@@ -23,11 +23,12 @@ import {
   getTestDb,
   insertTestRecipeLine,
   mintTestFood,
+  testHouseholdOf,
 } from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 function viewer(userId: string): RecipeListContext {
-  return { userId, householdUserIds: null, isServerAdmin: false };
+  return { userId, householdId: testHouseholdOf(userId), isServerAdmin: false };
 }
 
 describe("the typing suggestions", () => {

@@ -40,18 +40,6 @@ export const NoteTitleSchema = z.string().min(1, "Title is required").max(200, "
 // Household Schemas
 // ============================================================================
 
-/** The longest household name the server takes. */
-export const HOUSEHOLD_NAME_MAX_LENGTH = 100;
-
-/**
- * Household name (optional, with length constraints)
- */
-export const HouseholdNameSchema = z
-  .string()
-  .min(1, "Name is required")
-  .max(HOUSEHOLD_NAME_MAX_LENGTH, "Name too long")
-  .optional();
-
 /**
  * 6-digit household join code
  */

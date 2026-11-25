@@ -25,10 +25,13 @@ export function createMockUser(overrides: Partial<User> = {}): User {
 export function createMockAuthedContext(user: User = createMockUser()) {
   return {
     user,
-    household: null,
-    householdKey: user.id,
+    household: {
+      id: "household-1",
+      name: "My household",
+      users: [{ id: user.id, name: user.name ?? "" }],
+    },
+    householdId: "household-1",
     userIds: [user.id],
-    householdUserIds: null,
     isServerAdmin: user.isServerAdmin ?? false,
   };
 }

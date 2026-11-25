@@ -10,7 +10,8 @@ import {
   resolveCategoryName,
 } from "@norish/shared/lib/categories";
 import { BUILT_IN_ALIASES } from "@norish/shared/lib/category-matcher";
-import { viewerAndHouseholdIds } from "@norish/shared/lib/household";
+
+import { getHouseholdMemberIds } from "./household-members";
 
 // A recipe's Category names in order, as a correlated subquery on `"recipes"`:
 // the query using it must not alias the recipes table.
@@ -51,11 +52,10 @@ export async function listCategoryNamesForUsers(userIds: string[]): Promise<stri
 }
 
 /** The Categories offered to a viewer's household. */
-export function listCategoryNamesForViewer(viewer: {
-  userId: string;
-  householdUserIds: readonly string[] | null;
+export async function listCategoryNamesForViewer(viewer: {
+  householdId: string;
 }): Promise<string[]> {
-  return listCategoryNamesForUsers(viewerAndHouseholdIds(viewer));
+  return listCategoryNamesForUsers(await getHouseholdMemberIds(viewer.householdId));
 }
 
 /**

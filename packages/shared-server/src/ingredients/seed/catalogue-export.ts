@@ -6,7 +6,7 @@ import type {
 } from "@norish/shared/contracts/ingredient-nutrition";
 import { listCatalogueForExport } from "@norish/db/repositories/ingredient-seed";
 
-import { NO_HOUSEHOLD, resolveIngredientNutrition } from "../nutrition/ingredient-nutrition";
+import { NO_CORRECTIONS, resolveIngredientNutrition } from "../nutrition/ingredient-nutrition";
 
 /** Where the catalogue's seed comes from, and under what licence (ADR-0038). */
 export const CATALOGUE_SOURCE = {
@@ -92,7 +92,7 @@ export async function buildCatalogueExport(exportedAt: Date): Promise<CatalogueE
   const { ingredients, aliases } = await listCatalogueForExport();
   const nutrition = await resolveIngredientNutrition(
     ingredients.map((ingredient) => ingredient.id),
-    NO_HOUSEHOLD
+    NO_CORRECTIONS
   );
   const byIngredient = new Map<string, Array<{ text: string; locale: string | null }>>();
 

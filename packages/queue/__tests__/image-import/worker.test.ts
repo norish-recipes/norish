@@ -122,8 +122,7 @@ describe("processImageImportJob", () => {
       data: {
         recipeId: "recipe-123",
         userId: "user-1",
-        householdKey: "household-1",
-        householdUserIds: null,
+        householdId: "household-1",
         files: [
           {
             data: Buffer.from("img").toString("base64"),
@@ -166,8 +165,7 @@ describe("processImageImportJob", () => {
       data: {
         recipeId: "recipe-123",
         userId: "user-1",
-        householdKey: "household-1",
-        householdUserIds: null,
+        householdId: "household-1",
         files: [
           {
             data: Buffer.from("img").toString("base64"),

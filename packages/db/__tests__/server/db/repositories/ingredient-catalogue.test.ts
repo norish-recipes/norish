@@ -21,6 +21,7 @@ import {
   firstSpellingId,
   getTestDb,
   insertTestRecipeLine,
+  testHouseholdOf,
 } from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
@@ -268,7 +269,7 @@ describe("ingredient uses", () => {
   it("lists the uses the viewer may see, a recipe once, and counts everything a delete touches", async () => {
     expect(
       await listIngredientUses(
-        { userId: me.id, householdUserIds: null, isServerAdmin: false },
+        { userId: me.id, householdId: testHouseholdOf(me.id), isServerAdmin: false },
         chickenId
       )
     ).toEqual({
@@ -291,7 +292,7 @@ describe("ingredient uses", () => {
       [(await firstSpellingId(chickenId))!, (await firstSpellingId(satay!.id))!]
     );
 
-    const viewer = { userId: me.id, householdUserIds: null, isServerAdmin: false };
+    const viewer = { userId: me.id, householdId: testHouseholdOf(me.id), isServerAdmin: false };
 
     expect((await listIngredientUses(viewer, satay!.id)).recipes).toEqual([
       { id: ricePan, name: "Rijstpan" },
@@ -320,7 +321,7 @@ describe("ingredient uses", () => {
     });
 
     const uses = await listIngredientUses(
-      { userId: me.id, householdUserIds: null, isServerAdmin: false },
+      { userId: me.id, householdId: testHouseholdOf(me.id), isServerAdmin: false },
       chickenId
     );
 

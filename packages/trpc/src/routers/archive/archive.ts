@@ -122,11 +122,11 @@ const importArchive = authedProcedure
  * The parser detects the format and picks the reader for it.
  */
 async function runArchiveImportAsync(
-  ctx: Pick<AuthedProcedureContext, "user" | "userIds" | "householdKey" | "householdUserIds">,
+  ctx: Pick<AuthedProcedureContext, "user" | "userIds" | "householdId">,
   buffer: Buffer,
   total: number
 ): Promise<void> {
-  const { userIds, householdKey, householdUserIds } = ctx;
+  const { userIds, householdId } = ctx;
   const userId = ctx.user.id;
   const allImported: RecipeDashboardDTO[] = [];
   const allErrors: ArchiveImportError[] = [];
@@ -134,7 +134,7 @@ async function runArchiveImportAsync(
   // Archive-created recipes reach whoever the view policy says may see them,
   // like every other recipe create.
   const viewPolicy = (await getRecipePermissionPolicy()).view;
-  const target = { viewPolicy, userId, householdKey };
+  const target = { viewPolicy, userId, householdId };
 
   // Calculate dynamic batch size based on total
   const batchSize = Math.max(1, calculateBatchSize(total));
@@ -179,7 +179,7 @@ async function runArchiveImportAsync(
     const inserted = landed?.inserted;
 
     if (inserted) {
-      announceUsableRecipe(inserted, { userId, householdKey, householdUserIds }).catch((err) =>
+      announceUsableRecipe(inserted, { userId, householdId }).catch((err) =>
         log.warn({ err, recipeId: inserted.recipeId }, "Failed to announce archive recipe")
       );
     }

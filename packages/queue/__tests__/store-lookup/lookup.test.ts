@@ -124,7 +124,7 @@ describe("matchGroceryName", () => {
       storeId: STORE,
       ingredientId: KAAS,
       name: "oude kaas",
-      householdKey: HOUSEHOLD,
+      householdId: HOUSEHOLD,
     });
 
     expect(visited[0]).toBe("https://www.dirk.nl/zoeken/producten/oude%20kaas");
@@ -140,7 +140,7 @@ describe("matchGroceryName", () => {
       storeId: STORE,
       ingredientId: KAAS,
       name: "oude kaas",
-      householdKey: HOUSEHOLD,
+      householdId: HOUSEHOLD,
     });
 
     expect(result).toEqual({ matched: true });
@@ -165,7 +165,7 @@ describe("matchGroceryName", () => {
       storeId: STORE,
       ingredientId: KAAS,
       name: "oude kaas",
-      householdKey: HOUSEHOLD,
+      householdId: HOUSEHOLD,
     });
 
     expect(mocks.upsertReadProduct).toHaveBeenCalledWith(
@@ -183,7 +183,7 @@ describe("matchGroceryName", () => {
       storeId: STORE,
       ingredientId: KAAS,
       name: "oude kaas",
-      householdKey: HOUSEHOLD,
+      householdId: HOUSEHOLD,
     });
 
     expect(mocks.upsertReadProduct).toHaveBeenCalledWith(
@@ -203,7 +203,7 @@ describe("matchGroceryName", () => {
       storeId: STORE,
       ingredientId: KAAS,
       name: "oude kaas",
-      householdKey: HOUSEHOLD,
+      householdId: HOUSEHOLD,
     });
 
     // The page is the authority, and the page presented no Sale at €8.49.
@@ -228,7 +228,7 @@ describe("matchGroceryName", () => {
       storeId: STORE,
       ingredientId: KAAS,
       name: "oude kaas",
-      householdKey: HOUSEHOLD,
+      householdId: HOUSEHOLD,
     });
 
     expect(mocks.upsertReadProduct).toHaveBeenCalledWith(
@@ -253,7 +253,7 @@ describe("matchGroceryName", () => {
       storeId: STORE,
       ingredientId: KAAS,
       name: "oude kaas",
-      householdKey: HOUSEHOLD,
+      householdId: HOUSEHOLD,
     });
     expect(mocks.upsertReadProduct).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -271,7 +271,7 @@ describe("matchGroceryName", () => {
       storeId: STORE,
       ingredientId: KAAS,
       name: "oude kaas",
-      householdKey: HOUSEHOLD,
+      householdId: HOUSEHOLD,
     });
     expect(mocks.upsertReadProduct).toHaveBeenCalledWith(
       expect.objectContaining({ size: "930 g", pack: grams })
@@ -285,7 +285,7 @@ describe("matchGroceryName", () => {
       storeId: STORE,
       ingredientId: KAAS,
       name: "oude kaas",
-      householdKey: HOUSEHOLD,
+      householdId: HOUSEHOLD,
     });
 
     expect(result).toEqual({ matched: false });
@@ -309,7 +309,7 @@ describe("matchGroceryName", () => {
         storeId: STORE,
         ingredientId: KAAS,
         name: "oude kaas",
-        householdKey: HOUSEHOLD,
+        householdId: HOUSEHOLD,
       });
 
       expect(mocks.decideProduct).not.toHaveBeenCalled();
@@ -333,7 +333,7 @@ describe("matchGroceryName", () => {
         storeId: STORE,
         ingredientId: KAAS,
         name: "oude kaas",
-        householdKey: HOUSEHOLD,
+        householdId: HOUSEHOLD,
       });
 
       expect(result).toEqual({ matched: true });
@@ -368,14 +368,14 @@ describe("matchGroceryName", () => {
         storeId: STORE,
         ingredientId: KAAS,
         name: "oude kaas",
-        householdKey: HOUSEHOLD,
+        householdId: HOUSEHOLD,
       });
 
       expect(result).toEqual({ matched: false });
       expect(mocks.linkIfUnanswered).toHaveBeenCalledExactlyOnceWith(STORE, KAAS, null, suggestion);
       expect(mocks.upsertReadProduct).not.toHaveBeenCalled();
       expect(mocks.publish).toHaveBeenCalledWith("linkUpdated", expect.anything(), {
-        householdKey: HOUSEHOLD,
+        householdId: HOUSEHOLD,
       });
     });
 
@@ -397,7 +397,7 @@ describe("matchGroceryName", () => {
           storeId: STORE,
           ingredientId: KAAS,
           name: "oude kaas",
-          householdKey: HOUSEHOLD,
+          householdId: HOUSEHOLD,
         })
       ).resolves.toEqual({ matched: false });
     });
@@ -410,7 +410,7 @@ describe("matchGroceryName", () => {
         storeId: STORE,
         ingredientId: KAAS,
         name: "oude kaas",
-        householdKey: HOUSEHOLD,
+        householdId: HOUSEHOLD,
       });
 
       expect(mocks.linkIfUnanswered).toHaveBeenCalledExactlyOnceWith(STORE, KAAS, null, null);
@@ -453,7 +453,7 @@ describe("matchGroceryName", () => {
         storeId: STORE,
         ingredientId: KAAS,
         name: "oude kaas",
-        householdKey: HOUSEHOLD,
+        householdId: HOUSEHOLD,
         ...listeners,
       });
 
@@ -489,7 +489,7 @@ describe("matchGroceryName", () => {
         storeId: STORE,
         ingredientId: KAAS,
         name: "oude kaas",
-        householdKey: HOUSEHOLD,
+        householdId: HOUSEHOLD,
         ...listeners,
       });
 
@@ -522,7 +522,7 @@ describe("matchGroceryName", () => {
         storeId: STORE,
         ingredientId: KAAS,
         name: "oude kaas",
-        householdKey: HOUSEHOLD,
+        householdId: HOUSEHOLD,
         ...listeners,
       });
 
@@ -542,7 +542,7 @@ describe("matchGroceryName", () => {
         storeId: STORE,
         ingredientId: KAAS,
         name: "oude kaas",
-        householdKey: HOUSEHOLD,
+        householdId: HOUSEHOLD,
         ...listeners,
       });
 
@@ -566,7 +566,7 @@ describe("matchGroceryName", () => {
         storeId: STORE,
         ingredientId: KAAS,
         name: "oude kaas",
-        householdKey: HOUSEHOLD,
+        householdId: HOUSEHOLD,
         ...listeners,
       });
 
@@ -586,7 +586,7 @@ describe("matchGroceryName", () => {
       storeId: STORE,
       ingredientId: KAAS,
       name: "oude kaas",
-      householdKey: HOUSEHOLD,
+      householdId: HOUSEHOLD,
     });
 
     expect(result).toEqual({ matched: true });
@@ -609,7 +609,7 @@ describe("matchGroceryName", () => {
       storeId: STORE,
       ingredientId: KAAS,
       name: "oude kaas",
-      householdKey: HOUSEHOLD,
+      householdId: HOUSEHOLD,
     });
 
     expect(result).toEqual({ matched: true });
@@ -635,7 +635,7 @@ describe("matchGroceryName", () => {
       storeId: STORE,
       ingredientId: KAAS,
       name: "oude kaas",
-      householdKey: HOUSEHOLD,
+      householdId: HOUSEHOLD,
     });
 
     expect(result).toEqual({ matched: false });
@@ -653,7 +653,7 @@ describe("matchGroceryName", () => {
       storeId: STORE,
       ingredientId: KAAS,
       name: "oude kaas",
-      householdKey: HOUSEHOLD,
+      householdId: HOUSEHOLD,
     });
 
     // The conditional write turns the pending row into the Miss; nothing
@@ -678,7 +678,7 @@ describe("matchGroceryName", () => {
       storeId: STORE,
       ingredientId: KAAS,
       name: "oude kaas",
-      householdKey: HOUSEHOLD,
+      householdId: HOUSEHOLD,
     });
 
     expect(result).toEqual({ matched: false });
@@ -702,14 +702,14 @@ describe("matchGroceryName", () => {
       storeId: STORE,
       ingredientId: KAAS,
       name: "oude kaas",
-      householdKey: HOUSEHOLD,
+      householdId: HOUSEHOLD,
     });
 
     expect(result).toEqual({ matched: false });
     expect(mocks.linkIfUnanswered).toHaveBeenCalledExactlyOnceWith(STORE, KAAS, "product-1");
     // Whatever the link now says is what the household hears.
     expect(mocks.publish).toHaveBeenCalledWith("linkUpdated", expect.anything(), {
-      householdKey: HOUSEHOLD,
+      householdId: HOUSEHOLD,
     });
   });
 
@@ -720,7 +720,7 @@ describe("matchGroceryName", () => {
       storeId: STORE,
       ingredientId: KAAS,
       name: "oude kaas",
-      householdKey: HOUSEHOLD,
+      householdId: HOUSEHOLD,
     });
 
     // The conditional write, never the unconditional one: a Miss found by the
@@ -745,7 +745,7 @@ describe("matchGroceryName", () => {
         storeId: STORE,
         ingredientId: KAAS,
         name: "oude kaas",
-        householdKey: HOUSEHOLD,
+        householdId: HOUSEHOLD,
       })
     ).resolves.toEqual({ matched: true });
   });
@@ -758,7 +758,7 @@ describe("matchGroceryName", () => {
       storeId: STORE,
       ingredientId: KAAS,
       name: "oude kaas",
-      householdKey: HOUSEHOLD,
+      householdId: HOUSEHOLD,
     });
 
     expect(visited).toEqual([]);
@@ -777,16 +777,16 @@ describe("matchGroceryName", () => {
       storeId: STORE,
       ingredientId: KAAS,
       name: "oude kaas",
-      householdKey: HOUSEHOLD,
+      householdId: HOUSEHOLD,
     });
 
     expect(mocks.publish).toHaveBeenCalledWith(
       "productUpdated",
       expect.objectContaining({ product: expect.objectContaining({ id: "product-1" }) }),
-      { householdKey: HOUSEHOLD }
+      { householdId: HOUSEHOLD }
     );
     expect(mocks.publish).toHaveBeenCalledWith("linkUpdated", expect.anything(), {
-      householdKey: HOUSEHOLD,
+      householdId: HOUSEHOLD,
     });
   });
 });
@@ -805,11 +805,9 @@ describe("refreshProducts", () => {
     mocks.listStaleProducts.mockResolvedValue([]);
     const visited = useShop({});
 
-    await expect(refreshProducts({ productIds: ["p1"], householdKey: HOUSEHOLD })).resolves.toEqual(
-      {
-        refreshed: 0,
-      }
-    );
+    await expect(refreshProducts({ productIds: ["p1"], householdId: HOUSEHOLD })).resolves.toEqual({
+      refreshed: 0,
+    });
     expect(visited).toEqual([]);
   });
 
@@ -819,11 +817,9 @@ describe("refreshProducts", () => {
     ]);
     const visited = useShop({ product: { name: "Oude kaas", price: 8.99, currency: "EUR" } });
 
-    await expect(refreshProducts({ productIds: ["p1"], householdKey: HOUSEHOLD })).resolves.toEqual(
-      {
-        refreshed: 1,
-      }
-    );
+    await expect(refreshProducts({ productIds: ["p1"], householdId: HOUSEHOLD })).resolves.toEqual({
+      refreshed: 1,
+    });
     expect(visited).toEqual([PRODUCT_PAGE]);
     expect(mocks.upsertReadProduct).toHaveBeenCalledWith(
       expect.objectContaining({ price: 8.99, pageUrl: PRODUCT_PAGE })
@@ -836,9 +832,9 @@ describe("refreshProducts", () => {
     ]);
     useShop({ product: null });
 
-    await expect(refreshProducts({ productIds: ["p1"], householdKey: HOUSEHOLD })).resolves.toEqual(
-      { refreshed: 0 }
-    );
+    await expect(refreshProducts({ productIds: ["p1"], householdId: HOUSEHOLD })).resolves.toEqual({
+      refreshed: 0,
+    });
     // The attempt is noted so a dead page takes its turn behind live ones;
     // nothing is written over the price the page last stated.
     expect(mocks.noteProductUnreadable).toHaveBeenCalledWith("p1");
@@ -848,7 +844,7 @@ describe("refreshProducts", () => {
   it("asks only for products the repository calls stale, which is never a by-hand one", async () => {
     mocks.listStaleProducts.mockResolvedValue([]);
 
-    await refreshProducts({ productIds: ["manual-1"], householdKey: HOUSEHOLD, now: new Date() });
+    await refreshProducts({ productIds: ["manual-1"], householdId: HOUSEHOLD, now: new Date() });
 
     expect(mocks.listStaleProducts).toHaveBeenCalledWith(["manual-1"], expect.any(Date));
     expect(mocks.upsertReadProduct).not.toHaveBeenCalled();

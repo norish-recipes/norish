@@ -107,7 +107,7 @@ describe("recipes.delete", () => {
     expect(recipes.publish).toHaveBeenCalledWith(
       "deleted",
       { ids: [MINE] },
-      { viewPolicy: "household", userId: "test-user-id", householdKey: "test-household-id" }
+      { viewPolicy: "household", userId: "test-user-id", householdId: "test-household-id" }
     );
     expect(recipes.publish).toHaveBeenCalledWith(
       "deleteKept",

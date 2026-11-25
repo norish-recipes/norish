@@ -27,7 +27,7 @@ import {
   estimateNutritionFromIngredients,
   estimateNutritionGap,
 } from "@norish/shared-server/ai/enrichment/nutrition-estimator";
-import { NO_HOUSEHOLD } from "@norish/shared-server/ingredients/nutrition/ingredient-nutrition";
+import { NO_CORRECTIONS } from "@norish/shared-server/ingredients/nutrition/ingredient-nutrition";
 import { workOutRecipeNutrition } from "@norish/shared-server/ingredients/nutrition/recipe-nutrition";
 import { createLogger } from "@norish/shared-server/logger";
 import { enrichmentWriteMode } from "@norish/shared/lib/recipe-enrichment";
@@ -71,7 +71,7 @@ export async function processNutritionEstimationJob(
       return applied;
     }
 
-    const worked = await workOutRecipeNutrition(recipe, NO_HOUSEHOLD);
+    const worked = await workOutRecipeNutrition(recipe, NO_CORRECTIONS);
     // Seasoning is left out of every total and never estimated.
     const gaps = worked?.leftOut.filter((line) => line.reason !== "seasoning") ?? [];
 

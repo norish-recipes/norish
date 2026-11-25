@@ -24,7 +24,7 @@ import {
   getIngredientStorePreference,
   upsertIngredientStorePreference,
 } from "@norish/db/repositories/stores";
-import { groceries, householdUsers, ingredients, recurringGroceries } from "@norish/db/schema";
+import { groceries, ingredients, recurringGroceries } from "@norish/db/schema";
 import {
   addAlias,
   CatalogueEditError,
@@ -37,12 +37,13 @@ import { addToPantry } from "@norish/shared-server/ingredients/pantry";
 import { resolveIngredients } from "@norish/shared-server/ingredients/resolver";
 
 import {
-  createTestHousehold,
   createTestRecipe,
   createTestUser,
   getRecipeIngredients,
   getTestDb,
   insertTestRecipeLine,
+  joinTestHousehold,
+  testHouseholdOf,
 } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 
@@ -62,7 +63,12 @@ describe("merging Ingredients and moving aliases", () => {
   beforeEach(async () => {
     const [user] = await testBase.beforeEachTest();
 
-    actor = { userId: user.id, householdUserIds: null, isServerAdmin: false };
+    actor = {
+      userId: user.id,
+      householdId: testHouseholdOf(user.id),
+      memberIds: [user.id],
+      isServerAdmin: false,
+    };
     storeId = (await createStore(crypto.randomUUID(), { userId: user.id, name: "Markt" })).id;
     await saveStoreAisles(storeId, [
       { id: GROENTE, name: "Groente", version: 0 },
@@ -239,14 +245,8 @@ describe("merging Ingredients and moving aliases", () => {
       const onion = await mint("onion");
       const uien = await mint("uien");
       const housemate = await createTestUser();
-      const household = await createTestHousehold(actor.userId, { id: crypto.randomUUID() });
 
-      await getTestDb()
-        .insert(householdUsers)
-        .values([
-          { householdId: household!.id, userId: actor.userId },
-          { householdId: household!.id, userId: housemate.id },
-        ]);
+      await joinTestHousehold(housemate.id, actor.userId);
       const userIds = [actor.userId, housemate.id];
 
       await addToPantry(crypto.randomUUID(), { userId: actor.userId, userIds, name: "onion" });
@@ -431,7 +431,12 @@ describe("merging Ingredients and moving aliases", () => {
       const [theirs] = await resolveIngredients(["uien"], { userId: stranger.id });
 
       await addAlias(
-        { userId: stranger.id, householdUserIds: null, isServerAdmin: false },
+        {
+          userId: stranger.id,
+          householdId: testHouseholdOf(stranger.id),
+          memberIds: [stranger.id],
+          isServerAdmin: false,
+        },
         theirs!.ingredientId,
         "ajuin"
       );

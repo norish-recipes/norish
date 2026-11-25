@@ -112,7 +112,7 @@ describe("calendar planned items household events", () => {
           calories: 320,
         }),
       },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   });
 });

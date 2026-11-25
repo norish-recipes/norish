@@ -33,7 +33,7 @@ export type WithOperationId<T> = T & { [OPERATION_ID_KEY]?: OperationId };
  * const jobData = withJobOperationContext({
  *   recipeId: "abc",
  *   userId: "user1",
- *   householdKey: "hh1",
+ *   householdId: "hh1",
  * });
  * await queue.add("import", jobData, { jobId });
  * ```

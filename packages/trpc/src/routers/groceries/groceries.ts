@@ -143,7 +143,7 @@ const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, 
 
             const [updated] = await updateGroceries(
               [parsed.data as GroceryUpdateDto],
-              ctx.userIds,
+              ctx.householdId,
               tx
             );
 
@@ -162,7 +162,7 @@ const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, 
           {
             reason: "Grocery was updated elsewhere",
           },
-          { householdKey: ctx.householdKey }
+          { householdId: ctx.householdId }
         );
 
         return { success: true, stale: true };
@@ -514,7 +514,7 @@ const reorderInStore = authedProcedure
 
         // Perform reorder (and optional store changes)
         const updated =
-          present.length > 0 ? await reorderGroceriesInStore(present, ctx.userIds) : [];
+          present.length > 0 ? await reorderGroceriesInStore(present, ctx.householdId) : [];
 
         if (updated.length !== updates.length) {
           log.info(
@@ -532,7 +532,7 @@ const reorderInStore = authedProcedure
             {
               reason: "Groceries were updated elsewhere",
             },
-            { householdKey: ctx.householdKey }
+            { householdId: ctx.householdId }
           );
         }
 
@@ -576,7 +576,7 @@ const reorderInStore = authedProcedure
             {
               changedGroceries: updated,
             },
-            { householdKey: ctx.householdKey }
+            { householdId: ctx.householdId }
           );
         }
 
@@ -595,7 +595,7 @@ const markAllDone = authedProcedure
 
     log.info({ userId: ctx.user.id, storeId }, "Marking all groceries done in store");
 
-    return markAllDoneInStore(ctx.userIds, storeId, targets)
+    return markAllDoneInStore(ctx.householdId, storeId, targets)
       .then((updated) => {
         if (updated.length < targets.length) {
           log.info(
@@ -607,7 +607,7 @@ const markAllDone = authedProcedure
             {
               reason: "Groceries were updated elsewhere",
             },
-            { householdKey: ctx.householdKey }
+            { householdId: ctx.householdId }
           );
         }
 
@@ -618,7 +618,7 @@ const markAllDone = authedProcedure
             {
               changedGroceries: updated,
             },
-            { householdKey: ctx.householdKey }
+            { householdId: ctx.householdId }
           );
         }
 
@@ -641,7 +641,7 @@ const deleteDone = authedProcedure
     return getGroceryOwnerIds(targets.map((grocery) => grocery.id))
       .then(async (ownerIds) => {
         const present = targets.filter((grocery) => ownerIds.has(grocery.id));
-        const deletedIds = await deleteDoneInStore(ctx.userIds, storeId, present);
+        const deletedIds = await deleteDoneInStore(ctx.householdId, storeId, present);
 
         if (deletedIds.length < present.length) {
           log.info(
@@ -653,7 +653,7 @@ const deleteDone = authedProcedure
             {
               reason: "Groceries were updated elsewhere",
             },
-            { householdKey: ctx.householdKey }
+            { householdId: ctx.householdId }
           );
         }
 
@@ -662,7 +662,7 @@ const deleteDone = authedProcedure
           void groceries.publish(
             "deleted",
             { groceryIds: deletedIds },
-            { householdKey: ctx.householdKey }
+            { householdId: ctx.householdId }
           );
         }
 

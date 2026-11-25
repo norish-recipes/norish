@@ -40,19 +40,22 @@ import {
   tags as tagsTable,
 } from "@norish/db/schema";
 
-import { createTestRecipe, createTestUser, getTestDb } from "../../../helpers/db-test-helpers";
+import {
+  createTestRecipe,
+  createTestUser,
+  getTestDb,
+  joinTestHousehold,
+  testHouseholdOf,
+} from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 type PermissionLevel = "everyone" | "household" | "owner";
 
 function viewer(
   userId: string,
-  { householdUserIds = null, isServerAdmin = false } = {} as {
-    householdUserIds?: string[] | null;
-    isServerAdmin?: boolean;
-  }
+  { isServerAdmin = false } = {} as { isServerAdmin?: boolean }
 ): RecipeListContext {
-  return { userId, householdUserIds, isServerAdmin };
+  return { userId, householdId: testHouseholdOf(userId), isServerAdmin };
 }
 
 async function setPolicy(level: {
@@ -140,11 +143,13 @@ describe("cookbook repository", () => {
       await setPolicy({ view: "household", edit: "household", delete: "household" });
       const cookbook = await createCookbook({ userId: ownerId, title: "Ours" });
 
-      const housemate = viewer(strangerId, { householdUserIds: [strangerId, ownerId] });
-      const outsider = viewer(strangerId, { householdUserIds: [strangerId] });
+      const outsider = viewer(strangerId);
 
-      expect((await listCookbooks(housemate, { limit: 50 })).cookbooks).toHaveLength(1);
       expect((await listCookbooks(outsider, { limit: 50 })).cookbooks).toHaveLength(0);
+
+      await joinTestHousehold(strangerId, ownerId);
+
+      expect((await listCookbooks(viewer(strangerId), { limit: 50 })).cookbooks).toHaveLength(1);
     });
 
     it("shows an Orphaned cookbook under every policy", async () => {

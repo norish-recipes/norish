@@ -49,6 +49,7 @@ import {
   getSpellingTexts,
   getTestDb,
   insertTestRecipeLine,
+  testHouseholdOf,
 } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 
@@ -67,7 +68,12 @@ describe("the ingredient catalogue", () => {
   beforeEach(async () => {
     const [user] = await testBase.beforeEachTest();
 
-    actor = { userId: user.id, householdUserIds: null, isServerAdmin: false };
+    actor = {
+      userId: user.id,
+      householdId: testHouseholdOf(user.id),
+      memberIds: [user.id],
+      isServerAdmin: false,
+    };
     announced = [];
     restorePublisher = publishIngredientChangesTo({
       changed: async (ids) => {
@@ -700,7 +706,12 @@ describe("the ingredient catalogue", () => {
     await expect(
       refusal(
         renameIngredient(
-          { userId: stranger.id, householdUserIds: null, isServerAdmin: false },
+          {
+            userId: stranger.id,
+            householdId: testHouseholdOf(stranger.id),
+            memberIds: [stranger.id],
+            isServerAdmin: false,
+          },
           onion.ingredientId,
           "Onions"
         )

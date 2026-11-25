@@ -13,13 +13,13 @@ const log = createLogger("worker:store-lookup");
 
 async function processStoreLookup(job: Job<StoreLookupJobData>): Promise<void> {
   if (job.data.kind === "match") {
-    const { storeId, ingredientId, name, householdKey } = job.data;
+    const { storeId, ingredientId, name, householdId } = job.data;
 
     await matchGroceryName({
       storeId,
       ingredientId,
       name,
-      householdKey,
+      householdId,
       onStep: (step) => reportStep(job, step),
       onStepDone: (detail) => completeStep(job, detail),
     });
@@ -30,7 +30,7 @@ async function processStoreLookup(job: Job<StoreLookupJobData>): Promise<void> {
   await reportStep(job, "reading-product", { asked: job.data.productIds.length });
   const { refreshed } = await refreshProducts({
     productIds: job.data.productIds,
-    householdKey: job.data.householdKey,
+    householdId: job.data.householdId,
   });
 
   await completeStep(job, { refreshed });

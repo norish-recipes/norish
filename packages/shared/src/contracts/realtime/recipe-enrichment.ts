@@ -21,8 +21,7 @@ import { defineRealtimeCatalogue } from "./catalogue";
 export const RecipeBecameUsablePayloadSchema = z.object({
   recipeId: z.string(),
   userId: z.string(),
-  householdKey: z.string(),
-  householdUserIds: z.array(z.string()).nullable(),
+  householdId: z.string(),
 });
 
 export type RecipeBecameUsablePayload = z.infer<typeof RecipeBecameUsablePayloadSchema>;

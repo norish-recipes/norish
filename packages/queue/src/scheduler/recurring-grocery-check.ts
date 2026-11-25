@@ -1,4 +1,4 @@
-import { getHouseholdForUser } from "@norish/db";
+import { getHouseholdIdForUser } from "@norish/db";
 import {
   getDueRecurringGroceries,
   uncheckGrocery,
@@ -8,15 +8,6 @@ import { schedulerLogger } from "@norish/shared-server/logger";
 import { groceries } from "@norish/shared-server/realtime/groceries";
 import { recurrencePatternOf } from "@norish/shared/contracts/recurrence";
 import { calculateNextOccurrence } from "@norish/shared/lib/recurrence/calculator";
-
-/**
- * Get the household key for a user (household ID or user ID if no household)
- */
-async function getHouseholdKeyForUser(userId: string): Promise<string> {
-  const household = await getHouseholdForUser(userId);
-
-  return household?.id ?? userId;
-}
 
 // Unchecks recurring groceries that are due
 export async function checkRecurringGroceries(): Promise<{ unchecked: number }> {
@@ -55,23 +46,24 @@ export async function checkRecurringGroceries(): Promise<{ unchecked: number }> 
         });
 
         // Broadcast to household members via tRPC emitter
-        const householdKey = await getHouseholdKeyForUser(item.recurringGrocery.userId);
+        const householdId = await getHouseholdIdForUser(item.recurringGrocery.userId);
 
-        void groceries.publish(
-          "recurringUpdated",
-          {
-            recurringGrocery: {
-              ...item.recurringGrocery,
-              nextPlannedFor: nextDate,
-              lastCheckedDate: item.recurringGrocery.nextPlannedFor,
+        if (householdId)
+          void groceries.publish(
+            "recurringUpdated",
+            {
+              recurringGrocery: {
+                ...item.recurringGrocery,
+                nextPlannedFor: nextDate,
+                lastCheckedDate: item.recurringGrocery.nextPlannedFor,
+              },
+              grocery: {
+                ...item.grocery,
+                isDone: false,
+              },
             },
-            grocery: {
-              ...item.grocery,
-              isDone: false,
-            },
-          },
-          { householdKey }
-        );
+            { householdId }
+          );
 
         unchecked++;
         schedulerLogger.info(

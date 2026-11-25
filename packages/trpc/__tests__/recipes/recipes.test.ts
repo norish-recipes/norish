@@ -144,7 +144,7 @@ describe("recipes procedures", () => {
             const result = await listRecipes(
               {
                 userId: ctx.user.id,
-                householdUserIds: ctx.householdUserIds,
+                householdId: ctx.householdId,
                 isServerAdmin: ctx.isServerAdmin,
               },
               input.limit,
@@ -181,7 +181,7 @@ describe("recipes procedures", () => {
       expect(listRecipes).toHaveBeenCalledWith(
         {
           userId: ctx.user.id,
-          householdUserIds: ctx.householdUserIds,
+          householdId: ctx.householdId,
           isServerAdmin: ctx.isServerAdmin,
         },
         50,
@@ -217,7 +217,7 @@ describe("recipes procedures", () => {
             const result = await listRecipes(
               {
                 userId: ctx.user.id,
-                householdUserIds: ctx.householdUserIds,
+                householdId: ctx.householdId,
                 isServerAdmin: ctx.isServerAdmin,
               },
               input.limit,
@@ -247,7 +247,7 @@ describe("recipes procedures", () => {
       expect(listRecipes).toHaveBeenCalledWith(
         {
           userId: ctx.user.id,
-          householdUserIds: ctx.householdUserIds,
+          householdId: ctx.householdId,
           isServerAdmin: ctx.isServerAdmin,
         },
         50,
@@ -282,7 +282,7 @@ describe("recipes procedures", () => {
             const result = await listRecipes(
               {
                 userId: ctx.user.id,
-                householdUserIds: ctx.householdUserIds,
+                householdId: ctx.householdId,
                 isServerAdmin: ctx.isServerAdmin,
               },
               input.limit,
@@ -311,7 +311,7 @@ describe("recipes procedures", () => {
       expect(listRecipes).toHaveBeenCalledWith(
         {
           userId: ctx.user.id,
-          householdUserIds: ctx.householdUserIds,
+          householdId: ctx.householdId,
           isServerAdmin: ctx.isServerAdmin,
         },
         50,
@@ -350,10 +350,12 @@ describe("recipes procedures", () => {
             if (recipe.userId) {
               const canView = await canAccessResource(
                 "view",
-                ctx.user.id,
-                recipe.userId,
-                ctx.householdUserIds,
-                ctx.isServerAdmin
+                {
+                  userId: ctx.user.id,
+                  householdId: ctx.householdId,
+                  isServerAdmin: ctx.isServerAdmin,
+                },
+                recipe.userId
               );
 
               if (!canView) {
@@ -371,10 +373,8 @@ describe("recipes procedures", () => {
       expect(getRecipeFull).toHaveBeenCalledWith("r1");
       expect(canAccessResource).toHaveBeenCalledWith(
         "view",
-        ctx.user.id,
-        "other-user-id",
-        ctx.householdUserIds,
-        ctx.isServerAdmin
+        { userId: ctx.user.id, householdId: ctx.householdId, isServerAdmin: ctx.isServerAdmin },
+        "other-user-id"
       );
       expect(result).toEqual(mockRecipe);
     });
@@ -398,10 +398,12 @@ describe("recipes procedures", () => {
             if (recipe.userId) {
               const canView = await canAccessResource(
                 "view",
-                ctx.user.id,
-                recipe.userId,
-                ctx.householdUserIds,
-                ctx.isServerAdmin
+                {
+                  userId: ctx.user.id,
+                  householdId: ctx.householdId,
+                  isServerAdmin: ctx.isServerAdmin,
+                },
+                recipe.userId
               );
 
               if (!canView) {
@@ -435,10 +437,12 @@ describe("recipes procedures", () => {
             if (recipe.userId) {
               const canView = await canAccessResource(
                 "view",
-                ctx.user.id,
-                recipe.userId,
-                ctx.householdUserIds,
-                ctx.isServerAdmin
+                {
+                  userId: ctx.user.id,
+                  householdId: ctx.householdId,
+                  isServerAdmin: ctx.isServerAdmin,
+                },
+                recipe.userId
               );
 
               if (!canView) {
@@ -484,10 +488,8 @@ describe("recipes procedures", () => {
       expect(getRecipeOwnerId).toHaveBeenCalledWith(editableRecipeId);
       expect(canAccessResource).toHaveBeenCalledWith(
         "edit",
-        ctx.user.id,
-        "other-user-id",
-        ctx.householdUserIds,
-        ctx.isServerAdmin
+        { userId: ctx.user.id, householdId: ctx.householdId, isServerAdmin: ctx.isServerAdmin },
+        "other-user-id"
       );
       expect(result).toEqual(mockRecipe);
     });
@@ -547,9 +549,7 @@ describe("recipes procedures", () => {
       readRecipeNutrition.mockResolvedValue(answer);
 
       await expect(caller().nutrition({ id: recipeId })).resolves.toEqual(answer);
-      expect(readRecipeNutrition).toHaveBeenCalledWith(recipe, {
-        householdUserIds: ctx.userIds,
-      });
+      expect(readRecipeNutrition).toHaveBeenCalledWith(recipe, { householdId: ctx.householdId });
     });
 
     it("is NOT_FOUND for a recipe that is missing or the reader may not view", async () => {
@@ -636,10 +636,12 @@ describe("recipes procedures", () => {
             if (ownerId !== null) {
               const canEdit = await canAccessResource(
                 "edit",
-                ctx.user.id,
-                ownerId,
-                ctx.householdUserIds,
-                ctx.isServerAdmin
+                {
+                  userId: ctx.user.id,
+                  householdId: ctx.householdId,
+                  isServerAdmin: ctx.isServerAdmin,
+                },
+                ownerId
               );
 
               if (!canEdit) {
@@ -655,7 +657,7 @@ describe("recipes procedures", () => {
               void recipes.publish(
                 "updated",
                 { recipe: updated },
-                { householdKey: ctx.householdKey }
+                { householdId: ctx.householdId }
               );
             }
 
@@ -675,7 +677,7 @@ describe("recipes procedures", () => {
         {
           recipe: expect.objectContaining({ id: "recipe-1" }),
         },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
       expect(result).toEqual({ success: true });
     });

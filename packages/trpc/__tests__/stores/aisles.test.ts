@@ -73,7 +73,7 @@ describe("filing a name at a Store", () => {
       {
         filing: { storeId: STORE, ingredientId: "ingredient:melk", aisleId: ZUIVEL },
       },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   });
 
@@ -87,7 +87,7 @@ describe("filing a name at a Store", () => {
       {
         filing: { storeId: STORE, ingredientId: "ingredient:melk", aisleId: null },
       },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   });
 

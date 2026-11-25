@@ -172,7 +172,7 @@ describe("cookbook membership", () => {
     expect(cookbooks.publish).toHaveBeenCalledWith(
       "membershipChanged",
       { cookbookId: COOKBOOK_ID, recipeIds: [RECIPE_ID, HIDDEN_ID], isMember: true },
-      { viewPolicy: "household", userId: "test-user-id", householdKey: "test-household-id" }
+      { viewPolicy: "household", userId: "test-user-id", householdId: "test-household-id" }
     );
   });
 
@@ -226,7 +226,7 @@ describe("cookbook membership", () => {
     expect(result).toHaveLength(1);
     expect(listEditableCookbooks).toHaveBeenCalledWith({
       userId: "test-user-id",
-      householdUserIds: ["test-user-id", "household-member-id"],
+      householdId: "test-household-id",
       isServerAdmin: false,
     });
   });

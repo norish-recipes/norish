@@ -15,7 +15,11 @@ import { ingredientAliases } from "@norish/db/schema";
 import { listIngredients, setParent } from "@norish/shared-server/ingredients/catalogue";
 import { resolveIngredients } from "@norish/shared-server/ingredients/resolver";
 
-import { getTestDb, nameInATestRecipe } from "../../../db/__tests__/helpers/db-test-helpers";
+import {
+  getTestDb,
+  nameInATestRecipe,
+  testHouseholdOf,
+} from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 import { seedEntry, seedEntryIn } from "../helpers/seed-entries";
 
@@ -32,7 +36,12 @@ describe("a mint's parent from the words of its text", () => {
   beforeEach(async () => {
     const [user] = await testBase.beforeEachTest();
 
-    actor = { userId: user.id, householdUserIds: null, isServerAdmin: true };
+    actor = {
+      userId: user.id,
+      householdId: testHouseholdOf(user.id),
+      memberIds: [user.id],
+      isServerAdmin: true,
+    };
     await applyIngredientSeed([
       seedEntry("en:cumin", "cumin", "komijn"),
       seedEntry("en:parsley", "parsley", "peterselie"),

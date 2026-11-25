@@ -6,13 +6,13 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
   addRecipeImages,
   addRecipeVideos,
-  addUserToHousehold,
-  createHousehold,
   createTag,
   getHouseholdForUser,
+  getHouseholdIdForUser,
   getRecipeFull,
   getUserAllergies,
   getUserById,
+  joinHousehold,
   updateRecipeImageOrder,
   updateRecipeVideoOrder,
   updateTagName,
@@ -77,17 +77,9 @@ describe("versioned repository behavior", () => {
 
   it("starts household memberships at version 1 and exposes them in the household DTO", async () => {
     const joiningUser = await createTestUser();
-    const household = await createHousehold({
-      name: "Versioned Household",
-      adminUserId: testUserId,
-    });
+    const outcome = await joinHousehold(joiningUser.id, (await getHouseholdIdForUser(testUserId))!);
 
-    const membership = await addUserToHousehold({
-      householdId: household.id,
-      userId: joiningUser.id,
-    });
-
-    expect(membership.version).toBe(1);
+    expect("joined" in outcome && outcome.joined.version).toBe(1);
 
     const householdDto = await getHouseholdForUser(joiningUser.id);
 

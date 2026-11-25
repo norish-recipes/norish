@@ -43,7 +43,6 @@ export const delayedDeliveryImmediateOnlyMutations = [
   "groceries.create",
   "recurringGroceries.createRecurring",
   "stores.create",
-  "households.create",
   "households.join",
   "calendar.createItem",
   "caldav.triggerSync",

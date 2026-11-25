@@ -35,13 +35,15 @@ import {
   createTestUser,
   getTestDb,
   insertTestRecipeLine,
+  joinTestHousehold,
+  testHouseholdOf,
 } from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 type PermissionLevel = "everyone" | "household" | "owner";
 
-function viewer(userId: string, householdUserIds: string[] | null = null): RecipeListContext {
-  return { userId, householdUserIds, isServerAdmin: false };
+function viewer(userId: string): RecipeListContext {
+  return { userId, householdId: testHouseholdOf(userId), isServerAdmin: false };
 }
 
 async function setPolicy(level: PermissionLevel) {
@@ -489,6 +491,8 @@ describe("the Library union", () => {
   describe("the pantry filter", () => {
     it("keeps the recipes the household's Pantry covers a line of, most complete first", async () => {
       const housemate = await createTestUser({ name: "Housemate" });
+
+      await joinTestHousehold(housemate.id, ownerId);
       const names = ["onion", "red onion", "olive oil", "butter", "salt", "garlic", "black garlic"];
       const resolved = await resolveIngredients(names, { userId: ownerId });
       const food = Object.fromEntries(names.map((name, i) => [name, resolved[i]!]));
@@ -534,7 +538,7 @@ describe("the Library union", () => {
       await recipe("Wrong kind", [[["black garlic"]]]);
       await recipe("Names no food", []);
 
-      const household = viewer(ownerId, [ownerId, housemate.id]);
+      const household = viewer(ownerId);
       const result = await listLibrary(household, { ...base, pantryOnly: true });
       const coverage = result.items.map((item) =>
         item.kind === "recipe" ? [item.recipe.name, item.recipe.pantryCoverage] : []

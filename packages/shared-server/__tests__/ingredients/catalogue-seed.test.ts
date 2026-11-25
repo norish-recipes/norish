@@ -54,6 +54,7 @@ import {
   getSpellingTexts,
   getTestDb,
   nameInATestRecipe,
+  testHouseholdOf,
 } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 
@@ -98,7 +99,12 @@ describe("the ingredient catalogue seed", () => {
   beforeEach(async () => {
     const [user] = await testBase.beforeEachTest();
 
-    actor = { userId: user.id, householdUserIds: null, isServerAdmin: false };
+    actor = {
+      userId: user.id,
+      householdId: testHouseholdOf(user.id),
+      memberIds: [user.id],
+      isServerAdmin: false,
+    };
     admin = { ...actor, isServerAdmin: true };
     // The seed's state is instance configuration, which the clean-up keeps.
     await getTestDb()

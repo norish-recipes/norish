@@ -258,7 +258,7 @@ describe("groceries openapi procedures", () => {
     expect(groceries.publish).not.toHaveBeenCalledWith(
       "failed",
       expect.anything(),
-      expect.objectContaining({ householdKey: expect.anything() })
+      expect.objectContaining({ householdId: expect.anything() })
     );
   });
 
@@ -326,7 +326,7 @@ describe("groceries openapi procedures", () => {
     expect(createGroceries).not.toHaveBeenCalled();
     expect(updateGroceries).toHaveBeenCalledWith(
       [{ id: existing.id, amount: 3, storeId }],
-      ctx.userIds,
+      ctx.householdId,
       TX
     );
     expect(result.ids).toEqual([existing.id]);
@@ -355,7 +355,7 @@ describe("groceries openapi procedures", () => {
       {
         changedGroceries: [sibling],
       },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   });
 
@@ -373,7 +373,7 @@ describe("groceries openapi procedures", () => {
 
     expect(updateGroceries).toHaveBeenCalledWith(
       [{ id: existing.id, amount: 2, storeId }],
-      ctx.userIds,
+      ctx.householdId,
       TX
     );
   });
@@ -471,7 +471,7 @@ describe("groceries openapi procedures", () => {
     const caller = openApiGroceriesRouter.createCaller(createMockCallerContext(ctx));
     const result = await caller.assignGroceryToStore({ id: groceryId, version: 2, storeId });
 
-    expect(assignGroceryToStore).toHaveBeenCalledWith(groceryId, storeId, ctx.userIds, 2);
+    expect(assignGroceryToStore).toHaveBeenCalledWith(groceryId, storeId, ctx.householdId, 2);
     expect(result).toEqual({ grocery: updated, stale: false });
   });
 });
@@ -556,18 +556,14 @@ describe("grocery emitter", () => {
 
     createGroceries.mockResolvedValue({ created: mockGroceries, shifted: [] });
 
-    void groceries.publish(
-      "created",
-      { groceries: mockGroceries },
-      { householdKey: "household-1" }
-    );
+    void groceries.publish("created", { groceries: mockGroceries }, { householdId: "household-1" });
 
     expect(groceries.publish).toHaveBeenCalledWith(
       "created",
       {
         groceries: mockGroceries,
       },
-      { householdKey: "household-1" }
+      { householdId: "household-1" }
     );
   });
 
@@ -579,7 +575,7 @@ describe("grocery emitter", () => {
     void groceries.publish(
       "updated",
       { changedGroceries: mockUpdated },
-      { householdKey: "household-1" }
+      { householdId: "household-1" }
     );
 
     expect(groceries.publish).toHaveBeenCalledWith(
@@ -587,7 +583,7 @@ describe("grocery emitter", () => {
       {
         changedGroceries: mockUpdated,
       },
-      { householdKey: "household-1" }
+      { householdId: "household-1" }
     );
   });
 
@@ -596,14 +592,14 @@ describe("grocery emitter", () => {
 
     deleteGroceryByIds.mockResolvedValue(undefined);
 
-    void groceries.publish("deleted", { groceryIds }, { householdKey: "household-1" });
+    void groceries.publish("deleted", { groceryIds }, { householdId: "household-1" });
 
     expect(groceries.publish).toHaveBeenCalledWith(
       "deleted",
       {
         groceryIds,
       },
-      { householdKey: "household-1" }
+      { householdId: "household-1" }
     );
   });
 });
@@ -670,14 +666,14 @@ describe("stale grocery updates", () => {
       "Stale grocery update; requesting client refresh"
     );
     expect(groceries.publish).not.toHaveBeenCalledWith("updated", expect.anything(), {
-      householdKey: ctx.householdKey,
+      householdId: ctx.householdId,
     });
     expect(groceries.publish).toHaveBeenCalledWith(
       "stale",
       {
         reason: expect.any(String),
       },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   });
 
@@ -788,7 +784,7 @@ describe("stale grocery updates", () => {
       {
         link,
       },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   });
 
@@ -940,7 +936,7 @@ describe("grocery names through Ingredient Aliases", () => {
     expect(createGroceries).not.toHaveBeenCalled();
     expect(updateGroceries).toHaveBeenCalledWith(
       [expect.objectContaining({ id: "g1", amount: 3 })],
-      ctx.userIds,
+      ctx.householdId,
       TX
     );
   });
@@ -984,7 +980,7 @@ describe("grocery names through Ingredient Aliases", () => {
           expect.objectContaining({ name: "peper" }),
         ],
       },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   });
 
@@ -1000,7 +996,7 @@ describe("grocery names through Ingredient Aliases", () => {
 
     expect(updateGroceries).toHaveBeenCalledWith(
       [expect.objectContaining({ id: "g1", amount: 2 })],
-      ctx.userIds,
+      ctx.householdId,
       TX
     );
     expect(createGroceries).toHaveBeenCalledWith(
@@ -1030,7 +1026,7 @@ describe("grocery names through Ingredient Aliases", () => {
       expect(groceries.publish).toHaveBeenCalledWith(
         "created",
         { groceries: [expect.objectContaining({ name: "peper" })] },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       )
     );
     expect(updateGroceries).toHaveBeenCalledWith(
@@ -1043,11 +1039,11 @@ describe("grocery names through Ingredient Aliases", () => {
           ingredientAliasId: "alias:zout",
         }),
       ],
-      ctx.userIds,
+      ctx.householdId,
       TX
     );
     // The list is held before the rename locks its row, so a create elsewhere waits, not deadlocks.
-    expect(lockGroceryList).toHaveBeenCalledWith(TX, ctx.userIds);
+    expect(lockGroceryList).toHaveBeenCalledWith(TX, ctx.householdId);
     expect(lockGroceryList.mock.invocationCallOrder[0]).toBeLessThan(
       updateGroceries.mock.invocationCallOrder[0]!
     );
@@ -1087,12 +1083,12 @@ describe("grocery names through Ingredient Aliases", () => {
 
     await vi.waitFor(() =>
       expect(groceries.publish).toHaveBeenCalledWith("stale", expect.anything(), {
-        householdKey: ctx.householdKey,
+        householdId: ctx.householdId,
       })
     );
     expect(createGroceries).not.toHaveBeenCalled();
     expect(groceries.publish).not.toHaveBeenCalledWith("created", expect.anything(), {
-      householdKey: ctx.householdKey,
+      householdId: ctx.householdId,
     });
   });
 
@@ -1111,7 +1107,7 @@ describe("grocery names through Ingredient Aliases", () => {
     await vi.waitFor(() =>
       expect(updateGroceries).toHaveBeenCalledWith(
         [expect.objectContaining({ id: groceryId, name: "Test", ingredientAliasId: "alias:test" })],
-        ctx.userIds,
+        ctx.householdId,
         TX
       )
     );

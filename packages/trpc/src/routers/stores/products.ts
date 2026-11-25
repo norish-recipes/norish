@@ -79,7 +79,7 @@ const createProduct = authedProcedure
     const product = await createManualProduct(input);
 
     log.info({ userId: ctx.user.id, storeId: input.storeId }, "By-hand store product created");
-    void stores.publish("productUpdated", { product }, { householdKey: ctx.householdKey });
+    void stores.publish("productUpdated", { product }, { householdId: ctx.householdId });
 
     return product;
   });
@@ -102,7 +102,7 @@ const updateProduct = authedProcedure
         message: "Only a by-hand product can be edited",
       });
     }
-    void stores.publish("productUpdated", { product }, { householdKey: ctx.householdKey });
+    void stores.publish("productUpdated", { product }, { householdId: ctx.householdId });
 
     return product;
   });
@@ -269,14 +269,14 @@ const chooseProduct = authedProcedure
       });
 
       storeProductId = product.id;
-      void stores.publish("productUpdated", { product }, { householdKey: ctx.householdKey });
+      void stores.publish("productUpdated", { product }, { householdId: ctx.householdId });
     }
 
     if (input.choice.kind === "manual") {
       const product = await writeManualProduct(input.storeId, input.choice);
 
       storeProductId = product.id;
-      void stores.publish("productUpdated", { product }, { householdKey: ctx.householdKey });
+      void stores.publish("productUpdated", { product }, { householdId: ctx.householdId });
     }
 
     // A Pack Size the shopper set is the last word for whichever product the
@@ -285,7 +285,7 @@ const chooseProduct = authedProcedure
       const product = await setPackSizeByHand(storeProductId, input.pack);
 
       if (product)
-        void stores.publish("productUpdated", { product }, { householdKey: ctx.householdKey });
+        void stores.publish("productUpdated", { product }, { householdId: ctx.householdId });
     }
 
     // The choice is about the food the grocery names, so every spelling of it
@@ -302,7 +302,7 @@ const chooseProduct = authedProcedure
     if (!ingredient) return null;
     const link = await resolveProductLink(input.storeId, ingredient.ingredientId);
 
-    if (link) void stores.publish("linkUpdated", { link }, { householdKey: ctx.householdKey });
+    if (link) void stores.publish("linkUpdated", { link }, { householdId: ctx.householdId });
 
     return link;
   });

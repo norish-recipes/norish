@@ -126,7 +126,7 @@ describe("stores procedures", () => {
     expect(stores.publish).toHaveBeenCalledWith(
       "updated",
       { store: { id: storeId, version: 4 } },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   });
 
@@ -213,12 +213,12 @@ describe("stores procedures", () => {
     expect(stores.publish).toHaveBeenCalledWith(
       "deleted",
       { storeId, deletedGroceryIds: [groceryId] },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
     expect(groceries.publish).toHaveBeenCalledWith(
       "deleted",
       { groceryIds: [groceryId] },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   });
 
@@ -247,7 +247,7 @@ describe("stores procedures", () => {
     expect(groceries.publish).toHaveBeenCalledWith(
       "updated",
       { changedGroceries: [moved] },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   });
 
@@ -312,7 +312,7 @@ describe("stores procedures", () => {
       {
         stores: [reorderedStore],
       },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   });
 
@@ -382,7 +382,7 @@ describe("stores procedures", () => {
       {
         store: saved,
       },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   });
 
@@ -430,7 +430,7 @@ describe("stores procedures", () => {
       expect.objectContaining({
         store: expect.objectContaining({ aisles: [expect.objectContaining({ name: "Zuivel" })] }),
       }),
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   });
 
@@ -491,7 +491,7 @@ describe("stores procedures", () => {
       expect.objectContaining({
         store: expect.objectContaining({ name: "Market" }),
       }),
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   });
 

@@ -45,8 +45,8 @@ const appRouter = router({ cookbooks: cookbooksRouter });
 
 function callerFor(user = createMockUser()) {
   const household = createMockHousehold();
-  // The real base context shape: the authed middleware derives householdKey,
-  // householdUserIds and isServerAdmin from it, so the procedures under test
+  // The real base context shape: the authed middleware derives householdId,
+  // its members and isServerAdmin from it, so the procedures under test
   // see exactly what they see in production.
   const ctx = {
     user,
@@ -94,7 +94,7 @@ describe("cookbook procedures", () => {
       expect(cookbooks.publish).toHaveBeenCalledWith(
         "created",
         { cookbook: summary },
-        { viewPolicy: "household", userId: "test-user-id", householdKey: "test-household-id" }
+        { viewPolicy: "household", userId: "test-user-id", householdId: "test-household-id" }
       );
     });
 
@@ -137,10 +137,8 @@ describe("cookbook procedures", () => {
 
       expect(canAccessResource).toHaveBeenCalledWith(
         "edit",
-        "test-user-id",
-        "someone-else",
-        ["test-user-id", "household-member-id"],
-        false
+        { userId: "test-user-id", householdId: "test-household-id", isServerAdmin: false },
+        "someone-else"
       );
       expect(result?.title).toBe("Christmas baking");
     });
@@ -247,10 +245,8 @@ describe("cookbook procedures", () => {
       });
       expect(canAccessResource).toHaveBeenCalledWith(
         "delete",
-        "test-user-id",
-        "someone-else",
-        ["test-user-id", "household-member-id"],
-        false
+        { userId: "test-user-id", householdId: "test-household-id", isServerAdmin: false },
+        "someone-else"
       );
     });
 
@@ -287,7 +283,7 @@ describe("cookbook procedures", () => {
       expect(listCookbooks).toHaveBeenCalledWith(
         {
           userId: "test-user-id",
-          householdUserIds: ["test-user-id", "household-member-id"],
+          householdId: "test-household-id",
           isServerAdmin: false,
         },
         { limit: 1, offset: 0, search: undefined, sortMode: "dateDesc" }

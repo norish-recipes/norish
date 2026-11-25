@@ -204,18 +204,8 @@ describe("avatar caching contract (ADR-0021)", () => {
           userId: "user-1",
           image: "/avatars/user-1-1755000000000.png",
         },
-        { householdKey: "house-1" }
+        { householdId: "house-1" }
       );
-    });
-
-    it("skips the emit when the user has no household", async () => {
-      mockDb.getUserById.mockResolvedValueOnce({ id: "user-1", image: null, version: 3 });
-      mockDb.updateUserAvatar.mockResolvedValue(committed("/avatars/user-1-1755000000000.png"));
-
-      const result = await createCaller(null).uploadAvatar(buildUploadInput());
-
-      expect(result.success).toBe(true);
-      expect(households.publish).not.toHaveBeenCalled();
     });
 
     it("deletes the just-written file and sweeps nothing on a stale upload", async () => {
@@ -251,7 +241,7 @@ describe("avatar caching contract (ADR-0021)", () => {
           userId: "user-1",
           image: null,
         },
-        { householdKey: "house-1" }
+        { householdId: "house-1" }
       );
     });
 

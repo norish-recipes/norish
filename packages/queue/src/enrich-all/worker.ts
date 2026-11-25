@@ -9,10 +9,10 @@ import { QUEUE_NAMES } from "../queue-names";
 
 /** Exported so the job body can be exercised without a Valkey-backed worker. */
 export async function processEnrichAllJob(job: Job<EnrichAllJobData>): Promise<void> {
-  const { userId, householdKey, replaceExisting } = job.data;
+  const { userId, householdId, replaceExisting } = job.data;
 
   await reportStep(job, "running");
-  const result = await enrollEnrichmentForAllRecipes({ userId, householdKey }, { replaceExisting });
+  const result = await enrollEnrichmentForAllRecipes({ userId, householdId }, { replaceExisting });
 
   await completeStep(job, result);
 }

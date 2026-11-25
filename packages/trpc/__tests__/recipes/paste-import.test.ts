@@ -78,8 +78,7 @@ describe("importFromPasteProcedure", () => {
         batchId: "batch-1",
         recipeIds: ["123e4567-e89b-42d3-a456-426614174001", "123e4567-e89b-42d3-a456-426614174002"],
         userId: user.id,
-        householdKey: ctx.householdKey,
-        householdUserIds: ctx.householdUserIds,
+        householdId: ctx.householdId,
       })
     );
   });

@@ -45,7 +45,11 @@ vi.mock("@norish/shared-server/logger", async (importOriginal) => {
 });
 
 vi.mock("@norish/shared-server/cache/household", () => ({
-  getCachedHouseholdForUser: vi.fn().mockResolvedValue(null),
+  getCachedHouseholdForUser: vi.fn().mockResolvedValue({
+    id: "house-1",
+    name: "My household",
+    users: [{ id: "user-1", name: "" }],
+  }),
 }));
 
 vi.mock("@norish/shared-server/realtime/recipes", () => import("../mocks/realtime/recipes"));
@@ -62,7 +66,7 @@ describe("archiveRouter.importArchive", () => {
         id: "user-1",
       },
       userIds: ["user-1"],
-      householdKey: "house-1",
+      householdId: "house-1",
     } as any);
 
     const formData = new FormData();
@@ -95,7 +99,7 @@ describe("archiveRouter.importArchive", () => {
         id: "user-1",
       },
       userIds: ["user-1"],
-      householdKey: "house-1",
+      householdId: "house-1",
     } as any);
 
     const formData = new FormData();
@@ -126,7 +130,7 @@ describe("archiveRouter.importArchive", () => {
         id: "user-1",
       },
       userIds: ["user-1"],
-      householdKey: "house-1",
+      householdId: "house-1",
     } as any);
 
     const formData = new FormData();
@@ -162,7 +166,7 @@ describe("archiveRouter.importArchive", () => {
     const caller = archiveRouter.createCaller({
       user: { id: "user-1" },
       userIds: ["user-1"],
-      householdKey: "house-1",
+      householdId: "house-1",
     } as any);
 
     const formData = new FormData();
@@ -190,10 +194,10 @@ describe("archiveRouter.importArchive", () => {
     expect(recipes.publish).toHaveBeenCalledWith(
       "recipeBatchCreated",
       { recipes: [recipe] },
-      { viewPolicy: "everyone", userId: "user-1", householdKey: "user-1" }
+      { viewPolicy: "everyone", userId: "user-1", householdId: "house-1" }
     );
     expect(recipes.publish).not.toHaveBeenCalledWith("recipeBatchCreated", expect.anything(), {
-      householdKey: "user-1",
+      householdId: "house-1",
     });
     expect(archive.publish).toHaveBeenCalledWith(
       "archiveProgress",
@@ -228,7 +232,7 @@ describe("archiveRouter.importArchive", () => {
     const caller = archiveRouter.createCaller({
       user: { id: "user-1" },
       userIds: ["user-1"],
-      householdKey: "house-1",
+      householdId: "house-1",
     } as any);
 
     const formData = new FormData();
@@ -255,8 +259,7 @@ describe("archiveRouter.importArchive", () => {
     expect(mockAnnounceUsableRecipe).toHaveBeenCalledTimes(1);
     expect(mockAnnounceUsableRecipe).toHaveBeenCalledWith(inserted, {
       userId: "user-1",
-      householdKey: "user-1",
-      householdUserIds: null,
+      householdId: "house-1",
     });
   });
   it("tells the household about the cookbooks the import made and filed into", async () => {
@@ -284,7 +287,7 @@ describe("archiveRouter.importArchive", () => {
     const caller = archiveRouter.createCaller({
       user: { id: "user-1" },
       userIds: ["user-1"],
-      householdKey: "house-1",
+      householdId: "house-1",
     } as any);
 
     const formData = new FormData();
@@ -304,7 +307,7 @@ describe("archiveRouter.importArchive", () => {
     // The import runs detached from the mutation; let it settle.
     for (let i = 0; i < 5; i += 1) await new Promise((resolve) => setImmediate(resolve));
 
-    const target = { viewPolicy: "everyone", userId: "user-1", householdKey: "user-1" };
+    const target = { viewPolicy: "everyone", userId: "user-1", householdId: "house-1" };
 
     expect(cookbooks.publish).toHaveBeenCalledTimes(3);
     expect(cookbooks.publish).toHaveBeenCalledWith("created", { cookbook: made }, target);
@@ -340,7 +343,7 @@ describe("archiveRouter.importArchive", () => {
     const caller = archiveRouter.createCaller({
       user: { id: "user-1" },
       userIds: ["user-1"],
-      householdKey: "house-1",
+      householdId: "house-1",
     } as any);
 
     const formData = new FormData();

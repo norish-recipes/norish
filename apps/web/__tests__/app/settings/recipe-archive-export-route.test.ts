@@ -42,13 +42,15 @@ function exportRequest(query = ""): Request {
 }
 
 /** The viewer context the export service was asked with. */
+const OWN_HOUSEHOLD = { id: "own-household", users: [] };
+
 function requestedContext() {
   return buildArchiveMock.mock.calls[0]?.[0]?.ctx;
 }
 
 describe("Recipe Archive export route", () => {
   beforeEach(() => {
-    householdMock.mockResolvedValue(null);
+    householdMock.mockResolvedValue(OWN_HOUSEHOLD);
     buildArchiveMock.mockResolvedValue({ stream: Readable.from(["PK"]), recipeCount: 0 });
   });
 
@@ -76,13 +78,16 @@ describe("Recipe Archive export route", () => {
 
   it("asks the visibility layer with the household the viewer belongs to", async () => {
     signedInAs({ id: "user-1" });
-    householdMock.mockResolvedValue({ users: [{ id: "user-1" }, { id: "user-2" }] });
+    householdMock.mockResolvedValue({
+      id: "household-1",
+      users: [{ id: "user-1" }, { id: "user-2" }],
+    });
 
     await GET(exportRequest());
 
     expect(requestedContext()).toEqual({
       userId: "user-1",
-      householdUserIds: ["user-1", "user-2"],
+      householdId: "household-1",
       isServerAdmin: false,
     });
   });
@@ -144,7 +149,7 @@ describe("Recipe Archive export route", () => {
 
     vi.clearAllMocks();
     signedInAs({ id: "admin-1", isServerAdmin: true });
-    householdMock.mockResolvedValue(null);
+    householdMock.mockResolvedValue(OWN_HOUSEHOLD);
     buildArchiveMock.mockResolvedValue({ stream: Readable.from(["PK"]), recipeCount: 0 });
 
     const instance = await GET(exportRequest("?scope=instance"));

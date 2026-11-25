@@ -72,7 +72,7 @@ const fileGroceryName = authedProcedure
       { userId: ctx.user.id, storeId: input.storeId, aisleId: input.aisleId },
       "Filed a grocery name"
     );
-    void stores.publish("aisleFiled", { filing }, { householdKey: ctx.householdKey });
+    void stores.publish("aisleFiled", { filing }, { householdId: ctx.householdId });
 
     return filing;
   });

@@ -29,13 +29,19 @@ export function createMockHousehold(
 
 export function createMockAuthedContext(
   user: User = createMockUser(),
+  // null: the user's own household of one, which every account has at least.
   household: HouseholdWithUsersNamesDto | null = createMockHousehold()
 ) {
+  household ??= createMockHousehold({
+    id: `household-of-${user.id}`,
+    adminUserId: user.id,
+    users: [{ id: user.id, name: user.name ?? "" }],
+  });
+
   return {
     user,
     household,
-    householdKey: household?.id ?? user.id,
-    householdUserIds: household?.users.map((u) => u.id) ?? null,
+    householdId: household.id,
     isServerAdmin: user.isServerAdmin ?? false,
   };
 }

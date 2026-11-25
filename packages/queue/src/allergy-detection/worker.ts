@@ -28,8 +28,7 @@ export function startAllergyDetectionWorker(): void {
     QUEUE_NAMES.ALLERGY_DETECTION,
     (job) =>
       runEnrichmentJob(job, async (recipe) => {
-        const memberIds =
-          job.data.householdUserIds ?? (await getHouseholdMemberIds(job.data.userId));
+        const memberIds = await getHouseholdMemberIds(job.data.householdId);
         const allergies = await getAllergiesForUsers(memberIds);
         const allergiesToDetect = Array.from(new Set(allergies.map((allergy) => allergy.tagName)));
 

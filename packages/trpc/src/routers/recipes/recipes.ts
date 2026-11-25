@@ -202,7 +202,7 @@ export const nutritionProcedure = authedProcedure
       throw new TRPCError({ code: "NOT_FOUND", message: "Recipe not found" });
     }
 
-    return await readRecipeNutrition(recipe, { householdUserIds: ctx.userIds });
+    return await readRecipeNutrition(recipe, { householdId: ctx.householdId });
   });
 
 export const getEditableProcedure = authedProcedure
@@ -276,7 +276,7 @@ export const createRecipeProcedure = authedProcedure
         void recipes.publish(
           "created",
           { recipe: dashboardDto },
-          { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
+          { viewPolicy: policy.view, userId: ctx.user.id, householdId: ctx.householdId }
         );
       }
 
@@ -284,8 +284,7 @@ export const createRecipeProcedure = authedProcedure
       // import: importing is not a prerequisite for automation.
       await announceUsableRecipe(created, {
         userId: ctx.user.id,
-        householdKey: ctx.householdKey,
-        householdUserIds: ctx.householdUserIds,
+        householdId: ctx.householdId,
       });
     });
 
@@ -393,7 +392,7 @@ const updateCategories = authedProcedure
       void recipes.publish(
         "updated",
         { recipe: updated },
-        { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
+        { viewPolicy: policy.view, userId: ctx.user.id, householdId: ctx.householdId }
       );
     }
 
@@ -429,7 +428,7 @@ const deleteProcedure = authedProcedure
       void recipes.publish(
         "deleted",
         { ids: deletedIds },
-        { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
+        { viewPolicy: policy.view, userId: ctx.user.id, householdId: ctx.householdId }
       );
     }
 
@@ -489,8 +488,7 @@ export const importFromUrlProcedure = authedProcedure
       url,
       recipeId,
       userId: ctx.user.id,
-      householdKey: ctx.householdKey,
-      householdUserIds: ctx.householdUserIds,
+      householdId: ctx.householdId,
       forceAI,
     });
 
@@ -539,10 +537,8 @@ export const importStatusProcedure = authedProcedure
       job &&
       (await canAccessResource(
         "view",
-        ctx.user.id,
-        job.data.userId,
-        ctx.householdUserIds,
-        ctx.isServerAdmin
+        { userId: ctx.user.id, householdId: ctx.householdId, isServerAdmin: ctx.isServerAdmin },
+        job.data.userId
       ));
 
     if (job && canView) {
@@ -638,7 +634,7 @@ const convertMeasurements = authedProcedure
       void recipes.publish(
         "converted",
         { recipe, conversion: { target: targetSystem, withAI, version }, stale },
-        { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
+        { viewPolicy: policy.view, userId: ctx.user.id, householdId: ctx.householdId }
       );
     };
 
@@ -672,10 +668,12 @@ const convertMeasurements = authedProcedure
         const permissionCheck = recipe.userId
           ? canAccessResource(
               "edit",
-              ctx.user.id,
-              recipe.userId,
-              ctx.householdUserIds,
-              ctx.isServerAdmin
+              {
+                userId: ctx.user.id,
+                householdId: ctx.householdId,
+                isServerAdmin: ctx.isServerAdmin,
+              },
+              recipe.userId
             )
           : Promise.resolve(true);
 
@@ -726,7 +724,7 @@ const convertMeasurements = authedProcedure
             ? import("@norish/shared-server/ai/enrichment/unit-converter").then(
                 ({ convertRecipeDataWithAI }) => convertRecipeDataWithAI(source, targetSystem)
               )
-            : convertRecipeMeasurements(source, targetSystem, { householdUserIds: ctx.userIds })
+            : convertRecipeMeasurements(source, targetSystem, { householdId: ctx.householdId })
         ).catch((error: unknown) => {
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
@@ -848,8 +846,7 @@ const importFromImagesProcedure = authedProcedure
     const result = await addImageImportJob(queues.imageImport, {
       recipeId,
       userId: ctx.user.id,
-      householdKey: ctx.householdKey,
-      householdUserIds: ctx.householdUserIds,
+      householdId: ctx.householdId,
       files,
     });
 
@@ -895,8 +892,7 @@ export const importFromPasteProcedure = authedProcedure
     const result = await addPasteImportJob(queues.pasteImport, {
       ...preparedImport,
       userId: ctx.user.id,
-      householdKey: ctx.householdKey,
-      householdUserIds: ctx.householdUserIds,
+      householdId: ctx.householdId,
     });
 
     if (result.status === "duplicate") {
@@ -941,8 +937,7 @@ const requestEnrichment = authedProcedure
       {
         recipeId,
         userId: ctx.user.id,
-        householdKey: ctx.householdKey,
-        householdUserIds: ctx.householdUserIds,
+        householdId: ctx.householdId,
       },
       { origin: "manual", kind }
     );

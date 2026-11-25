@@ -482,7 +482,7 @@ export async function getUserAuthorInfo(
 
 /**
  * List every user on the server for the admin user management page.
- * Each user is in at most one household, so the left join can't fan out.
+ * Each user is in exactly one household, so the join neither fans out nor drops anyone.
  */
 export async function listUsersForAdmin(): Promise<AdminUserRowDTO[]> {
   const rows = await db
@@ -498,8 +498,8 @@ export async function listUsersForAdmin(): Promise<AdminUserRowDTO[]> {
       householdName: households.name,
     })
     .from(users)
-    .leftJoin(householdUsers, eq(householdUsers.userId, users.id))
-    .leftJoin(households, eq(households.id, householdUsers.householdId))
+    .innerJoin(householdUsers, eq(householdUsers.userId, users.id))
+    .innerJoin(households, eq(households.id, householdUsers.householdId))
     .orderBy(desc(users.isServerOwner), desc(users.isServerAdmin), users.createdAt);
 
   return rows.map((row) => ({
@@ -510,10 +510,7 @@ export async function listUsersForAdmin(): Promise<AdminUserRowDTO[]> {
     isServerOwner: row.isServerOwner,
     isServerAdmin: row.isServerAdmin,
     createdAt: row.createdAt.getTime(),
-    household:
-      row.householdId && row.householdName
-        ? { id: row.householdId, name: row.householdName }
-        : null,
+    household: { id: row.householdId, name: row.householdName },
   }));
 }
 

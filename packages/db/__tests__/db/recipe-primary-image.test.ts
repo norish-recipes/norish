@@ -18,7 +18,7 @@ import {
   searchRecipesByName,
 } from "@norish/db/repositories/recipes";
 
-import { createTestUser } from "../helpers/db-test-helpers";
+import { createTestUser, testHouseholdOf } from "../helpers/db-test-helpers";
 import { createRecipeWithRefs } from "../helpers/recipe-writes";
 import { RepositoryTestBase } from "../helpers/repository-test-base";
 
@@ -47,7 +47,7 @@ const BASE_RECIPE = {
 };
 
 function listContext() {
-  return { userId, householdUserIds: [userId], isServerAdmin: false };
+  return { userId, householdId: testHouseholdOf(userId), isServerAdmin: false };
 }
 
 async function seedShapes() {

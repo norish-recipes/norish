@@ -45,8 +45,8 @@ vi.mock("@norish/db", () => ({
 }));
 
 vi.mock("@norish/db/repositories/categories", () => ({
-  listCategoryNamesForViewer: vi.fn(async (viewer: { householdUserIds: string[] | null }) =>
-    viewer.householdUserIds?.includes("user-2") ? ["Breakfast", "Drinks"] : ["Breakfast"]
+  listCategoryNamesForViewer: vi.fn(async (viewer: { householdId: string }) =>
+    viewer.householdId === "household-1" ? ["Breakfast", "Drinks"] : ["Breakfast"]
   ),
 }));
 vi.mock("@norish/db/repositories/site-auth-tokens", () => ({
@@ -121,8 +121,7 @@ describe("processImportJob", () => {
         url: "https://example.com/stew",
         recipeId: "recipe-77",
         userId: "user-1",
-        householdKey: "household-1",
-        householdUserIds: null,
+        householdId: "household-1",
       },
     } as unknown as Job<RecipeImportJobData>);
 
@@ -145,8 +144,7 @@ describe("processImportJob", () => {
         url: "https://example.com/margarita",
         recipeId: "recipe-77",
         userId: "user-1",
-        householdKey: "household-1",
-        householdUserIds: ["user-1", "user-2"],
+        householdId: "household-1",
       },
     } as unknown as Job<RecipeImportJobData>);
 
@@ -170,8 +168,7 @@ describe("processImportJob", () => {
           url: "https://example.com/stew",
           recipeId: "recipe-78",
           userId: "user-1",
-          householdKey: "household-1",
-          householdUserIds: null,
+          householdId: "household-1",
         },
       } as unknown as Job<RecipeImportJobData>)
     ).resolves.toBe("recipe-12");
@@ -201,8 +198,7 @@ describe("processImportJob", () => {
         url: "https://example.com/untitled",
         recipeId: "recipe-77",
         userId: "user-1",
-        householdKey: "household-1",
-        householdUserIds: null,
+        householdId: "household-1",
       },
     };
 
@@ -239,8 +235,7 @@ describe("processImportJob", () => {
         url: "https://example.com/untitled",
         recipeId: "recipe-77",
         userId: "user-1",
-        householdKey: "household-1",
-        householdUserIds: null,
+        householdId: "household-1",
       },
     };
 
@@ -268,8 +263,7 @@ describe("processImportJob", () => {
           url: "https://www.instagram.com/reel/ABC123/",
           recipeId: "recipe-77",
           userId: "user-1",
-          householdKey: "household-1",
-          householdUserIds: null,
+          householdId: "household-1",
         },
       }) as unknown as Job<RecipeImportJobData>;
 
@@ -336,8 +330,7 @@ describe("processImportJob", () => {
         url: "https://example.com/about",
         recipeId: "recipe-77",
         userId: "user-1",
-        householdKey: "household-1",
-        householdUserIds: null,
+        householdId: "household-1",
       },
     };
     const failure = await processRecipeImportJob(job as unknown as Job<RecipeImportJobData>).catch(
@@ -370,8 +363,7 @@ describe("processImportJob", () => {
         url: "http://192.168.1.1/",
         recipeId: "recipe-78",
         userId: "user-1",
-        householdKey: "household-1",
-        householdUserIds: null,
+        householdId: "household-1",
       },
     };
     const failure = await processRecipeImportJob(job as unknown as Job<RecipeImportJobData>).catch(
@@ -403,8 +395,7 @@ describe("processImportJob", () => {
         url: "https://example.com/thin",
         recipeId: "recipe-77",
         userId: "user-1",
-        householdKey: "household-1",
-        householdUserIds: null,
+        householdId: "household-1",
       },
     };
 
@@ -449,8 +440,7 @@ describe("processImportJob", () => {
           url,
           recipeId: "recipe-77",
           userId: "user-1",
-          householdKey: "household-1",
-          householdUserIds: null,
+          householdId: "household-1",
         },
       } as unknown as Job<RecipeImportJobData>);
     };

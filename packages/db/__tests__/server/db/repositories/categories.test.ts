@@ -14,7 +14,11 @@ import {
 } from "@norish/db/repositories/recipes";
 import { categories } from "@norish/db/schema";
 
-import { createTestRecipe, createTestUser } from "../../../helpers/db-test-helpers";
+import {
+  createTestRecipe,
+  createTestUser,
+  testHouseholdOf,
+} from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 const testBase = new RepositoryTestBase("test_categories");
@@ -107,7 +111,7 @@ describe("Categories Repository", () => {
     const user = await createTestUser();
     const dinner = await createTestRecipe(user.id, { name: "Stew" });
     const drink = await createTestRecipe(user.id, { name: "Mojito" });
-    const viewer = { userId: user.id, householdUserIds: null, isServerAdmin: false };
+    const viewer = { userId: user.id, householdId: testHouseholdOf(user.id), isServerAdmin: false };
 
     await attach(dinner.id, ["Dinner"]);
     await attach(drink.id, ["Cocktails"]);

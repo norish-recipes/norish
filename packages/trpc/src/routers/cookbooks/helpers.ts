@@ -12,8 +12,7 @@ import { cookbooks } from "@norish/shared-server/realtime/cookbooks";
 
 export type CookbookUserContext = {
   user: { id: string };
-  householdUserIds: string[] | null;
-  householdKey: string;
+  householdId: string;
   isServerAdmin: boolean;
 };
 
@@ -26,7 +25,7 @@ export type CookbookUserContext = {
  * it twice.
  */
 export async function assertCookbookAccess(
-  ctx: Pick<CookbookUserContext, "user" | "householdUserIds" | "isServerAdmin">,
+  ctx: Pick<CookbookUserContext, "user" | "householdId" | "isServerAdmin">,
   cookbookId: string,
   action: PermissionAction
 ) {
@@ -44,10 +43,8 @@ export async function assertCookbookAccess(
 
   const canAccess = await canAccessResource(
     action,
-    ctx.user.id,
-    cookbook.userId,
-    ctx.householdUserIds,
-    ctx.isServerAdmin
+    { userId: ctx.user.id, householdId: ctx.householdId, isServerAdmin: ctx.isServerAdmin },
+    cookbook.userId
   );
 
   if (!canAccess) {
@@ -65,7 +62,7 @@ export async function assertCookbookAccess(
  * the same reach the cookbook itself has.
  */
 export async function emitCookbookEvent<E extends ClientEventName<CookbooksRealtime>>(
-  ctx: Pick<CookbookUserContext, "user" | "householdKey">,
+  ctx: Pick<CookbookUserContext, "user" | "householdId">,
   event: E,
   data: PayloadOf<CookbooksRealtime, E>
 ): Promise<void> {
@@ -75,12 +72,12 @@ export async function emitCookbookEvent<E extends ClientEventName<CookbooksRealt
   const publish = cookbooks.publish as (
     event: E,
     payload: PayloadOf<CookbooksRealtime, E>,
-    target: { viewPolicy: PermissionLevel; userId: string; householdKey: string }
+    target: { viewPolicy: PermissionLevel; userId: string; householdId: string }
   ) => Promise<void>;
 
   await publish(event, data, {
     viewPolicy: policy.view,
     userId: ctx.user.id,
-    householdKey: ctx.householdKey,
+    householdId: ctx.householdId,
   });
 }

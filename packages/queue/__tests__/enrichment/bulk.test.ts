@@ -36,7 +36,7 @@ vi.mock("../../src/enrichment/producer", () => ({ addEnrichmentJob }));
 
 const { enrollEnrichmentForAllRecipes } = await import("../../src/enrichment/bulk");
 
-const requester = { userId: "admin-1", householdKey: "admin-household" };
+const requester = { userId: "admin-1", householdId: "admin-household" };
 
 const ALL_ON = {
   autoTagging: true,
@@ -98,7 +98,7 @@ describe("enrollEnrichmentForAllRecipes", () => {
       expect.objectContaining({
         recipeId: "recipe-2",
         userId: "user-2",
-        householdKey: "household-2",
+        householdId: "household-2",
         origin: "automatic",
         requestedByUserId: undefined,
       })
@@ -199,7 +199,7 @@ describe("enrollEnrichmentForAllRecipes", () => {
       expect.objectContaining({
         recipeId: "recipe-orphan",
         userId: "admin-1",
-        householdKey: "admin-household",
+        householdId: "admin-household",
       })
     );
   });

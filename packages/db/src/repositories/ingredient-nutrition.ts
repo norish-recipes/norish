@@ -15,6 +15,7 @@ import {
 } from "@norish/db/schema";
 
 import type { RecipeListContext } from "./recipes";
+import { householdMemberIdsSql } from "./household-members";
 import { isFirstLineFood } from "./ingredients";
 import { buildOwnerPolicyCondition } from "./recipes";
 
@@ -242,9 +243,9 @@ export interface NutritionCorrectionValues {
  */
 export async function findHouseholdCorrections(
   ingredientIds: readonly string[],
-  householdUserIds: readonly string[]
+  householdId: string
 ): Promise<Map<string, NutritionCorrectionRow>> {
-  if (ingredientIds.length === 0 || householdUserIds.length === 0) return new Map();
+  if (ingredientIds.length === 0) return new Map();
 
   const rows = await db
     .select()
@@ -252,7 +253,7 @@ export async function findHouseholdCorrections(
     .where(
       and(
         inArray(ingredientNutritionCorrections.ingredientId, [...new Set(ingredientIds)]),
-        inArray(ingredientNutritionCorrections.userId, [...new Set(householdUserIds)])
+        inArray(ingredientNutritionCorrections.userId, householdMemberIdsSql(householdId))
       )
     )
     .orderBy(
@@ -306,16 +307,14 @@ export async function saveNutritionCorrection(
  */
 export async function removeHouseholdCorrections(
   ingredientId: string,
-  householdUserIds: readonly string[]
+  householdId: string
 ): Promise<number> {
-  if (householdUserIds.length === 0) return 0;
-
   const removed = await db
     .delete(ingredientNutritionCorrections)
     .where(
       and(
         eq(ingredientNutritionCorrections.ingredientId, ingredientId),
-        inArray(ingredientNutritionCorrections.userId, [...householdUserIds])
+        inArray(ingredientNutritionCorrections.userId, householdMemberIdsSql(householdId))
       )
     )
     .returning({ id: ingredientNutritionCorrections.id });

@@ -118,7 +118,7 @@ async function persistImportedRating(
 async function createStructuredRecipe(
   structuredRecipe: StructuredPasteImportRecipe,
   userId: string,
-  _householdKey: string
+  _householdId: string
 ): Promise<CreateRecipeResult | null> {
   const parsed = FullRecipeInsertSchema.safeParse(structuredRecipe.recipe);
 
@@ -145,8 +145,7 @@ async function createStructuredRecipe(
 export async function processPasteImportJob(
   job: Job<PasteImportJobData>
 ): Promise<PasteImportJobResult> {
-  const { recipeIds, structuredRecipes, userId, householdKey, householdUserIds, text, forceAI } =
-    job.data;
+  const { recipeIds, structuredRecipes, userId, householdId, text, forceAI } = job.data;
 
   log.info(
     { jobId: job.id, recipeIds, attempt: job.attemptsMade + 1 },
@@ -155,7 +154,7 @@ export async function processPasteImportJob(
 
   const policy = await getRecipePermissionPolicy();
   const viewPolicy = policy.view;
-  const ctx = { userId, householdKey };
+  const ctx = { userId, householdId };
 
   recipeIds.forEach((recipeId) => {
     void recipes.publish(
@@ -176,7 +175,7 @@ export async function processPasteImportJob(
     for (const structuredRecipe of structuredRecipes) {
       index++;
       await reportStep(job, `creating-recipes:${index}/${structuredRecipes.length}`);
-      const structuredResult = await createStructuredRecipe(structuredRecipe, userId, householdKey);
+      const structuredResult = await createStructuredRecipe(structuredRecipe, userId, householdId);
 
       if (!structuredResult) {
         continue;
@@ -200,7 +199,7 @@ export async function processPasteImportJob(
       text,
       recipeId,
       forceAI,
-      await listCategoryNamesForViewer({ userId, householdUserIds })
+      await listCategoryNamesForViewer({ householdId })
     );
 
     await reportStep(job, "saving");
@@ -241,7 +240,7 @@ export async function processPasteImportJob(
       { viewPolicy: viewPolicy, ...ctx }
     );
 
-    await announceUsableRecipe(result, { userId, householdKey, householdUserIds });
+    await announceUsableRecipe(result, { userId, householdId });
   }
 
   return { recipeIds: created.map((result) => result.recipeId) };
@@ -253,14 +252,14 @@ async function handleJobFailed(
 ): Promise<void> {
   if (!job) return;
 
-  const { recipeIds, userId, householdKey } = job.data;
+  const { recipeIds, userId, householdId } = job.data;
   const isFinal = isFinalFailure(job, error);
 
   await Promise.all(recipeIds.map((recipeId) => deleteRecipeImagesDir(recipeId)));
 
   if (isFinal) {
     const policy = await getRecipePermissionPolicy();
-    const ctx = { userId, householdKey };
+    const ctx = { userId, householdId };
 
     recipeIds.forEach((recipeId) => {
       void recipes.publish(

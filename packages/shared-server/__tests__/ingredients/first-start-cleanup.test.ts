@@ -46,6 +46,7 @@ import {
   getTestDb,
   insertTestRecipeLine,
   mintTestFood,
+  testHouseholdOf,
 } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 import { seedEntry } from "../helpers/seed-entries";
@@ -145,7 +146,7 @@ describe("the first-start cleanup", () => {
     };
 
     await markDistinct(
-      { userId, householdUserIds: null, isServerAdmin: false },
+      { userId, householdId: testHouseholdOf(userId), memberIds: [userId], isServerAdmin: false },
       joined.ingredientId
     );
     const joinedLine = await insertTestRecipeLine(
@@ -178,7 +179,7 @@ describe("the first-start cleanup", () => {
     });
 
     await markDistinct(
-      { userId, householdUserIds: null, isServerAdmin: false },
+      { userId, householdId: testHouseholdOf(userId), memberIds: [userId], isServerAdmin: false },
       decided.ingredientId
     );
 
@@ -321,10 +322,13 @@ describe("the first-start cleanup", () => {
       [kept.aliasIds[0]!]
     );
 
-    await markDistinct({ userId, householdUserIds: null, isServerAdmin: false }, kept.ingredientId);
+    await markDistinct(
+      { userId, householdId: testHouseholdOf(userId), memberIds: [userId], isServerAdmin: false },
+      kept.ingredientId
+    );
     // A parent 0.25 marked as a person's is no decision: its mark goes first.
     await setParent(
-      { userId, householdUserIds: null, isServerAdmin: false },
+      { userId, householdId: testHouseholdOf(userId), memberIds: [userId], isServerAdmin: false },
       frying.ingredientId,
       oil.ingredientId
     );
@@ -346,7 +350,7 @@ describe("the first-start cleanup", () => {
     );
 
     await setParent(
-      { userId, householdUserIds: null, isServerAdmin: false },
+      { userId, householdId: testHouseholdOf(userId), memberIds: [userId], isServerAdmin: false },
       frying.ingredientId,
       oil.ingredientId
     );
@@ -378,7 +382,7 @@ describe("the first-start cleanup", () => {
     );
 
     await markDistinct(
-      { userId, householdUserIds: null, isServerAdmin: false },
+      { userId, householdId: testHouseholdOf(userId), memberIds: [userId], isServerAdmin: false },
       melted.ingredientId
     );
     await withTransaction((tx) =>
@@ -529,7 +533,7 @@ describe("the first-start cleanup", () => {
     ]);
 
     await markDistinct(
-      { userId, householdUserIds: null, isServerAdmin: false },
+      { userId, householdId: testHouseholdOf(userId), memberIds: [userId], isServerAdmin: false },
       legacy.ingredientId
     );
 
@@ -745,7 +749,12 @@ describe("the first-start cleanup", () => {
   });
 
   it("lets AI ask about and re-file a food whose parent was confirmed in 0.25, not one chosen since", async () => {
-    const actor = { userId, householdUserIds: null, isServerAdmin: false };
+    const actor = {
+      userId,
+      householdId: testHouseholdOf(userId),
+      memberIds: [userId],
+      isServerAdmin: false,
+    };
     const prawns = await oldMint("king prawns", ["king prawns"]);
     const recipe = await createTestRecipe(userId);
     const parentOf = async () =>

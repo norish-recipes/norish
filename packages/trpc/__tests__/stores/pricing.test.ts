@@ -32,7 +32,7 @@ vi.mock("@norish/shared-server/logger", () => ({
 }));
 
 const STORE = "11111111-1111-4111-8111-111111111111";
-const ctx = { userIds: ["user-1"], householdKey: "household-1" };
+const ctx = { userIds: ["user-1"], householdId: "household-1" };
 const searchable = { id: STORE, searchAddress: "https://shop.example.nl/zoeken?q={query}" };
 
 /** A grocery at the Store whose name resolved to the Ingredient named for its lowercase self. */
@@ -67,7 +67,7 @@ describe("asking a Store what an Ingredient means", () => {
         storeId: STORE,
         ingredientId: "ingredient:oude kaas",
         name: "Oude kaas",
-        householdKey: "household-1",
+        householdId: "household-1",
       },
       expect.not.objectContaining({ delay: expect.anything() })
     );
@@ -86,7 +86,7 @@ describe("asking a Store what an Ingredient means", () => {
       {
         link: pending,
       },
-      { householdKey: "household-1" }
+      { householdId: "household-1" }
     );
   });
 
@@ -114,7 +114,7 @@ describe("asking a Store what an Ingredient means", () => {
     expect(stores.publish).toHaveBeenCalledExactlyOnceWith(
       "linkUpdated",
       { link: pending },
-      { householdKey: "household-1" }
+      { householdId: "household-1" }
     );
   });
 

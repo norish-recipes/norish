@@ -11,7 +11,7 @@ import type { RecipeEnrichmentJobData } from "@norish/queue/contracts/job-types"
 
 const mocks = vi.hoisted(() => ({
   getRecipeFull: vi.fn(),
-  getHouseholdMemberIds: vi.fn(),
+  getHouseholdMemberIdsForUser: vi.fn(),
   listCategoryNamesForUsers: vi.fn(),
   replaceRecipeCategories: vi.fn(),
   categorizeRecipe: vi.fn(),
@@ -19,7 +19,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@norish/db", () => ({ getRecipeFull: mocks.getRecipeFull }));
 vi.mock("@norish/db/repositories/households", () => ({
-  getHouseholdMemberIds: mocks.getHouseholdMemberIds,
+  getHouseholdMemberIdsForUser: mocks.getHouseholdMemberIdsForUser,
 }));
 vi.mock("@norish/db/repositories/categories", () => ({
   listCategoryNamesForUsers: mocks.listCategoryNamesForUsers,
@@ -55,8 +55,7 @@ function job(): Job<RecipeEnrichmentJobData> {
       kind: "auto-categorization",
       // An administrator's run: the owner's household decides the list, not theirs.
       userId: "admin-1",
-      householdKey: "admin-household",
-      householdUserIds: null,
+      householdId: "admin-household",
       origin: "manual",
       requestedByUserId: "admin-1",
     },
@@ -72,7 +71,7 @@ describe("processAutoCategorizationJob", () => {
       description: null,
       recipeIngredients: [{ ingredientName: "tequila" }],
     });
-    mocks.getHouseholdMemberIds.mockResolvedValue(["owner-1", "owner-2"]);
+    mocks.getHouseholdMemberIdsForUser.mockResolvedValue(["owner-1", "owner-2"]);
     mocks.listCategoryNamesForUsers.mockResolvedValue(HOUSEHOLD);
     mocks.categorizeRecipe.mockResolvedValue(["Drinks"]);
     mocks.replaceRecipeCategories.mockResolvedValue(true);
@@ -81,7 +80,7 @@ describe("processAutoCategorizationJob", () => {
   it("categorizes from the recipe owner's household list and saves the pick", async () => {
     await processAutoCategorizationJob(job());
 
-    expect(mocks.getHouseholdMemberIds).toHaveBeenCalledWith("owner-1");
+    expect(mocks.getHouseholdMemberIdsForUser).toHaveBeenCalledWith("owner-1");
     expect(mocks.listCategoryNamesForUsers).toHaveBeenCalledWith(["owner-1", "owner-2"]);
     expect(mocks.categorizeRecipe).toHaveBeenCalledWith(
       expect.objectContaining({ title: "Margarita" }),

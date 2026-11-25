@@ -44,7 +44,7 @@ const log = createLogger("worker:recipe-import");
  */
 async function processImportJob(job: Job<RecipeImportJobData>): Promise<string> {
   const parseRecipeFromUrl = requireQueueApiHandler("parseRecipeFromUrl");
-  const { url, recipeId, userId, householdKey, householdUserIds } = job.data;
+  const { url, recipeId, userId, householdId } = job.data;
 
   log.info(
     { jobId: job.id, url, recipeId, attempt: job.attemptsMade + 1 },
@@ -53,14 +53,14 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<string> 
 
   const policy = await getRecipePermissionPolicy();
   const viewPolicy = policy.view;
-  const ctx = { userId, householdKey };
+  const ctx = { userId, householdId };
 
   // Emit import started event
   void recipes.publish("importStarted", { recipeId, url }, { viewPolicy: viewPolicy, ...ctx });
 
   // Check if recipe already exists (policy-aware)
   await reportStep(job, "dedupe-check");
-  const existingCheck = await recipeExistsByUrlForPolicy(url, userId, householdUserIds, viewPolicy);
+  const existingCheck = await recipeExistsByUrlForPolicy(url, userId, householdId, viewPolicy);
 
   await completeStep(job, { alreadyExists: existingCheck.exists });
 
@@ -92,7 +92,7 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<string> 
   // No allergy list is fetched here: extraction reads the source, and allergy
   // detection runs afterwards as its own enrichment kind.
 
-  const householdCategories = await listCategoryNamesForViewer({ userId, householdUserIds });
+  const householdCategories = await listCategoryNamesForViewer({ householdId });
   // One site login per import, and the job records which: an import that dies
   // on an expired or rate-limited account has to be able to name it.
   const sets = credentialSetsForUrl(await getDecryptedTokensByUserId(userId), url);
@@ -179,7 +179,7 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<string> 
     );
   }
 
-  await announceUsableRecipe(created, { userId, householdKey, householdUserIds });
+  await announceUsableRecipe(created, { userId, householdId });
 
   return createdId;
 }
@@ -194,7 +194,7 @@ async function handleJobFailed(
 ): Promise<void> {
   if (!job) return;
 
-  const { url, recipeId, userId, householdKey } = job.data;
+  const { url, recipeId, userId, householdId } = job.data;
   const isFinal = isFinalFailure(job, error);
 
   await deleteRecipeImagesDir(recipeId);
@@ -202,7 +202,7 @@ async function handleJobFailed(
   if (isFinal) {
     // Emit failed event to remove skeleton
     const policy = await getRecipePermissionPolicy();
-    const ctx = { userId, householdKey };
+    const ctx = { userId, householdId };
 
     void recipes.publish(
       "failed",

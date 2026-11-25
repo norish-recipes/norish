@@ -30,13 +30,13 @@ const log = createLogger("worker:image-import");
  */
 export async function processImageImportJob(job: Job<ImageImportJobData>): Promise<void> {
   const extractRecipeFromImages = requireQueueApiHandler("extractRecipeFromImages");
-  const { recipeId, userId, householdKey, householdUserIds, files } = job.data;
+  const { recipeId, userId, householdId, files } = job.data;
 
   log.info({ jobId: job.id, recipeId, fileCount: files.length }, "Processing image import job");
 
   const policy = await getRecipePermissionPolicy();
   const viewPolicy = policy.view;
-  const ctx = { userId, householdKey };
+  const ctx = { userId, householdId };
 
   // Emit import started event (shows skeleton)
   void recipes.publish(
@@ -54,7 +54,7 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
   const parsedRecipe = await extractRecipeFromImages(
     recipeId,
     files,
-    await listCategoryNamesForViewer({ userId, householdUserIds })
+    await listCategoryNamesForViewer({ householdId })
   );
 
   // Save the recipe
@@ -109,7 +109,7 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
 
   // Vision parsing is a reader, not an inference step: an image import enters
   // the same enrichment flow as every other creation path.
-  await announceUsableRecipe(created, { userId, householdKey, householdUserIds });
+  await announceUsableRecipe(created, { userId, householdId });
 
   // A finished import is kept as long as the retention says, but not its
   // images: they are base64 in the job data and would sit in Valkey with it.
@@ -125,13 +125,13 @@ async function handleJobFailed(
 ): Promise<void> {
   if (!job) return;
 
-  const { recipeId, userId, householdKey, files } = job.data;
+  const { recipeId, userId, householdId, files } = job.data;
 
   await deleteRecipeImagesDir(recipeId);
 
   // Emit failed event (removes skeleton)
   const policy = await getRecipePermissionPolicy();
-  const ctx = { userId, householdKey };
+  const ctx = { userId, householdId };
 
   void recipes.publish(
     "failed",

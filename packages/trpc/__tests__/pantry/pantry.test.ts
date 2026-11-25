@@ -81,7 +81,7 @@ describe("the Pantry", () => {
     expect(pantry.publish).toHaveBeenCalledWith(
       "added",
       { item: expect.objectContaining({ id: OLIVE, name: "Olive Oil" }) },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   });
 
@@ -110,7 +110,7 @@ describe("the Pantry", () => {
     expect(pantry.publish).toHaveBeenCalledWith(
       "added",
       { item: expect.objectContaining({ id: ONION, name: "peper" }) },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   });
 
@@ -130,7 +130,7 @@ describe("the Pantry", () => {
     expect(pantry.publish).toHaveBeenCalledWith(
       "added",
       { item: expect.objectContaining({ id: OLIVE, ingredientId: ONION }) },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   });
 
@@ -179,7 +179,7 @@ describe("the Pantry", () => {
     expect(pantry.publish).toHaveBeenCalledWith(
       "removed",
       { itemId: OLIVE },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   });
 

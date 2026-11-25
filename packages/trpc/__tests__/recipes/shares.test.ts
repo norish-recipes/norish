@@ -140,7 +140,7 @@ describe("recipe share procedures", () => {
           version: 1,
         },
       },
-      { viewPolicy: "household", userId: user.id, householdKey: authedCtx.householdKey }
+      { viewPolicy: "household", userId: user.id, householdId: authedCtx.householdId }
     );
     expect(result.url).toBe("/share/token-1");
   });
@@ -450,7 +450,7 @@ describe("recipe share procedures", () => {
           version: 2,
         },
       },
-      { viewPolicy: "household", userId: user.id, householdKey: authedCtx.householdKey }
+      { viewPolicy: "household", userId: user.id, householdId: authedCtx.householdId }
     );
   });
 
@@ -499,7 +499,7 @@ describe("recipe share procedures", () => {
           version: 3,
         },
       },
-      { viewPolicy: "household", userId: user.id, householdKey: authedCtx.householdKey }
+      { viewPolicy: "household", userId: user.id, householdId: authedCtx.householdId }
     );
   });
 
@@ -533,7 +533,7 @@ describe("recipe share procedures", () => {
           version: 4,
         },
       },
-      { viewPolicy: "household", userId: user.id, householdKey: authedCtx.householdKey }
+      { viewPolicy: "household", userId: user.id, householdId: authedCtx.householdId }
     );
   });
 });

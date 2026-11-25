@@ -16,11 +16,16 @@ import {
   tags as tagsTable,
 } from "@norish/db/schema";
 
-import { createTestRecipe, createTestUser, getTestDb } from "../../../helpers/db-test-helpers";
+import {
+  createTestRecipe,
+  createTestUser,
+  getTestDb,
+  testHouseholdOf,
+} from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 function viewer(userId: string): RecipeListContext {
-  return { userId, householdUserIds: null, isServerAdmin: false };
+  return { userId, householdId: testHouseholdOf(userId), isServerAdmin: false };
 }
 
 describe("the discover reads", () => {

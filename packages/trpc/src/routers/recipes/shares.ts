@@ -54,7 +54,7 @@ import { assertRecipeAccess } from "./helpers";
 
 type ShareMutationContext = {
   user: { id: string };
-  householdKey: string;
+  householdId: string;
 };
 
 function toRecipeShareLifecycleEvent(
@@ -79,7 +79,7 @@ async function emitRecipeShareEvent(
   await recipes.publish(
     "shareEvent",
     { kind: type, share: toRecipeShareLifecycleEvent(share, type) },
-    { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
+    { viewPolicy: policy.view, userId: ctx.user.id, householdId: ctx.householdId }
   );
 }
 

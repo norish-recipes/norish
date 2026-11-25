@@ -86,6 +86,6 @@ async function viewPolicy() {
   return (await getRecipePermissionPolicy()).view;
 }
 
-function emitContext(data: RecipeEnrichmentJobData): { userId: string; householdKey: string } {
-  return { userId: data.userId, householdKey: data.householdKey };
+function emitContext(data: RecipeEnrichmentJobData): { userId: string; householdId: string } {
+  return { userId: data.userId, householdId: data.householdId };
 }

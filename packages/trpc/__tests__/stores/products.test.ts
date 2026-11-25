@@ -219,7 +219,7 @@ describe("chooseProduct", () => {
     expect(stores.publish).toHaveBeenCalledWith(
       "productUpdated",
       expect.objectContaining({ product: expect.objectContaining({ id: MANUAL_ID }) }),
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   });
 
@@ -248,7 +248,7 @@ describe("chooseProduct", () => {
     expect(stores.publish).toHaveBeenCalledWith(
       "productUpdated",
       expect.objectContaining({ product: expect.objectContaining({ id: PRODUCT }) }),
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
     expect(storeProductsRepository.upsertProductLink).toHaveBeenCalledWith(
       STORE,

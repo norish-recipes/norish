@@ -18,7 +18,7 @@ const { addEnrichAllJob, ENRICH_ALL_DEDUPLICATION_ID } =
   await import("@norish/queue/enrich-all/producer");
 const { processEnrichAllJob } = await import("@norish/queue/enrich-all/worker");
 
-const data: EnrichAllJobData = { userId: "admin-1", householdKey: "hh-1", replaceExisting: true };
+const data: EnrichAllJobData = { userId: "admin-1", householdId: "hh-1", replaceExisting: true };
 
 describe("Enrich All", () => {
   it("queues one deduplicated job and does not run the sweep", async () => {
@@ -38,7 +38,7 @@ describe("Enrich All", () => {
     await processEnrichAllJob({ data } as Job<EnrichAllJobData>);
 
     expect(enroll).toHaveBeenCalledWith(
-      { userId: "admin-1", householdKey: "hh-1" },
+      { userId: "admin-1", householdId: "hh-1" },
       { replaceExisting: true }
     );
   });

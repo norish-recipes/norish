@@ -115,10 +115,8 @@ describe("requestEnrichment", () => {
     expect(enrichRecipe).not.toHaveBeenCalled();
     expect(canAccessResource).toHaveBeenCalledWith(
       "edit",
-      mockUser.id,
-      "someone-else",
-      expect.anything(),
-      expect.anything()
+      expect.objectContaining({ userId: mockUser.id }),
+      "someone-else"
     );
   });
 

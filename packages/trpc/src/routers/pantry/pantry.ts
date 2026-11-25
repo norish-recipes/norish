@@ -51,7 +51,7 @@ const add = authedProcedure.input(PantryIngredientAddSchema).mutation(async ({ c
   for (const { item, created } of items) {
     if (!created) continue;
     log.info({ userId: ctx.user.id, pantryIngredientId: item.id }, "Pantry ingredient added");
-    void pantry.publish("added", { item }, { householdKey: ctx.householdKey });
+    void pantry.publish("added", { item }, { householdId: ctx.householdId });
   }
 
   return first.item.id;
@@ -71,7 +71,7 @@ const remove = authedProcedure
 
     if (removed) {
       log.info({ userId: ctx.user.id, pantryIngredientId: input.id }, "Pantry ingredient removed");
-      void pantry.publish("removed", { itemId: input.id }, { householdKey: ctx.householdKey });
+      void pantry.publish("removed", { itemId: input.id }, { householdId: ctx.householdId });
     }
 
     return input.id;

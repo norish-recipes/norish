@@ -38,17 +38,24 @@ export function createMockHousehold(
  */
 export function createMockAuthedContext(
   user: User = createMockUser(),
+  // null: the user's own household of one, which every account has at least.
   household: HouseholdWithUsersNamesDto | null = createMockHousehold()
 ) {
-  const householdUserIds = household?.users.map((u) => u.id) ?? [];
-  const allUserIds = [user.id, ...householdUserIds].filter((id, i, arr) => arr.indexOf(id) === i);
+  household ??= createMockHousehold({
+    id: `household-of-${user.id}`,
+    adminUserId: user.id,
+    users: [{ id: user.id, name: user.name ?? "" }],
+  });
+
+  const allUserIds = [user.id, ...household.users.map((u) => u.id)].filter(
+    (id, i, arr) => arr.indexOf(id) === i
+  );
 
   return {
     user,
     household,
-    householdKey: household?.id ?? user.id,
+    householdId: household.id,
     userIds: allUserIds,
-    householdUserIds: householdUserIds.length > 0 ? householdUserIds : null,
     isServerAdmin: user.isServerAdmin ?? false,
   };
 }

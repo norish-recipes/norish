@@ -55,8 +55,7 @@ function importData(overrides: Partial<RecipeImportJobData> = {}): RecipeImportJ
     url: "https://example.com/recipe",
     recipeId: "recipe-1",
     userId: "user-1",
-    householdKey: "household-1",
-    householdUserIds: ["user-1"],
+    householdId: "household-1",
     ...overrides,
   };
 }
@@ -104,7 +103,7 @@ describe("the view policy scopes what counts as the same import", () => {
     await addImportJob(queue, importData());
     const other = await addImportJob(
       queue,
-      importData({ recipeId: "recipe-2", userId: "user-2", householdKey: "household-2" })
+      importData({ recipeId: "recipe-2", userId: "user-2", householdId: "household-2" })
     );
 
     expect(other.status).toBe("duplicate");
@@ -120,7 +119,7 @@ describe("the view policy scopes what counts as the same import", () => {
     );
     const otherHousehold = await addImportJob(
       queue,
-      importData({ recipeId: "recipe-3", userId: "user-3", householdKey: "household-3" })
+      importData({ recipeId: "recipe-3", userId: "user-3", householdId: "household-3" })
     );
 
     expect(sameHousehold.status).toBe("duplicate");

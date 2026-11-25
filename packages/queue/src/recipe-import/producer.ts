@@ -31,7 +31,7 @@ export async function addImportJob(
   const deduplicationId = recipeImportDeduplicationId(
     data.url,
     data.userId,
-    data.householdKey,
+    data.householdId,
     policy.view
   );
 
@@ -43,7 +43,7 @@ export async function addImportJob(
   const existingCheck = await recipeExistsByUrlForPolicy(
     data.url,
     data.userId,
-    data.householdUserIds,
+    data.householdId,
     policy.view
   );
 

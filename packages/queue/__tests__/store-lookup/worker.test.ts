@@ -44,7 +44,7 @@ const match = {
   storeId: STORE,
   ingredientId: "ingredient-kaas",
   name: "kaas",
-  householdKey: "h",
+  householdId: "h",
 };
 
 /** A job as the processor sees it, keeping whatever progress it writes. */
@@ -94,7 +94,7 @@ describe("forgetFailedLookup", () => {
   it("has nothing to clear for a refresh, or for no job at all", async () => {
     await forgetFailedLookup(
       {
-        data: { kind: "refresh", storeId: STORE, productIds: ["p1"], householdKey: "h" },
+        data: { kind: "refresh", storeId: STORE, productIds: ["p1"], householdId: "h" },
         attemptsMade: 2,
         opts: { attempts: 2 },
       },
@@ -148,7 +148,7 @@ describe("startStoreLookupWorker", () => {
       kind: "refresh",
       storeId: STORE,
       productIds: ["p1", "p2", "p3"],
-      householdKey: "h",
+      householdId: "h",
     });
 
     await captured.processor!(job);

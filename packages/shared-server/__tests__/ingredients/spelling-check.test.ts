@@ -43,6 +43,7 @@ import {
   getTestDb,
   insertTestRecipeLine,
   mintTestFood,
+  testHouseholdOf,
 } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 import { seedEntry } from "../helpers/seed-entries";
@@ -101,7 +102,12 @@ describe("AI checks the spellings added to a seeded food", () => {
     const [user] = await testBase.beforeEachTest();
 
     userId = user.id;
-    actor = { userId, householdUserIds: null, isServerAdmin: true };
+    actor = {
+      userId,
+      householdId: testHouseholdOf(userId),
+      memberIds: [userId],
+      isServerAdmin: true,
+    };
     minted.length = 0;
     onIngredientsMinted(async (ids) => void minted.push(...ids));
     vi.mocked(generateStructured).mockReset();

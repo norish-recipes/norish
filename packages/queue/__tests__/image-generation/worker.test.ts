@@ -76,8 +76,7 @@ function jobFor(overrides: Partial<RecipeEnrichmentJobData> = {}): Job<RecipeEnr
     recipeId: "recipe-1",
     kind: "image-generation",
     userId: "user-1",
-    householdKey: "household-1",
-    householdUserIds: ["user-1"],
+    householdId: "household-1",
     origin: "automatic",
     ...overrides,
   };

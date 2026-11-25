@@ -13,7 +13,7 @@ import { router } from "../../trpc";
 
 interface UserContext {
   user: { id: string };
-  householdKey: string;
+  householdId: string;
 }
 
 async function emitRatingFailed(ctx: UserContext, recipeId: string, reason: string): Promise<void> {
@@ -22,7 +22,7 @@ async function emitRatingFailed(ctx: UserContext, recipeId: string, reason: stri
   void ratings.publish(
     "ratingFailed",
     { recipeId, reason },
-    { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
+    { viewPolicy: policy.view, userId: ctx.user.id, householdId: ctx.householdId }
   );
 }
 
@@ -50,7 +50,7 @@ const rate = authedProcedure.input(RatingInputSchema).mutation(({ ctx, input }) 
       void ratings.publish(
         "ratingUpdated",
         { recipeId, averageRating: stats.averageRating, ratingCount: stats.ratingCount },
-        { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
+        { viewPolicy: policy.view, userId: ctx.user.id, householdId: ctx.householdId }
       );
     })
     .catch((err) => {

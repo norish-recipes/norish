@@ -17,8 +17,7 @@ function jobData(): ImageImportJobData {
   return {
     recipeId: "recipe-1",
     userId: "user-1",
-    householdKey: "household-1",
-    householdUserIds: ["user-1"],
+    householdId: "household-1",
     files: [{ data: "aGk=", mimeType: "image/png", filename: "recipe.png" }],
   };
 }

@@ -9,6 +9,7 @@ import type {
   CatalogueIngredient,
   CatalogueOwner,
 } from "@norish/db/repositories/ingredient-catalogue";
+import type { RecipeListContext } from "@norish/db/repositories/recipes";
 import type { CatalogueRefusal, FlagReason } from "@norish/shared/contracts/ingredient-catalogue";
 import type { LocaleNames, NamedFood } from "@norish/shared/lib/ingredient-names";
 import type {
@@ -51,7 +52,6 @@ import {
 import { getIngredientPermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { claimOwnIcon } from "@norish/shared-server/media/ingredient-icon";
 import { isFlagReason } from "@norish/shared/contracts/ingredient-catalogue";
-import { viewerAndHouseholdIds } from "@norish/shared/lib/household";
 import { catalogueLanguagesFor, chooseLocaleNames } from "@norish/shared/lib/ingredient-names";
 import { parseIngredientSearch } from "@norish/shared/lib/ingredient-search";
 import { cleanSpelling, ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
@@ -62,11 +62,9 @@ import { ingredientIcons } from "./icons";
 import { resolveAgain } from "./resolve-again";
 import { cleanIngredientText, forgetSpellingRules } from "./resolver";
 
-/** Who is editing: what the policy is asked about. */
-export interface CatalogueActor {
-  userId: string;
-  householdUserIds: readonly string[] | null;
-  isServerAdmin: boolean;
+/** Who is editing: what the policy is asked about. `memberIds` is their household, them included. */
+export interface CatalogueActor extends RecipeListContext {
+  memberIds: readonly string[];
 }
 
 export type { CatalogueRefusal };
@@ -95,7 +93,7 @@ export function mayEditOwnedRow(
     case "everyone":
       return true;
     case "household":
-      return viewerAndHouseholdIds(actor).includes(ownerId);
+      return actor.memberIds.includes(ownerId);
     default:
       return false;
   }

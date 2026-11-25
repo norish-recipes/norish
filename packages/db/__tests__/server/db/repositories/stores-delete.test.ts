@@ -5,6 +5,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createGroceries } from "@norish/db/repositories/groceries";
 import { createStore, deleteStore, getStoreById } from "@norish/db/repositories/stores";
 
+import { householdIdOf } from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 describe("deleteStore with a grocery snapshot", () => {
@@ -43,7 +44,7 @@ describe("deleteStore with a grocery snapshot", () => {
           },
         },
       ],
-      [userId]
+      await householdIdOf(userId)
     );
 
     const result = await deleteStore(store.id, store.version, true, [
@@ -79,7 +80,7 @@ describe("deleteStore with a grocery snapshot", () => {
           },
         },
       ],
-      [userId]
+      await householdIdOf(userId)
     );
 
     const result = await deleteStore(store.id, store.version, false, [

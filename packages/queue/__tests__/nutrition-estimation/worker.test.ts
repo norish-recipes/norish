@@ -40,7 +40,7 @@ vi.mock("@norish/shared-server/ai/enrichment/nutrition-estimator", () => ({
 }));
 
 vi.mock("@norish/shared-server/ingredients/nutrition/ingredient-nutrition", () => ({
-  NO_HOUSEHOLD: { householdUserIds: [] },
+  NO_CORRECTIONS: { householdId: null },
 }));
 
 vi.mock("@norish/shared-server/ingredients/nutrition/recipe-nutrition", () => ({
@@ -127,8 +127,7 @@ function job(overrides: Partial<RecipeEnrichmentJobData> = {}): Job<RecipeEnrich
       recipeId: "recipe-1",
       kind: "nutrition-estimation",
       userId: "user-1",
-      householdKey: "household-1",
-      householdUserIds: ["user-1"],
+      householdId: "household-1",
       origin: "automatic",
       ...overrides,
     },

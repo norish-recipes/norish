@@ -433,7 +433,8 @@ describe("AI Changes", () => {
     await expect(callerFor().aiChanges()).resolves.toEqual([{ id: CHANGE, kind: "merge" }]);
     expect(aiChanges.listAIChangesFor).toHaveBeenCalledWith({
       userId: ME,
-      householdUserIds: [ME, HOUSEMATE],
+      householdId: "test-household-id",
+      memberIds: [ME, HOUSEMATE],
       isServerAdmin: false,
     });
   });

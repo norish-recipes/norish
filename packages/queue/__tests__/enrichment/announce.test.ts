@@ -30,8 +30,7 @@ const data: RecipeEnrichmentJobData = {
   runSequence: 1,
   kind: "auto-tagging",
   userId: "user-1",
-  householdKey: "household-1",
-  householdUserIds: ["user-1"],
+  householdId: "household-1",
   origin: "manual",
   requestedByUserId: "user-1",
 };
@@ -70,13 +69,13 @@ describe("publishEnrichmentRecipeUpdated", () => {
     expect(mocks.publishRecipe).toHaveBeenCalledWith(
       "updated",
       { recipe, source: "enrichment", kind: data.kind },
-      { viewPolicy: "household", userId: "user-1", householdKey: "household-1" }
+      { viewPolicy: "household", userId: "user-1", householdId: "household-1" }
     );
   });
 });
 
 describe("announceUsableRecipe", () => {
-  const context = { userId: "user-1", householdKey: "household-1", householdUserIds: ["user-1"] };
+  const context = { userId: "user-1", householdId: "household-1" };
 
   it("announces a genuinely new recipe on the internal channel", async () => {
     await announceUsableRecipe({ status: "inserted", recipeId: "recipe-1" }, context);

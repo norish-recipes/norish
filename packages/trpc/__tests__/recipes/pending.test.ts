@@ -39,8 +39,8 @@ const t = initTRPC.context<ReturnType<typeof createMockAuthedContext>>().create(
 describe("recipes.getPending", () => {
   const user = createMockUser();
   const household = createMockHousehold();
-  const ours = { userId: user.id, householdKey: household.id };
-  const theirs = { userId: "someone-else", householdKey: "another-household" };
+  const ours = { userId: user.id, householdId: household.id };
+  const theirs = { userId: "someone-else", householdId: "another-household" };
 
   beforeEach(() => {
     vi.clearAllMocks();

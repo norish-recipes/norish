@@ -25,6 +25,7 @@ import {
   getSpellingTexts,
   getTestDb,
   nameInATestRecipe,
+  testHouseholdOf,
 } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 
@@ -54,7 +55,12 @@ describe("Plain Names", () => {
   beforeEach(async () => {
     const [user] = await testBase.beforeEachTest();
 
-    actor = { userId: user.id, householdUserIds: null, isServerAdmin: false };
+    actor = {
+      userId: user.id,
+      householdId: testHouseholdOf(user.id),
+      memberIds: [user.id],
+      isServerAdmin: false,
+    };
     vi.mocked(generateStructured).mockReset();
     vi.mocked(isAIEnabled).mockResolvedValue(false);
   });

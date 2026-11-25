@@ -90,8 +90,7 @@ describe("processPasteImportJob integration", () => {
         batchId: "batch-integration-1",
         recipeIds: ["123e4567-e89b-42d3-a456-426614174001", "123e4567-e89b-42d3-a456-426614174002"],
         userId,
-        householdKey: "household-test",
-        householdUserIds: [userId],
+        householdId: "household-test",
         text: "structured",
         structuredRecipes: [
           {

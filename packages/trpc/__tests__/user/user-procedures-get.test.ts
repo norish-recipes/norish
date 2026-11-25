@@ -60,7 +60,7 @@ const ctx: Context = {
     isServerAdmin: false,
     version: 1,
   },
-  household: null,
+  household: { id: "house-1", name: "My household", users: [{ id: "user-1", name: "" }] },
   connectionId: null,
   operationId: null,
 };

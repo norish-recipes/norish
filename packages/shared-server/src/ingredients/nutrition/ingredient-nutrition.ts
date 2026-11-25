@@ -58,12 +58,12 @@ import {
 } from "@norish/db/repositories/ingredient-nutrition";
 import { knownExtras } from "@norish/shared/contracts/nutrients";
 
-/** Whose corrections count: a household's members, or nobody's (the catalogue export). */
+/** Whose corrections count: a household's, or nobody's (the catalogue export). */
 export interface NutritionReader {
-  householdUserIds: readonly string[];
+  householdId: string | null;
 }
 
-export const NO_HOUSEHOLD: NutritionReader = { householdUserIds: [] };
+export const NO_CORRECTIONS: NutritionReader = { householdId: null };
 
 /** One step's dataset food for an Ingredient, and where it is from. */
 interface Step {
@@ -111,10 +111,12 @@ function first<T>(offers: ReadonlyArray<Offer<T>>): { value: T; source: Nutritio
 
 /** The corrections, estimates, foods and rules every node of a lineage needs, in five queries. */
 async function readSources(nodes: readonly NutritionNode[], reader: NutritionReader) {
-  const corrections = await findHouseholdCorrections(
-    nodes.map((node) => node.id),
-    reader.householdUserIds
-  );
+  const corrections = reader.householdId
+    ? await findHouseholdCorrections(
+        nodes.map((node) => node.id),
+        reader.householdId
+      )
+    : new Map<string, NutritionCorrectionRow>();
   const estimates = await findNutritionEstimates(nodes.map((node) => node.id));
   const rules = await findNutritionRules(nodes.flatMap((node) => (node.offId ? [node.offId] : [])));
   const fixes = new Map<string, string>();
@@ -417,7 +419,7 @@ export async function findNutritionGaps(
 ): Promise<Map<string, NutritionGaps>> {
   const lineage = await findNutritionLineage(ingredientIds);
   const nodes = [...new Set(ingredientIds)].flatMap((id) => lineage.get(id) ?? []);
-  const sources = await readSources(nodes, NO_HOUSEHOLD);
+  const sources = await readSources(nodes, NO_CORRECTIONS);
   const corrected = new Map<string, NutritionGaps>();
 
   for (const row of await findAnyCorrections(ingredientIds)) {

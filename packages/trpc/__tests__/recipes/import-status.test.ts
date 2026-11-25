@@ -95,7 +95,7 @@ describe("importStatusProcedure", () => {
         recipeId: RECIPE_ID,
         url: "https://example.com/recipe",
         userId: mockUser.id,
-        householdKey: mockHousehold.id,
+        householdId: mockHousehold.id,
       },
       getState: vi.fn().mockResolvedValue("active"),
       progress: { step: "parsing" },
@@ -120,7 +120,7 @@ describe("importStatusProcedure", () => {
         recipeId: RECIPE_ID,
         url: "https://example.com/recipe",
         userId: mockUser.id,
-        householdKey: mockHousehold.id,
+        householdId: mockHousehold.id,
       },
       getState: vi.fn().mockResolvedValue("waiting"),
       progress: null,
@@ -149,7 +149,7 @@ describe("importStatusProcedure", () => {
         recipeId: RECIPE_ID,
         url: "https://example.com/recipe",
         userId: mockUser.id,
-        householdKey: mockHousehold.id,
+        householdId: mockHousehold.id,
       },
       getState: vi.fn().mockResolvedValue("completed"),
       progress: { step: "saving" },
@@ -175,7 +175,7 @@ describe("importStatusProcedure", () => {
         recipeId: RECIPE_ID,
         url: "https://example.com/recipe",
         userId: mockUser.id,
-        householdKey: mockHousehold.id,
+        householdId: mockHousehold.id,
       },
       getState: vi.fn().mockResolvedValue("failed"),
       failedReason: "Failed to parse recipe from URL",
@@ -202,7 +202,7 @@ describe("importStatusProcedure", () => {
         recipeId: RECIPE_ID,
         url: "https://example.com/recipe",
         userId: "other-user",
-        householdKey: "other-household",
+        householdId: "other-household",
       },
       getState: vi.fn().mockResolvedValue("active"),
     });
@@ -213,10 +213,8 @@ describe("importStatusProcedure", () => {
     );
     expect(canAccessResource).toHaveBeenCalledWith(
       "view",
-      ctx.user.id,
-      "other-user",
-      ctx.householdUserIds,
-      ctx.isServerAdmin
+      { userId: ctx.user.id, householdId: ctx.householdId, isServerAdmin: ctx.isServerAdmin },
+      "other-user"
     );
   });
 
@@ -283,7 +281,7 @@ describe("importStatusProcedure", () => {
         recipeId: RECIPE_ID,
         url: "https://example.com/recipe",
         userId: mockUser.id,
-        householdKey: mockHousehold.id,
+        householdId: mockHousehold.id,
       },
       getState: vi.fn().mockImplementation(async () => {
         callCount++;

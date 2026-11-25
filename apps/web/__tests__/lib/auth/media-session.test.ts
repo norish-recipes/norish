@@ -19,7 +19,10 @@ describe("refuseUnlessViewer", () => {
 
   beforeEach(() => {
     readSessionPrincipal.mockResolvedValue({ userId: "reader-id" });
-    getCachedHouseholdForUser.mockResolvedValue({ users: [{ id: "reader-id" }] });
+    getCachedHouseholdForUser.mockResolvedValue({
+      id: "household-1",
+      users: [{ id: "reader-id" }],
+    });
     canAccessResource.mockResolvedValue(false);
     isUserServerAdmin.mockResolvedValue(false);
   });
@@ -38,10 +41,8 @@ describe("refuseUnlessViewer", () => {
 
     expect(canAccessResource).toHaveBeenCalledWith(
       "view",
-      "reader-id",
-      "owner-id",
-      ["reader-id"],
-      false
+      { userId: "reader-id", householdId: "household-1", isServerAdmin: false },
+      "owner-id"
     );
     expect(refused?.status).toBe(404);
   });

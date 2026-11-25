@@ -46,6 +46,7 @@ import {
   getTestDb,
   insertTestRecipeLine,
   nameInATestRecipe,
+  testHouseholdOf,
 } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 
@@ -66,7 +67,12 @@ describe("keeping and undoing AI Changes", () => {
   beforeEach(async () => {
     const [user] = await testBase.beforeEachTest();
 
-    actor = { userId: user.id, householdUserIds: null, isServerAdmin: false };
+    actor = {
+      userId: user.id,
+      householdId: testHouseholdOf(user.id),
+      memberIds: [user.id],
+      isServerAdmin: false,
+    };
     // Every mint here is the words' alone: AI is off, so each is flagged.
     vi.mocked(isAIEnabled).mockResolvedValue(false);
   });
@@ -240,7 +246,12 @@ describe("keeping and undoing AI Changes", () => {
       .returning({ id: ingredients.id });
     const prei = await mint("prei");
     const stranger = await createTestUser();
-    const strangers = { userId: stranger.id, householdUserIds: null, isServerAdmin: false };
+    const strangers = {
+      userId: stranger.id,
+      householdId: testHouseholdOf(stranger.id),
+      memberIds: [stranger.id],
+      isServerAdmin: false,
+    };
 
     await mergeByAI(prei.ingredientId, seeded!.id, false);
     const change = await onlyChange();
@@ -267,7 +278,12 @@ describe("keeping and undoing AI Changes", () => {
     await expect(deleteByAI(melted.ingredientId)).resolves.toBe("applied");
     const change = await onlyChange();
     const stranger = await createTestUser();
-    const strangers = { userId: stranger.id, householdUserIds: null, isServerAdmin: false };
+    const strangers = {
+      userId: stranger.id,
+      householdId: testHouseholdOf(stranger.id),
+      memberIds: [stranger.id],
+      isServerAdmin: false,
+    };
 
     expect(await listAIChangesFor(strangers)).toMatchObject([
       { kind: "not-a-food", ingredient: null, from: "melted", canAct: false },
@@ -294,7 +310,12 @@ describe("keeping and undoing AI Changes", () => {
 
   it("settles many at once: one gone is skipped, one refused is thrown after the rest", async () => {
     const stranger = await createTestUser();
-    const strangers = { userId: stranger.id, householdUserIds: null, isServerAdmin: false };
+    const strangers = {
+      userId: stranger.id,
+      householdId: testHouseholdOf(stranger.id),
+      memberIds: [stranger.id],
+      isServerAdmin: false,
+    };
     const onion = await mint("onion");
     const uien = await mint("uien");
     const leek = await mint("leek", stranger.id);
@@ -315,7 +336,12 @@ describe("keeping and undoing AI Changes", () => {
 
   it("stops listing to who cleared Changed by AI what was settled by then, never an open one", async () => {
     const stranger = await createTestUser();
-    const strangers = { userId: stranger.id, householdUserIds: null, isServerAdmin: false };
+    const strangers = {
+      userId: stranger.id,
+      householdId: testHouseholdOf(stranger.id),
+      memberIds: [stranger.id],
+      isServerAdmin: false,
+    };
     const onion = await mint("onion");
     const uien = await mint("uien");
     const allium = await mint("allium");

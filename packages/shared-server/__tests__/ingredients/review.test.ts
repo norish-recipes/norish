@@ -69,6 +69,7 @@ import {
   insertTestRecipeLine,
   mintTestFood,
   nameInATestRecipe,
+  testHouseholdOf,
 } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 import { foodReading, noFoodReading, severalReading } from "../helpers/ingredient-readings";
@@ -181,7 +182,12 @@ describe("asking AI about an Ingredient", () => {
   beforeEach(async () => {
     const [user] = await testBase.beforeEachTest();
 
-    actor = { userId: user.id, householdUserIds: null, isServerAdmin: false };
+    actor = {
+      userId: user.id,
+      householdId: testHouseholdOf(user.id),
+      memberIds: [user.id],
+      isServerAdmin: false,
+    };
     vi.mocked(decide).mockReset();
     for (const prompt of Object.keys(modelAnswers)) delete modelAnswers[prompt];
     vi.mocked(generateStructured)

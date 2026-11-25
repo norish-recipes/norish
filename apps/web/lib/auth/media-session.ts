@@ -49,9 +49,12 @@ export async function refuseUnlessViewer(
   if (ownerId === null) return null;
 
   const household = await getCachedHouseholdForUser(principal.userId);
-  const householdUserIds = household?.users.map((user: { id: string }) => user.id) ?? null;
+
+  if (!household) return notFound();
+
+  const viewer = { userId: principal.userId, householdId: household.id, isServerAdmin: false };
   const allowed =
-    (await canAccessResource("view", principal.userId, ownerId, householdUserIds, false)) ||
+    (await canAccessResource("view", viewer, ownerId)) ||
     (await isUserServerAdmin(principal.userId));
 
   return allowed ? null : notFound();

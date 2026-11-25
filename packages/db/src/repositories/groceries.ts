@@ -16,6 +16,7 @@ import {
 } from "@norish/shared/contracts/zod";
 
 import type { IngredientRef } from "./ingredient-aliases";
+import { householdMemberIdsSql } from "./household-members";
 
 export async function getGroceryById(id: string): Promise<GroceryDto | null> {
   const [row] = await db.select().from(groceries).where(eq(groceries.id, id)).limit(1);
@@ -172,15 +173,13 @@ function parseRows(rows: unknown[], what: string): GroceryDto[] {
  * Hold the household's list until the transaction ends. Every write of several of its rows takes
  * this before its first, so two such writes wait for each other rather than deadlock.
  */
-export async function lockGroceryList(tx: DbTransaction, householdUserIds: readonly string[]) {
-  const household = [...householdUserIds].sort((a, b) => a.localeCompare(b)).join(",");
-
-  await holdLock(tx, `groceries:${household}`);
+export async function lockGroceryList(tx: DbTransaction, householdId: string) {
+  await holdLock(tx, `groceries:${householdId}`);
 }
 
 export async function createGroceries(
   items: { id: string; groceries: GroceryInsertDto }[],
-  householdUserIds: string[],
+  householdId: string,
   tx: Db = db
 ): Promise<CreatedGroceries> {
   if (!items.length) return { created: [], shifted: [] };
@@ -196,7 +195,7 @@ export async function createGroceries(
   });
 
   return await tx.transaction(async (trx) => {
-    await lockGroceryList(trx, householdUserIds);
+    await lockGroceryList(trx, householdId);
 
     // Group items by storeId for efficient updates
     const storeGroups = new Map<string | null, typeof prepared>();
@@ -221,7 +220,7 @@ export async function createGroceries(
         })
         .where(
           and(
-            inArray(groceries.userId, householdUserIds),
+            inArray(groceries.userId, householdMemberIdsSql(householdId)),
             eq(groceries.isDone, false),
             storeId ? eq(groceries.storeId, storeId) : isNull(groceries.storeId)
           )
@@ -279,7 +278,7 @@ export async function updateGrocery(input: GroceryUpdateDto): Promise<GroceryDto
 
 export async function updateGroceries(
   input: GroceryUpdateDto[],
-  householdUserIds: readonly string[],
+  householdId: string,
   tx: Db = db
 ): Promise<GroceryDto[]> {
   const parsed = z.array(GroceryUpdateBaseSchema).safeParse(input);
@@ -287,7 +286,7 @@ export async function updateGroceries(
   if (!parsed.success) throw new Error("Invalid GroceryUpdateDto array");
 
   return await tx.transaction(async (trx) => {
-    await lockGroceryList(trx, householdUserIds);
+    await lockGroceryList(trx, householdId);
 
     const updatedGroceries: GroceryDto[] = [];
 
@@ -349,14 +348,14 @@ export async function deleteGroceryById(id: string): Promise<void> {
 
 export async function deleteGroceryByIds(
   items: Array<{ id: string; version: number }>,
-  householdUserIds: readonly string[]
+  householdId: string
 ): Promise<{ deletedIds: string[]; staleIds: string[] }> {
   if (items.length === 0) {
     return { deletedIds: [], staleIds: [] };
   }
 
   return await db.transaction(async (trx) => {
-    await lockGroceryList(trx, householdUserIds);
+    await lockGroceryList(trx, householdId);
 
     const deletedIds: string[] = [];
     const staleIds: string[] = [];
@@ -428,12 +427,12 @@ export async function getGroceryOwnerIds(groceryIds: string[]): Promise<Map<stri
  */
 export async function reorderGroceriesInStore(
   updates: { id: string; version: number; sortOrder: number; storeId?: string | null }[],
-  householdUserIds: readonly string[]
+  householdId: string
 ): Promise<GroceryDto[]> {
   if (updates.length === 0) return [];
 
   return await db.transaction(async (trx) => {
-    await lockGroceryList(trx, householdUserIds);
+    await lockGroceryList(trx, householdId);
 
     const updatedGroceries: GroceryDto[] = [];
 
@@ -474,20 +473,18 @@ export async function reorderGroceriesInStore(
  * Returns the updated groceries
  */
 export async function markAllDoneInStore(
-  userIds: string[],
+  householdId: string,
   storeId: string | null,
   groceriesToMark?: Array<{ id: string; version: number }>
 ): Promise<GroceryDto[]> {
-  if (userIds.length === 0) return [];
-
   if (groceriesToMark && groceriesToMark.length === 0) return [];
 
   return await db.transaction(async (trx) => {
-    await lockGroceryList(trx, userIds);
+    await lockGroceryList(trx, householdId);
 
     if (!groceriesToMark) {
       const whereConditions = [
-        inArray(groceries.userId, userIds),
+        inArray(groceries.userId, householdMemberIdsSql(householdId)),
         eq(groceries.isDone, false),
         storeId ? eq(groceries.storeId, storeId) : isNull(groceries.storeId),
       ];
@@ -505,7 +502,7 @@ export async function markAllDoneInStore(
 
     for (const grocery of groceriesToMark) {
       const whereConditions = [
-        inArray(groceries.userId, userIds),
+        inArray(groceries.userId, householdMemberIdsSql(householdId)),
         eq(groceries.id, grocery.id),
         eq(groceries.version, grocery.version),
         eq(groceries.isDone, false),
@@ -532,20 +529,18 @@ export async function markAllDoneInStore(
  * Returns the deleted grocery IDs
  */
 export async function deleteDoneInStore(
-  userIds: string[],
+  householdId: string,
   storeId: string | null,
   groceriesToDelete?: Array<{ id: string; version: number }>
 ): Promise<string[]> {
-  if (userIds.length === 0) return [];
-
   if (groceriesToDelete && groceriesToDelete.length === 0) return [];
 
   return await db.transaction(async (trx) => {
-    await lockGroceryList(trx, userIds);
+    await lockGroceryList(trx, householdId);
 
     if (!groceriesToDelete) {
       const whereConditions = [
-        inArray(groceries.userId, userIds),
+        inArray(groceries.userId, householdMemberIdsSql(householdId)),
         eq(groceries.isDone, true),
         storeId ? eq(groceries.storeId, storeId) : isNull(groceries.storeId),
       ];
@@ -562,7 +557,7 @@ export async function deleteDoneInStore(
 
     for (const grocery of groceriesToDelete) {
       const whereConditions = [
-        inArray(groceries.userId, userIds),
+        inArray(groceries.userId, householdMemberIdsSql(householdId)),
         eq(groceries.id, grocery.id),
         eq(groceries.version, grocery.version),
         eq(groceries.isDone, true),
@@ -589,7 +584,7 @@ export async function deleteDoneInStore(
 export async function assignGroceryToStore(
   groceryId: string,
   newStoreId: string | null,
-  _householdUserIds: string[],
+  _householdId: string,
   version?: number
 ): Promise<GroceryDto | null> {
   const whereConditions = [eq(groceries.id, groceryId)];

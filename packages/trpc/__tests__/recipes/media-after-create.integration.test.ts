@@ -158,7 +158,7 @@ describe("a gallery upload right after recipes.create", () => {
     expect(announced().map((r) => r.images.map((i) => i.id))).toEqual([[image.id], [image.id]]);
     expect(announced()[1]?.videos.map((v) => v.id)).toEqual([video.id]);
     expect(realtime.published.find((entry) => entry.event === "updated")?.target).toEqual(
-      expect.objectContaining({ viewPolicy: "household", householdKey: user.id })
+      expect.objectContaining({ viewPolicy: "household", householdId: user.id })
     );
 
     await caller().deleteGalleryImage({ imageId: image.id, version: image.version ?? 1 });

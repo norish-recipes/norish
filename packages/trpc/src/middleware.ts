@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 
 import type { RecipeListContext } from "@norish/db";
+import type { CatalogueActor } from "@norish/shared-server/ingredients/catalogue";
 import type { FullRecipeDTO, HouseholdWithUsersNamesDto, User } from "@norish/shared/contracts";
 import type { RecipeShareDto } from "@norish/shared/contracts/dto/recipe-shares";
 import type { OperationId } from "@norish/shared/contracts/realtime/envelope";
@@ -10,7 +11,6 @@ import { getRecipeFull } from "@norish/db/repositories/recipes";
 import { getCachedHouseholdForUser } from "@norish/shared-server/cache/household";
 import { runWithOperationContext } from "@norish/shared-server/lib/operation-context";
 import { ResolveSharedRecipeInputSchema } from "@norish/shared/contracts/zod/recipe-shares";
-import { viewerAndHouseholdIds } from "@norish/shared/lib/household";
 
 import type { Context } from "./context";
 import { withIdempotency } from "./idempotency-middleware";
@@ -37,8 +37,11 @@ const withAuth = middleware(async ({ ctx, next }) => {
 
   const household = ctx.household ?? (await getCachedHouseholdForUser(user.id));
 
-  const householdUserIds = household?.users.map((u: { id: string }) => u.id) ?? [];
-  const householdKey = household?.id ?? user.id;
+  // Every account has a household; none means the account was deleted mid-session.
+  if (!household) {
+    throw new TRPCError({ code: "UNAUTHORIZED", message: "Your account no longer exists" });
+  }
+
   const isServerAdmin = user.isServerAdmin ?? false;
 
   const operationId = ctx.operationId ?? undefined;
@@ -49,9 +52,8 @@ const withAuth = middleware(async ({ ctx, next }) => {
         ...ctx,
         user,
         household,
-        householdKey,
-        userIds: viewerAndHouseholdIds({ userId: user.id, householdUserIds }),
-        householdUserIds: householdUserIds.length > 0 ? householdUserIds : null,
+        householdId: household.id,
+        userIds: household.users.map((member: { id: string }) => member.id),
         isServerAdmin,
         operationId: ctx.operationId ?? null,
       },
@@ -62,7 +64,7 @@ const withAuth = middleware(async ({ ctx, next }) => {
 /**
  * Authenticated procedure with full context:
  * - User must be logged in
- * - Household context available (ctx.household, ctx.householdKey, ctx.userIds)
+ * - Household context available (ctx.household, ctx.householdId, and its members as ctx.userIds)
  * - Use canAccessResource from @norish/auth/permissions for permission checks
  *
  * `withIdempotency` runs first: any mutation carrying an `x-operation-id` is
@@ -117,23 +119,32 @@ export const sharedRecipeProcedure = publicProcedure
 export type AuthedProcedureContext = Omit<Context, "household"> & {
   user: User;
   // The request's own household, or the cached one `withAuth` falls back to.
-  household: Context["household"] | HouseholdWithUsersNamesDto | null;
-  householdKey: string;
+  household: NonNullable<Context["household"]> | HouseholdWithUsersNamesDto;
+  householdId: string;
+  /** The household's members, the caller included. */
   userIds: string[];
-  householdUserIds: string[] | null;
   isServerAdmin: boolean;
   operationId: OperationId | null;
 };
 
 /** The caller, as the repositories scope what a viewer may read and edit. */
 export function viewerOf(
-  ctx: Pick<AuthedProcedureContext, "householdUserIds" | "isServerAdmin"> & { user: { id: string } }
+  ctx: Pick<AuthedProcedureContext, "householdId" | "isServerAdmin"> & { user: { id: string } }
 ): RecipeListContext {
   return {
     userId: ctx.user.id,
-    householdUserIds: ctx.householdUserIds,
+    householdId: ctx.householdId,
     isServerAdmin: ctx.isServerAdmin,
   };
+}
+
+/** The caller as the Ingredient catalogue judges an edit: the viewer, with their household's members. */
+export function actorOf(
+  ctx: Pick<AuthedProcedureContext, "householdId" | "isServerAdmin" | "userIds"> & {
+    user: { id: string };
+  }
+): CatalogueActor {
+  return { ...viewerOf(ctx), memberIds: ctx.userIds };
 }
 
 /**

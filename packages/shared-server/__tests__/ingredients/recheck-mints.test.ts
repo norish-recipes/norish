@@ -30,6 +30,7 @@ import {
   getTestDb,
   mintTestFood,
   nameInATestRecipe,
+  testHouseholdOf,
 } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 import { seedEntry } from "../helpers/seed-entries";
@@ -47,7 +48,12 @@ describe("looking at old undecided mints again", () => {
   beforeEach(async () => {
     const [user] = await testBase.beforeEachTest();
 
-    actor = { userId: user.id, householdUserIds: null, isServerAdmin: true };
+    actor = {
+      userId: user.id,
+      householdId: testHouseholdOf(user.id),
+      memberIds: [user.id],
+      isServerAdmin: true,
+    };
     await getTestDb()
       .delete(serverConfig)
       .where(eq(serverConfig.key, ServerConfigKeys.INGREDIENT_SEED_STATE));

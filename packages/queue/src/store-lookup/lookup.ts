@@ -61,17 +61,17 @@ export type LookupStepDetail =
   | { written: boolean };
 
 async function announceLink(
-  householdKey: string,
+  householdId: string,
   storeId: string,
   ingredientId: string
 ): Promise<void> {
   const link = await resolveProductLink(storeId, ingredientId);
 
-  if (link) void stores.publish("linkUpdated", { link }, { householdKey });
+  if (link) void stores.publish("linkUpdated", { link }, { householdId });
 }
 
-function announceProduct(householdKey: string, product: StoreProductDto): void {
-  void stores.publish("productUpdated", { product }, { householdKey });
+function announceProduct(householdId: string, product: StoreProductDto): void {
+  void stores.publish("productUpdated", { product }, { householdId });
 }
 
 /**
@@ -161,11 +161,11 @@ export async function matchGroceryName(input: {
   ingredientId: string;
   /** The grocery's name: what the shop is searched for. */
   name: string;
-  householdKey: string;
+  householdId: string;
   onStep?: (step: string) => Promise<void>;
   onStepDone?: (detail: LookupStepDetail) => Promise<void>;
 }): Promise<{ matched: boolean }> {
-  const { storeId, ingredientId, name, householdKey } = input;
+  const { storeId, ingredientId, name, householdId } = input;
   const store = await getStoreById(storeId);
   // Nothing was learned: the Pending Link the producer wrote goes, so the
   // name is unknown again rather than "being asked" for ever.
@@ -239,7 +239,7 @@ export async function matchGroceryName(input: {
     );
 
     await input.onStepDone?.({ written });
-    await announceLink(householdKey, storeId, ingredientId);
+    await announceLink(householdId, storeId, ingredientId);
 
     return { matched: false };
   }
@@ -261,8 +261,8 @@ export async function matchGroceryName(input: {
   const linked = await linkUnlessGone(() => linkIfUnanswered(storeId, ingredientId, product.id));
 
   await input.onStepDone?.({ written: linked });
-  announceProduct(householdKey, product);
-  await announceLink(householdKey, storeId, ingredientId);
+  announceProduct(householdId, product);
+  await announceLink(householdId, storeId, ingredientId);
   if (linked) {
     log.info(
       {
@@ -306,7 +306,7 @@ async function linkUnlessGone(write: () => Promise<boolean>): Promise<boolean> {
  */
 export async function refreshProducts(input: {
   productIds: string[];
-  householdKey: string;
+  householdId: string;
   now?: Date;
 }): Promise<{ refreshed: number }> {
   const now = input.now ?? new Date();
@@ -338,7 +338,7 @@ export async function refreshProducts(input: {
 
     const updated = await upsertReadProduct(reading);
 
-    announceProduct(input.householdKey, updated);
+    announceProduct(input.householdId, updated);
     refreshed += 1;
   }
 

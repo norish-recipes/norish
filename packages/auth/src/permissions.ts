@@ -3,7 +3,7 @@ import {
   DEFAULT_RECIPE_PERMISSION_POLICY,
   ServerConfigKeys,
 } from "@norish/config/zod/server-config";
-import { getHouseholdForUser } from "@norish/db/repositories/households";
+import { isHouseholdMember } from "@norish/db/repositories/households";
 import { getConfig } from "@norish/db/repositories/server-config";
 
 export async function getRecipePermissionPolicy(): Promise<RecipePermissionPolicy> {
@@ -20,58 +20,35 @@ export async function isAIEnabled(): Promise<boolean> {
 
 export type PermissionAction = "view" | "edit" | "delete";
 
+/** Who is asking: the account, its household, and whether it administers the server. */
+export interface PermissionViewer {
+  userId: string;
+  householdId: string;
+  isServerAdmin: boolean;
+}
+
 export async function canAccessResource(
   action: PermissionAction,
-  userId: string,
-  ownerId: string,
-  userHouseholdUserIds: string[] | null,
-  isServerAdmin: boolean
+  viewer: PermissionViewer,
+  ownerId: string
 ): Promise<boolean> {
-  if (userId === ownerId || isServerAdmin) return true;
+  if (viewer.userId === ownerId || viewer.isServerAdmin) return true;
 
   const policy = await getRecipePermissionPolicy();
-  const policyLevel = policy[action];
 
-  switch (policyLevel) {
+  switch (policy[action]) {
     case "everyone":
       return true;
-
-    case "household": {
-      if (!userHouseholdUserIds) return false;
-
-      // Check if owner is in user's household (households are symmetric)
-      return userHouseholdUserIds.includes(ownerId);
-    }
+    case "household":
+      return isHouseholdMember(viewer.householdId, ownerId);
     default:
       return false;
   }
 }
 
-export async function canAccessHouseholdResource(
-  userId: string,
-  resourceOwnerId: string
-): Promise<boolean> {
-  // Owner always has access
-  if (userId === resourceOwnerId) return true;
-
-  // Check if user shares a household with the owner
-  const userHousehold = await getHouseholdForUser(userId);
-
-  if (!userHousehold) return false;
-
-  // Check if owner is in the user's household
-  const householdUserIds = userHousehold.users.map((u) => u.id);
-
-  return householdUserIds.includes(resourceOwnerId);
-}
-
-export async function assertHouseholdAccess(
-  userId: string,
-  resourceOwnerId: string
-): Promise<void> {
-  const hasAccess = await canAccessHouseholdResource(userId, resourceOwnerId);
-
-  if (!hasAccess) {
+/** Refuses a household row whose owner is not in the caller's household. */
+export async function assertHouseholdAccess(householdId: string, ownerId: string): Promise<void> {
+  if (!(await isHouseholdMember(householdId, ownerId))) {
     throw new Error("FORBIDDEN");
   }
 }

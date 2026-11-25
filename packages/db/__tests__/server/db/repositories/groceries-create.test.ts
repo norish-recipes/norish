@@ -22,13 +22,14 @@ import {
 import { createStore } from "@norish/db/repositories/stores";
 import { groceries } from "@norish/db/schema";
 
-import { getTestDb } from "../../../helpers/db-test-helpers";
+import { getTestDb, householdIdOf } from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 describe("what a create shifts", () => {
   const testBase = new RepositoryTestBase("test_groceries_create");
 
   let userId: string;
+  let householdId: string;
   let storeId: string;
 
   beforeAll(async () => {
@@ -39,6 +40,7 @@ describe("what a create shifts", () => {
     const [user] = await testBase.beforeEachTest();
 
     userId = user.id;
+    householdId = await householdIdOf(userId);
     storeId = (await createStore(crypto.randomUUID(), { userId, name: "Markt" })).id;
   });
 
@@ -62,8 +64,8 @@ describe("what a create shifts", () => {
   });
 
   it("hands back every active sibling in the Store, shifted down at the version it had", async () => {
-    const first = await createGroceries([line("appel")], [userId]);
-    const second = await createGroceries([line("peer")], [userId]);
+    const first = await createGroceries([line("appel")], householdId);
+    const second = await createGroceries([line("peer")], householdId);
 
     expect(first.shifted).toEqual([]);
     expect(second.shifted).toHaveLength(1);
@@ -79,42 +81,42 @@ describe("what a create shifts", () => {
 
   // The writes an offline client queues, each at the version its own earlier writes left the row.
   const rename = (id: string, version: number) =>
-    updateGroceries([{ id, version, name: "havermelk" }], [userId]);
+    updateGroceries([{ id, version, name: "havermelk" }], householdId);
   const tick = (id: string, version: number) =>
-    updateGroceries([{ id, version, isDone: true }], [userId]);
+    updateGroceries([{ id, version, isDone: true }], householdId);
 
   it("keeps an edit queued after the user's own add, at the version read before it", async () => {
-    const [melk] = (await createGroceries([line("melk")], [userId])).created;
+    const [melk] = (await createGroceries([line("melk")], householdId)).created;
 
-    await createGroceries([line("brood")], [userId]);
+    await createGroceries([line("brood")], householdId);
 
     await expect(rename(melk!.id, 1)).resolves.toMatchObject([{ name: "havermelk", version: 2 }]);
   });
 
   it("keeps the edit after ticking another line and adding one", async () => {
-    const [melk, eieren] = (await createGroceries([line("melk"), line("eieren")], [userId]))
+    const [melk, eieren] = (await createGroceries([line("melk"), line("eieren")], householdId))
       .created;
 
     await tick(eieren!.id, 1);
-    await createGroceries([line("brood")], [userId]);
+    await createGroceries([line("brood")], householdId);
 
     await expect(rename(melk!.id, 1)).resolves.toMatchObject([{ name: "havermelk" }]);
   });
 
   it("still refuses an edit after another member changed the line", async () => {
-    const [melk] = (await createGroceries([line("melk")], [userId])).created;
+    const [melk] = (await createGroceries([line("melk")], householdId)).created;
 
-    await updateGroceries([{ id: melk!.id, version: 1, amount: 2 }], [userId]);
+    await updateGroceries([{ id: melk!.id, version: 1, amount: 2 }], householdId);
 
     await expect(rename(melk!.id, 1)).resolves.toEqual([]);
   });
 
   it("leaves a done sibling, and a sibling in another Store, alone", async () => {
     const other = await createStore(crypto.randomUUID(), { userId, name: "Bakker" });
-    const done = await createGroceries([line("klaar", { isDone: true })], [userId]);
-    const elsewhere = await createGroceries([line("brood", { storeId: other.id })], [userId]);
+    const done = await createGroceries([line("klaar", { isDone: true })], householdId);
+    const elsewhere = await createGroceries([line("brood", { storeId: other.id })], householdId);
 
-    const made = await createGroceries([line("peer")], [userId]);
+    const made = await createGroceries([line("peer")], householdId);
 
     expect(made.shifted).toEqual([]);
     await expect(
@@ -126,12 +128,12 @@ describe("what a create shifts", () => {
   });
 
   it("is undone with the caller's transaction, a merge and all", async () => {
-    const [appel] = (await createGroceries([line("appel")], [userId])).created;
+    const [appel] = (await createGroceries([line("appel")], householdId)).created;
 
     await expect(
       withTransaction(async (tx) => {
-        await updateGroceries([{ id: appel!.id, amount: 2 }], [userId], tx);
-        await createGroceries([line("peer")], [userId], tx);
+        await updateGroceries([{ id: appel!.id, amount: 2 }], householdId, tx);
+        await createGroceries([line("peer")], householdId, tx);
         throw new Error("a later write failed");
       })
     ).rejects.toThrow("a later write failed");
@@ -143,7 +145,7 @@ describe("what a create shifts", () => {
 
   // Each writer, unlocked, would hold "appel" while it waits for "kiwi", which the edit holds.
   const writers: Array<[string, (appel: GroceryDto, kiwi: GroceryDto) => Promise<unknown>]> = [
-    ["a create", () => createGroceries([line("druif")], [userId])],
+    ["a create", () => createGroceries([line("druif")], householdId)],
     [
       "an update of several",
       (appel, kiwi) =>
@@ -152,7 +154,7 @@ describe("what a create shifts", () => {
             { id: appel.id, isDone: true },
             { id: kiwi.id, isDone: true },
           ],
-          [userId]
+          householdId
         ),
     ],
     [
@@ -163,7 +165,7 @@ describe("what a create shifts", () => {
             { id: appel.id, version: appel.version, sortOrder: 5 },
             { id: kiwi.id, version: kiwi.version, sortOrder: 6 },
           ],
-          [userId]
+          householdId
         ),
     ],
     [
@@ -174,17 +176,17 @@ describe("what a create shifts", () => {
             { id: appel.id, version: appel.version },
             { id: kiwi.id, version: kiwi.version },
           ],
-          [userId]
+          householdId
         ),
     ],
-    ["marking a Store done", () => markAllDoneInStore([userId], storeId)],
+    ["marking a Store done", () => markAllDoneInStore(householdId, storeId)],
   ];
 
   it.each(writers)(
     "makes %s wait for a write holding the list, rather than deadlock on its rows",
     async (_, write) => {
       const [appel, , kiwi] = (
-        await createGroceries([line("appel"), line("peer"), line("kiwi")], [userId])
+        await createGroceries([line("appel"), line("peer"), line("kiwi")], householdId)
       ).created;
       let edited!: () => void;
       let release!: () => void;
@@ -196,12 +198,12 @@ describe("what a create shifts", () => {
 
       // A rename that adds another food: it locks its row, then moves the list.
       const edit = withTransaction(async (tx) => {
-        await lockGroceryList(tx, [userId]);
-        await updateGroceries([{ id: kiwi!.id, name: "kiwi's" }], [userId], tx);
+        await lockGroceryList(tx, householdId);
+        await updateGroceries([{ id: kiwi!.id, name: "kiwi's" }], householdId, tx);
         edited();
         await held;
 
-        return await createGroceries([line("mango")], [userId], tx);
+        return await createGroceries([line("mango")], householdId, tx);
       });
 
       await editing;
@@ -228,6 +230,7 @@ describe("what a create shifts", () => {
 describe("findNewestGroceryNamed", () => {
   const testBase = new RepositoryTestBase("test_groceries_newest");
   let userId: string;
+  let householdId: string;
 
   beforeAll(async () => {
     await testBase.setup();
@@ -235,6 +238,7 @@ describe("findNewestGroceryNamed", () => {
 
   beforeEach(async () => {
     userId = (await testBase.beforeEachTest())[0].id;
+    householdId = await householdIdOf(userId);
   });
 
   afterAll(async () => {
@@ -259,7 +263,7 @@ describe("findNewestGroceryNamed", () => {
           },
         },
       ],
-      [userId]
+      householdId
     );
 
     return id;
@@ -279,6 +283,7 @@ describe("findNewestGroceryNamed", () => {
 describe("the order a list comes back in", () => {
   const testBase = new RepositoryTestBase("test_groceries_list_order");
   let userId: string;
+  let householdId: string;
 
   beforeAll(async () => {
     await testBase.setup();
@@ -286,6 +291,7 @@ describe("the order a list comes back in", () => {
 
   beforeEach(async () => {
     userId = (await testBase.beforeEachTest())[0].id;
+    householdId = await householdIdOf(userId);
   });
 
   afterAll(async () => {
@@ -310,7 +316,7 @@ describe("the order a list comes back in", () => {
           },
         },
       ],
-      [userId]
+      householdId
     );
 
   it("breaks a sortOrder tie by Store, no Store first, then by id", async () => {

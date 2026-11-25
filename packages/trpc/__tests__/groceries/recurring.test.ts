@@ -145,7 +145,7 @@ describe("recurring groceries procedures", () => {
           recurringGrocery: mockRecurring,
           grocery: mockGrocery,
         },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
 
       expect(groceries.publish).toHaveBeenCalledWith(
@@ -154,7 +154,7 @@ describe("recurring groceries procedures", () => {
           recurringGrocery: mockRecurring,
           grocery: mockGrocery,
         }),
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
     });
 
@@ -175,7 +175,7 @@ describe("recurring groceries procedures", () => {
 
       expect(createRecurringGroceries).toHaveBeenCalledWith(
         [expect.objectContaining({ recurring: expect.objectContaining({ id: clientId }) })],
-        ctx.userIds
+        ctx.householdId
       );
     });
 
@@ -217,7 +217,7 @@ describe("recurring groceries procedures", () => {
             }),
           }),
         ],
-        ctx.userIds
+        ctx.householdId
       );
       for (const name of ["zout", "peper"]) {
         expect(groceries.publish).toHaveBeenCalledWith(
@@ -226,7 +226,7 @@ describe("recurring groceries procedures", () => {
             recurringGrocery: expect.objectContaining({ name }),
             grocery: expect.objectContaining({ name }),
           },
-          { householdKey: ctx.householdKey }
+          { householdId: ctx.householdId }
         );
       }
     });
@@ -255,7 +255,7 @@ describe("recurring groceries procedures", () => {
             }),
           },
         ],
-        ctx.userIds
+        ctx.householdId
       );
     });
   });
@@ -334,7 +334,7 @@ describe("recurring groceries procedures", () => {
               }),
             }),
           ],
-          ctx.userIds,
+          ctx.householdId,
           TX
         )
       );
@@ -368,7 +368,7 @@ describe("recurring groceries procedures", () => {
       await flushAsync();
 
       expect(groceries.publish).toHaveBeenCalledWith("stale", expect.anything(), {
-        householdKey: ctx.householdKey,
+        householdId: ctx.householdId,
       });
       expect(createRecurringGroceries).not.toHaveBeenCalled();
     });
@@ -399,7 +399,7 @@ describe("recurring groceries procedures", () => {
         expect(groceries.publish).toHaveBeenCalledWith(
           "created",
           { groceries: [expect.objectContaining({ name: "peper" })] },
-          { householdKey: ctx.householdKey }
+          { householdId: ctx.householdId }
         )
       );
       // The detach and the new grocery are one transaction.
@@ -409,7 +409,7 @@ describe("recurring groceries procedures", () => {
       );
       expect(createGroceries).toHaveBeenCalledWith(
         [expect.objectContaining({ groceries: expect.objectContaining({ name: "peper" }) })],
-        ctx.userIds,
+        ctx.householdId,
         TX
       );
     });
@@ -444,7 +444,7 @@ describe("recurring groceries procedures", () => {
           recurringGrocery: mockRecurring,
           grocery: mockGrocery,
         },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
 
       expect(groceries.publish).toHaveBeenCalledWith(
@@ -453,7 +453,7 @@ describe("recurring groceries procedures", () => {
           recurringGrocery: mockRecurring,
           grocery: mockGrocery,
         }),
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
     });
   });
@@ -475,13 +475,13 @@ describe("recurring groceries procedures", () => {
         {
           recurringGroceryId,
         },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
 
       expect(groceries.publish).toHaveBeenCalledWith(
         "recurringDeleted",
         { recurringGroceryId },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
     });
 
@@ -507,12 +507,12 @@ describe("recurring groceries procedures", () => {
         {
           groceryIds: ["g1", "g2"],
         },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
       expect(groceries.publish).toHaveBeenCalledWith(
         "recurringDeleted",
         { recurringGroceryId: "r1" },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
     });
 
@@ -531,14 +531,14 @@ describe("recurring groceries procedures", () => {
 
       expect(deleteRecurringGroceryById).toHaveBeenCalledWith("r1", 4);
       expect(groceries.publish).not.toHaveBeenCalledWith("recurringDeleted", expect.anything(), {
-        householdKey: ctx.householdKey,
+        householdId: ctx.householdId,
       });
       expect(groceries.publish).toHaveBeenCalledWith(
         "stale",
         {
           reason: expect.any(String),
         },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
     });
   });
@@ -581,7 +581,7 @@ describe("recurring groceries procedures", () => {
       expect(groceries.publish).toHaveBeenCalledWith(
         "recurringUpdated",
         { recurringGrocery: mockRecurring, grocery: mockGrocery },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
     });
 
@@ -648,10 +648,10 @@ describe("recurring groceries procedures", () => {
         {
           reason: expect.any(String),
         },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
       expect(groceries.publish).not.toHaveBeenCalledWith("recurringUpdated", expect.anything(), {
-        householdKey: ctx.householdKey,
+        householdId: ctx.householdId,
       });
     });
   });
@@ -697,14 +697,14 @@ describe("recurring groceries procedures", () => {
       expect(groceries.publish).toHaveBeenCalledWith(
         "recurringDeleted",
         { recurringGroceryId },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
       expect(groceries.publish).toHaveBeenCalledWith(
         "updated",
         {
           changedGroceries: [detached],
         },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
     });
 
@@ -782,13 +782,13 @@ describe("recurring groceries procedures", () => {
         {
           reason: expect.any(String),
         },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
       expect(groceries.publish).not.toHaveBeenCalledWith("recurringDeleted", expect.anything(), {
-        householdKey: ctx.householdKey,
+        householdId: ctx.householdId,
       });
       expect(groceries.publish).not.toHaveBeenCalledWith("updated", expect.anything(), {
-        householdKey: ctx.householdKey,
+        householdId: ctx.householdId,
       });
     });
   });
@@ -842,7 +842,7 @@ describe("recurring groceries procedures", () => {
       expect(groceries.publish).toHaveBeenCalledWith(
         "recurringUpdated",
         { recurringGrocery: advancedRecurring, grocery: checkedGrocery },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
     });
 
@@ -878,7 +878,7 @@ describe("recurring groceries procedures", () => {
       expect(groceries.publish).toHaveBeenCalledWith(
         "recurringUpdated",
         { recurringGrocery: mockRecurring, grocery: uncheckedGrocery },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
     });
 
@@ -907,10 +907,10 @@ describe("recurring groceries procedures", () => {
         {
           reason: expect.any(String),
         },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
       expect(groceries.publish).not.toHaveBeenCalledWith("recurringUpdated", expect.anything(), {
-        householdKey: ctx.householdKey,
+        householdId: ctx.householdId,
       });
     });
   });
@@ -1027,7 +1027,7 @@ describe("a repeating grocery asks its Store what it knows", () => {
       {
         link,
       },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   });
 
@@ -1058,7 +1058,7 @@ describe("a repeating grocery asks its Store what it knows", () => {
       {
         link,
       },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   });
 
@@ -1091,7 +1091,7 @@ describe("a repeating grocery asks its Store what it knows", () => {
       {
         link,
       },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   });
 });

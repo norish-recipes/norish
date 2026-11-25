@@ -28,7 +28,7 @@ import { publishCalendarItemEvent } from "./publish";
 export type CalendarProcedureContext = {
   user: { id: string };
   userIds: string[];
-  householdKey: string;
+  householdId: string;
 };
 
 type PlannedItemWithRecipeRow = Awaited<
@@ -167,7 +167,7 @@ export async function createCalendarItem(ctx: CalendarProcedureContext, input: C
     calories: itemWithRecipe?.calories ?? null,
   });
 
-  await publishCalendarItemEvent("itemCreated", { item: itemPayload }, ctx.householdKey);
+  await publishCalendarItemEvent("itemCreated", { item: itemPayload }, ctx.householdId);
 
   // The item rides the response so the actor's own caches converge without
   // waiting on the realtime echo; the REST route's output schema keeps `id`.
@@ -204,7 +204,7 @@ export async function deleteCalendarItem(
   await publishCalendarItemEvent(
     "itemDeleted",
     { itemId, date: item.date, slot: item.slot },
-    ctx.householdKey
+    ctx.householdId
   );
 
   return { success: true, stale: false };
@@ -233,7 +233,7 @@ export async function publishItemMoved(
       oldSlot: from.slot,
       oldSortOrder: from.sortOrder,
     },
-    ctx.householdKey
+    ctx.householdId
   );
 }
 
@@ -302,7 +302,7 @@ export async function editCalendarItem(
   if (!payload) return { success: true, stale: false };
 
   if (moves) await publishItemMoved(ctx, item, payload);
-  else await publishCalendarItemEvent("itemUpdated", { item: payload }, ctx.householdKey);
+  else await publishCalendarItemEvent("itemUpdated", { item: payload }, ctx.householdId);
 
   // The item rides the answer, as a create's does: the echo is the fast path (ADR-0011).
   return { success: true, stale: false, item: payload };

@@ -14,7 +14,7 @@ type CalendarItemPayload<E extends CalendarItemEvent> = PayloadOf<CalendarRealti
 const publishToHousehold = calendar.publish as <E extends CalendarItemEvent>(
   event: E,
   payload: CalendarItemPayload<E>,
-  target: { householdKey: string }
+  target: { householdId: string }
 ) => Promise<void>;
 const publishInternal = calendar.publish as <E extends CalendarItemEvent>(
   event: (typeof calendarInternalCompanion)[E],
@@ -31,8 +31,8 @@ const publishInternal = calendar.publish as <E extends CalendarItemEvent>(
 export async function publishCalendarItemEvent<E extends CalendarItemEvent>(
   event: E,
   payload: CalendarItemPayload<E>,
-  householdKey: string
+  householdId: string
 ): Promise<void> {
-  await publishToHousehold(event, payload, { householdKey });
+  await publishToHousehold(event, payload, { householdId });
   await publishInternal(calendarInternalCompanion[event], payload, undefined);
 }

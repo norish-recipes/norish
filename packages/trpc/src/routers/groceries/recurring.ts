@@ -115,11 +115,11 @@ async function announceRecurring(ctx: GroceryProcedureContext, made: CreatedRecu
       {
         changedGroceries: made.shifted,
       },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   }
   for (const created of made.created) {
-    void groceries.publish("recurringCreated", created, { householdKey: ctx.householdKey });
+    void groceries.publish("recurringCreated", created, { householdId: ctx.householdId });
   }
 }
 
@@ -149,7 +149,8 @@ const createRecurring = authedProcedure
       const parts = await groceryPartsOf(input);
       const made = await writeResolved(
         () => resolveGroceryNames(parts, { userId: ctx.user.id }),
-        (foods) => createRecurringGroceries(recurringRows(ctx, input, parts, foods), ctx.userIds)
+        (foods) =>
+          createRecurringGroceries(recurringRows(ctx, input, parts, foods), ctx.householdId)
       );
       const [first] = made.created;
 
@@ -226,7 +227,7 @@ const updateRecurring = authedProcedure
             }),
           ([food, ...foods]) =>
             withTransaction(async (tx) => {
-              await lockGroceryList(tx, ctx.userIds);
+              await lockGroceryList(tx, ctx.householdId);
 
               // An unchanged name keeps the food it had.
               const ingredient = renamed && ingredientColumns(food);
@@ -255,7 +256,9 @@ const updateRecurring = authedProcedure
               return {
                 outcome,
                 made:
-                  rows.length > 0 ? await createRecurringGroceries(rows, ctx.userIds, tx) : null,
+                  rows.length > 0
+                    ? await createRecurringGroceries(rows, ctx.householdId, tx)
+                    : null,
               };
             })
         );
@@ -270,7 +273,7 @@ const updateRecurring = authedProcedure
             {
               reason: "Recurring grocery was updated elsewhere",
             },
-            { householdKey: ctx.householdKey }
+            { householdId: ctx.householdId }
           );
 
           return { success: true, stale: true };
@@ -292,7 +295,7 @@ const updateRecurring = authedProcedure
             recurringGrocery: outcome.value.recurringGrocery,
             grocery: outcome.value.grocery,
           },
-          { householdKey: ctx.householdKey }
+          { householdId: ctx.householdId }
         );
 
         if (made) await announceRecurring(ctx, made);
@@ -377,7 +380,7 @@ const detachRecurring = authedProcedure
             {
               reason: "Grocery was updated elsewhere",
             },
-            { householdKey: ctx.householdKey }
+            { householdId: ctx.householdId }
           );
 
           return { success: true, stale: true };
@@ -396,7 +399,7 @@ const detachRecurring = authedProcedure
           {
             recurringGroceryId,
           },
-          { householdKey: ctx.householdKey }
+          { householdId: ctx.householdId }
         );
 
         return { success: true, stale: false };
@@ -444,7 +447,7 @@ const deleteRecurring = authedProcedure
             {
               reason: "Recurring grocery was updated elsewhere",
             },
-            { householdKey: ctx.householdKey }
+            { householdId: ctx.householdId }
           );
 
           return { success: true, stale: true };
@@ -458,7 +461,7 @@ const deleteRecurring = authedProcedure
             {
               groceryIds: result.deletedGroceryIds,
             },
-            { householdKey: ctx.householdKey }
+            { householdId: ctx.householdId }
           );
         }
 
@@ -467,7 +470,7 @@ const deleteRecurring = authedProcedure
           {
             recurringGroceryId,
           },
-          { householdKey: ctx.householdKey }
+          { householdId: ctx.householdId }
         );
 
         return { success: true, stale: false };
@@ -561,7 +564,7 @@ const checkRecurring = authedProcedure
             {
               reason: "Grocery was updated elsewhere",
             },
-            { householdKey: ctx.householdKey }
+            { householdId: ctx.householdId }
           );
 
           return { success: true, stale: true };
@@ -574,7 +577,7 @@ const checkRecurring = authedProcedure
             recurringGrocery: outcome.value.recurringGrocery ?? recurringGrocery,
             grocery: outcome.value.grocery,
           },
-          { householdKey: ctx.householdKey }
+          { householdId: ctx.householdId }
         );
 
         return { success: true, stale: false };

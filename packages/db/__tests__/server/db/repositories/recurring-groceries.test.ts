@@ -14,7 +14,7 @@ import {
 } from "@norish/db/repositories/recurring-groceries";
 import { groceries, recurringGroceries, stores } from "@norish/db/schema";
 
-import { getTestDb } from "../../../helpers/db-test-helpers";
+import { getTestDb, householdIdOf } from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 describe("recurring groceries transactional writes", () => {
@@ -73,7 +73,7 @@ describe("recurring groceries transactional writes", () => {
   async function createRecurringWithGrocery() {
     const {
       created: [made],
-    } = await createRecurringGroceries([recurringRow("Milk")], [testUserId]);
+    } = await createRecurringGroceries([recurringRow("Milk")], await householdIdOf(testUserId));
 
     return { recurring: made!.recurringGrocery, grocery: made!.grocery };
   }
@@ -82,7 +82,7 @@ describe("recurring groceries transactional writes", () => {
     it("creates each recurring grocery with the grocery it puts on the list", async () => {
       const { created } = await createRecurringGroceries(
         [recurringRow("Zout"), recurringRow("Peper")],
-        [testUserId]
+        await householdIdOf(testUserId)
       );
 
       expect(
@@ -101,7 +101,7 @@ describe("recurring groceries transactional writes", () => {
       await expect(
         createRecurringGroceries(
           [recurringRow("Zout"), recurringRow("Peper", { storeId: crypto.randomUUID() })],
-          [testUserId]
+          await householdIdOf(testUserId)
         )
       ).rejects.toThrow();
 
@@ -130,7 +130,11 @@ describe("recurring groceries transactional writes", () => {
           },
           tx
         );
-        const made = await createRecurringGroceries([recurringRow("Zout")], [testUserId], tx);
+        const made = await createRecurringGroceries(
+          [recurringRow("Zout")],
+          await householdIdOf(testUserId),
+          tx
+        );
 
         return [updated.stale, detached.stale, made.created.length];
       });
@@ -155,7 +159,11 @@ describe("recurring groceries transactional writes", () => {
     it("is undone with the transaction", async () => {
       await expect(
         withTransaction(async (tx) => {
-          await createRecurringGroceries([recurringRow("Zout")], [testUserId], tx);
+          await createRecurringGroceries(
+            [recurringRow("Zout")],
+            await householdIdOf(testUserId),
+            tx
+          );
           throw new Error("a later write failed");
         })
       ).rejects.toThrow("a later write failed");

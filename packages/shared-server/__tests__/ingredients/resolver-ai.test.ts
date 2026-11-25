@@ -31,7 +31,7 @@ import {
 import { resolveIngredients } from "@norish/shared-server/ingredients/resolver";
 import { askAIAbout } from "@norish/shared-server/ingredients/review";
 
-import { getTestDb } from "../../../db/__tests__/helpers/db-test-helpers";
+import { getTestDb, testHouseholdOf } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 import { foodReading, noFoodReading } from "../helpers/ingredient-readings";
 
@@ -170,7 +170,10 @@ describe("ingredient resolver with AI on", () => {
 
     expect(others).toEqual([]);
     expect(change).toMatchObject({ sure: true, undo: { kind: "not-a-food" } });
-    await undoAIChange({ userId, householdUserIds: null, isServerAdmin: false }, change!.id);
+    await undoAIChange(
+      { userId, householdId: testHouseholdOf(userId), memberIds: [userId], isServerAdmin: false },
+      change!.id
+    );
     await expect(getRecipeFull(recipeId)).resolves.toMatchObject({
       recipeIngredients: [{ ingredientName: "melted", ingredientId: melted.ingredientId }],
     });
@@ -202,7 +205,10 @@ describe("ingredient resolver with AI on", () => {
 
     const [change] = await listAIChanges();
 
-    await undoAIChange({ userId, householdUserIds: null, isServerAdmin: false }, change!.id);
+    await undoAIChange(
+      { userId, householdId: testHouseholdOf(userId), memberIds: [userId], isServerAdmin: false },
+      change!.id
+    );
     await expect(listJunkFolds()).resolves.toEqual([]);
     const restored = await saved(["melted"]);
 

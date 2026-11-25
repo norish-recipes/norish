@@ -35,7 +35,7 @@ import {
 import { ingredientIcons } from "@norish/shared-server/ingredients/icons";
 import { resolveIngredients } from "@norish/shared-server/ingredients/resolver";
 
-import { getTestDb } from "../../../db/__tests__/helpers/db-test-helpers";
+import { getTestDb, testHouseholdOf } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 
 // The image provider, drawing a plain square: the cut-out and the store are real.
@@ -75,7 +75,12 @@ describe("Ingredient Icons", () => {
   beforeEach(async () => {
     const [user] = await testBase.beforeEachTest();
 
-    actor = { userId: user.id, householdUserIds: null, isServerAdmin: false };
+    actor = {
+      userId: user.id,
+      householdId: testHouseholdOf(user.id),
+      memberIds: [user.id],
+      isServerAdmin: false,
+    };
   });
 
   afterAll(async () => {

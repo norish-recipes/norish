@@ -13,7 +13,11 @@ import { groceries, ingredients } from "@norish/db/schema";
 import { groceryParts, resolveGroceryNames } from "@norish/shared-server/ingredients/groceries";
 import { withResolvedIngredients } from "@norish/shared-server/ingredients/recipe-lines";
 
-import { getTestDb, mintTestFood } from "../../../db/__tests__/helpers/db-test-helpers";
+import {
+  getTestDb,
+  mintTestFood,
+  testHouseholdOf,
+} from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 
 describe("grocery names through aliases", () => {
@@ -194,7 +198,7 @@ describe("grocery names through aliases", () => {
             },
           },
         ],
-        [userId]
+        testHouseholdOf(userId)
       );
 
       await expect(

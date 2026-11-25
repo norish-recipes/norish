@@ -45,10 +45,12 @@ describe("recipe permission enforcement", () => {
             if (r.userId) {
               const can = await canAccessResource(
                 "view",
-                ctx.user.id,
-                r.userId,
-                ctx.householdUserIds,
-                ctx.isServerAdmin
+                {
+                  userId: ctx.user.id,
+                  householdId: ctx.householdId,
+                  isServerAdmin: ctx.isServerAdmin,
+                },
+                r.userId
               );
 
               if (!can) return null;
@@ -61,7 +63,11 @@ describe("recipe permission enforcement", () => {
       const caller = t.createCallerFactory(testRouter)(ctx);
       const result = await caller.get({ id: "r1" });
 
-      expect(canAccessResource).toHaveBeenCalledWith("view", "owner-id", "owner-id", null, false);
+      expect(canAccessResource).toHaveBeenCalledWith(
+        "view",
+        expect.objectContaining({ userId: "owner-id", isServerAdmin: false }),
+        "owner-id"
+      );
       expect(result).toBeTruthy();
     });
 
@@ -84,10 +90,12 @@ describe("recipe permission enforcement", () => {
             if (r.userId) {
               const can = await canAccessResource(
                 "view",
-                ctx.user.id,
-                r.userId,
-                ctx.householdUserIds,
-                ctx.isServerAdmin
+                {
+                  userId: ctx.user.id,
+                  householdId: ctx.householdId,
+                  isServerAdmin: ctx.isServerAdmin,
+                },
+                r.userId
               );
 
               if (!can) return null;
@@ -100,7 +108,11 @@ describe("recipe permission enforcement", () => {
       const caller = t.createCallerFactory(testRouter)(ctx);
       const result = await caller.get({ id: "r1" });
 
-      expect(canAccessResource).toHaveBeenCalledWith("view", "admin-id", "other-user", null, true);
+      expect(canAccessResource).toHaveBeenCalledWith(
+        "view",
+        expect.objectContaining({ userId: "admin-id", isServerAdmin: true }),
+        "other-user"
+      );
       expect(result).toBeTruthy();
     });
 
@@ -129,10 +141,12 @@ describe("recipe permission enforcement", () => {
             if (r.userId) {
               const can = await canAccessResource(
                 "view",
-                ctx.user.id,
-                r.userId,
-                ctx.householdUserIds,
-                ctx.isServerAdmin
+                {
+                  userId: ctx.user.id,
+                  householdId: ctx.householdId,
+                  isServerAdmin: ctx.isServerAdmin,
+                },
+                r.userId
               );
 
               if (!can) return null;
@@ -147,10 +161,8 @@ describe("recipe permission enforcement", () => {
 
       expect(canAccessResource).toHaveBeenCalledWith(
         "view",
-        "member-id",
-        "owner-id",
-        ["member-id", "owner-id"],
-        false
+        expect.objectContaining({ userId: "member-id", isServerAdmin: false }),
+        "owner-id"
       );
       expect(result).toBeTruthy();
     });
@@ -174,10 +186,12 @@ describe("recipe permission enforcement", () => {
             if (r.userId) {
               const can = await canAccessResource(
                 "view",
-                ctx.user.id,
-                r.userId,
-                ctx.householdUserIds,
-                ctx.isServerAdmin
+                {
+                  userId: ctx.user.id,
+                  householdId: ctx.householdId,
+                  isServerAdmin: ctx.isServerAdmin,
+                },
+                r.userId
               );
 
               if (!can) return null;
@@ -192,10 +206,8 @@ describe("recipe permission enforcement", () => {
 
       expect(canAccessResource).toHaveBeenCalledWith(
         "view",
-        "outsider-id",
-        "owner-id",
-        null,
-        false
+        expect.objectContaining({ userId: "outsider-id", isServerAdmin: false }),
+        "owner-id"
       );
       expect(result).toBeNull();
     });
@@ -218,10 +230,12 @@ describe("recipe permission enforcement", () => {
             if (ownerId !== null) {
               const can = await canAccessResource(
                 "edit",
-                ctx.user.id,
-                ownerId,
-                ctx.householdUserIds,
-                ctx.isServerAdmin
+                {
+                  userId: ctx.user.id,
+                  householdId: ctx.householdId,
+                  isServerAdmin: ctx.isServerAdmin,
+                },
+                ownerId
               );
 
               if (!can) throw new Error("FORBIDDEN");
@@ -234,7 +248,11 @@ describe("recipe permission enforcement", () => {
       const caller = t.createCallerFactory(testRouter)(ctx);
       const result = await caller.update({ id: "r1", data: {} });
 
-      expect(canAccessResource).toHaveBeenCalledWith("edit", "owner-id", "owner-id", null, false);
+      expect(canAccessResource).toHaveBeenCalledWith(
+        "edit",
+        expect.objectContaining({ userId: "owner-id", isServerAdmin: false }),
+        "owner-id"
+      );
       expect(result).toEqual({ success: true });
     });
 
@@ -254,10 +272,12 @@ describe("recipe permission enforcement", () => {
             if (ownerId !== null) {
               const can = await canAccessResource(
                 "edit",
-                ctx.user.id,
-                ownerId,
-                ctx.householdUserIds,
-                ctx.isServerAdmin
+                {
+                  userId: ctx.user.id,
+                  householdId: ctx.householdId,
+                  isServerAdmin: ctx.isServerAdmin,
+                },
+                ownerId
               );
 
               if (!can) throw new Error("FORBIDDEN");
@@ -290,10 +310,12 @@ describe("recipe permission enforcement", () => {
             if (ownerId !== null) {
               const can = await canAccessResource(
                 "delete",
-                ctx.user.id,
-                ownerId,
-                ctx.householdUserIds,
-                ctx.isServerAdmin
+                {
+                  userId: ctx.user.id,
+                  householdId: ctx.householdId,
+                  isServerAdmin: ctx.isServerAdmin,
+                },
+                ownerId
               );
 
               if (!can) throw new Error("FORBIDDEN");
@@ -306,7 +328,11 @@ describe("recipe permission enforcement", () => {
       const caller = t.createCallerFactory(testRouter)(ctx);
       const result = await caller.delete({ id: "r1" });
 
-      expect(canAccessResource).toHaveBeenCalledWith("delete", "owner-id", "owner-id", null, false);
+      expect(canAccessResource).toHaveBeenCalledWith(
+        "delete",
+        expect.objectContaining({ userId: "owner-id", isServerAdmin: false }),
+        "owner-id"
+      );
       expect(result).toEqual({ success: true });
     });
 
@@ -332,10 +358,12 @@ describe("recipe permission enforcement", () => {
             if (ownerId !== null) {
               const can = await canAccessResource(
                 "delete",
-                ctx.user.id,
-                ownerId,
-                ctx.householdUserIds,
-                ctx.isServerAdmin
+                {
+                  userId: ctx.user.id,
+                  householdId: ctx.householdId,
+                  isServerAdmin: ctx.isServerAdmin,
+                },
+                ownerId
               );
 
               if (!can) throw new Error("FORBIDDEN");
@@ -366,10 +394,12 @@ describe("recipe permission enforcement", () => {
             if (ownerId !== null) {
               const can = await canAccessResource(
                 "delete",
-                ctx.user.id,
-                ownerId,
-                ctx.householdUserIds,
-                ctx.isServerAdmin
+                {
+                  userId: ctx.user.id,
+                  householdId: ctx.householdId,
+                  isServerAdmin: ctx.isServerAdmin,
+                },
+                ownerId
               );
 
               if (!can) throw new Error("FORBIDDEN");
@@ -382,7 +412,11 @@ describe("recipe permission enforcement", () => {
       const caller = t.createCallerFactory(testRouter)(ctx);
       const result = await caller.delete({ id: "r1" });
 
-      expect(canAccessResource).toHaveBeenCalledWith("delete", "admin-id", "owner-id", null, true);
+      expect(canAccessResource).toHaveBeenCalledWith(
+        "delete",
+        expect.objectContaining({ userId: "admin-id", isServerAdmin: true }),
+        "owner-id"
+      );
       expect(result).toEqual({ success: true });
     });
   });
@@ -407,7 +441,7 @@ describe("recipe permission enforcement", () => {
             const result = await listRecipes(
               {
                 userId: ctx.user.id,
-                householdUserIds: ctx.householdUserIds,
+                householdId: ctx.householdId,
                 isServerAdmin: ctx.isServerAdmin,
               },
               input.limit,
@@ -433,7 +467,7 @@ describe("recipe permission enforcement", () => {
       expect(listRecipes).toHaveBeenCalledWith(
         {
           userId: "user-id",
-          householdUserIds: ["user-id", "other-id"],
+          householdId: "test-household-id",
           isServerAdmin: false,
         },
         50,

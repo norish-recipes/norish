@@ -17,7 +17,6 @@ import type {
 import type { IngredientSearch } from "@norish/shared/lib/ingredient-search";
 import { db } from "@norish/db/drizzle";
 import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
-import { viewerAndHouseholdIds } from "@norish/shared/lib/household";
 import { parseIngredientSearch } from "@norish/shared/lib/ingredient-search";
 import { hasSearchText } from "@norish/shared/lib/search-terms";
 
@@ -161,7 +160,7 @@ export async function listLibrary(
 
   const branches: SQL[] = [];
   // Recipes with something at home, most complete first (#679).
-  const pantryCoverage = pantryOnly ? pantryCoverageSql(viewerAndHouseholdIds(ctx)) : undefined;
+  const pantryCoverage = pantryOnly ? pantryCoverageSql(ctx.householdId) : undefined;
 
   if (includeRecipes) {
     const conditions: SQL[] = [];

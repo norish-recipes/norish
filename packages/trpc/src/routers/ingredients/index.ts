@@ -58,7 +58,7 @@ import {
 
 import type { AuthedProcedureContext } from "../../middleware";
 import { formDataInputSchema, getFormDataString, getUploadedFile } from "../../form-data";
-import { authedProcedure, viewerOf } from "../../middleware";
+import { actorOf, authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
 import { ingredientsSubscriptions } from "./subscriptions";
 
@@ -137,7 +137,7 @@ const list = authedProcedure
     })
   )
   .query(async ({ ctx, input }) => {
-    const page = await listIngredients(viewerOf(ctx), {
+    const page = await listIngredients(actorOf(ctx), {
       listedOnly: input.listedOnly,
       search: input.search,
       match: input.match,
@@ -156,7 +156,7 @@ const list = authedProcedure
 const kinds = authedProcedure
   .input(z.object({ parentId: z.uuid(), locale: z.string().max(20).optional() }))
   .query(async ({ ctx, input }) => {
-    const page = await listIngredients(viewerOf(ctx), {
+    const page = await listIngredients(actorOf(ctx), {
       parentId: input.parentId,
       listedOnly: true,
       locale: input.locale,
@@ -173,7 +173,7 @@ const kinds = authedProcedure
 const get = authedProcedure
   .input(z.object({ ingredientId: z.uuid(), locale: z.string().max(20).optional() }))
   .query(async ({ ctx, input }) => {
-    const page = await listIngredients(viewerOf(ctx), {
+    const page = await listIngredients(actorOf(ctx), {
       id: input.ingredientId,
       locale: input.locale,
     });
@@ -184,19 +184,19 @@ const get = authedProcedure
 /** Every spelling of one Ingredient, for a row that asked to see them all. */
 const spellings = authedProcedure
   .input(z.object({ ingredientId: z.uuid() }))
-  .query(({ ctx, input }) => listSpellings(viewerOf(ctx), input.ingredientId));
+  .query(({ ctx, input }) => listSpellings(actorOf(ctx), input.ingredientId));
 
 /** Where an Ingredient is still used, for the panel a refused delete opens. */
 const uses = authedProcedure
   .input(z.object({ ingredientId: z.uuid() }))
-  .query(({ ctx, input }) => listIngredientUses(viewerOf(ctx), input.ingredientId));
+  .query(({ ctx, input }) => listIngredientUses(actorOf(ctx), input.ingredientId));
 
 const addAlias = authedProcedure
   .input(z.object({ ingredientId: z.uuid(), text: ingredientName }))
   .mutation(({ ctx, input }) => {
     log.info({ userId: ctx.user.id, ingredientId: input.ingredientId }, "Adding an alias");
 
-    return asEditResult(() => addCatalogueAlias(viewerOf(ctx), input.ingredientId, input.text));
+    return asEditResult(() => addCatalogueAlias(actorOf(ctx), input.ingredientId, input.text));
   });
 
 const rename = authedProcedure
@@ -204,7 +204,7 @@ const rename = authedProcedure
   .mutation(({ ctx, input }) => {
     log.info({ userId: ctx.user.id, ingredientId: input.ingredientId }, "Renaming an Ingredient");
 
-    return asEditResult(() => renameIngredient(viewerOf(ctx), input.ingredientId, input.name));
+    return asEditResult(() => renameIngredient(actorOf(ctx), input.ingredientId, input.name));
   });
 
 const markDistinct = authedProcedure
@@ -212,7 +212,7 @@ const markDistinct = authedProcedure
   .mutation(({ ctx, input }) => {
     log.info({ userId: ctx.user.id, ingredientId: input.ingredientId }, "Marking distinct");
 
-    return asEditResult(() => markCatalogueDistinct(viewerOf(ctx), input.ingredientId));
+    return asEditResult(() => markCatalogueDistinct(actorOf(ctx), input.ingredientId));
   });
 
 const removeAlias = authedProcedure
@@ -220,11 +220,11 @@ const removeAlias = authedProcedure
   .mutation(({ ctx, input }) => {
     log.info({ userId: ctx.user.id, aliasId: input.aliasId }, "Removing an alias");
 
-    return asEditResult(() => removeCatalogueAlias(viewerOf(ctx), input.aliasId));
+    return asEditResult(() => removeCatalogueAlias(actorOf(ctx), input.aliasId));
   });
 
 /** Every change Changed by AI lists, each saying whether the viewer may keep or undo it. */
-const aiChanges = authedProcedure.query(({ ctx }) => listAIChangesFor(viewerOf(ctx)));
+const aiChanges = authedProcedure.query(({ ctx }) => listAIChangesFor(actorOf(ctx)));
 
 const aiChangeId = z.object({ changeId: z.uuid() });
 
@@ -232,14 +232,14 @@ const aiChangeId = z.object({ changeId: z.uuid() });
 const keepAIChange = authedProcedure.input(aiChangeId).mutation(({ ctx, input }) => {
   log.info({ userId: ctx.user.id, changeId: input.changeId }, "Keeping an AI Change");
 
-  return asEditResult(() => keepCatalogueAIChange(viewerOf(ctx), input.changeId));
+  return asEditResult(() => keepCatalogueAIChange(actorOf(ctx), input.changeId));
 });
 
 /** Undo an AI Change, which AI then never makes again. Follows `edit` on the food. */
 const undoAIChange = authedProcedure.input(aiChangeId).mutation(({ ctx, input }) => {
   log.info({ userId: ctx.user.id, changeId: input.changeId }, "Undoing an AI Change");
 
-  return asEditResult(() => undoCatalogueAIChange(viewerOf(ctx), input.changeId));
+  return asEditResult(() => undoCatalogueAIChange(actorOf(ctx), input.changeId));
 });
 
 /** Clear Changed by AI for the viewer: what is settled by now is no longer listed to them. */
@@ -258,7 +258,7 @@ const settleAIChanges = authedProcedure
       "Settling AI Changes"
     );
 
-    return asEditResult(() => settleCatalogueAIChanges(viewerOf(ctx), input.changeIds, input.how));
+    return asEditResult(() => settleCatalogueAIChanges(actorOf(ctx), input.changeIds, input.how));
   });
 
 /**
@@ -304,7 +304,7 @@ const uploadIcon = authedProcedure.input(formDataInputSchema).mutation(async ({ 
   );
   const bytes = Buffer.from(await picture.arrayBuffer());
 
-  return translated(() => uploadIngredientIcon(viewerOf(ctx), ingredientId.data, bytes));
+  return translated(() => uploadIngredientIcon(actorOf(ctx), ingredientId.data, bytes));
 });
 
 /**
@@ -321,7 +321,7 @@ const generateIcon = authedProcedure
       "Generating an Ingredient Icon"
     );
 
-    return translated(() => generateIngredientIcon(viewerOf(ctx), input.ingredientId));
+    return translated(() => generateIngredientIcon(actorOf(ctx), input.ingredientId));
   });
 
 /** Refuse unless the instance can draw: AI on and an image provider configured. */
@@ -352,7 +352,7 @@ const saveDraft = authedProcedure
     log.info({ userId: ctx.user.id, ingredientId: input.ingredientId }, "Saving an Ingredient");
     const { ingredientId, ...draft } = input;
 
-    return asEditResult(() => saveIngredientDraft(viewerOf(ctx), ingredientId, draft));
+    return asEditResult(() => saveIngredientDraft(actorOf(ctx), ingredientId, draft));
   });
 
 /** Delete an Ingredient; its lines and Groceries keep their text. Follows `edit` on the Ingredient. */
@@ -361,7 +361,7 @@ const remove = authedProcedure
   .mutation(({ ctx, input }) => {
     log.info({ userId: ctx.user.id, ingredientId: input.ingredientId }, "Deleting an Ingredient");
 
-    return asEditResult(() => deleteIngredient(viewerOf(ctx), input.ingredientId));
+    return asEditResult(() => deleteIngredient(actorOf(ctx), input.ingredientId));
   });
 
 /** Merge one Ingredient into another. Needs `edit` on both. */
@@ -370,7 +370,7 @@ const merge = authedProcedure
   .mutation(({ ctx, input }) => {
     log.info({ userId: ctx.user.id, ...input }, "Merging Ingredients");
 
-    return asEditResult(() => mergeIngredients(viewerOf(ctx), input.sourceId, input.targetId));
+    return asEditResult(() => mergeIngredients(actorOf(ctx), input.sourceId, input.targetId));
   });
 
 /** Move a spelling to another Ingredient, or to a new one (`targetId` null): the unmerge. */
@@ -379,7 +379,7 @@ const moveAlias = authedProcedure
   .mutation(({ ctx, input }) => {
     log.info({ userId: ctx.user.id, ...input }, "Moving an alias");
 
-    return asEditResult(() => moveCatalogueAlias(viewerOf(ctx), input.aliasId, input.targetId));
+    return asEditResult(() => moveCatalogueAlias(actorOf(ctx), input.aliasId, input.targetId));
   });
 
 /** Set or clear an Ingredient's Parent Ingredient. Follows `edit` on the Ingredient. */
@@ -388,9 +388,7 @@ const setParent = authedProcedure
   .mutation(({ ctx, input }) => {
     log.info({ userId: ctx.user.id, ...input }, "Setting a Parent Ingredient");
 
-    return asEditResult(() =>
-      setCatalogueParent(viewerOf(ctx), input.ingredientId, input.parentId)
-    );
+    return asEditResult(() => setCatalogueParent(actorOf(ctx), input.ingredientId, input.parentId));
   });
 
 /**
@@ -402,7 +400,7 @@ const nutrition = authedProcedure
   .input(z.object({ ingredientId: z.uuid() }))
   .query(async ({ ctx, input }): Promise<IngredientNutrition | null> => {
     const answer = await resolveIngredientNutrition([input.ingredientId], {
-      householdUserIds: ctx.userIds,
+      householdId: ctx.householdId,
     });
 
     return answer.get(input.ingredientId) ?? null;
@@ -417,7 +415,7 @@ const nutritionFor = authedProcedure
   .input(z.object({ ingredientIds: z.array(z.uuid()).max(500) }))
   .query(async ({ ctx, input }): Promise<Record<string, IngredientNutrition>> => {
     const answer = await resolveIngredientNutrition(input.ingredientIds, {
-      householdUserIds: ctx.userIds,
+      householdId: ctx.householdId,
     });
 
     return Object.fromEntries(answer);
@@ -431,7 +429,7 @@ const nutritionFor = authedProcedure
 const spoonMeasure = authedProcedure
   .input(z.object({ ingredientId: z.uuid() }))
   .query(({ ctx, input }): Promise<SpoonMeasure | null> =>
-    spoonMeasureFor(viewerOf(ctx), input.ingredientId)
+    spoonMeasureFor(actorOf(ctx), input.ingredientId)
   );
 
 /** A dataset food, as a correction names it. */
@@ -503,7 +501,7 @@ const nutritionFoods = authedProcedure
   .query(({ input }): Promise<NutritionFoodSummary[]> => searchDatasetFoods(input.search));
 
 function memberOf(ctx: AuthedProcedureContext) {
-  return { userId: ctx.user.id, householdUserIds: ctx.userIds, householdKey: ctx.householdKey };
+  return { userId: ctx.user.id, householdId: ctx.householdId };
 }
 
 export const ingredientsRouter = router({

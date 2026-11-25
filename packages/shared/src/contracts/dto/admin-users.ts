@@ -16,5 +16,5 @@ export interface AdminUserRowDTO {
   isServerOwner: boolean;
   isServerAdmin: boolean;
   createdAt: number;
-  household: AdminUserHouseholdDTO | null;
+  household: AdminUserHouseholdDTO;
 }

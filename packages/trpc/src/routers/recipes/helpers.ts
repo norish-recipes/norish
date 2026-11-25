@@ -11,8 +11,7 @@ import { recipes } from "@norish/shared-server/realtime/recipes";
 
 export type RecipeUserContext = {
   user: { id: string };
-  householdUserIds: string[] | null;
-  householdKey: string;
+  householdId: string;
   isServerAdmin: boolean;
 };
 
@@ -36,7 +35,7 @@ export async function createSettled(recipeId: string): Promise<void> {
 }
 
 export async function emitRecipeFailure(
-  ctx: Pick<RecipeUserContext, "user" | "householdKey">,
+  ctx: Pick<RecipeUserContext, "user" | "householdId">,
   reason: string,
   meta?: { recipeId?: string; url?: string }
 ): Promise<void> {
@@ -45,12 +44,12 @@ export async function emitRecipeFailure(
   void recipes.publish(
     "failed",
     { reason, ...meta },
-    { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
+    { viewPolicy: policy.view, userId: ctx.user.id, householdId: ctx.householdId }
   );
 }
 
 export function handleRecipeError(
-  ctx: Pick<RecipeUserContext, "user" | "householdKey">,
+  ctx: Pick<RecipeUserContext, "user" | "householdId">,
   err: unknown,
   operation: string,
   meta?: { recipeId?: string; url?: string }
@@ -63,7 +62,7 @@ export function handleRecipeError(
 
 /** Announce a recipe as stored now to everyone who may view it, and return it. */
 export async function announceRecipeUpdated(
-  ctx: Pick<RecipeUserContext, "user" | "householdKey">,
+  ctx: Pick<RecipeUserContext, "user" | "householdId">,
   recipeId: string
 ): Promise<FullRecipeDTO | null> {
   const stored = await getRecipeFull(recipeId);
@@ -74,7 +73,7 @@ export async function announceRecipeUpdated(
     void recipes.publish(
       "updated",
       { recipe: stored },
-      { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
+      { viewPolicy: policy.view, userId: ctx.user.id, householdId: ctx.householdId }
     );
   }
 
@@ -82,7 +81,7 @@ export async function announceRecipeUpdated(
 }
 
 export async function assertRecipeAccess(
-  ctx: Pick<RecipeUserContext, "user" | "householdUserIds" | "isServerAdmin">,
+  ctx: Pick<RecipeUserContext, "user" | "householdId" | "isServerAdmin">,
   recipeId: string,
   action: PermissionAction
 ): Promise<void> {
@@ -96,10 +95,8 @@ export async function assertRecipeAccess(
 
   const canAccess = await canAccessResource(
     action,
-    ctx.user.id,
-    ownerId,
-    ctx.householdUserIds,
-    ctx.isServerAdmin
+    { userId: ctx.user.id, householdId: ctx.householdId, isServerAdmin: ctx.isServerAdmin },
+    ownerId
   );
 
   if (!canAccess) {
@@ -115,7 +112,7 @@ export async function assertRecipeAccess(
  * are open to everyone; ones that do not exist are left out of the map.
  */
 export async function recipeAccess(
-  ctx: Pick<RecipeUserContext, "user" | "householdUserIds" | "isServerAdmin">,
+  ctx: Pick<RecipeUserContext, "user" | "householdId" | "isServerAdmin">,
   recipeIds: string[],
   action: PermissionAction
 ): Promise<Map<string, boolean>> {
@@ -134,10 +131,8 @@ export async function recipeAccess(
     if (!allowed) {
       allowed = canAccessResource(
         action,
-        ctx.user.id,
-        ownerId,
-        ctx.householdUserIds,
-        ctx.isServerAdmin
+        { userId: ctx.user.id, householdId: ctx.householdId, isServerAdmin: ctx.isServerAdmin },
+        ownerId
       );
       byOwner.set(ownerId, allowed);
     }
@@ -164,7 +159,7 @@ export function recipeIdOfMediaUrl(url: string): string | null {
 }
 
 export async function findRecipeForViewer(
-  ctx: Pick<RecipeUserContext, "user" | "householdUserIds" | "isServerAdmin">,
+  ctx: Pick<RecipeUserContext, "user" | "householdId" | "isServerAdmin">,
   recipeId: string
 ): Promise<FullRecipeDTO | null> {
   const recipe = await getRecipeFull(recipeId);
@@ -176,10 +171,8 @@ export async function findRecipeForViewer(
   if (recipe.userId) {
     const canView = await canAccessResource(
       "view",
-      ctx.user.id,
-      recipe.userId,
-      ctx.householdUserIds,
-      ctx.isServerAdmin
+      { userId: ctx.user.id, householdId: ctx.householdId, isServerAdmin: ctx.isServerAdmin },
+      recipe.userId
     );
 
     if (!canView) {

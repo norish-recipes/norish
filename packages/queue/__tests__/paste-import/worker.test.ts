@@ -85,8 +85,7 @@ describe("processPasteImportJob", () => {
         batchId: "batch-1",
         recipeIds: ["recipe-1", "recipe-invalid", "recipe-2"],
         userId: "user-1",
-        householdKey: "household-1",
-        householdUserIds: null,
+        householdId: "household-1",
         text: "structured",
         structuredRecipes: [
           {
@@ -216,8 +215,7 @@ describe("processPasteImportJob", () => {
           batchId: "batch-2",
           recipeIds: ["recipe-invalid"],
           userId: "user-1",
-          householdKey: "household-1",
-          householdUserIds: null,
+          householdId: "household-1",
           text: "structured",
           structuredRecipes: [
             {

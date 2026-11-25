@@ -46,22 +46,16 @@ import { router } from "../../trpc";
  * suppression, ADR-0021) that a member's profile picture changed.
  */
 function emitMemberProfileUpdated(
-  ctx: { user: { id: string }; household: { id: string } | null },
+  ctx: { user: { id: string }; householdId: string },
   image: string | null
 ) {
-  if (!ctx.household) {
-    log.debug({ userId: ctx.user.id }, "No household, skipping memberProfileUpdated emit");
-
-    return;
-  }
-
   void households.publish(
     "memberProfileUpdated",
     {
       userId: ctx.user.id,
       image,
     },
-    { householdKey: ctx.household.id }
+    { householdId: ctx.householdId }
   );
 }
 
@@ -389,23 +383,11 @@ const setAllergies = authedProcedure
 
     const updatedAllergies = await getUserAllergies(ctx.user.id);
 
-    if (ctx.household) {
-      const userIds = ctx.household.users.map((u) => u.id);
-      const allergiesRows = await getAllergiesForUsers(userIds);
-      const allergies = [...new Set(allergiesRows.map((a) => a.tagName))];
+    const allergiesRows = await getAllergiesForUsers(ctx.userIds);
+    const allergies = [...new Set(allergiesRows.map((a) => a.tagName))];
 
-      log.info(
-        { householdId: ctx.household.id, allergies },
-        "Emitting allergiesUpdated to household"
-      );
-      void households.publish(
-        "allergiesUpdated",
-        { allergies },
-        { householdKey: ctx.household.id }
-      );
-    } else {
-      log.info({ userId: ctx.user.id }, "No household, skipping allergiesUpdated emit");
-    }
+    log.info({ householdId: ctx.householdId, allergies }, "Emitting allergiesUpdated to household");
+    void households.publish("allergiesUpdated", { allergies }, { householdId: ctx.householdId });
 
     log.info({ userId: ctx.user.id, allergies: input.allergies }, "User allergies updated");
 

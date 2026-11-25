@@ -25,7 +25,7 @@ const get = authedProcedure.query(async ({ ctx }) => {
     isAIEnabled: aiEnabled,
     // AI on and an image provider configured: Ingredient Icons can be drawn.
     canDrawImages: aiEnabled && imageConfigured,
-    householdUserIds: ctx.householdUserIds,
+    householdMemberIds: ctx.userIds,
     isServerAdmin: serverAdmin,
   };
 });

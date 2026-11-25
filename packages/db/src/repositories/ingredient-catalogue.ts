@@ -31,11 +31,11 @@ import {
   recipes,
   recurringGroceries,
 } from "@norish/db/schema";
-import { viewerAndHouseholdIds } from "@norish/shared/lib/household";
 import { escapeLike } from "@norish/shared/lib/ingredient-search";
 import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
 import type { RecipeListContext } from "./recipes";
+import { householdMemberIdsSql } from "./household-members";
 import { buildOwnerPolicyCondition } from "./recipes";
 
 /**
@@ -696,7 +696,7 @@ export async function listIngredientUses(
 ): Promise<IngredientUses> {
   const naming = rowsNaming(ingredientId);
   const household = (userId: AnyPgColumn) =>
-    sql<boolean>`${inArray(userId, viewerAndHouseholdIds(viewer))}`;
+    sql<boolean>`${inArray(userId, householdMemberIdsSql(viewer.householdId))}`;
   const openable = (await buildOwnerPolicyCondition(viewer, recipes.userId, "view")) ?? sql`true`;
 
   const [lines, groceryRows, recurringRows, pantryRows] = await Promise.all([

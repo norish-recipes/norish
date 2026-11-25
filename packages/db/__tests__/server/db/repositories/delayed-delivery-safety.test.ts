@@ -9,7 +9,7 @@ import { rateRecipe } from "@norish/db/repositories/ratings";
 import { deleteStore } from "@norish/db/repositories/stores";
 import { groceries, recipeFavorites, recipeRatings, stores } from "@norish/db/schema";
 
-import { getTestDb } from "../../../helpers/db-test-helpers";
+import { getTestDb, householdIdOf } from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 describe("delayed-delivery repository safety", () => {
@@ -80,7 +80,7 @@ describe("delayed-delivery repository safety", () => {
 
     const result = await updateGroceries(
       [{ id: grocery.id, version: 2, name: "Oat milk" }],
-      [testUserId]
+      await householdIdOf(testUserId)
     );
     const [stored] = await db.select().from(groceries).where(eq(groceries.id, grocery.id)).limit(1);
 
@@ -104,7 +104,7 @@ describe("delayed-delivery repository safety", () => {
       .values({ userId: testUserId, storeId: store.id, name: "Eggs", isDone: true })
       .returning();
 
-    const deletedIds = await deleteDoneInStore([testUserId], store.id, [
+    const deletedIds = await deleteDoneInStore(await householdIdOf(testUserId), store.id, [
       { id: snapshotted.id, version: snapshotted.version },
     ]);
     const remainingRows = await db.select().from(groceries).where(eq(groceries.storeId, store.id));

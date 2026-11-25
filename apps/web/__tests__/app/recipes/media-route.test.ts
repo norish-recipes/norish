@@ -17,7 +17,7 @@ vi.mock("@norish/auth/permissions", () => ({ canAccessResource }));
 vi.mock("@norish/db", () => ({ isUserServerAdmin: async () => false }));
 vi.mock("@norish/db/repositories/recipes", () => ({ getRecipeOwnerId }));
 vi.mock("@norish/shared-server/cache/household", () => ({
-  getCachedHouseholdForUser: async () => null,
+  getCachedHouseholdForUser: async () => ({ id: "household-1", users: [] }),
 }));
 
 vi.mock("node:fs/promises", () => ({

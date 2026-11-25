@@ -23,7 +23,7 @@ export function sanitizeUrlForJobId(url: string): string {
 export function recipeImportDeduplicationId(
   url: string,
   userId: string,
-  householdKey: string,
+  householdId: string,
   viewPolicy: PermissionLevel
 ): string {
   const sanitized = sanitizeUrlForJobId(url);
@@ -32,7 +32,7 @@ export function recipeImportDeduplicationId(
     case "everyone":
       return `import_${sanitized}`;
     case "household":
-      return `import_${householdKey}_${sanitized}`;
+      return `import_${householdId}_${sanitized}`;
     case "owner":
       return `import_${userId}_${sanitized}`;
     default:

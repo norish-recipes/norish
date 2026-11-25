@@ -79,7 +79,7 @@ describe("convertRecipeMeasurements", () => {
       ],
     } satisfies Pick<FullRecipeDTO, "recipeIngredients" | "steps">;
 
-    const converted = await convertRecipeMeasurements(recipe, "metric", { householdUserIds: [] });
+    const converted = await convertRecipeMeasurements(recipe, "metric", { householdId: null });
 
     expect(converted.ingredients.map(({ amount, unit }) => [amount, unit])).toEqual([
       [250, "gram"],

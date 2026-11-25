@@ -239,7 +239,7 @@ export async function listPantrySuggestions(userIds: string[]): Promise<PantrySu
     sql`, `
   );
   const rows = await db.execute<{ ingredient_id: string; name: string; recipe_count: number }>(sql`
-    with recursive ${coveredCte(userIds)},
+    with recursive ${coveredCte(sql`(${members})`)},
     used as (
       select a.ingredient_id, count(distinct r.id)::int as recipe_count
       from recipes r

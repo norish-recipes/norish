@@ -64,7 +64,7 @@ export async function rememberStorePreference(
 export type GroceryProcedureContext = {
   user: { id: string };
   userIds: string[];
-  householdKey: string;
+  householdId: string;
 };
 
 type GroceryMergeCandidate = {
@@ -298,7 +298,7 @@ export async function createGroceriesData(
       await fileNewLines(aliases);
 
       return await withTransaction(async (tx) => {
-        await lockGroceryList(tx, ctx.userIds);
+        await lockGroceryList(tx, ctx.householdId);
 
         // The edit's name was resolved last.
         const edited = edit && (await edit.write(ingredientColumns(aliases.at(-1)), tx));
@@ -311,11 +311,11 @@ export async function createGroceriesData(
           edited,
           merged:
             groceriesToUpdate.length > 0
-              ? await updateGroceries(groceriesToUpdate, ctx.userIds, tx)
+              ? await updateGroceries(groceriesToUpdate, ctx.householdId, tx)
               : [],
           made:
             groceriesToCreate.length > 0
-              ? await createGroceries(groceriesToCreate, ctx.userIds, tx)
+              ? await createGroceries(groceriesToCreate, ctx.householdId, tx)
               : noneMade,
         };
       });
@@ -336,7 +336,7 @@ export async function createGroceriesData(
       {
         changedGroceries: updatedGroceries,
       },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   }
 
@@ -347,7 +347,7 @@ export async function createGroceriesData(
       {
         groceries: createdGroceries,
       },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   }
 
@@ -366,7 +366,7 @@ export async function createGroceriesData(
       {
         changedGroceries: made.shifted,
       },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   }
 
@@ -436,7 +436,7 @@ export async function toggleGroceriesData(
 
   const updated =
     parsed.data.length > 0
-      ? await updateGroceries(parsed.data as GroceryUpdateDto[], ctx.userIds)
+      ? await updateGroceries(parsed.data as GroceryUpdateDto[], ctx.householdId)
       : [];
 
   if (updated.length !== groceryIds.length) {
@@ -455,7 +455,7 @@ export async function toggleGroceriesData(
       {
         reason: "Groceries were updated elsewhere",
       },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   }
 
@@ -467,7 +467,7 @@ export async function toggleGroceriesData(
       {
         changedGroceries: updated,
       },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   }
 
@@ -496,7 +496,7 @@ export async function deleteGroceriesData(
 
   const result = await deleteGroceryByIds(
     input.groceries.filter((grocery) => ownerIds.has(grocery.id)),
-    ctx.userIds
+    ctx.householdId
   );
 
   if (result.staleIds.length > 0) {
@@ -509,7 +509,7 @@ export async function deleteGroceriesData(
       {
         reason: "Groceries were updated elsewhere",
       },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   }
 
@@ -518,7 +518,7 @@ export async function deleteGroceriesData(
     void groceries.publish(
       "deleted",
       { groceryIds: result.deletedIds },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   }
 
@@ -556,7 +556,7 @@ export async function assignGroceryToStoreData(
 
   const [grocery] = ownerId ? await getGroceriesByIds([groceryId]) : [];
   const updated = grocery
-    ? await assignGroceryToStore(groceryId, storeId, ctx.userIds, version)
+    ? await assignGroceryToStore(groceryId, storeId, ctx.householdId, version)
     : null;
 
   if (!updated) {
@@ -569,7 +569,7 @@ export async function assignGroceryToStoreData(
       {
         reason: "Grocery was updated elsewhere",
       },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
 
     return null;
@@ -589,7 +589,7 @@ export async function assignGroceryToStoreData(
     {
       changedGroceries: [updated],
     },
-    { householdKey: ctx.householdKey }
+    { householdId: ctx.householdId }
   );
 
   return updated;

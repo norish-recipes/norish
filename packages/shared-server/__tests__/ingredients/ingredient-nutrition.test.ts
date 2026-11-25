@@ -44,7 +44,7 @@ import {
 } from "@norish/shared-server/ingredients/nutrition/fill-gaps";
 import {
   findNutritionGaps,
-  NO_HOUSEHOLD,
+  NO_CORRECTIONS,
   resolveIngredientNutrition,
 } from "@norish/shared-server/ingredients/nutrition/ingredient-nutrition";
 import {
@@ -54,7 +54,12 @@ import {
 import { buildCatalogueExport } from "@norish/shared-server/ingredients/seed/catalogue-export";
 import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
-import { createTestUser, getTestDb } from "../../../db/__tests__/helpers/db-test-helpers";
+import {
+  createTestUser,
+  getTestDb,
+  joinTestHousehold,
+  testHouseholdOf,
+} from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 
 const estimator = vi.hoisted(() => ({ estimateFoodFacts: vi.fn() }));
@@ -190,6 +195,7 @@ describe("Ingredient Nutrition", () => {
     const second = await createTestUser();
     const stranger = await createTestUser();
 
+    await joinTestHousehold(second!.id, first.id);
     householdA = [first.id, second!.id];
     householdB = [stranger!.id];
     await getTestDb()
@@ -207,8 +213,10 @@ describe("Ingredient Nutrition", () => {
     await testBase.teardown();
   });
 
-  async function read(offId: string, householdUserIds: readonly string[] = []) {
-    const answer = await resolveIngredientNutrition([id(offId)], { householdUserIds });
+  /** The food as `household`'s members read it; nobody's corrections without one. */
+  async function read(offId: string, household: readonly string[] = []) {
+    const householdId = household[0] ? testHouseholdOf(household[0]) : null;
+    const answer = await resolveIngredientNutrition([id(offId)], { householdId });
 
     return answer.get(id(offId))!;
   }
@@ -329,7 +337,12 @@ describe("Ingredient Nutrition", () => {
 
     it("borrows from whatever parent a person gives it", async () => {
       await setParent(
-        { userId: householdA[0]!, householdUserIds: householdA, isServerAdmin: true },
+        {
+          userId: householdA[0]!,
+          householdId: testHouseholdOf(householdA[0]!),
+          memberIds: householdA,
+          isServerAdmin: true,
+        },
         id("en:red-onion"),
         id("en:milk")
       );
@@ -493,8 +506,7 @@ describe("Ingredient Nutrition", () => {
   describe("correcting through the module", () => {
     const member = (userId: string, household: string[]) => ({
       userId,
-      householdUserIds: household,
-      householdKey: `household-of-${household[0]}`,
+      householdId: testHouseholdOf(household[0]!),
     });
 
     it("lets any member correct any food, seeded or not, by a dataset food or a label", async () => {
@@ -594,7 +606,7 @@ describe("Ingredient Nutrition", () => {
     });
 
     it("counts from the datasets' numbers, and names what it left out", async () => {
-      const worked = await workOutRecipeNutrition(recipe(), NO_HOUSEHOLD);
+      const worked = await workOutRecipeNutrition(recipe(), NO_CORRECTIONS);
 
       expect(worked?.counted).toEqual([
         expect.objectContaining({ lineId: "a", grams: 300, calories: 105 }),
@@ -605,11 +617,11 @@ describe("Ingredient Nutrition", () => {
     });
 
     it("works nothing out for a recipe that supplies its own", async () => {
-      await expect(workOutRecipeNutrition(recipe(320), NO_HOUSEHOLD)).resolves.toBeNull();
+      await expect(workOutRecipeNutrition(recipe(320), NO_CORRECTIONS)).resolves.toBeNull();
     });
 
     it("answers an API reader with the recipe's own numbers, working nothing out beside them", async () => {
-      const answer = await readRecipeNutrition(recipe(320), NO_HOUSEHOLD);
+      const answer = await readRecipeNutrition(recipe(320), NO_CORRECTIONS);
 
       expect(answer).toEqual({
         source: "supplied",
@@ -624,7 +636,7 @@ describe("Ingredient Nutrition", () => {
     it("answers an API reader with the nutrients the recipe states, each fully known", async () => {
       const answer = await readRecipeNutrition(
         { ...recipe(320), nutritionExtras: { fiber: 9 } },
-        NO_HOUSEHOLD
+        NO_CORRECTIONS
       );
 
       expect(answer.perServing?.extras).toEqual({ fiber: 9 });
@@ -634,7 +646,7 @@ describe("Ingredient Nutrition", () => {
     it("lets a nutrient the recipe states win over its lines', each on its own", async () => {
       const answer = await readRecipeNutrition(
         { ...recipe(), nutritionExtras: { fiber: 9 } },
-        NO_HOUSEHOLD
+        NO_CORRECTIONS
       );
 
       expect(answer.perServing?.extras.fiber).toBe(9);
@@ -644,11 +656,11 @@ describe("Ingredient Nutrition", () => {
     });
 
     it("answers an API reader with the worked-out total and the model's share, as the page shows it", async () => {
-      const key = (await workOutRecipeNutrition(recipe(), NO_HOUSEHOLD))!.leftOut[0]!.key;
+      const key = (await workOutRecipeNutrition(recipe(), NO_CORRECTIONS))!.leftOut[0]!.key;
       const share = { key, calories: 60, fat: 0, carbs: 1, protein: 0 };
       const answer = await readRecipeNutrition(
         { ...recipe(), nutritionEstimate: { lines: [share] } },
-        NO_HOUSEHOLD
+        NO_CORRECTIONS
       );
 
       expect(answer.source).toBe("worked-out");
@@ -664,7 +676,7 @@ describe("Ingredient Nutrition", () => {
     it("answers none, naming the lines, where nothing counts", async () => {
       const brandyOnly = { ...recipe(), recipeIngredients: recipe().recipeIngredients.slice(1) };
 
-      await expect(readRecipeNutrition(brandyOnly, NO_HOUSEHOLD)).resolves.toEqual({
+      await expect(readRecipeNutrition(brandyOnly, NO_CORRECTIONS)).resolves.toEqual({
         source: "none",
         perServing: null,
         estimated: false,
@@ -770,7 +782,7 @@ describe("Ingredient Nutrition", () => {
             },
           ],
         },
-        NO_HOUSEHOLD
+        NO_CORRECTIONS
       );
 
       expect(worked).toMatchObject({ estimated: true, credits: [], household: false });
@@ -958,7 +970,7 @@ describe("Ingredient Nutrition", () => {
 
     it("answers nothing for an Ingredient no household reads, without corrections", async () => {
       await expect(
-        resolveIngredientNutrition([crypto.randomUUID()], NO_HOUSEHOLD)
+        resolveIngredientNutrition([crypto.randomUUID()], NO_CORRECTIONS)
       ).resolves.toEqual(new Map());
     });
   });

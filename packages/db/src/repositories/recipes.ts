@@ -25,7 +25,6 @@ import {
 import { db } from "@norish/db/drizzle";
 import { dbLogger } from "@norish/db/logger";
 import { stripHtmlTags } from "@norish/shared/lib/helpers";
-import { viewerAndHouseholdIds } from "@norish/shared/lib/household";
 import { joinOf } from "@norish/shared/lib/line-foods";
 import { normalizeOriginCountry } from "@norish/shared/lib/recipe-enrichment";
 import { hasSearchText, searchTerms } from "@norish/shared/lib/search-terms";
@@ -60,6 +59,7 @@ import {
   recipeInAnyCategorySql,
 } from "./categories";
 import { replaceRecipeCuisinesTx } from "./cuisines";
+import { householdMemberIdsSql } from "./household-members";
 import {
   attachIngredientsToRecipeByInputTx,
   getUnitsForNormalization,
@@ -203,7 +203,7 @@ export async function getRecipeByUrl(url: string): Promise<FullRecipeDTO | null>
 export async function recipeExistsByUrlForPolicy(
   url: string,
   userId: string,
-  householdUserIds: string[] | null,
+  householdId: string,
   viewPolicy: "everyone" | "household" | "owner"
 ): Promise<{ exists: boolean; existingRecipeId?: string }> {
   let whereCondition: ReturnType<typeof and> | ReturnType<typeof or> | ReturnType<typeof eq>;
@@ -218,7 +218,7 @@ export async function recipeExistsByUrlForPolicy(
       // Check if URL exists for any household member
       whereCondition = and(
         eq(recipes.url, url),
-        inArray(recipes.userId, viewerAndHouseholdIds({ userId, householdUserIds }))
+        inArray(recipes.userId, householdMemberIdsSql(householdId))
       );
       break;
 
@@ -311,7 +311,7 @@ export async function findExistingRecipe(
 
 export interface RecipeListContext {
   userId: string;
-  householdUserIds: readonly string[] | null;
+  householdId: string;
   isServerAdmin: boolean;
 }
 
@@ -349,7 +349,10 @@ export async function buildOwnerPolicyCondition(
 
     case "household":
       // Own rows + household members' rows + orphaned rows (null owner)
-      return or(inArray(ownerColumn, viewerAndHouseholdIds(ctx)), sql`${ownerColumn} IS NULL`);
+      return or(
+        inArray(ownerColumn, householdMemberIdsSql(ctx.householdId)),
+        sql`${ownerColumn} IS NULL`
+      );
 
     case "owner":
       // Only own rows + orphaned rows (null owner)
@@ -619,9 +622,7 @@ export async function listRecipes(
   }
 
   // Members with something at home, most complete first, as the Library orders them.
-  const pantryCoverage = options?.pantryOnly
-    ? pantryCoverageSql(viewerAndHouseholdIds(ctx))
-    : undefined;
+  const pantryCoverage = options?.pantryOnly ? pantryCoverageSql(ctx.householdId) : undefined;
 
   if (pantryCoverage) {
     whereConditions.push(sql`${pantryCoverage} > 0`);
@@ -1890,7 +1891,7 @@ export async function getRandomRecipeCandidates(
 
   const whereClause = whereConditions.length ? and(...whereConditions) : undefined;
 
-  const householdUserIds = ctx.householdUserIds ?? [ctx.userId];
+  const members = householdMemberIdsSql(ctx.householdId);
 
   const rows = await db
     .select({
@@ -1917,10 +1918,7 @@ export async function getRandomRecipeCandidates(
       })
       .from(recipeFavorites)
       .where(
-        and(
-          inArray(recipeFavorites.recipeId, recipeIds),
-          inArray(recipeFavorites.userId, householdUserIds)
-        )
+        and(inArray(recipeFavorites.recipeId, recipeIds), inArray(recipeFavorites.userId, members))
       )
       .groupBy(recipeFavorites.recipeId),
 
@@ -1931,10 +1929,7 @@ export async function getRandomRecipeCandidates(
       })
       .from(recipeRatings)
       .where(
-        and(
-          inArray(recipeRatings.recipeId, recipeIds),
-          inArray(recipeRatings.userId, householdUserIds)
-        )
+        and(inArray(recipeRatings.recipeId, recipeIds), inArray(recipeRatings.userId, members))
       )
       .groupBy(recipeRatings.recipeId),
   ]);

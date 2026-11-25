@@ -125,7 +125,7 @@ export async function createRecurringGroceries(
     recurring: RecurringGroceryInsertDto;
     grocery: { id: string; groceries: GroceryInsertDto };
   }>,
-  householdUserIds: string[],
+  householdId: string,
   tx: Db = db
 ): Promise<CreatedRecurringGroceries> {
   return await tx.transaction(async (trx) => {
@@ -144,7 +144,7 @@ export async function createRecurringGroceries(
 
     const made = await createGroceries(
       items.map(({ grocery }) => grocery),
-      householdUserIds,
+      householdId,
       trx
     );
     const groceryOf = new Map(made.created.map((grocery) => [grocery.recurringGroceryId, grocery]));

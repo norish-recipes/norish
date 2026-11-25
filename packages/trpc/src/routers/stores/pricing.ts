@@ -43,7 +43,7 @@ interface PriceablePair {
 
 interface PricingContext {
   userIds: string[];
-  householdKey: string;
+  householdId: string;
 }
 
 function priceablePairs(groceries: PriceableGrocery[]): PriceablePair[] {
@@ -81,7 +81,7 @@ async function askStore(
     storeId: pair.storeId,
     ingredientId: pair.ingredientId,
     name: pair.name,
-    householdKey: ctx.householdKey,
+    householdId: ctx.householdId,
   }).catch((err: unknown) => {
     log.error({ err, storeId: pair.storeId }, "Failed to enqueue a store lookup");
   });
@@ -151,7 +151,7 @@ export async function noticeGroceries(
   const links = [...known, ...fresh];
 
   for (const link of links) {
-    void stores.publish("linkUpdated", { link }, { householdKey: ctx.householdKey });
+    void stores.publish("linkUpdated", { link }, { householdId: ctx.householdId });
   }
 
   return links;
@@ -172,7 +172,7 @@ export async function priceTheList(ctx: PricingContext): Promise<ResolvedProduct
   const { known, fresh } = await resolveAndQueue(ctx, groceries);
 
   for (const link of fresh) {
-    void stores.publish("linkUpdated", { link }, { householdKey: ctx.householdKey });
+    void stores.publish("linkUpdated", { link }, { householdId: ctx.householdId });
   }
   const links = [...known, ...fresh];
   const productIds = links
@@ -199,7 +199,7 @@ export async function priceTheList(ctx: PricingContext): Promise<ResolvedProduct
         kind: "refresh",
         storeId,
         productIds: ids,
-        householdKey: ctx.householdKey,
+        householdId: ctx.householdId,
       }).catch((err: unknown) => {
         log.error({ err, storeId }, "Failed to enqueue a Shelf Price refresh");
       })

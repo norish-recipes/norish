@@ -10,7 +10,7 @@ import { router } from "../../trpc";
 
 const RUNNING_STATES = ["waiting", "active", "delayed"] as const;
 
-type ImportJob = Job<{ userId: string; householdKey: string }>;
+type ImportJob = Job<{ userId: string; householdId: string }>;
 
 const getPending = authedProcedure.query(async ({ ctx }) => {
   log.debug({ userId: ctx.user.id }, "Fetching pending recipe imports");
@@ -23,7 +23,7 @@ const getPending = authedProcedure.query(async ({ ctx }) => {
       case "everyone":
         return true;
       case "household":
-        return job.data.householdKey === ctx.householdKey;
+        return job.data.householdId === ctx.householdId;
       case "owner":
         return job.data.userId === ctx.user.id;
     }

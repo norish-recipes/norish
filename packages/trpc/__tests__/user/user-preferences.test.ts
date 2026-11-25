@@ -63,7 +63,7 @@ function createCaller(signedIn = true) {
           isServerAdmin: false,
         }
       : null,
-    household: null,
+    household: { id: "house-1", name: "My household", users: [{ id: "user-1", name: "" }] },
     connectionId: null,
     operationId: null,
   };

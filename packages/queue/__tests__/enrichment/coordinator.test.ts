@@ -37,8 +37,7 @@ const { enrichRecipe } = await import("../../src/enrichment/coordinator");
 const context = {
   recipeId: "recipe-1",
   userId: "user-1",
-  householdKey: "household-1",
-  householdUserIds: ["user-1"],
+  householdId: "household-1",
 };
 
 const ALL_ON = {

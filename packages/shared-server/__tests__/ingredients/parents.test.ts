@@ -29,7 +29,7 @@ import { addToPantry } from "@norish/shared-server/ingredients/pantry";
 import { resolveIngredients } from "@norish/shared-server/ingredients/resolver";
 import { pantryIngredientFor } from "@norish/shared/lib/pantry";
 
-import { getTestDb } from "../../../db/__tests__/helpers/db-test-helpers";
+import { getTestDb, testHouseholdOf } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 
 const GROENTE = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
@@ -47,7 +47,12 @@ describe("Parent Ingredients", () => {
   beforeEach(async () => {
     const [user] = await testBase.beforeEachTest();
 
-    actor = { userId: user.id, householdUserIds: null, isServerAdmin: false };
+    actor = {
+      userId: user.id,
+      householdId: testHouseholdOf(user.id),
+      memberIds: [user.id],
+      isServerAdmin: false,
+    };
   });
 
   afterAll(async () => {

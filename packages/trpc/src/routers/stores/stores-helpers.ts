@@ -16,7 +16,7 @@ import { duplicateAisleName } from "@norish/shared/lib/aisles";
 export type StoreProcedureContext = {
   user: { id: string };
   userIds: string[];
-  householdKey: string;
+  householdId: string;
 };
 
 /**
@@ -97,7 +97,7 @@ export async function createStoreData(
     {
       store: createdStore,
     },
-    { householdKey: ctx.householdKey }
+    { householdId: ctx.householdId }
   );
 
   return createdStore;

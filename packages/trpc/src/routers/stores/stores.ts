@@ -124,7 +124,7 @@ const update = authedProcedure.input(StoreUpdateInputSchema).mutation(async ({ c
       {
         store: updatedStore,
       },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
 
     return { success: true, stale: false };
@@ -161,7 +161,7 @@ const remove = authedProcedure.input(StoreDeleteSchema).mutation(async ({ ctx, i
       void groceries.publish(
         "updated",
         { changedGroceries: movedGroceries },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
     }
 
@@ -188,7 +188,7 @@ const remove = authedProcedure.input(StoreDeleteSchema).mutation(async ({ ctx, i
           storeId,
           deletedGroceryIds,
         },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
     }
 
@@ -198,7 +198,7 @@ const remove = authedProcedure.input(StoreDeleteSchema).mutation(async ({ ctx, i
         {
           groceryIds: deletedGroceryIds,
         },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
     }
 
@@ -245,7 +245,7 @@ const reorder = authedProcedure.input(StoreReorderSchema).mutation(async ({ ctx,
       {
         stores: reorderedStores,
       },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
 
     return { success: true, stale: reorderedStores.length !== storeUpdates.length };
@@ -296,7 +296,7 @@ const checkSearchAddress = authedProcedure
         const saved = await updateStore({ id: store.id, searchAddress });
 
         if (saved) {
-          void stores.publish("updated", { store: saved }, { householdKey: ctx.householdKey });
+          void stores.publish("updated", { store: saved }, { householdId: ctx.householdId });
         }
       }
     }

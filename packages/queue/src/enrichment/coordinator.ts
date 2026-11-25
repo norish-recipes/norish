@@ -43,8 +43,7 @@ export interface RecipeEnrichmentContext {
   recipeId: string;
   /** The user whose creation or request this is; also whose household allergies apply. */
   userId: string;
-  householdKey: string;
-  householdUserIds: string[] | null;
+  householdId: string;
 }
 
 export type RecipeEnrichmentRequest =
@@ -118,8 +117,7 @@ export async function enrichRecipe(
       recipeId: recipe.id,
       kind,
       userId: context.userId,
-      householdKey: context.householdKey,
-      householdUserIds: context.householdUserIds,
+      householdId: context.householdId,
       origin: request.origin,
       requestedByUserId: request.origin === "manual" ? context.userId : undefined,
       replaceExisting: replaceExisting ? true : undefined,
@@ -261,7 +259,7 @@ function evaluate(kind: RecipeEnrichmentKind, input: EvaluationInput): Eligibili
 }
 
 async function loadHouseholdHasAllergies(context: RecipeEnrichmentContext): Promise<boolean> {
-  const memberIds = context.householdUserIds ?? (await getHouseholdMemberIds(context.userId));
+  const memberIds = await getHouseholdMemberIds(context.householdId);
   const allergies = await getAllergiesForUsers(memberIds);
 
   return allergies.length > 0;

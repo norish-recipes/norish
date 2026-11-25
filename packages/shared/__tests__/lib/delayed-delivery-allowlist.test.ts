@@ -13,7 +13,6 @@ describe("delayed-delivery allowlist", () => {
       "groceries.create",
       "recurringGroceries.createRecurring",
       "stores.create",
-      "households.create",
       "households.join",
       "calendar.createItem",
       "caldav.triggerSync",

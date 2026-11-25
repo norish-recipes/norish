@@ -93,13 +93,14 @@ export async function GET(req: Request) {
   }
 
   const household = await getCachedHouseholdForUser(sessionUser.id);
-  const householdUserIds = household?.users.map((user: { id: string }) => user.id) ?? [];
+
+  if (!household) return new Response("Unauthorized", { status: 401 });
 
   const exportedAt = new Date();
   const { stream, recipeCount } = await buildNorishArchiveForViewer({
     ctx: {
       userId: sessionUser.id,
-      householdUserIds: householdUserIds.length > 0 ? householdUserIds : null,
+      householdId: household.id,
       // The exporter's own reach, from either doorway. An admin's library
       // already lists every recipe on the instance — `recipes.list` asks the
       // visibility layer with this same flag — so "everything the exporter can
