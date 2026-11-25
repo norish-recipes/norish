@@ -10,6 +10,7 @@ import {
 
 import { MUTATION_SEND_TIMEOUT_MS } from "../../offline/outbox-link";
 import { ConnectivityProvider } from "../../offline/react";
+import { isUncaptured } from "../../offline/uncaptured";
 import {
   answerCall,
   answerRead,
@@ -21,7 +22,6 @@ import {
   serveTRPC,
   trpcCalls,
 } from "../../trpc/testing";
-import { isUncaptured } from "../../offline/uncaptured";
 import { useEntryCreatePending, useEntryPicker } from "../use-entry-picker";
 
 vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
