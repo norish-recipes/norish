@@ -17,9 +17,13 @@ export default function CuisineVocabularyForm() {
   const { cuisines: offered, isLoading } = useCuisinesQuery();
   const cuisines = offered.filter((cuisine) => cuisine.instance);
   const [newName, setNewName] = useState("");
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editing, setEditing] = useState<{ id: string; version: number } | null>(null);
   const [editingName, setEditingName] = useState("");
-  const [pendingDelete, setPendingDelete] = useState<{ id: string; name: string } | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<{
+    id: string;
+    version: number;
+    name: string;
+  } | null>(null);
   const [error, setError] = useState<CuisineRefusal | null>(null);
   const { create, rename, remove, isPending } = useCuisineMutations(setError);
 
@@ -43,11 +47,11 @@ export default function CuisineVocabularyForm() {
   const handleRename = () => {
     const name = editingName.trim();
 
-    if (!editingId || !name) return;
+    if (!editing || !name) return;
 
     void run(
-      () => rename(editingId, name),
-      () => setEditingId(null)
+      () => rename(editing, name),
+      () => setEditing(null)
     );
   };
 
@@ -85,7 +89,7 @@ export default function CuisineVocabularyForm() {
       <ScrollShadow className="max-h-80" size={24}>
         <ul className="divide-border divide-y">
           {cuisines.map((cuisine) =>
-            editingId === cuisine.id ? (
+            editing?.id === cuisine.id ? (
               <li key={cuisine.id} className="flex items-center gap-2 py-2">
                 <TextField
                   aria-label={t("renameLabel", { name: cuisine.name })}
@@ -94,7 +98,7 @@ export default function CuisineVocabularyForm() {
                   onChange={setEditingName}
                   onKeyDown={(event) => {
                     if (event.key === "Enter") handleRename();
-                    if (event.key === "Escape") setEditingId(null);
+                    if (event.key === "Escape") setEditing(null);
                   }}
                 >
                   <Input variant="secondary" />
@@ -110,7 +114,7 @@ export default function CuisineVocabularyForm() {
                   action="cancel"
                   label={tActions("cancel")}
                   size="sm"
-                  onPress={() => setEditingId(null)}
+                  onPress={() => setEditing(null)}
                 />
               </li>
             ) : (
@@ -123,7 +127,7 @@ export default function CuisineVocabularyForm() {
                     size="sm"
                     onPress={() => {
                       setError(null);
-                      setEditingId(cuisine.id);
+                      setEditing(cuisine);
                       setEditingName(cuisine.name);
                     }}
                   />
@@ -131,7 +135,7 @@ export default function CuisineVocabularyForm() {
                     action="delete"
                     label={t("deleteLabel", { name: cuisine.name })}
                     size="sm"
-                    onPress={() => setPendingDelete({ id: cuisine.id, name: cuisine.name })}
+                    onPress={() => setPendingDelete(cuisine)}
                   />
                 </div>
               </li>
@@ -151,7 +155,7 @@ export default function CuisineVocabularyForm() {
               if (!target) return;
 
               void run(
-                () => remove(target.id),
+                () => remove(target),
                 () => setPendingDelete(null)
               );
             }}

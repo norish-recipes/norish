@@ -84,14 +84,22 @@ describe("the lists router", () => {
       { ...soja, recipeCount: 0, editable: true },
       { ...soy, recipeCount: 0, editable: true },
     ]);
-    expect(await theirs.rename({ kind: "tag", id: soja.id, name: "Soja" })).toMatchObject({
-      merged: false,
-      entry: { name: "Soja" },
+    const renamed = await theirs.rename({ kind: "tag", id: soja.id, version: 1, name: "Soja" });
+
+    expect(renamed).toMatchObject({ stale: false, merged: false, entry: { name: "Soja" } });
+    // A delete confirmed against the entry as it was before the rename changes nothing.
+    expect(await mine.delete({ kind: "tag", id: soja.id, version: 1 })).toEqual({ stale: true });
+    expect(
+      await mine.merge({
+        kind: "tag",
+        source: { id: soy.id, version: 1 },
+        target: { id: soja.id, version: 2 },
+      })
+    ).toMatchObject({ stale: false, entry: { id: soja.id, version: 3 } });
+    expect(await mine.delete({ kind: "tag", id: soja.id, version: 3 })).toEqual({
+      stale: false,
+      detached: 0,
     });
-    expect(await mine.merge({ kind: "tag", sourceId: soy.id, targetId: soja.id })).toMatchObject({
-      entry: { id: soja.id },
-    });
-    expect(await mine.delete({ kind: "tag", id: soja.id })).toEqual({ detached: 0 });
     expect(await mine.list({ kind: "tag" })).toEqual([]);
     expect(realtime.published.map(({ event, target }) => [event, target])).toEqual(
       Array(5).fill(["changed", { householdId: helpers.testHouseholdOf(member.id) }])
@@ -105,10 +113,12 @@ describe("the lists router", () => {
     expect((await stranger.list({ kind: "cuisine" })).map((e) => e.name)).not.toContain(
       "Grandma's"
     );
-    await expect(stranger.rename({ kind: "cuisine", id: entry.id, name: "Mine" })).rejects.toThrow(
+    await expect(
+      stranger.rename({ kind: "cuisine", id: entry.id, version: 1, name: "Mine" })
+    ).rejects.toThrow("Not found");
+    await expect(stranger.delete({ kind: "cuisine", id: entry.id, version: 1 })).rejects.toThrow(
       "Not found"
     );
-    await expect(stranger.delete({ kind: "cuisine", id: entry.id })).rejects.toThrow("Not found");
   });
 
   it("leaves the instance's Cuisines to an admin and the built-in Categories to nobody", async () => {
@@ -118,15 +128,15 @@ describe("the lists router", () => {
     const dinner = (await theirs.list({ kind: "category" })).find((e) => e.name === "Dinner")!;
 
     expect([italian.instance, italian.editable, dinner.editable]).toEqual([true, false, false]);
-    await expect(mine.rename({ kind: "cuisine", id: italian.id, name: "Italia" })).rejects.toThrow(
-      "This entry cannot be changed"
-    );
+    await expect(
+      mine.rename({ kind: "cuisine", id: italian.id, version: italian.version, name: "Italia" })
+    ).rejects.toThrow("This entry cannot be changed");
     await expect(mine.add({ kind: "cuisine", name: "Basque", instance: true })).rejects.toThrow(
       "Only an administrator adds these"
     );
-    await expect(theirs.delete({ kind: "category", id: dinner.id })).rejects.toThrow(
-      "This entry cannot be changed"
-    );
+    await expect(
+      theirs.delete({ kind: "category", id: dinner.id, version: dinner.version })
+    ).rejects.toThrow("This entry cannot be changed");
     await expect(theirs.add({ kind: "category", name: "Brunch", instance: true })).rejects.toThrow(
       "Only an administrator adds these"
     );
@@ -138,7 +148,7 @@ describe("the lists router", () => {
       editable: false,
     });
     expect(
-      await theirs.rename({ kind: "cuisine", id: basque.id, name: "Basque Country" })
+      await theirs.rename({ kind: "cuisine", id: basque.id, version: 1, name: "Basque Country" })
     ).toMatchObject({ entry: { name: "Basque Country", editable: true } });
   });
 

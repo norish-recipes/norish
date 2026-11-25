@@ -169,18 +169,20 @@ describe("household lists", () => {
     const entries = await listEntries("tag", ann.household);
     const bbq = entries.find((e) => e.name === "BBQ");
     const barbecue = entries.find((e) => e.name === "Barbecue");
-    const renamed = await renameEntry("tag", ann.household, barbecue!.id, "bbq");
+    const renamed = await renameEntry("tag", ann.household, barbecue!, "bbq");
 
-    expect(renamed).toEqual({ merged: true, entry: expect.objectContaining({ id: bbq!.id }) });
+    expect(renamed).toMatchObject({
+      applied: true,
+      value: { merged: true, entry: { id: bbq!.id } },
+    });
     expect(await tagsOf(ann.recipe)).toEqual(["BBQ"]);
     expect(await tagsOf(other.id)).toEqual(["BBQ"]);
     expect(await listEntries("tag", ann.household)).toEqual([
       expect.objectContaining({ id: bbq!.id, name: "BBQ", recipeCount: 2 }),
     ]);
-    expect(await renameEntry("tag", bob.household, bbq!.id, "Grill")).toBeNull();
-    expect(await renameEntry("tag", ann.household, bbq!.id, "B.B.Q.")).toMatchObject({
-      merged: false,
-      entry: { name: "B.B.Q." },
+    expect(await renameEntry("tag", bob.household, renamed!.value!.entry, "Grill")).toBeNull();
+    expect(await renameEntry("tag", ann.household, renamed!.value!.entry, "B.B.Q.")).toMatchObject({
+      value: { merged: false, entry: { name: "B.B.Q." } },
     });
   });
 
@@ -192,9 +194,9 @@ describe("household lists", () => {
 
     await db.transaction((tx) => attachCategoriesToRecipeByInputTx(tx, ann.recipe, ["Supper"]));
 
-    expect(await mergeEntries("category", bob.household, mine.id, dinner!.id)).toBeNull();
-    expect(await mergeEntries("category", ann.household, mine.id, dinner!.id)).toMatchObject({
-      id: dinner!.id,
+    expect(await mergeEntries("category", bob.household, mine, dinner!)).toBeNull();
+    expect(await mergeEntries("category", ann.household, mine, dinner!)).toMatchObject({
+      value: { id: dinner!.id },
     });
     expect((await getRecipeFull(ann.recipe))?.categories).toEqual(["Dinner"]);
   });
@@ -207,9 +209,41 @@ describe("household lists", () => {
 
     const soja = (await listEntries("tag", ann.household)).find((e) => e.name === "soja")!;
 
-    expect(await deleteEntry("tag", bob.household, soja.id)).toBeNull();
-    expect(await deleteEntry("tag", ann.household, soja.id)).toEqual({ detached: 2 });
+    expect(await deleteEntry("tag", bob.household, soja)).toBeNull();
+    expect(await deleteEntry("tag", ann.household, soja)).toMatchObject({
+      value: { detached: 2 },
+    });
     expect(await tagsOf(ann.recipe)).toEqual(["tofu"]);
+  });
+
+  it("refuses a rename, merge or delete made against an older version, a merge bumping the target", async () => {
+    const soja = (await addEntry("tag", ann.household, "soja"))!.entry;
+    const soy = (await addEntry("tag", ann.household, "soy"))!.entry;
+    const renamed = await renameEntry("tag", ann.household, soja, "Soja");
+
+    expect(renamed).toMatchObject({ applied: true, value: { entry: { version: 2 } } });
+    expect(await renameEntry("tag", ann.household, soja, "Tofu")).toEqual({
+      applied: false,
+      stale: true,
+    });
+    expect(await deleteEntry("tag", ann.household, soja)).toEqual({ applied: false, stale: true });
+    expect(await mergeEntries("tag", ann.household, soy, soja)).toEqual({
+      applied: false,
+      stale: true,
+    });
+
+    const merged = await mergeEntries("tag", ann.household, soy, { id: soja.id, version: 2 });
+
+    expect(merged).toMatchObject({ applied: true, value: { id: soja.id, version: 3 } });
+    expect(await deleteEntry("tag", ann.household, { id: soja.id, version: 2 })).toEqual({
+      applied: false,
+      stale: true,
+    });
+    expect(await deleteEntry("tag", ann.household, { id: soja.id, version: 3 })).toEqual({
+      applied: true,
+      stale: false,
+      value: { detached: 0 },
+    });
   });
 
   it("appends enrichment Tags into the recipe's household list", async () => {
@@ -244,7 +278,7 @@ describe("household lists", () => {
       const soja = (await addEntry("tag", ann.household, "soja"))!.entry;
       const [run] = await raceBehind(
         (tx) => tx.execute(sql`DELETE FROM tags WHERE id = ${soja.id}`),
-        [() => renameEntry("tag", ann.household, soja.id, "Tofu")]
+        [() => renameEntry("tag", ann.household, soja, "Tofu")]
       );
 
       expect(run).toEqual({ status: "fulfilled", value: null });
@@ -259,7 +293,7 @@ describe("household lists", () => {
       const [soja, soy] = await listEntries("tag", ann.household);
       const [run] = await raceBehind(
         (tx) => replaceRecipeEntriesByNameTx(tx, "tag", other.id, ["soja"]),
-        [() => mergeEntries("tag", ann.household, soja!.id, soy!.id)]
+        [() => mergeEntries("tag", ann.household, soja!, soy!)]
       );
 
       expect(run?.status).toBe("fulfilled");

@@ -119,55 +119,59 @@ const add = authedProcedure
     };
   });
 
+const EntryRefSchema = z.object({ id: z.uuid(), version: z.number().int() });
+
+/** A change against an older version than the entry's changes nothing and answers `stale`. */
+const STALE = { stale: true } as const;
+
 /** Renames an entry; a name the list already has merges the two and answers the one kept. */
 const rename = authedProcedure
-  .input(z.object({ kind: KindSchema, id: z.uuid(), name: NameSchema }))
+  .input(EntryRefSchema.extend({ kind: KindSchema, name: NameSchema }))
   .mutation(async ({ ctx, input }) => {
     const scope = await changeableScope(ctx, input.kind, input.id);
-    const renamed = await renameEntry(input.kind, scope, input.id, input.name);
+    const renamed = await renameEntry(input.kind, scope, input, input.name);
 
     if (!renamed) throw new TRPCError({ code: "NOT_FOUND", message: "Not found" });
+    if (renamed.stale) return STALE;
 
-    log.info(
-      { userId: ctx.user.id, kind: input.kind, merged: renamed.merged },
-      "List entry renamed"
-    );
+    const { entry, merged } = renamed.value;
+
+    log.info({ userId: ctx.user.id, kind: input.kind, merged }, "List entry renamed");
     announce(input.kind, scope);
 
-    return {
-      entry: shown(ctx, input.kind, scope ?? ctx.householdId, renamed.entry),
-      merged: renamed.merged,
-    };
+    return { stale: false, entry: shown(ctx, input.kind, scope ?? ctx.householdId, entry), merged };
   });
 
 /** Moves the source's recipes onto the target (the household's own or an instance entry) and removes the source. */
 const merge = authedProcedure
-  .input(z.object({ kind: KindSchema, sourceId: z.uuid(), targetId: z.uuid() }))
+  .input(z.object({ kind: KindSchema, source: EntryRefSchema, target: EntryRefSchema }))
   .mutation(async ({ ctx, input }) => {
-    const scope = await changeableScope(ctx, input.kind, input.sourceId);
-    const target = await mergeEntries(input.kind, scope, input.sourceId, input.targetId);
+    const scope = await changeableScope(ctx, input.kind, input.source.id);
+    const merged = await mergeEntries(input.kind, scope, input.source, input.target);
 
-    if (!target) throw new TRPCError({ code: "NOT_FOUND", message: "Not found" });
+    if (!merged) throw new TRPCError({ code: "NOT_FOUND", message: "Not found" });
+    if (merged.stale) return STALE;
 
     log.info({ userId: ctx.user.id, kind: input.kind }, "List entries merged");
     announce(input.kind, scope);
 
-    return { entry: shown(ctx, input.kind, scope ?? ctx.householdId, target) };
+    return { stale: false, entry: shown(ctx, input.kind, scope ?? ctx.householdId, merged.value) };
   });
 
-/** Deletes an entry, taking it off its recipes; answers how many recipes it was on. */
+/** Deletes an entry, taking it off its recipes; answers how many recipes it came off. */
 const remove = authedProcedure
-  .input(z.object({ kind: KindSchema, id: z.uuid() }))
+  .input(EntryRefSchema.extend({ kind: KindSchema }))
   .mutation(async ({ ctx, input }) => {
     const scope = await changeableScope(ctx, input.kind, input.id);
-    const deleted = await deleteEntry(input.kind, scope, input.id);
+    const deleted = await deleteEntry(input.kind, scope, input);
 
     if (!deleted) throw new TRPCError({ code: "NOT_FOUND", message: "Not found" });
+    if (deleted.stale) return STALE;
 
-    log.info({ userId: ctx.user.id, kind: input.kind, ...deleted }, "List entry deleted");
+    log.info({ userId: ctx.user.id, kind: input.kind, ...deleted.value }, "List entry deleted");
     announce(input.kind, scope);
 
-    return deleted;
+    return { stale: false, ...deleted.value };
   });
 
 export const listsProcedures = router({ list, add, rename, merge, delete: remove });

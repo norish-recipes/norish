@@ -20,8 +20,10 @@ import {
 import { entryFold } from "@norish/shared/lib/fold-name";
 import { stripHtmlTags } from "@norish/shared/lib/helpers";
 
+import type { MutationOutcome } from "./mutation-outcomes";
 import { isConstraintViolation } from "./constraint-violation";
 import { ForeignHouseholdReferenceError } from "./household-rows";
+import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 import { rowsOf, uuidListSql } from "./raw-sql";
 
 export type ListKind = "tag" | "cuisine" | "category";
@@ -380,13 +382,14 @@ export async function addEntry(
   return existing ? { entry: existing, created: false } : null;
 }
 
-/** Moves every recipe from `sourceId` onto `targetId` without duplicates, then removes the source. */
+/** Moves every recipe from `sourceId` onto `targetId` without duplicates, removes the source and
+ * answers the target, its version bumped. */
 export async function mergeEntryTx(
   tx: DbTransaction,
   kind: ListKind,
   sourceId: string,
   targetId: string
-) {
+): Promise<ListEntryRow | undefined> {
   const { table, link, entity } = KINDS[kind];
 
   await tx.execute(sql`
@@ -396,7 +399,19 @@ export async function mergeEntryTx(
   `);
   await tx.execute(sql`DELETE FROM ${link} WHERE ${entity} = ${sourceId}::uuid`);
   await tx.execute(sql`DELETE FROM ${table} WHERE id = ${sourceId}::uuid`);
+
+  const [target] = rowsOf<ListEntryRow>(
+    await tx.execute(sql`
+      UPDATE ${table} AS e SET version = e.version + 1 WHERE e.id = ${targetId}::uuid
+      RETURNING ${ROW_COLUMNS}
+    `)
+  );
+
+  return target;
 }
+
+/** An entry as a change names it: the version the caller last read. */
+export type EntryRef = { id: string; version: number };
 
 /** The scope's entry `id`, locked for the change. */
 async function lockOwnEntryTx(tx: DbTransaction, kind: ListKind, scope: ListScope, id: string) {
@@ -414,15 +429,15 @@ async function lockOwnEntryTx(tx: DbTransaction, kind: ListKind, scope: ListScop
 export type RenameEntryResult = { entry: ListEntryRow; merged: boolean };
 
 /**
- * Renames the scope's entry `id`. A name the list already has (the instance's included) merges the
- * two in one transaction: the entry's recipes move onto the other and the entry goes.
+ * Renames the scope's entry, or stale when it changed since `version`. A name the list already
+ * has (the instance's included) merges the entry onto that one in the same transaction.
  */
 export async function renameEntry(
   kind: ListKind,
   scope: ListScope,
-  id: string,
+  { id, version }: EntryRef,
   name: string
-): Promise<RenameEntryResult | null> {
+): Promise<MutationOutcome<RenameEntryResult> | null> {
   const { table } = KINDS[kind];
   const cleaned = cleanEntryName(name);
 
@@ -436,6 +451,7 @@ export async function renameEntry(
         const own = await lockOwnEntryTx(tx, kind, scope, id);
 
         if (!own) return null;
+        if (own.version !== version) return staleOutcome<RenameEntryResult>();
 
         if (own.name_fold !== fold) {
           const [target] = rowsOf<ListEntryRow>(
@@ -447,9 +463,9 @@ export async function renameEntry(
           );
 
           if (target) {
-            await mergeEntryTx(tx, kind, id, target.id);
+            const merged = await mergeEntryTx(tx, kind, id, target.id);
 
-            return { entry: target, merged: true };
+            return merged ? appliedOutcome({ entry: merged, merged: true }) : null;
           }
         }
 
@@ -460,7 +476,7 @@ export async function renameEntry(
           `)
         );
 
-        return renamed ? { entry: renamed, merged: false } : null;
+        return renamed ? appliedOutcome({ entry: renamed, merged: false }) : null;
       });
     } catch (error) {
       // An entry of that name made meanwhile: the next attempt merges onto it.
@@ -470,50 +486,57 @@ export async function renameEntry(
 }
 
 /**
- * Merges the scope's entry `sourceId` into `targetId`, the scope's own or an instance entry: the
- * source's recipes carry the target instead, once each, and the source goes.
+ * Merges the scope's entry `source` into `target`, the scope's own or an instance entry, or stale
+ * when either changed since its version: the source's recipes carry the target, and the source goes.
  */
 export async function mergeEntries(
   kind: ListKind,
   scope: ListScope,
-  sourceId: string,
-  targetId: string
-): Promise<ListEntryRow | null> {
+  source: EntryRef,
+  target: EntryRef
+): Promise<MutationOutcome<ListEntryRow> | null> {
   const { table } = KINDS[kind];
 
-  if (sourceId === targetId) return null;
+  if (source.id === target.id) return null;
 
   return await db.transaction(async (tx) => {
     // Both rows locked in id order, so two merges of the same pair cannot deadlock.
     const locked = rowsOf<ListEntryRow & { owned: boolean }>(
       await tx.execute(sql`
         SELECT ${ROW_COLUMNS}, ${ownedBy(scope)} AS owned FROM ${table} e
-        WHERE e.id IN (${uuidListSql([sourceId, targetId])})
+        WHERE e.id IN (${uuidListSql([source.id, target.id])})
           AND (${ownedBy(scope)} OR e.household_id IS NULL)
         ORDER BY e.id FOR UPDATE
       `)
     );
-    const source = locked.find((row) => row.id === sourceId && row.owned);
-    const target = locked.find((row) => row.id === targetId);
+    const from = locked.find((row) => row.id === source.id && row.owned);
+    const into = locked.find((row) => row.id === target.id);
 
-    if (!source || !target) return null;
+    if (!from || !into) return null;
+    if (from.version !== source.version || into.version !== target.version) {
+      return staleOutcome<ListEntryRow>();
+    }
 
-    await mergeEntryTx(tx, kind, sourceId, targetId);
+    const merged = await mergeEntryTx(tx, kind, source.id, target.id);
 
-    return { id: target.id, name: target.name, instance: target.instance, version: target.version };
+    return merged ? appliedOutcome(merged) : null;
   });
 }
 
-/** Deletes the scope's entry `id`, taking it off every recipe; returns how many it was on. */
+/** Deletes the scope's entry off every recipe, or stale when it changed since `version`; answers
+ * how many recipes it came off. */
 export async function deleteEntry(
   kind: ListKind,
   scope: ListScope,
-  id: string
-): Promise<{ detached: number } | null> {
+  { id, version }: EntryRef
+): Promise<MutationOutcome<{ detached: number }> | null> {
   const { table, link, entity } = KINDS[kind];
 
   return await db.transaction(async (tx) => {
-    if (!(await lockOwnEntryTx(tx, kind, scope, id))) return null;
+    const own = await lockOwnEntryTx(tx, kind, scope, id);
+
+    if (!own) return null;
+    if (own.version !== version) return staleOutcome<{ detached: number }>();
 
     const detached = rowsOf<{ recipe_id: string }>(
       await tx.execute(sql`DELETE FROM ${link} WHERE ${entity} = ${id}::uuid RETURNING recipe_id`)
@@ -521,7 +544,7 @@ export async function deleteEntry(
 
     await tx.execute(sql`DELETE FROM ${table} WHERE id = ${id}::uuid`);
 
-    return { detached: detached.length };
+    return appliedOutcome({ detached: detached.length });
   });
 }
 

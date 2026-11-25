@@ -72,8 +72,8 @@ describe("useCuisineMutations", () => {
     let removed: Promise<boolean> | undefined;
 
     act(() => {
-      renamed = result.current.rename("c1", "Thai");
-      removed = result.current.remove("c2");
+      renamed = result.current.rename({ id: "c1", version: 1 }, "Thai");
+      removed = result.current.remove({ id: "c2", version: 3 });
     });
     const rename = await sentCall("lists.rename");
     const remove = await sentCall("lists.delete");
@@ -86,5 +86,26 @@ describe("useCuisineMutations", () => {
     expect([await renamed, await removed]).toEqual([false, false]);
     expect(onRefused.mock.calls).toEqual([["saveFailed"], ["saveFailed"]]);
     expect(stale()).toBe(false);
+  });
+
+  it("sends the version read and calls a stale answer not saved", async () => {
+    const { stale, wrapper } = setUp();
+    const onRefused = vi.fn();
+    const { result } = renderHook(() => useCuisineMutations(onRefused), { wrapper });
+    let removed: Promise<boolean> | undefined;
+
+    act(() => {
+      removed = result.current.remove({ id: "c2", version: 3 });
+    });
+    expect((await sentCall("lists.delete")).input).toEqual({
+      kind: "cuisine",
+      id: "c2",
+      version: 3,
+    });
+    await answerCall("lists.delete", { stale: true });
+
+    expect(await removed).toBe(false);
+    expect(onRefused.mock.calls).toEqual([["saveFailed"]]);
+    expect(stale()).toBe(true);
   });
 });

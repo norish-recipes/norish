@@ -1,10 +1,13 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { wentThrough } from "../offline/settled";
+import { answered } from "../offline/settled";
 import { useTRPC } from "../trpc";
 
 /** Why a cuisine write failed: the name is taken, or anything else. */
 export type CuisineRefusal = "duplicate" | "saveFailed";
+
+/** A Cuisine as last read: a rename or delete of an older version is refused. */
+type CuisineRef = { id: string; version: number };
 
 /**
  * Adds, renames and deletes the instance's Cuisines, then rereads the list every cuisine picker
@@ -23,20 +26,28 @@ export function useCuisineMutations(onRefused: (refusal: CuisineRefusal) => void
   const rename = useMutation(trpc.lists.rename.mutationOptions(handlers));
   const remove = useMutation(trpc.lists.delete.mutationOptions(handlers));
 
+  /** Whether a write was saved; `onError` told a failed one, `refusal` names a refused answer. */
+  const saved = async <T>(write: Promise<T>, refusal: (answer: T) => CuisineRefusal | null) => {
+    const answer = await answered(write);
+    const refused = answer === null ? null : refusal(answer);
+
+    if (refused) onRefused(refused);
+
+    return answer !== null && refused === null;
+  };
+  // Changed since it was read: the reread list shows it as it is now.
+  const unlessStale = (answer: { stale: boolean }) => (answer.stale ? "saveFailed" : null);
+
   return {
     /** Each resolves whether it was saved. */
-    create: async (name: string) => {
-      const added = await create
-        .mutateAsync({ kind: "cuisine", name, instance: true })
-        .catch(() => null);
-
-      if (added && !added.created) onRefused("duplicate");
-
-      return added?.created === true;
-    },
-    rename: (id: string, name: string) =>
-      wentThrough(rename.mutateAsync({ kind: "cuisine", id, name })),
-    remove: (id: string) => wentThrough(remove.mutateAsync({ kind: "cuisine", id })),
+    create: (name: string) =>
+      saved(create.mutateAsync({ kind: "cuisine", name, instance: true }), (added) =>
+        added.created ? null : "duplicate"
+      ),
+    rename: ({ id, version }: CuisineRef, name: string) =>
+      saved(rename.mutateAsync({ kind: "cuisine", id, version, name }), unlessStale),
+    remove: ({ id, version }: CuisineRef) =>
+      saved(remove.mutateAsync({ kind: "cuisine", id, version }), unlessStale),
     isPending: create.isPending || rename.isPending || remove.isPending,
   };
 }
