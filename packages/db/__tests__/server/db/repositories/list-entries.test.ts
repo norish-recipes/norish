@@ -181,7 +181,23 @@ describe("household lists", () => {
       expect(await names("tag")).toEqual([]);
     });
 
-    it("still creates for the callers that do not say otherwise: imports, AI and the REST routes", async () => {
+    it("attaches the household Category the reader picked over a built-in it is an alias of", async () => {
+      await addEntry("category", ann.household, "Dinners");
+
+      await updateRecipeWithRefs(ann.recipe, ann.id, { categories: ["Dinners"] }, undefined, {
+        createEntries: false,
+      });
+
+      expect((await getRecipeFull(ann.recipe))?.categories).toEqual(["Dinners"]);
+    });
+
+    it("maps an alias to its built-in for the callers that create: imports, AI and the REST routes", async () => {
+      await updateRecipeWithRefs(ann.recipe, ann.id, { categories: ["Dinners"] });
+
+      expect((await getRecipeFull(ann.recipe))?.categories).toEqual(["Dinner"]);
+    });
+
+    it("creates the entries a plain save names, as imports, AI and the REST routes do", async () => {
       await updateRecipeWithRefs(ann.recipe, ann.id, {
         tags: [{ name: "Typed" }],
         categories: ["Typed category"],
