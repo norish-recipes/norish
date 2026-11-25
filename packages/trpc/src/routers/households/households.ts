@@ -7,22 +7,18 @@ import type {
 } from "@norish/shared/contracts/dto/household";
 import type { HouseholdUserInfo } from "@norish/shared/contracts/realtime/households";
 import {
-  addUserToHousehold,
-  createHousehold,
   findHouseholdByJoinCode,
   getAllergiesForUsers,
   getHouseholdForUser,
   getUsersByHouseholdId,
   isUserHouseholdAdmin,
+  joinHousehold,
   kickUserFromHousehold,
+  moveToHouseholdOfOne,
   regenerateJoinCode,
-  removeUserFromHousehold,
   transferHouseholdAdmin,
 } from "@norish/db";
-import {
-  invalidateHouseholdCache,
-  invalidateHouseholdCacheForUsers,
-} from "@norish/shared-server/cache/household";
+import { invalidateHouseholdCacheForUsers } from "@norish/shared-server/cache/household";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { emitConnectionInvalidation } from "@norish/shared-server/realtime/connection";
 import { households } from "@norish/shared-server/realtime/households";
@@ -32,7 +28,7 @@ import {
   RegenerateHouseholdJoinCodeInputSchema,
   TransferHouseholdAdminInputSchema,
 } from "@norish/shared/contracts/zod";
-import { HouseholdNameSchema, JoinCodeSchema } from "@norish/shared/lib/validation/schemas";
+import { JoinCodeSchema } from "@norish/shared/lib/validation/schemas";
 
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
@@ -91,74 +87,35 @@ function toHouseholdDto(
   } as HouseholdSettingsDto;
 }
 
-const get = authedProcedure.query(async ({ ctx }) => {
-  log.debug({ userId: ctx.user.id }, "Getting household settings");
-
-  const household = await getHouseholdForUser(ctx.user.id);
+/** The household as `userId` sees it in settings, allergies included. */
+async function householdSettingsFor(userId: string) {
+  const household = await getHouseholdForUser(userId);
   const userIds = household?.users.map((u) => u.id) ?? [];
   const allergiesRows = await getAllergiesForUsers(userIds);
   const allergies = [...new Set(allergiesRows.map((a) => a.tagName))];
-  const dto = toHouseholdDto(household, ctx.user.id, allergies);
 
-  log.debug({ userId: ctx.user.id, hasHousehold: !!dto }, "Household settings retrieved");
+  return toHouseholdDto(household, userId, allergies);
+}
 
-  return { household: dto, currentUserId: ctx.user.id };
+const get = authedProcedure.query(async ({ ctx }) => {
+  log.debug({ userId: ctx.user.id }, "Getting household settings");
+
+  const household = await householdSettingsFor(ctx.user.id);
+
+  // Every account has a household; none means the account is gone.
+  if (!household) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Household not found" });
+  }
+
+  return { household, currentUserId: ctx.user.id };
 });
 
-const create = authedProcedure
-  .input(z.object({ name: HouseholdNameSchema }))
-  .mutation(async ({ ctx, input }) => {
-    const name = (input.name ?? "My Household").trim();
-    const id = crypto.randomUUID();
-
-    log.info({ userId: ctx.user.id, name }, "Creating household");
-
-    // Check if user is already in a household
-    const existingHousehold = await getHouseholdForUser(ctx.user.id);
-
-    if (existingHousehold) {
-      throw new TRPCError({
-        code: "CONFLICT",
-        message: "You are already in a household. Leave it first to create a new one.",
-      });
-    }
-
-    // Create household async and emit events
-    createHousehold({ name, adminUserId: ctx.user.id })
-      .then(async (household) => {
-        await addUserToHousehold({ householdId: household.id, userId: ctx.user.id });
-
-        log.info({ userId: ctx.user.id, householdId: household.id }, "Household created");
-
-        // Get full household data with users
-        const fullHousehold = await getHouseholdForUser(ctx.user.id);
-        const userIds = fullHousehold?.users.map((u) => u.id) ?? [];
-        const allergiesRows = await getAllergiesForUsers(userIds);
-        const allergies = [...new Set(allergiesRows.map((a) => a.tagName))];
-        const dto = toHouseholdDto(fullHousehold, ctx.user.id, allergies);
-
-        // Awaited before the invalidation, so the creator's view receives the
-        // household before its socket closes.
-        await households.publish("created", { household: dto! }, { userId: ctx.user.id });
-
-        // Invalidate cache and terminate connection to rebind subscriptions
-        // The client already has the household data from the event above
-        await invalidateHouseholdCache(ctx.user.id);
-        await emitConnectionInvalidation(ctx.user.id, "household-created");
-      })
-      .catch((err) => {
-        log.error({ err, userId: ctx.user.id }, "Failed to create household");
-        void households.publish(
-          "failed",
-          {
-            reason: "Failed to create household",
-          },
-          { userId: ctx.user.id }
-        );
-      });
-
-    return { id };
-  });
+const JOIN_REFUSALS = {
+  "already-member": "You are already in this household.",
+  shared: "You are already in a household. Leave it first to join another one.",
+  "holds-things":
+    "Your household already has recipes, groceries or plans of its own, so it cannot join another household yet.",
+} as const;
 
 const join = authedProcedure
   .input(z.object({ code: z.string() }))
@@ -170,16 +127,6 @@ const join = authedProcedure
 
     // Validate cleaned code format
     JoinCodeSchema.parse(cleaned);
-
-    // Check if user is already in a household
-    const existingHousehold = await getHouseholdForUser(ctx.user.id);
-
-    if (existingHousehold) {
-      throw new TRPCError({
-        code: "CONFLICT",
-        message: "You are already in a household. Leave it first to join another one.",
-      });
-    }
 
     // Find household by code
     const household = await findHouseholdByJoinCode(cleaned);
@@ -205,47 +152,37 @@ const join = authedProcedure
     const existingMembers = await getUsersByHouseholdId(householdId);
     const existingMemberIds = existingMembers.map((u) => u.userId);
 
-    // Add user async and emit events
-    addUserToHousehold({ householdId, userId: ctx.user.id })
-      .then(async (membership) => {
-        log.info({ userId: ctx.user.id, householdId }, "User joined household");
-        const versionedMembership = membership as typeof membership & { version: number };
+    // The move is one transaction; a refusal reaches the caller as the mutation's error.
+    const outcome = await joinHousehold(ctx.user.id, householdId);
 
-        // Get full household for the joining user
-        const fullHousehold = await getHouseholdForUser(ctx.user.id);
-        const userIds = fullHousehold?.users.map((u) => u.id) ?? [];
-        const allergiesRows = await getAllergiesForUsers(userIds);
-        const allergies = [...new Set(allergiesRows.map((a) => a.tagName))];
-        const dto = toHouseholdDto(fullHousehold, ctx.user.id, allergies);
+    if ("refused" in outcome) {
+      throw new TRPCError({ code: "CONFLICT", message: JOIN_REFUSALS[outcome.refused] });
+    }
 
-        // Awaited before the invalidation, so the joining user's view receives
-        // the household before its socket closes.
-        await households.publish("created", { household: dto! }, { userId: ctx.user.id });
+    log.info({ userId: ctx.user.id, householdId }, "User joined household");
 
-        // Emit to existing household members
-        const userInfo = {
-          id: ctx.user.id,
-          name: ctx.user.name ?? null,
-          isAdmin: false,
-          version: versionedMembership.version,
-        } as HouseholdUserInfo;
+    void (async () => {
+      const dto = await householdSettingsFor(ctx.user.id);
 
-        await households.publish("userJoined", { user: userInfo }, { householdKey: householdId });
+      // Awaited before the invalidation, so the joining user's view receives
+      // the household before its socket closes.
+      if (dto) await households.publish("created", { household: dto }, { userId: ctx.user.id });
 
-        // Invalidate cache and terminate connection AFTER events are sent
-        await invalidateHouseholdCacheForUsers([ctx.user.id, ...existingMemberIds]);
-        await emitConnectionInvalidation(ctx.user.id, "household-joined");
-      })
-      .catch((err) => {
-        log.error({ err, userId: ctx.user.id }, "Failed to join household");
-        void households.publish(
-          "failed",
-          {
-            reason: "Failed to join household",
-          },
-          { userId: ctx.user.id }
-        );
-      });
+      const userInfo = {
+        id: ctx.user.id,
+        name: ctx.user.name ?? null,
+        isAdmin: false,
+        version: outcome.joined.version,
+      } as HouseholdUserInfo;
+
+      await households.publish("userJoined", { user: userInfo }, { householdId });
+
+      // Invalidate cache and terminate connection AFTER events are sent
+      await invalidateHouseholdCacheForUsers([ctx.user.id, ...existingMemberIds]);
+      await emitConnectionInvalidation(ctx.user.id, "household-joined");
+    })().catch((err) => {
+      log.error({ err, userId: ctx.user.id }, "Failed to announce household join");
+    });
 
     return { householdId };
   });
@@ -264,8 +201,15 @@ const leave = authedProcedure.input(LeaveHouseholdInputSchema).mutation(async ({
     });
   }
 
+  if (household.users.length === 1) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "You are the only member of this household.",
+    });
+  }
+
   // Check if user is admin with other members
-  if (household.adminUserId === ctx.user.id && household.users.length > 1) {
+  if (household.adminUserId === ctx.user.id) {
     throw new TRPCError({
       code: "FORBIDDEN",
       message:
@@ -277,7 +221,7 @@ const leave = authedProcedure.input(LeaveHouseholdInputSchema).mutation(async ({
   const remainingMemberIds = household.users.filter((u) => u.id !== ctx.user.id).map((u) => u.id);
 
   // Remove user async and emit events - fire and forget
-  removeUserFromHousehold(householdId, ctx.user.id, version)
+  moveToHouseholdOfOne(householdId, ctx.user.id, version)
     .then(async (result) => {
       if (result.stale) {
         log.info(
@@ -295,10 +239,13 @@ const leave = authedProcedure.input(LeaveHouseholdInputSchema).mutation(async ({
         await households.publish("userLeft", { userId: ctx.user.id }, { userId: memberId });
       }
 
-      // Invalidate cache for leaving user AND remaining members (their user list changed)
       await invalidateHouseholdCacheForUsers([ctx.user.id, ...remainingMemberIds]);
 
-      // Terminate connection to rebind subscriptions (now user-only channels)
+      // The leaver's view gets their new household of one before the socket rebinds to it.
+      const dto = await householdSettingsFor(ctx.user.id);
+
+      if (dto) await households.publish("created", { household: dto }, { userId: ctx.user.id });
+
       await emitConnectionInvalidation(ctx.user.id, "household-left");
     })
     .catch((err) => {
@@ -368,9 +315,14 @@ const kick = authedProcedure
 
         log.info({ userId: ctx.user.id, householdId, userIdToKick }, "User kicked from household");
 
-        // The kicked user hears it before their socket is terminated; the
-        // reconnect that follows refetches their recipe view under the new
-        // identity (Recovery, ADR-0011).
+        await invalidateHouseholdCacheForUsers([userIdToKick, ...remainingMemberIds]);
+
+        // The kicked user gets their new household of one and hears why before their
+        // socket is terminated; the reconnect refetches under the new identity (ADR-0011).
+        const dto = await householdSettingsFor(userIdToKick);
+
+        if (dto) await households.publish("created", { household: dto }, { userId: userIdToKick });
+
         await households.publish(
           "userKicked",
           { householdId, kickedBy: ctx.user.id },
@@ -378,14 +330,8 @@ const kick = authedProcedure
         );
 
         // Emit to remaining household members (household-scoped)
-        await households.publish(
-          "memberRemoved",
-          { userId: userIdToKick },
-          { householdKey: householdId }
-        );
+        await households.publish("memberRemoved", { userId: userIdToKick }, { householdId });
 
-        // Invalidate cache and terminate connection AFTER events are sent
-        await invalidateHouseholdCacheForUsers([userIdToKick, ...remainingMemberIds]);
         await emitConnectionInvalidation(userIdToKick, "household-kicked");
       })
       .catch((err) => {
@@ -443,7 +389,7 @@ const regenerateCode = authedProcedure
             joinCodeExpiresAt: household.joinCodeExpiresAt!.toISOString(),
             version: household.version,
           },
-          { householdKey: householdId }
+          { householdId }
         );
       })
       .catch((err) => {
@@ -508,7 +454,7 @@ const transferAdmin = authedProcedure
             newAdminId,
             version: household.version,
           },
-          { householdKey: householdId }
+          { householdId }
         );
       })
       .catch((err) => {
@@ -527,7 +473,6 @@ const transferAdmin = authedProcedure
 
 export const householdsRouter = router({
   get,
-  create,
   join,
   leave,
   kick,

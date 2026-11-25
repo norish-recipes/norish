@@ -10,21 +10,19 @@ import {
 } from "../calendar/test-utils";
 
 const householdDb = vi.hoisted(() => ({
-  addUserToHousehold: vi.fn(),
-  createHousehold: vi.fn(),
   findHouseholdByJoinCode: vi.fn(),
   getAllergiesForUsers: vi.fn(),
   getHouseholdForUser: vi.fn(),
   getUsersByHouseholdId: vi.fn(),
   isUserHouseholdAdmin: vi.fn(),
+  joinHousehold: vi.fn(),
   kickUserFromHousehold: vi.fn(),
+  moveToHouseholdOfOne: vi.fn(),
   regenerateJoinCode: vi.fn(),
-  removeUserFromHousehold: vi.fn(),
   transferHouseholdAdmin: vi.fn(),
 }));
 
 const householdCache = vi.hoisted(() => ({
-  invalidateHouseholdCache: vi.fn(),
   invalidateHouseholdCacheForUsers: vi.fn(),
 }));
 
@@ -85,37 +83,15 @@ describe("household mutations announce before they restart the socket", () => {
     householdDb.isUserHouseholdAdmin.mockResolvedValue(true);
   });
 
-  it("create: the creator hears `created` before the invalidation", async () => {
-    householdDb.getHouseholdForUser.mockResolvedValueOnce(null).mockResolvedValue(household);
-    householdDb.createHousehold.mockResolvedValue({ id: householdId });
-    householdDb.addUserToHousehold.mockResolvedValue({ version: 1 });
-
-    await householdsRouter.createCaller(ctx as never).create({ name: "Home" });
-    await settle();
-
-    expect(timeline()).toEqual(["household:created", "connection.invalidate:household-created"]);
-    expect(households.published[0]!.target).toEqual({ userId: user.id });
-  });
-
-  it("create: keeps the join code the household was created with", async () => {
-    householdDb.getHouseholdForUser.mockResolvedValueOnce(null).mockResolvedValue(household);
-    householdDb.createHousehold.mockResolvedValue({ id: householdId });
-    householdDb.addUserToHousehold.mockResolvedValue({ version: 1 });
-
-    await householdsRouter.createCaller(ctx as never).create({ name: "Home" });
-    await settle();
-
-    // A second code would replace the first after a reader may already have been shown it.
-    expect(householdDb.regenerateJoinCode).not.toHaveBeenCalled();
-  });
-
   it("join: the joiner and the household hear it before the invalidation", async () => {
-    householdDb.getHouseholdForUser.mockResolvedValueOnce(null).mockResolvedValue(household);
     householdDb.findHouseholdByJoinCode.mockResolvedValue({
       id: householdId,
       joinCodeExpiresAt: null,
     });
-    householdDb.addUserToHousehold.mockResolvedValue({ version: 1 });
+    householdDb.joinHousehold.mockResolvedValue({
+      joined: { version: 1 },
+      leftHouseholdId: "own-household",
+    });
 
     await householdsRouter.createCaller(ctx as never).join({ code: "123456" });
     await settle();
@@ -130,15 +106,64 @@ describe("household mutations announce before they restart the socket", () => {
     );
   });
 
-  it("leave: the remaining members hear `userLeft` before the leaver's invalidation", async () => {
-    householdDb.getHouseholdForUser.mockResolvedValue({ ...household, adminUserId: memberId });
-    householdDb.removeUserFromHousehold.mockResolvedValue({ stale: false });
+  it.each([
+    ["shared", /Leave it first/],
+    ["holds-things", /cannot join another household yet/],
+    ["already-member", /already in this household/],
+  ] as const)("join: refuses a %s household and announces nothing", async (refused, message) => {
+    householdDb.findHouseholdByJoinCode.mockResolvedValue({
+      id: householdId,
+      joinCodeExpiresAt: null,
+    });
+    householdDb.joinHousehold.mockResolvedValue({ refused });
+
+    await expect(
+      householdsRouter.createCaller(ctx as never).join({ code: "123456" })
+    ).rejects.toThrow(message);
+    await settle();
+
+    expect(timeline()).toEqual([]);
+  });
+
+  it("leave: the members hear `userLeft`, then the leaver gets their new household of one", async () => {
+    const leaver = { ...household, adminUserId: memberId };
+
+    householdDb.getHouseholdForUser
+      .mockResolvedValueOnce(leaver)
+      .mockResolvedValue({ ...household, id: "new-household", users: [household.users[0]] });
+    householdDb.moveToHouseholdOfOne.mockResolvedValue({ stale: false, applied: true });
 
     await householdsRouter.createCaller(ctx as never).leave({ householdId, version: 3 });
     await settle();
 
-    expect(timeline()).toEqual(["household:userLeft", "connection.invalidate:household-left"]);
+    expect(householdDb.moveToHouseholdOfOne).toHaveBeenCalledWith(householdId, user.id, 3);
+    expect(timeline()).toEqual([
+      "household:userLeft",
+      "household:created",
+      "connection.invalidate:household-left",
+    ]);
     expect(households.published[0]!.target).toEqual({ userId: memberId });
+    expect(households.published[1]!.target).toEqual({ userId: user.id });
+    expect(households.published[1]!.payload).toMatchObject({ household: { id: "new-household" } });
+  });
+
+  it("leave: refuses the only member, who has nowhere to leave to", async () => {
+    householdDb.getHouseholdForUser.mockResolvedValue({
+      ...household,
+      users: [household.users[0]],
+    });
+
+    await expect(
+      householdsRouter.createCaller(ctx as never).leave({ householdId, version: 3 })
+    ).rejects.toThrow(/only member/);
+    expect(householdDb.moveToHouseholdOfOne).not.toHaveBeenCalled();
+  });
+
+  it("leave: refuses an admin who has not handed the role on", async () => {
+    await expect(
+      householdsRouter.createCaller(ctx as never).leave({ householdId, version: 3 })
+    ).rejects.toThrow(/transfer admin/);
+    expect(householdDb.moveToHouseholdOfOne).not.toHaveBeenCalled();
   });
 
   it("kick: the kicked user and the household hear it before the kicked user's invalidation", async () => {
@@ -150,10 +175,13 @@ describe("household mutations announce before they restart the socket", () => {
     await settle();
 
     expect(timeline()).toEqual([
+      "household:created",
       "household:userKicked",
       "household:memberRemoved",
       "connection.invalidate:household-kicked",
     ]);
+    // The removed member gets their new household of one before their socket restarts.
+    expect(households.published[0]!.target).toEqual({ userId: memberId });
     expect(emitConnectionInvalidation).toHaveBeenCalledWith(memberId, "household-kicked");
   });
 

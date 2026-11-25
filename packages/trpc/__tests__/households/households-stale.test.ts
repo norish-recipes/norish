@@ -13,21 +13,19 @@ import { emitConnectionInvalidation } from "../mocks/realtime/connection";
 import { households } from "../mocks/realtime/households";
 
 const householdDb = vi.hoisted(() => ({
-  addUserToHousehold: vi.fn(),
-  createHousehold: vi.fn(),
   findHouseholdByJoinCode: vi.fn(),
   getAllergiesForUsers: vi.fn(),
   getHouseholdForUser: vi.fn(),
   getUsersByHouseholdId: vi.fn(),
   isUserHouseholdAdmin: vi.fn(),
+  joinHousehold: vi.fn(),
   kickUserFromHousehold: vi.fn(),
+  moveToHouseholdOfOne: vi.fn(),
   regenerateJoinCode: vi.fn(),
-  removeUserFromHousehold: vi.fn(),
   transferHouseholdAdmin: vi.fn(),
 }));
 
 const householdCache = vi.hoisted(() => ({
-  invalidateHouseholdCache: vi.fn(),
   invalidateHouseholdCacheForUsers: vi.fn(),
 }));
 
@@ -69,7 +67,7 @@ describe("household stale mutation handling", () => {
   });
 
   it("logs stale leave mutations as no-ops", async () => {
-    householdDb.removeUserFromHousehold.mockResolvedValue({ stale: true });
+    householdDb.moveToHouseholdOfOne.mockResolvedValue({ stale: true });
 
     const caller = householdsRouter.createCaller(ctx as any);
     const result = await caller.leave({ householdId: household.id, version: 3 });

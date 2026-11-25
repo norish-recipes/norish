@@ -106,6 +106,30 @@ export async function cleanDatabase() {
   await db.delete(schema.users);
 }
 
+// Each test user's household, for the synchronous viewers tests build.
+const testHouseholds = new Map<string, string>();
+
+/** The household a user made by `createTestUser` is in, as last moved by `joinTestHousehold`. */
+export function testHouseholdOf(userId: string): string {
+  const householdId = testHouseholds.get(userId);
+
+  if (!householdId) throw new Error(`${userId} was not made by createTestUser`);
+
+  return householdId;
+}
+
+/** Moves a fresh test user into another user's household, its own household of one gone. */
+export async function joinTestHousehold(userId: string, hostId: string): Promise<string> {
+  const householdId = testHouseholdOf(hostId);
+  const db = getTestDb();
+
+  await db.delete(schema.households).where(eq(schema.households.id, testHouseholdOf(userId)));
+  await db.insert(schema.householdUsers).values({ householdId, userId });
+  testHouseholds.set(userId, householdId);
+
+  return householdId;
+}
+
 /**
  * Create a test user
  */
@@ -124,6 +148,8 @@ export async function createTestUser(overrides: Partial<typeof schema.users.$inf
       updatedAt: overrides.updatedAt ?? new Date(),
     })
     .returning();
+
+  testHouseholds.set(user!.id, await householdIdOf(user!.id));
 
   return user;
 }
@@ -401,4 +427,16 @@ export async function verifyDatabaseConnection() {
   } catch {
     return false;
   }
+}
+
+/** The household every account is in from its first insert. */
+export async function householdIdOf(userId: string): Promise<string> {
+  const [row] = await getTestDb()
+    .select({ householdId: schema.householdUsers.householdId })
+    .from(schema.householdUsers)
+    .where(eq(schema.householdUsers.userId, userId));
+
+  if (!row) throw new Error(`No household for ${userId}`);
+
+  return row.householdId;
 }

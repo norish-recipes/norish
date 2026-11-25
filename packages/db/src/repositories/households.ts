@@ -1,27 +1,40 @@
 import { randomInt } from "node:crypto";
-import { and, eq, sql } from "drizzle-orm";
+import type { AnyPgColumn, PgTable } from "drizzle-orm/pg-core";
+import { and, eq, inArray, sql } from "drizzle-orm";
 
+import type { DbTransaction } from "@norish/db/drizzle";
 import type {
   HouseholdDto,
-  HouseholdInsertDto,
   HouseholdUserDto,
-  HouseholdUserInsertDto,
   HouseholdWithUsersNamesDto,
 } from "@norish/shared/contracts/dto/household";
 import { db } from "@norish/db/drizzle";
-import { households, householdUsers } from "@norish/db/schema";
 import {
-  HouseholdInsertBaseSchema,
+  cookbooks,
+  groceries,
+  households,
+  householdUsers,
+  ingredientAliases,
+  ingredientNutritionCorrections,
+  ingredients,
+  ingredientStorePreferences,
+  pantryIngredients,
+  plannedItems,
+  recipes,
+  recurringGroceries,
+  stores,
+} from "@norish/db/schema";
+import {
   HouseholdSelectBaseSchema,
-  HouseholdUserInsertBaseSchema,
   HouseholdUserSelectBaseSchema,
   HouseholdWithUsersNamesSchema,
 } from "@norish/shared/contracts/zod/household";
-import { viewerAndHouseholdIds } from "@norish/shared/lib/household";
 
 import type { MutationOutcome } from "./mutation-outcomes";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 import { getUsersByIds } from "./users";
+
+export { getHouseholdMemberIds, householdMemberIdsSql } from "./household-members";
 
 export async function getUsersByHouseholdId(householdId: string): Promise<HouseholdUserDto[]> {
   const rows = await db.query.householdUsers.findMany({
@@ -31,24 +44,29 @@ export async function getUsersByHouseholdId(householdId: string): Promise<Househ
   return rows;
 }
 
-export async function createHousehold(input: HouseholdInsertDto): Promise<HouseholdDto> {
-  const parsed = HouseholdInsertBaseSchema.safeParse(input);
+/** What sign-up, the upgrade and leaving name a new household of one (migration 0088). */
+export const NEW_HOUSEHOLD_NAME = "My household";
 
-  if (!parsed.success) throw new Error("Invalid HouseholdInsertDto");
+const JOIN_CODE_LIFETIME_MS = 10 * 60 * 1000;
 
-  // generate a unique 6-digit code with 10-minute expiration
-  const code = await generateUniqueJoinCode();
-  const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
+/** The account's household; null only for an account that no longer exists. */
+export async function getHouseholdIdForUser(userId: string): Promise<string | null> {
   const [row] = await db
-    .insert(households)
-    .values({ ...parsed.data, joinCode: code, joinCodeExpiresAt: expiresAt })
-    .returning();
-  const validated = HouseholdSelectBaseSchema.safeParse(row);
+    .select({ householdId: householdUsers.householdId })
+    .from(householdUsers)
+    .where(eq(householdUsers.userId, userId));
 
-  if (!validated.success) throw new Error("Failed to parse created household");
+  return row?.householdId ?? null;
+}
 
-  return validated.data;
+export async function isHouseholdMember(householdId: string, userId: string): Promise<boolean> {
+  const rows = await db
+    .select({ userId: householdUsers.userId })
+    .from(householdUsers)
+    .where(and(eq(householdUsers.householdId, householdId), eq(householdUsers.userId, userId)))
+    .limit(1);
+
+  return rows.length > 0;
 }
 
 export async function deleteHousehold(id: string): Promise<void> {
@@ -127,64 +145,49 @@ export async function getHouseholdForUser(
   return parsed.data;
 }
 
-/**
- * Gets all member IDs in the user's household (including the user)
- * If user is not in a household, returns just the user's ID
- */
-export async function getHouseholdMemberIds(userId: string): Promise<string[]> {
-  const household = await getHouseholdForUser(userId);
+/** Everyone in the account's household, the account included. */
+export async function getHouseholdMemberIdsForUser(userId: string): Promise<string[]> {
+  const rows = await db
+    .select({ userId: householdUsers.userId })
+    .from(householdUsers)
+    .where(
+      inArray(
+        householdUsers.householdId,
+        db
+          .select({ householdId: householdUsers.householdId })
+          .from(householdUsers)
+          .where(eq(householdUsers.userId, userId))
+      )
+    );
 
-  return viewerAndHouseholdIds({
-    userId,
-    householdUserIds: household?.users.map((u) => u.id) ?? null,
-  });
+  return rows.map((row) => row.userId);
 }
 
-export async function addUserToHousehold(input: HouseholdUserInsertDto): Promise<HouseholdUserDto> {
-  const parsed = HouseholdUserInsertBaseSchema.safeParse(input);
-
-  if (!parsed.success) throw new Error("Invalid HouseholdUserInsertDto");
-
-  // Check if user is already in a household
-  const existingHousehold = await getHouseholdForUser(parsed.data.userId);
-
-  if (existingHousehold) {
-    throw new Error("User is already in a household. Leave the current household first.");
-  }
-
-  const [row] = await db
-    .insert(householdUsers)
-    .values(parsed.data)
-    .onConflictDoNothing()
+async function insertHouseholdOfOne(tx: DbTransaction, userId: string): Promise<HouseholdDto> {
+  const [row] = await tx
+    .insert(households)
+    .values({
+      name: NEW_HOUSEHOLD_NAME,
+      adminUserId: userId,
+      joinCode: await generateUniqueJoinCode(),
+      joinCodeExpiresAt: new Date(Date.now() + JOIN_CODE_LIFETIME_MS),
+    })
     .returning();
 
-  const resolved = row
-    ? row
-    : (
-        await db
-          .select()
-          .from(householdUsers)
-          .where(
-            and(
-              eq(householdUsers.householdId, parsed.data.householdId),
-              eq(householdUsers.userId, parsed.data.userId)
-            )
-          )
-          .limit(1)
-      )[0];
+  await tx.insert(householdUsers).values({ householdId: row!.id, userId });
 
-  const validated = HouseholdUserSelectBaseSchema.safeParse(resolved);
-
-  if (!validated.success) throw new Error("Failed to add user to household");
-
-  return validated.data;
+  return HouseholdSelectBaseSchema.parse(row);
 }
 
-export async function removeUserFromHousehold(
+/**
+ * Takes a member out of a household and into a new household of one, in one
+ * transaction, so no account is ever left without one. An emptied household goes.
+ */
+export async function moveToHouseholdOfOne(
   householdId: string,
   userId: string,
   version?: number
-): Promise<MutationOutcome<void>> {
+): Promise<MutationOutcome<HouseholdDto>> {
   return await db.transaction(async (tx) => {
     const whereConditions = [
       eq(householdUsers.householdId, householdId),
@@ -204,18 +207,88 @@ export async function removeUserFromHousehold(
       return staleOutcome();
     }
 
-    const rows = await tx
-      .select({ count: sql<number>`count(*)::int` })
+    const remaining = await tx
+      .select({ userId: householdUsers.userId })
       .from(householdUsers)
-      .where(eq(householdUsers.householdId, householdId));
+      .where(eq(householdUsers.householdId, householdId))
+      .limit(1);
 
-    const count = Number(rows?.[0]?.count ?? 0);
-
-    if (count === 0) {
+    if (remaining.length === 0) {
       await tx.delete(households).where(eq(households.id, householdId));
     }
 
-    return appliedOutcome(undefined);
+    return appliedOutcome(await insertHouseholdOfOne(tx, userId));
+  });
+}
+
+/** What a household of one holds under its member's id, which joining cannot merge yet. */
+const HELD_BY_MEMBER: ReadonlyArray<readonly [PgTable, AnyPgColumn]> = [
+  [recipes, recipes.userId],
+  [cookbooks, cookbooks.userId],
+  [stores, stores.userId],
+  [ingredientStorePreferences, ingredientStorePreferences.userId],
+  [groceries, groceries.userId],
+  [recurringGroceries, recurringGroceries.userId],
+  [pantryIngredients, pantryIngredients.userId],
+  [plannedItems, plannedItems.userId],
+  [ingredientNutritionCorrections, ingredientNutritionCorrections.userId],
+  [ingredients, ingredients.ownerId],
+  [ingredientAliases, ingredientAliases.ownerId],
+];
+
+async function holdsAnything(tx: DbTransaction, userId: string): Promise<boolean> {
+  for (const [table, owner] of HELD_BY_MEMBER) {
+    const rows = await tx
+      .select({ one: sql`1` })
+      .from(table)
+      .where(eq(owner, userId))
+      .limit(1);
+
+    if (rows.length > 0) return true;
+  }
+
+  return false;
+}
+
+export type JoinHouseholdOutcome =
+  | { joined: HouseholdUserDto; leftHouseholdId: string }
+  | { refused: "already-member" | "shared" | "holds-things" };
+
+/**
+ * Moves an account into another household, deleting the household of one it
+ * leaves. Refused from a shared household (leave first) and, until merging
+ * lands (ticket 09), from a household of one that holds anything.
+ */
+export async function joinHousehold(
+  userId: string,
+  householdId: string
+): Promise<JoinHouseholdOutcome> {
+  return await db.transaction(async (tx) => {
+    const [current] = await tx
+      .select({ householdId: householdUsers.householdId })
+      .from(householdUsers)
+      .where(eq(householdUsers.userId, userId))
+      .for("update");
+
+    if (!current) throw new Error("Account has no household");
+    if (current.householdId === householdId) return { refused: "already-member" };
+
+    const members = await tx
+      .select({ userId: householdUsers.userId })
+      .from(householdUsers)
+      .where(eq(householdUsers.householdId, current.householdId));
+
+    if (members.length > 1) return { refused: "shared" };
+    if (await holdsAnything(tx, userId)) return { refused: "holds-things" };
+
+    await tx.delete(households).where(eq(households.id, current.householdId));
+
+    const [row] = await tx.insert(householdUsers).values({ householdId, userId }).returning();
+
+    return {
+      joined: HouseholdUserSelectBaseSchema.parse(row),
+      leftHouseholdId: current.householdId,
+    };
   });
 }
 
@@ -226,17 +299,6 @@ export async function findHouseholdByJoinCode(code: string): Promise<HouseholdDt
   return parsed.success ? parsed.data : null;
 }
 
-export async function joinHouseholdByCode(
-  userId: string,
-  code: string
-): Promise<HouseholdUserDto | null> {
-  const household = await findHouseholdByJoinCode(code);
-
-  if (!household) return null;
-
-  return addUserToHousehold({ householdId: household.id, userId });
-}
-
 /**
  * Regenerates the join code for a household with a new 10-minute expiration
  */
@@ -245,7 +307,7 @@ export async function regenerateJoinCode(
   version?: number
 ): Promise<MutationOutcome<HouseholdDto>> {
   const code = await generateUniqueJoinCode();
-  const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+  const expiresAt = new Date(Date.now() + JOIN_CODE_LIFETIME_MS);
 
   const whereConditions = [eq(households.id, householdId)];
 
@@ -292,7 +354,7 @@ export async function kickUserFromHousehold(
   userIdToKick: string,
   adminUserId: string,
   version?: number
-): Promise<MutationOutcome<void>> {
+): Promise<MutationOutcome<HouseholdDto>> {
   // Verify admin
   const isAdmin = await isUserHouseholdAdmin(householdId, adminUserId);
 
@@ -305,7 +367,7 @@ export async function kickUserFromHousehold(
     throw new Error("Admin cannot kick themselves. Transfer admin first or leave the household.");
   }
 
-  return await removeUserFromHousehold(householdId, userIdToKick, version);
+  return await moveToHouseholdOfOne(householdId, userIdToKick, version);
 }
 
 /**
@@ -376,40 +438,11 @@ export async function findHouseholdByName(name: string): Promise<HouseholdDto | 
   return parsed.success ? parsed.data : null;
 }
 
-/**
- * Find existing household by name or create a new one
- * Used for OIDC claim-based household assignment
- */
-export async function findOrCreateHouseholdByName(
-  name: string,
-  creatorUserId: string
-): Promise<HouseholdDto> {
-  const normalizedName = name.trim();
-
-  // Try to find existing (case-insensitive)
-  const existing = await findHouseholdByName(normalizedName);
-
-  if (existing) return existing;
-
-  // Create new household with this user as admin
-  const code = await generateUniqueJoinCode();
-  const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-
-  const [row] = await db
-    .insert(households)
-    .values({
-      name: normalizedName,
-      adminUserId: creatorUserId,
-      joinCode: code,
-      joinCodeExpiresAt: expiresAt,
-    })
-    .returning();
-
-  const validated = HouseholdSelectBaseSchema.safeParse(row);
-
-  if (!validated.success) throw new Error("Failed to create household");
-
-  return validated.data;
+export async function renameHousehold(householdId: string, name: string): Promise<void> {
+  await db
+    .update(households)
+    .set({ name: name.trim(), updatedAt: new Date(), version: sql`${households.version} + 1` })
+    .where(eq(households.id, householdId));
 }
 
 async function generateUniqueJoinCode(): Promise<string> {
