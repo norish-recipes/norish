@@ -4,7 +4,7 @@
  * households: unique on the fold within a household, never offered or attached across one, kept
  * until deleted, merged on a rename; and the races the database decides.
  */
-import { sql } from "drizzle-orm";
+import { count, eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { db } from "@norish/db/drizzle";
@@ -30,6 +30,7 @@ import {
   updateRecipeWithRefs,
 } from "@norish/db/repositories/recipes";
 import { appendRecipeTags } from "@norish/db/repositories/tags";
+import { recipeCuisines, tags } from "@norish/db/schema";
 import { FullRecipeInsertSchema } from "@norish/shared/contracts/zod";
 
 import {
@@ -47,11 +48,7 @@ const tagsOf = (recipeId: string) => recipeEntryNames("tag", recipeId);
 const attachTags = (recipeId: string, names: string[]) =>
   db.transaction((tx) => replaceRecipeEntriesByNameTx(tx, "tag", recipeId, names));
 const rowCount = async (name: string) =>
-  (
-    await getTestDb().execute<{ n: number }>(
-      sql`SELECT count(*)::int AS n FROM tags WHERE name_fold = ${name}`
-    )
-  ).rows[0]!.n;
+  (await getTestDb().select({ n: count() }).from(tags).where(eq(tags.nameFold, name)))[0]!.n;
 
 describe("household lists", () => {
   let ann: { id: string; household: string; recipe: string };
@@ -233,9 +230,7 @@ describe("household lists", () => {
     ).rejects.toThrow(ForeignHouseholdReferenceError);
 
     // A recipe that moved household still carries its old household's entry until ticket 09.
-    await getTestDb().execute(
-      sql`INSERT INTO recipe_cuisines (recipe_id, cuisine_id) VALUES (${bob.recipe}, ${own.id})`
-    );
+    await getTestDb().insert(recipeCuisines).values({ recipeId: bob.recipe, cuisineId: own.id });
     await db.transaction((tx) => replaceRecipeEntryIdsTx(tx, "cuisine", bob.recipe, [own.id]));
     expect((await getRecipeCuisines(bob.recipe)).map((c) => c.name)).toEqual(["Grandma's"]);
   });
@@ -359,9 +354,7 @@ describe("household lists", () => {
     it("two adds of one name end with one entry, neither failing", async () => {
       const runs = await raceBehind(
         (tx) =>
-          tx.execute(
-            sql`INSERT INTO tags (household_id, name, name_fold) VALUES (${ann.household}, 'Soja', 'soja')`
-          ),
+          tx.insert(tags).values({ householdId: ann.household, name: "Soja", nameFold: "soja" }),
         [() => addEntry("tag", ann.household, "soja"), () => addEntry("tag", ann.household, "SOJA")]
       );
 
@@ -376,7 +369,7 @@ describe("household lists", () => {
     it("a rename behind a delete finds nothing to rename", async () => {
       const soja = (await addEntry("tag", ann.household, "soja"))!.entry;
       const [run] = await raceBehind(
-        (tx) => tx.execute(sql`DELETE FROM tags WHERE id = ${soja.id}`),
+        (tx) => tx.delete(tags).where(eq(tags.id, soja.id)),
         [() => renameEntry("tag", ann.household, soja, "Tofu")]
       );
 
@@ -406,7 +399,7 @@ describe("household lists", () => {
       const [soja, soy] = await listEntries("tag", ann.household);
       const [run] = await raceBehind(
         async (tx) => {
-          await tx.execute(sql`SELECT id FROM tags WHERE id = ${soja!.id} FOR UPDATE`);
+          await tx.select({ id: tags.id }).from(tags).where(eq(tags.id, soja!.id)).for("update");
           await mergeEntryTx(tx, "tag", soja!.id, soy!.id);
         },
         [

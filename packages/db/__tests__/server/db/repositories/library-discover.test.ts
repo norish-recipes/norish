@@ -1,14 +1,14 @@
 // @vitest-environment node
 /** What Search offers with no text, against a real database: four Categories with a photo, twelve Tags. */
 
-import { sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import type { RecipeListContext } from "@norish/db/repositories/recipes";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { listLibraryDiscover } from "@norish/db/repositories/library";
 import { deleteConfig, setConfig } from "@norish/db/repositories/server-config";
-import { recipeImages } from "@norish/db/schema";
+import { recipeImages, recipes } from "@norish/db/schema";
 
 import {
   attachTestEntry,
@@ -117,9 +117,7 @@ describe("the discover reads", () => {
         null,
         false
       );
-      await getTestDb().execute(
-        sql`UPDATE recipes SET user_id = ${strangerId} WHERE id = ${hidden}`
-      );
+      await getTestDb().update(recipes).set({ userId: strangerId }).where(eq(recipes.id, hidden));
 
       expect((await discover()).categories).toEqual([
         { name: "Dinner", image: "/newest-first.jpg" },
