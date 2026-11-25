@@ -83,4 +83,25 @@ describe("env-config-server secret resolution", () => {
       expect(SERVER_CONFIG.DATABASE_URL).toBe(directUrl);
     });
   });
+
+  describe("MASTER_KEY", () => {
+    it("is unset when blank, as Compose passes an unset ${MASTER_KEY}", async () => {
+      for (const blank of ["", " "]) {
+        vi.resetModules();
+        setEnv("MASTER_KEY", blank);
+        setEnv("MASTER_KEY_PREVIOUS", blank);
+
+        const { SERVER_CONFIG } = await import("@norish/config/env-config-server");
+
+        expect(SERVER_CONFIG.MASTER_KEY).toBeUndefined();
+        expect(SERVER_CONFIG.MASTER_KEY_PREVIOUS).toBeUndefined();
+      }
+    });
+
+    it("still refuses a key too short to be one", async () => {
+      setEnv("MASTER_KEY", "short");
+
+      await expect(import("@norish/config/env-config-server")).rejects.toThrow("MASTER_KEY");
+    });
+  });
 });

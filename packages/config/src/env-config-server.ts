@@ -110,6 +110,12 @@ const commaSeparatedList = z
   )
   .pipe(z.array(z.string()));
 
+/** A Master Key, unset when blank: Compose passes an unset `${MASTER_KEY}` as an empty string. */
+const optionalMasterKey = z.preprocess(
+  (value) => (typeof value === "string" && !value.trim() ? undefined : value),
+  z.string().min(32).optional()
+);
+
 const ServerConfigFields = z.object({
   NODE_ENV: z.enum(["development", "production"]),
 
@@ -172,9 +178,9 @@ const ServerConfigFields = z.object({
 
   // Pins the Master Key; unset, the instance keeps a generated one in <UPLOADS_DIR>/.norish.
   // Nothing reads it at import, so a build needs none.
-  MASTER_KEY: z.string().min(32).optional(),
+  MASTER_KEY: optionalMasterKey,
   // The key MASTER_KEY replaces, until the boot that re-encrypts under the new one.
-  MASTER_KEY_PREVIOUS: z.string().min(32).optional(),
+  MASTER_KEY_PREVIOUS: optionalMasterKey,
 
   // AI Provider Configuration
   AI_PROVIDER: z.enum(["openai", "ollama", "lm-studio", "generic-openai"]).default("openai"),
