@@ -19,7 +19,6 @@ vi.mock("@norish/db", () => ({
   updateUserPreferences: mockDb.updateUserPreferences,
   updateUserName: vi.fn(),
   updateUserAvatar: vi.fn(),
-  deleteUser: vi.fn(),
   clearUserAvatar: vi.fn(),
   getHouseholdForUser: vi.fn(),
   getUserAllergies: vi.fn(),

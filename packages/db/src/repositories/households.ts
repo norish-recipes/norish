@@ -68,10 +68,6 @@ export async function isHouseholdMember(householdId: string, userId: string): Pr
   return rows.length > 0;
 }
 
-export async function deleteHousehold(id: string): Promise<void> {
-  await db.delete(households).where(eq(households.id, id));
-}
-
 export async function getHouseholdById(id: string): Promise<HouseholdDto | null> {
   const rows = await db.select().from(households).where(eq(households.id, id)).limit(1);
   const parsed = HouseholdSelectBaseSchema.safeParse(rows[0]);

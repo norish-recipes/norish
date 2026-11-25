@@ -8,7 +8,6 @@ export const getUserById = vi.fn();
 export const updateUserName = vi.fn();
 export const updateUserAvatar = vi.fn();
 export const clearUserAvatar = vi.fn();
-export const deleteUser = vi.fn();
 export const getHouseholdForUser = vi.fn();
 export const getUserPreferences = vi.fn();
 export const updateUserPreferences = vi.fn();
@@ -25,7 +24,6 @@ export function resetUserMocks() {
   updateUserName.mockReset();
   updateUserAvatar.mockReset();
   clearUserAvatar.mockReset();
-  deleteUser.mockReset();
   getHouseholdForUser.mockReset();
   getUserPreferences.mockReset();
   updateUserPreferences.mockReset();

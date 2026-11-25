@@ -427,10 +427,6 @@ export async function updateUserName(
   return appliedOutcome(updated ? readProfile(updated) : null);
 }
 
-export async function deleteUser(userId: string): Promise<void> {
-  await db.delete(users).where(eq(users.id, userId));
-}
-
 export async function getAllUserIds(): Promise<string[]> {
   const result = await db.select({ id: users.id }).from(users);
 

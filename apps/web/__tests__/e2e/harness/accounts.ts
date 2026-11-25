@@ -1,7 +1,7 @@
 import type { BrowserContext } from "@playwright/test";
 
-import { deleteHousehold, getHouseholdForUser } from "@norish/db/repositories/households";
-import { deleteUser, getUserByEmail } from "@norish/db/repositories/users";
+import { deleteAccount } from "@norish/db/repositories/households";
+import { getUserByEmail } from "@norish/db/repositories/users";
 
 import type { HarnessUser } from "./production-stack";
 
@@ -24,12 +24,8 @@ export async function closeAndDelete(
 ): Promise<void> {
   const closed = await Promise.allSettled(contexts.map((context) => context.close()));
 
-  for (const user of users) {
-    const household = await getHouseholdForUser(user.id);
-
-    if (household) await deleteHousehold(household.id);
-    await deleteUser(user.id);
-  }
+  // Each deletion hands its household on, and the last member's takes the household with it.
+  for (const user of users) await deleteAccount(user.id);
 
   const failed = closed.find((result) => result.status === "rejected");
 
