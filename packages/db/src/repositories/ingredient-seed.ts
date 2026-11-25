@@ -1,6 +1,19 @@
 import type { SQL } from "drizzle-orm";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
-import { and, eq, inArray, isNotNull, isNull, like, not, or, sql } from "drizzle-orm";
+import {
+  and,
+  eq,
+  exists,
+  inArray,
+  isNotNull,
+  isNull,
+  like,
+  not,
+  notExists,
+  or,
+  sql,
+} from "drizzle-orm";
+import { QueryBuilder } from "drizzle-orm/pg-core";
 
 import type { DbTransaction } from "@norish/db/drizzle";
 import type { NutritionCodes } from "@norish/db/schema";
@@ -25,6 +38,7 @@ import {
 import { likeLiteral } from "./ingredient-aliases";
 import {
   deleteCatalogueAlias,
+  hasNoKinds,
   ingredientIsListed,
   ingredientIsNamed,
   nameIsFree,
@@ -36,6 +50,8 @@ import { closesCycle, lockFoods, lockTree, moveCatalogueAlias } from "./ingredie
  * The catalogue seed's writes (ADR-0038): seeded Ingredients, aliases and parents are upserted, and
  * what a person made (an own alias, a merge, a move, a parent) outlives every refresh.
  */
+
+const qb = new QueryBuilder();
 
 /** One update of many rows: each row whose `key` is a pair's first takes that pair's value. */
 function valueByKey(key: AnyPgColumn, pairs: ReadonlyArray<readonly [SQL, SQL]>): SQL {
@@ -207,7 +223,7 @@ export async function applyIngredientSeed(entries: readonly SeedEntry[]): Promis
           .update(ingredients)
           .set({
             offId: entry.offId,
-            name: sql`case when exists (select 1 from ${ingredients} o where o.id <> ${row.id} and lower(o.name) = lower(${entry.name})) then ${ingredients.name} else ${entry.name} end`,
+            name: sql`case when ${nameIsFree(row.id, entry.name)} then ${entry.name} else ${ingredients.name} end`,
             flagged: false,
             flagReason: null,
             version: sql`${ingredients.version} + 1`,
@@ -412,7 +428,8 @@ async function removeUnusedDropped(tx: DbTransaction, listed: readonly string[])
       | typeof storeProductLinks
       | typeof ingredientStorePreferences
       | typeof ingredientNutritionCorrections
-  ) => sql`exists (select 1 from ${table} r where r.ingredient_id = ${ingredients.id})`;
+  ) =>
+    exists(qb.select({ id: table.id }).from(table).where(eq(table.ingredientId, ingredients.id)));
 
   const removed = await tx
     .delete(ingredients)
@@ -429,8 +446,18 @@ async function removeUnusedDropped(tx: DbTransaction, listed: readonly string[])
         sql`not ${usedById(storeProductLinks)}`,
         sql`not ${usedById(ingredientStorePreferences)}`,
         sql`not ${usedById(ingredientNutritionCorrections)}`,
-        sql`not exists (select 1 from ${ingredientAliases} a where a.ingredient_id = ${ingredients.id} and not a.seeded)`,
-        sql`not exists (select 1 from ${ingredients} c where c.parent_id = ${ingredients.id})`
+        notExists(
+          qb
+            .select({ id: ingredientAliases.id })
+            .from(ingredientAliases)
+            .where(
+              and(
+                eq(ingredientAliases.ingredientId, ingredients.id),
+                eq(ingredientAliases.seeded, false)
+              )
+            )
+        ),
+        hasNoKinds()
       )
     )
     .returning({ id: ingredients.id });

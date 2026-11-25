@@ -11,10 +11,11 @@ import {
   isNull,
   lte,
   ne,
+  notExists,
   or,
   sql,
 } from "drizzle-orm";
-import { alias } from "drizzle-orm/pg-core";
+import { alias, QueryBuilder } from "drizzle-orm/pg-core";
 
 import type { Db, DbTransaction } from "@norish/db/drizzle";
 import type { FlagReason } from "@norish/shared/contracts/ingredient-catalogue";
@@ -36,6 +37,17 @@ import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
 import type { RecipeListContext } from "./recipes";
 import { buildPolicyCondition } from "./recipes";
+
+const qb = new QueryBuilder();
+const kind = alias(ingredients, "k");
+const otherFood = alias(ingredients, "o");
+
+/** `column` qualified by its table, also where a single-table select would render it bare. */
+const qualified = (column: AnyPgColumn) => sql`${column.table}.${sql.identifier(column.name)}`;
+
+/** Whether no Ingredient has the `ingredients` row the outer statement is on as its parent. */
+export const hasNoKinds = () =>
+  notExists(qb.select({ id: kind.id }).from(kind).where(eq(kind.parentId, ingredients.id)));
 
 /**
  * The catalogue as the Ingredients page reads it and edits within one Ingredient (ADR-0037); moves
@@ -183,8 +195,13 @@ export async function listCatalogueIngredients(query: {
   const matchesSearch = query.search ? matchingSearch(query.search, parents) : undefined;
   const ranks = query.search ? [searchRank(query.search, query.languages)] : [];
   const listedKind = query.listedOnly
-    ? sql` and ${listedFood({ id: sql`k.id`, offId: sql`k.off_id` })}`
-    : sql``;
+    ? listedFood({ id: qualified(kind.id), offId: qualified(kind.offId) })
+    : undefined;
+  const kindsOf = (fields: { n: SQL }) =>
+    qb
+      .select(fields)
+      .from(kind)
+      .where(and(eq(kind.parentId, ingredients.id), listedKind));
 
   const page = db
     .select({
@@ -196,8 +213,7 @@ export async function listCatalogueIngredients(query: {
       version: ingredients.version,
       parentId: parents.id,
       parentName: parents.name,
-      // The table under its own name again: a Drizzle alias in raw SQL renders bare.
-      kinds: sql<number>`(select count(*)::int from ${ingredients} k where k.parent_id = ${ingredients.id}${listedKind})`,
+      kinds: sql<number>`${kindsOf({ n: sql`count(*)::int` })}`,
     })
     .from(ingredients)
     .leftJoin(parents, eq(parents.id, ingredients.parentId))
@@ -214,10 +230,7 @@ export async function listCatalogueIngredients(query: {
             ? isNull(ingredients.parentId)
             : eq(ingredients.parentId, query.parentId),
         query.standaloneOnly
-          ? and(
-              isNull(ingredients.parentId),
-              sql`not exists (select 1 from ${ingredients} k where k.parent_id = ${ingredients.id}${listedKind})`
-            )
+          ? and(isNull(ingredients.parentId), notExists(kindsOf({ n: sql`1` })))
           : undefined,
         matchesSearch
       )
@@ -303,7 +316,7 @@ function listedFood(food: { id: SQL; offId: SQL }): SQL {
  * `ingredientIsNamed`.
  */
 export function ingredientIsListed(): SQL {
-  return listedFood({ id: sql`${ingredients}.id`, offId: sql`${ingredients}.off_id` });
+  return listedFood({ id: qualified(ingredients.id), offId: qualified(ingredients.offId) });
 }
 
 /**
@@ -316,7 +329,7 @@ function askableByAI(): SQL<boolean> {
     eq(ingredients.keptDistinct, false),
     eq(ingredients.nameChosen, false),
     eq(ingredients.parentChosen, false),
-    namedByARecipeLine(sql`${ingredients}.id`)
+    namedByARecipeLine(qualified(ingredients.id))
   )})`;
 }
 
@@ -426,10 +439,7 @@ export async function listWholeCatalogueCleanUpIds(): Promise<string[]> {
     .select({ one: sql`1` })
     .from(ingredientAliases)
     .where(
-      and(
-        eq(ingredientAliases.ingredientId, sql`${ingredients}.id`),
-        eq(ingredientAliases.seeded, false)
-      )
+      and(eq(ingredientAliases.ingredientId, ingredients.id), eq(ingredientAliases.seeded, false))
     );
   const rows = await db
     .select({ id: ingredients.id })
@@ -775,7 +785,7 @@ export async function deleteCatalogueIngredient(tx: DbTransaction, id: string): 
  * per call, so importing this module runs no query builder.
  */
 export function ingredientIsNamed(): SQL {
-  const naming = rowsNaming(sql`${ingredients}.id`);
+  const naming = rowsNaming(qualified(ingredients.id));
   const any = (table: PgTable, where: SQL | undefined) =>
     exists(
       db
@@ -806,7 +816,7 @@ export async function deleteUnnamedOwnFoods(
     .from(ingredientAliases)
     .where(
       and(
-        eq(ingredientAliases.ingredientId, sql`${ingredients}.id`),
+        eq(ingredientAliases.ingredientId, ingredients.id),
         sql`${ingredientAliases.fold} not in (select ${ingredientJunkPile.fold} from ${ingredientJunkPile})`
       )
     );
@@ -820,7 +830,7 @@ export async function deleteUnnamedOwnFoods(
         ),
         isNull(ingredients.offId),
         sql`not ${ingredientIsNamed()}`,
-        sql`not exists (select 1 from ${ingredients} c where c.parent_id = ${ingredients}.id)`
+        hasNoKinds()
       )
     )
     .returning({ id: ingredients.id });
@@ -850,7 +860,7 @@ export async function sweepUnusedCatalogueIngredients(tx: DbTransaction): Promis
         lte(ingredients.unusedSince, sql`now() - interval '89 days 12 hours'`),
         sql`not ${ingredientIsNamed()}`,
         // A parent waits for its children; its mark stands, so it goes the night after the last.
-        sql`not exists (select 1 from ${ingredients} c where c.parent_id = ${ingredients}.id)`
+        hasNoKinds()
       )
     )
     .returning({ id: ingredients.id });
@@ -867,7 +877,14 @@ export async function sweepUnusedCatalogueIngredients(tx: DbTransaction): Promis
 
 /** Whether no Ingredient but `ingredientId` goes by `name`, in any case. */
 export function nameIsFree(ingredientId: string, name: string): SQL {
-  return sql`not exists (select 1 from ${ingredients} o where o.id <> ${ingredientId} and lower(o.name) = lower(${name}))`;
+  return notExists(
+    qb
+      .select({ id: otherFood.id })
+      .from(otherFood)
+      .where(
+        and(ne(otherFood.id, ingredientId), eq(sql`lower(${otherFood.name})`, sql`lower(${name})`))
+      )
+  );
 }
 
 /** Settle an Ingredient's name unless it is settled already; whether it was. */
