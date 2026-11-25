@@ -10,9 +10,10 @@ import { upgradePromptCopies, upgradeTaggingSettings } from "./before-0-20-setti
 import { upgradeDishColours } from "./before-0-22-dish-colours";
 import { upgradeIngredients } from "./before-0-25-ingredients";
 import { upgradeOAuthTokens } from "./before-0-26-oauth-tokens";
+import { upgradeHouseholdLists } from "./before-0-28-household-lists";
 
 /** Raised when a release adds an upgrade, so every instance runs the data upgrades once more. */
-export const UPGRADES_VERSION = 1;
+export const UPGRADES_VERSION = 2;
 
 /** Settings in an older shape, before the config sync drops the fields it does not know. */
 export async function upgradeSettingsFromOlderReleases(): Promise<void> {
@@ -30,8 +31,9 @@ export async function upgradeDataFromOlderReleases(): Promise<void> {
           const dishColours = await upgradeDishColours();
           const ingredients = await upgradeIngredients();
           const oauthTokens = await upgradeOAuthTokens();
+          const listEntries = await upgradeHouseholdLists();
 
-          return { pictures, dishColours, oauthTokens, ...ingredients };
+          return { pictures, dishColours, oauthTokens, listEntries, ...ingredients };
         },
         changed: ({ rows, links }) => rows + links > 0,
         done: "Upgraded data from older releases",

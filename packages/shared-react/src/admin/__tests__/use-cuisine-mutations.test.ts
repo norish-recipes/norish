@@ -28,7 +28,7 @@ function setUp() {
 afterEach(resetTRPCFake);
 
 describe("useCuisineMutations", () => {
-  it("reads the vocabulary again once a cuisine is added", async () => {
+  it("reads the list again once an instance Cuisine is added", async () => {
     const { stale, wrapper } = setUp();
     const onRefused = vi.fn();
     const { result } = renderHook(() => useCuisineMutations(onRefused), { wrapper });
@@ -37,14 +37,34 @@ describe("useCuisineMutations", () => {
     act(() => {
       added = result.current.create("Thai");
     });
-    await answerCall("admin.cuisines.create", { id: "c1" });
+    expect((await sentCall("lists.add")).input).toEqual({
+      kind: "cuisine",
+      name: "Thai",
+      instance: true,
+    });
+    await answerCall("lists.add", { created: true, entry: { id: "c1" } });
 
     expect(await added).toBe(true);
     expect(onRefused).not.toHaveBeenCalled();
     expect(stale()).toBe(true);
   });
 
-  it("tells a taken name from any other failure", async () => {
+  it("calls a name already in the list a duplicate", async () => {
+    const { wrapper } = setUp();
+    const onRefused = vi.fn();
+    const { result } = renderHook(() => useCuisineMutations(onRefused), { wrapper });
+    let added: Promise<boolean> | undefined;
+
+    act(() => {
+      added = result.current.create("thai");
+    });
+    await answerCall("lists.add", { created: false, entry: { id: "c1" } });
+
+    expect(await added).toBe(false);
+    expect(onRefused.mock.calls).toEqual([["duplicate"]]);
+  });
+
+  it("says a failed rename or delete was not saved", async () => {
     const { stale, wrapper } = setUp();
     const onRefused = vi.fn();
     const { result } = renderHook(() => useCuisineMutations(onRefused), { wrapper });
@@ -55,16 +75,16 @@ describe("useCuisineMutations", () => {
       renamed = result.current.rename("c1", "Thai");
       removed = result.current.remove("c2");
     });
-    const rename = await sentCall("admin.cuisines.rename");
-    const remove = await sentCall("admin.cuisines.delete");
+    const rename = await sentCall("lists.rename");
+    const remove = await sentCall("lists.delete");
 
     await act(async () => {
-      rename.deferred.reject(Object.assign(new Error("taken"), { data: { code: "CONFLICT" } }));
+      rename.deferred.reject(new Error("gone"));
       remove.deferred.reject(new Error("offline"));
     });
 
     expect([await renamed, await removed]).toEqual([false, false]);
-    expect(onRefused.mock.calls).toEqual([["duplicate"], ["saveFailed"]]);
+    expect(onRefused.mock.calls).toEqual([["saveFailed"], ["saveFailed"]]);
     expect(stale()).toBe(false);
   });
 });

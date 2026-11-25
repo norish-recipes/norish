@@ -24,8 +24,16 @@ import {
   stores,
   users,
 } from "@norish/db/schema";
+import { entryFold } from "@norish/shared/lib/fold-name";
 
 import { rowActor } from "./household-rows";
+import {
+  findFoldedTwinTx,
+  LIST_KINDS,
+  listPendingFoldEntries,
+  mergeEntryTx,
+  setEntryFoldTx,
+} from "./list-entries";
 
 /** What the boot upgrades from older releases (startup/upgrades) read and write. */
 
@@ -312,4 +320,34 @@ export async function unparkLink(
 
     return put.length > 0 ? "restored" : "dropped";
   });
+}
+
+/**
+ * Folds the Tag, Cuisine and Category names migration 0092 could not fold exactly. Two entries of
+ * one list folding alike merge: the older keeps its id, the other's recipes move onto it.
+ */
+export async function foldPendingListEntries(): Promise<number> {
+  let folded = 0;
+
+  for (const kind of LIST_KINDS) {
+    folded += await db.transaction(async (tx) => {
+      const pending = await listPendingFoldEntries(kind, tx);
+
+      for (const entry of pending) {
+        const fold = entryFold(entry.name);
+        const twin = await findFoldedTwinTx(tx, kind, entry.household_id, fold, entry.id);
+
+        if (twin?.older) {
+          await mergeEntryTx(tx, kind, entry.id, twin.id);
+          continue;
+        }
+        if (twin) await mergeEntryTx(tx, kind, twin.id, entry.id);
+        await setEntryFoldTx(tx, kind, entry.id, fold);
+      }
+
+      return pending.length;
+    });
+  }
+
+  return folded;
 }

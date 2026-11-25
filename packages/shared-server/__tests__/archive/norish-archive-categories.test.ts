@@ -2,9 +2,9 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getRecipeFull } from "@norish/db";
-import { listCategoryNamesForUsers } from "@norish/db/repositories/categories";
+import { listCategoryNamesForHousehold } from "@norish/db/repositories/categories";
 
-import { createTestUser } from "../../../db/__tests__/helpers/db-test-helpers";
+import { createTestUser, testHouseholdOf } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 import { writeArchive } from "./norish-fixtures";
 
@@ -87,12 +87,14 @@ describe("a Recipe Archive carries Categories", () => {
   }
 
   it("gives the importer a household Category it did not have", async () => {
-    expect(await listCategoryNamesForUsers([importerId])).not.toContain("Drinks");
+    expect(await listCategoryNamesForHousehold(testHouseholdOf(importerId))).not.toContain(
+      "Drinks"
+    );
 
     const importedId = await exportAndImport(["Drinks", "Snack"]);
 
     expect((await getRecipeFull(importedId))?.categories).toEqual(["Drinks", "Snack"]);
-    expect(await listCategoryNamesForUsers([importerId])).toContain("Drinks");
+    expect(await listCategoryNamesForHousehold(testHouseholdOf(importerId))).toContain("Drinks");
   });
 
   it("names a built-in by its translation and creates any other name as it is", async () => {

@@ -72,10 +72,15 @@ vi.mock("@norish/db/repositories/cookbooks", () => ({
 }));
 
 vi.mock("@norish/db/repositories/categories", () => ({
-  listCategoryNamesForUsers: vi.fn().mockResolvedValue(["Breakfast", "Lunch", "Dinner", "Snack"]),
+  listCategoryNamesForHousehold: vi
+    .fn()
+    .mockResolvedValue(["Breakfast", "Lunch", "Dinner", "Snack"]),
+}));
+vi.mock("@norish/db/repositories/tags", () => ({
+  listTagNamesForHousehold: vi.fn().mockResolvedValue([]),
 }));
 vi.mock("@norish/db/repositories/cuisines", () => ({
-  listCuisines: vi.fn().mockResolvedValue([]),
+  listCuisinesForHousehold: vi.fn().mockResolvedValue([]),
 }));
 
 vi.mock("@norish/shared-server/media/storage", () => ({

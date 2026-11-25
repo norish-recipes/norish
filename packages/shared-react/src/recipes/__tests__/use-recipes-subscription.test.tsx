@@ -91,6 +91,7 @@ vi.mock("../../trpc", () => ({
     cookbooks: { recipes: { pathKey: () => [["cookbooks", "recipes"]] } },
     config: {
       categories: { queryKey: () => CATEGORIES_KEY },
+      tags: { queryKey: () => [["config", "tags"]] },
     },
   }),
 }));

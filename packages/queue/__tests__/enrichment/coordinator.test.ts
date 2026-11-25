@@ -3,19 +3,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { RecipeEnrichmentKind } from "@norish/shared/lib/recipe-enrichment";
 
 const getRecipeFull = vi.fn();
-const getHouseholdMemberIdsByHouseholdId = vi.fn();
-const getAllergiesForUsers = vi.fn();
+const getHouseholdAllergyNames = vi.fn();
 const isAIEnabled = vi.fn();
 const getAutomaticEnrichmentConfig = vi.fn();
 const isImageGenerationConfigured = vi.fn();
 const addEnrichmentJob = vi.fn();
 
-vi.mock("@norish/db/repositories/household-members", () => ({
-  getHouseholdMemberIdsByHouseholdId,
-}));
 vi.mock("@norish/db", () => ({
   getRecipeFull,
-  getAllergiesForUsers,
+  getHouseholdAllergyNames,
 }));
 
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
@@ -80,8 +76,7 @@ function outcome(results: Awaited<ReturnType<typeof enrichRecipe>>, kind: Recipe
 
 beforeEach(() => {
   getRecipeFull.mockResolvedValue(recipe());
-  getHouseholdMemberIdsByHouseholdId.mockResolvedValue(["user-1"]);
-  getAllergiesForUsers.mockResolvedValue(["Milk"]);
+  getHouseholdAllergyNames.mockResolvedValue(["Milk"]);
   isAIEnabled.mockResolvedValue(true);
   getAutomaticEnrichmentConfig.mockResolvedValue(ALL_ON);
   isImageGenerationConfigured.mockResolvedValue(true);
@@ -174,7 +169,7 @@ describe("automatic enrollment", () => {
   });
 
   it("skips allergy detection when the household has no configured allergies", async () => {
-    getAllergiesForUsers.mockResolvedValue([]);
+    getHouseholdAllergyNames.mockResolvedValue([]);
 
     const results = await enrichRecipe(context, { origin: "automatic" });
 
@@ -355,7 +350,7 @@ describe("automatic enrollment", () => {
   });
 
   it("keeps enrolling siblings when allergy lookup throws", async () => {
-    getAllergiesForUsers.mockRejectedValue(new Error("allergy database is down"));
+    getHouseholdAllergyNames.mockRejectedValue(new Error("allergy database is down"));
 
     const results = await enrichRecipe(context, { origin: "automatic" });
 
@@ -598,7 +593,7 @@ describe("manual enrollment", () => {
   });
 
   it("still observes configured household allergies", async () => {
-    getAllergiesForUsers.mockResolvedValue([]);
+    getHouseholdAllergyNames.mockResolvedValue([]);
 
     const results = await enrichRecipe(context, { origin: "manual", kind: "allergy-detection" });
 

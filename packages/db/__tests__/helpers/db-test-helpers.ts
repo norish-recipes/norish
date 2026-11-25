@@ -19,6 +19,7 @@ import { getRecipeFull } from "@norish/db";
 import { createGroceries, deleteGroceryByIds } from "@norish/db/repositories/groceries";
 import { mintIngredientWithAliases } from "@norish/db/repositories/ingredient-aliases";
 import { isFirstLineFood, writeRecipeLineFoodsTx } from "@norish/db/repositories/ingredients";
+import { appendRecipeEntriesTx } from "@norish/db/repositories/list-entries";
 import { addPantryIngredients } from "@norish/db/repositories/pantry";
 import { createRecurringGroceries } from "@norish/db/repositories/recurring-groceries";
 import * as schema from "@norish/db/schema";
@@ -135,6 +136,17 @@ export async function joinTestHousehold(userId: string, hostId: string): Promise
   testHouseholds.set(userId, householdId);
 
   return householdId;
+}
+
+/** Puts the Tag or Category `name` on each recipe, from the recipe's household's list (ADR-0043). */
+export async function attachTestEntry(
+  kind: "tag" | "category",
+  recipeIds: readonly string[],
+  name: string
+): Promise<void> {
+  for (const recipeId of recipeIds) {
+    await getTestDb().transaction((tx) => appendRecipeEntriesTx(tx, kind, recipeId, [name]));
+  }
 }
 
 /**

@@ -8,16 +8,10 @@ import type { RecipeListContext } from "@norish/db/repositories/recipes";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { listLibrary, listLibrarySuggestions } from "@norish/db/repositories/library";
 import { deleteConfig, setConfig } from "@norish/db/repositories/server-config";
-import {
-  categories,
-  ingredientAliases,
-  ingredients,
-  recipeCategories,
-  recipeTags,
-  tags as tagsTable,
-} from "@norish/db/schema";
+import { ingredientAliases, ingredients } from "@norish/db/schema";
 
 import {
+  attachTestEntry,
   createTestRecipe,
   createTestUser,
   getTestDb,
@@ -75,25 +69,11 @@ describe("the typing suggestions", () => {
     (await ask(text, as)).ingredients.map((each) => each.name);
 
   async function tagRecipes(recipeIds: string[], name: string) {
-    const [row] = await getTestDb().insert(tagsTable).values({ name }).returning();
-
-    await getTestDb()
-      .insert(recipeTags)
-      .values(recipeIds.map((recipeId) => ({ recipeId, tagId: row!.id, order: 0 })));
+    await attachTestEntry("tag", recipeIds, name);
   }
 
   async function categorise(recipeIds: string[], name: string) {
-    // The built-in names are seeded, so an existing row is the one to use.
-    await getTestDb().insert(categories).values({ name }).onConflictDoNothing();
-
-    const [row] = await getTestDb()
-      .select()
-      .from(categories)
-      .where(sql`lower(${categories.name}) = ${name.toLowerCase()}`);
-
-    await getTestDb()
-      .insert(recipeCategories)
-      .values(recipeIds.map((recipeId) => ({ recipeId, categoryId: row!.id, order: 0 })));
+    await attachTestEntry("category", recipeIds, name);
   }
 
   describe("Ingredients", () => {
@@ -307,6 +287,20 @@ describe("the typing suggestions", () => {
       await tagRecipes([one.id], "Quail");
 
       expect((await ask("qu")).tags).toEqual(["Quick meal", "Quail", "quiche"]);
+    });
+
+    it("offers households' Tags folding alike once, as the reader's household spells it", async () => {
+      await tagRecipes([(await recipeNaming(ownerId, [], "Ours")).id], "Soja");
+      await tagRecipes(
+        [
+          (await recipeNaming(strangerId, [], "Theirs")).id,
+          (await recipeNaming(strangerId, [], "Theirs too")).id,
+        ],
+        "soja!"
+      );
+
+      expect((await ask("so")).tags).toEqual(["Soja"]);
+      expect((await ask("so", strangerId)).tags).toEqual(["soja!"]);
     });
 
     it("leaves out the applied Tags, in any case, before the cap", async () => {

@@ -8,7 +8,7 @@ import type { Job } from "bullmq";
 
 import type { RecipeImportJobData } from "@norish/queue/contracts/job-types";
 import { dashboardRecipe, findRecipeIdByUrlForAccount } from "@norish/db";
-import { listCategoryNamesForViewer } from "@norish/db/repositories/categories";
+import { listCategoryNamesForHousehold } from "@norish/db/repositories/categories";
 import { getDecryptedTokensByUserId } from "@norish/db/repositories/site-auth-tokens";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { createResolvedRecipe } from "@norish/shared-server/ingredients/recipe-lines";
@@ -16,6 +16,7 @@ import { createLogger } from "@norish/shared-server/logger";
 import { withDishColor } from "@norish/shared-server/media/dish-color";
 import { accountAudience, policyAudience } from "@norish/shared-server/realtime/audience";
 import { recipes } from "@norish/shared-server/realtime/recipes";
+import { matchImportedTags } from "@norish/shared-server/recipes/imported-tags";
 import {
   NOT_A_RECIPE_REASON,
   PRIVATE_ADDRESS_REASON,
@@ -87,7 +88,7 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<string> 
   // No allergy list is fetched here: extraction reads the source, and allergy
   // detection runs afterwards as its own enrichment kind.
 
-  const householdCategories = await listCategoryNamesForViewer({ householdId });
+  const householdCategories = await listCategoryNamesForHousehold(householdId);
   // One site login per import, and the job records which: an import that dies
   // on an expired or rate-limited account has to be able to name it.
   const sets = credentialSetsForUrl(await getDecryptedTokensByUserId(userId), url);
@@ -143,7 +144,7 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<string> 
   const created = await createResolvedRecipe(
     recipeId,
     userId,
-    await withDishColor(parseResult.recipe),
+    await withDishColor(await matchImportedTags(householdId, parseResult.recipe)),
     { userId }
   );
   const createdId = created?.recipeId;

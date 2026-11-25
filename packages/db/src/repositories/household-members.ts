@@ -11,12 +11,6 @@ export function householdMemberIdsSql(householdId: string) {
     .where(eq(householdUsers.householdId, householdId));
 }
 
-export async function getHouseholdMemberIdsByHouseholdId(householdId: string): Promise<string[]> {
-  const rows = await householdMemberIdsSql(householdId);
-
-  return rows.map((row) => row.userId);
-}
-
 /** The household the account is in now, as a subquery for a repository to filter on. */
 export function currentHouseholdIdSql(userId: string) {
   return db

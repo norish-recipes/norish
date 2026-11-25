@@ -13,7 +13,7 @@ import { emitConnectionInvalidation } from "../mocks/realtime/connection";
 import { households } from "../mocks/realtime/households";
 
 const householdDb = vi.hoisted(() => ({
-  getAllergiesForUsers: vi.fn(),
+  getHouseholdAllergyNames: vi.fn(),
   getHouseholdForUser: vi.fn(),
   isUserHouseholdAdmin: vi.fn(),
   joinHousehold: vi.fn(),

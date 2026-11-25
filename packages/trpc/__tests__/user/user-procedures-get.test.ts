@@ -23,7 +23,7 @@ vi.mock("@norish/db", () => ({
   getHouseholdForUser: vi.fn(),
   getUserAllergies: vi.fn(),
   updateUserAllergies: vi.fn(),
-  getAllergiesForUsers: vi.fn(),
+  getHouseholdAllergyNames: vi.fn(),
   getUserLocale: vi.fn(),
   updateUserLocale: vi.fn(),
 }));

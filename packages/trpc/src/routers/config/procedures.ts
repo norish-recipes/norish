@@ -4,9 +4,9 @@ import { getAvailableProviders, isPasswordAuthEnabled } from "@norish/auth/provi
 import { buildInternalParserApiUrl, SERVER_CONFIG } from "@norish/config/env-config-server";
 import configPackage from "@norish/config/package.json" with { type: "json" };
 import { getDatabaseHealth } from "@norish/db/drizzle";
-import { listCategoryNamesForUsers } from "@norish/db/repositories/categories";
-import { listCuisines } from "@norish/db/repositories/cuisines";
-import { listTagNamesForViewer } from "@norish/db/repositories/library";
+import { listCategoryNamesForHousehold } from "@norish/db/repositories/categories";
+import { listCuisinesForHousehold } from "@norish/db/repositories/cuisines";
+import { listTagNamesForHousehold } from "@norish/db/repositories/tags";
 import {
   getIngredientWords,
   getLocaleConfig,
@@ -21,7 +21,7 @@ import { trpcLogger as log } from "@norish/shared-server/logger";
 import { getValkeyHealth } from "@norish/shared-server/valkey/client";
 import { BUILT_IN_ALIASES } from "@norish/shared/lib/category-matcher";
 
-import { authedProcedure, viewerOf } from "../../middleware";
+import { authedProcedure } from "../../middleware";
 import { publicProcedure, router } from "../../trpc";
 import {
   liveResponseSchema,
@@ -93,38 +93,28 @@ const localeConfig = publicProcedure.query(async () => {
   };
 });
 
-/** Every tag name on a recipe the reader may view; a server admin is a reader like any other. */
+/** The household's Tags, whatever the Permission Policy (ADR-0043). */
 const tags = authedProcedure.query(async ({ ctx }) => {
   log.debug({ userId: ctx.user.id }, "Getting tags");
 
-  return { tags: await listTagNamesForViewer(viewerOf(ctx)) };
+  return { tags: await listTagNamesForHousehold(ctx.householdId) };
 });
 
-/**
- * The household's Categories. Always household-scoped, unlike `tags`: another
- * household's Categories would fill the chip row (ADR-0040).
- */
+/** The built-in Categories, then the household's own, whatever the Permission Policy (ADR-0040). */
 const categories = authedProcedure.query(async ({ ctx }) => {
   log.debug({ userId: ctx.user.id }, "Getting categories");
 
   return {
-    categories: await listCategoryNamesForUsers(ctx.userIds),
+    categories: await listCategoryNamesForHousehold(ctx.householdId),
     builtInAliases: BUILT_IN_ALIASES,
   };
 });
 
-/**
- * Get the deployment's Cuisine vocabulary.
- *
- * Unscoped on purpose: unlike Tags, which grow out of whichever recipes a user
- * can see, the vocabulary is one administrator-owned list. An editor picks from
- * exactly the same list AI does, which is what makes manual entries match
- * inferred ones.
- */
+/** The household's Cuisines and the administrator's, the list an editor and AI pick from alike. */
 const cuisines = authedProcedure.query(async ({ ctx }) => {
-  log.debug({ userId: ctx.user.id }, "Getting the Cuisine vocabulary");
+  log.debug({ userId: ctx.user.id }, "Getting cuisines");
 
-  return { cuisines: await listCuisines() };
+  return { cuisines: await listCuisinesForHousehold(ctx.householdId) };
 });
 
 /**

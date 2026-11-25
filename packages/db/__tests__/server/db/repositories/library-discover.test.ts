@@ -8,15 +8,10 @@ import type { RecipeListContext } from "@norish/db/repositories/recipes";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { listLibraryDiscover } from "@norish/db/repositories/library";
 import { deleteConfig, setConfig } from "@norish/db/repositories/server-config";
-import {
-  categories,
-  recipeCategories,
-  recipeImages,
-  recipeTags,
-  tags as tagsTable,
-} from "@norish/db/schema";
+import { recipeImages } from "@norish/db/schema";
 
 import {
+  attachTestEntry,
   createTestRecipe,
   createTestUser,
   getTestDb,
@@ -68,25 +63,11 @@ describe("the discover reads", () => {
   }
 
   async function categorise(recipeIds: string[], name: string) {
-    // The built-in names are seeded, so an existing row is the one to use.
-    await getTestDb().insert(categories).values({ name }).onConflictDoNothing();
-
-    const [row] = await getTestDb()
-      .select()
-      .from(categories)
-      .where(sql`lower(${categories.name}) = ${name.toLowerCase()}`);
-
-    await getTestDb()
-      .insert(recipeCategories)
-      .values(recipeIds.map((recipeId) => ({ recipeId, categoryId: row!.id, order: 0 })));
+    await attachTestEntry("category", recipeIds, name);
   }
 
   async function tag(recipeIds: string[], name: string) {
-    const [row] = await getTestDb().insert(tagsTable).values({ name }).returning();
-
-    await getTestDb()
-      .insert(recipeTags)
-      .values(recipeIds.map((recipeId) => ({ recipeId, tagId: row!.id, order: 0 })));
+    await attachTestEntry("tag", recipeIds, name);
   }
 
   describe("Categories", () => {

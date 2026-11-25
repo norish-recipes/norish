@@ -33,14 +33,10 @@ import {
 import { setFavorite } from "@norish/db/repositories/favorites";
 import { deleteRecipeById, listRecipes } from "@norish/db/repositories/recipes";
 import { deleteConfig, setConfig } from "@norish/db/repositories/server-config";
-import {
-  recipeImages as recipeImagesTable,
-  recipes as recipesTable,
-  recipeTags as recipeTagsTable,
-  tags as tagsTable,
-} from "@norish/db/schema";
+import { recipeImages as recipeImagesTable, recipes as recipesTable } from "@norish/db/schema";
 
 import {
+  attachTestEntry,
   createTestRecipe,
   createTestUser,
   getTestDb,
@@ -65,16 +61,7 @@ async function setPolicy(level: {
 
 /** Put named tags on a recipe, so a cookbook has member tags to gather. */
 async function tagRecipe(recipeId: string, names: string[]) {
-  const db = getTestDb();
-
-  for (const [order, name] of names.entries()) {
-    // Tags are shared rows, so two members carrying the same one must reuse it.
-    await db.insert(tagsTable).values({ name }).onConflictDoNothing();
-
-    const [tag] = await db.select().from(tagsTable).where(eq(tagsTable.name, name)).limit(1);
-
-    await db.insert(recipeTagsTable).values({ recipeId, tagId: tag!.id, order });
-  }
+  for (const name of names) await attachTestEntry("tag", [recipeId], name);
 }
 
 /**

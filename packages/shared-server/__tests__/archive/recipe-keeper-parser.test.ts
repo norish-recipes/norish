@@ -32,11 +32,14 @@ vi.mock("@norish/shared-server/media/dish-color", () => ({
 }));
 vi.mock("@norish/db/repositories/ratings", () => ({ rateRecipe: mockRateRecipe }));
 vi.mock("@norish/db/repositories/favorites", () => ({ addFavorite: mockAddFavorite }));
+vi.mock("@norish/db/repositories/tags", () => ({
+  listTagNamesForHousehold: vi.fn().mockResolvedValue([]),
+}));
 vi.mock("@norish/db/repositories/cuisines", () => ({
-  listCuisines: vi.fn().mockResolvedValue([]),
+  listCuisinesForHousehold: vi.fn().mockResolvedValue([]),
 }));
 vi.mock("@norish/db/repositories/categories", () => ({
-  listCategoryNamesForUsers: mockListCategoryNames,
+  listCategoryNamesForHousehold: mockListCategoryNames,
 }));
 vi.mock("@norish/db/repositories/cookbooks", () => ({
   findOwnCookbookIdByTitle: vi.fn().mockResolvedValue(null),
@@ -137,10 +140,7 @@ async function exportZip(blocks: string[], { wrapper = "" } = {}) {
 
 async function importBlocks(blocks: string[]) {
   const bytes = Buffer.from(await (await exportZip(blocks)).generateAsync({ type: "uint8array" }));
-  const result = await importArchive(
-    { userId: "user-1", householdId: "household-1", memberIds: ["user-1"] },
-    bytes
-  );
+  const result = await importArchive({ userId: "user-1", householdId: "household-1" }, bytes);
 
   return { result, dtos: mockCreateResolvedRecipe.mock.calls.map((call) => call[2]) };
 }
@@ -258,7 +258,7 @@ describe("Recipe Keeper import", () => {
       categories: ["Dessert"],
     });
     expect(mockListCategoryNames).toHaveBeenCalledTimes(1);
-    expect(mockListCategoryNames).toHaveBeenCalledWith(["user-1"]);
+    expect(mockListCategoryNames).toHaveBeenCalledWith("household-1");
   });
 
   it("files a recipe into its collections as the importer's cookbooks", async () => {

@@ -7,7 +7,7 @@ import type { ImageImportJobData } from "@norish/queue/contracts/job-types";
 
 const createRecipeWithRefs = vi.fn();
 const dashboardRecipe = vi.fn();
-const getAllergiesForUsers = vi.fn();
+const getHouseholdAllergyNames = vi.fn();
 const addRecipeImages = vi.fn();
 const updateRecipeDishColor = vi.fn();
 const publishRecipe = vi.fn(async () => undefined);
@@ -20,12 +20,12 @@ vi.mock("@norish/db", () => ({
   addRecipeImages,
   createRecipeWithRefs,
   dashboardRecipe,
-  getAllergiesForUsers,
+  getHouseholdAllergyNames,
   updateRecipeDishColor,
 }));
 
 vi.mock("@norish/db/repositories/categories", () => ({
-  listCategoryNamesForViewer: vi.fn().mockResolvedValue(["Breakfast", "Drinks"]),
+  listCategoryNamesForHousehold: vi.fn().mockResolvedValue(["Breakfast", "Drinks"]),
 }));
 vi.mock("@norish/shared-server/media/dish-color", () => ({
   dishColorForImageUrl,

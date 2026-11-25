@@ -10,11 +10,12 @@ import type { CuisineRefusal } from "@norish/shared-react/admin";
 import { useCuisineMutations } from "@norish/shared-react/admin";
 import { useCuisinesQuery } from "@norish/shared-react/config";
 
-/** Cuisine vocabulary: a rename is one row every recipe follows; a delete cascades silently. */
+/** The instance's Cuisines: a rename onto another merges the two; a delete takes it off its recipes. */
 export default function CuisineVocabularyForm() {
   const t = useTranslations("settings.admin.cuisineVocabulary");
   const tActions = useTranslations("common.actions");
-  const { cuisines, isLoading } = useCuisinesQuery();
+  const { cuisines: offered, isLoading } = useCuisinesQuery();
+  const cuisines = offered.filter((cuisine) => cuisine.instance);
   const [newName, setNewName] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");

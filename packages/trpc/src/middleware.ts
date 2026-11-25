@@ -10,6 +10,7 @@ import {
   isPrimaryKeyCollision,
   isRetryableConflict,
 } from "@norish/db/repositories/constraint-violation";
+import { ForeignHouseholdReferenceError } from "@norish/db/repositories/household-rows";
 import { getActiveRecipeShareByToken } from "@norish/db/repositories/recipe-shares";
 import { getRecipeFull } from "@norish/db/repositories/recipes";
 import { getCachedHouseholdForUser } from "@norish/shared-server/cache/household";
@@ -81,12 +82,16 @@ const withAuth = middleware(async ({ ctx, next }) => {
 export const authedProcedure = publicProcedure
   .use(withIdempotency)
   .use(withAuth)
-  // A client-made id another household's row holds answers like a missing row, without the database's text.
+  // A client-made id another household's row holds, or a reference to one, answers like a missing row.
   // A write its Owner's move overtook, or a deadlock's victim, is a 503 the Outbox retries (a 409 parks).
   .use(async ({ next }) => {
     const result = await next();
 
-    if (!result.ok && isPrimaryKeyCollision(result.error)) {
+    if (
+      !result.ok &&
+      (isPrimaryKeyCollision(result.error) ||
+        result.error.cause instanceof ForeignHouseholdReferenceError)
+    ) {
       throw new TRPCError({ code: "NOT_FOUND", message: "Not found" });
     }
     if (!result.ok && isRetryableConflict(result.error)) {

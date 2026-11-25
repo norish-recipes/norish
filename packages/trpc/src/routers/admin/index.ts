@@ -3,7 +3,6 @@ import { aiConfigProcedures } from "./ai-config";
 import { authProvidersProcedures } from "./auth-providers";
 import { adminConfigProcedures } from "./config";
 import { contentConfigProcedures } from "./content-config";
-import { cuisinesProcedures } from "./cuisines";
 import { generalProcedures } from "./general";
 import { ingredientCatalogueProcedures } from "./ingredient-catalogue";
 import { jobQueueProcedures } from "./job-queue";
@@ -25,9 +24,6 @@ export const adminRouter = router({
 
   // Content config (indicators, units, recurrence)
   content: contentConfigProcedures,
-
-  // Cuisine vocabulary governance; the list itself is read from `config.cuisines`
-  cuisines: cuisinesProcedures,
 
   // Job queue monitoring
   jobs: jobQueueProcedures,

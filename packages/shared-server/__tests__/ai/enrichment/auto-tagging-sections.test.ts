@@ -12,16 +12,11 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { listAllTagNames } from "@norish/db/repositories/tags";
 import { getTagStrategy } from "@norish/shared-server/config/server-config-loader";
 
 // Mock dependencies before imports
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   getTagStrategy: vi.fn(),
-}));
-
-vi.mock("@norish/db/repositories/tags", () => ({
-  listAllTagNames: vi.fn(),
 }));
 
 const { buildAutoTaggingSections, parsePredefinedTags } =
@@ -78,12 +73,6 @@ describe("buildAutoTaggingSections", () => {
       vi.mocked(getTagStrategy).mockResolvedValue("predefined");
     });
 
-    it("does not fetch DB tags", async () => {
-      await buildAutoTaggingSections({}, mockRecipe);
-
-      expect(listAllTagNames).not.toHaveBeenCalled();
-    });
-
     it("appends no strategy addition, only the recipe", async () => {
       const sections = await buildAutoTaggingSections({}, mockRecipe);
 
@@ -119,29 +108,18 @@ describe("buildAutoTaggingSections", () => {
       vi.mocked(getTagStrategy).mockResolvedValue("predefined_db");
     });
 
-    it("fetches existing tags and includes them in a section", async () => {
-      vi.mocked(listAllTagNames).mockResolvedValue(["dinner", "lunch", "breakfast"]);
+    it("offers the household's Tags it is handed in a section", async () => {
+      const sections = await buildAutoTaggingSections(
+        { existingDbTags: ["dinner", "lunch", "breakfast"] },
+        mockRecipe
+      );
 
-      const sections = await buildAutoTaggingSections({}, mockRecipe);
-
-      expect(listAllTagNames).toHaveBeenCalled();
       expect(sections.join("\n")).toContain("ADDITIONAL ALLOWED TAGS");
       expect(sections.join("\n")).toContain("dinner, lunch, breakfast");
     });
 
-    it("uses pre-fetched tags if provided", async () => {
-      const providedTags = ["custom-tag-1", "custom-tag-2"];
-
-      const sections = await buildAutoTaggingSections({ existingDbTags: providedTags }, mockRecipe);
-
-      expect(listAllTagNames).not.toHaveBeenCalled();
-      expect(sections.join("\n")).toContain("custom-tag-1, custom-tag-2");
-    });
-
-    it("handles empty DB tags gracefully", async () => {
-      vi.mocked(listAllTagNames).mockResolvedValue([]);
-
-      const sections = await buildAutoTaggingSections({}, mockRecipe);
+    it("adds no section for a household without Tags", async () => {
+      const sections = await buildAutoTaggingSections({ existingDbTags: [] }, mockRecipe);
 
       expect(sections.join("\n")).not.toContain("ADDITIONAL ALLOWED TAGS");
     });
@@ -156,12 +134,6 @@ describe("buildAutoTaggingSections", () => {
       const sections = await buildAutoTaggingSections({}, mockRecipe);
 
       expect(sections.join("\n")).toContain("you may create new relevant tags");
-    });
-
-    it("does not fetch DB tags", async () => {
-      await buildAutoTaggingSections({}, mockRecipe);
-
-      expect(listAllTagNames).not.toHaveBeenCalled();
     });
   });
 

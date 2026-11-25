@@ -37,7 +37,7 @@ vi.mock("@norish/db", () => ({
   getHouseholdForUser: vi.fn(),
   getUserAllergies: vi.fn(),
   updateUserAllergies: vi.fn(),
-  getAllergiesForUsers: vi.fn(),
+  getHouseholdAllergyNames: vi.fn(),
 }));
 
 vi.mock("@norish/shared-server/realtime/households", () => import("../mocks/realtime/households"));

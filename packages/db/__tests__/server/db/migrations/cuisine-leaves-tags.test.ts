@@ -135,8 +135,11 @@ describe("cuisine tags migrating onto the Cuisine vocabulary", () => {
       await readFile(resolve(MIGRATIONS_FOLDER, "meta/_journal.json"), "utf8")
     );
 
-    PRIOR_JOURNAL.entries = journal.entries.filter(
-      (entry: { tag: string }) => entry.tag !== "0037_cuisine_leaves_tags"
+    PRIOR_JOURNAL.entries = journal.entries.slice(
+      0,
+      journal.entries.findIndex(
+        (entry: { tag: string }) => entry.tag === "0037_cuisine_leaves_tags"
+      )
     );
 
     for (const entry of PRIOR_JOURNAL.entries) {

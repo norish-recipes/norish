@@ -71,8 +71,11 @@ vi.mock("@norish/db/repositories/cookbooks", () => ({
   addRecipeToCookbook: mockAddRecipeToCookbook,
 }));
 
+vi.mock("@norish/db/repositories/tags", () => ({
+  listTagNamesForHousehold: vi.fn().mockResolvedValue([]),
+}));
 vi.mock("@norish/db/repositories/cuisines", () => ({
-  listCuisines: mockListCuisines,
+  listCuisinesForHousehold: mockListCuisines,
 }));
 
 vi.mock("@norish/shared-server/media/storage", () => ({

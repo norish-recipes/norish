@@ -3,7 +3,7 @@
 import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { findCuisineByName, getRecipeCuisines } from "@norish/db/repositories/cuisines";
+import { cuisinesForNames, getRecipeCuisines } from "@norish/db/repositories/cuisines";
 import {
   replaceRecipeCategories,
   replaceRecipeNutrition,
@@ -226,7 +226,7 @@ describe("Recipe Enrichment repository", () => {
   });
 
   async function cuisineId(name: string): Promise<string> {
-    const cuisine = await findCuisineByName(name);
+    const [cuisine] = await cuisinesForNames(testRecipe.householdId, [name], { create: false });
 
     if (!cuisine) throw new Error(`Seeded Cuisine missing: ${name}`);
 
@@ -540,14 +540,14 @@ describe("Recipe Enrichment repository", () => {
 
   describe("an editor saving the recipe form", () => {
     it("writes the whole group, and its Cuisines by id", async () => {
-      const italian = await findCuisineByName("Italian");
+      const italian = await cuisineId("Italian");
 
       await updateRecipeWithRefs(testRecipe.id, userId, {
         originCountry: "IT",
         originCountryName: "Italië",
         originRegion: "Lazio",
         provenanceNote: "My grandmother's, from Rome.",
-        cuisines: [italian!.id],
+        cuisines: [italian],
       });
 
       const recipe = await getRecipeFull(testRecipe.id);
@@ -580,13 +580,13 @@ describe("Recipe Enrichment repository", () => {
     });
 
     it("keeps the Cuisines chosen while creating the recipe", async () => {
-      const italian = await findCuisineByName("Italian");
+      const italian = await cuisineId("Italian");
       const created = await createRecipeWithRefs(randomUUID(), userId, {
         name: "Created with provenance",
         systemUsed: "metric",
         originCountry: "IT",
         provenanceNote: "Typed in at creation.",
-        cuisines: [italian!.id],
+        cuisines: [italian],
       });
 
       const recipe = await getRecipeFull(created!.recipeId);
@@ -618,11 +618,11 @@ describe("Recipe Enrichment repository", () => {
     });
 
     it("clears the group when the editor empties every field", async () => {
-      const italian = await findCuisineByName("Italian");
+      const italian = await cuisineId("Italian");
 
       await replaceRecipeProvenance(
         testRecipe.id,
-        { originCountry: "IT", provenanceNote: "Wrong.", cuisineIds: [italian!.id] },
+        { originCountry: "IT", provenanceNote: "Wrong.", cuisineIds: [italian] },
         "replace"
       );
 

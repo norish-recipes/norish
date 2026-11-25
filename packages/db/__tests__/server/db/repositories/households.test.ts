@@ -8,8 +8,8 @@ import { eq, sql } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import {
-  getHouseholdMemberIdsByHouseholdId,
   getHouseholdMemberIdsByUserId,
+  householdMemberIdsSql,
 } from "@norish/db/repositories/household-members";
 import {
   deleteAccount,
@@ -30,6 +30,9 @@ import { households, householdUsers, users } from "@norish/db/schema";
 import { createTestRecipe, createTestUser, getTestDb } from "../../../helpers/db-test-helpers";
 import { lockWaits, raceBehind, waitFor } from "../../../helpers/lock-race";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
+
+const getHouseholdMemberIdsByHouseholdId = async (householdId: string) =>
+  (await householdMemberIdsSql(householdId)).map((row) => row.userId);
 
 describe("households", () => {
   const testBase = new RepositoryTestBase("test_households");

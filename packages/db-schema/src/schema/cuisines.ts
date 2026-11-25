@@ -1,28 +1,30 @@
 import { sql } from "drizzle-orm";
 import { index, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
+import { households } from "./households";
 import { versionColumn } from "./shared";
 
 /**
- * The deployment's Cuisine vocabulary.
- *
- * Structurally identical to `tags` and governed the opposite way: Tags are an
- * open folksonomy anyone may extend, Cuisines are curated by an administrator
- * — or by AI only under an explicitly permissive strategy (ADR-0012).
- *
- * Rows rather than an enum, because an enum cannot be extended from a settings
- * form, which is the whole point of administrator ownership.
+ * Cuisines (ADR-0012, ADR-0043): the administrator's are the instance entries
+ * (`household_id` null), offered to every household beside the household's own.
  */
 export const cuisines = pgTable(
   "cuisines",
   {
     id: uuid("id").defaultRandom().primaryKey(),
+    householdId: uuid("household_id").references(() => households.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
+    nameFold: text("name_fold").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     ...versionColumn,
   },
   (t) => [
-    uniqueIndex("uqidx_cuisines_name_lower").on(sql`lower(${t.name})`),
+    uniqueIndex("uq_cuisines_household_fold")
+      .on(t.householdId, t.nameFold)
+      .where(sql`${t.householdId} IS NOT NULL`),
+    uniqueIndex("uq_cuisines_instance_fold")
+      .on(t.nameFold)
+      .where(sql`${t.householdId} IS NULL`),
     index("idx_cuisines_created_at").on(t.createdAt),
   ]
 );

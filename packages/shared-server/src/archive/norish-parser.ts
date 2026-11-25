@@ -8,6 +8,7 @@ import {
   saveVideoBytes,
 } from "@norish/shared-server/media/storage";
 import { FullRecipeInsertDTO } from "@norish/shared/contracts";
+import { entryFold } from "@norish/shared/lib/fold-name";
 
 import {
   EXTERNAL_MEDIA_URL,
@@ -233,8 +234,8 @@ async function rehomeMediaReference(
 
 /**
  * Attach cuisine names only where the receiving vocabulary already knows them
- * (lowercased name → cuisine id), and say which were dropped: an archive
- * never extends a vocabulary its administrator owns (ADR-0022).
+ * (folded name → cuisine id), and say which were dropped: an import never
+ * extends a household's Cuisines (ADR-0022, ADR-0043).
  */
 export function matchCuisineNames(
   names: readonly string[],
@@ -245,7 +246,7 @@ export function matchCuisineNames(
   const seenDropped = new Set<string>();
 
   for (const name of names) {
-    const key = name.trim().toLowerCase();
+    const key = entryFold(name);
     const id = cuisineIdsByName.get(key);
 
     if (id) {

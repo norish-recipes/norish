@@ -39,7 +39,7 @@ vi.mock("@norish/db", async (importOriginal) => {
     createRecipeWithRefs: recipes.createRecipeWithRefs,
     dashboardRecipe: recipes.dashboardRecipe,
     deleteRecipeById: recipes.deleteRecipeById,
-    getAllergiesForUsers: vi.fn(),
+    getHouseholdAllergyNames: vi.fn(),
     getRecipeByUrl: recipes.getRecipeByUrl,
     getRecipeFull: recipes.getRecipeFull,
     getRecipeHouseholdIds: recipes.getRecipeHouseholdIds,

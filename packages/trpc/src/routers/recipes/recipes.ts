@@ -28,7 +28,7 @@ import {
   updateRecipeCategories,
   writeConvertedCopy,
 } from "@norish/db";
-import { listCategoryNamesForUsers } from "@norish/db/repositories/categories";
+import { listCategoryNamesForHousehold } from "@norish/db/repositories/categories";
 import {
   addImageImportJob,
   addImportJob,
@@ -861,7 +861,7 @@ export const importFromPasteProcedure = authedProcedure
     const preparedImport = await preparePasteImport(
       input.text,
       input.forceAI,
-      await listCategoryNamesForUsers(ctx.userIds)
+      await listCategoryNamesForHousehold(ctx.householdId)
     );
 
     log.info(

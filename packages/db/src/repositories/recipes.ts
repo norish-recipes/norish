@@ -26,6 +26,7 @@ import {
 } from "@norish/config/zod/server-config";
 import { db } from "@norish/db/drizzle";
 import { dbLogger } from "@norish/db/logger";
+import { entryFold } from "@norish/shared/lib/fold-name";
 import { stripHtmlTags } from "@norish/shared/lib/helpers";
 import { joinOf } from "@norish/shared/lib/line-foods";
 import { normalizeOriginCountry } from "@norish/shared/lib/recipe-enrichment";
@@ -69,6 +70,7 @@ import {
   resolvedRecipeLineValues,
   writeRecipeLineFoodsTx,
 } from "./ingredients";
+import { recipeCarriesFoldsSql } from "./list-entries";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 import { pantryCoverageSql } from "./pantry-coverage";
 import { assertOwnRecipeMedia } from "./recipe-media-references";
@@ -585,40 +587,15 @@ export async function listRecipes(
     searchRank = searchSql.rank;
   }
 
-  let tagFilteredIds: string[] | undefined;
-
   if (tagNames?.length) {
-    const normalizedTags = tagNames.map((t) => t.toLowerCase());
-    const tagRelations = await db.query.recipeTags.findMany({
-      columns: { recipeId: true },
-      with: { tag: { columns: { name: true } } },
-    });
-
-    const recipeTagMap = new Map<string, Set<string>>();
-
-    for (const rel of tagRelations) {
-      const tagName = rel.tag?.name?.toLowerCase();
-
-      if (!tagName) continue;
-      if (!recipeTagMap.has(rel.recipeId)) {
-        recipeTagMap.set(rel.recipeId, new Set());
-      }
-      recipeTagMap.get(rel.recipeId)!.add(tagName);
-    }
-
-    tagFilteredIds = Array.from(recipeTagMap.entries())
-      .filter(([_, tagSet]) =>
-        filterMode === "AND"
-          ? normalizedTags.every((t) => tagSet.has(t))
-          : normalizedTags.some((t) => tagSet.has(t))
+    // Across households a Tag filter matches on the folded name (ADR-0043).
+    whereConditions.push(
+      recipeCarriesFoldsSql(
+        "tag",
+        tagNames,
+        filterMode === "AND" ? new Set(tagNames.map(entryFold)).size : 1
       )
-      .map(([recipeId]) => recipeId);
-
-    if (!tagFilteredIds.length) {
-      return { recipes: [], total: 0 };
-    }
-
-    whereConditions.push(inArray(recipes.id, tagFilteredIds));
+    );
   }
 
   if (categories?.length) {

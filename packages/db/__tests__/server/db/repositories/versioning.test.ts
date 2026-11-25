@@ -6,7 +6,6 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
   addRecipeImages,
   addRecipeVideos,
-  createTag,
   getHouseholdForUser,
   getHouseholdIdForUser,
   getRecipeFull,
@@ -15,10 +14,10 @@ import {
   joinHousehold,
   updateRecipeImageOrder,
   updateRecipeVideoOrder,
-  updateTagName,
   updateUserAllergies,
   updateUserName,
 } from "@norish/db";
+import { addEntry, renameEntry } from "@norish/db/repositories/list-entries";
 import {
   recipeImages,
   recipeVideos,
@@ -59,11 +58,15 @@ describe("versioned repository behavior", () => {
   });
 
   it("starts tags at version 1 and increments on rename", async () => {
-    const tag = await createTag("Pantry");
+    const { entry: tag } = (await addEntry(
+      "tag",
+      (await getHouseholdIdForUser(testUserId))!,
+      "Pantry"
+    ))!;
 
     expect(tag.version).toBe(1);
 
-    await updateTagName("Pantry", "Pantry Staples");
+    await renameEntry("tag", (await getHouseholdIdForUser(testUserId))!, tag.id, "Pantry Staples");
 
     const db = getTestDb();
     const [updatedTag] = await db.select().from(tags).where(eq(tags.id, tag.id)).limit(1);
@@ -245,9 +248,7 @@ describe("versioned repository behavior", () => {
 
   it("keeps a stored allergy name a save sends back unchanged, cleaning only new ones", async () => {
     const db = getTestDb();
-    const [stored] = await db.insert(tags).values({ name: "<milk>" }).returning();
-
-    await db.insert(userAllergies).values({ userId: testUserId, tagId: stored!.id, version: 1 });
+    await db.insert(userAllergies).values({ userId: testUserId, name: "<milk>", version: 1 });
     await updateUserAllergies(testUserId, ["<milk>", "<b>Soy</b>"], 1);
 
     expect((await getUserAllergies(testUserId)).allergies).toEqual(["<milk>", "Soy"]);

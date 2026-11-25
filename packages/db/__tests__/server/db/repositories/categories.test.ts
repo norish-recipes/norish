@@ -5,7 +5,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { db } from "@norish/db/drizzle";
 import {
   attachCategoriesToRecipeByInputTx,
-  listCategoryNamesForUsers,
+  listCategoryNamesForHousehold,
 } from "@norish/db/repositories/categories";
 import {
   getRandomRecipeCandidates,
@@ -17,6 +17,7 @@ import { categories } from "@norish/db/schema";
 import {
   createTestRecipe,
   createTestUser,
+  joinTestHousehold,
   testHouseholdOf,
 } from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
@@ -79,7 +80,7 @@ describe("Categories Repository", () => {
     expect((await getRecipeFull(second.id))?.categories).toEqual(["Cocktails"]);
   });
 
-  it("removes an unused Category but spares the built-ins", async () => {
+  it("keeps a Category no recipe carries any more (ADR-0043)", async () => {
     const user = await createTestUser();
     const recipe = await createTestRecipe(user.id, { name: "Mojito" });
 
@@ -87,7 +88,13 @@ describe("Categories Repository", () => {
     await attach(recipe.id, []);
 
     expect((await getRecipeFull(recipe.id))?.categories).toEqual([]);
-    expect(await allCategoryNames()).toEqual(["Breakfast", "Dinner", "Lunch", "Snack"]);
+    expect(await allCategoryNames()).toEqual([
+      "Breakfast",
+      "Cocktails",
+      "Dinner",
+      "Lunch",
+      "Snack",
+    ]);
   });
 
   it("lists the built-ins plus the household's own Categories, never another household's", async () => {
@@ -95,10 +102,11 @@ describe("Categories Repository", () => {
     const partner = await createTestUser();
     const stranger = await createTestUser();
 
+    await joinTestHousehold(partner.id, me.id);
     await attach((await createTestRecipe(partner.id, { name: "Tiramisu" })).id, ["Puddings"]);
     await attach((await createTestRecipe(stranger.id, { name: "Mojito" })).id, ["Cocktails"]);
 
-    expect(await listCategoryNamesForUsers([me.id, partner.id])).toEqual([
+    expect(await listCategoryNamesForHousehold(testHouseholdOf(me.id))).toEqual([
       "Breakfast",
       "Lunch",
       "Dinner",

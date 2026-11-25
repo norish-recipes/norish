@@ -41,7 +41,6 @@ import {
   stepImages,
   steps,
   stores,
-  tags,
   userAllergies,
   userCaldavConfig,
   users,
@@ -87,12 +86,7 @@ describe("deleting an account", () => {
     const db = getTestDb();
     const recipe = await createTestRecipe(userId, { name });
     const cookbook = await createCookbook({ userId, title: `${name} book` });
-    const [tag] = await db
-      .insert(tags)
-      .values({ name: `${name} allergen` })
-      .returning();
-
-    await db.insert(userAllergies).values({ userId, tagId: tag!.id });
+    await db.insert(userAllergies).values({ userId, name: `${name} allergen` });
     await db.insert(apiKeys).values({ referenceId: userId, key: `key-${name}` });
     await db
       .insert(accounts)

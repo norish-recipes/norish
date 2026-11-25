@@ -9,7 +9,7 @@ import type { Job } from "bullmq";
 
 import type { ImageImportJobData } from "@norish/queue/contracts/job-types";
 import { addRecipeImages, dashboardRecipe, updateRecipeDishColor } from "@norish/db";
-import { listCategoryNamesForViewer } from "@norish/db/repositories/categories";
+import { listCategoryNamesForHousehold } from "@norish/db/repositories/categories";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { createResolvedRecipe } from "@norish/shared-server/ingredients/recipe-lines";
 import { createLogger } from "@norish/shared-server/logger";
@@ -17,6 +17,7 @@ import { dishColorForImageUrl } from "@norish/shared-server/media/dish-color";
 import { deleteUnreferencedRecipeFile, saveImageBytes } from "@norish/shared-server/media/storage";
 import { accountAudience, policyAudience } from "@norish/shared-server/realtime/audience";
 import { recipes } from "@norish/shared-server/realtime/recipes";
+import { matchImportedTags } from "@norish/shared-server/recipes/imported-tags";
 
 import { createWorker } from "../create-worker";
 import { announceUsableRecipe } from "../enrichment/announce";
@@ -48,12 +49,17 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
   const parsedRecipe = await extractRecipeFromImages(
     recipeId,
     files,
-    await listCategoryNamesForViewer({ householdId })
+    await listCategoryNamesForHousehold(householdId)
   );
 
   // Save the recipe
   await reportStep(job, "saving");
-  const created = await createResolvedRecipe(recipeId, userId, parsedRecipe, { userId });
+  const created = await createResolvedRecipe(
+    recipeId,
+    userId,
+    await matchImportedTags(householdId, parsedRecipe),
+    { userId }
+  );
   const createdId = created?.recipeId;
 
   if (!createdId) {

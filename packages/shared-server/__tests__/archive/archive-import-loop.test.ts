@@ -39,8 +39,11 @@ vi.mock("@norish/shared-server/ingredients/recipe-lines", () => ({
 
 vi.mock("@norish/db/repositories/ratings", () => ({ rateRecipe: vi.fn() }));
 vi.mock("@norish/db/repositories/favorites", () => ({ addFavorite: vi.fn() }));
+vi.mock("@norish/db/repositories/tags", () => ({
+  listTagNamesForHousehold: vi.fn().mockResolvedValue([]),
+}));
 vi.mock("@norish/db/repositories/cuisines", () => ({
-  listCuisines: vi.fn().mockResolvedValue([]),
+  listCuisinesForHousehold: vi.fn().mockResolvedValue([]),
 }));
 vi.mock("@norish/db/repositories/cookbooks", () => ({
   findOwnCookbookIdByTitle: mockFindOwnCookbookIdByTitle,

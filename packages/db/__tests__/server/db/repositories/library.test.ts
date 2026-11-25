@@ -23,13 +23,12 @@ import {
   ingredients,
   pantryIngredients,
   recipeRatings,
-  recipeTags,
   steps as stepsTable,
-  tags as tagsTable,
 } from "@norish/db/schema";
 
 import { resolveIngredients } from "../../../../../shared-server/src/ingredients/resolver";
 import {
+  attachTestEntry,
   createTestRecipe,
   createTestRecipeStep,
   createTestUser,
@@ -612,11 +611,7 @@ describe("the Library union", () => {
     }
 
     async function tag(recipeIds: string[], name: string) {
-      const [row] = await getTestDb().insert(tagsTable).values({ name }).returning();
-
-      await getTestDb()
-        .insert(recipeTags)
-        .values(recipeIds.map((recipeId) => ({ recipeId, tagId: row!.id, order: 0 })));
+      await attachTestEntry("tag", recipeIds, name);
     }
 
     const named = async (params: Partial<LibraryListParams>) =>
@@ -809,15 +804,7 @@ describe("the Library union", () => {
       });
 
       if (hits.includes("tags")) {
-        const [tag] = await getTestDb()
-          .insert(tagsTable)
-          .values({ name: "basil" })
-          .onConflictDoNothing()
-          .returning();
-
-        await getTestDb()
-          .insert(recipeTags)
-          .values({ recipeId: recipe.id, tagId: tag!.id, order: 0 });
+        await attachTestEntry("tag", [recipe.id], "basil");
       }
 
       if (hits.includes("ingredients")) {
@@ -1110,18 +1097,7 @@ describe("the Library union", () => {
 
       const recipe = await createTestRecipe(ownerId, { name: "Green sauce" });
 
-      for (const [order, name] of [
-        [0, "chicken"],
-        [1, "rice"],
-      ] as const) {
-        const [tag] = await getTestDb()
-          .insert(tagsTable)
-          .values({ name })
-          .onConflictDoNothing()
-          .returning();
-
-        await getTestDb().insert(recipeTags).values({ recipeId: recipe.id, tagId: tag!.id, order });
-      }
+      for (const name of ["chicken", "rice"]) await attachTestEntry("tag", [recipe.id], name);
 
       const result = await listLibrary(viewer(ownerId), {
         ...base,

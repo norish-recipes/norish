@@ -645,6 +645,13 @@
       "when": 1795613201715,
       "tag": "0091_permission_policy_levels",
       "breakpoints": true
+    },
+    {
+      "idx": 92,
+      "version": "7",
+      "when": 1795630569573,
+      "tag": "0092_household_lists",
+      "breakpoints": true
     }
   ]
 }

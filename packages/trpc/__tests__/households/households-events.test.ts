@@ -10,7 +10,7 @@ import {
 } from "../calendar/test-utils";
 
 const householdDb = vi.hoisted(() => ({
-  getAllergiesForUsers: vi.fn(),
+  getHouseholdAllergyNames: vi.fn(),
   getHouseholdForUser: vi.fn(),
   isUserHouseholdAdmin: vi.fn(),
   joinHousehold: vi.fn(),
@@ -101,7 +101,7 @@ describe("household mutations announce before they restart the socket", () => {
     householdCache.invalidateHouseholdCacheForUsers.mockClear();
     viewEpoch.bumpViewEpoch.mockClear();
     caldavSync.chaseLeftBehindEvents.mockClear();
-    householdDb.getAllergiesForUsers.mockResolvedValue([]);
+    householdDb.getHouseholdAllergyNames.mockResolvedValue([]);
     householdDb.getHouseholdForUser.mockResolvedValue(household);
     householdDb.isUserHouseholdAdmin.mockResolvedValue(true);
   });

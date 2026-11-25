@@ -14,7 +14,7 @@ import type {
 } from "@norish/queue/contracts/job-types";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts";
 import { dashboardRecipe } from "@norish/db";
-import { listCategoryNamesForViewer } from "@norish/db/repositories/categories";
+import { listCategoryNamesForHousehold } from "@norish/db/repositories/categories";
 import { getAverageRating, rateRecipe } from "@norish/db/repositories/ratings";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { isAIEnabled } from "@norish/shared-server/config/server-config-loader";
@@ -23,6 +23,7 @@ import { createLogger } from "@norish/shared-server/logger";
 import { withDishColor } from "@norish/shared-server/media/dish-color";
 import { accountAudience, policyAudience } from "@norish/shared-server/realtime/audience";
 import { recipes } from "@norish/shared-server/realtime/recipes";
+import { matchImportedTags } from "@norish/shared-server/recipes/imported-tags";
 import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
 import { FullRecipeInsertSchema } from "@norish/shared/contracts/zod";
 import { hasRecipeNameIngredientsAndSteps } from "@norish/shared/lib/helpers";
@@ -116,7 +117,7 @@ async function persistImportedRating(
 async function createStructuredRecipe(
   structuredRecipe: StructuredPasteImportRecipe,
   userId: string,
-  _householdId: string
+  householdId: string
 ): Promise<CreateRecipeResult | null> {
   const parsed = FullRecipeInsertSchema.safeParse(structuredRecipe.recipe);
 
@@ -127,7 +128,7 @@ async function createStructuredRecipe(
   const created = await createResolvedRecipe(
     structuredRecipe.recipeId,
     userId,
-    await withDishColor(parsed.data),
+    await withDishColor(await matchImportedTags(householdId, parsed.data)),
     { userId }
   );
 
@@ -188,14 +189,14 @@ export async function processPasteImportJob(
       text,
       recipeId,
       forceAI,
-      await listCategoryNamesForViewer({ householdId })
+      await listCategoryNamesForHousehold(householdId)
     );
 
     await reportStep(job, "saving");
     const textResult = await createResolvedRecipe(
       recipeId,
       userId,
-      await withDishColor(parseResult.recipe),
+      await withDishColor(await matchImportedTags(householdId, parseResult.recipe)),
       { userId }
     );
 

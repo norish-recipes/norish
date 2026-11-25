@@ -5,8 +5,8 @@ import { deleteUserAccount } from "@norish/auth/account-deletion";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import {
   clearUserAvatar,
-  getAllergiesForUsers,
   getApiKeysForUser,
+  getHouseholdAllergyNames,
   getSignInMethodsForUser,
   getUserAllergies,
   getUserById,
@@ -368,8 +368,7 @@ const setAllergies = authedProcedure
 
     const updatedAllergies = await getUserAllergies(ctx.user.id);
 
-    const allergiesRows = await getAllergiesForUsers(ctx.userIds);
-    const allergies = [...new Set(allergiesRows.map((a) => a.tagName))];
+    const allergies = await getHouseholdAllergyNames(ctx.householdId);
 
     log.info({ householdId: ctx.householdId, allergies }, "Emitting allergiesUpdated to household");
     void households.publish("allergiesUpdated", { allergies }, { householdId: ctx.householdId });

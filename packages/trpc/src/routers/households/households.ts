@@ -6,7 +6,7 @@ import type {
   HouseholdSettingsDto,
 } from "@norish/shared/contracts/dto/household";
 import {
-  getAllergiesForUsers,
+  getHouseholdAllergyNames,
   getHouseholdForUser,
   isUserHouseholdAdmin,
   joinHousehold,
@@ -91,9 +91,7 @@ function toHouseholdDto(
 /** The household as `userId` sees it in settings, allergies included. */
 async function householdSettingsFor(userId: string) {
   const household = await getHouseholdForUser(userId);
-  const userIds = household?.users.map((u) => u.id) ?? [];
-  const allergiesRows = await getAllergiesForUsers(userIds);
-  const allergies = [...new Set(allergiesRows.map((a) => a.tagName))];
+  const allergies = household ? await getHouseholdAllergyNames(household.id) : [];
 
   return toHouseholdDto(household, userId, allergies);
 }

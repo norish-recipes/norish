@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 
 const createRecipeWithRefs = vi.fn();
 const dashboardRecipe = vi.fn();
-const getAllergiesForUsers = vi.fn();
+const getHouseholdAllergyNames = vi.fn();
 const rateRecipe = vi.fn();
 const getAverageRating = vi.fn();
 const publishRecipeBecameUsable = vi.fn(async () => undefined);
@@ -13,7 +13,7 @@ const publishRecipe = vi.fn(async () => undefined);
 vi.mock("@norish/db", () => ({
   createRecipeWithRefs,
   dashboardRecipe,
-  getAllergiesForUsers,
+  getHouseholdAllergyNames,
 }));
 
 vi.mock("@norish/db/repositories/ratings", () => ({

@@ -1,10 +1,7 @@
 // @vitest-environment node
 /**
- * Cuisine vocabulary persistence.
- *
- * The vocabulary is administrator-owned, so these tests are about governance
- * rather than storage mechanics: a rename must not touch recipes, and a delete
- * must cascade to the join rows without touching recipes either.
+ * Cuisines (ADR-0012, ADR-0043): the shipped vocabulary is the instance's, an administrator
+ * changes it, and a household's own sit beside it. A rename or delete never writes a recipe row.
  */
 
 import { eq, notInArray } from "drizzle-orm";
@@ -12,22 +9,24 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { db } from "@norish/db/drizzle";
 import {
-  attachRecipeCuisines,
-  createCuisine,
-  createCuisines,
-  deleteCuisine,
-  findCuisineByName,
+  cuisinesForNames,
   getRecipeCuisines,
-  listCuisines,
-  renameCuisine,
+  listCuisinesForHousehold,
+  replaceRecipeCuisinesTx,
 } from "@norish/db/repositories/cuisines";
-import { cuisines, recipeCuisines, recipes } from "@norish/db/schema";
+import { addEntry, deleteEntry, renameEntry } from "@norish/db/repositories/list-entries";
+import { cuisines, recipes } from "@norish/db/schema";
 
+import { testHouseholdOf } from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 describe("Cuisine repository", () => {
   let recipeId: string;
+  let householdId: string;
   let seededIds: string[];
+  const listCuisines = () => listCuisinesForHousehold(householdId);
+  const attach = (ids: string[]) =>
+    db.transaction((tx) => replaceRecipeCuisinesTx(tx, recipeId, ids));
   const testBase = new RepositoryTestBase("test_cuisines");
 
   async function readRecipeRow() {
@@ -40,13 +39,14 @@ describe("Cuisine repository", () => {
   beforeAll(async () => {
     await testBase.setup();
 
-    seededIds = (await listCuisines()).map((cuisine) => cuisine.id);
+    seededIds = (await db.select({ id: cuisines.id }).from(cuisines)).map((cuisine) => cuisine.id);
   });
 
   beforeEach(async () => {
-    const [, recipe] = await testBase.beforeEachTest();
+    const [user, recipe] = await testBase.beforeEachTest();
 
     recipeId = recipe.id;
+    householdId = testHouseholdOf(user.id);
 
     // The seeded vocabulary is migration state and survives; rows a test added
     // do not, so each test starts from the shipped list.
@@ -58,10 +58,11 @@ describe("Cuisine repository", () => {
   });
 
   describe("seeded vocabulary", () => {
-    it("ships a starting vocabulary", async () => {
+    it("ships a starting vocabulary of instance entries", async () => {
       const vocabulary = await listCuisines();
 
       expect(vocabulary.length).toBeGreaterThan(10);
+      expect(vocabulary.every((cuisine) => cuisine.instance)).toBe(true);
     });
 
     it("covers every cuisine that was a predefined auto-tagging Tag", async () => {
@@ -91,80 +92,75 @@ describe("Cuisine repository", () => {
   });
 
   describe("administration", () => {
-    it("adds a Cuisine", async () => {
-      const created = await createCuisine("Basque");
+    it("adds an instance Cuisine; a name already there answers that entry", async () => {
+      const created = await addEntry("cuisine", null, "Basque");
 
-      expect(created.name).toBe("Basque");
-      expect(await findCuisineByName("basque")).not.toBeNull();
-    });
-
-    it("rejects a duplicate regardless of case or surrounding whitespace", async () => {
-      await createCuisine("Basque");
-
-      await expect(createCuisine("  basque ")).rejects.toThrow();
+      expect(created).toMatchObject({ created: true, entry: { name: "Basque", instance: true } });
+      expect(await addEntry("cuisine", null, "  basque ")).toEqual({
+        created: false,
+        entry: created!.entry,
+      });
+      expect(await addEntry("cuisine", householdId, "BASQUE")).toEqual({
+        created: false,
+        entry: created!.entry,
+      });
     });
 
     it("renames a Cuisine without writing any recipe", async () => {
-      const created = await createCuisine("Basque");
+      const created = (await addEntry("cuisine", null, "Basque"))!.entry;
 
-      await attachRecipeCuisines(recipeId, [created.id]);
+      await attach([created.id]);
 
       const before = await readRecipeRow();
-      const renamed = await renameCuisine(created.id, "Basque Country");
+      const renamed = await renameEntry("cuisine", null, created.id, "Basque Country");
 
-      expect(renamed?.name).toBe("Basque Country");
+      expect(renamed).toMatchObject({ merged: false, entry: { name: "Basque Country" } });
       expect(await readRecipeRow()).toEqual(before);
-
-      // Every recipe referencing the row follows the rename by construction.
       expect(await getRecipeCuisines(recipeId)).toEqual([
         expect.objectContaining({ name: "Basque Country" }),
       ]);
     });
 
-    it("deletes a Cuisine, cascading to the join rows and touching no recipe", async () => {
-      const created = await createCuisine("Basque");
+    it("merges a rename onto a name that already exists", async () => {
+      const basque = (await addEntry("cuisine", null, "Basque"))!.entry;
+      const galician = (await addEntry("cuisine", null, "Galician"))!.entry;
 
-      await attachRecipeCuisines(recipeId, [created.id]);
+      await attach([basque.id, galician.id]);
+
+      expect(await renameEntry("cuisine", null, basque.id, "galician")).toMatchObject({
+        merged: true,
+        entry: { id: galician.id },
+      });
+      expect((await getRecipeCuisines(recipeId)).map((c) => c.name)).toEqual(["Galician"]);
+    });
+
+    it("deletes a Cuisine off its recipes, answering how many, touching no recipe row", async () => {
+      const created = (await addEntry("cuisine", null, "Basque"))!.entry;
+
+      await attach([created.id]);
 
       const before = await readRecipeRow();
 
-      expect(await deleteCuisine(created.id)).toBe(true);
+      expect(await deleteEntry("cuisine", null, created.id)).toEqual({ detached: 1 });
       expect(await readRecipeRow()).toEqual(before);
-
-      const joinRows = await db
-        .select()
-        .from(recipeCuisines)
-        .where(eq(recipeCuisines.recipeId, recipeId));
-
-      expect(joinRows).toHaveLength(0);
-      expect(await findCuisineByName("Basque")).toBeNull();
+      expect(await getRecipeCuisines(recipeId)).toEqual([]);
+      expect(await deleteEntry("cuisine", null, created.id)).toBeNull();
     });
 
-    it("reports a delete of something that is not there", async () => {
-      expect(await deleteCuisine("00000000-0000-0000-0000-000000000000")).toBe(false);
-    });
+    it("adds the extend strategy's Cuisines to the household, tolerating one already there", async () => {
+      await cuisinesForNames(householdId, ["Basque"], { create: true });
 
-    it("adds several Cuisines at once for the extend strategy", async () => {
-      const created = await createCuisines(["Basque", "Galician"]);
+      const second = await cuisinesForNames(householdId, ["basque", "Galician", "Italian"], {
+        create: true,
+      });
 
-      expect(created.map((cuisine) => cuisine.name).sort()).toEqual(["Basque", "Galician"]);
-    });
-
-    it("tolerates a name that is already there, so two runs cannot collide", async () => {
-      await createCuisines(["Basque"]);
-
-      const second = await createCuisines(["Basque", "Galician"]);
-
-      expect(second.map((cuisine) => cuisine.name).sort()).toEqual(["Basque", "Galician"]);
+      expect(second.map((c) => [c.name, c.instance]).sort()).toEqual([
+        ["Basque", false],
+        ["Galician", false],
+        ["Italian", true],
+      ]);
       expect((await listCuisines()).filter((c) => c.name === "Basque")).toHaveLength(1);
-    });
-
-    it("refuses a rename onto a name that already exists", async () => {
-      const created = await createCuisine("Basque");
-
-      await createCuisine("Galician");
-
-      await expect(renameCuisine(created.id, "galician")).rejects.toThrow();
+      expect(await cuisinesForNames(householdId, ["Catalan"], { create: false })).toEqual([]);
     });
   });
 });

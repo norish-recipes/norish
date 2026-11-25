@@ -123,11 +123,11 @@ const importArchive = authedProcedure
  * The parser detects the format and picks the reader for it.
  */
 async function runArchiveImportAsync(
-  ctx: Pick<AuthedProcedureContext, "user" | "userIds" | "householdId">,
+  ctx: Pick<AuthedProcedureContext, "user" | "householdId">,
   buffer: Buffer,
   total: number
 ): Promise<void> {
-  const { userIds, householdId } = ctx;
+  const { householdId } = ctx;
   const userId = ctx.user.id;
   const allImported: RecipeDashboardDTO[] = [];
   const allErrors: ArchiveImportError[] = [];
@@ -249,11 +249,7 @@ async function runArchiveImportAsync(
 
   try {
     // Import archive (auto-detects format)
-    const result = await runArchiveImport(
-      { userId, householdId, memberIds: userIds },
-      buffer,
-      onProgress
-    );
+    const result = await runArchiveImport({ userId, householdId }, buffer, onProgress);
 
     // An archive whose entries outnumber or fall short of its count never
     // reaches the last boundary, so whatever landed since is sent now.

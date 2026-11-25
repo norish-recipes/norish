@@ -10,9 +10,9 @@ import {
   createMockUser,
 } from "../recipes/test-utils";
 
-const listCategoryNamesForUsers = vi.hoisted(() => vi.fn());
+const listCategoryNamesForHousehold = vi.hoisted(() => vi.fn());
 
-vi.mock("@norish/db/repositories/categories", () => ({ listCategoryNamesForUsers }));
+vi.mock("@norish/db/repositories/categories", () => ({ listCategoryNamesForHousehold }));
 vi.mock("@norish/shared-server/config/server-config-loader", () => import("../mocks/config"));
 
 describe("config.categories", () => {
@@ -22,7 +22,7 @@ describe("config.categories", () => {
       edit: "household",
       delete: "household",
     });
-    listCategoryNamesForUsers.mockResolvedValue([
+    listCategoryNamesForHousehold.mockResolvedValue([
       "Breakfast",
       "Lunch",
       "Dinner",
@@ -36,7 +36,7 @@ describe("config.categories", () => {
     );
     const result = await configProcedures.createCaller(createMockCallerContext(ctx)).categories();
 
-    expect(listCategoryNamesForUsers).toHaveBeenCalledWith(ctx.userIds);
+    expect(listCategoryNamesForHousehold).toHaveBeenCalledWith(ctx.householdId);
     expect(result).toEqual({
       categories: ["Breakfast", "Lunch", "Dinner", "Snack", "Puddings"],
       builtInAliases: expect.objectContaining({ ontbijt: "Breakfast", snack: "Snack" }),
