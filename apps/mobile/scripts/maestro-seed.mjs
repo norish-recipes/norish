@@ -189,7 +189,20 @@ export function seeder({ trpc, query }) {
         "API keys"
       ),
     // A recipe as the recipe form saves one; answers its id.
-    createRecipe({ name, ingredients = [], steps = [], tags = [], categories = [], minutes }) {
+    async createRecipe({
+      name,
+      ingredients = [],
+      steps = [],
+      tags = [],
+      categories = [],
+      minutes,
+    }) {
+      // The form's save only attaches entries the list has, so the entries are made first.
+      for (const tag of tags) await trpc("lists.add", { kind: "tag", name: tag });
+      for (const category of categories) {
+        await trpc("lists.add", { kind: "category", name: category });
+      }
+
       return trpc("recipes.create", {
         name,
         systemUsed: "metric",
