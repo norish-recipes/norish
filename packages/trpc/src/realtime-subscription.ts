@@ -27,6 +27,7 @@ import type {
   RealtimeEventEnvelope,
 } from "@norish/shared/contracts/realtime/envelope";
 import { getCachedHouseholdForUser } from "@norish/shared-server/cache/household";
+import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { getRealtimeHub, RealtimeLaggedError } from "@norish/shared-server/realtime/hub";
 import { encodeCursor } from "@norish/shared-server/realtime/resume";
@@ -106,9 +107,14 @@ export function realtimeSubscription<C extends RealtimeCatalogue, E extends Clie
 
     // Read here, not in middleware: a lookup Valkey does not answer ends Lagged too.
     let householdId: string | undefined;
+    // A policy change refuses older cursors, so nothing published under a wider view replays.
+    let viewPolicy: string | undefined;
 
     try {
       householdId = (ctx.household ?? (await getCachedHouseholdForUser(userId)))?.id;
+      if (domain.catalogue.events[event]!.scope === "policy") {
+        viewPolicy = (await getRecipePermissionPolicy()).view;
+      }
     } catch (err) {
       throw await lagged(err, "");
     }
@@ -116,7 +122,7 @@ export function realtimeSubscription<C extends RealtimeCatalogue, E extends Clie
     // Every account has a household; none means the account is gone.
     if (!householdId) throw new TRPCError({ code: "UNAUTHORIZED" });
 
-    const identity = { userId, householdId };
+    const identity = { userId, householdId, viewPolicy };
     // The CURRENT identity, always; a Scope Change restarts the socket (ADR-0033).
     const channels = domain.channelsFor(event, identity);
     // 1. Listeners first, so nothing published from here on is missed.

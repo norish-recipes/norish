@@ -71,12 +71,16 @@ export function compareStreamIds(a: string, b: string): number {
 export interface RealtimeIdentity {
   userId: string;
   householdId: string;
+  /** A policy-scoped event's view level: a cursor minted under another one is refused. */
+  viewPolicy?: string;
 }
 
-/** The first eight hex characters of `sha1(userId + "|" + householdId)`. */
+/** The first eight hex characters of `sha1(userId|householdId)`, with `|viewPolicy` when given. */
 export function identityHashFor(identity: RealtimeIdentity): string {
+  const policy = identity.viewPolicy ? `|${identity.viewPolicy}` : "";
+
   return createHash("sha1")
-    .update(`${identity.userId}|${identity.householdId}`)
+    .update(`${identity.userId}|${identity.householdId}${policy}`)
     .digest("hex")
     .slice(0, IDENTITY_HASH_LENGTH);
 }

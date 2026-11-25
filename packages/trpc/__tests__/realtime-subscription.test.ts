@@ -153,6 +153,11 @@ vi.mock("@norish/db", () => ({ isUserServerAdmin: vi.fn() }));
 vi.mock("@norish/db/repositories/recipe-shares", () => ({ getActiveRecipeShareByToken: vi.fn() }));
 vi.mock("@norish/db/repositories/recipes", () => ({ getRecipeFull: vi.fn() }));
 vi.mock("@norish/shared-server/cache/household", () => ({ getCachedHouseholdForUser: vi.fn() }));
+const policy = vi.hoisted(() => ({ view: "everyone" }));
+
+vi.mock("@norish/shared-server/config/server-config-loader", () => ({
+  getRecipePermissionPolicy: vi.fn(async () => ({ ...policy })),
+}));
 const { RealtimeLaggedError } = await import("@norish/shared-server/realtime/hub");
 const { defineRealtimeDomain } = await import("@norish/shared-server/realtime/domain");
 const { encodeCursor, identityHashFor, RESUME_TTL_SECONDS } =
@@ -192,6 +197,8 @@ const IMPORTED = {
 };
 const identity = { userId: USER, householdId: HOUSEHOLD };
 const hash = identityHashFor(identity);
+/** A policy-scoped subscription's cursor also carries the view level it was minted under. */
+const policyHash = identityHashFor({ ...identity, viewPolicy: "everyone" });
 
 /** Stream ids must be younger than the TTL, so they are minted from now. */
 const base = Date.now() - 60_000;
@@ -356,7 +363,7 @@ describe("fresh subscription", () => {
     const first = await take(iterator);
 
     expect(first.data).toEqual({ mark: "cursor" });
-    expect(first.cursor).toBe(encodeCursor({ identityHash: hash, ids: [id(2), "0-0"] }));
+    expect(first.cursor).toBe(encodeCursor({ identityHash: policyHash, ids: [id(2), "0-0"] }));
     expect(valkey.xrevrange).toHaveBeenCalledTimes(2);
     expect(valkey.xrange).not.toHaveBeenCalled();
     controller.abort();
@@ -536,7 +543,7 @@ describe("resume", () => {
     seedStream(IMPORTED.broadcast, [[id(6), { recipeId: "b6" }]]);
 
     const { iterator, controller } = await subscribe("onImported", {
-      lastEventId: encodeCursor({ identityHash: hash, ids: [id(1), "0-0"] }),
+      lastEventId: encodeCursor({ identityHash: policyHash, ids: [id(1), "0-0"] }),
     });
 
     await take(iterator);
@@ -555,8 +562,8 @@ describe("resume", () => {
     // The broadcast cursor was 0-0: it had never been written when the cursor
     // was minted, so everything in it now came after and is replayed.
     expect(got.map((g) => g.recipeId)).toEqual(["h4", "h5", "b6"]);
-    expect(got[0]!.cursor).toBe(encodeCursor({ identityHash: hash, ids: [id(4), "0-0"] }));
-    expect(got[2]!.cursor).toBe(encodeCursor({ identityHash: hash, ids: [id(5), id(6)] }));
+    expect(got[0]!.cursor).toBe(encodeCursor({ identityHash: policyHash, ids: [id(4), "0-0"] }));
+    expect(got[2]!.cursor).toBe(encodeCursor({ identityHash: policyHash, ids: [id(5), id(6)] }));
     controller.abort();
   });
 
@@ -639,6 +646,27 @@ describe("resume", () => {
     expect(valkey.xrange).not.toHaveBeenCalled();
     expect(valkey.xrevrange).not.toHaveBeenCalled();
     controller.abort();
+  });
+
+  it("is Lagged identity-changed after view narrows, and replays nothing published under Everyone", async () => {
+    const minted = await subscribe("onImported");
+    const { cursor } = await take(minted.iterator);
+
+    minted.controller.abort();
+    seedStream(IMPORTED.broadcast, [[id(2), { recipeId: "another-households" }]]);
+    policy.view = "household";
+
+    try {
+      const { iterator, controller } = await subscribe("onImported", { lastEventId: cursor });
+
+      const cause = laggedCause(await failure(iterator.next()));
+
+      expect(cause.reason).toBe("identity-changed");
+      expect(valkey.xrange).not.toHaveBeenCalled();
+      controller.abort();
+    } finally {
+      policy.view = "everyone";
+    }
   });
 
   it("is Lagged identity-changed when the channel count does not match the current scope", async () => {
