@@ -47,27 +47,19 @@ const KINDS = {
     table: tags,
     link: recipeTags,
     entity: recipeTags.tagId,
-    linkRow: (recipeId: string, tagId: string, order: number) => ({ recipeId, tagId, order }),
+    linkRow: <R, E, O>(recipeId: R, tagId: E, order: O) => ({ recipeId, tagId, order }),
   },
   cuisine: {
     table: cuisines,
     link: recipeCuisines,
     entity: recipeCuisines.cuisineId,
-    linkRow: (recipeId: string, cuisineId: string, order: number) => ({
-      recipeId,
-      cuisineId,
-      order,
-    }),
+    linkRow: <R, E, O>(recipeId: R, cuisineId: E, order: O) => ({ recipeId, cuisineId, order }),
   },
   category: {
     table: categories,
     link: recipeCategories,
     entity: recipeCategories.categoryId,
-    linkRow: (recipeId: string, categoryId: string, order: number) => ({
-      recipeId,
-      categoryId,
-      order,
-    }),
+    linkRow: <R, E, O>(recipeId: R, categoryId: E, order: O) => ({ recipeId, categoryId, order }),
   },
 } as const;
 
@@ -123,6 +115,9 @@ const rowColumns = (table: ListTable) => ({
   instance: isNull(table.householdId).mapWith(Boolean),
   version: table.version,
 });
+
+/** `column`'s own default: an insert-from-select names every column. */
+const defaultOf = (column: AnyPgColumn) => sql`${column.default}`.as(column.name);
 
 /** A list's order: by name, then id. */
 const byName = (table: ListTable) => [sql`lower(${table.name})`, table.id];
@@ -512,18 +507,21 @@ export async function mergeEntryTx(
   sourceId: string,
   targetId: string
 ): Promise<ListEntryRow | undefined> {
-  const { table, link, entity } = KINDS[kind];
-  // The callers hold the source FOR UPDATE, so no attach adds a link between these statements.
-  const moved = await tx
-    .select({ recipeId: link.recipeId, order: link.order })
-    .from(link)
-    .where(eq(entity, sourceId));
-
-  await insertLinksTx(
-    tx,
-    kind,
-    moved.map((row) => ({ recipeId: row.recipeId, id: targetId, order: row.order }))
-  );
+  const { table, link, entity, linkRow } = KINDS[kind];
+  // One statement, so a link attached or dropped meanwhile is moved as it stands; any count.
+  await tx
+    .insert(link)
+    .select(
+      qb
+        .select({
+          ...linkRow(link.recipeId, sql<string>`${targetId}::uuid`.as(entity.name), link.order),
+          createdAt: defaultOf(link.createdAt),
+          version: defaultOf(link.version),
+        })
+        .from(link)
+        .where(eq(entity, sourceId))
+    )
+    .onConflictDoNothing();
   await tx.delete(link).where(eq(entity, sourceId));
   await tx.delete(table).where(eq(table.id, sourceId));
 
