@@ -1,7 +1,10 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { announcementsSettled, householdsRouter } from "@norish/trpc/routers/households/households";
+import {
+  announcementsSettled,
+  householdsRouter,
+} from "@norish/trpc/routers/households/households";
 
 import {
   createMockAuthedContext,
@@ -85,6 +88,7 @@ describe("household mutations announce before they restart the socket", () => {
     households.reset();
     emitConnectionInvalidation.mockClear();
     householdCache.invalidateHouseholdCacheForUsers.mockClear();
+    caldavSync.chaseLeftBehindEvents.mockClear();
     householdDb.getAllergiesForUsers.mockResolvedValue([]);
     householdDb.getHouseholdForUser.mockResolvedValue(household);
     householdDb.isUserHouseholdAdmin.mockResolvedValue(true);
@@ -217,7 +221,7 @@ describe("household mutations announce before they restart the socket", () => {
     expect(caldavSync.chaseLeftBehindEvents).toHaveBeenCalledWith(memberId);
   });
 
-  describe("an announcement that fails still rescopes the moved session", () => {
+  describe("an announcement that fails still rescopes the moved session and clears its calendar", () => {
     beforeEach(() => {
       households.publish.mockRejectedValueOnce(new Error("valkey down"));
     });
@@ -251,6 +255,7 @@ describe("household mutations announce before they restart the socket", () => {
         memberId,
       ]);
       expect(emitConnectionInvalidation).toHaveBeenCalledWith(user.id, "household-left");
+      expect(caldavSync.chaseLeftBehindEvents).toHaveBeenCalledWith(user.id);
     });
 
     it("kick", async () => {
@@ -266,6 +271,7 @@ describe("household mutations announce before they restart the socket", () => {
         user.id,
       ]);
       expect(emitConnectionInvalidation).toHaveBeenCalledWith(memberId, "household-kicked");
+      expect(caldavSync.chaseLeftBehindEvents).toHaveBeenCalledWith(memberId);
     });
   });
 

@@ -226,24 +226,31 @@ const leave = authedProcedure.input(LeaveHouseholdInputSchema).mutation(async ({
 
         const { memberIds } = result.value;
 
-        await announceMembershipChange(
-          { userId: ctx.user.id, reason: "household-left", affectedUserIds: memberIds },
-          {
-            // The leaver's view gets its household of one before its socket restarts.
-            toMover: () => publishHouseholdTo(ctx.user.id),
-            toOthers: async () => {
-              for (const memberId of memberIds) {
-                await households.publish("userLeft", { userId: ctx.user.id }, { userId: memberId });
-              }
-            },
-          }
-        );
-        await chaseLeftBehindEvents(ctx.user.id).catch((err) =>
-          log.error(
-            { err, userId: ctx.user.id },
-            "Failed to take a left household's plan off CalDAV"
-          )
-        );
+        try {
+          await announceMembershipChange(
+            { userId: ctx.user.id, reason: "household-left", affectedUserIds: memberIds },
+            {
+              // The leaver's view gets its household of one before its socket restarts.
+              toMover: () => publishHouseholdTo(ctx.user.id),
+              toOthers: async () => {
+                for (const memberId of memberIds) {
+                  await households.publish(
+                    "userLeft",
+                    { userId: ctx.user.id },
+                    { userId: memberId }
+                  );
+                }
+              },
+            }
+          );
+        } finally {
+          await chaseLeftBehindEvents(ctx.user.id).catch((err) =>
+            log.error(
+              { err, userId: ctx.user.id },
+              "Failed to take a left household's plan off CalDAV"
+            )
+          );
+        }
       })
       .catch((err) => {
         log.error({ err, userId: ctx.user.id }, "Failed to leave household");
@@ -313,33 +320,36 @@ const kick = authedProcedure
             "User kicked from household"
           );
 
-          await announceMembershipChange(
-            {
-              userId: userIdToKick,
-              reason: "household-kicked",
-              affectedUserIds: result.value.memberIds,
-            },
-            {
-              // The kicked user gets their household of one and hears why before the socket
-              // closes; the reconnect refetches under the new identity (ADR-0011).
-              toMover: async () => {
-                await publishHouseholdTo(userIdToKick);
-                await households.publish(
-                  "userKicked",
-                  { householdId, kickedBy: ctx.user.id },
-                  { userId: userIdToKick }
-                );
+          try {
+            await announceMembershipChange(
+              {
+                userId: userIdToKick,
+                reason: "household-kicked",
+                affectedUserIds: result.value.memberIds,
               },
-              toOthers: () =>
-                households.publish("memberRemoved", { userId: userIdToKick }, { householdId }),
-            }
-          );
-          await chaseLeftBehindEvents(userIdToKick).catch((err) =>
-            log.error(
-              { err, userId: userIdToKick },
-              "Failed to take a left household's plan off CalDAV"
-            )
-          );
+              {
+                // The kicked user gets their household of one and hears why before the socket
+                // closes; the reconnect refetches under the new identity (ADR-0011).
+                toMover: async () => {
+                  await publishHouseholdTo(userIdToKick);
+                  await households.publish(
+                    "userKicked",
+                    { householdId, kickedBy: ctx.user.id },
+                    { userId: userIdToKick }
+                  );
+                },
+                toOthers: () =>
+                  households.publish("memberRemoved", { userId: userIdToKick }, { householdId }),
+              }
+            );
+          } finally {
+            await chaseLeftBehindEvents(userIdToKick).catch((err) =>
+              log.error(
+                { err, userId: userIdToKick },
+                "Failed to take a left household's plan off CalDAV"
+              )
+            );
+          }
         })
         .catch((err) => {
           log.error({ err, userId: ctx.user.id }, "Failed to kick user");
