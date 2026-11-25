@@ -405,6 +405,28 @@ describe("households", () => {
     });
   });
 
+  describe("racing a deletion against the account's own join", () => {
+    it("deletes the account from the household it moved to", async () => {
+      const deleted = await createTestUser();
+      const target = await createTestUser();
+      const own = await householdOf(deleted.id);
+      const targetHousehold = await householdOf(target.id);
+
+      const settled = await raceBehindLock(own, [
+        () => joinHousehold(deleted.id, { householdId: targetHousehold }),
+        () => deleteAccount(deleted.id),
+      ]);
+
+      expect(settled).toEqual([
+        fulfilled(expect.objectContaining({ leftHouseholdId: own })),
+        fulfilled(null),
+      ]);
+      expect(await getHouseholdIdForUser(deleted.id)).toBeNull();
+      expect(await getHouseholdMemberIdsByHouseholdId(targetHousehold)).toEqual([target.id]);
+      await expectEveryAccountHoused();
+    });
+  });
+
   describe("racing a leave against a join", () => {
     it("names who stays as the move found them under the lock", async () => {
       const { admin, member, householdId } = await sharedHousehold();

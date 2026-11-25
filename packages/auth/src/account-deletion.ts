@@ -14,12 +14,13 @@ import { auth } from "./auth";
  * never drift into leaving different debris behind.
  */
 export async function deleteUserAccount(userId: string): Promise<void> {
-  await sweepUserAvatars(userId);
-
   const successorId = await deleteAccount(userId);
 
   if (successorId)
     log.info({ userId, successorId }, "Passed household on with its admin's account");
+
+  // Only once the deletion committed, so a failed one keeps its files.
+  await sweepUserAvatars(userId);
 
   // Sessions live in Valkey, which the row's cascade never reaches.
   await (await auth.$context).internalAdapter.deleteUserSessions(userId);

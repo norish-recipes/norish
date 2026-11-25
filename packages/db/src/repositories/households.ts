@@ -171,6 +171,20 @@ async function lockHouseholds(tx: DbTransaction, ids: string[]) {
     .for("update");
 }
 
+/** The account left the household it was read in before that household's lock landed. */
+const MOVED = Symbol("moved");
+
+/** Runs `work` in a transaction, and again in a fresh one while it finds the account MOVED. */
+async function retryWhileMoved<T>(
+  work: (tx: DbTransaction) => Promise<T | typeof MOVED>
+): Promise<T> {
+  for (;;) {
+    const result = await db.transaction(work);
+
+    if (result !== MOVED) return result;
+  }
+}
+
 /** Locks the account's household; every move of the account locks it first, so it stays put. */
 async function lockHouseholdOf(tx: DbTransaction, userId: string) {
   const current = await householdIdIn(tx, userId);
@@ -179,11 +193,7 @@ async function lockHouseholdOf(tx: DbTransaction, userId: string) {
 
   const [household] = await lockHouseholds(tx, [current]);
 
-  if (!household || (await householdIdIn(tx, userId)) !== current) {
-    throw new Error("Household changed");
-  }
-
-  return household;
+  return household && (await householdIdIn(tx, userId)) === current ? household : MOVED;
 }
 
 /** Longest-standing first. */
@@ -290,7 +300,7 @@ export async function joinHousehold(
   userId: string,
   target: { householdId: string } | { joinCode: string }
 ): Promise<JoinHouseholdOutcome> {
-  return await db.transaction(async (tx) => {
+  return await retryWhileMoved(async (tx) => {
     const current = await householdIdIn(tx, userId);
 
     if (!current) throw new Error("Account has no household");
@@ -313,7 +323,7 @@ export async function joinHousehold(
       }
     }
     // Every move of this account locks its household first, so this read is now stable.
-    if ((await householdIdIn(tx, userId)) !== current) throw new Error("Household changed");
+    if ((await householdIdIn(tx, userId)) !== current) return MOVED;
     if ((await memberIdsIn(tx, current)).length > 1) return { refused: "shared" };
     if (await holdsAnything(tx, userId)) return { refused: "holds-things" };
 
@@ -470,9 +480,10 @@ export async function findHouseholdByName(name: string): Promise<HouseholdDto | 
 
 /** Names the account's household while it is a household of one; null once it is shared. */
 export async function renameHouseholdOfOne(userId: string, name: string): Promise<string | null> {
-  return await db.transaction(async (tx) => {
+  return await retryWhileMoved(async (tx) => {
     const household = await lockHouseholdOf(tx, userId);
 
+    if (household === MOVED) return MOVED;
     if (!household || (await memberIdsIn(tx, household.id)).length > 1) return null;
 
     await tx
@@ -489,8 +500,10 @@ export async function renameHouseholdOfOne(userId: string, name: string): Promis
  * longest-standing member, or the household goes with its last member. Returns the successor.
  */
 export async function deleteAccount(userId: string): Promise<string | null> {
-  return await db.transaction(async (tx) => {
+  return await retryWhileMoved(async (tx) => {
     const household = await lockHouseholdOf(tx, userId);
+
+    if (household === MOVED) return MOVED;
     const others = household
       ? (await memberIdsIn(tx, household.id)).filter((id) => id !== userId)
       : [];

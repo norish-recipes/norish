@@ -42,10 +42,11 @@ describe("deleteUserAccount", () => {
     repositories.deleteUserSessions.mockResolvedValue(undefined);
   });
 
-  it("sweeps avatars, deletes the account, ends its sessions and cuts live connections", async () => {
+  it("deletes the account, then sweeps avatars, ends its sessions and cuts live connections", async () => {
     const order: string[] = [];
 
     repositories.deleteAccount.mockImplementation(async () => void order.push("delete"));
+    repositories.sweepUserAvatars.mockImplementation(async () => void order.push("sweep"));
     repositories.emitConnectionInvalidation.mockImplementation(
       async () => void order.push("invalidate")
     );
@@ -59,6 +60,13 @@ describe("deleteUserAccount", () => {
       "user-1",
       "account-deleted"
     );
-    expect(order).toEqual(["delete", "invalidate"]);
+    expect(order).toEqual(["delete", "sweep", "invalidate"]);
+  });
+
+  it("keeps the avatar files of an account whose deletion failed", async () => {
+    repositories.deleteAccount.mockRejectedValue(new Error("connection lost"));
+
+    await expect(deleteUserAccount("user-1")).rejects.toThrow("connection lost");
+    expect(repositories.sweepUserAvatars).not.toHaveBeenCalled();
   });
 });
