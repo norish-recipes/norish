@@ -115,6 +115,8 @@ type GroceryMergeCandidate = {
  */
 export interface GroceryEdit {
   name: GroceryName;
+  /** The edited line's own recipe line: kept, so not checked again, even out of view. */
+  keptRecipeLine?: string | null;
   write: (ingredient: GroceryIngredientColumns, tx: DbTransaction) => Promise<GroceryDto | null>;
 }
 
@@ -175,9 +177,15 @@ export async function createGroceriesData(
   input: Array<z.infer<typeof GroceryCreateSchema>>,
   edit?: GroceryEdit
 ) {
-  // A line from a recipe only while the household may view that recipe; else as if it were gone.
+  // A new line from a recipe only while the household may view it; else as if it were gone.
   const fromRecipes = [
-    ...new Set(input.flatMap((g) => (g.recipeIngredientId ? [g.recipeIngredientId] : []))),
+    ...new Set(
+      input.flatMap((g) =>
+        g.recipeIngredientId && g.recipeIngredientId !== edit?.keptRecipeLine
+          ? [g.recipeIngredientId]
+          : []
+      )
+    ),
   ];
   const viewable = await getRecipeInfoForGroceries(fromRecipes, ctx.householdId);
 
@@ -464,8 +472,9 @@ export async function toggleGroceriesData(
   const existingGroceries =
     present.size > 0 ? await getGroceriesByIds([...present], ctx.householdId) : [];
 
+  // Only what a toggle changes: the row read back hides a recipe out of view, which stays stored.
   const updatedGroceries = existingGroceries.map((grocery) => ({
-    ...grocery,
+    id: grocery.id,
     version: versionById.get(grocery.id) ?? grocery.version,
     isDone,
   }));

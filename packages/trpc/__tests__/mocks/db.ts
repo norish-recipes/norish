@@ -11,6 +11,7 @@ export const deleteGroceryByIds = vi.fn();
 export const deleteDoneInStore = vi.fn();
 export const getGroceryHouseholdIds = vi.fn();
 export const getGroceriesByIds = vi.fn();
+export const getGroceryRecipeLine = vi.fn();
 export const getRecipeInfoForGroceries = vi.fn();
 export const lockGroceryList = vi.fn();
 export const assignGroceryToStore = vi.fn();
@@ -50,6 +51,7 @@ export function resetDbMocks() {
   deleteDoneInStore.mockReset();
   getGroceryHouseholdIds.mockReset();
   getGroceriesByIds.mockReset();
+  getGroceryRecipeLine.mockReset().mockResolvedValue(null);
   getRecipeInfoForGroceries.mockReset();
   lockGroceryList.mockReset();
   assignGroceryToStore.mockReset();

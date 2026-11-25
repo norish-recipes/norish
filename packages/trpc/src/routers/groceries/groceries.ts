@@ -5,6 +5,7 @@ import type { GroceryUpdateDto } from "@norish/shared/contracts";
 import {
   deleteDoneInStore,
   getGroceriesByIds,
+  getGroceryRecipeLine,
   GroceryCreateSchema,
   GroceryDeleteSchema,
   GrocerySelectBaseSchema,
@@ -95,8 +96,8 @@ const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, 
 
       // A grocery keeps its food while its text is unchanged, so an amount or
       // Store edit re-points nothing; one from a recipe line also follows the line.
-      const [current] = await getGroceriesByIds([groceryId], ctx.householdId);
-      const recipeIngredientId = current?.recipeIngredientId ?? null;
+      // The stored line, kept as it is even when its recipe is out of view.
+      const recipeIngredientId = await getGroceryRecipeLine(groceryId, ctx.householdId);
       // A new name joining foods renames it to the first and adds the rest, each finding its own
       // Store and pack count as a typed add does.
       const [renamed, ...others] = await groceryPartsOf({
@@ -110,6 +111,7 @@ const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, 
         otherFoods(others, parsedIngredient, recipeIngredientId),
         {
           name: renamed,
+          keptRecipeLine: recipeIngredientId,
           write: async (ingredient, tx) => {
             const updateData: GroceryUpdateDto = {
               id: groceryId,

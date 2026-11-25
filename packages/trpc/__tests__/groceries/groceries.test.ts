@@ -26,6 +26,7 @@ import {
   deleteGroceryByIds,
   getGroceriesByIds,
   getGroceryHouseholdIds,
+  getGroceryRecipeLine,
   getRecipeInfoForGroceries,
   listGroceriesByHousehold,
   lockGroceryList,
@@ -682,9 +683,7 @@ describe("stale grocery updates", () => {
     const recipeIngredientId = crypto.randomUUID();
 
     getGroceryHouseholdIds.mockResolvedValue(new Map([[groceryId, ctx.user.id]]));
-    getGroceriesByIds.mockResolvedValue([
-      createMockGrocery({ id: groceryId, name: "onions, diced", recipeIngredientId }),
-    ]);
+    getGroceryRecipeLine.mockResolvedValue(recipeIngredientId);
     assertHouseholdAccess.mockReturnValue(undefined);
     updateGroceries.mockResolvedValue([]);
 
@@ -1084,6 +1083,35 @@ describe("grocery names through Ingredient Aliases", () => {
             storeId: null,
             purchaseAmount: undefined,
           }),
+        }),
+      ],
+      expect.anything(),
+      TX
+    );
+  });
+
+  it("splits a line from a recipe out of view, keeping the reference it already had", async () => {
+    const groceryId = crypto.randomUUID();
+    const recipeLine = crypto.randomUUID();
+
+    getGroceryHouseholdIds.mockResolvedValue(new Map([[groceryId, ctx.user.id]]));
+    assertHouseholdAccess.mockReturnValue(undefined);
+    getGroceryRecipeLine.mockResolvedValue(recipeLine);
+    // The recipe the line came from is out of view now.
+    getRecipeInfoForGroceries.mockResolvedValue(new Map());
+    parseIngredientWithDefaults.mockReturnValueOnce([
+      { description: "zout en peper", quantity: 2, unitOfMeasure: "el" },
+    ]);
+    updateGroceries.mockResolvedValue([createMockGrocery({ id: groceryId, name: "zout" })]);
+
+    await groceriesProcedures
+      .createCaller(createMockCallerContext(ctx))
+      .update({ groceryId, raw: "2 el zout en peper", version: 4 });
+
+    expect(createGroceries).toHaveBeenCalledWith(
+      [
+        expect.objectContaining({
+          groceries: expect.objectContaining({ name: "peper", recipeIngredientId: recipeLine }),
         }),
       ],
       expect.anything(),

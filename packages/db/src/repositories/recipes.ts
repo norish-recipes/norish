@@ -3,6 +3,7 @@ import { and, asc, desc, eq, ilike, inArray, isNull, lte, notInArray, or, sql } 
 import z from "zod";
 
 import type { RecipePermissionPolicy } from "@norish/config/zod/server-config";
+import type { Db } from "@norish/db/drizzle";
 import type {
   FullRecipeDTO,
   FullRecipeInsertDTO,
@@ -88,8 +89,15 @@ type RecipeViewPolicy = RecipePermissionPolicy["view"];
  */
 export type PolicyAction = "view" | "edit" | "delete";
 
-async function getRecipePolicyLevel(action: PolicyAction): Promise<RecipeViewPolicy> {
-  const policy = await getConfig<RecipePermissionPolicy>(ServerConfigKeys.RECIPE_PERMISSION_POLICY);
+async function getRecipePolicyLevel(
+  action: PolicyAction,
+  executor: Db = db
+): Promise<RecipeViewPolicy> {
+  const policy = await getConfig<RecipePermissionPolicy>(
+    ServerConfigKeys.RECIPE_PERMISSION_POLICY,
+    false,
+    executor
+  );
 
   return policy?.[action] ?? DEFAULT_RECIPE_PERMISSION_POLICY[action];
 }
@@ -291,9 +299,10 @@ export interface RecipeListContext {
 export async function buildPolicyCondition(
   ctx: Pick<RecipeListContext, "householdId">,
   householdColumn: AnyPgColumn,
-  action: PolicyAction = "view"
+  action: PolicyAction = "view",
+  executor: Db = db
 ) {
-  const level = await getRecipePolicyLevel(action);
+  const level = await getRecipePolicyLevel(action, executor);
 
   return level === "household" ? eq(householdColumn, ctx.householdId) : undefined;
 }

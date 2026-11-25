@@ -22,7 +22,13 @@ import {
   getFavoritesByRecipeIds,
   setFavorite,
 } from "@norish/db/repositories/favorites";
-import { getRecipeInfoForGroceries } from "@norish/db/repositories/groceries";
+import {
+  getGroceriesByIds,
+  getGroceryRecipeLine,
+  getRecipeInfoForGroceries,
+  listGroceriesByHousehold,
+  updateGroceries,
+} from "@norish/db/repositories/groceries";
 import { listLibrary } from "@norish/db/repositories/library";
 import {
   createPlannedItem,
@@ -254,6 +260,23 @@ describe("the Permission Policy over two households", () => {
     expect(await getRecipeInfoForGroceries([line.id], testHouseholdOf(ann))).toEqual(
       new Map([[line.id, { recipeId: stew, recipeName: "Stew" }]])
     );
+  });
+
+  it("hands no reference to a recipe out of view on a grocery line, and keeps it stored", async () => {
+    const line = await insertTestRecipeLine({ recipeId: stew, name: "beans" });
+    const grocery = await addTestGrocery(ann, { name: "beans", recipeIngredientId: line.id });
+    const household = testHouseholdOf(ann);
+
+    await setView("household");
+    expect((await listGroceriesByHousehold(household))[0]?.recipeIngredientId).toBeNull();
+    expect((await getGroceriesByIds([grocery.id], household))[0]?.recipeIngredientId).toBeNull();
+    const [toggled] = await updateGroceries([{ id: grocery.id, isDone: true }], household);
+
+    expect(toggled?.recipeIngredientId).toBeNull();
+    expect(await getGroceryRecipeLine(grocery.id, household)).toBe(line.id);
+
+    await setView("everyone");
+    expect((await getGroceriesByIds([grocery.id], household))[0]?.recipeIngredientId).toBe(line.id);
   });
 
   it("matches an import only within the importer's household", async () => {

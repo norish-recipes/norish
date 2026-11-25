@@ -1,5 +1,6 @@
 import { eq, sql } from "drizzle-orm";
 
+import type { Db } from "@norish/db/drizzle";
 import { decrypt, encrypt } from "@norish/config/crypto";
 import { db } from "@norish/db/drizzle";
 import { dbLogger } from "@norish/db/logger";
@@ -14,9 +15,10 @@ import {
 
 export async function getConfig<T = unknown>(
   key: ServerConfigKey,
-  includeSecrets = false
+  includeSecrets = false,
+  executor: Db = db
 ): Promise<T | null> {
-  const config = await db.query.serverConfig.findFirst({
+  const config = await executor.query.serverConfig.findFirst({
     where: eq(serverConfig.key, key),
   });
 

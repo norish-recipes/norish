@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, isNull, lte, sql } from "drizzle-orm";
+import { and, asc, desc, eq, getTableColumns, inArray, isNull, lte, sql } from "drizzle-orm";
 import z from "zod";
 
 import type { Db, DbTransaction } from "@norish/db/drizzle";
@@ -19,13 +19,39 @@ import type { IngredientRef } from "./ingredient-aliases";
 import { assertOwnReferences, householdRow, householdRows } from "./household-rows";
 import { buildPolicyCondition } from "./recipes";
 
+/** A grocery as its household reads it: its recipe line only while the household may view that
+ * recipe, so a line from one out of view carries no reference to it. */
+async function readerColumns(householdId: string, executor: Db = db) {
+  const all = getTableColumns(groceries);
+  const viewable = await buildPolicyCondition(
+    { householdId },
+    recipes.householdId,
+    "view",
+    executor
+  );
+
+  if (!viewable) return all;
+  const inView = db
+    .select({ one: sql`1` })
+    .from(recipeIngredients)
+    .innerJoin(recipes, eq(recipeIngredients.recipeId, recipes.id))
+    .where(and(eq(recipeIngredients.id, groceries.recipeIngredientId), viewable));
+
+  return {
+    ...all,
+    recipeIngredientId: sql<
+      string | null
+    >`CASE WHEN EXISTS (${inView}) THEN ${groceries.recipeIngredientId} END`,
+  };
+}
+
 /** The grocery last added under this name on the household's list. */
 export async function findNewestGroceryNamed(
   householdId: string,
   name: string
 ): Promise<GroceryDto | null> {
   const [row] = await db
-    .select()
+    .select(await readerColumns(householdId))
     .from(groceries)
     .where(and(eq(groceries.householdId, householdId), eq(groceries.name, name)))
     .orderBy(desc(groceries.createdAt))
@@ -38,7 +64,7 @@ export async function getGroceriesByIds(ids: string[], householdId: string): Pro
   if (ids.length === 0) return [];
 
   const rows = await db
-    .select()
+    .select(await readerColumns(householdId))
     .from(groceries)
     .where(householdRows(groceries, householdId, ids));
 
@@ -47,6 +73,19 @@ export async function getGroceriesByIds(ids: string[], householdId: string): Pro
   if (!parsed.success) throw new Error("Failed to parse groceries by ids");
 
   return parsed.data;
+}
+
+/** The recipe line a household's grocery came from, as stored, whether or not it is in view. */
+export async function getGroceryRecipeLine(
+  groceryId: string,
+  householdId: string
+): Promise<string | null> {
+  const [row] = await db
+    .select({ recipeIngredientId: groceries.recipeIngredientId })
+    .from(groceries)
+    .where(householdRow(groceries, householdId, groceryId));
+
+  return row?.recipeIngredientId ?? null;
 }
 
 /** The household's groceries' texts and the food each names, by id; one naming no food has none (ADR-0037). */
@@ -90,7 +129,7 @@ export async function listGroceriesByHousehold(
   const household = eq(groceries.householdId, householdId);
 
   const rows = await db
-    .select()
+    .select(await readerColumns(householdId))
     .from(groceries)
     .where(includeDone ? household : and(household, eq(groceries.isDone, false)))
     .orderBy(...LIST_ORDER);
@@ -144,6 +183,8 @@ export async function createGroceries(
   });
 
   return await tx.transaction(async (trx) => {
+    const columns = await readerColumns(householdId, trx);
+
     await lockGroceryList(trx, householdId);
     if (prepared.some((item) => item.householdId !== householdId)) {
       throw new Error("Groceries are created in the household whose list is locked");
@@ -185,7 +226,7 @@ export async function createGroceries(
             storeId ? eq(groceries.storeId, storeId) : isNull(groceries.storeId)
           )
         )
-        .returning();
+        .returning(columns);
 
       shifted.push(...parseRows(rows, "shifted groceries"));
     }
@@ -205,7 +246,7 @@ export async function createGroceries(
       };
     });
 
-    const inserted = await trx.insert(groceries).values(valuesToInsert).returning();
+    const inserted = await trx.insert(groceries).values(valuesToInsert).returning(columns);
 
     return { created: parseRows(inserted, "created groceries"), shifted };
   });
@@ -221,6 +262,8 @@ export async function updateGroceries(
   if (!parsed.success) throw new Error("Invalid GroceryUpdateDto array");
 
   return await tx.transaction(async (trx) => {
+    const columns = await readerColumns(householdId, trx);
+
     await lockGroceryList(trx, householdId);
     await assertOwnReferences(
       householdId,
@@ -238,7 +281,7 @@ export async function updateGroceries(
         .update(groceries)
         .set({ ...(g as any), version: sql`${groceries.version} + 1` })
         .where(householdRow(groceries, householdId, g.id, g.version))
-        .returning();
+        .returning(columns);
 
       if (row) {
         const validated = GrocerySelectBaseSchema.safeParse(row);
@@ -324,6 +367,8 @@ export async function reorderGroceriesInStore(
   if (updates.length === 0) return [];
 
   return await db.transaction(async (trx) => {
+    const columns = await readerColumns(householdId, trx);
+
     await lockGroceryList(trx, householdId);
     await assertOwnReferences(householdId, { storeIds: updates.map((u) => u.storeId) }, trx);
 
@@ -345,7 +390,7 @@ export async function reorderGroceriesInStore(
         .update(groceries)
         .set({ ...updateData, version: sql`${groceries.version} + 1` })
         .where(householdRow(groceries, householdId, id, version))
-        .returning();
+        .returning(columns);
 
       if (row) {
         const validated = GrocerySelectBaseSchema.safeParse(row);
@@ -373,6 +418,8 @@ export async function markAllDoneInStore(
   if (groceriesToMark && groceriesToMark.length === 0) return [];
 
   return await db.transaction(async (trx) => {
+    const columns = await readerColumns(householdId, trx);
+
     await lockGroceryList(trx, householdId);
 
     if (!groceriesToMark) {
@@ -386,12 +433,12 @@ export async function markAllDoneInStore(
         .update(groceries)
         .set({ isDone: true, updatedAt: new Date(), version: sql`${groceries.version} + 1` })
         .where(and(...whereConditions))
-        .returning();
+        .returning(columns);
 
       return parseRows(rows, "marked groceries");
     }
 
-    const updatedRows: (typeof groceries.$inferSelect)[] = [];
+    const updatedRows: unknown[] = [];
 
     for (const grocery of groceriesToMark) {
       const whereConditions = [
@@ -406,7 +453,7 @@ export async function markAllDoneInStore(
         .update(groceries)
         .set({ isDone: true, updatedAt: new Date(), version: sql`${groceries.version} + 1` })
         .where(and(...whereConditions))
-        .returning();
+        .returning(columns);
 
       if (row) {
         updatedRows.push(row);
@@ -484,7 +531,7 @@ export async function assignGroceryToStore(
     .update(groceries)
     .set({ storeId: newStoreId, updatedAt: new Date(), version: sql`${groceries.version} + 1` })
     .where(householdRow(groceries, householdId, groceryId, version))
-    .returning();
+    .returning(await readerColumns(householdId));
 
   if (!updated) return null;
 
