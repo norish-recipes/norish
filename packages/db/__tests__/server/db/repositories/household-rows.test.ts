@@ -57,9 +57,13 @@ describe("household rows", () => {
     household = await joinTestHousehold(member, admin);
     food = (await mintTestFood("melk")).ingredientId;
 
-    // The member adds one of everything.
+    await addOneOfEverything(household);
+  });
+
+  /** The member adds one of everything to a household they are in. */
+  async function addOneOfEverything(householdId: string) {
     const store = await createStore(crypto.randomUUID(), {
-      householdId: household,
+      householdId,
       userId: member,
       name: "Markt",
     });
@@ -68,14 +72,14 @@ describe("household rows", () => {
     await addTestRecurringGrocery(member, { name: "brood" });
     await addTestPantryIngredient(member, { ingredientId: food });
     await createPlannedItem({
-      householdId: household,
+      householdId,
       userId: member,
       date: DAY,
       slot: "Dinner",
       itemType: "note",
       title: "Soep",
     });
-    await saveNutritionCorrection(household, member, food, {
+    await saveNutritionCorrection(householdId, member, food, {
       numbersFood: null,
       kcal: 42,
       fat: 1,
@@ -86,8 +90,8 @@ describe("household rows", () => {
       densityFood: null,
       density: null,
     });
-    await upsertIngredientStorePreference(household, member, food, store.id);
-  });
+    await upsertIngredientStorePreference(householdId, member, food, store.id);
+  }
 
   afterAll(async () => {
     await testBase.teardown();
@@ -150,13 +154,30 @@ describe("household rows", () => {
 
   it("goes with a household whose last member deletes their account", async () => {
     await moveToHouseholdOfOne(household, member);
-    // A household of one again: its last member's deletion erases it with what it holds.
+    // A household of one again: its last member's deletion erases it with all it holds.
     const own = await householdIdOf(member);
 
-    await createStore(crypto.randomUUID(), { householdId: own, userId: member, name: "Eigen" });
+    await addOneOfEverything(own);
+    expect(await held(own)).toEqual({
+      stores: [member],
+      groceries: ["brood", "melk"],
+      recurring: ["brood"],
+      pantry: [member],
+      plan: [member],
+      corrections: [member],
+      preference: member,
+    });
     await deleteAccount(member);
 
-    expect((await held(own)).stores).toEqual([]);
+    expect(await held(own)).toEqual({
+      stores: [],
+      groceries: [],
+      recurring: [],
+      pantry: [],
+      plan: [],
+      corrections: [],
+      preference: undefined,
+    });
     expect((await held(household)).stores).toEqual([null]);
   });
 });
