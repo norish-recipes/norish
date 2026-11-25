@@ -480,3 +480,7 @@ _Avoid_: Subpath (ambiguous with a route), Mount point (a proxy's word, not the 
 **Demo Instance**:
 An instance whose administrator has switched it to demo: every write is refused for everyone, while the whole UI stays available, and a refused action says only that the instance is a read-only demo. Its data is a curated set prepared before the switch is turned on. The public one runs at demo.norish.dev under one shared account.
 _Avoid_: Sandbox (suggests writes that are thrown away), Read-only user (the refusal belongs to the instance, not an account)
+
+**Master Key**:
+The one secret an instance's stored secrets, private account details and sign-in signatures all derive from. An administrator can supply it, or the instance creates one at its first start. Rotating it re-encrypts everything under a new key and retires the old one, so the old key opens nothing written afterwards. An instance never makes a new one over data an earlier key wrote.
+_Avoid_: Encryption key (only one of the keys it yields), Auth secret (same)
