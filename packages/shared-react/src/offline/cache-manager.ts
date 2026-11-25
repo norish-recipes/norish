@@ -57,6 +57,8 @@ const keys = createTRPCOptionsProxy<AppRouter>({
  */
 const NEVER_PERSISTED = [
   keys.admin.pathKey(),
+  // Every account's links, across households: recipe names and makers.
+  keys.recipes.shareListAdmin.pathKey(),
   keys.caldav.getPassword.pathKey(),
   keys.caldav.checkConnection.pathKey(),
   // Keyed by what is typed in Search, which is never kept (CONTEXT.md: Recent Search).

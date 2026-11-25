@@ -467,6 +467,27 @@ describe("createCacheManager", () => {
     expect(JSON.stringify(stored)).not.toContain("checked");
   });
 
+  it("never persists the admin share list, which holds other households' links", async () => {
+    const manager = createManager();
+    const trpc = createTRPCOptionsProxy<AppRouter>({
+      client: createTRPCClient<AppRouter>({ links: [] }),
+      queryClient: manager.queryClient,
+    });
+    const kept = trpc.recipes.shareListMine.queryKey();
+
+    await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+    manager.queryClient.setQueryData(trpc.recipes.shareListAdmin.queryKey(), [
+      { recipeName: "Other household's soup" },
+    ]);
+    manager.queryClient.setQueryData(kept, []);
+    await manager.flush();
+
+    const stored = await persisted(storage, "u1");
+
+    expect(stored.map((query) => query.queryKey)).toContainEqual(kept);
+    expect(JSON.stringify(stored)).not.toContain("Other household's soup");
+  });
+
   it("never persists Search's text-keyed reads, and keeps the Library's and Discover as before", async () => {
     const manager = createManager();
     const trpc = createTRPCOptionsProxy<AppRouter>({

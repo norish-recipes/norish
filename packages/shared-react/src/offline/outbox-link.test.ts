@@ -109,6 +109,19 @@ describe("createOutboxLink", () => {
     expect(enqueue).toHaveBeenCalledTimes(4);
   });
 
+  it("excludes the admin share moderation, not the maker's own share writes", async () => {
+    const failure = new TypeError("Failed to fetch");
+
+    for (const path of [
+      "recipes.shareRevokeAdmin",
+      "recipes.shareReactivateAdmin",
+      "recipes.shareDeleteAdmin",
+    ]) {
+      await runLink(mutationOp({ path, input: { id: "x" } }), errorWith(failure));
+    }
+    expect(enqueue).not.toHaveBeenCalled();
+  });
+
   it("excludes procedures of the admin router only", async () => {
     const failure = new TypeError("Failed to fetch");
 
