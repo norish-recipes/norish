@@ -57,15 +57,21 @@ const add = authedProcedure.input(PantryIngredientAddSchema).mutation(async ({ c
   return first.item.id;
 });
 
+/** A Pantry Ingredient a procedure names is the household's own. */
+async function assertPantryIngredientAccess(householdId: string, id: string): Promise<void> {
+  const rowHouseholdId = await getPantryIngredientHouseholdId(id);
+
+  if (!rowHouseholdId) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Pantry ingredient not found" });
+  }
+  assertHouseholdAccess(householdId, rowHouseholdId);
+}
+
 /** Take a name out of the Pantry: any member of the household may. */
 const remove = authedProcedure
   .input(PantryIngredientRemoveSchema)
   .mutation(async ({ ctx, input }) => {
-    const householdId = await getPantryIngredientHouseholdId(input.id);
-
-    if (!householdId)
-      throw new TRPCError({ code: "NOT_FOUND", message: "Pantry ingredient not found" });
-    assertHouseholdAccess(ctx.householdId, householdId);
+    await assertPantryIngredientAccess(ctx.householdId, input.id);
 
     const removed = await deletePantryIngredient(input.id, ctx.householdId);
 
