@@ -4,7 +4,7 @@
 
 **Blocked by:** 02, 03
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] **Recipes and cookbooks** `user_id` become `ON DELETE CASCADE`, so the images, videos, step images and cookbook files of erased recipes are swept as recipe deletion already does.
 - [x] **Account rows** (ratings, favourites, allergies, API keys, CalDAV, Site Accounts, share links) keep cascading.
