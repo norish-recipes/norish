@@ -314,9 +314,14 @@ export async function joinHousehold(
 
     if (!household) return { refused: "gone" };
     // Read again under the lock, so a code rotated or expired, or a rename, admits nobody.
-    const name = "name" in target ? target.name?.trim().toLowerCase() : undefined;
+    if ("name" in target && target.name !== undefined) {
+      const [named] = await tx
+        .select({ id: households.id })
+        .from(households)
+        .where(and(eq(households.id, householdId), householdNamed(target.name)));
 
-    if (name !== undefined && household.name.toLowerCase() !== name) return { refused: "gone" };
+      if (!named) return { refused: "gone" };
+    }
     if ("joinCode" in target) {
       if (household.joinCode !== target.joinCode) return { refused: "gone" };
       if (household.joinCodeExpiresAt && household.joinCodeExpiresAt < new Date()) {
@@ -462,17 +467,15 @@ export async function transferHouseholdAdmin(
   });
 }
 
+/** The household carries `name`, case and outer space aside; the lookup and the join share it. */
+const householdNamed = (name: string) =>
+  sql`LOWER(${households.name}) = ${name.toLowerCase().trim()}`;
+
 /**
  * Find a household by name (case-insensitive)
  */
 export async function findHouseholdByName(name: string): Promise<HouseholdDto | null> {
-  const normalizedName = name.toLowerCase().trim();
-
-  const rows = await db
-    .select()
-    .from(households)
-    .where(sql`LOWER(${households.name}) = ${normalizedName}`)
-    .limit(1);
+  const rows = await db.select().from(households).where(householdNamed(name)).limit(1);
 
   const parsed = HouseholdSelectBaseSchema.safeParse(rows[0]);
 
