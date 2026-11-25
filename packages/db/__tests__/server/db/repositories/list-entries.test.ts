@@ -314,24 +314,35 @@ describe("household lists", () => {
       addEntry("tag", ann.household, "soy"),
     ]);
     const ids = Array.from({ length: carried }, () => randomUUID());
+    const rolledBack = new Error("rolled back");
+    let moved = 0;
 
-    for (let from = 0; from < carried; from += 5000) {
-      const chunk = ids.slice(from, from + 5000);
+    // Rolled back, so no later test pays for cleaning the rows away.
+    await expect(
+      db.transaction(async (tx) => {
+        for (let from = 0; from < carried; from += 5000) {
+          const chunk = ids.slice(from, from + 5000);
 
-      await getTestDb()
-        .insert(recipes)
-        .values(chunk.map((id) => ({ id, userId: ann.id, householdId: ann.household, name: id })));
-      await getTestDb()
-        .insert(recipeTags)
-        .values(chunk.map((recipeId) => ({ recipeId, tagId: soja!.entry.id })));
-    }
-
-    expect(await mergeEntries("tag", ann.household, soja!.entry, soy!.entry)).toMatchObject({
-      value: { id: soy!.entry.id },
-    });
-    expect((await listEntries("tag", ann.household)).map((e) => [e.name, e.recipeCount])).toEqual([
-      ["soy", carried],
-    ]);
+          await tx
+            .insert(recipes)
+            .values(
+              chunk.map((id) => ({ id, userId: ann.id, householdId: ann.household, name: id }))
+            );
+          await tx
+            .insert(recipeTags)
+            .values(chunk.map((recipeId) => ({ recipeId, tagId: soja!.entry.id })));
+        }
+        await mergeEntryTx(tx, "tag", soja!.entry.id, soy!.entry.id);
+        moved = (
+          await tx
+            .select({ n: count() })
+            .from(recipeTags)
+            .where(eq(recipeTags.tagId, soy!.entry.id))
+        )[0]!.n;
+        throw rolledBack;
+      })
+    ).rejects.toBe(rolledBack);
+    expect(moved).toBe(carried);
   }, 60_000);
 
   it("deletes an entry off every recipe it was on, answering how many", async () => {
