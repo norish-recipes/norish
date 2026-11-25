@@ -1,7 +1,5 @@
+import { entryFold as fold } from "@norish/shared/lib/fold-name";
 import { stripHtmlTags } from "@norish/shared/lib/helpers";
-
-/** Folds a name as the tags' `lower(name)` unique index does. */
-const fold = (name: string) => name.toLowerCase();
 
 /** Whether saving `next` over `saved` would change what the server stores. */
 export function changesAllergies(next: readonly string[], saved: readonly string[]) {

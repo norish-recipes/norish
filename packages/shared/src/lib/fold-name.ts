@@ -31,3 +31,11 @@ export function nameWords(name: string): string[] {
     .split(" ")
     .filter((word) => word.length > 0);
 }
+
+/**
+ * What a Tag, Cuisine or Category is unique on within its list (ADR-0043): its
+ * fold, or the trimmed name when nothing is left to fold ("🔥").
+ */
+export function entryFold(name: string): string {
+  return foldName(name) || name.trim();
+}

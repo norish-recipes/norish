@@ -12,6 +12,8 @@
 
 import type { CuisineStrategy } from "@norish/config/zod/server-config";
 
+import { entryFold } from "./fold-name";
+
 /** The minimum a vocabulary row has to offer to be resolvable. */
 export interface CuisineVocabularyEntry {
   id: string;
@@ -178,4 +180,26 @@ export function resolveCuisines({
   }
 
   return { resolved, created, dropped };
+}
+
+/**
+ * Proposed names as a household's list spells them, in order: an entry folding like or nearly
+ * like a proposal stands for it, any other proposal is kept as a new name; one name per fold.
+ */
+export function matchNamesToList(proposed: readonly string[], list: readonly string[]): string[] {
+  const vocabulary = list.map((name) => ({ id: name, name }));
+  const picked = new Map<string, string>();
+
+  for (const name of proposed) {
+    const [match] = resolveCuisines({
+      proposed: [name],
+      strategy: "existing",
+      vocabulary,
+    }).resolved;
+    const chosen = match?.name ?? name.trim();
+
+    if (chosen && !picked.has(entryFold(chosen))) picked.set(entryFold(chosen), chosen);
+  }
+
+  return [...picked.values()];
 }
