@@ -12,6 +12,7 @@ import {
   getPublicRecipeView,
   getRecipeShareById,
   getRecipeShareInventoryByUserId,
+  getRecipeShareInventoryForAdmin,
   getRecipeSharesByUserId,
   getRecipeShareUrl,
   reactivateRecipeShare,
@@ -29,6 +30,7 @@ import { trpcLogger as log } from "@norish/shared-server/logger";
 import { recipeAudience } from "@norish/shared-server/realtime/audience";
 import { recipes } from "@norish/shared-server/realtime/recipes";
 import {
+  AdminRecipeShareInventorySchema,
   CreateRecipeShareInputSchema,
   DeleteRecipeShareInputSchema,
   GetRecipeShareInputSchema,
@@ -46,7 +48,7 @@ import {
   UpdateRecipeShareInputSchema,
 } from "@norish/shared/contracts/zod/recipe-shares";
 
-import { authedProcedure, sharedRecipeProcedure } from "../../middleware";
+import { adminProcedure, authedProcedure, sharedRecipeProcedure } from "../../middleware";
 import { router } from "../../trpc";
 import { assertRecipeAccess } from "./helpers";
 
@@ -83,6 +85,14 @@ async function getOwnedShareOrThrow(ctx: { user: { id: string } }, shareId: stri
   if (!share || share.userId !== ctx.user.id) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Recipe share not found" });
   }
+
+  return share;
+}
+
+async function getShareOrThrow(shareId: string) {
+  const share = await getRecipeShareById(shareId);
+
+  if (!share) throw new TRPCError({ code: "NOT_FOUND", message: "Recipe share not found" });
 
   return share;
 }
@@ -215,6 +225,60 @@ const remove = authedProcedure
     return { success: true, stale: result.stale };
   });
 
+// Share-link moderation: an admin lists and acts on every account's links, across households.
+const listAdmin = adminProcedure
+  .output(z.array(AdminRecipeShareInventorySchema))
+  .query(async () => getRecipeShareInventoryForAdmin());
+
+const revokeAdmin = adminProcedure
+  .input(RevokeRecipeShareInputSchema)
+  .output(RecipeShareMutationResultSchema)
+  .mutation(async ({ input }) => {
+    const share = await getShareOrThrow(input.id);
+    const result = await revokeRecipeShare(input.id, input.version);
+
+    if (result.stale || !result.value) {
+      return { ...toRecipeShareSummary(share), stale: true };
+    }
+
+    await emitRecipeShareEvent(result.value, "revoked");
+
+    return { ...result.value, stale: false };
+  });
+
+const reactivateAdmin = adminProcedure
+  .input(ReactivateRecipeShareInputSchema)
+  .output(RecipeShareMutationResultSchema)
+  .mutation(async ({ input }) => {
+    const share = await getShareOrThrow(input.id);
+    const result = await reactivateRecipeShare(input.id, input.version);
+
+    if (result.stale || !result.value) {
+      return { ...toRecipeShareSummary(share), stale: true };
+    }
+
+    await emitRecipeShareEvent(result.value, "reactivated");
+
+    return { ...result.value, stale: false };
+  });
+
+const removeAdmin = adminProcedure
+  .input(DeleteRecipeShareInputSchema)
+  .output(RecipeShareDeleteResultSchema)
+  .mutation(async ({ input }) => {
+    const share = await getShareOrThrow(input.id);
+    const result = await deleteRecipeShare(input.id, input.version);
+
+    if (!result.stale) {
+      await emitRecipeShareEvent(
+        { id: share.id, recipeId: share.recipeId, version: share.version },
+        "deleted"
+      );
+    }
+
+    return { success: true, stale: result.stale };
+  });
+
 const getShared = sharedRecipeProcedure.output(PublicRecipeViewSchema).query(async ({ ctx }) => {
   const publicRecipe = await getPublicRecipeView(
     ctx.sharedRecipe.share.recipeId,
@@ -262,6 +326,10 @@ export const recipeSharesProcedures = router({
   shareReactivate: reactivate,
   shareUrl: url,
   shareDelete: remove,
+  shareListAdmin: listAdmin,
+  shareRevokeAdmin: revokeAdmin,
+  shareReactivateAdmin: reactivateAdmin,
+  shareDeleteAdmin: removeAdmin,
   getShared,
   sharePublicConfig,
 });
