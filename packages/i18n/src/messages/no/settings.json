@@ -249,6 +249,7 @@
       "yourRole": "Din rolle",
       "admin": "Administrator",
       "member": "Medlem",
+      "justYou": "Din husstand (bare deg)",
       "members": "Medlemmer",
       "leaveButton": "Forlat husstand",
       "leaveModal": {
@@ -294,13 +295,6 @@
       "copySuccess": "Invitasjonskode kopiert",
       "copyFailed": "Kunne ikke kopiere invitasjonskoden",
       "copyButton": "Kopier invitasjonskode"
-    },
-    "create": {
-      "title": "Opprett husstand",
-      "description": "Opprett en ny husstand for å dele oppskrifter og handlelister med familie eller venner.",
-      "nameLabel": "Husstandsnavn",
-      "namePlaceholder": "f.eks. Familien Hansen",
-      "submitButton": "Opprett husstand"
     },
     "join": {
       "title": "Bli med i husstand",
@@ -658,7 +652,6 @@
         "owner": "Eier",
         "admin": "Admin"
       },
-      "noHousehold": "Ingen husstand",
       "loading": "Laster brukere…",
       "empty": "Ingen brukere ennå.",
       "loadFailed": "Kunne ikke laste brukerlisten.",
@@ -1353,7 +1346,6 @@
     },
     "versionServer": "Server {server}",
     "offlineReason": "Frakoblet · endringer er satt på pause",
-    "noHousehold": "Ingen",
     "avatarHint": "Trykk på bildet ditt for å endre det",
     "changePhoto": "Endre bilde",
     "accountGroup": "Din konto",

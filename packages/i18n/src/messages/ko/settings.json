@@ -249,6 +249,7 @@
       "yourRole": "내 역할",
       "admin": "관리자",
       "member": "회원",
+      "justYou": "내 가구 (나만)",
       "members": "회원",
       "leaveButton": "가구 나가기",
       "leaveModal": {
@@ -294,13 +295,6 @@
       "copySuccess": "참여 코드가 복사되었습니다",
       "copyFailed": "참여 코드 복사에 실패했습니다",
       "copyButton": "참여 코드 복사"
-    },
-    "create": {
-      "title": "가구 만들기",
-      "description": "새 가구를 만들어 가족이나 친구와 레시피와 장보기 목록을 공유하세요.",
-      "nameLabel": "가구 이름",
-      "namePlaceholder": "예: 스미스 가구",
-      "submitButton": "가구 만들기"
     },
     "join": {
       "title": "가구 참여",
@@ -658,7 +652,6 @@
         "owner": "소유자",
         "admin": "관리자"
       },
-      "noHousehold": "가구 없음",
       "loading": "사용자 불러오는 중…",
       "empty": "아직 사용자가 없습니다.",
       "loadFailed": "사용자 목록을 불러오지 못했습니다.",
@@ -1353,7 +1346,6 @@
     },
     "versionServer": "서버 {server}",
     "offlineReason": "오프라인 · 변경 사항 일시 중지",
-    "noHousehold": "없음",
     "avatarHint": "사진을 탭하여 변경하세요",
     "changePhoto": "사진 변경",
     "accountGroup": "내 계정",

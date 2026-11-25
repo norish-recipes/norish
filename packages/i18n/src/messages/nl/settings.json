@@ -249,6 +249,7 @@
       "yourRole": "Jouw rol",
       "admin": "Beheerder",
       "member": "Lid",
+      "justYou": "Je huishouden (alleen jij)",
       "members": "Leden",
       "leaveButton": "Verlaat huishouden",
       "leaveModal": {
@@ -294,13 +295,6 @@
       "copySuccess": "Join-code gekopieerd",
       "copyFailed": "Join-code kopieren mislukt",
       "copyButton": "Join code kopiëren"
-    },
-    "create": {
-      "title": "Huishouden aanmaken",
-      "description": "Maak een nieuw huishouden om recepten en boodschappen te delen met familie of vrienden.",
-      "nameLabel": "Naam",
-      "namePlaceholder": "bijv. Familie Jansen",
-      "submitButton": "Maak huishouden aan"
     },
     "join": {
       "title": "Huishouden joinen",
@@ -658,7 +652,6 @@
         "owner": "Eigenaar",
         "admin": "Admin"
       },
-      "noHousehold": "Geen huishouden",
       "loading": "Gebruikers laden…",
       "empty": "Nog geen gebruikers.",
       "loadFailed": "Kan de gebruikerslijst niet laden.",
@@ -1353,7 +1346,6 @@
     },
     "versionServer": "Server {server}",
     "offlineReason": "Offline · wijzigingen staan stil",
-    "noHousehold": "Geen",
     "avatarHint": "Tik op je foto om die te wijzigen",
     "changePhoto": "Foto wijzigen",
     "accountGroup": "Je account",

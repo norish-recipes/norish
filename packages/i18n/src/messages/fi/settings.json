@@ -249,6 +249,7 @@
       "yourRole": "Roolisi",
       "admin": "Ylläpitäjä",
       "member": "Jäsen",
+      "justYou": "Kotitaloutesi (vain sinä)",
       "members": "Jäsenet",
       "leaveButton": "Poistu kotitaloudesta",
       "leaveModal": {
@@ -294,13 +295,6 @@
       "copySuccess": "Liittymiskoodi kopioitu",
       "copyFailed": "Liittymiskoodin kopiointi epäonnistui",
       "copyButton": "Kopioi liittymiskoodi"
-    },
-    "create": {
-      "title": "Luo kotitalous",
-      "description": "Luo uusi kotitalous jakaaksesi reseptejä ja ostoksia perheen tai ystävien kanssa.",
-      "nameLabel": "Kotitalouden nimi",
-      "namePlaceholder": "esim. Perhe Virtanen",
-      "submitButton": "Luo kotitalous"
     },
     "join": {
       "title": "Liity kotitalouteen",
@@ -658,7 +652,6 @@
         "owner": "Omistaja",
         "admin": "Ylläpitäjä"
       },
-      "noHousehold": "Ei kotitaloutta",
       "loading": "Ladataan käyttäjiä…",
       "empty": "Ei vielä käyttäjiä.",
       "loadFailed": "Käyttäjälistaa ei voitu ladata.",
@@ -1353,7 +1346,6 @@
     },
     "versionServer": "Palvelin {server}",
     "offlineReason": "Offline · muutokset ovat tauolla",
-    "noHousehold": "Ei mitään",
     "avatarHint": "Vaihda kuva napauttamalla sitä",
     "changePhoto": "Vaihda kuva",
     "accountGroup": "Tilisi",

@@ -249,6 +249,7 @@
       "yourRole": "Din rolle",
       "admin": "Administrator",
       "member": "Medlem",
+      "justYou": "Din husstand (kun dig)",
       "members": "Medlemmer",
       "leaveButton": "Forlad husstand",
       "leaveModal": {
@@ -294,13 +295,6 @@
       "copySuccess": "Tilmeldingskode kopieret",
       "copyFailed": "Kunne ikke kopiere tilmeldingskoden",
       "copyButton": "Kopier tilmeldingskode"
-    },
-    "create": {
-      "title": "Opret husstand",
-      "description": "Opret en ny husstand for at dele opskrifter og indkøbslister med familie eller venner.",
-      "nameLabel": "Husstandsnavn",
-      "namePlaceholder": "f.eks. Familien Hansen",
-      "submitButton": "Opret husstand"
     },
     "join": {
       "title": "Tilmeld husstand",
@@ -658,7 +652,6 @@
         "owner": "Ejer",
         "admin": "Admin"
       },
-      "noHousehold": "Ingen husstand",
       "loading": "Indlæser brugere…",
       "empty": "Ingen brugere endnu.",
       "loadFailed": "Brugerlisten kunne ikke indlæses.",
@@ -1353,7 +1346,6 @@
     },
     "versionServer": "Server {server}",
     "offlineReason": "Offline · ændringer er sat på pause",
-    "noHousehold": "Ingen",
     "avatarHint": "Tryk på dit billede for at ændre det",
     "changePhoto": "Skift billede",
     "accountGroup": "Din konto",

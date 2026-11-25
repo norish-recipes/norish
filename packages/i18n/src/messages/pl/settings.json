@@ -249,6 +249,7 @@
       "yourRole": "Twoja rola",
       "admin": "Administrator",
       "member": "Członek",
+      "justYou": "Twoje gospodarstwo domowe (tylko ty)",
       "members": "Członkowie",
       "leaveButton": "Opuść gospodarstwo domowe",
       "leaveModal": {
@@ -294,13 +295,6 @@
       "copySuccess": "Skopiowano kod dołączenia",
       "copyFailed": "Nie udało się skopiować kodu dołączenia",
       "copyButton": "Kopiuj kod dołączenia"
-    },
-    "create": {
-      "title": "Utwórz gospodarstwo domowe",
-      "description": "Utwórz nowe gospodarstwo domowe, aby współdzielić przepisy i zakupy z rodziną lub znajomymi.",
-      "nameLabel": "Nazwa gospodarstwa domowego",
-      "namePlaceholder": "np. Rodzina Kowalskich",
-      "submitButton": "Utwórz gospodarstwo domowe"
     },
     "join": {
       "title": "Dołącz do gospodarstwa domowego",
@@ -658,7 +652,6 @@
         "owner": "Właściciel",
         "admin": "Administrator"
       },
-      "noHousehold": "Brak gospodarstwa",
       "loading": "Ładowanie użytkowników…",
       "empty": "Brak użytkowników.",
       "loadFailed": "Nie udało się wczytać listy użytkowników.",
@@ -1353,7 +1346,6 @@
     },
     "versionServer": "Serwer {server}",
     "offlineReason": "Offline · zmiany są wstrzymane",
-    "noHousehold": "Brak",
     "avatarHint": "Dotknij zdjęcia, aby je zmienić",
     "changePhoto": "Zmień zdjęcie",
     "accountGroup": "Twoje konto",

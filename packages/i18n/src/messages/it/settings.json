@@ -249,6 +249,7 @@
       "yourRole": "Il tuo ruolo",
       "admin": "Amministratore",
       "member": "Membro",
+      "justYou": "La tua famiglia (solo tu)",
       "members": "Membri",
       "leaveButton": "Lascia nucleo familiare",
       "leaveModal": {
@@ -294,13 +295,6 @@
       "copySuccess": "Codice di accesso copiato",
       "copyFailed": "Impossibile copiare il codice di accesso",
       "copyButton": "Copia codice di accesso"
-    },
-    "create": {
-      "title": "Crea nucleo familiare",
-      "description": "Crea un nuovo nucleo familiare per condividere ricette e spesa con famiglia o amici.",
-      "nameLabel": "Nome nucleo familiare",
-      "namePlaceholder": "es. Famiglia Rossi",
-      "submitButton": "Crea nucleo familiare"
     },
     "join": {
       "title": "Unisciti a un nucleo familiare",
@@ -658,7 +652,6 @@
         "owner": "Proprietario",
         "admin": "Amministratore"
       },
-      "noHousehold": "Nessuna famiglia",
       "loading": "Caricamento utenti…",
       "empty": "Nessun utente ancora.",
       "loadFailed": "Impossibile caricare l'elenco degli utenti.",
@@ -1353,7 +1346,6 @@
     },
     "versionServer": "Server {server}",
     "offlineReason": "Offline · modifiche in pausa",
-    "noHousehold": "Nessuna",
     "avatarHint": "Tocca la tua foto per cambiarla",
     "changePhoto": "Cambia foto",
     "accountGroup": "Il tuo account",

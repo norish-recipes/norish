@@ -249,6 +249,7 @@
       "yourRole": "Din roll",
       "admin": "Administratör",
       "member": "Medlem",
+      "justYou": "Ditt hushåll (bara du)",
       "members": "Medlemmar",
       "leaveButton": "Lämna hushåll",
       "leaveModal": {
@@ -294,13 +295,6 @@
       "copySuccess": "Inbjudningskoden har kopierats",
       "copyFailed": "Det gick inte att kopiera inbjudningskoden",
       "copyButton": "Kopiera inbjudningskod"
-    },
-    "create": {
-      "title": "Skapa hushåll",
-      "description": "Skapa ett hushåll för att dela recept och inköpslistor med familj eller vänner.",
-      "nameLabel": "Hushållets namn",
-      "namePlaceholder": "T.ex. Familjen Andersson",
-      "submitButton": "Skapa hushåll"
     },
     "join": {
       "title": "Gå med i hushåll",
@@ -658,7 +652,6 @@
         "owner": "Ägare",
         "admin": "Administratör"
       },
-      "noHousehold": "Inget hushåll",
       "loading": "Läser in användare…",
       "empty": "Inga användare ännu.",
       "loadFailed": "Det gick inte att hämta användarlistan.",
@@ -1353,7 +1346,6 @@
     },
     "versionServer": "Server {server}",
     "offlineReason": "Offline · ändringar är pausade",
-    "noHousehold": "Ingen",
     "avatarHint": "Tryck på ditt foto för att ändra det",
     "changePhoto": "Ändra foto",
     "accountGroup": "Ditt konto",

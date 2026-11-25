@@ -249,6 +249,7 @@
       "yourRole": "Tu rol",
       "admin": "Administrador",
       "member": "Miembro",
+      "justYou": "Tu hogar (solo tú)",
       "members": "Miembros",
       "leaveButton": "Abandonar hogar",
       "leaveModal": {
@@ -294,13 +295,6 @@
       "copySuccess": "Código copiado",
       "copyFailed": "No se pudo copiar el código",
       "copyButton": "Copiar código de unión"
-    },
-    "create": {
-      "title": "Crear hogar",
-      "description": "Crea un hogar para compartir recetas y la lista de la compra con familia o amigos.",
-      "nameLabel": "Nombre del hogar",
-      "namePlaceholder": "p. ej., Familia Pérez",
-      "submitButton": "Crear hogar"
     },
     "join": {
       "title": "Unirse a un hogar",
@@ -658,7 +652,6 @@
         "owner": "Propietario",
         "admin": "Administrador"
       },
-      "noHousehold": "Sin hogar",
       "loading": "Cargando usuarios…",
       "empty": "Todavía no hay usuarios.",
       "loadFailed": "No se pudo cargar la lista de usuarios.",
@@ -1353,7 +1346,6 @@
     },
     "versionServer": "Servidor {server}",
     "offlineReason": "Sin conexión · cambios en pausa",
-    "noHousehold": "Ninguno",
     "avatarHint": "Toca tu foto para cambiarla",
     "changePhoto": "Cambiar foto",
     "accountGroup": "Tu cuenta",

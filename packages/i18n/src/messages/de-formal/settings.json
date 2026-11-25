@@ -249,6 +249,7 @@
       "yourRole": "Ihre Rolle",
       "admin": "Administrator",
       "member": "Mitglied",
+      "justYou": "Ihr Haushalt (nur Sie)",
       "members": "Mitglieder",
       "leaveButton": "Haushalt verlassen",
       "leaveModal": {
@@ -294,13 +295,6 @@
       "copySuccess": "Join-Code kopiert",
       "copyFailed": "Join-Code konnte nicht kopiert werden",
       "copyButton": "Join-Code kopieren"
-    },
-    "create": {
-      "title": "Haushalt erstellen",
-      "description": "Erstellen Sie einen neuen Haushalt, um Rezepte und Einkaufslisten mit Familie oder Freunden zu teilen.",
-      "nameLabel": "Haushaltsname",
-      "namePlaceholder": "z.B. Familie Müller",
-      "submitButton": "Haushalt erstellen"
     },
     "join": {
       "title": "Haushalt beitreten",
@@ -658,7 +652,6 @@
         "owner": "Eigentümer",
         "admin": "Admin"
       },
-      "noHousehold": "Kein Haushalt",
       "loading": "Benutzer werden geladen…",
       "empty": "Noch keine Benutzer.",
       "loadFailed": "Die Benutzerliste konnte nicht geladen werden.",
@@ -1353,7 +1346,6 @@
     },
     "versionServer": "Server {server}",
     "offlineReason": "Offline · Änderungen sind pausiert",
-    "noHousehold": "Keiner",
     "avatarHint": "Tippen Sie auf Ihr Foto, um es zu ändern",
     "changePhoto": "Foto ändern",
     "accountGroup": "Ihr Konto",

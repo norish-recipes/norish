@@ -249,6 +249,7 @@
       "yourRole": "Your role",
       "admin": "Admin",
       "member": "Member",
+      "justYou": "Your household (just you)",
       "members": "Members",
       "leaveButton": "Leave household",
       "leaveModal": {
@@ -294,13 +295,6 @@
       "copySuccess": "Join code copied",
       "copyFailed": "Failed to copy join code",
       "copyButton": "Copy join code"
-    },
-    "create": {
-      "title": "Create household",
-      "description": "Create a new household to share recipes and groceries with family or friends.",
-      "nameLabel": "Household name",
-      "namePlaceholder": "e.g., Smith Family",
-      "submitButton": "Create household"
     },
     "join": {
       "title": "Join household",
@@ -658,7 +652,6 @@
         "owner": "Owner",
         "admin": "Admin"
       },
-      "noHousehold": "No household",
       "loading": "Loading users…",
       "empty": "No users yet.",
       "loadFailed": "Could not load the user list.",
@@ -1353,7 +1346,6 @@
     },
     "versionServer": "Server {server}",
     "offlineReason": "Offline · changes are paused",
-    "noHousehold": "None",
     "avatarHint": "Tap your photo to change it",
     "changePhoto": "Change photo",
     "accountGroup": "Your account",

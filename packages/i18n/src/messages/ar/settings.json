@@ -249,6 +249,7 @@
       "yourRole": "دورك",
       "admin": "مسؤول",
       "member": "عضو",
+      "justYou": "أسرتك (أنت فقط)",
       "members": "الأعضاء",
       "leaveButton": "مغادرة المنزل",
       "leaveModal": {
@@ -294,13 +295,6 @@
       "copySuccess": "تم نسخ رمز الانضمام",
       "copyFailed": "تعذّر نسخ رمز الانضمام",
       "copyButton": "نسخ رمز الانضمام"
-    },
-    "create": {
-      "title": "إنشاء منزل",
-      "description": "أنشئ منزلًا جديدًا لمشاركة الوصفات والمشتريات مع العائلة أو الأصدقاء.",
-      "nameLabel": "اسم المنزل",
-      "namePlaceholder": "مثال: عائلة الحلبي",
-      "submitButton": "إنشاء المنزل"
     },
     "join": {
       "title": "الانضمام إلى منزل",
@@ -658,7 +652,6 @@
         "owner": "المالك",
         "admin": "مسؤول"
       },
-      "noHousehold": "بلا منزل",
       "loading": "جارٍ تحميل المستخدمين…",
       "empty": "لا يوجد مستخدمون بعد.",
       "loadFailed": "تعذّر تحميل قائمة المستخدمين.",
@@ -1353,7 +1346,6 @@
     },
     "versionServer": "الخادم {server}",
     "offlineReason": "غير متصل · التغييرات متوقفة",
-    "noHousehold": "لا شيء",
     "avatarHint": "اضغط على صورتك لتغييرها",
     "changePhoto": "تغيير الصورة",
     "accountGroup": "حسابك",

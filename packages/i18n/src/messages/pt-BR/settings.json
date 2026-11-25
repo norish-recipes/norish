@@ -249,6 +249,7 @@
       "yourRole": "Seu papel",
       "admin": "Admin",
       "member": "Membro",
+      "justYou": "Sua casa (só você)",
       "members": "Membros",
       "leaveButton": "Sair da casa",
       "leaveModal": {
@@ -294,13 +295,6 @@
       "copySuccess": "Código de entrada copiado",
       "copyFailed": "Falha ao copiar código de entrada",
       "copyButton": "Copiar código de entrada"
-    },
-    "create": {
-      "title": "Criar casa",
-      "description": "Crie uma nova casa para compartilhar receitas e compras com familiares ou amigos.",
-      "nameLabel": "Nome da casa",
-      "namePlaceholder": "ex.: Família Silva",
-      "submitButton": "Criar casa"
     },
     "join": {
       "title": "Entrar em uma casa",
@@ -658,7 +652,6 @@
         "owner": "Proprietário",
         "admin": "Admin"
       },
-      "noHousehold": "Sem residência",
       "loading": "Carregando usuários…",
       "empty": "Ainda não há usuários.",
       "loadFailed": "Não foi possível carregar a lista de usuários.",
@@ -1353,7 +1346,6 @@
     },
     "versionServer": "Servidor {server}",
     "offlineReason": "Offline · alterações pausadas",
-    "noHousehold": "Nenhuma",
     "avatarHint": "Toque na sua foto para alterá-la",
     "changePhoto": "Alterar foto",
     "accountGroup": "Sua conta",
