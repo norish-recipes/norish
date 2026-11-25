@@ -4,7 +4,7 @@
 
 **Blocked by:** 03
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] **Columns:** `tags`, `cuisines` and `categories` get `household_id` (null means an instance entry), unique on `foldName(name)` within a household and among instance entries.
 - [x] **Migration:**
