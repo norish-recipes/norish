@@ -1,5 +1,4 @@
 import type { OIDCClaimConfig } from "@norish/config/zod/server-config";
-import type { HouseholdUserInfo } from "@norish/shared/contracts/realtime/households";
 import {
   findHouseholdByName,
   getHouseholdForUser,
@@ -11,8 +10,7 @@ import {
 import { getUserById, isUserServerOwner, setUserAdminStatus } from "@norish/db/repositories/users";
 import { invalidateHouseholdCacheForUsers } from "@norish/shared-server/cache/household";
 import { authLogger } from "@norish/shared-server/logger";
-import { emitConnectionInvalidation } from "@norish/shared-server/realtime/connection";
-import { households } from "@norish/shared-server/realtime/households";
+import { announceHouseholdJoin } from "@norish/shared-server/realtime/household-membership";
 import { getPublisherClient } from "@norish/shared-server/valkey/client";
 
 // Valkey key prefix and TTL for OIDC profiles during auth flow
@@ -347,17 +345,13 @@ export async function processClaimsForUser(
       "User joined household via OIDC claim"
     );
 
-    // Emit WebSocket events for real-time sync
     const user = await getUserById(userId);
-    const userInfo = {
-      id: userId,
-      name: user?.name ?? null,
-      isAdmin: false,
-      version: outcome.joined.version,
-    } as HouseholdUserInfo;
 
-    await households.publish("userJoined", { user: userInfo }, { householdId: claimed.id });
-    await invalidateHouseholdCacheForUsers([userId, ...existingMemberIds]);
-    await emitConnectionInvalidation(userId, "household-joined-via-oidc");
+    await announceHouseholdJoin({
+      householdId: claimed.id,
+      user: { id: userId, name: user?.name ?? null, version: outcome.joined.version },
+      memberIds: existingMemberIds,
+      reason: "household-joined-via-oidc",
+    });
   }
 }

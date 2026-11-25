@@ -55,6 +55,7 @@
     "./realtime/cookbooks": "./src/realtime/cookbooks.ts",
     "./realtime/domain": "./src/realtime/domain.ts",
     "./realtime/groceries": "./src/realtime/groceries.ts",
+    "./realtime/household-membership": "./src/realtime/household-membership.ts",
     "./realtime/households": "./src/realtime/households.ts",
     "./realtime/hub": "./src/realtime/hub.ts",
     "./realtime/ingredients": "./src/realtime/ingredients.ts",

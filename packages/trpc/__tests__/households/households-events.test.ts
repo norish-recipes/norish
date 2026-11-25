@@ -185,6 +185,60 @@ describe("household mutations announce before they restart the socket", () => {
     expect(emitConnectionInvalidation).toHaveBeenCalledWith(memberId, "household-kicked");
   });
 
+  describe("an announcement that fails still rescopes the moved session", () => {
+    beforeEach(() => {
+      emitConnectionInvalidation.mockClear();
+      householdCache.invalidateHouseholdCacheForUsers.mockClear();
+      households.publish.mockRejectedValueOnce(new Error("valkey down"));
+    });
+
+    it("join", async () => {
+      householdDb.findHouseholdByJoinCode.mockResolvedValue({
+        id: householdId,
+        joinCodeExpiresAt: null,
+      });
+      householdDb.joinHousehold.mockResolvedValue({ joined: { version: 1 }, leftHouseholdId: "x" });
+
+      await householdsRouter.createCaller(ctx as never).join({ code: "123456" });
+      await settle();
+
+      expect(householdCache.invalidateHouseholdCacheForUsers).toHaveBeenCalledWith([
+        user.id,
+        memberId,
+      ]);
+      expect(emitConnectionInvalidation).toHaveBeenCalledWith(user.id, "household-joined");
+    });
+
+    it("leave", async () => {
+      householdDb.getHouseholdForUser.mockResolvedValue({ ...household, adminUserId: memberId });
+      householdDb.moveToHouseholdOfOne.mockResolvedValue({ stale: false, applied: true });
+
+      await householdsRouter.createCaller(ctx as never).leave({ householdId, version: 3 });
+      await settle();
+
+      expect(householdCache.invalidateHouseholdCacheForUsers).toHaveBeenCalledWith([
+        user.id,
+        memberId,
+      ]);
+      expect(emitConnectionInvalidation).toHaveBeenCalledWith(user.id, "household-left");
+    });
+
+    it("kick", async () => {
+      householdDb.kickUserFromHousehold.mockResolvedValue({ stale: false });
+
+      await householdsRouter
+        .createCaller(ctx as never)
+        .kick({ householdId, userId: memberId, version: 3 });
+      await settle();
+
+      expect(householdCache.invalidateHouseholdCacheForUsers).toHaveBeenCalledWith([
+        memberId,
+        user.id,
+      ]);
+      expect(emitConnectionInvalidation).toHaveBeenCalledWith(memberId, "household-kicked");
+    });
+  });
+
   it("admin transfer: the household hears `adminTransferred` and nobody's socket restarts", async () => {
     householdDb.transferHouseholdAdmin.mockResolvedValue({
       stale: false,
