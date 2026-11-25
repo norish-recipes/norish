@@ -362,6 +362,60 @@ async function addAliasIn(
   return { changed: [ingredientId], audience, piled };
 }
 
+/** What adding a food by hand came to: the food the household now has, and whether it is new. */
+export interface AddedIngredient extends CatalogueEdit {
+  ingredientId: string;
+  created: boolean;
+}
+
+/**
+ * Add a food by hand (`ingredients.add`): a household's food under a clean name, with its name and
+ * `spellings` as the household's spellings, which no sweep or AI deletes. A name the household's
+ * catalogue or the seed already has answers that food, unchanged; a spelling one of the household's
+ * other foods holds refuses the whole add.
+ */
+export async function addIngredient(
+  actor: CatalogueActor,
+  name: string,
+  spellings: readonly string[] = []
+): Promise<AddedIngredient> {
+  const { piled, ...added } = await inEdit(async (tx) => {
+    const cleaned = cleanIngredientText(name);
+
+    if (!cleaned) throw new CatalogueEditError("empty");
+    const audience = actor.householdId;
+    const existing = await lockIngredientNamed(tx, actor.householdId, cleaned);
+
+    if (existing)
+      return { ingredientId: existing, created: false, changed: [], audience, piled: 0 };
+    const ingredientId = await refusedOn("name-taken", () =>
+      insertCatalogueIngredient(tx, {
+        householdId: actor.householdId,
+        name: cleaned,
+        ownerId: actor.userId,
+        flagged: false,
+        flagReason: null,
+        addedByHand: true,
+        nameChosen: true,
+        nameSettled: true,
+      })
+    );
+    let piled = 0;
+
+    for (const text of [cleaned, ...spellings]) {
+      if (cleanSpelling(cleanIngredientText(text))) {
+        piled += (await addAliasIn(tx, actor, ingredientId, text)).piled;
+      }
+    }
+
+    return { ingredientId, created: true, changed: [ingredientId], audience, piled };
+  });
+
+  if (piled > 0) forgetSpellingRules();
+
+  return added;
+}
+
 /**
  * Rename an Ingredient (`edit`), which clears its flag; the clean name becomes a spelling too,
  * unless another Ingredient holds it.

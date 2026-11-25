@@ -13,6 +13,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import type { CatalogueActor } from "@norish/shared-server/ingredients/catalogue";
 import { updateGroceries } from "@norish/db/repositories/groceries";
 import { findIngredientByAliasId } from "@norish/db/repositories/ingredient-aliases";
+import { listAskableIngredientIds } from "@norish/db/repositories/ingredient-catalogue";
 import { listJunkFolds } from "@norish/db/repositories/ingredient-junk-pile";
 import { writeGroceryParts } from "@norish/db/repositories/ingredient-relocation";
 import { insertSeededIngredient } from "@norish/db/repositories/ingredient-seed";
@@ -24,6 +25,7 @@ import {
 } from "@norish/db/schema";
 import {
   addAlias,
+  addIngredient,
   CatalogueEditError,
   deleteIngredient,
   listIngredients,
@@ -802,6 +804,68 @@ describe("the ingredient catalogue", () => {
     });
   });
 
+  describe("adding a food by hand (ingredients.add)", () => {
+    it("adds the household's food with its spellings, listed though nothing names it, and tells the household", async () => {
+      const added = await addIngredient(actor, "  Sterrenmix ", ["sterren mix", "starmix"]);
+
+      expect(added).toMatchObject({ created: true, audience: actor.householdId });
+      expect(audiences).toEqual([actor.householdId]);
+      expect((await listIngredients(actor, { id: added.ingredientId })).items).toMatchObject([
+        { name: "Sterrenmix", canEdit: true },
+      ]);
+      expect(
+        (await listIngredients(actor, { listedOnly: true, search: "sterrenmix" })).items
+      ).toHaveLength(1);
+      expect((await getSpellingTexts(added.ingredientId)).sort()).toEqual(
+        ["Sterrenmix", "sterren mix", "starmix"].sort()
+      );
+      // The words never read it again and AI never asks about it.
+      await expect(listAskableIngredientIds(actor.householdId)).resolves.not.toContain(
+        added.ingredientId
+      );
+      await expect(resolveIngredients(["starmix"], actor)).resolves.toMatchObject([
+        { ingredientId: added.ingredientId },
+      ]);
+    });
+
+    it("answers the household's or the seed's food of the name, in any case, unchanged", async () => {
+      const onion = await mint("onion");
+      const salt = await insertSeededIngredient({ name: "salt", offId: "en:salt" }, [
+        { text: "salt", fold: "salt", locale: "en" },
+      ]);
+
+      await expect(addIngredient(actor, "Onion", ["ui"])).resolves.toMatchObject({
+        ingredientId: onion.ingredientId,
+        created: false,
+      });
+      await expect(addIngredient(actor, "SALT")).resolves.toMatchObject({
+        ingredientId: salt,
+        created: false,
+      });
+      expect(await getSpellingTexts(onion.ingredientId)).toEqual(["onion"]);
+    });
+
+    it("refuses an empty name, and a spelling another of the household's foods holds, adding nothing", async () => {
+      await mint("ui");
+
+      await expect(refusal(addIngredient(actor, "   "))).resolves.toBe("empty");
+      await expect(refusal(addIngredient(actor, "Sjalotje", ["ui"]))).resolves.toBe(
+        "spelling-taken"
+      );
+      expect((await listIngredients(actor, { search: "sjalotje" })).items).toEqual([]);
+      // Another household's spelling is no matter: it has a catalogue of its own.
+      const stranger = await createTestUser();
+
+      await expect(
+        addIngredient(
+          { userId: stranger.id, householdId: testHouseholdOf(stranger.id), isServerAdmin: false },
+          "Sjalotje",
+          ["ui"]
+        )
+      ).resolves.toMatchObject({ created: true });
+    });
+  });
+
   describe("the nightly sweep of unused foods", () => {
     /** Backdate the sweep's mark, as though it had found the food unused `days` (and `hours` less) ago. */
     async function unusedFor(ingredientId: string, days: number, hours = 0) {
@@ -819,6 +883,30 @@ describe("the ingredient catalogue", () => {
 
       return row?.unusedSince ?? null;
     }
+
+    it("never deletes a food added by hand, nor one of another household's foods", async () => {
+      const { ingredientId: kept } = await addIngredient(actor, "kerstpakket");
+      const stranger = await createTestUser();
+      const [theirs] = await resolveIngredients(["kerstboom"], {
+        userId: stranger.id,
+        householdId: testHouseholdOf(stranger.id),
+      });
+
+      await sweepUnusedIngredients();
+      await unusedFor(kept, 120);
+      await sweepUnusedIngredients();
+
+      expect((await listIngredients(actor, { id: kept })).items).toMatchObject([
+        { name: "kerstpakket" },
+      ]);
+      // The other household's food is swept in its own household, with its own announcement.
+      await unusedFor(theirs!.ingredientId, 90);
+      announced = [];
+      audiences = [];
+      await sweepUnusedIngredients();
+      await expect(findIngredientByAliasId(theirs!.aliasId)).resolves.toBeNull();
+      expect(audiences).toEqual([testHouseholdOf(stranger.id)]);
+    });
 
     it("deletes an own food nothing has named for 90 days, and keeps one unused for 89", async () => {
       const box = await mint("action grote doos");

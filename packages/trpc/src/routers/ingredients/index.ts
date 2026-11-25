@@ -22,6 +22,7 @@ import {
 } from "@norish/shared-server/ingredients/ai-changes";
 import {
   addAlias as addCatalogueAlias,
+  addIngredient,
   CatalogueEditError,
   deleteIngredient,
   listIngredients,
@@ -195,6 +196,27 @@ const uses = authedProcedure
     if (!found) throw new TRPCError({ code: "NOT_FOUND", message: "not-found" });
 
     return found;
+  });
+
+/**
+ * Add a food by hand to the household's catalogue (a name, optional spellings), never swept or
+ * deleted by AI; a name the household or the seed has answers that food (`created: false`).
+ */
+const add = authedProcedure
+  .input(
+    z.object({
+      name: ingredientName,
+      spellings: z.array(ingredientName).max(100).default([]),
+      locale: z.string().max(20).optional(),
+    })
+  )
+  .mutation(async ({ ctx, input }) => {
+    log.info({ userId: ctx.user.id }, "Adding an Ingredient by hand");
+    const actor = actorOf(ctx);
+    const added = await translated(() => addIngredient(actor, input.name, input.spellings));
+    const page = await listIngredients(actor, { id: added.ingredientId, locale: input.locale });
+
+    return { ingredient: page.items[0] ?? null, created: added.created };
   });
 
 const addAlias = authedProcedure
@@ -515,6 +537,7 @@ function memberOf(ctx: AuthedProcedureContext) {
 
 export const ingredientsRouter = router({
   find,
+  add,
   list,
   kinds,
   get,
