@@ -6,7 +6,7 @@ import { measurementSystemEnum, recipes } from "@norish/db-schema/schema";
 import { primaryRecipeImage } from "../../lib/recipe-media";
 import { ExtraNutrientsSchema } from "../nutrients";
 import { CuisineSummarySchema } from "./cuisine";
-import { ListEntryNameSchemas } from "./list-entry";
+import { StoredCategoryNameSchema } from "./list-entry";
 import { RecipeImagesArraySchema, RecipeImageSchema } from "./recipe-images";
 import {
   RecipeIngredientInputBaseSchema,
@@ -17,8 +17,9 @@ import { RecipeVideosArraySchema, RecipeVideoSchema } from "./recipe-videos";
 import { StepOutputSchema, StepStepSchema } from "./steps";
 import { TagNameSchema, TagSummarySchema } from "./tag";
 
-/** A Category name as a write takes it: trimmed, inner whitespace collapsed, 1 to 40 characters (ADR-0040). */
-export const recipeCategorySchema = ListEntryNameSchemas.category;
+/** A Category name as a write or filter takes it: trimmed, inner whitespace collapsed (ADR-0040);
+ * only a new entry is bounded. */
+export const recipeCategorySchema = StoredCategoryNameSchema;
 
 // The stored nutrients beyond the four, by the catalogue's keys rather than as any JSON.
 const nutritionExtras = ExtraNutrientsSchema.nullish();

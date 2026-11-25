@@ -28,7 +28,7 @@ const KindSchema = z.enum(LIST_KINDS);
 
 type ListContext = Pick<AuthedProcedureContext, "householdId" | "isServerAdmin">;
 
-/** The name as its kind takes it, under the bound recipes write it with. */
+/** The name as its kind creates or renames an entry, under its bound. */
 function entryName(kind: ListKind, name: string): string {
   const parsed = ListEntryNameSchemas[kind].safeParse(name);
 

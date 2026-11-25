@@ -97,6 +97,15 @@ describe("a Recipe Archive carries Categories", () => {
     expect(await listCategoryNamesForHousehold(testHouseholdOf(importerId))).toContain("Drinks");
   });
 
+  it("reimports a stored Category over the bound the list creates with", async () => {
+    const long = "x".repeat(60);
+    const importedId = await exportAndImport([], (json) => {
+      json.categories = [long, "Snack"];
+    });
+
+    expect((await getRecipeFull(importedId))?.categories).toEqual(["Snack"]);
+  });
+
   it("names a built-in by its translation and creates any other name as it is", async () => {
     const importedId = await exportAndImport([], (json) => {
       json.categories = ["ontbijt", "Desserts"];
