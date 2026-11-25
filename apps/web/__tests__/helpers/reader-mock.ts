@@ -85,6 +85,12 @@ export async function mockReader(read: () => MockReader = () => ({})) {
     useSignOut: () => async () => {},
     useProfileQuery: () => ({ user: read().user ?? null, apiKeys: [] }),
     usePermissions: <T>(select: (p: ReaderPermissions) => T) => select(permissions()),
+    useReaderOwner: () => {
+      const userId = read().user?.id;
+      const householdId = permissions().householdId;
+
+      return userId && householdId ? { userId, householdId } : null;
+    },
     useRecipePermissions: () => ({
       isLoading: false,
       canViewRecipe: () => true,
