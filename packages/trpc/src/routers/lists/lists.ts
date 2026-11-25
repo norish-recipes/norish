@@ -1,8 +1,5 @@
-/**
- * Tags, Cuisines and Categories as household lists (ADR-0043). Every member manages the
- * household's entries; instance entries are an administrator's, and built-in Categories are fixed.
- * Another household's entries are never offered or changed, whatever the Permission Policy.
- */
+/** Tags, Cuisines and Categories (ADR-0043): members manage the household's own, admins the
+ * instance's Cuisines, nobody the built-ins; another household's are never offered or changed. */
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
@@ -47,7 +44,7 @@ function mayChangeInstance(ctx: ListContext, kind: ListKind): boolean {
 }
 
 /** An entry as the caller's list shows it, with whether they may rename, merge or delete it. */
-function shown(ctx: ListContext, kind: ListKind, household: string, entry: ListEntryRow) {
+function withEditable(ctx: ListContext, kind: ListKind, household: string, entry: ListEntryRow) {
   const editable = entry.instance ? mayChangeInstance(ctx, kind) : household === ctx.householdId;
 
   return { ...entry, editable };
@@ -84,23 +81,19 @@ function announce(kind: ListKind, scope: ListScope) {
   else announceListsChanged(scope, [kind]);
 }
 
-/**
- * The household's entries plus the instance's, each with the count of the household's recipes
- * carrying it. With `recipeId` (one the caller may edit) it is that recipe's household's list.
- */
+/** The household's entries plus the instance's, with how many of its recipes carry each; with
+ * `recipeId` (one the caller may edit), that recipe's household's. */
 const list = authedProcedure
   .input(z.object({ kind: KindSchema, recipeId: z.uuid().optional() }))
   .query(async ({ ctx, input }) => {
     const household = await listHousehold(ctx, input.recipeId);
     const entries = await listEntries(input.kind, household);
 
-    return entries.map((entry) => shown(ctx, input.kind, household, entry));
+    return entries.map((entry) => withEditable(ctx, input.kind, household, entry));
   });
 
-/**
- * Adds a name to the household's list, or to the recipe's household's for `recipeId`, or (an
- * admin's Cuisine) to the instance's. A name already there answers that entry, `created` false.
- */
+/** Adds a name to the household's list (the recipe's for `recipeId`, the instance's for an admin's
+ * Cuisine); a name already there answers that entry, `created` false. */
 const add = authedProcedure
   .input(
     z.object({
@@ -124,7 +117,7 @@ const add = authedProcedure
     if (added.created) announce(input.kind, scope);
 
     return {
-      entry: shown(ctx, input.kind, scope ?? ctx.householdId, added.entry),
+      entry: withEditable(ctx, input.kind, scope ?? ctx.householdId, added.entry),
       created: added.created,
     };
   });
@@ -149,7 +142,11 @@ const rename = authedProcedure
     log.info({ userId: ctx.user.id, kind: input.kind, merged }, "List entry renamed");
     announce(input.kind, scope);
 
-    return { stale: false, entry: shown(ctx, input.kind, scope ?? ctx.householdId, entry), merged };
+    return {
+      stale: false,
+      entry: withEditable(ctx, input.kind, scope ?? ctx.householdId, entry),
+      merged,
+    };
   });
 
 /** Moves the source's recipes onto the target (the household's own or an instance entry) and removes the source. */
@@ -165,7 +162,10 @@ const merge = authedProcedure
     log.info({ userId: ctx.user.id, kind: input.kind }, "List entries merged");
     announce(input.kind, scope);
 
-    return { stale: false, entry: shown(ctx, input.kind, scope ?? ctx.householdId, merged.value) };
+    return {
+      stale: false,
+      entry: withEditable(ctx, input.kind, scope ?? ctx.householdId, merged.value),
+    };
   });
 
 /** Deletes an entry, taking it off its recipes; answers how many recipes it came off. */

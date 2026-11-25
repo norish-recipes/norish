@@ -4,11 +4,8 @@
  */
 import { entryFold } from "./fold-name";
 
-/**
- * How close two folded names must be to count as one entry. `Italiana`/`Italian` and
- * `Japanse`/`Japanese` sit at 0.875 and must match; `American`/`Mexican` at 0.75 must not.
- * A translated name (`Giapponese`) stays unmatched on purpose: this only forgives spelling.
- */
+/** How alike two folds must be to be one entry: `Italiana`/`Italian` (0.875) match, `American`/
+ * `Mexican` (0.75) do not; a translation stays unmatched, as this only forgives spelling. */
 const MATCH_THRESHOLD = 0.85;
 
 /** Levenshtein distance, iterative with a single row of state. */
