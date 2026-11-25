@@ -112,9 +112,11 @@ describe("Cuisine repository", () => {
       await attach([created.id]);
 
       const before = await readRecipeRow();
-      const renamed = await renameEntry("cuisine", null, created.id, "Basque Country");
+      const renamed = await renameEntry("cuisine", null, created, "Basque Country");
 
-      expect(renamed).toMatchObject({ merged: false, entry: { name: "Basque Country" } });
+      expect(renamed).toMatchObject({
+        value: { merged: false, entry: { name: "Basque Country" } },
+      });
       expect(await readRecipeRow()).toEqual(before);
       expect(await getRecipeCuisines(recipeId)).toEqual([
         expect.objectContaining({ name: "Basque Country" }),
@@ -127,9 +129,8 @@ describe("Cuisine repository", () => {
 
       await attach([basque.id, galician.id]);
 
-      expect(await renameEntry("cuisine", null, basque.id, "galician")).toMatchObject({
-        merged: true,
-        entry: { id: galician.id },
+      expect(await renameEntry("cuisine", null, basque, "galician")).toMatchObject({
+        value: { merged: true, entry: { id: galician.id } },
       });
       expect((await getRecipeCuisines(recipeId)).map((c) => c.name)).toEqual(["Galician"]);
     });
@@ -141,10 +142,10 @@ describe("Cuisine repository", () => {
 
       const before = await readRecipeRow();
 
-      expect(await deleteEntry("cuisine", null, created.id)).toEqual({ detached: 1 });
+      expect(await deleteEntry("cuisine", null, created)).toMatchObject({ value: { detached: 1 } });
       expect(await readRecipeRow()).toEqual(before);
       expect(await getRecipeCuisines(recipeId)).toEqual([]);
-      expect(await deleteEntry("cuisine", null, created.id)).toBeNull();
+      expect(await deleteEntry("cuisine", null, created)).toBeNull();
     });
 
     it("adds the extend strategy's Cuisines to the household, tolerating one already there", async () => {

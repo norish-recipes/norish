@@ -66,7 +66,7 @@ describe("versioned repository behavior", () => {
 
     expect(tag.version).toBe(1);
 
-    await renameEntry("tag", (await getHouseholdIdForUser(testUserId))!, tag.id, "Pantry Staples");
+    await renameEntry("tag", (await getHouseholdIdForUser(testUserId))!, tag, "Pantry Staples");
 
     const db = getTestDb();
     const [updatedTag] = await db.select().from(tags).where(eq(tags.id, tag.id)).limit(1);
