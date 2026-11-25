@@ -10,8 +10,9 @@ const mockSetUserAdminStatus = vi.fn();
 const mockIsUserServerOwner = vi.fn();
 const mockGetUserById = vi.fn();
 const mockGetHouseholdForUser = vi.fn();
-const mockFindOrCreateHouseholdByName = vi.fn();
-const mockAddUserToHousehold = vi.fn();
+const mockFindHouseholdByName = vi.fn();
+const mockJoinHousehold = vi.fn();
+const mockRenameHousehold = vi.fn();
 const mockGetUsersByHouseholdId = vi.fn();
 
 vi.mock("@norish/db/repositories/users", () => ({
@@ -22,8 +23,9 @@ vi.mock("@norish/db/repositories/users", () => ({
 
 vi.mock("@norish/db/repositories/households", () => ({
   getHouseholdForUser: (...args: unknown[]) => mockGetHouseholdForUser(...args),
-  findOrCreateHouseholdByName: (...args: unknown[]) => mockFindOrCreateHouseholdByName(...args),
-  addUserToHousehold: (...args: unknown[]) => mockAddUserToHousehold(...args),
+  findHouseholdByName: (...args: unknown[]) => mockFindHouseholdByName(...args),
+  joinHousehold: (...args: unknown[]) => mockJoinHousehold(...args),
+  renameHousehold: (...args: unknown[]) => mockRenameHousehold(...args),
   getUsersByHouseholdId: (...args: unknown[]) => mockGetUsersByHouseholdId(...args),
 }));
 
@@ -262,15 +264,14 @@ describe("parseOIDCClaims", () => {
 
 describe("processClaimsForUser", () => {
   const userId = "user-123";
+  const HOUSEHOLD_OF_ONE = { id: "own-hh", name: "My household", users: [{ id: userId }] };
 
   beforeEach(() => {
-    mockGetHouseholdForUser.mockResolvedValue(null);
-    mockFindOrCreateHouseholdByName.mockResolvedValue({ id: "household-456", name: "test" });
-    mockAddUserToHousehold.mockResolvedValue({
-      householdId: "household-456",
-      userId,
-      isAdmin: false,
-      version: 1,
+    mockGetHouseholdForUser.mockResolvedValue(HOUSEHOLD_OF_ONE);
+    mockFindHouseholdByName.mockResolvedValue(null);
+    mockJoinHousehold.mockResolvedValue({
+      joined: { householdId: "household-456", userId, version: 1 },
+      leftHouseholdId: HOUSEHOLD_OF_ONE.id,
     });
     mockSetUserAdminStatus.mockResolvedValue(undefined);
     mockIsUserServerOwner.mockResolvedValue(false);
@@ -295,7 +296,7 @@ describe("processClaimsForUser", () => {
 
       expect(mockSetUserAdminStatus).not.toHaveBeenCalled();
       expect(mockGetHouseholdForUser).not.toHaveBeenCalled();
-      expect(mockFindOrCreateHouseholdByName).not.toHaveBeenCalled();
+      expect(mockFindHouseholdByName).not.toHaveBeenCalled();
     });
 
     it("should skip processing when enabled is explicitly false", async () => {
@@ -360,29 +361,64 @@ describe("processClaimsForUser", () => {
       expect(mockSetUserAdminStatus).toHaveBeenCalledWith(userId, true);
     });
 
-    it("should join user to household when claim present and user has no household", async () => {
+    it("joins a household of one to the claimed household when it exists", async () => {
       const profile = { groups: ["norish_household_smiths"] };
 
-      mockGetHouseholdForUser.mockResolvedValue(null);
-      mockFindOrCreateHouseholdByName.mockResolvedValue({ id: "hh-123", name: "smiths" });
+      mockFindHouseholdByName.mockResolvedValue({ id: "hh-123", name: "smiths" });
 
       await processClaimsForUser(userId, profile, enabledConfig);
 
-      expect(mockGetHouseholdForUser).toHaveBeenCalledWith(userId);
-      expect(mockFindOrCreateHouseholdByName).toHaveBeenCalledWith("smiths", userId);
-      expect(mockAddUserToHousehold).toHaveBeenCalledWith({ householdId: "hh-123", userId });
+      expect(mockFindHouseholdByName).toHaveBeenCalledWith("smiths");
+      expect(mockJoinHousehold).toHaveBeenCalledWith(userId, "hh-123");
+      expect(mockRenameHousehold).not.toHaveBeenCalled();
     });
 
-    it("should not join household when user already has one", async () => {
-      const profile = { groups: ["norish_household_newhouse"] };
-
-      mockGetHouseholdForUser.mockResolvedValue({ id: "existing-hh", name: "existing" });
+    it("names a household of one after the claim when no household has that name", async () => {
+      const profile = { groups: ["norish_household_smiths"] };
 
       await processClaimsForUser(userId, profile, enabledConfig);
 
-      expect(mockGetHouseholdForUser).toHaveBeenCalledWith(userId);
-      expect(mockFindOrCreateHouseholdByName).not.toHaveBeenCalled();
-      expect(mockAddUserToHousehold).not.toHaveBeenCalled();
+      expect(mockRenameHousehold).toHaveBeenCalledWith(HOUSEHOLD_OF_ONE.id, "smiths");
+      expect(mockJoinHousehold).not.toHaveBeenCalled();
+    });
+
+    it("leaves an account in a shared household where it is", async () => {
+      const profile = { groups: ["norish_household_newhouse"] };
+
+      mockGetHouseholdForUser.mockResolvedValue({
+        id: "existing-hh",
+        name: "existing",
+        users: [{ id: userId }, { id: "housemate" }],
+      });
+
+      await processClaimsForUser(userId, profile, enabledConfig);
+
+      expect(mockFindHouseholdByName).not.toHaveBeenCalled();
+      expect(mockJoinHousehold).not.toHaveBeenCalled();
+      expect(mockRenameHousehold).not.toHaveBeenCalled();
+    });
+
+    it("keeps a household of one that holds things when joining is refused", async () => {
+      const profile = { groups: ["norish_household_smiths"] };
+
+      mockFindHouseholdByName.mockResolvedValue({ id: "hh-123", name: "smiths" });
+      mockJoinHousehold.mockResolvedValue({ refused: "holds-things" });
+
+      await processClaimsForUser(userId, profile, enabledConfig);
+
+      expect(mockJoinHousehold).toHaveBeenCalledWith(userId, "hh-123");
+      expect(mockRenameHousehold).not.toHaveBeenCalled();
+    });
+
+    it("does nothing when the account is already in the claimed household", async () => {
+      const profile = { groups: ["norish_household_smiths"] };
+
+      mockFindHouseholdByName.mockResolvedValue({ id: HOUSEHOLD_OF_ONE.id, name: "smiths" });
+
+      await processClaimsForUser(userId, profile, enabledConfig);
+
+      expect(mockJoinHousehold).not.toHaveBeenCalled();
+      expect(mockRenameHousehold).not.toHaveBeenCalled();
     });
 
     it("should not attempt to join household when no household claim exists", async () => {
@@ -392,20 +428,18 @@ describe("processClaimsForUser", () => {
 
       expect(mockSetUserAdminStatus).toHaveBeenCalled();
       expect(mockGetHouseholdForUser).not.toHaveBeenCalled();
-      expect(mockFindOrCreateHouseholdByName).not.toHaveBeenCalled();
+      expect(mockFindHouseholdByName).not.toHaveBeenCalled();
     });
 
     it("should process both admin and household in single call", async () => {
       const profile = { groups: ["norish_admin", "norish_household_family"] };
 
-      mockGetHouseholdForUser.mockResolvedValue(null);
-      mockFindOrCreateHouseholdByName.mockResolvedValue({ id: "family-hh", name: "family" });
+      mockFindHouseholdByName.mockResolvedValue({ id: "family-hh", name: "family" });
 
       await processClaimsForUser(userId, profile, enabledConfig);
 
       expect(mockSetUserAdminStatus).toHaveBeenCalledWith(userId, true);
-      expect(mockFindOrCreateHouseholdByName).toHaveBeenCalledWith("family", userId);
-      expect(mockAddUserToHousehold).toHaveBeenCalledWith({ householdId: "family-hh", userId });
+      expect(mockJoinHousehold).toHaveBeenCalledWith(userId, "family-hh");
     });
   });
 
@@ -423,12 +457,9 @@ describe("processClaimsForUser", () => {
       const profile = { groups: ["team_engineering"] };
       const config = { enabled: true, householdPrefix: "team_" };
 
-      mockGetHouseholdForUser.mockResolvedValue(null);
-      mockFindOrCreateHouseholdByName.mockResolvedValue({ id: "eng-hh", name: "engineering" });
-
       await processClaimsForUser(userId, profile, config);
 
-      expect(mockFindOrCreateHouseholdByName).toHaveBeenCalledWith("engineering", userId);
+      expect(mockFindHouseholdByName).toHaveBeenCalledWith("engineering");
     });
   });
 });
