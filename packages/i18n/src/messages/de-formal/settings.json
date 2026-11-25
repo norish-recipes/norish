@@ -631,12 +631,7 @@
       "localesDescription": "Wählen Sie, welche Sprachen Benutzer auswählen können",
       "defaultLocale": "Standardsprache",
       "defaultLocaleDescription": "Sprache für neue Benutzer und als Fallback",
-      "atLeastOneLocale": "Mindestens eine Sprache muss aktiviert sein",
-      "export": {
-        "title": "Rezeptarchiv",
-        "description": "Laden Sie jedes Rezept auf diesem Server herunter.",
-        "button": "Rezeptarchiv exportieren"
-      }
+      "atLeastOneLocale": "Mindestens eine Sprache muss aktiviert sein"
     },
     "users": {
       "title": "Benutzer",
@@ -1312,8 +1307,7 @@
     "errors": {
       "failedTitle": "Export fehlgeschlagen",
       "failedDescription": "Das Rezeptarchiv konnte nicht heruntergeladen werden. Bitte versuchen Sie es erneut.",
-      "signedOut": "Ihre Sitzung ist abgelaufen. Melden Sie sich erneut an, um zu exportieren.",
-      "notAllowed": "Sie haben keine Berechtigung, dies zu exportieren."
+      "signedOut": "Ihre Sitzung ist abgelaufen. Melden Sie sich erneut an, um zu exportieren."
     }
   },
   "mobile": {

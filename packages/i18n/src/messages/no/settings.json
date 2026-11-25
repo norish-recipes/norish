@@ -631,12 +631,7 @@
       "localesDescription": "Velg hvilke språk brukere kan velge mellom",
       "defaultLocale": "Standardspråk",
       "defaultLocaleDescription": "Språk brukt for nye brukere og som reserve",
-      "atLeastOneLocale": "Minst ett språk må være aktivert",
-      "export": {
-        "title": "Oppskriftsarkiv",
-        "description": "Last ned alle oppskriftene på denne serveren.",
-        "button": "Eksporter oppskriftsarkiv"
-      }
+      "atLeastOneLocale": "Minst ett språk må være aktivert"
     },
     "users": {
       "title": "Brukere",
@@ -1312,8 +1307,7 @@
     "errors": {
       "failedTitle": "Eksporten mislyktes",
       "failedDescription": "Oppskriftsarkivet kunne ikke lastes ned. Prøv igjen.",
-      "signedOut": "Økten din er utløpt. Logg inn igjen for å eksportere.",
-      "notAllowed": "Du har ikke tillatelse til å eksportere dette."
+      "signedOut": "Økten din er utløpt. Logg inn igjen for å eksportere."
     }
   },
   "mobile": {

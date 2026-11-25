@@ -631,12 +631,7 @@
       "localesDescription": "Select which languages users can choose from",
       "defaultLocale": "Default language",
       "defaultLocaleDescription": "Language used for new users and as fallback",
-      "atLeastOneLocale": "At least one language must be enabled",
-      "export": {
-        "title": "Recipe archive",
-        "description": "Download every recipe on this server.",
-        "button": "Export recipe archive"
-      }
+      "atLeastOneLocale": "At least one language must be enabled"
     },
     "users": {
       "title": "Users",
@@ -1312,8 +1307,7 @@
     "errors": {
       "failedTitle": "Export failed",
       "failedDescription": "The Recipe Archive could not be downloaded. Please try again.",
-      "signedOut": "Your session has expired. Sign in again to export.",
-      "notAllowed": "You do not have permission to export this."
+      "signedOut": "Your session has expired. Sign in again to export."
     }
   },
   "mobile": {

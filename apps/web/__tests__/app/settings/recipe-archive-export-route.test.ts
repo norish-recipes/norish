@@ -7,7 +7,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const getSessionMock = vi.hoisted(() => vi.fn());
 const buildArchiveMock = vi.hoisted(() => vi.fn());
 const householdMock = vi.hoisted(() => vi.fn());
-const isUserServerAdminMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@norish/auth/auth", () => ({
   auth: { api: { getSession: getSessionMock } },
@@ -17,8 +16,6 @@ vi.mock("@norish/shared-server/archive/norish-export", () => ({
   buildNorishArchiveForViewer: buildArchiveMock,
 }));
 
-vi.mock("@norish/db", () => ({ isUserServerAdmin: isUserServerAdminMock }));
-
 vi.mock("@norish/shared-server/cache/household", () => ({
   getCachedHouseholdForUser: householdMock,
 }));
@@ -27,14 +24,8 @@ vi.mock("@norish/shared-server/logger", () => ({
   serverLogger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() },
 }));
 
-function signedInAs(user: {
-  id: string;
-  name?: string | null;
-  isServerAdmin?: boolean;
-  isServerOwner?: boolean;
-}) {
+function signedInAs(user: { id: string; name?: string | null; isServerAdmin?: boolean }) {
   getSessionMock.mockResolvedValue({ user });
-  isUserServerAdminMock.mockResolvedValue(Boolean(user.isServerAdmin || user.isServerOwner));
 }
 
 function exportRequest(query = ""): Request {
@@ -85,79 +76,16 @@ describe("Recipe Archive export route", () => {
 
     await GET(exportRequest());
 
-    expect(requestedContext()).toEqual({
-      userId: "user-1",
-      householdId: "household-1",
-      isServerAdmin: false,
-    });
+    expect(requestedContext()).toEqual({ userId: "user-1", householdId: "household-1" });
   });
 
-  it("refuses the instance-wide scope for a non-admin, whatever the UI shows", async () => {
-    signedInAs({ id: "user-1" });
-
-    const response = await GET(exportRequest("?scope=instance"));
-
-    expect(response.status).toBe(403);
-    expect(buildArchiveMock).not.toHaveBeenCalled();
-  });
-
-  it("resolves the instance-wide scope to everything for a server admin", async () => {
+  it("asks a server admin's export the same way, with no wider scope", async () => {
     signedInAs({ id: "admin-1", isServerAdmin: true });
 
     const response = await GET(exportRequest("?scope=instance"));
 
     expect(response.status).toBe(200);
-    expect(requestedContext()?.isServerAdmin).toBe(true);
-  });
-
-  it("gives an admin the same reach from the user doorway, by design", async () => {
-    // The scope is "everything the exporter can see", and an admin's library
-    // already shows them everything — `recipes.list` asks the visibility layer
-    // with this same flag — so the admin button is discoverability, not
-    // privileged extra data (ADR-0022). Pinned because it looks like an
-    // authorisation leak until you know it is the decision.
-    signedInAs({ id: "admin-1", isServerAdmin: true });
-
-    await GET(exportRequest());
-
-    expect(requestedContext()?.isServerAdmin).toBe(true);
-  });
-
-  it("refuses the instance-wide scope to a demoted admin whose session still says admin", async () => {
-    signedInAs({ id: "admin-1", isServerAdmin: true });
-    isUserServerAdminMock.mockResolvedValue(false);
-
-    const response = await GET(exportRequest("?scope=instance"));
-
-    expect(response.status).toBe(403);
-    expect(buildArchiveMock).not.toHaveBeenCalled();
-  });
-
-  it("grants the instance-wide scope to the server owner too", async () => {
-    signedInAs({ id: "owner-1", isServerOwner: true });
-
-    const response = await GET(exportRequest("?scope=instance"));
-
-    expect(response.status).toBe(200);
-    expect(requestedContext()?.isServerAdmin).toBe(true);
-  });
-
-  it("produces the same format and mechanics for both doorways", async () => {
-    signedInAs({ id: "admin-1", isServerAdmin: true });
-
-    const viewer = await GET(exportRequest());
-
-    vi.clearAllMocks();
-    signedInAs({ id: "admin-1", isServerAdmin: true });
-    householdMock.mockResolvedValue(OWN_HOUSEHOLD);
-    buildArchiveMock.mockResolvedValue({ stream: Readable.from(["PK"]), recipeCount: 0 });
-
-    const instance = await GET(exportRequest("?scope=instance"));
-
-    expect(instance.headers.get("Content-Type")).toBe(viewer.headers.get("Content-Type"));
-    expect(instance.headers.get("Content-Disposition")).toBe(
-      viewer.headers.get("Content-Disposition")
-    );
+    expect(requestedContext()).toEqual({ userId: "admin-1", householdId: "own-household" });
   });
 
   describe("authorisation probe", () => {
@@ -181,24 +109,6 @@ describe("Recipe Archive export route", () => {
       expect(response.status).toBe(401);
     });
 
-    it("refuses a non-admin's instance-scope probe before answering it", async () => {
-      signedInAs({ id: "user-1" });
-
-      const response = await GET(exportRequest("?scope=instance&probe=1"));
-
-      expect(response.status).toBe(403);
-      expect(buildArchiveMock).not.toHaveBeenCalled();
-    });
-
-    it("answers an admin's instance-scope probe", async () => {
-      signedInAs({ id: "admin-1", isServerAdmin: true });
-
-      const response = await GET(exportRequest("?scope=instance&probe=1"));
-
-      expect(response.status).toBe(204);
-      expect(buildArchiveMock).not.toHaveBeenCalled();
-    });
-
     it("still streams when no probe is asked for", async () => {
       signedInAs({ id: "user-1" });
 
@@ -207,14 +117,5 @@ describe("Recipe Archive export route", () => {
       expect(response.status).toBe(200);
       expect(buildArchiveMock).toHaveBeenCalled();
     });
-  });
-
-  it("ignores an unrecognised scope instead of widening it", async () => {
-    signedInAs({ id: "user-1" });
-
-    const response = await GET(exportRequest("?scope=everything"));
-
-    expect(response.status).toBe(200);
-    expect(requestedContext()?.isServerAdmin).toBe(false);
   });
 });

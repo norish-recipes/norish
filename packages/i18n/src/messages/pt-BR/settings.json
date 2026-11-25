@@ -631,12 +631,7 @@
       "localesDescription": "Selecione quais idiomas os usuários podem escolher",
       "defaultLocale": "Idioma padrão",
       "defaultLocaleDescription": "Idioma usado para novos usuários e como fallback",
-      "atLeastOneLocale": "Pelo menos um idioma deve estar ativado",
-      "export": {
-        "title": "Arquivo de receitas",
-        "description": "Baixe todas as receitas deste servidor.",
-        "button": "Exportar arquivo de receitas"
-      }
+      "atLeastOneLocale": "Pelo menos um idioma deve estar ativado"
     },
     "users": {
       "title": "Usuários",
@@ -1312,8 +1307,7 @@
     "errors": {
       "failedTitle": "Falha na exportação",
       "failedDescription": "Não foi possível baixar o arquivo de receitas. Tente novamente.",
-      "signedOut": "Sua sessão expirou. Entre novamente para exportar.",
-      "notAllowed": "Você não tem permissão para exportar isso."
+      "signedOut": "Sua sessão expirou. Entre novamente para exportar."
     }
   },
   "mobile": {

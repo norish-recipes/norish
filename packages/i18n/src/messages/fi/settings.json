@@ -631,12 +631,7 @@
       "localesDescription": "Valitse, mistä kielistä käyttäjät voivat valita",
       "defaultLocale": "Oletuskieli",
       "defaultLocaleDescription": "Uusien käyttäjien kieli ja varakieli",
-      "atLeastOneLocale": "Vähintään yhden kielen on oltava käytössä",
-      "export": {
-        "title": "Reseptiarkisto",
-        "description": "Lataa kaikki tämän palvelimen reseptit.",
-        "button": "Vie reseptiarkisto"
-      }
+      "atLeastOneLocale": "Vähintään yhden kielen on oltava käytössä"
     },
     "users": {
       "title": "Käyttäjät",
@@ -1312,8 +1307,7 @@
     "errors": {
       "failedTitle": "Vienti epäonnistui",
       "failedDescription": "Reseptiarkistoa ei voitu ladata. Yritä uudelleen.",
-      "signedOut": "Istuntosi on vanhentunut. Kirjaudu uudelleen sisään viedäksesi.",
-      "notAllowed": "Sinulla ei ole oikeutta viedä tätä."
+      "signedOut": "Istuntosi on vanhentunut. Kirjaudu uudelleen sisään viedäksesi."
     }
   },
   "mobile": {

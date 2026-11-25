@@ -631,12 +631,7 @@
       "localesDescription": "Wybierz, które języki będą dostępne dla użytkowników",
       "defaultLocale": "Domyślny język",
       "defaultLocaleDescription": "Język używany dla nowych użytkowników i jako zapasowy",
-      "atLeastOneLocale": "Musi być włączony co najmniej jeden język",
-      "export": {
-        "title": "Archiwum przepisów",
-        "description": "Pobierz każdy przepis na tym serwerze.",
-        "button": "Eksportuj archiwum przepisów"
-      }
+      "atLeastOneLocale": "Musi być włączony co najmniej jeden język"
     },
     "users": {
       "title": "Użytkownicy",
@@ -1312,8 +1307,7 @@
     "errors": {
       "failedTitle": "Eksport nie udał się",
       "failedDescription": "Nie udało się pobrać archiwum przepisów. Spróbuj ponownie.",
-      "signedOut": "Twoja sesja wygasła. Zaloguj się ponownie, aby eksportować.",
-      "notAllowed": "Nie masz uprawnień, aby to eksportować."
+      "signedOut": "Twoja sesja wygasła. Zaloguj się ponownie, aby eksportować."
     }
   },
   "mobile": {

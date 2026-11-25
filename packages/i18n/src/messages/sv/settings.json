@@ -631,12 +631,7 @@
       "localesDescription": "Välj vilka språk användarna kan välja mellan",
       "defaultLocale": "Standardspråk",
       "defaultLocaleDescription": "Språk för nya användare och när en översättning saknas",
-      "atLeastOneLocale": "Minst ett språk måste vara aktiverat",
-      "export": {
-        "title": "Receptarkiv",
-        "description": "Ladda ner alla recept på den här servern.",
-        "button": "Exportera receptarkiv"
-      }
+      "atLeastOneLocale": "Minst ett språk måste vara aktiverat"
     },
     "users": {
       "title": "Användare",
@@ -1312,8 +1307,7 @@
     "errors": {
       "failedTitle": "Exporten misslyckades",
       "failedDescription": "Det gick inte att ladda ner receptarkivet. Försök igen.",
-      "signedOut": "Din session har gått ut. Logga in igen för att exportera.",
-      "notAllowed": "Du har inte behörighet att exportera detta."
+      "signedOut": "Din session har gått ut. Logga in igen för att exportera."
     }
   },
   "mobile": {

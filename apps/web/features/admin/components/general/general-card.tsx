@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import ArchiveExportButton from "@/components/settings/archive-export-button";
 import { SettingRow, SwitchRow } from "@/components/settings/setting-row";
 import { SettingsCard } from "@/components/settings/settings-card";
 import SettingsSwitch from "@/components/settings/settings-switch";
@@ -194,13 +193,6 @@ export default function GeneralCard() {
           {tActions("save")}
         </ActionButton>
       </ActionButtonGroup>
-
-      <Separator />
-
-      {/* Instance-wide Recipe Archive export */}
-      <SettingRow description={t("export.description")} title={t("export.title")}>
-        <ArchiveExportButton fullWidth label={t("export.button")} scope="instance" />
-      </SettingRow>
     </SettingsCard>
   );
 }

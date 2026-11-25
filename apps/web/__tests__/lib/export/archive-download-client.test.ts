@@ -155,7 +155,7 @@ describe("startArchiveDownload — streamed through the worker", () => {
 describe("startArchiveDownload — reporting refusals in place", () => {
   it.each([
     [401, "unauthorized"],
-    [403, "forbidden"],
+    [403, "failed"],
     [500, "failed"],
   ])("maps %i to %s without navigating away", async (status, reason) => {
     controllingWorker();
@@ -224,10 +224,10 @@ describe("startArchiveDownload — handed to the browser", () => {
 
     vi.stubGlobal("fetch", fetchMock);
 
-    await startArchiveDownload({ ...REQUEST, url: "/export/recipes?scope=instance" });
+    await startArchiveDownload({ ...REQUEST, url: "/export/recipes?lang=en" });
 
-    expect(fetchMock.mock.calls[0]![0]).toBe("/export/recipes?scope=instance&probe=1");
-    expect(assign).toHaveBeenCalledWith("/export/recipes?scope=instance");
+    expect(fetchMock.mock.calls[0]![0]).toBe("/export/recipes?lang=en&probe=1");
+    expect(assign).toHaveBeenCalledWith("/export/recipes?lang=en");
   });
 
   it("does not navigate when the probe refuses", async () => {

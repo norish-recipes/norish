@@ -631,12 +631,7 @@
       "localesDescription": "Vælg hvilke sprog brugere kan vælge imellem",
       "defaultLocale": "Standardsprog",
       "defaultLocaleDescription": "Sprog anvendt for nye brugere og som backup",
-      "atLeastOneLocale": "Mindst ét sprog skal være aktiveret",
-      "export": {
-        "title": "Opskriftsarkiv",
-        "description": "Download alle opskrifter på denne server.",
-        "button": "Eksportér opskriftsarkiv"
-      }
+      "atLeastOneLocale": "Mindst ét sprog skal være aktiveret"
     },
     "users": {
       "title": "Brugere",
@@ -1312,8 +1307,7 @@
     "errors": {
       "failedTitle": "Eksport mislykkedes",
       "failedDescription": "Opskriftsarkivet kunne ikke downloades. Prøv igen.",
-      "signedOut": "Din session er udløbet. Log ind igen for at eksportere.",
-      "notAllowed": "Du har ikke tilladelse til at eksportere dette."
+      "signedOut": "Din session er udløbet. Log ind igen for at eksportere."
     }
   },
   "mobile": {

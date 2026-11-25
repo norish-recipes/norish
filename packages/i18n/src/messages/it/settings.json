@@ -631,12 +631,7 @@
       "localesDescription": "Seleziona quali lingue gli utenti possono scegliere",
       "defaultLocale": "Lingua predefinita",
       "defaultLocaleDescription": "Lingua utilizzata per i nuovi utenti e come fallback",
-      "atLeastOneLocale": "Almeno una lingua deve essere abilitata",
-      "export": {
-        "title": "Archivio ricette",
-        "description": "Scarica tutte le ricette di questo server.",
-        "button": "Esporta archivio ricette"
-      }
+      "atLeastOneLocale": "Almeno una lingua deve essere abilitata"
     },
     "users": {
       "title": "Utenti",
@@ -1312,8 +1307,7 @@
     "errors": {
       "failedTitle": "Esportazione non riuscita",
       "failedDescription": "Non è stato possibile scaricare l'archivio ricette. Riprova.",
-      "signedOut": "La tua sessione è scaduta. Accedi di nuovo per esportare.",
-      "notAllowed": "Non hai il permesso di esportare questo contenuto."
+      "signedOut": "La tua sessione è scaduta. Accedi di nuovo per esportare."
     }
   },
   "mobile": {

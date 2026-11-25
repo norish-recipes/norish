@@ -631,12 +631,7 @@
       "localesDescription": "Selecteer welke talen gebruikers kunnen kiezen",
       "defaultLocale": "Standaardtaal",
       "defaultLocaleDescription": "Taal voor nieuwe gebruikers en als fallback",
-      "atLeastOneLocale": "Minimaal één taal moet ingeschakeld zijn",
-      "export": {
-        "title": "Archief",
-        "description": "Download elk recept op deze server.",
-        "button": "Archief exporteren"
-      }
+      "atLeastOneLocale": "Minimaal één taal moet ingeschakeld zijn"
     },
     "users": {
       "title": "Gebruikers",
@@ -1312,8 +1307,7 @@
     "errors": {
       "failedTitle": "Exporteren mislukt",
       "failedDescription": "Het archief kon niet worden gedownload. Probeer het opnieuw.",
-      "signedOut": "Je sessie is verlopen. Meld je opnieuw aan om te exporteren.",
-      "notAllowed": "Je hebt geen rechten om dit te exporteren."
+      "signedOut": "Je sessie is verlopen. Meld je opnieuw aan om te exporteren."
     }
   },
   "mobile": {

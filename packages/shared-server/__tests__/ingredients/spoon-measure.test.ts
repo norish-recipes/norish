@@ -41,7 +41,7 @@ describe("the measure a spoon weight is shown in", () => {
     housemateId = (await createTestUser({ name: "Housemate" }))!.id;
     strangerId = (await createTestUser({ name: "Stranger" }))!.id;
     await joinTestHousehold(housemateId, owner.id);
-    household = { userId: owner.id, householdId: testHouseholdOf(owner.id), isServerAdmin: false };
+    household = { userId: owner.id, householdId: testHouseholdOf(owner.id) };
     await setConfig(
       ServerConfigKeys.RECIPE_PERMISSION_POLICY,
       { view: "household", edit: "household", delete: "household" },
@@ -95,10 +95,7 @@ describe("the measure a spoon weight is shown in", () => {
 
     await expect(spoonMeasureFor(household, cumin.id)).resolves.toBe("teaspoon");
     await expect(
-      spoonMeasureFor(
-        { userId: strangerId, householdId: testHouseholdOf(strangerId), isServerAdmin: false },
-        cumin.id
-      )
+      spoonMeasureFor({ userId: strangerId, householdId: testHouseholdOf(strangerId) }, cumin.id)
     ).resolves.toBe("cup");
   });
 
