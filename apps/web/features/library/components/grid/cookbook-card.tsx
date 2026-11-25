@@ -1,7 +1,7 @@
 "use client";
 
 import type { MouseEvent } from "react";
-import { memo, useCallback, useMemo, useRef, useState } from "react";
+import { memo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import CookbookCover from "@/components/cookbooks/cookbook-cover";
 import { CookbookIconSolid } from "@/components/cookbooks/cookbook-icon";
@@ -83,58 +83,54 @@ function CookbookCardComponent({
   const canEdit = canEditRecipe(cookbook.householdId);
   const canDelete = canDeleteRecipe(cookbook.householdId);
 
-  const open = useCallback(() => {
+  const open = () => {
     if (!rowOpen) router.push(withOrigin(`/cookbooks/${cookbook.id}`, pathname));
-  }, [router, cookbook.id, rowOpen, pathname]);
+  };
 
-  const stopParentActivation = useCallback((event: MouseEvent) => {
+  const stopParentActivation = (event: MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
-  }, []);
+  };
 
-  const handleDelete = useCallback(() => {
+  const handleDelete = () => {
     setDeleteOpen(false);
     rowRef.current?.triggerDeleteAnimation(() => {
       onDelete({ id: cookbook.id, version: cookbook.version });
     });
-  }, [onDelete, cookbook.id, cookbook.version]);
+  };
 
-  const actions: SwipeAction[] = useMemo(() => {
-    const list: SwipeAction[] = [];
+  const actions: SwipeAction[] = [];
 
-    if (canEdit) {
-      list.push({
-        key: "add",
-        icon: PlusIcon,
-        color: "warning",
-        onPress: () => setAddOpen(true),
-        label: t("addRecipes"),
-      });
-    }
+  if (canEdit) {
+    actions.push({
+      key: "add",
+      icon: PlusIcon,
+      color: "warning",
+      onPress: () => setAddOpen(true),
+      label: t("addRecipes"),
+    });
+  }
 
-    if (canEdit) {
-      list.push({
-        key: "edit",
-        icon: PencilSquareIcon,
-        color: "accent",
-        onPress: () => setEditOpen(true),
-        label: t("editTitle"),
-      });
-    }
+  if (canEdit) {
+    actions.push({
+      key: "edit",
+      icon: PencilSquareIcon,
+      color: "accent",
+      onPress: () => setEditOpen(true),
+      label: t("editTitle"),
+    });
+  }
 
-    if (canDelete) {
-      list.push({
-        key: "delete",
-        icon: TrashIcon,
-        color: "danger",
-        onPress: () => setDeleteOpen(true),
-        primary: false,
-        label: t("deleteTitle"),
-      });
-    }
-
-    return list;
-  }, [canEdit, canDelete, t]);
+  if (canDelete) {
+    actions.push({
+      key: "delete",
+      icon: TrashIcon,
+      color: "danger",
+      onPress: () => setDeleteOpen(true),
+      primary: false,
+      label: t("deleteTitle"),
+    });
+  }
 
   /*
    * The facts a cookbook derives from its members, read in one place and with
@@ -161,10 +157,7 @@ function CookbookCardComponent({
   // Only the reader's own allergens, not every tag the members carry: a
   // cookbook is a set of other people's recipes and the warning is the part
   // worth the space.
-  const allergens = useMemo(
-    () => memberTags.filter((tag) => isAllergenTag(tag, allergySet)),
-    [memberTags, allergySet]
-  );
+  const allergens = memberTags.filter((tag) => isAllergenTag(tag, allergySet));
   const optionsButton = (
     <div className="hidden md:block" role="presentation" onClick={stopParentActivation}>
       <Tooltip delay={0}>

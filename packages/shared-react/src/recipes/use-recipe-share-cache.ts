@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { useTRPC } from "../trpc";
@@ -19,40 +18,21 @@ export function useRecipeShareCacheHelpers(): RecipeShareCacheHelpers {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  const invalidateRecipeShares = useCallback(
-    (recipeId: string | null) => {
+  return {
+    invalidateRecipeShares: (recipeId) => {
       void rereadAfterWrite(
         queryClient,
         recipeId ? trpc.recipes.shareList.queryKey({ recipeId }) : trpc.recipes.shareList.pathKey()
       );
     },
-    [queryClient, trpc]
-  );
-
-  const invalidateRecipeShare = useCallback(
-    (shareId: string) => {
+    invalidateMyRecipeShares: () => {
+      void rereadAfterWrite(queryClient, trpc.recipes.shareListMine.queryKey());
+    },
+    invalidateRecipeShare: (shareId) => {
       void rereadAfterWrite(queryClient, trpc.recipes.shareGet.queryKey({ id: shareId }));
     },
-    [queryClient, trpc]
-  );
-
-  const invalidateMyRecipeShares = useCallback(() => {
-    void rereadAfterWrite(queryClient, trpc.recipes.shareListMine.queryKey());
-  }, [queryClient, trpc]);
-
-  const removeRecipeShare = useCallback(
-    (shareId: string) => {
-      queryClient.removeQueries({
-        queryKey: trpc.recipes.shareGet.queryKey({ id: shareId }),
-      });
+    removeRecipeShare: (shareId) => {
+      queryClient.removeQueries({ queryKey: trpc.recipes.shareGet.queryKey({ id: shareId }) });
     },
-    [queryClient, trpc]
-  );
-
-  return {
-    invalidateRecipeShares,
-    invalidateMyRecipeShares,
-    invalidateRecipeShare,
-    removeRecipeShare,
   };
 }

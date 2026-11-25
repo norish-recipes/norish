@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
 import { CookbookIconSolid } from "@/components/cookbooks/cookbook-icon";
 import MiniCalendar from "@/components/Panel/consumers/mini-calendar";
@@ -89,182 +89,163 @@ export default function ActionsMenu({ id, buttonClassName, onPrint }: Props) {
   const canEdit = canEditRecipe(recipe.householdId);
   const canDelete = canDeleteRecipe(recipe.householdId);
 
-  const handleDeleteClick = React.useCallback(() => {
+  const handleDeleteClick = () => {
     onDeleteModalOpen();
-  }, [onDeleteModalOpen]);
+  };
 
-  const handleDeleteConfirm = React.useCallback(() => {
+  const handleDeleteConfirm = () => {
     onDeleteModalClose();
     deleteRecipes([{ id, version: recipe.version }]);
     router.push("/");
-  }, [deleteRecipes, id, recipe.version, router, onDeleteModalClose]);
+  };
 
-  const menuItems = useMemo(() => {
-    const items: MenuItem[] = [
+  const menuItems: MenuItem[] = [
+    {
+      key: "plan",
+      label: t("plan"),
+      icon: <CalendarDaysIcon className="size-4" />,
+      onPress: () => setOpenCalendar(true),
+    },
+    {
+      key: "groceries",
+      label: t("groceries"),
+      icon: <ShoppingCartIcon className="size-4" />,
+      onPress: () => setOpenGroceries(true),
+    },
+    {
+      // Filing needs only view on the recipe and edit on the cookbook, so
+      // this is offered to every reader who can see the page (ADR-0027).
+      key: "cookbooks",
+      label: t("cookbooks"),
+      icon: <CookbookIconSolid className="size-4" />,
+      onPress: () => setOpenCookbooks(true),
+    },
+  ];
+  if (canEdit) {
+    menuItems.push({
+      key: "share",
+      label: t("share"),
+      icon: <ShareIcon className="size-4" />,
+      onPress: () => setOpenSharePanel(true),
+    });
+  }
+  menuItems.push({
+    key: "print",
+    label: tPrint("title"),
+    icon: <PrinterIcon className="size-4" />,
+    onPress: onPrint,
+  });
+  if (canEdit) {
+    menuItems.push({
+      key: "edit",
+      label: t("edit"),
+      icon: <PencilSquareIcon className="size-4" />,
+      onPress: () => router.push(`/recipes/edit/${id}`),
+    });
+  }
+  if (isSupported) {
+    menuItems.push({
+      key: "wake-lock",
+      label: isActive ? t("screenOn") : t("keepScreenOn"),
+      icon: <DevicePhoneMobileIcon className="size-4" />,
+      onPress: toggle,
+      labelClassName: isActive ? "text-success" : "",
+      iconClassName: isActive ? "text-success" : "text-muted",
+    });
+  }
+  // Manual Recipe Enrichment: shown on AI enablement and edit permission alone.
+  // The administrator's automatic switches decide what runs on creation, not
+  // whether an editor may ask for it.
+  if (isAIEnabled && canEdit) {
+    // Every kind renders the same way, so the states read consistently
+    // and a quiet automatic failure is still discoverable here.
+    const enrichmentActions: {
+      kind: RecipeEnrichmentKind;
+      key: string;
+      idleLabel: string;
+      busyLabel: string;
+      show?: boolean;
+    }[] = [
       {
-        key: "plan",
-        label: t("plan"),
-        icon: <CalendarDaysIcon className="size-4" />,
-        onPress: () => setOpenCalendar(true),
+        kind: "auto-tagging",
+        key: "auto-tag",
+        idleLabel: t("autoTag"),
+        busyLabel: t("autoTagging"),
       },
       {
-        key: "groceries",
-        label: t("groceries"),
-        icon: <ShoppingCartIcon className="size-4" />,
-        onPress: () => setOpenGroceries(true),
+        kind: "auto-categorization",
+        key: "auto-categorize",
+        idleLabel: t("autoCategorize"),
+        busyLabel: t("autoCategorizing"),
       },
       {
-        // Filing needs only view on the recipe and edit on the cookbook, so
-        // this is offered to every reader who can see the page (ADR-0027).
-        key: "cookbooks",
-        label: t("cookbooks"),
-        icon: <CookbookIconSolid className="size-4" />,
-        onPress: () => setOpenCookbooks(true),
+        kind: "allergy-detection",
+        key: "detect-allergies",
+        idleLabel: t("detectAllergies"),
+        busyLabel: t("detectingAllergies"),
+        // Allergy detection needs something to look for.
+        show: allergies.length > 0,
+      },
+      {
+        kind: "nutrition-estimation",
+        key: "estimate-nutrition",
+        idleLabel: t("estimateNutrition"),
+        busyLabel: t("estimatingNutrition"),
+      },
+      {
+        kind: "recipe-provenance",
+        key: "infer-provenance",
+        idleLabel: t("inferProvenance"),
+        busyLabel: t("inferringProvenance"),
+      },
+      {
+        kind: "ingredient-linking",
+        key: "link-ingredients",
+        idleLabel: t("linkIngredients"),
+        busyLabel: t("linkingIngredients"),
+      },
+      {
+        // Unguarded and destructive by decision (ADR-0025): it runs on a
+        // recipe that already has a photograph and replaces the primary.
+        kind: "image-generation",
+        key: "generate-image",
+        idleLabel: t("generateImage"),
+        busyLabel: t("generatingImage"),
       },
     ];
-    if (canEdit) {
-      items.push({
-        key: "share",
-        label: t("share"),
-        icon: <ShareIcon className="size-4" />,
-        onPress: () => setOpenSharePanel(true),
+
+    for (const action of enrichmentActions) {
+      if (action.show === false) continue;
+
+      const state = enrichment.states[action.kind];
+      const isBusy = state === "queued" || state === "processing";
+
+      menuItems.push({
+        key: action.key,
+        label: isBusy ? action.busyLabel : action.idleLabel,
+        icon: <SparklesIcon className="size-4" />,
+        onPress: () => enrichment.request(action.kind),
+        labelClassName: cssAIGradientText,
+        iconClassName: cssAIIconColor,
+        // A failed run stays visible and re-runnable; only an in-flight one
+        // is disabled.
+        description: state === "idle" ? undefined : tEnrichment(`states.${state}`),
+        descriptionClassName: state === "failed" ? "text-danger" : "text-muted",
+        isDisabled: isBusy,
       });
     }
-    items.push({
-      key: "print",
-      label: tPrint("title"),
-      icon: <PrinterIcon className="size-4" />,
-      onPress: onPrint,
+  }
+  if (canDelete) {
+    menuItems.push({
+      key: "delete",
+      label: t("delete"),
+      icon: <TrashIcon className="size-4" />,
+      onPress: handleDeleteClick,
+      className: cssButtonPillDanger,
+      labelClassName: "text-danger",
+      iconClassName: "text-danger",
     });
-    if (canEdit) {
-      items.push({
-        key: "edit",
-        label: t("edit"),
-        icon: <PencilSquareIcon className="size-4" />,
-        onPress: () => router.push(`/recipes/edit/${id}`),
-      });
-    }
-    if (isSupported) {
-      items.push({
-        key: "wake-lock",
-        label: isActive ? t("screenOn") : t("keepScreenOn"),
-        icon: <DevicePhoneMobileIcon className="size-4" />,
-        onPress: toggle,
-        labelClassName: isActive ? "text-success" : "",
-        iconClassName: isActive ? "text-success" : "text-muted",
-      });
-    }
-    // Manual Recipe Enrichment: shown on AI enablement and edit permission alone.
-    // The administrator's automatic switches decide what runs on creation, not
-    // whether an editor may ask for it.
-    if (isAIEnabled && canEdit) {
-      // Every kind renders the same way, so the states read consistently
-      // and a quiet automatic failure is still discoverable here.
-      const enrichmentActions: {
-        kind: RecipeEnrichmentKind;
-        key: string;
-        idleLabel: string;
-        busyLabel: string;
-        show?: boolean;
-      }[] = [
-        {
-          kind: "auto-tagging",
-          key: "auto-tag",
-          idleLabel: t("autoTag"),
-          busyLabel: t("autoTagging"),
-        },
-        {
-          kind: "auto-categorization",
-          key: "auto-categorize",
-          idleLabel: t("autoCategorize"),
-          busyLabel: t("autoCategorizing"),
-        },
-        {
-          kind: "allergy-detection",
-          key: "detect-allergies",
-          idleLabel: t("detectAllergies"),
-          busyLabel: t("detectingAllergies"),
-          // Allergy detection needs something to look for.
-          show: allergies.length > 0,
-        },
-        {
-          kind: "nutrition-estimation",
-          key: "estimate-nutrition",
-          idleLabel: t("estimateNutrition"),
-          busyLabel: t("estimatingNutrition"),
-        },
-        {
-          kind: "recipe-provenance",
-          key: "infer-provenance",
-          idleLabel: t("inferProvenance"),
-          busyLabel: t("inferringProvenance"),
-        },
-        {
-          kind: "ingredient-linking",
-          key: "link-ingredients",
-          idleLabel: t("linkIngredients"),
-          busyLabel: t("linkingIngredients"),
-        },
-        {
-          // Unguarded and destructive by decision (ADR-0025): it runs on a
-          // recipe that already has a photograph and replaces the primary.
-          kind: "image-generation",
-          key: "generate-image",
-          idleLabel: t("generateImage"),
-          busyLabel: t("generatingImage"),
-        },
-      ];
-
-      for (const action of enrichmentActions) {
-        if (action.show === false) continue;
-
-        const state = enrichment.states[action.kind];
-        const isBusy = state === "queued" || state === "processing";
-
-        items.push({
-          key: action.key,
-          label: isBusy ? action.busyLabel : action.idleLabel,
-          icon: <SparklesIcon className="size-4" />,
-          onPress: () => enrichment.request(action.kind),
-          labelClassName: cssAIGradientText,
-          iconClassName: cssAIIconColor,
-          // A failed run stays visible and re-runnable; only an in-flight one
-          // is disabled.
-          description: state === "idle" ? undefined : tEnrichment(`states.${state}`),
-          descriptionClassName: state === "failed" ? "text-danger" : "text-muted",
-          isDisabled: isBusy,
-        });
-      }
-    }
-    if (canDelete) {
-      items.push({
-        key: "delete",
-        label: t("delete"),
-        icon: <TrashIcon className="size-4" />,
-        onPress: handleDeleteClick,
-        className: cssButtonPillDanger,
-        labelClassName: "text-danger",
-        iconClassName: "text-danger",
-      });
-    }
-    return items;
-  }, [
-    canEdit,
-    canDelete,
-    handleDeleteClick,
-    id,
-    router,
-    isSupported,
-    isActive,
-    toggle,
-    t,
-    tPrint,
-    onPrint,
-    tEnrichment,
-    isAIEnabled,
-    allergies,
-    enrichment,
-  ]);
+  }
   return (
     <>
       <Dropdown isOpen={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
