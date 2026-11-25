@@ -222,3 +222,15 @@ export async function resolveMasterKey(): Promise<void> {
   // No fingerprint: an instance from before fingerprints, or one that has never started.
   await openByFingerprint(fingerprint ?? (await adoptKey(await keySource())));
 }
+
+/** Open the key a server's boot resolved, for a tool or script: never generates nor writes one. */
+export async function openMasterKey(): Promise<void> {
+  const fingerprint = await getConfig<string>(ServerConfigKeys.MASTER_KEY_FINGERPRINT);
+
+  if (!fingerprint) {
+    throw new Error(
+      "This database has no Master Key fingerprint yet. Start the Norish server on it once first."
+    );
+  }
+  await openByFingerprint(fingerprint);
+}

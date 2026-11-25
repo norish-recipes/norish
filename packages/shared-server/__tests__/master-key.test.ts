@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { randomBytes } from "node:crypto";
-import { mkdtempSync } from "node:fs";
+import { globSync, mkdtempSync, readFileSync } from "node:fs";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -81,7 +81,7 @@ vi.mock("@norish/shared-server/logger", () => {
   return { serverLogger: logger, createLogger: () => logger };
 });
 
-const { keyFilePath, readKeyFile, resolveMasterKey, writeKeyFile } =
+const { keyFilePath, openMasterKey, readKeyFile, resolveMasterKey, writeKeyFile } =
   await import("@norish/shared-server/master-key");
 
 const keyDir = () => path.dirname(keyFilePath());
@@ -462,6 +462,51 @@ describe("which key boot opens", () => {
       await expect(resolveMasterKey()).rejects.toThrow(
         `This database is encrypted with the previous key in ${keyFilePath()}`
       );
+    });
+  });
+
+  describe("for a tool or script", () => {
+    it("refuses a database no server has booted on, generating and writing nothing", async () => {
+      await expect(openMasterKey()).rejects.toThrow(
+        "This database has no Master Key fingerprint yet. Start the Norish server on it once first."
+      );
+      expect(await readKeyFile()).toBeNull();
+      expect(fingerprintWrites).toEqual([]);
+      expect(openedKeys).toEqual([]);
+    });
+
+    it("opens the key the fingerprint names, writing nothing", async () => {
+      database.fingerprint = masterKeyFingerprint(keyA);
+      await writeKeyFile({ current: keyA });
+
+      await openMasterKey();
+
+      expect(opened()).toBe(lookupBy(keyA));
+      expect(fingerprintWrites).toEqual([]);
+    });
+
+    it("refuses a key the fingerprint does not name", async () => {
+      database.fingerprint = masterKeyFingerprint(keyA);
+      config.MASTER_KEY = keyB.toString("base64");
+
+      await expect(openMasterKey()).rejects.toThrow(
+        "MASTER_KEY is not the key this database is encrypted with."
+      );
+    });
+
+    it("is how every entry point but the server's boot opens the key", () => {
+      const repoRoot = path.resolve(import.meta.dirname, "../../..");
+      const sources = globSync(
+        ["apps/*/{server,scripts,app,lib}/**/*.{ts,tsx}", "{packages,tooling}/*/src/**/*.ts"],
+        { cwd: repoRoot, exclude: (entry) => entry.includes("node_modules") }
+      );
+      const resolvers = sources.filter((file) =>
+        /import\s*{[^}]*\bresolveMasterKey\b[^}]*}\s*from/.test(
+          readFileSync(path.join(repoRoot, file), "utf8")
+        )
+      );
+
+      expect(resolvers).toEqual(["apps/web/server/index.ts"]);
     });
   });
 
