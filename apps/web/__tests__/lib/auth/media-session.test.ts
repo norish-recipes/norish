@@ -51,8 +51,12 @@ describe("refuseUnlessViewer", () => {
     expect((await refuseUnlessViewer(req, owner))?.status).toBe(404);
   });
 
-  it("serves a file of a recipe not saved yet", async () => {
-    expect(await refuseUnlessViewer(req, async () => null)).toBeNull();
+  it("serves a file whose row is missing only to the account that uploaded it", async () => {
+    const missing = async () => null;
+
+    expect(await refuseUnlessViewer(req, missing, async () => "reader-id")).toBeNull();
+    expect((await refuseUnlessViewer(req, missing, async () => "uploader-id"))?.status).toBe(404);
+    expect((await refuseUnlessViewer(req, missing))?.status).toBe(404);
     expect(canAccessResource).not.toHaveBeenCalled();
   });
 });

@@ -6,6 +6,9 @@ import { serverPackage } from "@/lib/server-package";
 const { getRecipeHouseholdId } = await serverPackage<
   typeof import("@norish/db/repositories/recipes")
 >("@norish/db/repositories/recipes");
+const { pendingRecipeMediaUploader } = await serverPackage<
+  typeof import("@norish/shared-server/media/pending-recipe-media")
+>("@norish/shared-server/media/pending-recipe-media");
 
 const VALID_UUID_PATTERN = /^[a-f0-9-]{36}$/i;
 
@@ -19,7 +22,11 @@ export async function GET(req: Request, { params }: RouteContext<"/recipes/[id]/
     return NextResponse.json({ error: "Invalid recipe ID" }, { status: 400 });
   }
 
-  const refused = await refuseUnlessViewer(req, () => getRecipeHouseholdId(id));
+  const refused = await refuseUnlessViewer(
+    req,
+    () => getRecipeHouseholdId(id),
+    () => pendingRecipeMediaUploader(id)
+  );
 
   if (refused) return refused;
 

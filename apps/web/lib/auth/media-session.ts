@@ -28,14 +28,12 @@ export async function refuseWithoutSession(req: Request): Promise<Response | nul
   return principal ? null : notFound();
 }
 
-/**
- * The check of a recipe or cookbook media route: the reader must be able to view what the file
- * belongs to under the Permission Policy, admins included. A file of no recipe yet (one the
- * new-recipe form has not saved) is served to any signed-in reader; a refusal reads as missing.
- */
+/** The check of a recipe or cookbook media route: the reader must be able to view what the file
+ * belongs to. A file whose row is missing is served only to the account that uploaded it. */
 export async function refuseUnlessViewer(
   req: Request,
-  householdOf: () => Promise<string | null>
+  householdOf: () => Promise<string | null>,
+  uploaderOf: () => Promise<string | null> = async () => null
 ): Promise<Response | null> {
   const principal = await readSessionPrincipal(req.headers).catch(() => null);
 
@@ -43,7 +41,9 @@ export async function refuseUnlessViewer(
 
   const rowHouseholdId = await householdOf();
 
-  if (rowHouseholdId === null) return null;
+  if (rowHouseholdId === null) {
+    return (await uploaderOf()) === principal.userId ? null : notFound();
+  }
 
   const household = await getCachedHouseholdForUser(principal.userId);
 
