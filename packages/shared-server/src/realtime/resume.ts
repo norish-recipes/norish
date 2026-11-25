@@ -18,6 +18,7 @@ import type { Result } from "ioredis";
 
 import { resolveExistingWorkspacePath } from "@norish/shared-server/lib/workspace-paths";
 import { getPublisherClient } from "@norish/shared-server/valkey/client";
+import { currentToken, freshToken } from "@norish/shared-server/valkey/token";
 
 import { RealtimeLaggedError } from "./hub";
 
@@ -89,11 +90,11 @@ const VIEW_EPOCH_KEY = "norish:realtime:view-epoch";
 // ponytail: one epoch for the server; a per-household one if membership changes grow common.
 /** Moves after a policy or membership change, so no event buffered under the old view replays. */
 export async function bumpViewEpoch(): Promise<void> {
-  await (await getPublisherClient()).incr(VIEW_EPOCH_KEY);
+  await (await getPublisherClient()).set(VIEW_EPOCH_KEY, freshToken());
 }
 
 export async function readViewEpoch(): Promise<string> {
-  return (await (await getPublisherClient()).get(VIEW_EPOCH_KEY)) ?? "0";
+  return currentToken(await getPublisherClient(), VIEW_EPOCH_KEY);
 }
 
 export interface RealtimeCursor {

@@ -1,8 +1,8 @@
-import { randomUUID } from "node:crypto";
 import superjson from "superjson";
 
 import { getHouseholdForUser as dbGetHouseholdForUser } from "@norish/db/repositories/households";
 import { getPublisherClient } from "@norish/shared-server/valkey/client";
+import { currentToken, freshToken } from "@norish/shared-server/valkey/token";
 
 const CACHE_PREFIX = "norish:cache:household:user:";
 /** A random token each invalidation replaces; an entry counts only while it carries the current one. */
@@ -25,9 +25,7 @@ export async function getCachedHouseholdForUser(userId: string): Promise<CachedH
     }
   }
 
-  // A lost token gets a fresh one, so no entry stamped before the loss matches it.
-  const fresh = randomUUID();
-  const generation = stored ?? (await valkey.set(generationKey, fresh, "NX", "GET")) ?? fresh;
+  const generation = stored ?? (await currentToken(valkey, generationKey));
 
   const household = await dbGetHouseholdForUser(userId);
 
@@ -52,6 +50,6 @@ export async function invalidateHouseholdCacheForUsers(userIds: string[]): Promi
   const valkey = await getPublisherClient();
   const bumps = valkey.multi();
 
-  for (const id of userIds) bumps.set(`${GENERATION_PREFIX}${id}`, randomUUID());
+  for (const id of userIds) bumps.set(`${GENERATION_PREFIX}${id}`, freshToken());
   await bumps.exec();
 }
