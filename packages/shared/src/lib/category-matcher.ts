@@ -25,8 +25,8 @@ import {
   lookupFoldedName,
   resolveCategoryName,
 } from "./categories";
-import { editDistance } from "./cuisine-resolver";
 import { foldName } from "./fold-name";
+import { editDistance, listMatcher } from "./list-match";
 
 type BuiltInCategoryKey = "breakfast" | "lunch" | "dinner" | "snack";
 
@@ -154,8 +154,8 @@ export function resolveBuiltInCategory(input: string): BuiltInCategory | null {
 }
 
 /**
- * The import rule for another app's category names (ADR-0040): a household
- * Category by name or plural, else a built-in through `match`, else a Tag.
+ * The import rule for another app's category names (ADR-0040, ADR-0043): a household Category by
+ * fold or plural, else its near miss, else a built-in through `match`, else a Tag.
  */
 export function sortSourceCategories(
   names: readonly string[],
@@ -163,11 +163,12 @@ export function sortSourceCategories(
   match: (name: string) => BuiltInCategory | null = matchCategory
 ): { categories: string[]; tags: string[] } {
   const byTerm = Object.fromEntries(household.map((name) => [foldName(name), name]));
+  const nearMiss = listMatcher(household, (name) => name);
   const categories = new Set<string>();
   const tags = new Map<string, string>();
 
   for (const name of names.map(cleanCategoryName).filter(Boolean)) {
-    const category = lookupFoldedName(byTerm, foldName(name)) ?? match(name);
+    const category = lookupFoldedName(byTerm, foldName(name)) ?? nearMiss(name) ?? match(name);
 
     if (category) categories.add(category);
     else if (!tags.has(name.toLowerCase())) tags.set(name.toLowerCase(), name);

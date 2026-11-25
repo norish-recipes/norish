@@ -1,5 +1,5 @@
 import { listTagNamesForHousehold } from "@norish/db/repositories/tags";
-import { matchNamesToList } from "@norish/shared/lib/cuisine-resolver";
+import { matchNamesToList } from "@norish/shared/lib/list-match";
 
 /** An import's Tags as its household's list spells them: fold, then near-match, else a new Tag (ADR-0043). */
 export async function matchImportedTags<T extends { tags?: { name: string }[] }>(

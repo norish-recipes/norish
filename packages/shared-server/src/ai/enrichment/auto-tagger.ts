@@ -18,7 +18,7 @@ import {
   isDecisionUseEnabled,
 } from "@norish/shared-server/config/server-config-loader";
 import { aiLogger } from "@norish/shared-server/logger";
-import { matchNamesToList } from "@norish/shared/lib/cuisine-resolver";
+import { matchNamesToList } from "@norish/shared/lib/list-match";
 
 import type { RecipeForTagging } from "./auto-tagging-prompt";
 import type { AutoTaggingOutput } from "./auto-tagging.schema";

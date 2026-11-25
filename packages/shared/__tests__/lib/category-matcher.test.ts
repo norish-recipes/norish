@@ -120,6 +120,13 @@ describe("sortSourceCategories", () => {
     });
   });
 
+  it("near-matches a household Category before the built-ins and before a Tag", () => {
+    expect(sortSourceCategories(["Coktails", "Smoothy"], [...household, "Cocktails"])).toEqual({
+      categories: ["Cocktails"],
+      tags: ["Smoothy"],
+    });
+  });
+
   it("then matches a built-in through synonyms and fuzz", () => {
     expect(sortSourceCategories(["Brunch", "supper", "Appetizers"], household)).toEqual({
       categories: ["Breakfast", "Dinner", "Snack"],

@@ -25,6 +25,21 @@ function resolve(proposed: string[], strategy: "existing" | "extend" = "existing
 }
 
 describe("resolveCuisines", () => {
+  it("matches and creates a name nothing folds, as its list keys it", () => {
+    const vocabulary = [...VOCABULARY, { id: "id-fire", name: "🔥" }];
+
+    expect(resolveCuisines({ proposed: [" 🔥 "], strategy: "existing", vocabulary })).toEqual({
+      resolved: [{ id: "id-fire", name: "🔥" }],
+      created: [],
+      dropped: [],
+    });
+    expect(resolveCuisines({ proposed: ["🌶️"], strategy: "extend", vocabulary })).toEqual({
+      resolved: [],
+      created: ["🌶️"],
+      dropped: [],
+    });
+  });
+
   it("returns nothing for an empty proposal set", () => {
     expect(resolve([])).toEqual({ resolved: [], created: [], dropped: [] });
   });
