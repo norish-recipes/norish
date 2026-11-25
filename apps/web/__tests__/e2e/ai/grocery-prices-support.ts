@@ -1,8 +1,12 @@
+import type { GroceryDto } from "@norish/shared/contracts";
 import type { ResolvedProductLink } from "@norish/shared/contracts/dto/store-products";
 import { findNewestGroceryNamed } from "@norish/db/repositories/groceries";
+import { getHouseholdForUser } from "@norish/db/repositories/households";
 
 import type { AIE2EStack } from "./fixture";
+import { userIdOf } from "../harness/accounts";
 import { queryTrpc } from "../harness/trpc";
+import { OWNER } from "./fixture";
 import { createPlainStore, listStores } from "./grocery-aisles-support";
 
 /** A Store pointing at the harness's own shop; the paste-and-derive flow has its own unit tests. */
@@ -46,16 +50,23 @@ export async function readStoredLink(
 export async function readGroceryAmount(
   name: string
 ): Promise<{ amount: number | null; purchaseAmount: number | null } | null> {
-  const grocery = await findNewestGroceryNamed(name);
+  const grocery = await readOwnerGrocery(name);
 
   return grocery
     ? { amount: grocery.amount, purchaseAmount: grocery.purchaseAmount ?? null }
     : null;
 }
 
+/** The newest grocery by this name on the owner's household list. */
+export async function readOwnerGrocery(name: string): Promise<GroceryDto | null> {
+  const household = await getHouseholdForUser(await userIdOf(OWNER));
+
+  return household ? await findNewestGroceryNamed(household.id, name) : null;
+}
+
 /** Which Store the newest grocery of that name sits under. */
 export async function readGroceryStore(stack: AIE2EStack, name: string): Promise<string | null> {
-  const storeId = (await findNewestGroceryNamed(name))?.storeId;
+  const storeId = (await readOwnerGrocery(name))?.storeId;
   const stores = await listStores(stack);
 
   return stores.find((store) => store.id === storeId)?.name ?? null;

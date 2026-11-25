@@ -18,12 +18,15 @@ import {
 import type { IngredientRef } from "./ingredient-aliases";
 import { assertOwnReferences, householdRow, householdRows } from "./household-rows";
 
-/** The grocery last added under this name, on anyone's list. */
-export async function findNewestGroceryNamed(name: string): Promise<GroceryDto | null> {
+/** The grocery last added under this name on the household's list. */
+export async function findNewestGroceryNamed(
+  householdId: string,
+  name: string
+): Promise<GroceryDto | null> {
   const [row] = await db
     .select()
     .from(groceries)
-    .where(eq(groceries.name, name))
+    .where(and(eq(groceries.householdId, householdId), eq(groceries.name, name)))
     .orderBy(desc(groceries.createdAt))
     .limit(1);
 

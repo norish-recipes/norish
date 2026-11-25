@@ -150,7 +150,7 @@ test("grocery create, update and delete reach the other browser without a reload
   await addGrocery(pageA, "realtime-melk");
   await expect(rowFor(pageB, "realtime-melk")).toBeVisible();
 
-  const created = (await readGrocery("realtime-melk"))!;
+  const created = (await readGrocery(stack, "realtime-melk"))!;
   const updated = await callMutation(pageA, stack.baseURL, "groceries.update", {
     groceryId: created.id,
     raw: "realtime-melk-hernoemd",
@@ -161,7 +161,7 @@ test("grocery create, update and delete reach the other browser without a reload
   await expect(rowFor(pageB, "realtime-melk-hernoemd")).toBeVisible();
   await expect(rowFor(pageB, "realtime-melk")).toHaveCount(0);
 
-  const renamed = (await readGrocery("realtime-melk-hernoemd"))!;
+  const renamed = (await readGrocery(stack, "realtime-melk-hernoemd"))!;
   const deleted = await callMutation(pageA, stack.baseURL, "groceries.delete", {
     groceries: [{ id: renamed.id, version: renamed.version }],
   });
@@ -214,7 +214,7 @@ test("a change made before a fresh screen's subscriptions are live shows once th
     await expect(rowFor(page, name)).toBeVisible();
   } finally {
     await context.close();
-    const row = await readGrocery(name);
+    const row = await readGrocery(stack, name);
 
     if (row) {
       await callMutation(pageA, stack.baseURL, "groceries.delete", {
@@ -644,7 +644,7 @@ test("a browser back from a network gap gets what it missed through Resume, befo
 
   // The link resent the cursor, and the missed event — that row, by id —
   // rode the new socket.
-  const missed = (await readGrocery("tunnel-appel"))!;
+  const missed = (await readGrocery(stack, "tunnel-appel"))!;
   const resubscribed = frames.frames.filter(
     (frame) =>
       frame.direction === "sent" &&

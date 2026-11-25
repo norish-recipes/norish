@@ -3,6 +3,7 @@ import { expect, request } from "@playwright/test";
 import { WebSocket as RawSocket } from "ws";
 
 import { findNewestGroceryNamed } from "@norish/db/repositories/groceries";
+import { getHouseholdForUser } from "@norish/db/repositories/households";
 
 import type { Identity, RealtimeStack } from "./fixture";
 import { closePanel, rowFor } from "../harness/groceries";
@@ -60,11 +61,13 @@ export async function readHousehold(
     : null;
 }
 
-/** The newest grocery by this name: a new grocery takes the top of its store's list. */
+/** The newest grocery by this name on A's list: a new grocery takes the top of its store's list. */
 export async function readGrocery(
+  stack: RealtimeStack,
   name: string
 ): Promise<{ id: string; version: number; isDone: boolean } | null> {
-  const grocery = await findNewestGroceryNamed(name);
+  const household = await getHouseholdForUser(stack.userIds.a);
+  const grocery = household ? await findNewestGroceryNamed(household.id, name) : null;
 
   return grocery ? { id: grocery.id, version: grocery.version, isDone: grocery.isDone } : null;
 }

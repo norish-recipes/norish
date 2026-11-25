@@ -283,14 +283,14 @@ describe("findNewestGroceryNamed", () => {
     return id;
   };
 
-  it("answers the grocery last added under the name, ticked or not", async () => {
+  it("answers the household's grocery last added under the name, ticked or not", async () => {
     await add("melk", false);
     const newest = await add("melk", true);
 
     await add("brood", false);
 
-    expect((await findNewestGroceryNamed("melk"))?.id).toBe(newest);
-    expect(await findNewestGroceryNamed("kaas")).toBeNull();
+    expect((await findNewestGroceryNamed(householdId, "melk"))?.id).toBe(newest);
+    expect(await findNewestGroceryNamed(householdId, "kaas")).toBeNull();
   });
 });
 

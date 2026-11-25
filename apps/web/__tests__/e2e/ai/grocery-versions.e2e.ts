@@ -5,11 +5,10 @@
  */
 import type { Page } from "@playwright/test";
 
-import { findNewestGroceryNamed } from "@norish/db/repositories/groceries";
-
 import { closePanel, rowFor } from "../harness/groceries";
 import { expect, test } from "./fixture";
 import { createPlainStore } from "./grocery-aisles-support";
+import { readOwnerGrocery } from "./grocery-prices-support";
 
 const STORE = "Versies";
 
@@ -73,15 +72,13 @@ test("a grocery ticked after another was added to its Store stays done", async (
   // first is shifted down to make room, its version left where the screen holds it.
   await addGrocery("versie-peer");
   await expect
-    .poll(() =>
-      findNewestGroceryNamed("versie-appel").then((row) => [row?.sortOrder, row?.version])
-    )
+    .poll(() => readOwnerGrocery("versie-appel").then((row) => [row?.sortOrder, row?.version]))
     .toEqual([1, 1]);
 
   await checkboxOf("versie-appel").click();
 
   await expect
-    .poll(() => findNewestGroceryNamed("versie-appel").then((row) => row?.isDone), {
+    .poll(() => readOwnerGrocery("versie-appel").then((row) => row?.isDone), {
       timeout: 10_000,
     })
     .toBe(true);
@@ -89,14 +86,14 @@ test("a grocery ticked after another was added to its Store stays done", async (
   await page.waitForTimeout(3000);
   await openDoneRow();
   await expect(rowFor(page, "versie-appel").getByRole("checkbox")).toBeChecked();
-  expect((await findNewestGroceryNamed("versie-appel"))?.isDone).toBe(true);
+  expect((await readOwnerGrocery("versie-appel"))?.isDone).toBe(true);
 });
 
 test("and so does the one added last, with nothing moved since", async () => {
   await checkboxOf("versie-peer").click();
 
   await expect
-    .poll(() => findNewestGroceryNamed("versie-peer").then((row) => row?.isDone), {
+    .poll(() => readOwnerGrocery("versie-peer").then((row) => row?.isDone), {
       timeout: 10_000,
     })
     .toBe(true);
