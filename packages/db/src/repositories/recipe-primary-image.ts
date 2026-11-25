@@ -1,6 +1,9 @@
-import { sql } from "drizzle-orm";
+import { asc, eq, sql } from "drizzle-orm";
+import { alias, QueryBuilder } from "drizzle-orm/pg-core";
 
-import { recipeImages } from "@norish/db/schema";
+import { recipeImages, recipes } from "@norish/db/schema";
+
+const gallery = alias(recipeImages, "gallery");
 
 /**
  * SQL twin of `primaryRecipeImage` (@norish/shared/lib/recipe-media): the
@@ -9,15 +12,12 @@ import { recipeImages } from "@norish/db/schema";
  * join the recipe for its thumbnail; a change here must move with the shared
  * helper.
  *
- * The outer reference is spelled `"recipes"."id"` by hand: interpolating the
- * drizzle column renders it unqualified in plain selects, and inside the
- * subquery an unqualified `"id"` resolves to the gallery's own column —
- * silently matching nothing. Any query using this must therefore reference the
- * recipes table under its own name, never an alias.
+ * A builder subquery, so its correlation renders qualified as `"recipes"."id"`:
+ * a query using this must reference the recipes table under its own name, never an alias.
  */
-export const PRIMARY_IMAGE_SQL = sql<string | null>`(
-  SELECT gallery.image FROM ${recipeImages} AS gallery
-  WHERE gallery.recipe_id = "recipes"."id"
-  ORDER BY COALESCE(gallery."order", 0) ASC, gallery.created_at ASC
-  LIMIT 1
-)`;
+export const PRIMARY_IMAGE_SQL = sql<string | null>`${new QueryBuilder()
+  .select({ image: gallery.image })
+  .from(gallery)
+  .where(eq(gallery.recipeId, recipes.id))
+  .orderBy(sql`COALESCE(${gallery.order}, 0) ASC`, asc(gallery.createdAt))
+  .limit(1)}`;

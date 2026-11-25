@@ -1,5 +1,19 @@
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
-import { and, asc, desc, eq, ilike, inArray, isNull, lte, notInArray, or, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  exists,
+  ilike,
+  inArray,
+  isNull,
+  lte,
+  notInArray,
+  or,
+  sql,
+} from "drizzle-orm";
+import { alias, QueryBuilder } from "drizzle-orm/pg-core";
 import z from "zod";
 
 import type { RecipePermissionPolicy } from "@norish/config/zod/server-config";
@@ -39,6 +53,7 @@ import type { MutationOutcome } from "./mutation-outcomes";
 import type { StepInsertWithImages } from "./steps";
 import {
   cookbookRecipes,
+  measurementSystemEnum,
   recipeFavorites,
   recipeImages,
   recipeIngredients,
@@ -81,6 +96,12 @@ import {
   loadIngredientLineIdsByOrderTx,
   syncStepIngredientsTx,
 } from "./steps";
+
+const qb = new QueryBuilder();
+const searchTagLink = alias(recipeTags, "search_rt");
+const searchTag = alias(tags, "search_tag");
+const searchLine = alias(recipeIngredients, "search_ri");
+const searchStep = alias(stepsTable, "search_step");
 
 /**
  * Which of the recipe permission policy's three levels a query is asking
@@ -341,11 +362,8 @@ export function searchTsqueryTerms(search: string): string | null {
  * there is nothing to search for, either because no term survived
  * sanitisation or because the reader unticked every field.
  *
- * Every reference is spelled `"recipes"."…"` by hand for the same reason
- * PRIMARY_IMAGE_SQL is: an interpolated drizzle column renders unqualified,
- * which resolves to the wrong table inside a correlated subquery and silently
- * matches nothing. The explicit spelling is what lets one builder serve both
- * the recipe list and the Library union.
+ * The correlated parts are builder subqueries, so `"recipes"."id"` renders qualified
+ * in both the recipe list and the Library union.
  */
 export function recipeSearchSql(
   search: string | undefined,
@@ -362,39 +380,36 @@ export function recipeSearchSql(
   for (const field of searchFields) {
     switch (field) {
       case "title":
-        parts.push(sql`setweight(to_tsvector('simple', coalesce("recipes"."name", '')), 'A')`);
+        parts.push(sql`setweight(to_tsvector('simple', coalesce(${recipes.name}, '')), 'A')`);
         break;
       case "tags":
         parts.push(
-          sql`setweight(to_tsvector('simple', coalesce((
-            SELECT string_agg(search_tag.name, ' ')
-            FROM ${recipeTags} search_rt
-            INNER JOIN ${tags} search_tag ON search_rt.tag_id = search_tag.id
-            WHERE search_rt.recipe_id = "recipes"."id"
-          ), '')), 'B')`
+          sql`setweight(to_tsvector('simple', coalesce(${qb
+            .select({ text: sql`string_agg(${searchTag.name}, ' ')` })
+            .from(searchTagLink)
+            .innerJoin(searchTag, eq(searchTagLink.tagId, searchTag.id))
+            .where(eq(searchTagLink.recipeId, recipes.id))}, '')), 'B')`
         );
         break;
       case "ingredients":
         parts.push(
-          sql`setweight(to_tsvector('simple', coalesce((
-            SELECT string_agg(search_ri.name, ' ')
-            FROM ${recipeIngredients} search_ri
-            WHERE search_ri.recipe_id = "recipes"."id"
-          ), '')), 'C')`
+          sql`setweight(to_tsvector('simple', coalesce(${qb
+            .select({ text: sql`string_agg(${searchLine.name}, ' ')` })
+            .from(searchLine)
+            .where(eq(searchLine.recipeId, recipes.id))}, '')), 'C')`
         );
         break;
       case "description":
         parts.push(
-          sql`setweight(to_tsvector('simple', coalesce("recipes"."description", '')), 'D')`
+          sql`setweight(to_tsvector('simple', coalesce(${recipes.description}, '')), 'D')`
         );
         break;
       case "steps":
         parts.push(
-          sql`setweight(to_tsvector('simple', coalesce((
-            SELECT string_agg(search_step.step, ' ')
-            FROM ${stepsTable} search_step
-            WHERE search_step.recipe_id = "recipes"."id"
-          ), '')), 'D')`
+          sql`setweight(to_tsvector('simple', coalesce(${qb
+            .select({ text: sql`string_agg(${searchStep.step}, ' ')` })
+            .from(searchStep)
+            .where(eq(searchStep.recipeId, recipes.id))}, '')), 'D')`
         );
         break;
     }
@@ -549,10 +564,14 @@ export async function listRecipes(
     // Same clause the Library union applies, so the favourites toggle means
     // the same thing inside a cookbook as it does on the Library.
     whereConditions.push(
-      sql`EXISTS (
-        SELECT 1 FROM ${recipeFavorites} AS favorite
-        WHERE favorite.recipe_id = "recipes"."id" AND favorite.user_id = ${ctx.userId}
-      )`
+      exists(
+        qb
+          .select({ recipeId: recipeFavorites.recipeId })
+          .from(recipeFavorites)
+          .where(
+            and(eq(recipeFavorites.recipeId, recipes.id), eq(recipeFavorites.userId, ctx.userId))
+          )
+      )
     );
   }
 
@@ -564,15 +583,18 @@ export async function listRecipes(
   }
 
   if (options?.cookbookId) {
-    // `"recipes"."id"` by hand: drizzle renders an interpolated column
-    // unqualified, and inside this subquery an unqualified `"id"` would
-    // resolve to the membership table's own column.
     whereConditions.push(
-      sql`EXISTS (
-        SELECT 1 FROM ${cookbookRecipes} AS membership
-        WHERE membership.cookbook_id = ${options.cookbookId}
-          AND membership.recipe_id = "recipes"."id"
-      )`
+      exists(
+        qb
+          .select({ recipeId: cookbookRecipes.recipeId })
+          .from(cookbookRecipes)
+          .where(
+            and(
+              eq(cookbookRecipes.cookbookId, options.cookbookId),
+              eq(cookbookRecipes.recipeId, recipes.id)
+            )
+          )
+      )
     );
   }
 
@@ -973,7 +995,7 @@ async function switchSystemTx(
       systemUsed: system,
       version: sql`${recipes.version} + 1`,
       ...(originalFrom && {
-        originalSystem: sql`coalesce(${recipes.originalSystem}, ${originalFrom}::measurement_system)`,
+        originalSystem: sql`coalesce(${recipes.originalSystem}, ${originalFrom}::${sql.identifier(measurementSystemEnum.enumName)})`,
       }),
     })
     .where(and(eq(recipes.id, recipeId), version ? eq(recipes.version, version) : undefined))

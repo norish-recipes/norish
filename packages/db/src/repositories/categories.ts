@@ -1,20 +1,24 @@
 import { eq, sql } from "drizzle-orm";
+import { alias, QueryBuilder } from "drizzle-orm/pg-core";
 
 import type { DbTransaction } from "@norish/db/drizzle";
-import { categories, recipeCategories } from "@norish/db/schema";
+import { categories, recipeCategories, recipes } from "@norish/db/schema";
 import { BUILT_IN_CATEGORIES, resolveCategoryName } from "@norish/shared/lib/categories";
 import { BUILT_IN_ALIASES } from "@norish/shared/lib/category-matcher";
 
 import type { EntryWriteOptions } from "./list-entries";
 import { listEntryNames, replaceRecipeEntriesByNameTx } from "./list-entries";
 
+const link = alias(recipeCategories, "link");
+const category = alias(categories, "category");
+
 // A recipe's Category names in order, as a correlated subquery on `"recipes"`:
 // the query using it must not alias the recipes table.
-export const RECIPE_CATEGORY_NAMES_SQL = sql<string[]>`COALESCE((
-  SELECT array_agg(category.name ORDER BY link."order") FROM ${recipeCategories} AS link
-  INNER JOIN ${categories} AS category ON category.id = link.category_id
-  WHERE link.recipe_id = "recipes"."id"
-), '{}')`;
+export const RECIPE_CATEGORY_NAMES_SQL = sql<string[]>`COALESCE(${new QueryBuilder()
+  .select({ names: sql`array_agg(${category.name} ORDER BY ${link.order})` })
+  .from(link)
+  .innerJoin(category, eq(category.id, link.categoryId))
+  .where(eq(link.recipeId, recipes.id))}, '{}')`;
 
 /** The Categories a household is offered: the built-ins in their order, then its own (ADR-0040). */
 export async function listCategoryNamesForHousehold(householdId: string): Promise<string[]> {
