@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, notInArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, notExists, notInArray, sql } from "drizzle-orm";
 
 import type {
   CaldavSyncStatus,
@@ -72,6 +72,27 @@ export async function getCaldavSyncStatusByItemId(
   return validated.data;
 }
 
+/** The account's statuses, less those of entries that stayed in a household it has left. */
+function shownTo(userId: string, statusFilter?: CaldavSyncStatus[]) {
+  return and(
+    eq(caldavSyncStatus.userId, userId),
+    statusFilter && statusFilter.length > 0
+      ? inArray(caldavSyncStatus.syncStatus, statusFilter)
+      : undefined,
+    notExists(
+      db
+        .select({ id: plannedItems.id })
+        .from(plannedItems)
+        .where(
+          and(
+            eq(plannedItems.id, caldavSyncStatus.plannedItemId),
+            notInArray(plannedItems.householdId, currentHouseholdIdSql(userId))
+          )
+        )
+    )
+  );
+}
+
 export async function getCaldavSyncStatusesByUser(
   userId: string,
   statusFilter?: CaldavSyncStatus[],
@@ -80,7 +101,7 @@ export async function getCaldavSyncStatusesByUser(
 ): Promise<{ items: CaldavSyncStatusViewDto[]; total: number }> {
   const offset = (page - 1) * pageSize;
 
-  let query = db
+  const items = await db
     .select({
       id: caldavSyncStatus.id,
       userId: caldavSyncStatus.userId,
@@ -100,42 +121,16 @@ export async function getCaldavSyncStatusesByUser(
       itemSlot: plannedItems.slot,
     })
     .from(caldavSyncStatus)
-    // An entry of a household the account has left shows no live date or slot.
-    .leftJoin(
-      plannedItems,
-      and(
-        eq(caldavSyncStatus.plannedItemId, plannedItems.id),
-        inArray(plannedItems.householdId, currentHouseholdIdSql(userId))
-      )
-    )
-    .where(eq(caldavSyncStatus.userId, userId))
-    .$dynamic();
-
-  if (statusFilter && statusFilter.length > 0) {
-    query = query.where(
-      and(eq(caldavSyncStatus.userId, userId), inArray(caldavSyncStatus.syncStatus, statusFilter))
-    );
-  }
-
-  const items = await query
+    .leftJoin(plannedItems, eq(caldavSyncStatus.plannedItemId, plannedItems.id))
+    .where(shownTo(userId, statusFilter))
     .orderBy(desc(caldavSyncStatus.createdAt))
     .limit(pageSize)
     .offset(offset);
 
-  // Get total count
-  let countQuery = db
+  const countRows = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(caldavSyncStatus)
-    .where(eq(caldavSyncStatus.userId, userId))
-    .$dynamic();
-
-  if (statusFilter && statusFilter.length > 0) {
-    countQuery = countQuery.where(
-      and(eq(caldavSyncStatus.userId, userId), inArray(caldavSyncStatus.syncStatus, statusFilter))
-    );
-  }
-
-  const countRows = await countQuery;
+    .where(shownTo(userId, statusFilter));
   const count = countRows[0]?.count ?? 0;
 
   const viewItems: CaldavSyncStatusViewDto[] = items.map((item) => ({
@@ -236,7 +231,7 @@ export async function getSyncStatusSummary(
       count: sql<number>`count(*)::int`,
     })
     .from(caldavSyncStatus)
-    .where(eq(caldavSyncStatus.userId, userId))
+    .where(shownTo(userId))
     .groupBy(caldavSyncStatus.syncStatus);
 
   const summary = {

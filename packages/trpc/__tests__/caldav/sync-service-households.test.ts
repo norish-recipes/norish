@@ -116,14 +116,17 @@ describe("CalDAV bulk sync across households", () => {
     return item;
   }
 
-  it("shows a former member no date or slot of the household they left", async () => {
-    const left = await synced(member, "Soep");
-
+  it("lists and counts a former member none of the household they left", async () => {
+    await synced(member, "Soep");
     await households.moveToHouseholdOfOne(household, member);
+    household = await helpers.householdIdOf(member);
+    const mine = await synced(member, "Eigen");
 
-    const { items } = await statuses.getCaldavSyncStatusesByUser(member);
-
-    expect(items).toEqual([expect.objectContaining({ itemId: left.id, date: null, slot: null })]);
+    expect(await statuses.getCaldavSyncStatusesByUser(member)).toEqual({
+      items: [expect.objectContaining({ itemId: mine.id, eventTitle: "Eigen" })],
+      total: 1,
+    });
+    expect(await statuses.getSyncStatusSummary(member)).toMatchObject({ synced: 1 });
   });
 
   it("on leaving, takes only the left household's synced entries off the calendar", async () => {
