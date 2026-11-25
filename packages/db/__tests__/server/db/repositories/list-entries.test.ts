@@ -23,8 +23,14 @@ import {
   replaceRecipeEntriesByNameTx,
   replaceRecipeEntryIdsTx,
 } from "@norish/db/repositories/list-entries";
-import { getRecipeFull, listRecipes } from "@norish/db/repositories/recipes";
+import {
+  createRecipeWithRefs,
+  getRecipeFull,
+  listRecipes,
+  updateRecipeWithRefs,
+} from "@norish/db/repositories/recipes";
 import { appendRecipeTags } from "@norish/db/repositories/tags";
+import { FullRecipeInsertSchema } from "@norish/shared/contracts/zod";
 
 import {
   createTestRecipe,
@@ -122,6 +128,69 @@ describe("household lists", () => {
     expect(await tagsOf(ann.recipe)).toEqual(["SOJA"]);
     expect((await getRecipeFull(ann.recipe))?.categories).toEqual(["Dinner"]);
     expect((await listEntries("category", ann.household)).filter((e) => !e.instance)).toEqual([]);
+  });
+
+  describe("a recipe save from an editor", () => {
+    const names = (kind: "tag" | "category") =>
+      listEntries(kind, ann.household).then((entries) =>
+        entries.filter((entry) => !entry.instance).map((entry) => entry.name)
+      );
+
+    it("attaches the entries the list has and creates none, neither on update nor on create", async () => {
+      await addEntry("tag", ann.household, "Quick");
+
+      await updateRecipeWithRefs(
+        ann.recipe,
+        ann.id,
+        { tags: [{ name: "quick" }, { name: "Typed" }], categories: ["Typed category"] },
+        undefined,
+        { createEntries: false }
+      );
+
+      expect(await tagsOf(ann.recipe)).toEqual(["Quick"]);
+      expect(await names("tag")).toEqual(["Quick"]);
+      expect(await names("category")).toEqual([]);
+
+      const recipeId = crypto.randomUUID();
+
+      await createRecipeWithRefs(
+        recipeId,
+        ann.id,
+        FullRecipeInsertSchema.parse({
+          name: "Soup",
+          servings: 2,
+          systemUsed: "metric",
+          tags: [{ name: "Typed" }],
+        }),
+        { createEntries: false }
+      );
+
+      expect(await tagsOf(recipeId)).toEqual([]);
+      expect(await names("tag")).toEqual(["Quick"]);
+    });
+
+    it("does not bring back a name that was deleted while the editor was open", async () => {
+      const { entry } = (await addEntry("tag", ann.household, "Gone"))!;
+
+      await deleteEntry("tag", ann.household, { id: entry.id, version: entry.version });
+      await updateRecipeWithRefs(ann.recipe, ann.id, { tags: [{ name: "Gone" }] }, undefined, {
+        createEntries: false,
+      });
+
+      expect(await tagsOf(ann.recipe)).toEqual([]);
+      expect(await names("tag")).toEqual([]);
+    });
+
+    it("still creates for the callers that do not say otherwise: imports, AI and the REST routes", async () => {
+      await updateRecipeWithRefs(ann.recipe, ann.id, {
+        tags: [{ name: "Typed" }],
+        categories: ["Typed category"],
+      });
+
+      expect(await tagsOf(ann.recipe)).toEqual(["Typed"]);
+      expect(await names("tag")).toEqual(["Typed"]);
+      expect(await names("category")).toEqual(["Typed category"]);
+    });
   });
 
   it("refuses another household's Cuisine on a recipe, but keeps one the recipe carries", async () => {

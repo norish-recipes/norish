@@ -34,6 +34,7 @@ import { hasSearchText, searchTerms } from "@norish/shared/lib/search-terms";
 import { normalizeUnit } from "@norish/shared/lib/unit-localization";
 
 import type { IngredientResolutions, LineFoods, NewRecipeLine } from "./ingredients";
+import type { EntryWriteOptions } from "./list-entries";
 import type { MutationOutcome } from "./mutation-outcomes";
 import type { StepInsertWithImages } from "./steps";
 import {
@@ -804,7 +805,8 @@ function galleryMedia(
 export async function createRecipeWithRefs(
   recipeId: string,
   userId: string,
-  input: WithIngredientResolutions<FullRecipeInsertDTO>
+  input: WithIngredientResolutions<FullRecipeInsertDTO>,
+  entryOptions: EntryWriteOptions = {}
 ): Promise<CreateRecipeResult | null> {
   const resolutions = input.ingredientResolutions;
   const parsed = FullRecipeInsertSchema.safeParse(input);
@@ -884,7 +886,8 @@ export async function createRecipeWithRefs(
         tx,
         "tag",
         rid,
-        payload.tags.map((t) => t.name)
+        payload.tags.map((t) => t.name),
+        entryOptions
       );
     }
 
@@ -893,7 +896,7 @@ export async function createRecipeWithRefs(
     }
 
     if (payload.categories.length) {
-      await attachCategoriesToRecipeByInputTx(tx, rid, payload.categories);
+      await attachCategoriesToRecipeByInputTx(tx, rid, payload.categories, entryOptions);
     }
 
     if (payload.recipeIngredients.length) {
@@ -1620,7 +1623,8 @@ export async function updateRecipeWithRefs(
   recipeId: string,
   userId: string,
   input: WithIngredientResolutions<FullRecipeUpdateDTO>,
-  version?: number
+  version?: number,
+  entryOptions: EntryWriteOptions = {}
 ): Promise<MutationOutcome<number | null>> {
   const resolutions = input.ingredientResolutions;
   const parsed = FullRecipeUpdateSchema.safeParse(input);
@@ -1693,7 +1697,7 @@ export async function updateRecipeWithRefs(
 
     // An empty list leaves the Categories alone, as it always has.
     if (payload.categories?.length) {
-      await attachCategoriesToRecipeByInputTx(tx, recipeId, payload.categories);
+      await attachCategoriesToRecipeByInputTx(tx, recipeId, payload.categories, entryOptions);
     }
 
     // Replace tags if provided
@@ -1702,7 +1706,8 @@ export async function updateRecipeWithRefs(
         tx,
         "tag",
         recipeId,
-        payload.tags.map((t) => t.name)
+        payload.tags.map((t) => t.name),
+        entryOptions
       );
     }
 

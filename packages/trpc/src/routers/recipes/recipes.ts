@@ -3,6 +3,7 @@ import { setTimeout as sleep } from "node:timers/promises";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import type { EntryWriteOptions } from "@norish/db/repositories/list-entries";
 import type { FullRecipeDTO } from "@norish/shared/contracts";
 import type { RecipeEnrichmentSkipReason } from "@norish/shared/lib/recipe-enrichment";
 import { isAIEnabled as checkAIEnabled } from "@norish/auth/permissions";
@@ -242,9 +243,18 @@ export const createRecipeProcedure = authedProcedure
       },
     },
   })
-  .input(FullRecipeInsertSchema)
+  .input(
+    FullRecipeInsertSchema.extend({
+      createEntries: z
+        .boolean()
+        .default(true)
+        .describe(
+          "Whether a tag or category name the household's list lacks is created. Send false to attach only entries the list has."
+        ),
+    })
+  )
   .output(z.uuid())
-  .mutation(async ({ ctx, input }) => {
+  .mutation(async ({ ctx, input: { createEntries, ...input } }) => {
     const recipeId = input.id ?? randomUUID();
 
     log.info(
@@ -261,9 +271,13 @@ export const createRecipeProcedure = authedProcedure
         throw new TRPCError({ code: "NOT_FOUND", message: "Not found" });
       }
 
-      return createResolvedRecipe(recipeId, ctx.user.id, await withDishColor(input), {
-        userId: ctx.user.id,
-      });
+      return createResolvedRecipe(
+        recipeId,
+        ctx.user.id,
+        await withDishColor(input),
+        { userId: ctx.user.id },
+        { createEntries }
+      );
     }).catch((err: unknown) => {
       log.error({ err, userId: ctx.user.id, recipeId }, "Failed to create recipe");
       throw err;
@@ -300,7 +314,8 @@ export const createRecipeProcedure = authedProcedure
 /** Apply an edit and announce it; a stale `version` changes nothing and returns no recipe. */
 async function applyRecipeUpdate(
   ctx: RecipeUserContext,
-  { id, data, version }: z.infer<typeof RecipeUpdateInputSchema>
+  { id, data, version }: z.infer<typeof RecipeUpdateInputSchema>,
+  entryOptions: EntryWriteOptions
 ) {
   log.info({ userId: ctx.user.id, recipeId: id }, "Updating recipe");
   log.debug({ recipe: data }, "Full recipe data");
@@ -314,7 +329,8 @@ async function applyRecipeUpdate(
     ctx.user.id,
     await withDishColorForUpdate(data),
     { userId: ctx.user.id },
-    version
+    version,
+    entryOptions
   );
 
   if (result.stale) {
@@ -332,11 +348,14 @@ async function applyRecipeUpdate(
 }
 
 // Answers once stored, with the stored version; a failure rejects, so the client rolls back.
+// The editors' save: it attaches the entries their pickers created, and creates none itself.
 const update = authedProcedure.input(RecipeUpdateInputSchema).mutation(async ({ ctx, input }) => {
-  const result = await applyRecipeUpdate(ctx, input).catch((err: unknown) => {
-    log.error({ err, userId: ctx.user.id, recipeId: input.id }, "Failed to update recipe");
-    throw err;
-  });
+  const result = await applyRecipeUpdate(ctx, input, { createEntries: false }).catch(
+    (err: unknown) => {
+      log.error({ err, userId: ctx.user.id, recipeId: input.id }, "Failed to update recipe");
+      throw err;
+    }
+  );
 
   return { stale: result.stale, version: result.version };
 });
@@ -365,7 +384,7 @@ export const updateRecipeProcedure = authedProcedure
       throw new TRPCError({ code: "NOT_FOUND", message: "Recipe not found" });
     }
 
-    return applyRecipeUpdate(ctx, input);
+    return applyRecipeUpdate(ctx, input, { createEntries: true });
   });
 
 const updateCategories = authedProcedure

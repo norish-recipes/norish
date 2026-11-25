@@ -237,18 +237,25 @@ export async function entriesByFoldTx(
   return found;
 }
 
+/** Whether a recipe write creates the entries its names lack (default) or attaches only the ones
+ * the list has: the editors attach, since they create through `lists.add`. */
+export interface EntryWriteOptions {
+  createEntries?: boolean;
+}
+
 /** Replaces a recipe's entries with `names`, in order, from the recipe's household's list. */
 export async function replaceRecipeEntriesByNameTx(
   tx: DbTransaction,
   kind: ListKind,
   recipeId: string,
-  names: readonly string[]
+  names: readonly string[],
+  { createEntries = true }: EntryWriteOptions = {}
 ): Promise<void> {
   const householdId = await recipeHouseholdId(recipeId, tx);
 
   if (!householdId) return;
 
-  const entries = await entriesByFoldTx(tx, kind, householdId, names, { create: true });
+  const entries = await entriesByFoldTx(tx, kind, householdId, names, { create: createEntries });
   const ids = names.flatMap((name) => entries.get(entryName(name)?.fold ?? "")?.id ?? []);
 
   await writeRecipeLinksTx(tx, kind, recipeId, ids);

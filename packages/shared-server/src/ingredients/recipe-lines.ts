@@ -1,5 +1,6 @@
 import type { RecipeLineAlias } from "@norish/db/repositories/ingredient-aliases";
 import type { LineResolution } from "@norish/db/repositories/ingredients";
+import type { EntryWriteOptions } from "@norish/db/repositories/list-entries";
 import type { MutationOutcome } from "@norish/db/repositories/mutation-outcomes";
 import type {
   CreateRecipeResult,
@@ -122,11 +123,12 @@ export function createResolvedRecipe(
   recipeId: string,
   userId: string,
   payload: FullRecipeInsertDTO,
-  actor: ResolveActor
+  actor: ResolveActor,
+  entryOptions?: EntryWriteOptions
 ): Promise<CreateRecipeResult | null> {
   return writeResolved(
     () => withResolvedIngredients(payload, actor),
-    (resolved) => createRecipeWithRefs(recipeId, userId, resolved)
+    (resolved) => createRecipeWithRefs(recipeId, userId, resolved, entryOptions)
   ).then(async (created) => {
     // Its Tags, Cuisines and Categories may be new entries, and count one recipe more.
     if (created?.status === "inserted") await announceRecipeListsChanged(created.recipeId);
@@ -141,11 +143,12 @@ export function updateResolvedRecipe(
   userId: string,
   payload: FullRecipeUpdateDTO,
   actor: ResolveActor,
-  version?: number
+  version?: number,
+  entryOptions?: EntryWriteOptions
 ): Promise<MutationOutcome<number | null>> {
   return writeResolved(
     () => withResolvedIngredients(payload, actor, recipeId),
-    (resolved) => updateRecipeWithRefs(recipeId, userId, resolved, version)
+    (resolved) => updateRecipeWithRefs(recipeId, userId, resolved, version, entryOptions)
   ).then(async (updated) => {
     if (updated.applied) await announceRecipeListsChanged(recipeId);
 

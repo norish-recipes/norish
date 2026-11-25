@@ -5,6 +5,7 @@ import { categories, recipeCategories } from "@norish/db/schema";
 import { BUILT_IN_CATEGORIES, resolveCategoryName } from "@norish/shared/lib/categories";
 import { BUILT_IN_ALIASES } from "@norish/shared/lib/category-matcher";
 
+import type { EntryWriteOptions } from "./list-entries";
 import { listEntryNames, replaceRecipeEntriesByNameTx } from "./list-entries";
 
 // A recipe's Category names in order, as a correlated subquery on `"recipes"`:
@@ -44,9 +45,10 @@ export async function recipeHasCategoriesTx(tx: DbTransaction, recipeId: string)
 export async function attachCategoriesToRecipeByInputTx(
   tx: DbTransaction,
   recipeId: string,
-  names: readonly string[]
+  names: readonly string[],
+  options: EntryWriteOptions = {}
 ): Promise<void> {
   const resolved = names.map((name) => resolveCategoryName(name, BUILT_IN_ALIASES, []));
 
-  await replaceRecipeEntriesByNameTx(tx, "category", recipeId, resolved);
+  await replaceRecipeEntriesByNameTx(tx, "category", recipeId, resolved, options);
 }

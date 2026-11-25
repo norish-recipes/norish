@@ -259,6 +259,20 @@ describe("recipes procedures", () => {
       );
     });
 
+    it("creates the entries it names unless told to attach only", async () => {
+      createRecipeWithRefs.mockResolvedValue({ status: "inserted", recipeId });
+      dashboardRecipe.mockResolvedValue(createMockRecipeDashboard({ id: recipeId }));
+
+      await createCaller().create(input);
+      await createCaller().create({ ...input, createEntries: false });
+
+      expect(createRecipeWithRefs.mock.calls.map((call) => call[3])).toEqual([
+        { createEntries: true },
+        { createEntries: false },
+      ]);
+      expect(createRecipeWithRefs.mock.calls[1]?.[2]).not.toHaveProperty("createEntries");
+    });
+
     it("answers a replayed create whose id is already stored", async () => {
       createRecipeWithRefs.mockResolvedValue({ status: "existing", recipeId });
       dashboardRecipe.mockResolvedValue(null);
@@ -308,7 +322,8 @@ describe("recipes procedures", () => {
         recipeId,
         ctx.user.id,
         expect.objectContaining({ name: "Renamed" }),
-        1
+        1,
+        { createEntries: true }
       );
       expect(result).toEqual({ recipe: edited, stale: false });
       expect(recipes.publish).toHaveBeenCalledWith(
@@ -423,7 +438,8 @@ describe("recipes procedures", () => {
         expect.objectContaining({
           images: [{ image: recipeImage, order: 0 }],
           dishColor: EXTRACTED_DISH_COLOR,
-        })
+        }),
+        { createEntries: true }
       );
     });
 
@@ -446,8 +462,23 @@ describe("recipes procedures", () => {
           images: [{ image: recipeImage, order: 0 }],
           dishColor: EXTRACTED_DISH_COLOR,
         }),
-        1
+        1,
+        { createEntries: false }
       );
+    });
+
+    it("the editor's save creates no entry", async () => {
+      everyRecipeIn(ctx.householdId);
+      updateRecipeWithRefs.mockResolvedValue({ stale: false });
+      getRecipeFull.mockResolvedValue(null);
+
+      await createCaller().update({
+        id: "55555555-5555-4555-8555-555555555555",
+        data: { tags: [{ name: "x" }] },
+        version: 1,
+      });
+      await vi.waitFor(() => expect(updateRecipeWithRefs).toHaveBeenCalledTimes(1));
+      expect(updateRecipeWithRefs.mock.calls[0]?.[4]).toEqual({ createEntries: false });
     });
 
     it("answers an edit once it is stored, so the next queued edit finds its version", async () => {
