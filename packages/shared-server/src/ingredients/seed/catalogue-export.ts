@@ -85,11 +85,15 @@ function exported<T>(fact: NutritionFact<T> | null): ExportedFact<T> | null {
 }
 
 /**
- * The whole catalogue (Ingredients, spellings, parents, nutrition codes and numbers) as the copy
- * the ODbL asks for (ADR-0038, ADR-0039); no owners, no household corrections.
+ * The seed and the reader's household's own catalogue (Ingredients, spellings, parents, nutrition
+ * codes and numbers) as the copy the ODbL asks for (ADR-0038, ADR-0039, ADR-0042); no owners, no
+ * household corrections.
  */
-export async function buildCatalogueExport(exportedAt: Date): Promise<CatalogueExport> {
-  const { ingredients, aliases } = await listCatalogueForExport();
+export async function buildCatalogueExport(
+  householdId: string,
+  exportedAt: Date
+): Promise<CatalogueExport> {
+  const { ingredients, aliases } = await listCatalogueForExport(householdId);
   const nutrition = await resolveIngredientNutrition(
     ingredients.map((ingredient) => ingredient.id),
     NO_CORRECTIONS
