@@ -115,9 +115,11 @@ export function holds(text: SQL, word: string, start = false): SQL {
 
 /** The rank's folded name, joined laterally once a matched row (`offset 0` keeps Postgres from
  * inlining it into every use). */
+const SEARCHED = sql.identifier("searched");
+const SEARCHED_NAME = sql.identifier("name");
 const searchedName = {
-  join: sql`(select ${folded(ingredients.name)} as name offset 0) searched`,
-  fold: sql.raw("searched.name"),
+  join: sql`(select ${folded(ingredients.name)} as ${SEARCHED_NAME} offset 0) ${SEARCHED}`,
+  fold: sql`${SEARCHED}.${SEARCHED_NAME}`,
 };
 
 /** A searched text (the name, its translations, the parent's) that is the fold exactly, or
