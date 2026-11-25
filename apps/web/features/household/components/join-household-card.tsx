@@ -10,6 +10,8 @@ import { useTranslations } from "next-intl";
 
 import { useHouseholdMutations } from "@norish/shared-react/reader";
 
+const CODE_SLOTS = [0, 1, 2, 3, 4, 5] as const;
+
 export default function JoinHouseholdCard() {
   const t = useTranslations("settings.household");
   const { joinHousehold } = useHouseholdMutations();
@@ -33,13 +35,11 @@ export default function JoinHouseholdCard() {
             <InputOTP.Group className="justify-start gap-2">
               {/* Secondary-input fill, no shadow: the plain field fill is white
                       and would vanish against the white card. */}
-              {Array.from({ length: 6 }).map((_, index) => (
+              {CODE_SLOTS.map((slot) => (
                 <InputOTP.Slot
-                  // A code slot is its position.
-                  // eslint-disable-next-line @eslint-react/no-array-index-key
-                  key={index}
+                  key={slot}
                   className="border-field-border bg-default text-foreground hover:bg-default data-[active=true]:bg-default data-[filled=true]:bg-default h-12 w-10 flex-none shadow-none"
-                  index={index}
+                  index={slot}
                 />
               ))}
             </InputOTP.Group>
