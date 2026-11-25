@@ -75,16 +75,40 @@ const shouldDehydrateQuery = (query: { queryKey: readonly unknown[]; state: { da
   !isSearchListRead(query.queryKey);
 
 /** The engine's QueryClient defaults; a client renders its server pass with its own copy. */
+/** The id a read names in its input, as `recipes.get` and `cookbooks.get` do. */
+const readIdOf = (queryKey: readonly unknown[]) =>
+  (queryKey[1] as { input?: { id?: unknown } } | undefined)?.input?.id;
+
 export function createOfflineQueryClient({
   refetchOnMount = true,
-}: { refetchOnMount?: RefetchOnMount } = {}): QueryClient {
-  const queryClient = new QueryClient({
+  outbox,
+}: {
+  refetchOnMount?: RefetchOnMount;
+  outbox?: Pick<OfflineStorage["outbox"], "all">;
+} = {}): QueryClient {
+  // Whether a create the server has not got yet, in flight or queued, makes this id.
+  const awaitsCreate = async (id: unknown) =>
+    typeof id === "string" &&
+    (queryClient
+      .getMutationCache()
+      .findAll({ status: "pending" })
+      .some((mutation) => (mutation.state.variables as { id?: unknown } | undefined)?.id === id) ||
+      ((await outbox?.all()) ?? []).some((entry) => entry.entityId === id));
+
+  const queryClient: QueryClient = new QueryClient({
     queryCache: new QueryCache({
-      // A refused read keeps no copy, here or stored: after a policy or membership change too.
+      // A refused read keeps no copy, here or stored, unless it is a create not stored yet.
       onError: (error, query) => {
-        if (isNotFoundError(error) && query.state.data !== undefined) {
-          query.setState({ data: undefined, dataUpdatedAt: 0 });
-        }
+        if (!isNotFoundError(error) || query.state.data === undefined) return;
+
+        const refusedAt = query.state.dataUpdatedAt;
+
+        void awaitsCreate(readIdOf(query.queryKey)).then((pending) => {
+          // A read answered since keeps its answer.
+          if (!pending && query.state.dataUpdatedAt === refusedAt) {
+            query.setState({ data: undefined, dataUpdatedAt: 0 });
+          }
+        });
       },
     }),
     defaultOptions: {
@@ -192,7 +216,7 @@ export function createCacheManager({
   const { keyval, lastOwner } = storage;
   let bootOwner = lastOwner.get();
   const queryStore = createQueryStore(keyval);
-  const queryClient = createOfflineQueryClient({ refetchOnMount });
+  const queryClient = createOfflineQueryClient({ refetchOnMount, outbox: storage.outbox });
 
   let appliedOwner: string | null = null;
   let unsubscribe: (() => void) | null = null;

@@ -365,6 +365,63 @@ describe("createCacheManager", () => {
     expect(await persisted(storage, "u1")).toHaveLength(1);
   });
 
+  it("keeps the optimistic read of a create still on its way when the server has not got it", async () => {
+    const manager = createManager();
+    const key = [["recipes", "get"], { input: { id: "r1" }, type: "query" }];
+    const optimistic = { id: "r1", name: "Made offline" };
+    const notFound = TRPCClientError.from({
+      error: { message: "Not found", code: -32004, data: { code: "NOT_FOUND", httpStatus: 404 } },
+    });
+    const refused = async () => {
+      await expect(
+        manager.queryClient.fetchQuery({
+          queryKey: key,
+          queryFn: () => Promise.reject(notFound),
+          retry: false,
+          staleTime: 0,
+        })
+      ).rejects.toBe(notFound);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    };
+
+    await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+    manager.queryClient.setQueryData(key, optimistic);
+
+    // Queued in the Outbox.
+    const seq = await storage.outbox.add({
+      id: "e1",
+      ownerId: "u1",
+      path: "recipes.create",
+      input: { id: "r1" },
+      entityId: "r1",
+      operationId: null,
+      headers: {},
+      createdAt: new Date().toISOString(),
+      attempts: 0,
+      status: "pending",
+    });
+
+    await refused();
+    expect(manager.queryClient.getQueryData(key)).toEqual(optimistic);
+    await storage.outbox.remove(seq);
+
+    // In flight.
+    const sent = Promise.withResolvers<void>();
+    const create = manager.queryClient
+      .getMutationCache()
+      .build(manager.queryClient, { mutationFn: () => sent.promise });
+    const done = create.execute({ id: "r1" });
+
+    await refused();
+    expect(manager.queryClient.getQueryData(key)).toEqual(optimistic);
+    sent.resolve();
+    await done;
+
+    // Nothing pending: the refusal drops it.
+    await refused();
+    expect(manager.queryClient.getQueryData(key)).toBeUndefined();
+  });
+
   it("never persists a mutation waiting behind another in its scope (the Outbox is the queue)", async () => {
     const manager = createManager();
     const scope = { id: "plan-writes" };
