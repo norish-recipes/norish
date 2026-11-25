@@ -552,11 +552,8 @@ export interface AccountDeletion {
   notes: Array<typeof plannedItems.$inferSelect>;
 }
 
-/**
- * Deletes an account under its household's lock: the admin role passes to the longest-standing
- * member, or the household goes with its last member. The account's recipes and cookbooks cascade
- * away, and every plan entry for one of those recipes becomes a note first.
- */
+/** Deletes an account under its household's lock, handing the admin role on or taking a last
+ * member's household along; plans of its recipes become notes before they cascade away. */
 export async function deleteAccount(userId: string): Promise<AccountDeletion> {
   const deletion = await retryWhileMoved(MOVED, async (tx) => {
     const household = await lockHouseholdOf(tx, userId);
