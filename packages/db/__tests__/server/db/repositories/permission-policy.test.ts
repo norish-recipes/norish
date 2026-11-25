@@ -17,7 +17,11 @@ import {
   listCookbooks,
   listEditableCookbooks,
 } from "@norish/db/repositories/cookbooks";
-import { setFavorite } from "@norish/db/repositories/favorites";
+import {
+  getFavoriteRecipesWithVersions,
+  getFavoritesByRecipeIds,
+  setFavorite,
+} from "@norish/db/repositories/favorites";
 import { listLibrary } from "@norish/db/repositories/library";
 import {
   findExistingRecipe,
@@ -191,9 +195,15 @@ describe("the Permission Policy over two households", () => {
 
     await setView("household");
     expect(await favourites()).toEqual([]);
+    expect(await getFavoriteRecipesWithVersions(viewer(ann))).toEqual([]);
+    expect(await getFavoritesByRecipeIds(viewer(ann), [stew])).toEqual(new Set());
 
     await setView("everyone");
     expect(await favourites()).toEqual([stew]);
+    expect((await getFavoriteRecipesWithVersions(viewer(ann))).map((f) => f.recipeId)).toEqual([
+      stew,
+    ]);
+    expect(await getFavoritesByRecipeIds(viewer(ann), [stew])).toEqual(new Set([stew]));
     expect((await listCookbookMemberIds(annsCookbook)).sort()).toEqual([soup, stew].sort());
   });
 

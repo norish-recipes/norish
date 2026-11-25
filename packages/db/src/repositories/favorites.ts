@@ -3,8 +3,10 @@ import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@norish/db/drizzle";
 
 import type { MutationOutcome } from "./mutation-outcomes";
-import { recipeFavorites } from "../schema";
+import type { RecipeListContext } from "./recipes";
+import { recipeFavorites, recipes } from "../schema";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
+import { buildPolicyCondition } from "./recipes";
 
 export async function addFavorite(userId: string, recipeId: string): Promise<void> {
   await db
@@ -52,58 +54,25 @@ export async function setFavorite(
   return appliedOutcome({ isFavorite: false });
 }
 
-export async function toggleFavorite(
-  userId: string,
-  recipeId: string,
-  _version?: number
-): Promise<{ isFavorite: boolean }> {
-  const existing = await db
-    .select({ id: recipeFavorites.id })
-    .from(recipeFavorites)
-    .where(and(eq(recipeFavorites.userId, userId), eq(recipeFavorites.recipeId, recipeId)))
-    .limit(1);
-
-  if (existing.length > 0) {
-    await removeFavorite(userId, recipeId);
-
-    return { isFavorite: false };
-  } else {
-    await addFavorite(userId, recipeId);
-
-    return { isFavorite: true };
-  }
-}
-
-export async function isFavorite(userId: string, recipeId: string): Promise<boolean> {
-  const result = await db
-    .select({ id: recipeFavorites.id })
-    .from(recipeFavorites)
-    .where(and(eq(recipeFavorites.userId, userId), eq(recipeFavorites.recipeId, recipeId)))
-    .limit(1);
-
-  return result.length > 0;
-}
-
-export async function getFavoriteRecipeIds(userId: string): Promise<string[]> {
-  const results = await db
-    .select({ recipeId: recipeFavorites.recipeId })
-    .from(recipeFavorites)
-    .where(eq(recipeFavorites.userId, userId));
-
-  return results.map((r) => r.recipeId);
-}
-
+/** The reader's favourites they may view now; one out of view comes back when the policy widens. */
 export async function getFavoriteRecipesWithVersions(
-  userId: string
+  viewer: RecipeListContext
 ): Promise<Array<{ recipeId: string; version: number }>> {
   return await db
     .select({ recipeId: recipeFavorites.recipeId, version: recipeFavorites.version })
     .from(recipeFavorites)
-    .where(eq(recipeFavorites.userId, userId));
+    .innerJoin(recipes, eq(recipes.id, recipeFavorites.recipeId))
+    .where(
+      and(
+        eq(recipeFavorites.userId, viewer.userId),
+        await buildPolicyCondition(viewer, recipes.householdId, "view")
+      )
+    );
 }
 
+/** Which of these recipes the reader favourited and may view now. */
 export async function getFavoritesByRecipeIds(
-  userId: string,
+  viewer: RecipeListContext,
   recipeIds: string[]
 ): Promise<Set<string>> {
   if (recipeIds.length === 0) return new Set();
@@ -111,7 +80,14 @@ export async function getFavoritesByRecipeIds(
   const results = await db
     .select({ recipeId: recipeFavorites.recipeId })
     .from(recipeFavorites)
-    .where(and(eq(recipeFavorites.userId, userId), inArray(recipeFavorites.recipeId, recipeIds)));
+    .innerJoin(recipes, eq(recipes.id, recipeFavorites.recipeId))
+    .where(
+      and(
+        eq(recipeFavorites.userId, viewer.userId),
+        inArray(recipeFavorites.recipeId, recipeIds),
+        await buildPolicyCondition(viewer, recipes.householdId, "view")
+      )
+    );
 
   return new Set(results.map((r) => r.recipeId));
 }

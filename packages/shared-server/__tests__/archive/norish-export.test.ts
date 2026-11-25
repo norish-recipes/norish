@@ -144,7 +144,10 @@ describe("norish export service", () => {
 
     // The marks are read for the exporting user, never for the household
     expect(mockGetUserRatingsByRecipeIds).toHaveBeenCalledWith("user-1", [RECIPE_A, RECIPE_B]);
-    expect(mockGetFavoritesByRecipeIds).toHaveBeenCalledWith("user-1", [RECIPE_A, RECIPE_B]);
+    expect(mockGetFavoritesByRecipeIds).toHaveBeenCalledWith(
+      { userId: "user-1", householdId: "household-1" },
+      [RECIPE_A, RECIPE_B]
+    );
 
     const recipeA = JSON.parse(await zip.file(`${RECIPE_A}/recipe.json`)!.async("string"));
     const recipeB = JSON.parse(await zip.file(`${RECIPE_B}/recipe.json`)!.async("string"));

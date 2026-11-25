@@ -6,15 +6,23 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { trpcLogger } from "@norish/shared-server/logger";
 import { ratingsProcedures } from "@norish/trpc/routers/ratings/ratings";
 
+import { policy, resetPermissionsMocks } from "../mocks/permissions";
 import {
   getAverageRating,
   getUserRating,
   getUserRatingWithVersion,
   rateRecipe,
 } from "../mocks/ratings-repository";
+import { everyRecipeIn, resetRecipesMocks } from "../mocks/recipes-repository";
 import { createMockAuthedContext, createMockHousehold, createMockUser } from "./test-utils";
 
 vi.mock("@norish/db/repositories/ratings", () => import("../mocks/ratings-repository"));
+vi.mock("@norish/db", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/db")>()),
+  getRecipeHouseholdIds: (await import("../mocks/recipes-repository")).getRecipeHouseholdIds,
+}));
+vi.mock("@norish/db/repositories/recipes", () => import("../mocks/recipes-repository"));
+vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
 vi.mock("@norish/shared-server/realtime/ratings", () => import("../mocks/realtime/ratings"));
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   getRecipePermissionPolicy: vi.fn().mockResolvedValue({ view: "household" }),
@@ -34,6 +42,9 @@ describe("ratings procedures", () => {
   let ctx: ReturnType<typeof createMockAuthedContext>;
 
   beforeEach(() => {
+    resetPermissionsMocks();
+    resetRecipesMocks();
+    everyRecipeIn("another-household");
     ctx = createMockAuthedContext(mockUser, mockHousehold);
   });
 
@@ -120,6 +131,40 @@ describe("ratings procedures", () => {
 
       expect(result.averageRating).toBeNull();
       expect(result.ratingCount).toBe(0);
+    });
+  });
+
+  describe("a recipe out of view", () => {
+    beforeEach(() => {
+      policy.view = "household";
+    });
+
+    it("is never rated, and answers as a gone one", async () => {
+      const caller = ratingsProcedures.createCaller(ctx as never);
+      const recipeId = crypto.randomUUID();
+
+      await expect(caller.rate({ recipeId, rating: 4 })).rejects.toMatchObject({
+        code: "NOT_FOUND",
+      });
+      expect(rateRecipe).not.toHaveBeenCalled();
+    });
+
+    it("reads as never rated, its own rating kept", async () => {
+      const caller = ratingsProcedures.createCaller(ctx as never);
+      const recipeId = crypto.randomUUID();
+
+      getAverageRating.mockClear();
+      await expect(caller.getUserRating({ recipeId })).resolves.toEqual({
+        recipeId,
+        userRating: null,
+        version: null,
+      });
+      await expect(caller.getAverage({ recipeId })).resolves.toEqual({
+        recipeId,
+        averageRating: null,
+        ratingCount: 0,
+      });
+      expect(getAverageRating).not.toHaveBeenCalled();
     });
   });
 

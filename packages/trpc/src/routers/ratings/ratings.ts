@@ -11,6 +11,7 @@ import { RatingGetInputSchema, RatingInputSchema } from "@norish/shared/contract
 
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
+import { assertRecipeAccess, recipeAccess } from "../recipes/helpers";
 
 interface UserContext {
   user: { id: string };
@@ -31,10 +32,11 @@ async function emitRatingFailed(ctx: UserContext, recipeId: string, reason: stri
   void ratings.publish("ratingFailed", { recipeId, reason }, await ratingAudience(ctx, recipeId));
 }
 
-const rate = authedProcedure.input(RatingInputSchema).mutation(({ ctx, input }) => {
+const rate = authedProcedure.input(RatingInputSchema).mutation(async ({ ctx, input }) => {
   const { recipeId, rating, version } = input;
 
   log.debug({ userId: ctx.user.id, recipeId, rating }, "Rating recipe");
+  await assertRecipeAccess(ctx, recipeId, "view");
 
   rateRecipe(ctx.user.id, recipeId, rating, version)
     .then(async (result) => {
@@ -70,13 +72,20 @@ const rate = authedProcedure.input(RatingInputSchema).mutation(({ ctx, input }) 
 const getUserRatingProcedure = authedProcedure
   .input(RatingGetInputSchema)
   .query(async ({ ctx, input }) => {
-    const rating = await getUserRatingWithVersion(ctx.user.id, input.recipeId);
+    // A recipe out of view answers as one never rated, as a gone one does.
+    const viewable = (await recipeAccess(ctx, [input.recipeId], "view")).has(input.recipeId);
+    const rating = viewable
+      ? await getUserRatingWithVersion(ctx.user.id, input.recipeId)
+      : { rating: null, version: null };
 
     return { recipeId: input.recipeId, userRating: rating.rating, version: rating.version };
   });
 
-const getAverage = authedProcedure.input(RatingGetInputSchema).query(async ({ input }) => {
-  const stats = await getAverageRating(input.recipeId);
+const getAverage = authedProcedure.input(RatingGetInputSchema).query(async ({ ctx, input }) => {
+  const viewable = (await recipeAccess(ctx, [input.recipeId], "view")).has(input.recipeId);
+  const stats = viewable
+    ? await getAverageRating(input.recipeId)
+    : { averageRating: null, ratingCount: 0 };
 
   return { recipeId: input.recipeId, ...stats };
 });
