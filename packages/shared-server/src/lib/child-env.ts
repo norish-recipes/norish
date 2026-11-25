@@ -3,7 +3,7 @@
  * (through a proxy too), never Norish's own secrets such as MASTER_KEY or DATABASE_URL.
  */
 
-const ALLOWED = new Set([
+const ALLOWED_NAMES = new Set([
   "PATH",
   "HOME",
   "LANG",
@@ -22,7 +22,7 @@ export function childEnv(extra: Record<string, string> = {}): NodeJS.ProcessEnv 
   const env = { ...process.env };
 
   for (const name of Object.keys(env)) {
-    if (!ALLOWED.has(name) && !name.startsWith("LC_")) delete env[name];
+    if (!ALLOWED_NAMES.has(name) && !name.startsWith("LC_")) delete env[name];
   }
 
   return Object.assign(env, extra);
