@@ -106,7 +106,7 @@ export function realtimeSubscription<C extends RealtimeCatalogue, E extends Clie
 
     // Read here, not in middleware: a lookup Valkey does not answer ends Lagged too.
     let householdId: string | undefined;
-    let viewEpoch = "";
+    let viewEpoch: string;
 
     try {
       [householdId, viewEpoch] = await Promise.all([
