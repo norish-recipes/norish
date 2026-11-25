@@ -1,4 +1,3 @@
-import { getHouseholdIdForUser } from "@norish/db";
 import {
   getDueRecurringGroceries,
   uncheckGrocery,
@@ -45,25 +44,22 @@ export async function checkRecurringGroceries(): Promise<{ unchecked: number }> 
           lastCheckedDate: item.recurringGrocery.nextPlannedFor,
         });
 
-        // Broadcast to household members via tRPC emitter
-        const householdId = await getHouseholdIdForUser(item.recurringGrocery.userId);
-
-        if (householdId)
-          void groceries.publish(
-            "recurringUpdated",
-            {
-              recurringGrocery: {
-                ...item.recurringGrocery,
-                nextPlannedFor: nextDate,
-                lastCheckedDate: item.recurringGrocery.nextPlannedFor,
-              },
-              grocery: {
-                ...item.grocery,
-                isDone: false,
-              },
+        // The row's own household, whoever added it.
+        void groceries.publish(
+          "recurringUpdated",
+          {
+            recurringGrocery: {
+              ...item.recurringGrocery,
+              nextPlannedFor: nextDate,
+              lastCheckedDate: item.recurringGrocery.nextPlannedFor,
             },
-            { householdId }
-          );
+            grocery: {
+              ...item.grocery,
+              isDone: false,
+            },
+          },
+          { householdId: item.recurringGrocery.householdId }
+        );
 
         unchecked++;
         schedulerLogger.info(
