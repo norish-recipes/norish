@@ -1,5 +1,5 @@
 import { and, asc, desc, eq, gt, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
-import { alias } from "drizzle-orm/pg-core";
+import { alias, QueryBuilder } from "drizzle-orm/pg-core";
 
 import type { Db, DbTransaction } from "@norish/db/drizzle";
 import type { AIChangeUndo, ChangedSpelling, DeletedFood } from "@norish/db/schema";
@@ -67,6 +67,7 @@ export async function recordAIChange(
 
 const targets = alias(ingredients, "ai_change_targets");
 const dropped = alias(ingredients, "ai_change_dropped");
+const qb = new QueryBuilder();
 
 /** How long Changed by AI lists a change a person has no more to do about. */
 const LISTED_FOR = sql`interval '30 days'`;
@@ -561,7 +562,9 @@ export async function readDeletedFood(
 
 /** The row's id where it is still there, so a restore never points at one deleted since. */
 function stillThere(table: typeof users | typeof ingredients, id: string | null) {
-  return id === null ? null : sql`(select id from ${table} where id = ${id})`;
+  return id === null
+    ? null
+    : sql`${qb.select({ id: table.id }).from(table).where(eq(table.id, id))}`;
 }
 
 /**
@@ -591,10 +594,21 @@ export async function restoreDeletedFood(tx: DbTransaction, food: DeletedFood): 
   if (back.size === 0) return false;
   for (const { lineId, position, aliasId } of food.lineFoods) {
     if (!back.has(aliasId)) continue;
-    await tx.execute(sql`
-      insert into ${recipeIngredientFoods} (recipe_ingredient_id, position, ingredient_alias_id)
-      select id, ${position}, ${aliasId} from ${recipeIngredients} where id = ${lineId}
-      on conflict do nothing`);
+    await tx
+      .insert(recipeIngredientFoods)
+      .select(
+        tx
+          .select({
+            recipeIngredientId: recipeIngredients.id,
+            position: sql<number>`${position}`.as(recipeIngredientFoods.position.name),
+            ingredientAliasId: sql<string>`${aliasId}`.as(
+              recipeIngredientFoods.ingredientAliasId.name
+            ),
+          })
+          .from(recipeIngredients)
+          .where(eq(recipeIngredients.id, lineId))
+      )
+      .onConflictDoNothing();
   }
   const free = (row: { aliasId: string | null }) => row.aliasId === null || back.has(row.aliasId);
 
