@@ -1,5 +1,4 @@
 import { randomUUID } from "node:crypto";
-
 import superjson from "superjson";
 
 import { getHouseholdForUser as dbGetHouseholdForUser } from "@norish/db/repositories/households";
