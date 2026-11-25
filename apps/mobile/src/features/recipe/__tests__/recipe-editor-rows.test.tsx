@@ -168,7 +168,9 @@ vi.mock("../hooks/use-editor-uploads", () => ({
 vi.mock("@norish/shared-react/config", () => ({
   useIngredientsSubscription: () => undefined,
   useUnitsQuery: () => ({ units: {}, isLoading: false }),
-  useCategoriesQuery: () => ({ categories: [], builtInAliases: {}, isLoading: false }),
+}));
+vi.mock("@norish/shared-react/lists", () => ({
+  useListEntries: () => ({ entries: [], isLoading: false }),
 }));
 vi.mock("@norish/shared-react/ingredients", () => ({
   useFoodsByName: () => new Map(),

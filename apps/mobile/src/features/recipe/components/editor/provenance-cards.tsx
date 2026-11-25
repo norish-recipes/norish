@@ -9,7 +9,7 @@ import { useIntl } from "react-intl";
 
 import type { ProvenanceFormValue } from "@norish/shared-react/recipes";
 import type { MeasurementSystem } from "@norish/shared/contracts";
-import { useCuisinesQuery } from "@norish/shared-react/config";
+import { chosenEntries, useListEntries } from "@norish/shared-react/lists";
 import { countryFlagEmoji, listCountryOptions } from "@norish/shared/lib/recipe-provenance";
 
 import { SectionCard } from "../tint";
@@ -21,12 +21,18 @@ import { EditorField, EditorInput } from "./editor-parts";
 export function ProvenanceCard({
   value,
   onChange,
+  recipeId,
+  carriedCuisines,
 }: {
   value: ProvenanceFormValue;
   onChange: (value: ProvenanceFormValue) => void;
+  /** The recipe being edited, once it exists: its household's Cuisines are the ones offered. */
+  recipeId?: string;
+  /** The Cuisines the recipe carries, which it keeps whatever the list offers. */
+  carriedCuisines?: { id: string; name: string }[];
 }) {
   const intl = useIntl();
-  const { cuisines } = useCuisinesQuery();
+  const { entries: cuisines } = useListEntries("cuisine", recipeId);
   const [muted] = useThemeColor(["muted"] as const);
   const router = useRouter();
   const text = useText();
@@ -53,7 +59,8 @@ export function ProvenanceCard({
   };
   const pickCuisines = () => {
     requestChoice({
-      choices: cuisines.map((cuisine) => ({ key: cuisine.id, label: cuisine.name })),
+      choices: [],
+      list: { kind: "cuisine", recipeId },
       selected: value.cuisineIds,
       onChange: (cuisineIds) => patch({ cuisineIds }),
     });
@@ -62,7 +69,7 @@ export function ProvenanceCard({
     );
   };
   const flag = countryFlagEmoji(value.originCountry);
-  const cuisineName = (id: string) => cuisines.find((cuisine) => cuisine.id === id)?.name ?? id;
+  const chosen = chosenEntries(value.cuisineIds, cuisines, carriedCuisines);
 
   return (
     <SectionCard title={text("recipes.form.provenance")}>
@@ -97,11 +104,13 @@ export function ProvenanceCard({
       </EditorField>
       <EditorField label={text("recipes.form.cuisines")}>
         <View className="flex-row flex-wrap gap-2 pt-1">
-          {value.cuisineIds.map((id) => (
+          {chosen.map((cuisine) => (
             <RemovableChip
-              key={id}
-              label={cuisineName(id)}
-              onRemove={() => patch({ cuisineIds: value.cuisineIds.filter((c) => c !== id) })}
+              key={cuisine.id}
+              label={cuisine.name}
+              onRemove={() =>
+                patch({ cuisineIds: value.cuisineIds.filter((id) => id !== cuisine.id) })
+              }
             />
           ))}
           <AddChip

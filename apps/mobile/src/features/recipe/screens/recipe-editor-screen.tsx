@@ -261,6 +261,7 @@ function Editor({ mode, initialData, recipeId }: EditorProps & { recipeId: strin
               categoryLabel={categoryLabel}
               categoryOptions={editor.categoryOptions}
               form={form}
+              recipeId={mode === "edit" ? initialData?.id : undefined}
               set={set}
               onAddCategory={editor.addCategory}
               onToggleCategory={editor.toggleCategory}
@@ -268,6 +269,8 @@ function Editor({ mode, initialData, recipeId }: EditorProps & { recipeId: strin
             <ServingsAndTimeCard error={error("servings")} form={form} set={set} />
             <NutritionCard form={form} set={set} />
             <ProvenanceCard
+              carriedCuisines={initialData?.cuisines}
+              recipeId={mode === "edit" ? initialData?.id : undefined}
               value={form.provenance}
               onChange={(provenance) => set("provenance", provenance)}
             />
