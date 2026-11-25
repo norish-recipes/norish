@@ -28,7 +28,7 @@ const database = vi.hoisted(() => ({
   encrypted: [] as string[],
 }));
 const setConfig = vi.hoisted(() => vi.fn());
-const logged = vi.hoisted(() => [] as unknown[]);
+const logged = vi.hoisted(() => [] as unknown[][]);
 
 vi.mock("@norish/config/env-config-server", () => ({ SERVER_CONFIG: config }));
 vi.mock("@norish/db/repositories/server-config", () => ({
@@ -41,8 +41,16 @@ vi.mock("@norish/db/repositories/master-key", () => ({
   findNewestCiphertext: async () => database.encrypted.at(-1) ?? null,
 }));
 vi.mock("@norish/shared-server/logger", () => {
-  const record = (...args: unknown[]) => void logged.push(args);
-  const logger = { debug: record, info: record, warn: record, error: record };
+  const record =
+    (level: string) =>
+    (...args: unknown[]) =>
+      void logged.push([level, ...args]);
+  const logger = {
+    debug: record("debug"),
+    info: record("info"),
+    warn: record("warn"),
+    error: record("error"),
+  };
 
   return { serverLogger: logger, createLogger: () => logger };
 });
@@ -118,6 +126,30 @@ describe("the key file", () => {
     await writeKeyFile({ current: randomBytes(32) });
 
     expect(await modeOf(keyDir())).toBe(0o700);
+  });
+
+  it("tightens a file and folder a restore left open, and says so", async () => {
+    const keys = { current: randomBytes(32) };
+
+    await writeKeyFile(keys);
+    await fs.chmod(keyFilePath(), 0o644);
+    await fs.chmod(keyDir(), 0o755);
+
+    expect(await readKeyFile()).toEqual(keys);
+    expect(await modeOf(keyFilePath())).toBe(0o600);
+    expect(await modeOf(keyDir())).toBe(0o700);
+    expect(logged.filter(([level]) => level === "warn")).toHaveLength(2);
+  });
+
+  it("still opens the key when it cannot tighten the file, and says so", async () => {
+    const keys = { current: randomBytes(32) };
+
+    await writeKeyFile(keys);
+    await fs.chmod(keyFilePath(), 0o644);
+    vi.spyOn(fs, "chmod").mockRejectedValue(new Error("read-only volume"));
+
+    expect(await readKeyFile()).toEqual(keys);
+    expect(logged.filter(([level]) => level === "warn")).toHaveLength(1);
   });
 
   it("is none when there is no file", async () => {

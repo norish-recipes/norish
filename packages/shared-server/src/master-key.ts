@@ -39,6 +39,19 @@ function refusal(problem: string): Error {
   );
 }
 
+/** Narrow `target` to `mode` when it is wider, as a restore can leave it; failing only warns. */
+async function tighten(target: string, mode: number): Promise<void> {
+  try {
+    const was = (await fs.stat(target)).mode & 0o777;
+
+    if ((was & ~mode) === 0) return;
+    await fs.chmod(target, mode);
+    log.warn({ path: target, was: was.toString(8) }, "Key file permissions were open, tightened");
+  } catch (error) {
+    log.warn({ path: target, err: error }, "Could not tighten the key file's permissions");
+  }
+}
+
 /** The key file, or null when there is none. Its contents never reach an error message. */
 export async function readKeyFile(): Promise<KeyFile | null> {
   let text: string;
@@ -51,6 +64,9 @@ export async function readKeyFile(): Promise<KeyFile | null> {
     if (code === "ENOENT") return null;
     throw refusal(`The key file ${keyFilePath()} cannot be read (${code}).`);
   }
+
+  await tighten(keyFilePath(), 0o600);
+  await tighten(path.dirname(keyFilePath()), 0o700);
 
   try {
     return mapKeys(KeyFileSchema.parse(JSON.parse(text)), fromBase64);
