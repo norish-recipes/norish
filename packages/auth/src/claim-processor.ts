@@ -326,7 +326,11 @@ export async function processClaimsForUser(
       return;
     }
 
-    const outcome = await joinHousehold(userId, { householdId: claimed.id });
+    // The join checks the name again under its lock, so a rename meanwhile refuses it.
+    const outcome = await joinHousehold(userId, {
+      householdId: claimed.id,
+      name: claims.householdName,
+    });
 
     if ("refused" in outcome) {
       authLogger.info(

@@ -388,6 +388,25 @@ describe("households", () => {
     });
   });
 
+  describe("racing a claim's join against renaming the claimed household", () => {
+    it("refuses the join once the name no longer matches the claim", async () => {
+      const owner = await createTestUser();
+      const joiner = await createTestUser();
+      const claimed = await householdOf(owner.id);
+
+      await renameHouseholdOfOne(owner.id, "The Smiths");
+
+      const settled = await raceBehindLock(claimed, [
+        () => renameHouseholdOfOne(owner.id, "The Joneses"),
+        () => joinHousehold(joiner.id, { householdId: claimed, name: "the smiths" }),
+      ]);
+
+      expect(settled).toEqual([fulfilled(claimed), fulfilled({ refused: "gone" })]);
+      expect(await householdOf(joiner.id)).not.toBe(claimed);
+      await expectEveryAccountHoused();
+    });
+  });
+
   describe("racing an admin transfer against the new admin leaving", () => {
     it("refuses the transfer, so the admin still lives there", async () => {
       const { admin, member, householdId } = await sharedHousehold();

@@ -161,6 +161,7 @@ async function lockHouseholds(tx: DbTransaction, ids: string[]) {
   return await tx
     .select({
       id: households.id,
+      name: households.name,
       adminUserId: households.adminUserId,
       joinCode: households.joinCode,
       joinCodeExpiresAt: households.joinCodeExpiresAt,
@@ -291,14 +292,14 @@ export type JoinHouseholdOutcome =
   | { refused: "already-member" | "shared" | "holds-things" | "gone" | "expired" };
 
 /**
- * Moves an account into another household, deleting the household of one it
- * leaves. Refused from a shared household (leave first) and, until merging
- * lands (ticket 09), from a household of one that holds anything. `memberIds`
- * are the members it joined.
+ * Moves an account into another household, deleting the household of one it leaves;
+ * with `name`, only while the household still carries it (case aside). Refused from a
+ * shared household (leave first) and, until merging lands (ticket 09), from a household
+ * of one that holds anything. `memberIds` are the members it joined.
  */
 export async function joinHousehold(
   userId: string,
-  target: { householdId: string } | { joinCode: string }
+  target: { householdId: string; name?: string } | { joinCode: string }
 ): Promise<JoinHouseholdOutcome> {
   return await retryWhileMoved(async (tx) => {
     const current = await householdIdIn(tx, userId);
@@ -315,7 +316,10 @@ export async function joinHousehold(
     const household = locked.find((h) => h.id === householdId);
 
     if (!household) return { refused: "gone" };
-    // Read again under the lock, so a code rotated or expired meanwhile admits nobody.
+    // Read again under the lock, so a code rotated or expired, or a rename, admits nobody.
+    const name = "name" in target ? target.name?.trim().toLowerCase() : undefined;
+
+    if (name !== undefined && household.name.toLowerCase() !== name) return { refused: "gone" };
     if ("joinCode" in target) {
       if (household.joinCode !== target.joinCode) return { refused: "gone" };
       if (household.joinCodeExpiresAt && household.joinCodeExpiresAt < new Date()) {
