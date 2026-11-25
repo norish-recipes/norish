@@ -98,9 +98,10 @@ function useShop(options: {
   return visited;
 }
 
-/** Postgres refusing a write onto a Store deleted meanwhile, as drizzle wraps it. */
-const storeGone = () =>
-  Object.assign(new Error("insert failed"), { cause: { code: "23503", constraint: "fk_store" } });
+/** Postgres refusing a write on a foreign key, as drizzle wraps it. */
+const foreignKeyFailure = (constraint: string) =>
+  Object.assign(new Error("insert failed"), { cause: { code: "23503", constraint } });
+const storeGone = () => foreignKeyFailure("store_products_store_id_stores_id_fk");
 
 describe("matchGroceryName", () => {
   beforeEach(() => {
@@ -894,6 +895,21 @@ describe("refreshProducts", () => {
     await expect(refreshProducts({ productIds: ["p1"], storeId: STORE })).resolves.toEqual({
       refreshed: 0,
     });
+  });
+
+  it("still fails on another foreign key once the Store is gone", async () => {
+    mocks.listStaleProducts.mockResolvedValue([
+      { id: "p1", storeId: STORE, pageUrl: PRODUCT_PAGE, isManual: false },
+    ]);
+    useShop({ product: { name: "Oude kaas", price: 8.99, currency: "EUR" } });
+    mocks.upsertReadProduct.mockRejectedValue(
+      foreignKeyFailure("store_product_links_store_product_id_store_products_id_fk")
+    );
+    mocks.getStoreHouseholdId.mockResolvedValueOnce(HOUSEHOLD).mockResolvedValue(null);
+
+    await expect(refreshProducts({ productIds: ["p1"], storeId: STORE })).rejects.toThrow(
+      "insert failed"
+    );
   });
 
   it("asks the repository only for this Store's products", async () => {

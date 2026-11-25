@@ -12,7 +12,7 @@ import type {
 } from "@norish/shared/contracts";
 import type { PricedCandidate } from "@norish/shared/lib/currency";
 import {
-  isConstraintViolation,
+  isGoneStoreReference,
   isStaleIngredientReference,
 } from "@norish/db/repositories/constraint-violation";
 import {
@@ -321,7 +321,7 @@ async function unlessStoreGone<T>(storeId: string, write: () => Promise<T>): Pro
   try {
     return await write();
   } catch (error) {
-    if (!isConstraintViolation(error, "23503") || (await getStoreHouseholdId(storeId))) throw error;
+    if (!isGoneStoreReference(error) || (await getStoreHouseholdId(storeId))) throw error;
     log.debug({ storeId }, "The Store was deleted while the shop was being read");
 
     return null;

@@ -29,6 +29,19 @@ export function isStaleIngredientReference(error: unknown): boolean {
   return false;
 }
 
+/** Whether a write was refused because the Store it points at is gone. */
+export function isGoneStoreReference(error: unknown): boolean {
+  for (let current = error; current && typeof current === "object";) {
+    const { code, constraint } = current as { code?: unknown; constraint?: unknown };
+
+    if (code === "23503")
+      return typeof constraint === "string" && constraint.endsWith("_store_id_stores_id_fk");
+    current = (current as { cause?: unknown }).cause;
+  }
+
+  return false;
+}
+
 /** Whether a write was refused because its id is already taken: a client-made id another row holds. */
 export function isPrimaryKeyCollision(error: unknown): boolean {
   for (let current = error; current && typeof current === "object";) {
