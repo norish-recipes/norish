@@ -13,8 +13,46 @@ const mocks = vi.hoisted(() => ({
   ],
 }));
 
-vi.mock("@norish/shared-react/config", () => ({
-  useCuisinesQuery: () => ({ cuisines: mocks.cuisines, isLoading: false }),
+vi.mock("@norish/shared-react/lists", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/shared-react/lists")>()),
+  useListEntries: () => ({ entries: mocks.cuisines, isLoading: false }),
+}));
+
+/** The picker's own behaviour is tested with it; here it stands for picking a row of the list. */
+vi.mock("@/components/shared/entry-combo-box", () => ({
+  EntryComboBox: ({
+    isSelected,
+    onSelect,
+  }: {
+    isSelected: (entry: { id: string; name: string }) => boolean;
+    onSelect: (entry: { id: string; name: string }) => void;
+  }) => (
+    <div>
+      {mocks.cuisines
+        .filter((cuisine) => !isSelected(cuisine))
+        .map((cuisine) => (
+          <button key={cuisine.id} data-row={cuisine.id} onClick={() => onSelect(cuisine)}>
+            pick:{cuisine.name}
+          </button>
+        ))}
+    </div>
+  ),
+}));
+
+vi.mock("@/components/shared/chip-button", () => ({
+  ChipButton: ({
+    children,
+    onClick,
+    "aria-label": label,
+  }: {
+    children?: React.ReactNode;
+    onClick?: () => void;
+    "aria-label"?: string;
+  }) => (
+    <button aria-label={label} onClick={onClick}>
+      {children}
+    </button>
+  ),
 }));
 
 /**
@@ -30,12 +68,7 @@ vi.mock("@heroui/react", () => {
   // single-selection props, which a multiple-mode Select silently ignores.
   // Stubbing the wrong pair here is exactly what let a permanently-empty
   // control pass its tests.
-  type ChangeHandler = (keys: string[]) => void;
-
-  const selectionContext: {
-    combo?: (key: string | null) => void;
-    select?: ChangeHandler;
-  } = {};
+  const selectionContext: { combo?: (key: string | null) => void } = {};
 
   const ComboBoxRoot = ({
     children,
@@ -53,41 +86,6 @@ vi.mock("@heroui/react", () => {
         {children}
         {/* React Aria reports a null key when the popover closes with no choice. */}
         <button onClick={() => onChange?.(null)}>dismiss-country</button>
-      </div>
-    );
-  };
-
-  const SelectRoot = ({
-    children,
-    value,
-    onChange,
-  }: {
-    children?: React.ReactNode;
-    value?: readonly string[];
-    onChange?: ChangeHandler;
-  }) => {
-    selectionContext.select = onChange;
-
-    return (
-      <div data-selected-cuisines={(value ?? []).join(",")}>
-        {children}
-        {/* Stands in for opening the popover and clicking a row. */}
-        {mocks.cuisines.map((cuisine) => (
-          <button
-            key={cuisine.id}
-            onClick={() => {
-              const current = value ?? [];
-
-              onChange?.(
-                current.includes(cuisine.id)
-                  ? current.filter((id) => id !== cuisine.id)
-                  : [...current, cuisine.id]
-              );
-            }}
-          >
-            toggle:{cuisine.name}
-          </button>
-        ))}
       </div>
     );
   };
@@ -112,19 +110,6 @@ vi.mock("@heroui/react", () => {
         </div>
       ),
       ItemIndicator: () => null,
-    }),
-    Select: Object.assign(SelectRoot, {
-      Trigger: Passthrough,
-      Value: ({
-        children,
-      }: {
-        children?: (renderProps: {
-          defaultChildren: React.ReactNode;
-          isPlaceholder: boolean;
-        }) => React.ReactNode;
-      }) => <div>{children?.({ defaultChildren: null, isPlaceholder: false })}</div>,
-      Indicator: () => null,
-      Popover: Passthrough,
     }),
     TextArea: () => <textarea />,
     TextField: ({
@@ -152,7 +137,8 @@ vi.mock("@heroui/react", () => {
 
 vi.mock("next-intl", () => ({
   useLocale: () => "en",
-  useTranslations: () => (key: string) => key,
+  useTranslations: () => (key: string, params?: Record<string, unknown>) =>
+    params ? `${key} ${Object.values(params).join(" ")}` : key,
 }));
 
 const FILLED: ProvenanceFormValue = {
@@ -170,34 +156,37 @@ beforeEach(() => {
 });
 
 describe("Recipe Provenance form fields", () => {
-  it("offers the vocabulary rather than free text", () => {
+  it("offers the list's Cuisines not yet chosen", () => {
     const { container } = render(<ProvenanceFields value={FILLED} onChange={onChange} />);
 
-    // An editor's manual entries have to match the ones AI produces.
-    expect(container.querySelector('[data-row="id-italian"]')).toHaveTextContent("Italian");
     expect(container.querySelector('[data-row="id-japanese"]')).toHaveTextContent("Japanese");
+    expect(container.querySelector('[data-row="id-italian"]')).not.toBeInTheDocument();
   });
 
-  it("names the selected Cuisines on the closed control", () => {
-    const { container } = render(<ProvenanceFields value={FILLED} onChange={onChange} />);
+  it("names the chosen Cuisines as chips", () => {
+    render(<ProvenanceFields value={FILLED} onChange={onChange} />);
 
-    // The trigger has to say what is chosen; the rows are behind a popover.
-    expect(container.querySelector("[data-selected-cuisines]")).toHaveTextContent("Italian");
-  });
-
-  it("hands the recipe's current Cuisines to the multiselect", () => {
-    const { container } = render(<ProvenanceFields value={FILLED} onChange={onChange} />);
-
-    expect(container.querySelector("[data-selected-cuisines]")).toHaveAttribute(
-      "data-selected-cuisines",
-      "id-italian"
+    expect(screen.getByRole("button", { name: "removeNamed Italian" })).toHaveTextContent(
+      "Italian"
     );
+  });
+
+  it("names a Cuisine the recipe carries and the list does not offer", () => {
+    render(
+      <ProvenanceFields
+        carriedCuisines={[{ id: "id-old", name: "Old" }]}
+        value={{ ...FILLED, cuisineIds: ["id-old"] }}
+        onChange={onChange}
+      />
+    );
+
+    expect(screen.getByRole("button", { name: "removeNamed Old" })).toBeInTheDocument();
   });
 
   it("adds a Cuisine without disturbing the rest of the group", () => {
     render(<ProvenanceFields value={FILLED} onChange={onChange} />);
 
-    fireEvent.click(screen.getByText("toggle:Japanese"));
+    fireEvent.click(screen.getByText("pick:Japanese"));
 
     expect(onChange).toHaveBeenCalledWith({
       ...FILLED,
@@ -208,7 +197,7 @@ describe("Recipe Provenance form fields", () => {
   it("removes a Cuisine that is already selected", () => {
     render(<ProvenanceFields value={FILLED} onChange={onChange} />);
 
-    fireEvent.click(screen.getByText("toggle:Italian"));
+    fireEvent.click(screen.getByRole("button", { name: "removeNamed Italian" }));
 
     expect(onChange).toHaveBeenCalledWith({ ...FILLED, cuisineIds: [] });
   });

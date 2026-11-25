@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChipButton } from "@/components/shared/chip-button";
-import TagInput from "@/components/shared/tag-input";
+import { EntryComboBox } from "@/components/shared/entry-combo-box";
+import TagPicker from "@/components/shared/tag-picker";
 import IngredientInput from "@/features/recipes/components/editor/ingredient-input";
 import MeasurementSystemSelector from "@/features/recipes/components/editor/measurement-system-selector";
 import MediaGalleryInput from "@/features/recipes/components/editor/media-gallery-input";
@@ -64,7 +65,6 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
     servings: errorText("servings"),
     submit: editor.errors.submit,
   };
-  const [newCategory, setNewCategory] = useState("");
   const [lineMoves, setLineMoves] = useState<LineMoves | null>(null);
 
   const navigateBack = () => router.back();
@@ -81,10 +81,6 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
     if (!confirmDiscardChanges()) return;
     allowNavigation();
     navigateBack();
-  };
-  const addCategory = () => {
-    setNewCategory("");
-    editor.addCategory(newCategory);
   };
   const handleSubmit = () => {
     const recipeData = editor.submit();
@@ -278,7 +274,11 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
           <div className="ml-0 space-y-6 md:ml-9">
             <div>
               <p className="text-muted mb-3 text-base">{t("tagsHelp")}</p>
-              <TagInput value={form.tags} onChange={(tags) => set("tags", tags)} />
+              <TagPicker
+                recipeId={mode === "edit" ? initialData?.id : undefined}
+                value={form.tags}
+                onChange={(tags) => set("tags", tags)}
+              />
             </div>
             <div>
               <p className="text-muted mb-3 text-base">{t("categoriesHelp")}</p>
@@ -299,21 +299,16 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
                     </ChipButton>
                   );
                 })}
-                <input
-                  aria-label={t("addCategory")}
-                  className="bg-default text-foreground placeholder:text-muted h-8 w-40 rounded-full border border-(--field-border) px-3 text-sm outline-none"
-                  maxLength={40}
+                <EntryComboBox
+                  className="w-44"
+                  entryLabel={categoryLabel}
+                  inputClassName="h-8 rounded-full px-3 text-sm"
+                  kind="category"
+                  label={t("addCategory")}
                   placeholder={t("addCategory")}
-                  style={{ fontSize: "16px" }}
-                  type="text"
-                  value={newCategory}
-                  onBlur={addCategory}
-                  onChange={(e) => setNewCategory(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key !== "Enter") return;
-                    e.preventDefault();
-                    addCategory();
-                  }}
+                  recipeId={mode === "edit" ? initialData?.id : undefined}
+                  isSelected={(entry) => form.categories.includes(entry.name)}
+                  onSelect={(entry) => editor.addCategory(entry.name)}
                 />
               </div>
             </div>
@@ -381,6 +376,8 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
           </h2>
           <div className="ml-0 md:ml-9">
             <ProvenanceFields
+              carriedCuisines={initialData?.cuisines}
+              recipeId={mode === "edit" ? initialData?.id : undefined}
               value={form.provenance}
               onChange={(provenance) => set("provenance", provenance)}
             />

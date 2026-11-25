@@ -1,70 +1,12 @@
 "use client";
 
-import type { DragEndEvent, DragStartEvent } from "@dnd-kit/core";
-import React, { useCallback, useId, useMemo, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import EditTagPanel from "@/components/Panel/consumers/edit-tag-panel";
-import {
-  closestCenter,
-  DndContext,
-  DragOverlay,
-  KeyboardSensor,
-  PointerSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
-import {
-  arrayMove,
-  horizontalListSortingStrategy,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+import { SortableTagChips } from "@/components/shared/sortable-tag-chips";
 import { AnimatePresence, motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
 import { useTagsQuery } from "@norish/shared-react/config";
-
-interface SortableTagItemProps {
-  tag: string;
-  onEdit: (tag: string) => void;
-}
-
-function SortableTagItem({ tag, onEdit }: SortableTagItemProps) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: tag,
-  });
-
-  const style: React.CSSProperties = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.4 : 1,
-  };
-
-  return (
-    // A Tag on the recipe is a chip that names a thing, and it is active:
-    // filled in the accent colour, like a selected filter chip.
-    <button
-      ref={setNodeRef}
-      className="bg-accent text-accent-foreground hover:bg-accent/90 inline-flex cursor-grab touch-none items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors active:cursor-grabbing"
-      style={style}
-      type="button"
-      onClick={(e) => {
-        e.stopPropagation();
-        onEdit(tag);
-      }}
-      onPointerDown={(_e) => {
-        // Allow drag to start, but also allow click
-        // The PointerSensor distance constraint handles this
-      }}
-      {...attributes}
-      {...listeners}
-    >
-      <span>{tag}</span>
-    </button>
-  );
-}
 
 interface TagInputProps {
   value: string[];
@@ -73,97 +15,36 @@ interface TagInputProps {
   className?: string;
 }
 
+/**
+ * Free-typed names kept as chips, split on spaces, with the household's Tags as suggestions: for
+ * what is a plain name, such as the account's allergies. The recipe editor picks from its list
+ * with `TagPicker` instead, which creates an entry only through its "Create" row.
+ */
 export default function TagInput({ value, onChange, placeholder, className = "" }: TagInputProps) {
   const t = useTranslations("common.tagInput");
   const [rawInput, setRawInput] = useState("");
-  const [activeId, setActiveId] = useState<string | null>(null);
   const [editingTag, setEditingTag] = useState<string | null>(null);
   const { tags: allTags } = useTagsQuery();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const defaultPlaceholder = placeholder ?? t("placeholder");
-
-  const dndId = useId();
-  // Configure sensors for mouse, touch, and keyboard
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      // Require 5px movement before activating (prevents accidental drags)
-      activationConstraint: {
-        distance: 5,
-      },
-    }),
-    useSensor(TouchSensor, {
-      // Press delay for touch to distinguish from scroll
-      activationConstraint: {
-        delay: 200,
-        tolerance: 5,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
-  // Handle drag start to track active item for overlay
-  const handleDragStart = useCallback((event: DragStartEvent) => {
-    setActiveId(event.active.id as string);
-  }, []);
-
-  // Handle drag end to reorder tags
-  const handleDragEnd = useCallback(
-    (event: DragEndEvent) => {
-      const { active, over } = event;
-
-      setActiveId(null);
-
-      if (over && active.id !== over.id) {
-        const oldIndex = value.indexOf(active.id as string);
-        const newIndex = value.indexOf(over.id as string);
-
-        onChange(arrayMove(value, oldIndex, newIndex));
-      }
-    },
-    [value, onChange]
-  );
+  const selected = (tag: string) => value.some((v) => v.toLowerCase() === tag.toLowerCase());
 
   // Parse all typed words (not just the current one)
-  const typedWords = useMemo(() => {
-    const trimmed = rawInput.trim();
+  const trimmedInput = rawInput.trim();
+  const typedWords = trimmedInput
+    ? [...new Set(trimmedInput.split(/\s+/).filter((w) => w.length >= 2))]
+    : [];
+  // The word being typed is the last one.
+  const currentWord = trimmedInput ? (trimmedInput.split(/\s+/).at(-1) ?? "") : "";
+  const exactMatch =
+    currentWord.length >= 2
+      ? (allTags.find((tag) => tag.toLowerCase() === currentWord.toLowerCase() && !selected(tag)) ??
+        null)
+      : null;
 
-    if (!trimmed) return [];
-
-    return [...new Set(trimmed.split(/\s+/).filter((w) => w.length >= 2))];
-  }, [rawInput]);
-
-  // Get the current word being typed (last word)
-  const currentWord = useMemo(() => {
-    const trimmed = rawInput.trim();
-
-    if (!trimmed) return "";
-    const words = trimmed.split(/\s+/);
-
-    return words[words.length - 1] ?? "";
-  }, [rawInput]);
-
-  // Find exact match for current word (for auto-select on space)
-  const exactMatch = useMemo(() => {
-    const lower = currentWord.toLowerCase();
-
-    if (!lower || lower.length < 2) return null;
-
-    const match = allTags.find((tag) => {
-      const tagLower = tag.toLowerCase();
-
-      return tagLower === lower && !value.some((v) => v.toLowerCase() === tagLower);
-    });
-
-    return match || null;
-  }, [currentWord, allTags, value]);
-
-  // Get all non-exact match suggestions to show below input
-  const suggestions = useMemo(() => {
-    if (typedWords.length === 0) return [];
-
+  // Every non-selected Tag containing a typed word, those starting with it first.
+  const suggestions = (() => {
     const results: { t: string; score: number }[] = [];
     const seenTags = new Set<string>();
 
@@ -173,20 +54,11 @@ export default function TagInput({ value, onChange, placeholder, className = "" 
       allTags.forEach((tag) => {
         const tl = tag.toLowerCase();
 
-        // Skip if already seen or selected
-        if (seenTags.has(tl)) return;
-        if (value.some((sel) => sel.toLowerCase() === tl)) return;
+        if (seenTags.has(tl) || selected(tag) || !tl.includes(lower)) return;
 
-        // Must contain the word
-        if (!tl.includes(lower)) return;
+        const base = tl.startsWith(lower) ? 1 : 2;
 
-        let base = 2;
-
-        if (tl.startsWith(lower)) base = 1;
-
-        const score = base * 10 + Math.abs(tag.length - lower.length);
-
-        results.push({ t: tag, score });
+        results.push({ t: tag, score: base * 10 + Math.abs(tag.length - lower.length) });
         seenTags.add(tl);
       });
     });
@@ -195,72 +67,61 @@ export default function TagInput({ value, onChange, placeholder, className = "" 
       .sort((a, b) => a.score - b.score || a.t.localeCompare(b.t))
       .map((r) => r.t)
       .slice(0, 8);
-  }, [typedWords, allTags, value]);
+  })();
 
-  // Handle removing a selected tag
-  const handleRemoveTag = useCallback(
-    (tag: string) => {
-      onChange(value.filter((t) => t.toLowerCase() !== tag.toLowerCase()));
-    },
-    [value, onChange]
-  );
+  const handleRemoveTag = (tag: string) => {
+    onChange(value.filter((t) => t.toLowerCase() !== tag.toLowerCase()));
+  };
 
-  // Handle clicking a suggested tag - removes matching text from input
-  const handleAddTag = useCallback(
-    (tag: string, clearInput = true) => {
-      if (value.some((t) => t.toLowerCase() === tag.toLowerCase())) {
-        return;
-      }
+  // Clicking a suggested tag removes the matching text from the input.
+  const handleAddTag = (tag: string, clearInput = true) => {
+    if (selected(tag)) return;
 
-      // When clicking a suggestion, remove the matching word from input
-      if (clearInput && rawInput) {
-        const words = rawInput.trim().split(/\s+/);
-        const tagLower = tag.toLowerCase();
-        const filteredWords = words.filter((word) => !tagLower.includes(word.toLowerCase()));
+    if (clearInput && rawInput) {
+      const tagLower = tag.toLowerCase();
+      const kept = rawInput
+        .trim()
+        .split(/\s+/)
+        .filter((word) => !tagLower.includes(word.toLowerCase()));
 
-        setRawInput(filteredWords.join(" ").trim());
-      } else {
-        setRawInput("");
-      }
+      setRawInput(kept.join(" ").trim());
+    } else {
+      setRawInput("");
+    }
 
-      onChange([...value, tag]);
-      inputRef.current?.focus();
-    },
-    [value, onChange, rawInput]
-  );
+    onChange([...value, tag]);
+    inputRef.current?.focus();
+  };
 
-  // Handle key down
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === " ") {
-        const lower = currentWord.toLowerCase();
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === " ") {
+      const lower = currentWord.toLowerCase();
 
-        // Check if current word matches an already selected tag
-        if (lower && value.some((t) => t.toLowerCase() === lower)) {
-          e.preventDefault();
-          // Remove the word from input since it's already selected
-          const words = rawInput.trim().split(/\s+/);
-          const filteredWords = words.filter((word) => word.toLowerCase() !== lower);
-
-          setRawInput(filteredWords.join(" ").trim());
-          inputRef.current?.focus();
-        } else if (exactMatch) {
-          e.preventDefault();
-          handleAddTag(exactMatch, false); // Don't try to remove text for exact matches
-        } else if (currentWord.trim() && currentWord.length >= 2) {
-          e.preventDefault();
-          handleAddTag(currentWord.trim(), false);
-        }
-      } else if (e.key === "Backspace" && !rawInput) {
-        const last = value.at(-1);
-
-        if (!last) return;
+      if (lower && selected(lower)) {
+        // The word is selected already: drop it from the input.
         e.preventDefault();
-        handleRemoveTag(last);
+        const kept = rawInput
+          .trim()
+          .split(/\s+/)
+          .filter((word) => word.toLowerCase() !== lower);
+
+        setRawInput(kept.join(" ").trim());
+        inputRef.current?.focus();
+      } else if (exactMatch) {
+        e.preventDefault();
+        handleAddTag(exactMatch, false);
+      } else if (currentWord.trim() && currentWord.length >= 2) {
+        e.preventDefault();
+        handleAddTag(currentWord.trim(), false);
       }
-    },
-    [exactMatch, handleAddTag, rawInput, value, handleRemoveTag, currentWord]
-  );
+    } else if (e.key === "Backspace" && !rawInput) {
+      const last = value.at(-1);
+
+      if (!last) return;
+      e.preventDefault();
+      handleRemoveTag(last);
+    }
+  };
 
   return (
     <div className={className}>
@@ -269,42 +130,20 @@ export default function TagInput({ value, onChange, placeholder, className = "" 
           secondary fill and border as every other input on the form — the
           plain field fill is pure white and would vanish against the card. */}
       <div className="group bg-default flex min-h-[48px] flex-wrap items-center gap-2 rounded-2xl border border-(--field-border) px-3 py-2 shadow-none">
-        <DndContext
-          collisionDetection={closestCenter}
-          id={dndId}
-          sensors={sensors}
-          onDragEnd={handleDragEnd}
-          onDragStart={handleDragStart}
-        >
-          <SortableContext items={value} strategy={horizontalListSortingStrategy}>
-            {/* Selected tags - sortable */}
-            {value.map((tag) => (
-              <SortableTagItem key={tag} tag={tag} onEdit={setEditingTag} />
-            ))}
-          </SortableContext>
-
-          {/* Drag overlay - shows the tag following the cursor */}
-          <DragOverlay>
-            {activeId ? (
-              <div className="bg-accent text-accent-foreground inline-flex cursor-grabbing items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium shadow-lg">
-                <span>{activeId}</span>
-              </div>
-            ) : null}
-          </DragOverlay>
-        </DndContext>
-
-        <input
-          ref={inputRef}
-          className="text-foreground placeholder:text-muted min-w-[120px] flex-1 border-none bg-transparent text-sm outline-none"
-          placeholder={value.length === 0 && typedWords.length === 0 ? defaultPlaceholder : ""}
-          style={{ fontSize: "16px" }}
-          type="text"
-          value={rawInput}
-          onBlur={(e) => e.currentTarget.parentElement?.removeAttribute("data-focus")}
-          onChange={(e) => setRawInput(e.target.value)}
-          onFocus={(e) => e.currentTarget.parentElement?.setAttribute("data-focus", "true")}
-          onKeyDown={handleKeyDown}
-        />
+        <SortableTagChips value={value} onActivate={setEditingTag} onChange={onChange}>
+          <input
+            ref={inputRef}
+            className="text-foreground placeholder:text-muted min-w-[120px] flex-1 border-none bg-transparent text-sm outline-none"
+            placeholder={value.length === 0 && typedWords.length === 0 ? defaultPlaceholder : ""}
+            style={{ fontSize: "16px" }}
+            type="text"
+            value={rawInput}
+            onBlur={(e) => e.currentTarget.parentElement?.removeAttribute("data-focus")}
+            onChange={(e) => setRawInput(e.target.value)}
+            onFocus={(e) => e.currentTarget.parentElement?.setAttribute("data-focus", "true")}
+            onKeyDown={handleKeyDown}
+          />
+        </SortableTagChips>
       </div>
 
       {/* Non-matching words and suggestions below (matching RecurrenceSuggestion styling) */}

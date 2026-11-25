@@ -1,0 +1,48 @@
+"use client";
+
+import { EntryComboBox } from "@/components/shared/entry-combo-box";
+import { SortableTagChips } from "@/components/shared/sortable-tag-chips";
+import { useTranslations } from "next-intl";
+
+import { entryFold } from "@norish/shared/lib/fold-name";
+
+interface TagPickerProps {
+  value: string[];
+  onChange: (tags: string[]) => void;
+  /** The recipe being edited, once it exists: its household's Tags are the ones offered. */
+  recipeId?: string;
+}
+
+/**
+ * The recipe's Tags as chips, and a field that searches the household's list as you type. A Tag
+ * the list lacks is made only by its "Create 'x'" row; typing and saving never make one.
+ */
+export default function TagPicker({ value, onChange, recipeId }: TagPickerProps) {
+  const t = useTranslations("recipes.editor");
+  const has = (name: string) => value.some((tag) => entryFold(tag) === entryFold(name));
+
+  return (
+    // A field holding chips is still a field: the same soft fill and border as the form's inputs.
+    <div className="group bg-default flex min-h-[48px] flex-wrap items-center gap-2 rounded-2xl border border-(--field-border) px-3 py-2 shadow-none">
+      <SortableTagChips
+        chipLabel={(tag) => t("removeNamed", { name: tag })}
+        value={value}
+        onActivate={(tag) => onChange(value.filter((other) => other !== tag))}
+        onChange={onChange}
+      >
+        <EntryComboBox
+          className="min-w-[120px] flex-1"
+          inputClassName="border-none bg-transparent px-0 shadow-none outline-none"
+          kind="tag"
+          label={t("addTag")}
+          placeholder={value.length === 0 ? t("addTag") : ""}
+          recipeId={recipeId}
+          isSelected={(entry) => has(entry.name)}
+          onSelect={(entry) => {
+            if (!has(entry.name)) onChange([...value, entry.name]);
+          }}
+        />
+      </SortableTagChips>
+    </div>
+  );
+}
