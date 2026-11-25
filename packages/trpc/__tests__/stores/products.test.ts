@@ -33,7 +33,7 @@ const storeProductsRepository = vi.hoisted(() => ({
 
 const storesRepository = vi.hoisted(() => ({
   getStoreById: vi.fn(),
-  getStoreOwnerId: vi.fn(),
+  getStoreHouseholdId: vi.fn(),
 }));
 
 vi.mock("@norish/db/repositories/store-products", () => storeProductsRepository);
@@ -67,8 +67,8 @@ describe("chooseProduct", () => {
   };
 
   beforeEach(() => {
-    storesRepository.getStoreOwnerId.mockResolvedValue(ctx.user.id);
-    assertHouseholdAccess.mockResolvedValue(undefined);
+    storesRepository.getStoreHouseholdId.mockResolvedValue(ctx.householdId);
+    assertHouseholdAccess.mockReturnValue(undefined);
     storeProductsRepository.resolveProductLink.mockResolvedValue(null);
   });
 
@@ -404,12 +404,12 @@ describe("searchShop", () => {
   ];
 
   beforeEach(() => {
-    storesRepository.getStoreOwnerId.mockResolvedValue(ctx.user.id);
+    storesRepository.getStoreHouseholdId.mockResolvedValue(ctx.householdId);
     storesRepository.getStoreById.mockResolvedValue({
       id: STORE,
       searchAddress: "https://www.dirk.nl/zoeken/producten/{query}",
     });
-    assertHouseholdAccess.mockResolvedValue(undefined);
+    assertHouseholdAccess.mockReturnValue(undefined);
     lookup.searchStore.mockResolvedValue({ candidates: offered, answered: true });
     storeProductsRepository.resolveProductLink.mockResolvedValue(null);
   });

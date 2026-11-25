@@ -7,7 +7,7 @@ import {
   listAisleLinksByStoreIds,
   listInheritedAisleLinks,
 } from "@norish/db/repositories/aisles";
-import { listStoresByUserIds } from "@norish/db/repositories/stores";
+import { listStoresByHousehold } from "@norish/db/repositories/stores";
 import { resolveIngredient, writeResolved } from "@norish/shared-server/ingredients/resolver";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { stores } from "@norish/shared-server/realtime/stores";
@@ -26,10 +26,10 @@ import { assertStoreAccess } from "./stores-helpers";
  * (ADR-0031), and the screen never walks the tree.
  */
 const aisleLinks = authedProcedure.query(async ({ ctx }): Promise<AisleLinkDto[]> => {
-  const storeIds = (await listStoresByUserIds(ctx.userIds)).map((store) => store.id);
+  const storeIds = (await listStoresByHousehold(ctx.householdId)).map((store) => store.id);
   const [own, inherited] = await Promise.all([
     listAisleLinksByStoreIds(storeIds),
-    listInheritedAisleLinks(storeIds, ctx.userIds),
+    listInheritedAisleLinks(storeIds, ctx.householdId),
   ]);
 
   return [...own, ...inherited];

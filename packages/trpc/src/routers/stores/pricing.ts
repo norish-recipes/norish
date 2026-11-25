@@ -7,13 +7,13 @@
  * never waits on a supermarket.
  */
 import type { GroceryDto, ResolvedProductLink } from "@norish/shared/contracts";
-import { listGroceriesByUsers } from "@norish/db/repositories/groceries";
+import { listGroceriesByHousehold } from "@norish/db/repositories/groceries";
 import {
   listStaleProducts,
   markLinkPending,
   resolveProductLinks,
 } from "@norish/db/repositories/store-products";
-import { listStoresByUserIds } from "@norish/db/repositories/stores";
+import { listStoresByHousehold } from "@norish/db/repositories/stores";
 import { getQueues } from "@norish/queue/registry";
 import { staleBefore } from "@norish/queue/store-lookup/lookup";
 import {
@@ -42,7 +42,6 @@ interface PriceablePair {
 }
 
 interface PricingContext {
-  userIds: string[];
   householdId: string;
 }
 
@@ -105,7 +104,7 @@ async function resolveAndQueue(
 
   if (pairs.length === 0) return { known: [], fresh: [] };
 
-  const stores = await listStoresByUserIds(ctx.userIds);
+  const stores = await listStoresByHousehold(ctx.householdId);
   // A grocery is priced through a Store of its own household and no other:
   // a store id that is not the household's is not a question for any shop,
   // and its links are not this household's to read.
@@ -164,7 +163,7 @@ export async function noticeGroceries(
  * visit a supermarket for a list nobody is shopping.
  */
 export async function priceTheList(ctx: PricingContext): Promise<ResolvedProductLink[]> {
-  const groceries = await listGroceriesByUsers(ctx.userIds, { includeDone: true });
+  const groceries = await listGroceriesByHousehold(ctx.householdId, { includeDone: true });
   // The list is the answer here, and what the Stores already knew is not
   // announced: everyone reading it is asking for exactly this. A question
   // asked just now is news, though — a Pending Link the household's other

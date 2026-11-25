@@ -5,7 +5,7 @@ import { recurringGroceriesProcedures } from "@norish/trpc/routers/groceries/rec
 
 // Import test utilities
 import { createMockCallerContext } from "../calendar/test-utils";
-import { createGroceries, listGroceriesByUsers, lockGroceryList } from "../mocks/db";
+import { createGroceries, listGroceriesByHousehold, lockGroceryList } from "../mocks/db";
 import { TX } from "../mocks/drizzle";
 import { parseIngredientWithDefaults } from "../mocks/helpers";
 import { resolveGroceryNames } from "../mocks/ingredient-groceries";
@@ -20,7 +20,7 @@ import {
   deleteRecurringGroceryById,
   detachRecurringGrocery,
   getRecurringGroceryById,
-  getRecurringGroceryOwnerId,
+  getRecurringGroceryHouseholdId,
   updateRecurringGrocery,
   updateRecurringGroceryWithGrocery,
 } from "../mocks/recurring-groceries";
@@ -35,11 +35,11 @@ import {
 
 const storesRepository = vi.hoisted(() => ({
   findBestIngredientStorePreference: vi.fn(),
-  getStoreOwnerId: vi.fn(),
+  getStoreHouseholdId: vi.fn(),
   upsertIngredientStorePreference: vi.fn(),
   // A household with no Store that points at a shop: pricing notices the
   // groceries, finds nothing to ask, and visits nothing.
-  listStoresByUserIds: vi.fn(async () => []),
+  listStoresByHousehold: vi.fn(async () => []),
 }));
 
 const storeProductsRepository = vi.hoisted(() => ({
@@ -104,10 +104,10 @@ describe("recurring groceries procedures", () => {
 
   beforeEach(() => {
     ctx = createMockAuthedContext(mockUser, mockHousehold);
-    getRecurringGroceryOwnerId.mockResolvedValue(ctx.user.id);
-    assertHouseholdAccess.mockResolvedValue(undefined);
+    getRecurringGroceryHouseholdId.mockResolvedValue(ctx.householdId);
+    assertHouseholdAccess.mockReturnValue(undefined);
     createRecurringGroceries.mockImplementation(madeAsAsked);
-    listGroceriesByUsers.mockResolvedValue([]);
+    listGroceriesByHousehold.mockResolvedValue([]);
     createGroceries.mockImplementation(groceriesAsAsked);
   });
 
@@ -621,6 +621,7 @@ describe("recurring groceries procedures", () => {
         TX
       );
       expect(storesRepository.upsertIngredientStorePreference).toHaveBeenCalledWith(
+        ctx.householdId,
         ctx.user.id,
         "ingredient:oat milk",
         storeId
@@ -752,6 +753,7 @@ describe("recurring groceries procedures", () => {
         TX
       );
       expect(storesRepository.upsertIngredientStorePreference).toHaveBeenCalledWith(
+        ctx.householdId,
         ctx.user.id,
         "ingredient:test",
         storeId
@@ -829,6 +831,7 @@ describe("recurring groceries procedures", () => {
 
       expect(result).toEqual({ success: true, stale: false });
       expect(checkRecurringGrocery).toHaveBeenCalledWith({
+        householdId: ctx.householdId,
         groceryId: "g1",
         groceryVersion: 3,
         isDone: true,
@@ -870,6 +873,7 @@ describe("recurring groceries procedures", () => {
       await flushAsync();
 
       expect(checkRecurringGrocery).toHaveBeenCalledWith({
+        householdId: ctx.householdId,
         groceryId: "g1",
         groceryVersion: 3,
         isDone: false,
@@ -968,7 +972,7 @@ describe("a failed repeat edit rejects, so Replay parks it", () => {
     ["deleteRecurring", () => caller().deleteRecurring({ recurringGroceryId: "r1", version: 2 })],
     ["checkRecurring", () => caller().checkRecurring({ ...versions, isDone: true })],
   ])("%s", async (_, write) => {
-    getRecurringGroceryOwnerId.mockResolvedValue(null);
+    getRecurringGroceryHouseholdId.mockResolvedValue(null);
 
     await expect(write()).rejects.toThrow("Recurring grocery not found");
     // The app's own client toasts the rejection; a `failed` event would toast it twice.
@@ -992,11 +996,13 @@ describe("a repeating grocery asks its Store what it knows", () => {
 
   beforeEach(() => {
     ctx = createMockAuthedContext(mockUser, mockHousehold);
-    getRecurringGroceryOwnerId.mockResolvedValue(ctx.user.id);
-    assertHouseholdAccess.mockResolvedValue(undefined);
+    getRecurringGroceryHouseholdId.mockResolvedValue(ctx.householdId);
+    assertHouseholdAccess.mockReturnValue(undefined);
     storeProductsRepository.resolveProductLinks.mockResolvedValue([link]);
     // Pricing answers only for the household's own Stores.
-    storesRepository.listStoresByUserIds.mockResolvedValue([{ id: storeId, searchAddress: null }]);
+    storesRepository.listStoresByHousehold.mockResolvedValue([
+      { id: storeId, searchAddress: null },
+    ]);
   });
 
   // Every other way a grocery lands on the list under a Store asks that Store

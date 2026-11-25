@@ -15,7 +15,7 @@ import {
   editPlannedItem,
   getPlannedItemById,
   getPlannedItemWithRecipeById,
-  listPlannedItemsByUserAndDateRange,
+  listPlannedItemsByHouseholdAndDateRange,
   listPlannedItemsWithRecipeBySlot,
   moveItem,
 } from "@norish/db/repositories/planned-items";
@@ -27,12 +27,11 @@ import { publishCalendarItemEvent } from "./publish";
 
 export type CalendarProcedureContext = {
   user: { id: string };
-  userIds: string[];
   householdId: string;
 };
 
 type PlannedItemWithRecipeRow = Awaited<
-  ReturnType<typeof listPlannedItemsByUserAndDateRange>
+  ReturnType<typeof listPlannedItemsByHouseholdAndDateRange>
 >[number];
 
 export function buildPlannedItemPayload(
@@ -120,7 +119,7 @@ export async function listItemsByRange(
   startISO: string,
   endISO: string
 ) {
-  return listPlannedItemsByUserAndDateRange(ctx.userIds, startISO, endISO);
+  return listPlannedItemsByHouseholdAndDateRange(ctx.householdId, startISO, endISO);
 }
 
 export async function listPlannedRecipesByRange(
@@ -142,6 +141,7 @@ export async function createCalendarItem(ctx: CalendarProcedureContext, input: C
   const newItem = await createPlannedItem({
     // Client-minted id when supplied; drizzle falls back to its default when undefined (ADR-0003).
     id,
+    householdId: ctx.householdId,
     userId: ctx.user.id,
     date,
     slot,
@@ -191,7 +191,7 @@ export async function deleteCalendarItem(
   }
   if (!item) return { success: true, stale: false };
 
-  await assertHouseholdAccess(ctx.householdId, item.userId);
+  assertHouseholdAccess(ctx.householdId, item.householdId);
 
   const deleteResult = await deletePlannedItem(itemId, version);
 
@@ -217,10 +217,12 @@ export async function publishItemMoved(
   item: PlannedItemWithRecipePayload
 ) {
   const sortOf = async (date: string, slot: Slot) =>
-    (await listPlannedItemsWithRecipeBySlot(ctx.userIds, date, slot)).map(({ id, sortOrder }) => ({
-      id,
-      sortOrder,
-    }));
+    (await listPlannedItemsWithRecipeBySlot(ctx.householdId, date, slot)).map(
+      ({ id, sortOrder }) => ({
+        id,
+        sortOrder,
+      })
+    );
   const crossSlot = from.date !== item.date || from.slot !== item.slot;
 
   await publishCalendarItemEvent(
@@ -248,7 +250,7 @@ async function itemAtVersion(
   // A plan another member removed lost to an earlier write: stale, as a changed version is.
   if (!item) return null;
 
-  await assertHouseholdAccess(ctx.householdId, item.userId);
+  assertHouseholdAccess(ctx.householdId, item.householdId);
 
   // A write at another version changes nothing, whatever it asks (ADR-0004).
   if (item.version === version) return item;

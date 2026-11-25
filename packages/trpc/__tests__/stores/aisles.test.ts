@@ -27,8 +27,8 @@ const aislesRepository = vi.hoisted(() => ({
 }));
 
 const storesRepository = vi.hoisted(() => ({
-  getStoreOwnerId: vi.fn(),
-  listStoresByUserIds: vi.fn(),
+  getStoreHouseholdId: vi.fn(),
+  listStoresByHousehold: vi.fn(),
 }));
 
 vi.mock("@norish/db/repositories/aisles", () => aislesRepository);
@@ -50,8 +50,8 @@ describe("filing a name at a Store", () => {
   const caller = aisleProcedures.createCaller(createMockCallerContext(ctx));
 
   beforeEach(() => {
-    storesRepository.getStoreOwnerId.mockResolvedValue(ctx.user.id);
-    assertHouseholdAccess.mockResolvedValue(undefined);
+    storesRepository.getStoreHouseholdId.mockResolvedValue(ctx.householdId);
+    assertHouseholdAccess.mockReturnValue(undefined);
     aislesRepository.getAisleById.mockResolvedValue({ id: ZUIVEL, storeId: STORE, name: "Zuivel" });
     aislesRepository.fileIngredient.mockImplementation(
       async (storeId: string, ingredientId: string, aisleId: string | null) => ({
@@ -101,7 +101,9 @@ describe("filing a name at a Store", () => {
   });
 
   it("refuses to file at a Store of another household", async () => {
-    assertHouseholdAccess.mockRejectedValue(new TRPCError({ code: "FORBIDDEN" }));
+    assertHouseholdAccess.mockImplementation(() => {
+      throw new TRPCError({ code: "FORBIDDEN" });
+    });
 
     await expect(
       caller.fileGroceryName({ storeId: OTHER_STORE, name: "melk", aisleId: ZUIVEL })
@@ -157,7 +159,7 @@ describe("filing a name at a Store", () => {
   });
 
   it("reads every Aisle Link of the household's Stores in one query", async () => {
-    storesRepository.listStoresByUserIds.mockResolvedValue([{ id: STORE }, { id: OTHER_STORE }]);
+    storesRepository.listStoresByHousehold.mockResolvedValue([{ id: STORE }, { id: OTHER_STORE }]);
     aislesRepository.listAisleLinksByStoreIds.mockResolvedValue([
       { storeId: STORE, ingredientId: "ingredient:melk", aisleId: ZUIVEL },
     ]);
@@ -168,11 +170,11 @@ describe("filing a name at a Store", () => {
 
     const links = await caller.aisleLinks();
 
-    expect(storesRepository.listStoresByUserIds).toHaveBeenCalledWith(ctx.userIds);
+    expect(storesRepository.listStoresByHousehold).toHaveBeenCalledWith(ctx.householdId);
     expect(aislesRepository.listAisleLinksByStoreIds).toHaveBeenCalledWith([STORE, OTHER_STORE]);
     expect(aislesRepository.listInheritedAisleLinks).toHaveBeenCalledWith(
       [STORE, OTHER_STORE],
-      ctx.userIds
+      ctx.householdId
     );
     // A kind of a food files where its parent is filed, read the same way.
     expect(links).toEqual([

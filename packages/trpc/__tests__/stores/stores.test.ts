@@ -26,8 +26,8 @@ const storesRepository = vi.hoisted(() => ({
   createStore: vi.fn(),
   deleteStore: vi.fn(),
   getStoreById: vi.fn(),
-  getStoreOwnerId: vi.fn(),
-  listStoresByUserIds: vi.fn(),
+  getStoreHouseholdId: vi.fn(),
+  listStoresByHousehold: vi.fn(),
   reorderStores: vi.fn(),
   updateStore: vi.fn(),
 }));
@@ -60,8 +60,8 @@ describe("stores procedures", () => {
   const ctx = createMockAuthedContext(user, household);
 
   beforeEach(() => {
-    storesRepository.getStoreOwnerId.mockResolvedValue(ctx.user.id);
-    assertHouseholdAccess.mockResolvedValue(undefined);
+    storesRepository.getStoreHouseholdId.mockResolvedValue(ctx.householdId);
+    assertHouseholdAccess.mockReturnValue(undefined);
   });
 
   it("checks the link the client just saved, not the one it replaced", async () => {
@@ -131,7 +131,7 @@ describe("stores procedures", () => {
   });
 
   it("answers an update to a Store that no longer exists as stale", async () => {
-    storesRepository.getStoreOwnerId.mockResolvedValue(null);
+    storesRepository.getStoreHouseholdId.mockResolvedValue(null);
 
     const caller = storesProcedures.createCaller(createMockCallerContext(ctx));
 
@@ -252,7 +252,7 @@ describe("stores procedures", () => {
   });
 
   it("takes a delete of a Store already gone as done", async () => {
-    storesRepository.getStoreOwnerId.mockResolvedValue(null);
+    storesRepository.getStoreHouseholdId.mockResolvedValue(null);
 
     const caller = storesProcedures.createCaller(createMockCallerContext(ctx));
 
@@ -449,7 +449,7 @@ describe("stores procedures", () => {
       },
     ];
 
-    storesRepository.listStoresByUserIds.mockResolvedValue(stores);
+    storesRepository.listStoresByHousehold.mockResolvedValue(stores);
 
     const caller = openApiStoresRouter.createCaller(createMockCallerContext(ctx));
     const result = await caller.listStores();

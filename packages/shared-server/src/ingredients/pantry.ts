@@ -9,7 +9,7 @@ import { resolveIngredients, typedParts, writeResolved } from "./resolver";
  */
 export async function addToPantry(
   id: string,
-  input: { userId: string; userIds: string[]; name: string }
+  input: { userId: string; householdId: string; name: string }
 ): Promise<PantryAdded[]> {
   const typed: { id?: string; name: string } = { id, name: input.name };
   const [parts = [typed]] = await typedParts([typed], { alternatives: "each" });
@@ -46,7 +46,7 @@ export async function addToPantry(
  */
 export async function addPickedToPantry(
   id: string,
-  input: { userId: string; userIds: string[]; ingredientId: string }
+  input: { userId: string; householdId: string; ingredientId: string }
 ): Promise<PantryAdded[]> {
   const spelling = await findIngredientOwnSpelling(input.ingredientId);
 

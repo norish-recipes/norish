@@ -6,7 +6,7 @@ import { assertHouseholdAccess } from "@norish/auth/permissions";
 import {
   deleteDoneInStore,
   getGroceriesByIds,
-  getGroceryOwnerIds,
+  getGroceryHouseholdIds,
   GroceryCreateSchema,
   GroceryDeleteSchema,
   GrocerySelectBaseSchema,
@@ -17,7 +17,7 @@ import {
   reorderGroceriesInStore,
   updateGroceries,
 } from "@norish/db";
-import { getStoreOwnerId } from "@norish/db/repositories/stores";
+import { getStoreHouseholdId } from "@norish/db/repositories/stores";
 import { getUnits } from "@norish/shared-server/config/server-config-loader";
 import { groceryPartsOf } from "@norish/shared-server/ingredients/groceries";
 import { trpcLogger as log } from "@norish/shared-server/logger";
@@ -76,14 +76,14 @@ const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, 
 
   log.debug({ userId: ctx.user.id, groceryId }, "Updating grocery");
 
-  return getGroceryOwnerIds([groceryId])
+  return getGroceryHouseholdIds([groceryId])
     .then(async (ownerIds) => {
       const ownerId = ownerIds.get(groceryId);
 
       // A line another member deleted lost to an earlier write: stale, as a changed version is.
       if (!ownerId) return { success: true, stale: true };
 
-      await assertHouseholdAccess(ctx.householdId, ownerId);
+      assertHouseholdAccess(ctx.householdId, ownerId);
       // The Store the grocery is filed under, and priced through, is the
       // household's own — as it is for a drag or an assignment.
       if (storeId) await assertStoreAccess(ctx, storeId);
@@ -171,7 +171,7 @@ const update = authedProcedure.input(GroceryUpdateInputSchema).mutation(({ ctx, 
       // Editing the store through the panel implies "remember this store for
       // this ingredient", matching the previous assignToStore behaviour.
       await afterCommit(ctx, "remembering the Store", () =>
-        rememberStorePreference(ctx.user.id, edited.ingredientId, storeId)
+        rememberStorePreference(ctx, edited.ingredientId, storeId)
       );
 
       log.debug({ userId: ctx.user.id, groceryId }, "Grocery updated");
@@ -492,24 +492,24 @@ const reorderInStore = authedProcedure
       }
     }
 
-    return getGroceryOwnerIds(groceryIds)
+    return getGroceryHouseholdIds(groceryIds)
       .then(async (ownerIds) => {
         // A line another member deleted lost to an earlier write: left out, it answers stale.
         const present = updates.filter((u) => ownerIds.has(u.id));
 
         // Check household access for all groceries
         for (const ownerId of ownerIds.values()) {
-          await assertHouseholdAccess(ctx.householdId, ownerId);
+          assertHouseholdAccess(ctx.householdId, ownerId);
         }
 
         // Verify access to any stores being assigned to
         for (const storeId of storeIdsToVerify) {
-          const storeOwnerId = await getStoreOwnerId(storeId);
+          const storeOwnerId = await getStoreHouseholdId(storeId);
 
           if (!storeOwnerId) {
             throw new TRPCError({ code: "NOT_FOUND", message: "Store not found" });
           }
-          await assertHouseholdAccess(ctx.householdId, storeOwnerId);
+          assertHouseholdAccess(ctx.householdId, storeOwnerId);
         }
 
         // Perform reorder (and optional store changes)
@@ -565,7 +565,7 @@ const reorderInStore = authedProcedure
             for (const grocery of groceriesForPreference) {
               const update = itemsWithStoreChange.find((u) => u.id === grocery.id);
 
-              await rememberStorePreference(ctx.user.id, grocery.ingredientId, update?.storeId);
+              await rememberStorePreference(ctx, grocery.ingredientId, update?.storeId);
             }
           }
         });
@@ -638,7 +638,7 @@ const deleteDone = authedProcedure
     log.info({ userId: ctx.user.id, storeId }, "Deleting done groceries in store");
 
     // A line already gone is a delete that already happened: skipped, not stale.
-    return getGroceryOwnerIds(targets.map((grocery) => grocery.id))
+    return getGroceryHouseholdIds(targets.map((grocery) => grocery.id))
       .then(async (ownerIds) => {
         const present = targets.filter((grocery) => ownerIds.has(grocery.id));
         const deletedIds = await deleteDoneInStore(ctx.householdId, storeId, present);

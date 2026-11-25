@@ -29,6 +29,7 @@ vi.mock("@norish/shared-server/logger", () => ({
 const ID = "00000000-0000-4000-8000-000000000001";
 const stored = {
   id: ID,
+  householdId: "test-household-id",
   userId: "household-member-id",
   date: "2025-01-15",
   slot: "Dinner",
@@ -64,7 +65,7 @@ describe("calendar.editItem", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     getPlannedItemById.mockResolvedValue(stored);
-    assertHouseholdAccess.mockResolvedValue(undefined);
+    assertHouseholdAccess.mockReturnValue(undefined);
     listPlannedItemsWithRecipeBySlot.mockResolvedValue([]);
     editPlannedItem.mockImplementation(async (_id, change: object) => ({
       applied: true,
@@ -102,12 +103,12 @@ describe("calendar.editItem", () => {
     await edit({ slot: "Lunch" });
 
     expect(listPlannedItemsWithRecipeBySlot).toHaveBeenCalledWith(
-      ctx.userIds,
+      ctx.householdId,
       stored.date,
       "Lunch"
     );
     expect(listPlannedItemsWithRecipeBySlot).toHaveBeenCalledWith(
-      ctx.userIds,
+      ctx.householdId,
       stored.date,
       "Dinner"
     );
@@ -156,10 +157,12 @@ describe("calendar.editItem", () => {
   });
 
   it("refuses a member outside the item's household", async () => {
-    assertHouseholdAccess.mockRejectedValue(new Error("Access denied"));
+    assertHouseholdAccess.mockImplementation(() => {
+      throw new Error("Access denied");
+    });
 
     await expect(edit({ title: "Leek soup" })).rejects.toThrow("Access denied");
-    expect(assertHouseholdAccess).toHaveBeenCalledWith(ctx.householdId, stored.userId);
+    expect(assertHouseholdAccess).toHaveBeenCalledWith(ctx.householdId, stored.householdId);
     expect(editPlannedItem).not.toHaveBeenCalled();
     expect(calendar.publish).not.toHaveBeenCalled();
   });

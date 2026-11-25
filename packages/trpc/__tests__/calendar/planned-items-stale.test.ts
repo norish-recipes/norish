@@ -52,7 +52,7 @@ describe("calendar planned items stale handling", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     getPlannedItemById.mockResolvedValue(createPlannedItem());
-    assertHouseholdAccess.mockResolvedValue(undefined);
+    assertHouseholdAccess.mockReturnValue(undefined);
   });
 
   it("logs stale moveItem mutations as no-ops", async () => {

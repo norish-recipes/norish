@@ -17,9 +17,9 @@ import {
   createPlannedItem,
   deletePlannedItem,
   getPlannedItemById,
-  getPlannedItemOwnerId,
+  getPlannedItemHouseholdId,
   getPlannedItemWithRecipeById,
-  listPlannedItemsByUserAndDateRange,
+  listPlannedItemsByHouseholdAndDateRange,
   moveItem,
 } from "../mocks/planned-items";
 import {
@@ -41,6 +41,7 @@ const t = initTRPC.context<ReturnType<typeof createMockAuthedContext>>().create(
 function createMockPlannedItem(overrides: Record<string, unknown> = {}) {
   return {
     id: `item-${crypto.randomUUID()}`,
+    householdId: "test-household-id",
     userId: "test-user-id",
     date: "2025-01-15",
     slot: "Breakfast" as const,
@@ -78,7 +79,7 @@ function createTestCaller(ctx: ReturnType<typeof createMockAuthedContext>) {
           });
         }
 
-        await assertHouseholdAccess(ctx.householdId, item.userId);
+        assertHouseholdAccess(ctx.householdId, item.householdId);
 
         if (
           item.date === targetDate &&
@@ -129,6 +130,7 @@ function createTestCaller(ctx: ReturnType<typeof createMockAuthedContext>) {
         }
 
         const newItem = await createPlannedItem({
+          householdId: ctx.householdId,
           userId: ctx.user.id,
           date,
           slot,
@@ -145,7 +147,7 @@ function createTestCaller(ctx: ReturnType<typeof createMockAuthedContext>) {
       .mutation(async ({ input }) => {
         const { itemId } = input;
 
-        const ownerId = await getPlannedItemOwnerId(itemId);
+        const ownerId = await getPlannedItemHouseholdId(itemId);
 
         if (!ownerId) {
           throw new TRPCError({
@@ -154,7 +156,7 @@ function createTestCaller(ctx: ReturnType<typeof createMockAuthedContext>) {
           });
         }
 
-        await assertHouseholdAccess(ctx.householdId, ownerId);
+        assertHouseholdAccess(ctx.householdId, ownerId);
 
         await deletePlannedItem(itemId);
 
@@ -190,7 +192,7 @@ describe("calendar planned recipe openapi procedures", () => {
   });
 
   it("lists today's planned recipes only", async () => {
-    listPlannedItemsByUserAndDateRange.mockResolvedValue([
+    listPlannedItemsByHouseholdAndDateRange.mockResolvedValue([
       {
         id: crypto.randomUUID(),
         userId: ctx.user.id,
@@ -230,8 +232,8 @@ describe("calendar planned recipe openapi procedures", () => {
     const caller = openApiCalendarRouter.createCaller(createMockCallerContext(ctx));
     const result = await caller.listTodayPlannedRecipes({});
 
-    expect(listPlannedItemsByUserAndDateRange).toHaveBeenCalledWith(
-      ctx.userIds,
+    expect(listPlannedItemsByHouseholdAndDateRange).toHaveBeenCalledWith(
+      ctx.householdId,
       "2025-01-15",
       "2025-01-15"
     );
@@ -261,39 +263,39 @@ describe("calendar planned recipe openapi procedures", () => {
   });
 
   it("lists the current week's planned recipes using server time", async () => {
-    listPlannedItemsByUserAndDateRange.mockResolvedValue([]);
+    listPlannedItemsByHouseholdAndDateRange.mockResolvedValue([]);
 
     const caller = openApiCalendarRouter.createCaller(createMockCallerContext(ctx));
     await caller.listWeekPlannedRecipes({});
 
-    expect(listPlannedItemsByUserAndDateRange).toHaveBeenCalledWith(
-      ctx.userIds,
+    expect(listPlannedItemsByHouseholdAndDateRange).toHaveBeenCalledWith(
+      ctx.householdId,
       "2025-01-13",
       "2025-01-19"
     );
   });
 
   it("lists the current month's planned recipes using server time", async () => {
-    listPlannedItemsByUserAndDateRange.mockResolvedValue([]);
+    listPlannedItemsByHouseholdAndDateRange.mockResolvedValue([]);
 
     const caller = openApiCalendarRouter.createCaller(createMockCallerContext(ctx));
     await caller.listMonthPlannedRecipes({});
 
-    expect(listPlannedItemsByUserAndDateRange).toHaveBeenCalledWith(
-      ctx.userIds,
+    expect(listPlannedItemsByHouseholdAndDateRange).toHaveBeenCalledWith(
+      ctx.householdId,
       "2025-01-01",
       "2025-01-31"
     );
   });
 
   it("lists planned recipes for any date range", async () => {
-    listPlannedItemsByUserAndDateRange.mockResolvedValue([]);
+    listPlannedItemsByHouseholdAndDateRange.mockResolvedValue([]);
 
     const caller = openApiCalendarRouter.createCaller(createMockCallerContext(ctx));
     await caller.listPlannedRecipesRange({ start: "2025-02-01", end: "2025-03-15" });
 
-    expect(listPlannedItemsByUserAndDateRange).toHaveBeenCalledWith(
-      ctx.userIds,
+    expect(listPlannedItemsByHouseholdAndDateRange).toHaveBeenCalledWith(
+      ctx.householdId,
       "2025-02-01",
       "2025-03-15"
     );
@@ -324,12 +326,12 @@ describe("calendar planned recipe openapi procedures", () => {
   });
 
   it("accepts a range of exactly 366 days", async () => {
-    listPlannedItemsByUserAndDateRange.mockResolvedValue([]);
+    listPlannedItemsByHouseholdAndDateRange.mockResolvedValue([]);
 
     const caller = openApiCalendarRouter.createCaller(createMockCallerContext(ctx));
     await caller.listPlannedRecipesRange({ start: "2024-01-01", end: "2024-12-31" });
 
-    expect(listPlannedItemsByUserAndDateRange).toHaveBeenCalled();
+    expect(listPlannedItemsByHouseholdAndDateRange).toHaveBeenCalled();
   });
 
   it("creates a planned note from a title", async () => {
@@ -357,6 +359,7 @@ describe("calendar planned recipe openapi procedures", () => {
     });
 
     expect(createPlannedItem).toHaveBeenCalledWith({
+      householdId: ctx.householdId,
       userId: ctx.user.id,
       date: "2025-01-20",
       slot: "Dinner",
@@ -394,7 +397,7 @@ describe("calendar planned recipe openapi procedures", () => {
       version: 1,
     });
     deletePlannedItem.mockResolvedValue({ stale: false, value: {} });
-    assertHouseholdAccess.mockResolvedValue(undefined);
+    assertHouseholdAccess.mockReturnValue(undefined);
 
     const caller = openApiCalendarRouter.createCaller(createMockCallerContext(ctx));
     const result = await caller.deletePlannedRecipe({ itemId, version: 1 });
@@ -444,6 +447,7 @@ describe("calendar planned recipe openapi procedures", () => {
     });
 
     expect(createPlannedItem).toHaveBeenCalledWith({
+      householdId: ctx.householdId,
       userId: ctx.user.id,
       date: "2025-01-20",
       slot: "Dinner",
@@ -512,7 +516,7 @@ describe("calendar planned recipe openapi procedures", () => {
       version: 2,
     });
     deletePlannedItem.mockResolvedValue({ stale: false, value: {} });
-    assertHouseholdAccess.mockResolvedValue(undefined);
+    assertHouseholdAccess.mockReturnValue(undefined);
 
     const caller = openApiCalendarRouter.createCaller(createMockCallerContext(ctx));
     const result = await caller.deletePlannedRecipe({ itemId, version: 2 });
@@ -556,7 +560,7 @@ describe("calendar planned items procedures", () => {
       });
 
       getPlannedItemById.mockResolvedValue(mockItem);
-      assertHouseholdAccess.mockResolvedValue(undefined);
+      assertHouseholdAccess.mockReturnValue(undefined);
       moveItem.mockResolvedValue(movedItem);
 
       const caller = createTestCaller(ctx);
@@ -568,7 +572,7 @@ describe("calendar planned items procedures", () => {
       });
 
       expect(getPlannedItemById).toHaveBeenCalledWith("item-123");
-      expect(assertHouseholdAccess).toHaveBeenCalledWith(ctx.householdId, mockItem.userId);
+      expect(assertHouseholdAccess).toHaveBeenCalledWith(ctx.householdId, mockItem.householdId);
       expect(moveItem).toHaveBeenCalledWith("item-123", "2025-01-15", "Breakfast", 2);
       expect(result).toEqual({ success: true, moved: true });
     });
@@ -588,7 +592,7 @@ describe("calendar planned items procedures", () => {
       });
 
       getPlannedItemById.mockResolvedValue(mockItem);
-      assertHouseholdAccess.mockResolvedValue(undefined);
+      assertHouseholdAccess.mockReturnValue(undefined);
       moveItem.mockResolvedValue(movedItem);
 
       const caller = createTestCaller(ctx);
@@ -619,7 +623,7 @@ describe("calendar planned items procedures", () => {
       });
 
       getPlannedItemById.mockResolvedValue(mockItem);
-      assertHouseholdAccess.mockResolvedValue(undefined);
+      assertHouseholdAccess.mockReturnValue(undefined);
       moveItem.mockResolvedValue(movedItem);
 
       const caller = createTestCaller(ctx);
@@ -643,7 +647,7 @@ describe("calendar planned items procedures", () => {
       });
 
       getPlannedItemById.mockResolvedValue(mockItem);
-      assertHouseholdAccess.mockResolvedValue(undefined);
+      assertHouseholdAccess.mockReturnValue(undefined);
 
       const caller = createTestCaller(ctx);
       const result = await caller.moveItem({
@@ -654,7 +658,7 @@ describe("calendar planned items procedures", () => {
       });
 
       expect(getPlannedItemById).toHaveBeenCalledWith("item-123");
-      expect(assertHouseholdAccess).toHaveBeenCalledWith(ctx.householdId, mockItem.userId);
+      expect(assertHouseholdAccess).toHaveBeenCalledWith(ctx.householdId, mockItem.householdId);
       expect(moveItem).not.toHaveBeenCalled();
       expect(result).toEqual({ success: true, moved: false });
     });
@@ -683,7 +687,9 @@ describe("calendar planned items procedures", () => {
       });
 
       getPlannedItemById.mockResolvedValue(mockItem);
-      assertHouseholdAccess.mockRejectedValue(new Error("Access denied"));
+      assertHouseholdAccess.mockImplementation(() => {
+        throw new Error("Access denied");
+      });
 
       const caller = createTestCaller(ctx);
 
@@ -717,7 +723,7 @@ describe("calendar planned items procedures", () => {
       };
 
       getPlannedItemById.mockResolvedValue(mockItem);
-      assertHouseholdAccess.mockResolvedValue(undefined);
+      assertHouseholdAccess.mockReturnValue(undefined);
       moveItem.mockResolvedValue(movedItem);
 
       const caller = createTestCaller(ctx);
@@ -755,6 +761,7 @@ describe("calendar planned items procedures", () => {
       });
 
       expect(createPlannedItem).toHaveBeenCalledWith({
+        householdId: ctx.householdId,
         userId: ctx.user.id,
         date: "2025-01-15",
         slot: "Breakfast",
@@ -787,6 +794,7 @@ describe("calendar planned items procedures", () => {
       });
 
       expect(createPlannedItem).toHaveBeenCalledWith({
+        householdId: ctx.householdId,
         userId: ctx.user.id,
         date: "2025-01-15",
         slot: "Lunch",
@@ -828,21 +836,21 @@ describe("calendar planned items procedures", () => {
 
   describe("deleteItem", () => {
     it("deletes item and reindexes slot", async () => {
-      getPlannedItemOwnerId.mockResolvedValue("test-user-id");
-      assertHouseholdAccess.mockResolvedValue(undefined);
+      getPlannedItemHouseholdId.mockResolvedValue(ctx.householdId);
+      assertHouseholdAccess.mockReturnValue(undefined);
       deletePlannedItem.mockResolvedValue([]);
 
       const caller = createTestCaller(ctx);
       const result = await caller.deleteItem({ itemId: "item-123" });
 
-      expect(getPlannedItemOwnerId).toHaveBeenCalledWith("item-123");
-      expect(assertHouseholdAccess).toHaveBeenCalledWith(ctx.householdId, "test-user-id");
+      expect(getPlannedItemHouseholdId).toHaveBeenCalledWith("item-123");
+      expect(assertHouseholdAccess).toHaveBeenCalledWith(ctx.householdId, ctx.householdId);
       expect(deletePlannedItem).toHaveBeenCalledWith("item-123");
       expect(result).toEqual({ success: true });
     });
 
     it("throws error when item not found", async () => {
-      getPlannedItemOwnerId.mockResolvedValue(null);
+      getPlannedItemHouseholdId.mockResolvedValue(null);
 
       const caller = createTestCaller(ctx);
 
@@ -854,8 +862,10 @@ describe("calendar planned items procedures", () => {
     });
 
     it("throws error when user lacks permission", async () => {
-      getPlannedItemOwnerId.mockResolvedValue("other-user-id");
-      assertHouseholdAccess.mockRejectedValue(new Error("Access denied"));
+      getPlannedItemHouseholdId.mockResolvedValue("other-user-id");
+      assertHouseholdAccess.mockImplementation(() => {
+        throw new Error("Access denied");
+      });
 
       const caller = createTestCaller(ctx);
 

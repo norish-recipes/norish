@@ -4,8 +4,8 @@ import type { PantryIngredientDto, PantrySuggestionDto } from "@norish/shared/co
 import { assertHouseholdAccess } from "@norish/auth/permissions";
 import {
   deletePantryIngredient,
-  getPantryIngredientOwnerId,
-  listPantryIngredientsByUserIds,
+  getPantryIngredientHouseholdId,
+  listPantryIngredientsByHousehold,
   listPantrySuggestions,
 } from "@norish/db/repositories/pantry";
 import { addPickedToPantry, addToPantry } from "@norish/shared-server/ingredients/pantry";
@@ -19,14 +19,14 @@ import {
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
 
-/** The household's Pantry, every member's items in one round trip. */
+/** The household's Pantry in one round trip. */
 const list = authedProcedure.query(async ({ ctx }): Promise<PantryIngredientDto[]> => {
-  return listPantryIngredientsByUserIds(ctx.userIds);
+  return listPantryIngredientsByHousehold(ctx.householdId);
 });
 
 /** The foods the household's own recipes use that its Pantry does not cover, most used first. */
 const suggestions = authedProcedure.query(async ({ ctx }): Promise<PantrySuggestionDto[]> => {
-  return listPantrySuggestions(ctx.userIds);
+  return listPantrySuggestions(ctx.householdId);
 });
 
 /**
@@ -35,7 +35,7 @@ const suggestions = authedProcedure.query(async ({ ctx }): Promise<PantrySuggest
  */
 const add = authedProcedure.input(PantryIngredientAddSchema).mutation(async ({ ctx, input }) => {
   const id = input.id ?? crypto.randomUUID();
-  const actor = { userId: ctx.user.id, userIds: ctx.userIds };
+  const actor = { userId: ctx.user.id, householdId: ctx.householdId };
   const items =
     "ingredientId" in input
       ? await addPickedToPantry(id, { ...actor, ingredientId: input.ingredientId })
@@ -61,11 +61,11 @@ const add = authedProcedure.input(PantryIngredientAddSchema).mutation(async ({ c
 const remove = authedProcedure
   .input(PantryIngredientRemoveSchema)
   .mutation(async ({ ctx, input }) => {
-    const ownerId = await getPantryIngredientOwnerId(input.id);
+    const householdId = await getPantryIngredientHouseholdId(input.id);
 
-    if (!ownerId)
+    if (!householdId)
       throw new TRPCError({ code: "NOT_FOUND", message: "Pantry ingredient not found" });
-    await assertHouseholdAccess(ctx.householdId, ownerId);
+    assertHouseholdAccess(ctx.householdId, householdId);
 
     const removed = await deletePantryIngredient(input.id);
 

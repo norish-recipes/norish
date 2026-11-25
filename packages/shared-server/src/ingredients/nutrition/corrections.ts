@@ -99,13 +99,13 @@ export async function correctNutrition(
     density: density?.gramsPerMl ?? null,
   };
 
-  if (!(await saveNutritionCorrection(member.userId, ingredientId, values))) {
+  if (!(await saveNutritionCorrection(member.householdId, member.userId, ingredientId, values))) {
     throw new NutritionCorrectionError("not-found");
   }
   await announce(member, ingredientId);
 }
 
-/** Remove the household's correction to an Ingredient: every member's, back to the sources. */
+/** Remove the household's correction to an Ingredient, back to the sources. */
 export async function removeNutritionCorrection(
   member: CorrectingMember,
   ingredientId: string

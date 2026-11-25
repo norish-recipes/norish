@@ -1,7 +1,7 @@
 // @vitest-environment node
 /**
- * Removing a Pantry item through the real household guard: only membership
- * is stubbed, so the guard must be handed the reader's household id.
+ * Removing a Pantry item through the real household guard: the guard compares the
+ * reader's household with the row's own.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -15,21 +15,11 @@ import {
 
 const pantryRepository = vi.hoisted(() => ({
   deletePantryIngredient: vi.fn(),
-  getPantryIngredientOwnerId: vi.fn(),
-  listPantryIngredientsByUserIds: vi.fn(),
+  getPantryIngredientHouseholdId: vi.fn(),
+  listPantryIngredientsByHousehold: vi.fn(),
   listPantrySuggestions: vi.fn(),
 }));
-const MEMBERS = vi.hoisted<Record<string, string[]>>(() => ({
-  "test-household-id": ["test-user-id", "household-member-id"],
-  "other-household-id": ["stranger-id"],
-}));
-
 vi.mock("@norish/db/repositories/pantry", () => pantryRepository);
-vi.mock("@norish/db/repositories/households", () => ({
-  isHouseholdMember: vi.fn(async (householdId: string, userId: string) =>
-    (MEMBERS[householdId] ?? []).includes(userId)
-  ),
-}));
 vi.mock("@norish/db/repositories/server-config", () => ({ getConfig: vi.fn() }));
 vi.mock("@norish/shared-server/ingredients/pantry", () => ({
   addToPantry: vi.fn(),
@@ -52,14 +42,14 @@ describe("the Pantry's household guard", () => {
   });
 
   it("lets a member remove a housemate's item", async () => {
-    pantryRepository.getPantryIngredientOwnerId.mockResolvedValue("household-member-id");
+    pantryRepository.getPantryIngredientHouseholdId.mockResolvedValue(ctx.householdId);
 
     await expect(caller.remove({ id: OLIVE })).resolves.toBe(OLIVE);
     expect(pantryRepository.deletePantryIngredient).toHaveBeenCalledWith(OLIVE);
   });
 
   it("refuses another household's item", async () => {
-    pantryRepository.getPantryIngredientOwnerId.mockResolvedValue("stranger-id");
+    pantryRepository.getPantryIngredientHouseholdId.mockResolvedValue("other-household-id");
 
     await expect(caller.remove({ id: OLIVE })).rejects.toThrow("FORBIDDEN");
     expect(pantryRepository.deletePantryIngredient).not.toHaveBeenCalled();

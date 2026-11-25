@@ -5,8 +5,8 @@ import { assertHouseholdAccess } from "@norish/auth/permissions";
 import {
   checkStoreNameExistsInHousehold,
   createStore,
-  getStoreOwnerId,
-  listStoresByUserIds,
+  getStoreHouseholdId,
+  listStoresByHousehold,
 } from "@norish/db/repositories/stores";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { stores } from "@norish/shared-server/realtime/stores";
@@ -15,7 +15,6 @@ import { duplicateAisleName } from "@norish/shared/lib/aisles";
 
 export type StoreProcedureContext = {
   user: { id: string };
-  userIds: string[];
   householdId: string;
 };
 
@@ -28,16 +27,16 @@ export async function assertStoreAccess(
   ctx: Pick<StoreProcedureContext, "user" | "householdId">,
   storeId: string
 ): Promise<void> {
-  const ownerId = await getStoreOwnerId(storeId);
+  const householdId = await getStoreHouseholdId(storeId);
 
-  if (!ownerId) throw new TRPCError({ code: "NOT_FOUND", message: "Store not found" });
-  await assertHouseholdAccess(ctx.householdId, ownerId);
+  if (!householdId) throw new TRPCError({ code: "NOT_FOUND", message: "Store not found" });
+  assertHouseholdAccess(ctx.householdId, householdId);
 }
 
 export async function listStoresData(ctx: StoreProcedureContext) {
   log.debug({ userId: ctx.user.id }, "Listing stores");
 
-  const stores = await listStoresByUserIds(ctx.userIds);
+  const stores = await listStoresByHousehold(ctx.householdId);
 
   log.debug({ userId: ctx.user.id, storeCount: stores.length }, "Stores listed");
 
@@ -67,7 +66,7 @@ export async function createStoreData(
 
   log.info({ userId: ctx.user.id, storeName: input.name }, "Creating store");
 
-  const exists = await checkStoreNameExistsInHousehold(input.name, ctx.userIds);
+  const exists = await checkStoreNameExistsInHousehold(input.name, ctx.householdId);
 
   if (exists) {
     throw new TRPCError({
@@ -78,6 +77,7 @@ export async function createStoreData(
   assertAisleNamesUnique(input.aisles);
 
   const storeData = {
+    householdId: ctx.householdId,
     userId: ctx.user.id,
     name: input.name,
     color: input.color ?? "primary",

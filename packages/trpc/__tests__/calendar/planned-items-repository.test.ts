@@ -3,9 +3,9 @@ import { describe, expect, it, vi } from "vitest";
 
 import { db } from "@norish/db/drizzle";
 import {
-  getPlannedItemOwnerId,
+  getPlannedItemHouseholdId,
+  listPlannedItemsByHouseholdAndDateRange,
   listPlannedItemsBySlot,
-  listPlannedItemsByUserAndDateRange,
 } from "@norish/db/repositories/planned-items";
 
 vi.mock("@norish/db/drizzle", () => ({
@@ -17,11 +17,11 @@ vi.mock("@norish/db/drizzle", () => ({
 const dbMock = vi.mocked(db);
 
 describe("planned items repository", () => {
-  const userIds = ["user-1", "user-2"];
+  const householdId = "household-1";
   const date = "2025-01-10";
   const slot = "Dinner" as const;
 
-  describe("listPlannedItemsByUserAndDateRange", () => {
+  describe("listPlannedItemsByHouseholdAndDateRange", () => {
     it("returns items sorted by date, slot, sortOrder", async () => {
       const items = [{ id: "a" }, { id: "b" }];
       const orderBy = vi.fn().mockResolvedValue(items);
@@ -32,7 +32,11 @@ describe("planned items repository", () => {
         from: vi.fn().mockReturnValue({ leftJoin }),
       } as any);
 
-      const result = await listPlannedItemsByUserAndDateRange(userIds, "2025-01-01", "2025-01-31");
+      const result = await listPlannedItemsByHouseholdAndDateRange(
+        householdId,
+        "2025-01-01",
+        "2025-01-31"
+      );
 
       expect(dbMock.select).toHaveBeenCalled();
       expect(leftJoin).toHaveBeenCalled();
@@ -50,7 +54,11 @@ describe("planned items repository", () => {
         from: vi.fn().mockReturnValue({ leftJoin }),
       } as any);
 
-      const result = await listPlannedItemsByUserAndDateRange(userIds, "2025-01-01", "2025-01-31");
+      const result = await listPlannedItemsByHouseholdAndDateRange(
+        householdId,
+        "2025-01-01",
+        "2025-01-31"
+      );
 
       expect(result).toEqual([]);
     });
@@ -66,7 +74,7 @@ describe("planned items repository", () => {
         from: vi.fn().mockReturnValue({ where }),
       } as any);
 
-      const result = await listPlannedItemsBySlot(userIds, date, slot);
+      const result = await listPlannedItemsBySlot(householdId, date, slot);
 
       expect(where).toHaveBeenCalled();
       expect(orderBy).toHaveBeenCalled();
@@ -81,25 +89,25 @@ describe("planned items repository", () => {
         from: vi.fn().mockReturnValue({ where }),
       } as any);
 
-      const result = await listPlannedItemsBySlot(userIds, date, slot);
+      const result = await listPlannedItemsBySlot(householdId, date, slot);
 
       expect(result).toEqual([]);
     });
   });
 
-  describe("getPlannedItemOwnerId", () => {
-    it("returns userId for permission checks", async () => {
+  describe("getPlannedItemHouseholdId", () => {
+    it("returns the household for the household guard", async () => {
       dbMock.select.mockReturnValue({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
-            limit: vi.fn().mockResolvedValue([{ userId: "user-1" }]),
+            limit: vi.fn().mockResolvedValue([{ householdId: "household-1" }]),
           }),
         }),
       } as any);
 
-      const result = await getPlannedItemOwnerId("item-1");
+      const result = await getPlannedItemHouseholdId("item-1");
 
-      expect(result).toBe("user-1");
+      expect(result).toBe("household-1");
     });
   });
 });

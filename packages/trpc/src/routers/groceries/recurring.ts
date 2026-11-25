@@ -13,7 +13,7 @@ import {
   deleteRecurringGroceryById,
   detachRecurringGrocery,
   getRecurringGroceryById,
-  getRecurringGroceryOwnerId,
+  getRecurringGroceryHouseholdId,
   updateRecurringGroceryWithGrocery,
 } from "@norish/db/repositories/recurring-groceries";
 import { getUnits } from "@norish/shared-server/config/server-config-loader";
@@ -67,6 +67,7 @@ function recurringRows(
     return {
       recurring: {
         id: recurringGroceryId,
+        householdId: ctx.householdId,
         userId: ctx.user.id,
         name,
         ...ingredient,
@@ -81,6 +82,7 @@ function recurringRows(
       grocery: {
         id: crypto.randomUUID(),
         groceries: {
+          householdId: ctx.householdId,
           userId: ctx.user.id,
           name,
           ...ingredient,
@@ -202,7 +204,7 @@ const updateRecurring = authedProcedure
 
     log.debug({ userId: ctx.user.id, recurringGroceryId, groceryId }, "Updating recurring grocery");
 
-    return getRecurringGroceryOwnerId(recurringGroceryId)
+    return getRecurringGroceryHouseholdId(recurringGroceryId)
       .then(async (ownerId) => {
         if (!ownerId) {
           throw new TRPCError({
@@ -211,7 +213,7 @@ const updateRecurring = authedProcedure
           });
         }
 
-        await assertHouseholdAccess(ctx.householdId, ownerId);
+        assertHouseholdAccess(ctx.householdId, ownerId);
 
         // A new name is resolved, and the grocery on the list takes the same answer; one
         // joining foods renames it to the first and repeats the rest on its rule, all or none.
@@ -280,7 +282,7 @@ const updateRecurring = authedProcedure
         }
 
         await afterCommit(ctx, "remembering the Store and pricing", async () => {
-          await rememberStorePreference(ctx.user.id, outcome.value.grocery.ingredientId, storeId);
+          await rememberStorePreference(ctx, outcome.value.grocery.ingredientId, storeId);
           // Renamed or moved, the grocery asks its Store a new question.
           await noticeGroceries(ctx, [outcome.value.grocery]);
         });
@@ -318,7 +320,7 @@ const detachRecurring = authedProcedure
 
     log.info({ userId: ctx.user.id, recurringGroceryId, groceryId }, "Detaching recurring grocery");
 
-    return getRecurringGroceryOwnerId(recurringGroceryId)
+    return getRecurringGroceryHouseholdId(recurringGroceryId)
       .then(async (ownerId) => {
         if (!ownerId) {
           throw new TRPCError({
@@ -327,7 +329,7 @@ const detachRecurring = authedProcedure
           });
         }
 
-        await assertHouseholdAccess(ctx.householdId, ownerId);
+        assertHouseholdAccess(ctx.householdId, ownerId);
 
         const units = await getUnits();
         const parsedIngredient = parseIngredientWithDefaults(raw, units)[0];
@@ -387,7 +389,7 @@ const detachRecurring = authedProcedure
         }
 
         await afterCommit(ctx, "remembering the Store", () =>
-          rememberStorePreference(ctx.user.id, edited.ingredientId, storeId)
+          rememberStorePreference(ctx, edited.ingredientId, storeId)
         );
 
         log.info(
@@ -425,7 +427,7 @@ const deleteRecurring = authedProcedure
 
     log.info({ userId: ctx.user.id, recurringGroceryId, version }, "Deleting recurring grocery");
 
-    return getRecurringGroceryOwnerId(recurringGroceryId)
+    return getRecurringGroceryHouseholdId(recurringGroceryId)
       .then(async (ownerId) => {
         if (!ownerId) {
           throw new TRPCError({
@@ -434,7 +436,7 @@ const deleteRecurring = authedProcedure
           });
         }
 
-        await assertHouseholdAccess(ctx.householdId, ownerId);
+        assertHouseholdAccess(ctx.householdId, ownerId);
         const result = await deleteRecurringGroceryById(recurringGroceryId, version);
 
         if (result.stale) {
@@ -503,7 +505,7 @@ const checkRecurring = authedProcedure
       "Checking recurring grocery"
     );
 
-    return getRecurringGroceryOwnerId(recurringGroceryId)
+    return getRecurringGroceryHouseholdId(recurringGroceryId)
       .then(async (ownerId) => {
         if (!ownerId) {
           throw new TRPCError({
@@ -512,7 +514,7 @@ const checkRecurring = authedProcedure
           });
         }
 
-        await assertHouseholdAccess(ctx.householdId, ownerId);
+        assertHouseholdAccess(ctx.householdId, ownerId);
 
         const recurringGrocery = await getRecurringGroceryById(recurringGroceryId);
 
@@ -548,6 +550,7 @@ const checkRecurring = authedProcedure
         }
 
         const outcome = await checkRecurringGrocery({
+          householdId: ctx.householdId,
           groceryId,
           groceryVersion,
           isDone,

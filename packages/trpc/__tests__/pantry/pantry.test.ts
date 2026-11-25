@@ -23,8 +23,8 @@ const { addToPantry, addPickedToPantry } = vi.hoisted(() => ({
 }));
 const pantryRepository = vi.hoisted(() => ({
   deletePantryIngredient: vi.fn(),
-  getPantryIngredientOwnerId: vi.fn(),
-  listPantryIngredientsByUserIds: vi.fn(),
+  getPantryIngredientHouseholdId: vi.fn(),
+  listPantryIngredientsByHousehold: vi.fn(),
   listPantrySuggestions: vi.fn(),
 }));
 
@@ -47,7 +47,7 @@ describe("the Pantry", () => {
   const caller = pantryProcedures.createCaller(createMockCallerContext(ctx));
 
   beforeEach(() => {
-    assertHouseholdAccess.mockResolvedValue(undefined);
+    assertHouseholdAccess.mockReturnValue(undefined);
     addToPantry.mockImplementation(async (id: string, input: { userId: string; name: string }) => [
       {
         item: {
@@ -59,15 +59,15 @@ describe("the Pantry", () => {
         created: true,
       },
     ]);
-    pantryRepository.getPantryIngredientOwnerId.mockResolvedValue(ctx.user.id);
+    pantryRepository.getPantryIngredientHouseholdId.mockResolvedValue(ctx.householdId);
     pantryRepository.deletePantryIngredient.mockResolvedValue(true);
   });
 
   it("reads the whole household's Pantry", async () => {
-    pantryRepository.listPantryIngredientsByUserIds.mockResolvedValue([{ id: OLIVE }]);
+    pantryRepository.listPantryIngredientsByHousehold.mockResolvedValue([{ id: OLIVE }]);
 
     await expect(caller.list()).resolves.toEqual([{ id: OLIVE }]);
-    expect(pantryRepository.listPantryIngredientsByUserIds).toHaveBeenCalledWith(ctx.userIds);
+    expect(pantryRepository.listPantryIngredientsByHousehold).toHaveBeenCalledWith(ctx.householdId);
   });
 
   it("adds a name under the client's id and tells the household", async () => {
@@ -75,7 +75,7 @@ describe("the Pantry", () => {
 
     expect(addToPantry).toHaveBeenCalledWith(OLIVE, {
       userId: ctx.user.id,
-      userIds: ctx.userIds,
+      householdId: ctx.householdId,
       name: "Olive Oil",
     });
     expect(pantry.publish).toHaveBeenCalledWith(
@@ -124,7 +124,7 @@ describe("the Pantry", () => {
     expect(addToPantry).not.toHaveBeenCalled();
     expect(addPickedToPantry).toHaveBeenCalledWith(OLIVE, {
       userId: ctx.user.id,
-      userIds: ctx.userIds,
+      householdId: ctx.householdId,
       ingredientId: ONION,
     });
     expect(pantry.publish).toHaveBeenCalledWith(
@@ -154,7 +154,7 @@ describe("the Pantry", () => {
     pantryRepository.listPantrySuggestions.mockResolvedValue([{ ingredientId: ONION }]);
 
     await expect(caller.suggestions()).resolves.toEqual([{ ingredientId: ONION }]);
-    expect(pantryRepository.listPantrySuggestions).toHaveBeenCalledWith(ctx.userIds);
+    expect(pantryRepository.listPantrySuggestions).toHaveBeenCalledWith(ctx.householdId);
   });
 
   it("refuses a typed name that names no food", async () => {
@@ -174,7 +174,7 @@ describe("the Pantry", () => {
   it("removes an item and tells the household which", async () => {
     await expect(caller.remove({ id: OLIVE })).resolves.toBe(OLIVE);
 
-    expect(assertHouseholdAccess).toHaveBeenCalledWith(ctx.householdId, ctx.user.id);
+    expect(assertHouseholdAccess).toHaveBeenCalledWith(ctx.householdId, ctx.householdId);
     expect(pantryRepository.deletePantryIngredient).toHaveBeenCalledWith(OLIVE);
     expect(pantry.publish).toHaveBeenCalledWith(
       "removed",
@@ -191,10 +191,12 @@ describe("the Pantry", () => {
   });
 
   it("refuses to remove another household's item, or one that does not exist", async () => {
-    assertHouseholdAccess.mockRejectedValue(new TRPCError({ code: "FORBIDDEN" }));
+    assertHouseholdAccess.mockImplementation(() => {
+      throw new TRPCError({ code: "FORBIDDEN" });
+    });
     await expect(caller.remove({ id: OLIVE })).rejects.toMatchObject({ code: "FORBIDDEN" });
 
-    pantryRepository.getPantryIngredientOwnerId.mockResolvedValue(null);
+    pantryRepository.getPantryIngredientHouseholdId.mockResolvedValue(null);
     await expect(caller.remove({ id: OLIVE })).rejects.toMatchObject({ code: "NOT_FOUND" });
     expect(pantryRepository.deletePantryIngredient).not.toHaveBeenCalled();
     expect(pantry.publish).not.toHaveBeenCalled();

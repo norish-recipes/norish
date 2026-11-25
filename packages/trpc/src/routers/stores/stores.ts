@@ -7,7 +7,7 @@ import {
   countGroceriesInStore,
   deleteStore,
   getStoreById,
-  getStoreOwnerId,
+  getStoreHouseholdId,
   reorderStores,
   updateStore,
 } from "@norish/db/repositories/stores";
@@ -26,7 +26,12 @@ import {
 
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
-import { assertAisleNamesUnique, createStoreData, listStoresData } from "./stores-helpers";
+import {
+  assertAisleNamesUnique,
+  assertStoreAccess,
+  createStoreData,
+  listStoresData,
+} from "./stores-helpers";
 import {
   createStoreOutputSchema,
   listStoresOutputSchema,
@@ -85,15 +90,15 @@ export const createStoreProcedure = authedProcedure
 const update = authedProcedure.input(StoreUpdateInputSchema).mutation(async ({ ctx, input }) => {
   log.debug({ userId: ctx.user.id, storeId: input.id }, "Updating store");
 
-  const ownerId = await getStoreOwnerId(input.id);
+  const householdId = await getStoreHouseholdId(input.id);
 
   // A Store another member deleted lost to an earlier write: stale, as a changed version is.
-  if (!ownerId) return { success: true, stale: true };
-  await assertHouseholdAccess(ctx.householdId, ownerId);
+  if (!householdId) return { success: true, stale: true };
+  assertHouseholdAccess(ctx.householdId, householdId);
 
   // Check for duplicate name if name is being changed
   if (input.name) {
-    const exists = await checkStoreNameExistsInHousehold(input.name, ctx.userIds, input.id);
+    const exists = await checkStoreNameExistsInHousehold(input.name, ctx.householdId, input.id);
 
     if (exists) {
       throw new TRPCError({
@@ -142,11 +147,11 @@ const remove = authedProcedure.input(StoreDeleteSchema).mutation(async ({ ctx, i
     "Deleting store"
   );
 
-  const ownerId = await getStoreOwnerId(storeId);
+  const householdId = await getStoreHouseholdId(storeId);
 
   // A Store already gone is a delete that already happened: a no-op, not stale.
-  if (!ownerId) return { success: true, stale: false };
-  await assertHouseholdAccess(ctx.householdId, ownerId);
+  if (!householdId) return { success: true, stale: false };
+  assertHouseholdAccess(ctx.householdId, householdId);
 
   try {
     const { deletedGroceryIds, movedGroceries, storeDeleted, stale } = await deleteStore(
@@ -216,7 +221,7 @@ const reorder = authedProcedure.input(StoreReorderSchema).mutation(async ({ ctx,
   log.debug({ userId: ctx.user.id, storeCount: storeUpdates.length }, "Reordering stores");
 
   try {
-    const reorderedStores = await reorderStores(storeUpdates);
+    const reorderedStores = await reorderStores(storeUpdates, ctx.householdId);
 
     if (reorderedStores.length === 0 && storeUpdates.length > 0) {
       log.info(
@@ -256,12 +261,12 @@ const reorder = authedProcedure.input(StoreReorderSchema).mutation(async ({ ctx,
 });
 
 const getGroceryCount = authedProcedure.input(storeIdInputSchema).query(async ({ ctx, input }) => {
-  const ownerId = await getStoreOwnerId(input.storeId);
+  const householdId = await getStoreHouseholdId(input.storeId);
 
-  if (!ownerId) {
+  if (!householdId) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Store not found" });
   }
-  await assertHouseholdAccess(ctx.householdId, ownerId);
+  assertHouseholdAccess(ctx.householdId, householdId);
 
   return countGroceriesInStore(input.storeId);
 });
@@ -276,10 +281,10 @@ const getGroceryCount = authedProcedure.input(storeIdInputSchema).query(async ({
 const checkSearchAddress = authedProcedure
   .input(StoreSearchAddressCheckSchema)
   .mutation(async ({ ctx, input }): Promise<StoreSearchAddressResult> => {
+    await assertStoreAccess(ctx, input.storeId);
     const store = await getStoreById(input.storeId);
 
     if (!store) throw new TRPCError({ code: "NOT_FOUND", message: "Store not found" });
-    await assertHouseholdAccess(ctx.householdId, store.userId);
 
     // What the client just saved wins over what the row still says, and a
     // field the client cleared is cleared: `null` is an answer, `undefined`
