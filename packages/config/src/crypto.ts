@@ -3,8 +3,8 @@ import crypto from "crypto";
 type DerivedKeys = { authSecret: string; encryption: Buffer; hmac: Buffer };
 
 // On globalThis, so the copy of this module the Next bundle carries sees the key boot resolved.
-const KEYS = Symbol.for("norish:master-key");
-const g = globalThis as { [KEYS]?: DerivedKeys };
+const DERIVED_KEYS = Symbol.for("norish:master-key");
+const shared = globalThis as { [DERIVED_KEYS]?: DerivedKeys };
 
 function deriveKey(masterKey: Buffer, label: string): Buffer {
   return Buffer.from(crypto.hkdfSync("sha256", masterKey, Buffer.alloc(0), Buffer.from(label), 32));
@@ -12,15 +12,15 @@ function deriveKey(masterKey: Buffer, label: string): Buffer {
 
 /** Take the Master Key boot resolved; nothing encrypts, decrypts, signs or hashes before this. */
 export function initMasterKey(masterKey: Buffer): void {
-  g[KEYS] = {
+  shared[DERIVED_KEYS] = {
     authSecret: deriveKey(masterKey, "auth").toString("base64url"),
     encryption: deriveKey(masterKey, "encryption"),
     hmac: deriveKey(masterKey, "hmac"),
   };
 }
 
-function keys(): DerivedKeys {
-  const derived = g[KEYS];
+function derivedKeys(): DerivedKeys {
+  const derived = shared[DERIVED_KEYS];
 
   if (!derived) throw new Error("The Master Key is used before boot resolved it");
 
@@ -34,12 +34,12 @@ export function masterKeyFingerprint(masterKey: Buffer): string {
 
 /** Better Auth's `secret`. */
 export function authSecret(): string {
-  return keys().authSecret;
+  return derivedKeys().authSecret;
 }
 
 export function encrypt(plain: string): string {
   const iv = crypto.randomBytes(12);
-  const cipher = crypto.createCipheriv("aes-256-gcm", keys().encryption, iv);
+  const cipher = crypto.createCipheriv("aes-256-gcm", derivedKeys().encryption, iv);
 
   const encrypted = Buffer.concat([cipher.update(plain, "utf8"), cipher.final()]);
   const tag = cipher.getAuthTag();
@@ -47,7 +47,7 @@ export function encrypt(plain: string): string {
   return Buffer.concat([iv, tag, encrypted]).toString("base64");
 }
 
-function open(encryptionKey: Buffer, enc: string): string {
+function decryptWith(encryptionKey: Buffer, enc: string): string {
   const data = Buffer.from(enc, "base64");
   const iv = data.subarray(0, 12);
   const tag = data.subarray(12, 28);
@@ -61,13 +61,13 @@ function open(encryptionKey: Buffer, enc: string): string {
 }
 
 export function decrypt(enc: string): string {
-  return open(keys().encryption, enc);
+  return decryptWith(derivedKeys().encryption, enc);
 }
 
 /** Whether `masterKey` wrote `enc`, without making it the key in use. */
 export function masterKeyOpens(masterKey: Buffer, enc: string): boolean {
   try {
-    open(deriveKey(masterKey, "encryption"), enc);
+    decryptWith(deriveKey(masterKey, "encryption"), enc);
 
     return true;
   } catch {
@@ -76,9 +76,9 @@ export function masterKeyOpens(masterKey: Buffer, enc: string): boolean {
 }
 
 export function hmacIndex(value: string): string {
-  return crypto.createHmac("sha256", keys().hmac).update(value).digest("hex");
+  return crypto.createHmac("sha256", derivedKeys().hmac).update(value).digest("hex");
 }
 
 export function hashToken(token: string): string {
-  return crypto.createHmac("sha256", keys().hmac).update(token).digest("hex");
+  return crypto.createHmac("sha256", derivedKeys().hmac).update(token).digest("hex");
 }
