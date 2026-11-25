@@ -129,7 +129,7 @@ async function deleteShare(share: ShareRow, version: number) {
 
   if (!result.stale) await emitRecipeShareEvent(share, "deleted");
 
-  return { success: true, stale: result.stale };
+  return { success: true as const, stale: result.stale };
 }
 
 const create = authedProcedure
