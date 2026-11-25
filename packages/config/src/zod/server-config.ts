@@ -26,6 +26,7 @@ export const ServerConfigKeys = {
   TIMER_KEYWORDS: "timer_keywords",
   INGREDIENT_WORDS: "ingredient_words",
   PAGE_RENDERERS: "page_renderers",
+  MASTER_KEY_FINGERPRINT: "master_key_fingerprint",
 } as const;
 
 export type ServerConfigKey = (typeof ServerConfigKeys)[keyof typeof ServerConfigKeys];
@@ -1029,6 +1030,8 @@ export function getSchemaForConfigKey(key: ServerConfigKey): z.ZodType {
       return IngredientWordsConfigSchema;
     case ServerConfigKeys.PAGE_RENDERERS:
       return PageRenderersConfigSchema;
+    case ServerConfigKeys.MASTER_KEY_FINGERPRINT:
+      return z.string().regex(/^[0-9a-f]{64}$/);
     default:
       return z.any();
   }

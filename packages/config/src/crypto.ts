@@ -27,6 +27,11 @@ function keys(): DerivedKeys {
   return derived;
 }
 
+/** Names a Master Key; its own label, so it tells nothing about the keys the Master Key yields. */
+export function masterKeyFingerprint(masterKey: Buffer): string {
+  return deriveKey(masterKey, "fingerprint").toString("hex");
+}
+
 /** Better Auth's `secret`. */
 export function authSecret(): string {
   return keys().authSecret;
@@ -42,17 +47,32 @@ export function encrypt(plain: string): string {
   return Buffer.concat([iv, tag, encrypted]).toString("base64");
 }
 
-export function decrypt(enc: string): string {
+function open(encryptionKey: Buffer, enc: string): string {
   const data = Buffer.from(enc, "base64");
   const iv = data.subarray(0, 12);
   const tag = data.subarray(12, 28);
   const encrypted = data.subarray(28);
 
-  const decipher = crypto.createDecipheriv("aes-256-gcm", keys().encryption, iv);
+  const decipher = crypto.createDecipheriv("aes-256-gcm", encryptionKey, iv);
 
   decipher.setAuthTag(tag);
 
   return Buffer.concat([decipher.update(encrypted), decipher.final()]).toString("utf8");
+}
+
+export function decrypt(enc: string): string {
+  return open(keys().encryption, enc);
+}
+
+/** Whether `masterKey` wrote `enc`, without making it the key in use. */
+export function masterKeyOpens(masterKey: Buffer, enc: string): boolean {
+  try {
+    open(deriveKey(masterKey, "encryption"), enc);
+
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function hmacIndex(value: string): string {
