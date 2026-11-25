@@ -18,6 +18,7 @@ import {
   isHouseholdMember,
   joinHousehold,
   kickUserFromHousehold,
+  MOVED_ATTEMPTS,
   moveToHouseholdOfOne,
   NEW_HOUSEHOLD_NAME,
   regenerateJoinCode,
@@ -437,6 +438,62 @@ describe("households", () => {
         rejected("New admin must be a member of the household"),
       ]);
       await expectEveryAccountHoused();
+    });
+  });
+
+  describe("an account that keeps moving before its lock lands", () => {
+    it("gives up deleting it after a few fresh transactions", async () => {
+      const moving = await createTestUser();
+      const hops = [await householdOf(moving.id)];
+
+      for (let i = 0; i < MOVED_ATTEMPTS; i++) {
+        hops.push(await householdOf((await createTestUser()).id));
+      }
+
+      let deletion: Promise<unknown> | undefined;
+      // Each holder waits for the deletion to block on it, moves the account on, and hands
+      // the next household to a fresh holder before releasing.
+      const hold = async (hop: number, held: () => void): Promise<void> => {
+        let next: Promise<void> = Promise.resolve();
+
+        await getTestDb().transaction(async (tx) => {
+          await tx
+            .select({ id: households.id })
+            .from(households)
+            .where(eq(households.id, hops[hop]!))
+            .for("no key update");
+          held();
+
+          const [holder] = (await tx.execute<{ pid: number }>(sql`SELECT pg_backend_pid() AS pid`))
+            .rows;
+
+          if (hop === 0) {
+            deletion = deleteAccount(moving.id);
+            deletion.catch(() => undefined);
+          }
+          await waitFor(
+            async () =>
+              [...(await lockWaits())].find(([, blockers]) => blockers.includes(holder!.pid)),
+            `attempt ${hop + 1} to wait on the lock`
+          );
+          await tx
+            .update(householdUsers)
+            .set({ householdId: hops[hop + 1]! })
+            .where(eq(householdUsers.userId, moving.id));
+          if (hop + 1 < MOVED_ATTEMPTS) {
+            await Promise.race([
+              new Promise<void>((resolve) => (next = hold(hop + 1, resolve))),
+              next,
+            ]);
+          }
+        });
+        await next;
+      };
+
+      await hold(0, () => undefined);
+
+      await expect(deletion).rejects.toThrow("kept moving while being deleted");
+      expect(await householdOf(moving.id)).toBe(hops[MOVED_ATTEMPTS]);
     });
   });
 

@@ -172,15 +172,21 @@ async function lockHouseholds(tx: DbTransaction, ids: string[]) {
 /** The account left the household it was read in before that household's lock landed. */
 const MOVED = Symbol("moved");
 
-/** Runs `work` in a transaction, and again in a fresh one while it finds the account MOVED. */
-async function retryWhileMoved<T>(
+/** How many fresh transactions an operation tries on an account that keeps moving. */
+export const MOVED_ATTEMPTS = 3;
+
+/** Runs `work` in a fresh transaction while it finds the account MOVED, then gives `givenUp`. */
+async function retryWhileMoved<T, G>(
+  givenUp: G,
   work: (tx: DbTransaction) => Promise<T | typeof MOVED>
-): Promise<T> {
-  for (;;) {
+): Promise<T | G> {
+  for (let attempt = 0; attempt < MOVED_ATTEMPTS; attempt++) {
     const result = await db.transaction(work);
 
     if (result !== MOVED) return result;
   }
+
+  return givenUp;
 }
 
 /** Locks the account's household; every move of the account locks it first, so it stays put. */
@@ -298,7 +304,7 @@ export async function joinHousehold(
   userId: string,
   target: { householdId: string; name?: string } | { joinCode: string }
 ): Promise<JoinHouseholdOutcome> {
-  return await retryWhileMoved(async (tx) => {
+  return await retryWhileMoved({ refused: "shared" } as const, async (tx) => {
     const current = await householdIdIn(tx, userId);
 
     if (!current) throw new Error("Account has no household");
@@ -484,7 +490,7 @@ export async function findHouseholdByName(name: string): Promise<HouseholdDto | 
 
 /** Names the account's household while it is a household of one; null once it is shared. */
 export async function renameHouseholdOfOne(userId: string, name: string): Promise<string | null> {
-  return await retryWhileMoved(async (tx) => {
+  return await retryWhileMoved(null, async (tx) => {
     const household = await lockHouseholdOf(tx, userId);
 
     if (household === MOVED) return MOVED;
@@ -504,7 +510,7 @@ export async function renameHouseholdOfOne(userId: string, name: string): Promis
  * longest-standing member, or the household goes with its last member. Returns the successor.
  */
 export async function deleteAccount(userId: string): Promise<string | null> {
-  return await retryWhileMoved(async (tx) => {
+  const successor = await retryWhileMoved(MOVED, async (tx) => {
     const household = await lockHouseholdOf(tx, userId);
 
     if (household === MOVED) return MOVED;
@@ -530,6 +536,10 @@ export async function deleteAccount(userId: string): Promise<string | null> {
 
     return successorId;
   });
+
+  if (successor === MOVED) throw new Error("The account kept moving while being deleted");
+
+  return successor;
 }
 
 async function generateUniqueJoinCode(): Promise<string> {
