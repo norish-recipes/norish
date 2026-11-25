@@ -228,6 +228,19 @@ describe("households", () => {
     return new Map(rows.map((row) => [row.pid, row.blockers]));
   }
 
+  /** Polls `found` until it answers, failing well inside Vitest's timeout so the caller's lock goes. */
+  async function waitFor<T>(found: () => Promise<T | undefined>, what: string): Promise<T> {
+    const deadline = Date.now() + 3000;
+
+    for (;;) {
+      const value = await found();
+
+      if (value !== undefined) return value;
+      if (Date.now() > deadline) throw new Error(`Timed out waiting for ${what}`);
+      await new Promise((resolve) => setTimeout(resolve, 5));
+    }
+  }
+
   /**
    * The test's own transaction holds the household's row lock while `ops` start in
    * order, each confirmed waiting behind the holder or an op before it; then it releases.
@@ -237,46 +250,49 @@ describe("households", () => {
     ops: Array<() => Promise<unknown>>,
     strength: "update" | "no key update" = "update"
   ): Promise<PromiseSettledResult<unknown>[]> {
-    const runs = await getTestDb().transaction(async (tx) => {
-      await tx
-        .select({ id: households.id })
-        .from(households)
-        .where(eq(households.id, householdId))
-        .for(strength);
+    const started: Promise<unknown>[] = [];
+    let settledRuns: PromiseSettledResult<unknown>[] = [];
 
-      const [holder] = (await tx.execute<{ pid: number }>(sql`SELECT pg_backend_pid() AS pid`))
-        .rows;
-      const queue = [holder!.pid];
-      const started: Promise<unknown>[] = [];
+    try {
+      // A failed wait rolls the transaction back, releasing the lock for the started ops.
+      await getTestDb().transaction(async (tx) => {
+        await tx
+          .select({ id: households.id })
+          .from(households)
+          .where(eq(households.id, householdId))
+          .for(strength);
 
-      for (const [index, op] of ops.entries()) {
-        let settled = false;
-        const run = op().finally(() => (settled = true));
+        const [holder] = (await tx.execute<{ pid: number }>(sql`SELECT pg_backend_pid() AS pid`))
+          .rows;
+        const queue = [holder!.pid];
 
-        run.catch(() => undefined);
-        started.push(run);
+        for (const [index, op] of ops.entries()) {
+          let settled = false;
+          const run = op().finally(() => (settled = true));
 
-        for (;;) {
-          const waiter = [...(await lockWaits())].find(
-            ([pid, blockers]) =>
-              !queue.includes(pid) &&
-              blockers.length > 0 &&
-              blockers.every((blocker) => queue.includes(blocker))
-          );
+          run.catch(() => undefined);
+          started.push(run);
 
-          if (waiter) {
-            queue.push(waiter[0]);
-            break;
-          }
-          if (settled) throw new Error(`Operation ${index} finished without waiting on the lock`);
-          await new Promise((resolve) => setTimeout(resolve, 5));
+          const [waiter] = await waitFor(async () => {
+            if (settled) throw new Error(`Operation ${index} finished without waiting on the lock`);
+
+            return [...(await lockWaits())].find(
+              ([pid, blockers]) =>
+                !queue.includes(pid) &&
+                blockers.length > 0 &&
+                blockers.every((blocker) => queue.includes(blocker))
+            );
+          }, `operation ${index} to wait on the lock`);
+
+          queue.push(waiter);
         }
-      }
+      });
+    } finally {
+      // Started ops finish before the next test, whether or not the race held.
+      settledRuns = await Promise.allSettled(started);
+    }
 
-      return started;
-    });
-
-    return await Promise.allSettled(runs);
+    return settledRuns;
   }
 
   /** The invariant: every account in exactly one household, every admin one of its members. */
