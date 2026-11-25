@@ -168,12 +168,16 @@ describe("deleteUserAccount", () => {
     expect(mocks.emitConnectionInvalidation).toHaveBeenCalledWith("gone", "account-deleted");
   });
 
-  it("rescopes the account and sweeps its files when the sessions or an announcement fail", async () => {
+  it("reports the committed deletion and runs every later step when one fails", async () => {
     mocks.deleteUserSessions.mockRejectedValue(new Error("valkey down"));
     mocks.householdsPublish.mockRejectedValue(new Error("publish failed"));
+    mocks.recipesPublish.mockRejectedValue(new Error("publish failed"));
 
-    await expect(deleteUserAccount("gone")).rejects.toThrow("publish failed");
+    await expect(deleteUserAccount("gone")).resolves.toBeUndefined();
     expect(mocks.emitConnectionInvalidation).toHaveBeenCalledWith("gone", "account-deleted");
+    expect(mocks.householdsPublish).toHaveBeenCalledTimes(2);
+    expect(mocks.cookbooksPublish).toHaveBeenCalledOnce();
+    expect(mocks.publishCalendarItemEvent).toHaveBeenCalledOnce();
     expect(mocks.deleteRecipeImagesDir).toHaveBeenCalledWith("recipe-1");
     expect(mocks.sweepUserAvatars).toHaveBeenCalledWith("gone");
   });

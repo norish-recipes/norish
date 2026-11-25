@@ -13,14 +13,23 @@ import { PlannedItemWithRecipePayloadSchema } from "@norish/shared/contracts/zod
 
 import { auth } from "./auth";
 
+/** What follows a committed deletion, named for the log when it fails. */
+type Step = readonly [what: string, run: () => Promise<unknown>];
+
+/** Runs each step in order; a failure is logged and the steps after it run all the same. */
+async function runEach(userId: string, steps: Step[]): Promise<void> {
+  for (const [what, run] of steps) {
+    try {
+      await run();
+    } catch (err) {
+      log.error({ err, userId }, `After an account deletion, could not ${what}`);
+    }
+  }
+}
+
 /**
- * Delete an account and settle everything that hangs off it once the deletion committed: its
- * sessions, its live connections (a Scope Change, ADR-0033), what everyone else hears, and the
- * files of what it erased.
- *
- * Every path that removes an account goes through here — a user closing their
- * own account and an administrator removing someone else's — so the two can
- * never drift into leaving different debris behind.
+ * The one way an account goes, its own or an admin's removal. Once the delete committed it
+ * succeeds: sessions, Scope Change (ADR-0033), announcements and files each log their own failure.
  */
 export async function deleteUserAccount(userId: string): Promise<void> {
   const deletion = await deleteAccount(userId);
@@ -28,70 +37,90 @@ export async function deleteUserAccount(userId: string): Promise<void> {
   if (deletion.successorId)
     log.info({ userId, successorId: deletion.successorId }, "Passed household on");
 
-  try {
+  await runEach(userId, [
     // Sessions live in Valkey, which the row's cascade never reaches.
-    await (await auth.$context).internalAdapter.deleteUserSessions(userId);
-  } finally {
-    try {
-      // After the row is gone, so a client that reconnects finds the account already absent.
-      await announceMembershipChange(
-        { userId, reason: "account-deleted", affectedUserIds: deletion.memberIds },
-        { toOthers: () => announceDeletion(userId, deletion) }
-      );
-    } finally {
-      await sweepFiles(userId, deletion);
-    }
-  }
+    [
+      "end its sessions",
+      async () => (await auth.$context).internalAdapter.deleteUserSessions(userId),
+    ],
+    // After the row is gone, so a client that reconnects finds the account already absent.
+    [
+      "announce it",
+      () =>
+        announceMembershipChange(
+          { userId, reason: "account-deleted", affectedUserIds: deletion.memberIds },
+          { toOthers: () => runEach(userId, announcements(userId, deletion)) }
+        ),
+    ],
+    ["sweep its avatar", () => sweepUserAvatars(userId)],
+    ...deletion.recipeIds.map((id): Step => [
+      "sweep a recipe's files",
+      () => deleteRecipeImagesDir(id),
+    ]),
+    ...deletion.cookbookIds.map((id): Step => [
+      "sweep a cookbook's files",
+      () => sweepCookbookImages(id),
+    ]),
+  ]);
 }
 
 /** The members who stay hear who went, then every reader hears of the erased and changed rows. */
-async function announceDeletion(userId: string, deletion: AccountDeletion): Promise<void> {
+function announcements(userId: string, deletion: AccountDeletion): Step[] {
   const { householdId, successorId } = deletion;
 
-  if (!householdId) return;
+  if (!householdId) return [];
+
+  let audience: ReturnType<typeof policyAudience> | undefined;
+  const readers = () => (audience ??= policyAudience(householdId));
+  const steps: Step[] = [];
+
   if (!deletion.householdErased) {
-    await households.publish("memberRemoved", { userId }, { householdId });
-
-    const household = successorId ? await getHouseholdById(householdId) : null;
-
-    if (successorId && household) {
-      await households.publish(
-        "adminTransferred",
-        { oldAdminId: userId, newAdminId: successorId, version: household.version },
-        { householdId }
-      );
-    }
+    steps.push([
+      "tell the household who went",
+      () => households.publish("memberRemoved", { userId }, { householdId }),
+    ]);
   }
+  if (!deletion.householdErased && successorId) {
+    steps.push([
+      "tell the household who took over",
+      async () => {
+        const household = await getHouseholdById(householdId);
 
-  const audience = await policyAudience(householdId);
-
-  if (deletion.recipeIds.length > 0)
-    await recipes.publish("deleted", { ids: deletion.recipeIds }, audience);
-  for (const id of deletion.cookbookIds) await cookbooks.publish("deleted", { id }, audience);
+        if (!household) return;
+        await households.publish(
+          "adminTransferred",
+          { oldAdminId: userId, newAdminId: successorId, version: household.version },
+          { householdId }
+        );
+      },
+    ]);
+  }
+  if (deletion.recipeIds.length > 0) {
+    steps.push([
+      "announce its erased recipes",
+      async () => recipes.publish("deleted", { ids: deletion.recipeIds }, await readers()),
+    ]);
+  }
+  for (const id of deletion.cookbookIds) {
+    steps.push([
+      "announce an erased cookbook",
+      async () => cookbooks.publish("deleted", { id }, await readers()),
+    ]);
+  }
   // As an edit: the household sees the note, and CalDAV retitles an event it synced (no link).
   for (const note of deletion.notes) {
-    const item = PlannedItemWithRecipePayloadSchema.parse({
-      ...note,
-      recipeName: null,
-      recipeImage: null,
-      servings: null,
-      calories: null,
-    });
+    const item = { ...note, recipeName: null, recipeImage: null, servings: null, calories: null };
 
-    await publishCalendarItemEvent("itemUpdated", { item }, note.householdId);
+    steps.push([
+      "announce a note",
+      () =>
+        publishCalendarItemEvent(
+          "itemUpdated",
+          { item: PlannedItemWithRecipePayloadSchema.parse(item) },
+          note.householdId
+        ),
+    ]);
   }
-}
 
-/** A failed sweep is logged and left to the nightly orphan cleanup; the deletion stands. */
-async function sweepFiles(userId: string, deletion: AccountDeletion): Promise<void> {
-  const swept = await Promise.allSettled([
-    sweepUserAvatars(userId),
-    ...deletion.recipeIds.map((id) => deleteRecipeImagesDir(id)),
-    ...deletion.cookbookIds.map((id) => sweepCookbookImages(id)),
-  ]);
-
-  for (const result of swept) {
-    if (result.status === "rejected")
-      log.warn({ err: result.reason, userId }, "Could not sweep a deleted account's files");
-  }
+  return steps;
 }
