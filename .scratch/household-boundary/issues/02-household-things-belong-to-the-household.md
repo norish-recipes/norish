@@ -4,7 +4,7 @@
 
 **Blocked by:** 01
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] **Columns:**
   - `stores`, `groceries`, `recurring_groceries`, `pantry_ingredients`, `planned_items`, `ingredient_nutrition_corrections` and `ingredient_store_preferences` get `household_id` (not null), filled from the household of the member who added each row.
