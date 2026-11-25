@@ -581,7 +581,8 @@ function droppedCuisinesNote(
  */
 async function* generateNorishRecipes(
   zip: JSZip,
-  householdId: string
+  householdId: string,
+  householdCategories: readonly string[]
 ): AsyncGenerator<RecipeImportItemOrError, void, unknown> {
   const manifest = await readNorishManifest(zip);
 
@@ -603,7 +604,8 @@ async function* generateNorishRecipes(
           entry.json,
           createArchiveRecipeId(),
           cuisineIdsByName,
-          zip.folder(entry.folderKey)
+          zip.folder(entry.folderKey),
+          householdCategories
         );
 
       const fileName = `recipe_${dto.name}`;
@@ -864,15 +866,12 @@ export async function importArchive(
 
   // Select generator based on format
   let generator: AsyncGenerator<RecipeImportItemOrError, void, unknown>;
-  // Another app's categories match the importing household's list.
-  const household =
-    format === ArchiveFormat.NORISH
-      ? []
-      : await listCategoryNamesForHousehold(importer.householdId);
+  // An archive's categories match the importing household's list.
+  const household = await listCategoryNamesForHousehold(importer.householdId);
 
   switch (format) {
     case ArchiveFormat.NORISH:
-      generator = generateNorishRecipes(zip, importer.householdId);
+      generator = generateNorishRecipes(zip, importer.householdId, household);
       break;
     case ArchiveFormat.MELA:
       generator = generateMelaRecipes(zip, household);

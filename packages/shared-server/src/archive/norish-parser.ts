@@ -9,6 +9,7 @@ import {
 } from "@norish/shared-server/media/storage";
 import { FullRecipeInsertDTO } from "@norish/shared/contracts";
 import { entryFold } from "@norish/shared/lib/fold-name";
+import { matchNamesToList } from "@norish/shared/lib/list-match";
 
 import {
   EXTERNAL_MEDIA_URL,
@@ -269,13 +270,15 @@ export function matchCuisineNames(
  * them. Media is read from the recipe's archive folder and rehomed through
  * the existing archive-media pipeline under the freshly minted recipe id.
  * Attribution (`authorName`) is informational and deliberately ignored —
- * ownership belongs to the importer.
+ * ownership belongs to the importer. Categories take the household's spelling
+ * by fold or near-match (`householdCategories`) before a new one is created.
  */
 export async function parseNorishRecipeToDTO(
   json: unknown,
   recipeId: string,
   cuisineIdsByName: ReadonlyMap<string, string>,
-  recipeFolder: JSZip | null = null
+  recipeFolder: JSZip | null = null,
+  householdCategories: readonly string[] = []
 ): Promise<ParsedNorishRecipe> {
   const parsed = NorishArchiveRecipeSchema.safeParse(json);
 
@@ -378,6 +381,7 @@ export async function parseNorishRecipeToDTO(
 
   const dto: FullRecipeInsertDTO = {
     ...rest,
+    categories: matchNamesToList(rest.categories, householdCategories),
     // A line's foods travel as their spellings, which the resolver reads before its text.
     recipeIngredients: wireLines.map(({ foods, ...line }) =>
       foods?.length ? { ...line, foodTexts: foods } : line
