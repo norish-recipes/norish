@@ -26,18 +26,44 @@ const config = vi.hoisted(() => ({
 const database = vi.hoisted(() => ({
   fingerprint: null as string | null,
   encrypted: [] as string[],
+  // What another boot does while this one counts rows.
+  meanwhile: () => {},
 }));
-const setConfig = vi.hoisted(() => vi.fn());
+// Every fingerprint boot stored, and every key it opened, in order.
+const fingerprintWrites = vi.hoisted(() => [] as string[]);
+const openedKeys = vi.hoisted(() => [] as Buffer[]);
 const logged = vi.hoisted(() => [] as unknown[][]);
+
+vi.mock("@norish/config/crypto", async (importOriginal) => {
+  const crypto = await importOriginal<typeof import("@norish/config/crypto")>();
+
+  return {
+    ...crypto,
+    initMasterKey: (key: Buffer) => {
+      openedKeys.push(key);
+      crypto.initMasterKey(key);
+    },
+  };
+});
 
 vi.mock("@norish/config/env-config-server", () => ({ SERVER_CONFIG: config }));
 vi.mock("@norish/db/repositories/server-config", () => ({
   getConfig: async (key: string) =>
     key === ServerConfigKeys.MASTER_KEY_FINGERPRINT ? database.fingerprint : null,
-  setConfig,
 }));
 vi.mock("@norish/db/repositories/master-key", () => ({
-  countEncryptedRows: async () => database.encrypted.length,
+  // An insert that keeps a fingerprint already there.
+  claimMasterKeyFingerprint: async (fingerprint: string) => {
+    fingerprintWrites.push(fingerprint);
+    database.fingerprint ??= fingerprint;
+
+    return database.fingerprint;
+  },
+  countEncryptedRows: async () => {
+    database.meanwhile();
+
+    return database.encrypted.length;
+  },
   findNewestCiphertext: async () => database.encrypted.at(-1) ?? null,
 }));
 vi.mock("@norish/shared-server/logger", () => {
@@ -90,7 +116,9 @@ beforeEach(() => {
   config.MASTER_KEY_PREVIOUS = undefined;
   database.fingerprint = null;
   database.encrypted = [];
-  setConfig.mockReset();
+  database.meanwhile = () => {};
+  fingerprintWrites.length = 0;
+  openedKeys.length = 0;
   logged.length = 0;
   forgetMasterKey();
 });
@@ -179,24 +207,45 @@ describe("the key file", () => {
     await expect(refusal).rejects.toThrow("The only way back is restoring MASTER_KEY");
   });
 
-  it("leaves the old file whole, and no half-written one, when a write fails", async () => {
+  it("never replaces a key file unless told to", async () => {
+    const old = { current: randomBytes(32) };
+
+    await writeKeyFile(old);
+
+    await expect(writeKeyFile({ current: randomBytes(32) })).rejects.toThrow("EEXIST");
+    expect(await readKeyFile()).toEqual(old);
+    expect(await fs.readdir(keyDir())).toEqual(["master-key.json"]);
+  });
+
+  it("leaves the old file whole, and no half-written one, when a replace fails", async () => {
     const old = { current: randomBytes(32) };
 
     await writeKeyFile(old);
     vi.spyOn(fs, "rename").mockRejectedValueOnce(new Error("disk gone"));
 
-    await expect(writeKeyFile({ current: randomBytes(32) })).rejects.toThrow("disk gone");
+    await expect(writeKeyFile({ current: randomBytes(32) }, { replace: true })).rejects.toThrow(
+      "disk gone"
+    );
 
     expect(await readKeyFile()).toEqual(old);
     expect(await fs.readdir(keyDir())).toEqual(["master-key.json"]);
+  });
+
+  it("replaces a key file when told to", async () => {
+    const keys = { current: randomBytes(32), previous: randomBytes(32) };
+
+    await writeKeyFile({ current: randomBytes(32) });
+    await writeKeyFile(keys, { replace: true });
+
+    expect(await readKeyFile()).toEqual(keys);
+    expect(await modeOf(keyFilePath())).toBe(0o600);
   });
 });
 
 describe("which key boot opens", () => {
   const keyA = randomBytes(32);
   const keyB = randomBytes(32);
-  const fingerprintWritten = () =>
-    setConfig.mock.calls.find(([key]) => key === ServerConfigKeys.MASTER_KEY_FINGERPRINT)?.[1];
+  const fingerprintWritten = () => fingerprintWrites[0];
   const opened = () => hmacIndex("ada@example.com");
   const RESTORE = "The only way back is restoring MASTER_KEY";
 
@@ -238,7 +287,7 @@ describe("which key boot opens", () => {
         "MASTER_KEY is not the key this database is encrypted with."
       );
       await expect(boot).rejects.toThrow(RESTORE);
-      expect(setConfig).not.toHaveBeenCalled();
+      expect(fingerprintWrites).toEqual([]);
       expect(opened).toThrow("used before boot resolved it");
     });
 
@@ -250,7 +299,7 @@ describe("which key boot opens", () => {
       await expect(resolveMasterKey()).rejects.toThrow(
         "This database is encrypted with MASTER_KEY_PREVIOUS"
       );
-      expect(setConfig).not.toHaveBeenCalled();
+      expect(fingerprintWrites).toEqual([]);
     });
 
     it("generates a key file on a first boot and opens that key", async () => {
@@ -262,6 +311,29 @@ describe("which key boot opens", () => {
       expect(await modeOf(keyFilePath())).toBe(0o600);
       expect(fingerprintWritten()).toBe(generated && masterKeyFingerprint(generated));
       expect(opened()).toBe(generated && lookupBy(generated));
+    });
+
+    it("ends two first boots at once on one key, the one the file and the fingerprint hold", async () => {
+      await Promise.all([resolveMasterKey(), resolveMasterKey()]);
+
+      const kept = (await readKeyFile())?.current;
+
+      expect(kept).toHaveLength(32);
+      expect(database.fingerprint).toBe(kept && masterKeyFingerprint(kept));
+      expect(openedKeys).toEqual([kept, kept]);
+    });
+
+    it("refuses its own key when another boot stored a fingerprint since it looked", async () => {
+      config.MASTER_KEY = keyB.toString("base64");
+      database.meanwhile = () => {
+        database.fingerprint = masterKeyFingerprint(keyA);
+      };
+
+      await expect(resolveMasterKey()).rejects.toThrow(
+        "MASTER_KEY is not the key this database is encrypted with."
+      );
+      expect(database.fingerprint).toBe(masterKeyFingerprint(keyA));
+      expect(openedKeys).toEqual([]);
     });
 
     it("keeps a key file a first boot wrote before it stopped", async () => {
@@ -283,7 +355,7 @@ describe("which key boot opens", () => {
       await expect(resolveMasterKey()).rejects.toThrow(
         "MASTER_KEY is not the key this database is encrypted with."
       );
-      expect(setConfig).not.toHaveBeenCalled();
+      expect(fingerprintWrites).toEqual([]);
     });
 
     it("refuses without MASTER_KEY over an account whose stored email is empty", async () => {
@@ -291,7 +363,7 @@ describe("which key boot opens", () => {
 
       await expect(resolveMasterKey()).rejects.toThrow("MASTER_KEY is not set");
       expect(await readKeyFile()).toBeNull();
-      expect(setConfig).not.toHaveBeenCalled();
+      expect(fingerprintWrites).toEqual([]);
     });
 
     it("refuses without MASTER_KEY over data an earlier key wrote, generating nothing", async () => {
@@ -304,7 +376,7 @@ describe("which key boot opens", () => {
       );
       await expect(boot).rejects.toThrow(RESTORE);
       expect(await readKeyFile()).toBeNull();
-      expect(setConfig).not.toHaveBeenCalled();
+      expect(fingerprintWrites).toEqual([]);
     });
   });
 
@@ -319,7 +391,7 @@ describe("which key boot opens", () => {
       await resolveMasterKey();
 
       expect(opened()).toBe(lookupBy(keyA));
-      expect(setConfig).not.toHaveBeenCalled();
+      expect(fingerprintWrites).toEqual([]);
       expect(await readKeyFile()).toBeNull();
     });
 
@@ -329,7 +401,7 @@ describe("which key boot opens", () => {
       await resolveMasterKey();
 
       expect(opened()).toBe(lookupBy(keyA));
-      expect(setConfig).not.toHaveBeenCalled();
+      expect(fingerprintWrites).toEqual([]);
     });
 
     it("ignores the key file in env mode", async () => {
@@ -350,7 +422,7 @@ describe("which key boot opens", () => {
         "MASTER_KEY is not the key this database is encrypted with."
       );
       await expect(boot).rejects.toThrow(RESTORE);
-      expect(setConfig).not.toHaveBeenCalled();
+      expect(fingerprintWrites).toEqual([]);
       expect(opened).toThrow("used before boot resolved it");
     });
 

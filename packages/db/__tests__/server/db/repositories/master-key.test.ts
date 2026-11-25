@@ -5,7 +5,11 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { decrypt, masterKeyFingerprint } from "@norish/config/crypto";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
-import { countEncryptedRows, findNewestCiphertext } from "@norish/db/repositories/master-key";
+import {
+  claimMasterKeyFingerprint,
+  countEncryptedRows,
+  findNewestCiphertext,
+} from "@norish/db/repositories/master-key";
 import { getConfig, setConfig } from "@norish/db/repositories/server-config";
 import { serverConfig, users } from "@norish/db/schema";
 
@@ -92,5 +96,25 @@ describe("what boot checks a Master Key against", () => {
 
     expect(row).toMatchObject({ value: fingerprint, valueEnc: null, isSensitive: false });
     expect(await getConfig(ServerConfigKeys.MASTER_KEY_FINGERPRINT)).toBe(fingerprint);
+  });
+
+  it("claims the fingerprint for the first key, and keeps it from a second", async () => {
+    const first = masterKeyFingerprint(Buffer.alloc(32, 1));
+    const second = masterKeyFingerprint(Buffer.alloc(32, 2));
+
+    expect(await claimMasterKeyFingerprint(first)).toBe(first);
+    expect(await claimMasterKeyFingerprint(second)).toBe(first);
+    expect(await getConfig(ServerConfigKeys.MASTER_KEY_FINGERPRINT)).toBe(first);
+  });
+
+  it("gives two claims at once the same fingerprint", async () => {
+    const claims = await Promise.all(
+      [1, 2, 3].map((fill) =>
+        claimMasterKeyFingerprint(masterKeyFingerprint(Buffer.alloc(32, fill)))
+      )
+    );
+
+    expect(new Set(claims).size).toBe(1);
+    expect(await getConfig(ServerConfigKeys.MASTER_KEY_FINGERPRINT)).toBe(claims[0]);
   });
 });

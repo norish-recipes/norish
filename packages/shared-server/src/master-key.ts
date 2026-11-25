@@ -6,8 +6,12 @@ import { z } from "zod";
 import { initMasterKey, masterKeyFingerprint, masterKeyOpens } from "@norish/config/crypto";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
-import { countEncryptedRows, findNewestCiphertext } from "@norish/db/repositories/master-key";
-import { getConfig, setConfig } from "@norish/db/repositories/server-config";
+import {
+  claimMasterKeyFingerprint,
+  countEncryptedRows,
+  findNewestCiphertext,
+} from "@norish/db/repositories/master-key";
+import { getConfig } from "@norish/db/repositories/server-config";
 import { serverLogger as log } from "@norish/shared-server/logger";
 
 /** The keys a key file holds: `previous` only between a rotation and the boot that re-keys. */
@@ -26,6 +30,9 @@ function mapKeys<From, To>(keys: { current: From; previous?: From }, convert: (k
     ...(keys.previous === undefined ? {} : { previous: convert(keys.previous) }),
   };
 }
+
+const errorCode = (error: unknown) =>
+  error instanceof Error && "code" in error ? String(error.code) : "unknown";
 
 /** Beside the uploads, so one backup of the database and the volume restores everything. */
 export function keyFilePath(): string {
@@ -59,10 +66,8 @@ export async function readKeyFile(): Promise<KeyFile | null> {
   try {
     text = await fs.readFile(keyFilePath(), "utf8");
   } catch (error) {
-    const code = error instanceof Error && "code" in error ? String(error.code) : "unknown";
-
-    if (code === "ENOENT") return null;
-    throw refusal(`The key file ${keyFilePath()} cannot be read (${code}).`);
+    if (errorCode(error) === "ENOENT") return null;
+    throw refusal(`The key file ${keyFilePath()} cannot be read (${errorCode(error)}).`);
   }
 
   await tighten(keyFilePath(), 0o600);
@@ -75,8 +80,11 @@ export async function readKeyFile(): Promise<KeyFile | null> {
   }
 }
 
-/** Replace the key file in one rename, readable by this user only: a crash leaves old or new, never half. */
-export async function writeKeyFile(keys: KeyFile): Promise<void> {
+/**
+ * Write the key file in one step, readable by this user only: a crash leaves old or new, never
+ * half. It never replaces a key file (EEXIST) unless told to.
+ */
+export async function writeKeyFile(keys: KeyFile, { replace = false } = {}): Promise<void> {
   const file = keyFilePath();
   const dir = path.dirname(file);
   const temp = `${file}.${randomBytes(8).toString("hex")}.tmp`;
@@ -94,13 +102,13 @@ export async function writeKeyFile(keys: KeyFile): Promise<void> {
     } finally {
       await handle.close();
     }
-    await fs.rename(temp, file);
-  } catch (error) {
+    // A link fails where a file is already, so of two first boots only one key lands.
+    await (replace ? fs.rename(temp, file) : fs.link(temp, file));
+  } finally {
     await fs.rm(temp, { force: true });
-    throw error;
   }
 
-  // The rename itself reaches the disk only with its directory.
+  // The new name reaches the disk only with its directory.
   const dirHandle = await fs.open(dir, "r");
 
   try {
@@ -157,31 +165,26 @@ function keyThatFits(source: KeySource, fits: (key: Buffer) => boolean): Buffer 
   );
 }
 
+/** A new key file, or the one another first boot wrote at the same time. */
 async function generateKeyFile(): Promise<Buffer> {
   const key = randomBytes(32);
 
-  await writeKeyFile({ current: key });
+  try {
+    await writeKeyFile({ current: key });
+  } catch (error) {
+    const theirs = errorCode(error) === "EEXIST" ? await readKeyFile() : null;
+
+    if (!theirs) throw error;
+
+    return theirs.current;
+  }
   log.info({ source: keyFilePath() }, "Master Key generated");
 
   return key;
 }
 
-/**
- * Pick the Master Key by the database's fingerprint and open it: once, after the database is
- * reachable and before any crypto. Generates one only for an instance that holds nothing encrypted.
- */
-export async function resolveMasterKey(): Promise<void> {
-  const source = await keySource();
-  const fingerprint = await getConfig<string>(ServerConfigKeys.MASTER_KEY_FINGERPRINT);
-
-  if (fingerprint) {
-    initMasterKey(keyThatFits(source, (key) => masterKeyFingerprint(key) === fingerprint));
-    log.info({ source: source.current }, "Master Key opened");
-
-    return;
-  }
-
-  // No fingerprint: an instance from before fingerprints, or one that has never started.
+/** For an instance without a fingerprint: take a key, store its fingerprint, and say which is stored. */
+async function adoptKey(source: KeySource): Promise<string | null> {
   const encrypted = (await countEncryptedRows()) > 0;
 
   if (encrypted && !source.pinned) {
@@ -193,8 +196,29 @@ export async function resolveMasterKey(): Promise<void> {
   const key = encrypted
     ? keyThatFits(source, (candidate) => newest !== null && masterKeyOpens(candidate, newest))
     : (source.keys?.current ?? (await generateKeyFile()));
+  // Another first boot may have stored its fingerprint since this one looked; that one stands.
+  const stored = await claimMasterKeyFingerprint(masterKeyFingerprint(key));
 
-  await setConfig(ServerConfigKeys.MASTER_KEY_FINGERPRINT, masterKeyFingerprint(key), null, false);
-  log.info({ source: source.current }, "Master Key adopted, fingerprint written");
-  initMasterKey(key);
+  log.info({ source: source.current }, "Master Key adopted");
+
+  return stored;
+}
+
+/** Open the key the database's fingerprint names, or refuse naming the key that is missing. */
+async function openByFingerprint(fingerprint: string | null): Promise<void> {
+  const source = await keySource();
+
+  initMasterKey(keyThatFits(source, (key) => masterKeyFingerprint(key) === fingerprint));
+  log.info({ source: source.current }, "Master Key opened");
+}
+
+/**
+ * Pick the Master Key by the database's fingerprint and open it: once, after the database is
+ * reachable and before any crypto. Generates one only for an instance that holds nothing encrypted.
+ */
+export async function resolveMasterKey(): Promise<void> {
+  const fingerprint = await getConfig<string>(ServerConfigKeys.MASTER_KEY_FINGERPRINT);
+
+  // No fingerprint: an instance from before fingerprints, or one that has never started.
+  await openByFingerprint(fingerprint ?? (await adoptKey(await keySource())));
 }

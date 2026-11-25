@@ -4,6 +4,8 @@ import { db } from "@norish/db/drizzle";
 
 import { users } from "../schema/auth";
 import { serverConfig } from "../schema/server-config";
+import { ServerConfigKeys } from "../zodSchemas/server-config";
+import { getConfig } from "./server-config";
 
 const secretSetting = isNotNull(serverConfig.valueEnc);
 
@@ -35,4 +37,14 @@ export async function findNewestCiphertext(): Promise<string | null> {
     .limit(1);
 
   return setting?.valueEnc ?? null;
+}
+
+/** Store `fingerprint` unless a fingerprint is there already; the one the database holds after. */
+export async function claimMasterKeyFingerprint(fingerprint: string): Promise<string | null> {
+  await db
+    .insert(serverConfig)
+    .values({ key: ServerConfigKeys.MASTER_KEY_FINGERPRINT, value: fingerprint })
+    .onConflictDoNothing({ target: serverConfig.key });
+
+  return getConfig<string>(ServerConfigKeys.MASTER_KEY_FINGERPRINT);
 }
