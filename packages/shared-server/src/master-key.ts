@@ -32,6 +32,13 @@ export function keyFilePath(): string {
   return path.join(SERVER_CONFIG.UPLOADS_DIR, ".norish", "master-key.json");
 }
 
+/** Why boot will not start: names the missing key and the way back, and never prints a key. */
+function refusal(problem: string): Error {
+  return new Error(
+    `${problem} The only way back is restoring MASTER_KEY, or the uploads volume that holds ${keyFilePath()}, from a backup.`
+  );
+}
+
 /** The key file, or null when there is none. Its contents never reach an error message. */
 export async function readKeyFile(): Promise<KeyFile | null> {
   let text: string;
@@ -39,19 +46,17 @@ export async function readKeyFile(): Promise<KeyFile | null> {
   try {
     text = await fs.readFile(keyFilePath(), "utf8");
   } catch (error) {
-    if (error instanceof Error && "code" in error && error.code === "ENOENT") return null;
-    throw error;
-  }
+    const code = error instanceof Error && "code" in error ? String(error.code) : "unknown";
 
-  let stored: z.infer<typeof KeyFileSchema>;
+    if (code === "ENOENT") return null;
+    throw refusal(`The key file ${keyFilePath()} cannot be read (${code}).`);
+  }
 
   try {
-    stored = KeyFileSchema.parse(JSON.parse(text));
+    return mapKeys(KeyFileSchema.parse(JSON.parse(text)), fromBase64);
   } catch {
-    throw new Error(`${keyFilePath()} is not a Norish key file`);
+    throw refusal(`${keyFilePath()} is not a Norish key file.`);
   }
-
-  return mapKeys(stored, fromBase64);
 }
 
 /** Replace the key file in one rename, readable by this user only: a crash leaves old or new, never half. */
@@ -116,13 +121,6 @@ async function keySource(): Promise<KeySource> {
     current: `The key in ${keyFilePath()}`,
     previous: `the previous key in ${keyFilePath()}`,
   };
-}
-
-/** Why boot will not start: names the missing key and the way back, and never prints a key. */
-function refusal(problem: string): Error {
-  return new Error(
-    `${problem} The only way back is restoring MASTER_KEY, or the uploads volume that holds ${keyFilePath()}, from a backup.`
-  );
 }
 
 /** The current key when it `fits` the database, else the refusal naming the key that is wrong. */

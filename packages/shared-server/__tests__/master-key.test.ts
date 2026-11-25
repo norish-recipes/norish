@@ -124,14 +124,27 @@ describe("the key file", () => {
     expect(await readKeyFile()).toBeNull();
   });
 
-  it("refuses a file that is not a key file without repeating what it holds", async () => {
+  it.each([
+    ["a key that is not one", '{"current":"sekrit-not-a-key"}'],
+    ["no JSON at all", "sekrit, not even JSON"],
+  ])("refuses a file holding %s, the way back named and its contents not", async (_, text) => {
     await fs.mkdir(keyDir(), { recursive: true });
-    await fs.writeFile(keyFilePath(), '{"current":"sekrit-not-a-key"}');
+    await fs.writeFile(keyFilePath(), text);
 
     const refusal = readKeyFile();
 
-    await expect(refusal).rejects.toThrow(`${keyFilePath()} is not a Norish key file`);
+    await expect(refusal).rejects.toThrow(`${keyFilePath()} is not a Norish key file.`);
+    await expect(refusal).rejects.toThrow("The only way back is restoring MASTER_KEY");
     await expect(refusal).rejects.not.toThrow(/sekrit/);
+  });
+
+  it("refuses a key file it cannot read, naming the way back", async () => {
+    await fs.mkdir(keyFilePath(), { recursive: true });
+
+    const refusal = readKeyFile();
+
+    await expect(refusal).rejects.toThrow(`The key file ${keyFilePath()} cannot be read (EISDIR).`);
+    await expect(refusal).rejects.toThrow("The only way back is restoring MASTER_KEY");
   });
 
   it("leaves the old file whole, and no half-written one, when a write fails", async () => {
