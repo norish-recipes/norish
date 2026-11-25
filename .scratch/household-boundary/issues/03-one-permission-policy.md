@@ -70,3 +70,12 @@
   4. fixed: the offline QueryClient drops a read's data, in memory and stored, when it answers NOT_FOUND; a network failure keeps it.
   5. fixed: the trigger locks once, household then membership, and raises 40001 when the membership moved; `authedProcedure` answers it CONFLICT. Owner-household races 20/20.
   6. fixed: cookbook events take `cookbookAudience` at publish (a delete: the household its RETURNING names); enrichment's update takes `recipeAudience`.
+- Review round 3:
+  1. fixed: an upload validates its file before it claims a not-yet-stored id, and a failed write gives the claim back when no file landed (images, step images, videos).
+  2. fixed: `FullRecipeInsertSchema` lower-cases a client-made id; the media routes still refuse any other spelling.
+  3. fixed: the View Epoch is a random token (`valkey/token.ts`, shared with the household cache): a change sets a fresh one, a reader that finds none creates one.
+  4. fixed: a NOT_FOUND read keeps its data while a create for that id is in flight or in the Outbox; with nothing pending it still drops.
+  5. fixed: the owner-household trigger raises its own SQLSTATE `NH001` (0090 edited in place); only that maps to the retry. Owner-household races 10/10.
+  6. fixed: that refusal answers 503 SERVICE_UNAVAILABLE, which Replay retries; other conflicts stay 409 and park.
+  7. fixed: confirmed; a paste import cleans up only on its final failure, and the paste, URL and image workers remove only the media of recipes they never stored. The archive import has no such clean-up.
+  - rejected: row ids in any letter case; an expired draft claim; device image caches; the read-to-publish instant; announcements after a failed epoch bump; moved to ticket 04: the resume epoch on account deletion.
