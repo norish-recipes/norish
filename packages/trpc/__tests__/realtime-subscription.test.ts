@@ -104,13 +104,14 @@ const valkey = vi.hoisted(() => {
     return ams === bms ? aseq - bseq : ams - bms;
   };
 
-  const epoch = { value: null as string | null };
+  const epoch = { value: "0" };
 
   return {
     streams,
     /** The View Epoch key: a policy or membership change moves it. */
     epoch,
-    get: vi.fn(async () => epoch.value),
+    // The epoch is only ever read with SET NX GET, and always set here.
+    set: vi.fn(async () => epoch.value),
     xrevrange: vi.fn(
       async (key: string, _end: string, _start: string, _c: string, count: number) => {
         const entries = streams.get(key) ?? [];
@@ -668,7 +669,7 @@ describe("resume", () => {
         expect(valkey.xrange).not.toHaveBeenCalled();
         controller.abort();
       } finally {
-        valkey.epoch.value = null;
+        valkey.epoch.value = "0";
       }
     }
   );
