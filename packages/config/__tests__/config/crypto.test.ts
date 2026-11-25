@@ -8,8 +8,10 @@ import {
   hashToken,
   hmacIndex,
   initMasterKey,
+  masterKeyFingerprint,
   masterKeyOpens,
 } from "@norish/config/crypto";
+import { getSchemaForConfigKey, ServerConfigKeys } from "@norish/config/zod/server-config";
 
 import { forgetMasterKey } from "../helpers/master-key";
 
@@ -64,5 +66,11 @@ describe("the Master Key's derived keys", () => {
     for (const value of ["", "ada@example.com", "bm90IGNpcGhlcnRleHQ=", truncated]) {
       expect(masterKeyOpens(key, value)).toBe(false);
     }
+  });
+
+  it("fingerprints a key in the shape the fingerprint setting accepts", () => {
+    const schema = getSchemaForConfigKey(ServerConfigKeys.MASTER_KEY_FINGERPRINT);
+
+    expect(schema.parse(masterKeyFingerprint(randomBytes(32)))).toMatch(/^[0-9a-f]{64}$/);
   });
 });
