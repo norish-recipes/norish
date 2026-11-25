@@ -42,3 +42,13 @@
   13. Fixed: the `deleteUserAccount` and `deleteAccount` comments are two lines (`AccountDeletion.notes` already was one).
   14. Not changed: auth's typecheck needs it (`storage.ts` imports `heic-convert`, TS7016 without it).
   - Rejected: catalogue owner set null on deletion (ticket 07 gives foods a household); the remote CalDAV calendar stays; admin self-deletion hands the role on; the E2E teardown.
+- Review round 2:
+  1. Fixed: after a failed row insert, gallery image, gallery video and image-import uploads remove the file only when no image or video row names it (`deleteUnreferencedRecipeFile`, `isRecipeMediaReferenced`).
+  2. Fixed: a purged URL, image or paste import job's recipe ids that were never stored have their folders swept.
+  3. Fixed in part: the purge drops CalDAV's deferred follow-ups (`dn:` hashes). No flow exists and Enrich All only enrolls, so no parent waits on or counts a removed child; a paused queue keeps its jobs in `wait`, already scanned.
+  4. Fixed: a recipe entry takes the recipe's name; a note keeps its own title.
+  5. Fixed: each post-commit step runs within 30 s; on timeout it logs and the rest run.
+  6. Not changed: the recipe-folder cleanup has no age threshold or claim check to copy; it removes a folder with no recipe row at once.
+  7. Fixed: the running-job tests wait on the processor's entry; both deadlock tests close the cycle on the intended victim. 30/30 each file.
+  8. Fixed: the step-image rows are read before the deletion and checked gone after.
+  - Rejected: a claim re-made in the instant of the sweep; a real failure reported as account gone; tokens left when Valkey was down; a 4410 during an ordinary expiry.
