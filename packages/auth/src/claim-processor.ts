@@ -1,11 +1,10 @@
 import type { OIDCClaimConfig } from "@norish/config/zod/server-config";
-import { getHouseholdMemberIdsByHouseholdId } from "@norish/db/repositories/household-members";
 import {
   findHouseholdByName,
   getHouseholdForUser,
   joinHousehold,
   NEW_HOUSEHOLD_NAME,
-  renameHousehold,
+  renameHouseholdOfOne,
 } from "@norish/db/repositories/households";
 import { getUserById, isUserServerOwner, setUserAdminStatus } from "@norish/db/repositories/users";
 import { invalidateHouseholdCacheForUsers } from "@norish/shared-server/cache/household";
@@ -221,6 +220,15 @@ export function parseOIDCClaims(
     .filter((g) => g.toLowerCase().startsWith(prefixLower))
     .map((g) => g.slice(cfg.householdPrefix.length))
     .filter((name) => name.length > 0)
+    .filter((name) => {
+      // Every sign-up's household carries the default name, so it never identifies one.
+      const isDefault = name.trim().toLowerCase() === NEW_HOUSEHOLD_NAME.toLowerCase();
+
+      if (isDefault)
+        authLogger.warn({ claim: name }, "OIDC household claim names the default household");
+
+      return !isDefault;
+    })
     .sort((a, b) => a.localeCompare(b, "en")); // Alphabetical, case aside, for deterministic "first wins"
 
   const householdName = householdGroups[0] ?? null;
@@ -291,16 +299,6 @@ export async function processClaimsForUser(
 
   // A claim places only an account still in a household of one; a shared household keeps them.
   if (claims.householdName) {
-    // Every sign-up's household carries the default name, so it never identifies one.
-    if (claims.householdName.trim().toLowerCase() === NEW_HOUSEHOLD_NAME.toLowerCase()) {
-      authLogger.warn(
-        { userId, claimedHousehold: claims.householdName },
-        "OIDC household claim names the default household, ignoring it"
-      );
-
-      return;
-    }
-
     const current = await getHouseholdForUser(userId);
 
     if (!current || current.users.length > 1) {
@@ -317,8 +315,8 @@ export async function processClaimsForUser(
     if (claimed?.id === current.id) return;
 
     if (!claimed) {
-      // Their household of one becomes the claimed household.
-      await renameHousehold(current.id, claims.householdName);
+      // Their household of one becomes the claimed household, unless someone joined it meanwhile.
+      if (!(await renameHouseholdOfOne(userId, claims.householdName))) return;
       await invalidateHouseholdCacheForUsers([userId]);
       authLogger.info(
         { userId, householdId: current.id, householdName: claims.householdName },
@@ -328,8 +326,7 @@ export async function processClaimsForUser(
       return;
     }
 
-    const existingMemberIds = await getHouseholdMemberIdsByHouseholdId(claimed.id);
-    const outcome = await joinHousehold(userId, claimed.id);
+    const outcome = await joinHousehold(userId, { householdId: claimed.id });
 
     if ("refused" in outcome) {
       authLogger.info(
@@ -345,12 +342,14 @@ export async function processClaimsForUser(
       "User joined household via OIDC claim"
     );
 
-    const user = await getUserById(userId);
-
     await announceHouseholdJoin({
       householdId: claimed.id,
-      user: { id: userId, name: user?.name ?? null, version: outcome.joined.version },
-      memberIds: existingMemberIds,
+      user: {
+        id: userId,
+        name: async () => (await getUserById(userId))?.name ?? null,
+        version: outcome.joined.version,
+      },
+      memberIds: outcome.memberIds,
       reason: "household-joined-via-oidc",
     });
   }

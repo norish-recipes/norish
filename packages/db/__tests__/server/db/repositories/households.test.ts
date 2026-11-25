@@ -12,6 +12,7 @@ import {
   getHouseholdMemberIdsByUserId,
 } from "@norish/db/repositories/household-members";
 import {
+  deleteAccount,
   getHouseholdForUser,
   getHouseholdIdForUser,
   isHouseholdMember,
@@ -19,6 +20,9 @@ import {
   kickUserFromHousehold,
   moveToHouseholdOfOne,
   NEW_HOUSEHOLD_NAME,
+  regenerateJoinCode,
+  renameHouseholdOfOne,
+  transferHouseholdAdmin,
 } from "@norish/db/repositories/households";
 import { households, householdUsers } from "@norish/db/schema";
 
@@ -54,7 +58,7 @@ describe("households", () => {
     const member = await createTestUser();
     const householdId = await householdOf(admin.id);
 
-    expect(await joinHousehold(member.id, householdId)).toHaveProperty("joined");
+    expect(await joinHousehold(member.id, { householdId })).toHaveProperty("joined");
 
     return { admin, member, householdId };
   }
@@ -132,6 +136,39 @@ describe("households", () => {
     });
   });
 
+  describe("deleting an account", () => {
+    it("hands its admin role to the longest-standing member who stays", async () => {
+      const { admin, member, householdId } = await sharedHousehold();
+      const later = await createTestUser();
+
+      await joinHousehold(later.id, { householdId });
+
+      expect(await deleteAccount(admin.id)).toBe(member.id);
+      expect(await getHouseholdForUser(member.id)).toMatchObject({
+        id: householdId,
+        adminUserId: member.id,
+      });
+    });
+
+    it("takes a household of one with its last member", async () => {
+      const user = await createTestUser();
+      const householdId = await householdOf(user.id);
+
+      expect(await deleteAccount(user.id)).toBeNull();
+      expect(await getHouseholdMemberIdsByHouseholdId(householdId)).toEqual([]);
+      expect(
+        await getTestDb().select().from(households).where(eq(households.id, householdId))
+      ).toEqual([]);
+    });
+
+    it("leaves a member's household to who stays", async () => {
+      const { admin, member, householdId } = await sharedHousehold();
+
+      expect(await deleteAccount(member.id)).toBeNull();
+      expect(await getHouseholdMemberIdsByHouseholdId(householdId)).toEqual([admin.id]);
+    });
+  });
+
   describe("joining", () => {
     it("from an empty household of one moves the account and deletes the one it left", async () => {
       const admin = await createTestUser();
@@ -139,7 +176,7 @@ describe("households", () => {
       const target = await householdOf(admin.id);
       const left = await householdOf(joiner.id);
 
-      const outcome = await joinHousehold(joiner.id, target);
+      const outcome = await joinHousehold(joiner.id, { householdId: target });
 
       expect(outcome).toMatchObject({ leftHouseholdId: left });
       expect(await householdOf(joiner.id)).toBe(target);
@@ -153,7 +190,7 @@ describe("households", () => {
 
       await createTestRecipe(joiner.id, { name: "Soup" });
 
-      expect(await joinHousehold(joiner.id, await householdOf(admin.id))).toEqual({
+      expect(await joinHousehold(joiner.id, { householdId: await householdOf(admin.id) })).toEqual({
         refused: "holds-things",
       });
       expect(await householdOf(joiner.id)).toBe(own);
@@ -163,7 +200,7 @@ describe("households", () => {
       const { member, householdId } = await sharedHousehold();
       const other = await createTestUser();
 
-      expect(await joinHousehold(member.id, await householdOf(other.id))).toEqual({
+      expect(await joinHousehold(member.id, { householdId: await householdOf(other.id) })).toEqual({
         refused: "shared",
       });
       expect(await householdOf(member.id)).toBe(householdId);
@@ -172,62 +209,153 @@ describe("households", () => {
     it("is refused into the household the account is already in", async () => {
       const user = await createTestUser();
 
-      expect(await joinHousehold(user.id, await householdOf(user.id))).toEqual({
+      expect(await joinHousehold(user.id, { householdId: await householdOf(user.id) })).toEqual({
         refused: "already-member",
       });
     });
   });
 
-  describe("racing a join into a household that is going away", () => {
-    /** Rows waiting on a lock, read from a connection outside the race. */
-    async function lockWaiters(): Promise<number> {
-      const rows = await getTestDb().execute<{ n: number }>(
-        sql`SELECT count(*)::int AS n FROM pg_locks WHERE NOT granted`
-      );
+  /** Client backends of this suite's own database waiting on a lock. */
+  async function lockWaiters(): Promise<number> {
+    const rows = await getTestDb().execute<{ n: number }>(
+      sql`SELECT count(*)::int AS n FROM pg_stat_activity
+          WHERE datname = current_database() AND backend_type = 'client backend'
+            AND wait_event_type = 'Lock'`
+    );
 
-      return rows.rows[0]!.n;
+    return rows.rows[0]!.n;
+  }
+
+  /**
+   * Holds the household's row lock while `ops` queue behind it one by one, then
+   * releases it, so they take the lock in the order given.
+   */
+  async function queueBehindLock(
+    householdId: string,
+    ops: Array<() => Promise<unknown>>,
+    strength: "update" | "no key update" = "update"
+  ) {
+    // Idle repository connections, so every op runs at once.
+    await Promise.all(ops.map(() => getHouseholdIdForUser(householdId)));
+
+    const queued = await getTestDb().transaction(async (tx) => {
+      await tx
+        .select({ id: households.id })
+        .from(households)
+        .where(eq(households.id, householdId))
+        .for(strength);
+
+      const pending = new Set<Promise<unknown>>();
+      const runs: Promise<unknown>[] = [];
+
+      for (const op of ops) {
+        const run: Promise<unknown> = op().finally(() => pending.delete(run));
+
+        run.catch(() => undefined);
+        pending.add(run);
+        runs.push(run);
+
+        while ((await lockWaiters()) < pending.size) await new Promise((r) => setTimeout(r, 10));
+      }
+
+      return runs;
+    });
+
+    return await Promise.allSettled(queued);
+  }
+
+  /** The invariant: each account in exactly one household, each admin one of its members. */
+  async function expectEveryAccountHoused(userIds: string[]) {
+    const memberships = await getTestDb().select().from(householdUsers);
+    const all = await getTestDb().select().from(households);
+
+    for (const userId of userIds) {
+      expect(memberships.filter((m) => m.userId === userId)).toHaveLength(1);
     }
+    for (const household of all) {
+      expect(memberships).toContainEqual(
+        expect.objectContaining({ householdId: household.id, userId: household.adminUserId })
+      );
+    }
+  }
 
+  describe("racing a join into a household that is going away", () => {
     it("never leaves an account without a household", async () => {
       const leaver = await createTestUser();
       const joiner = await createTestUser();
       const target = await createTestUser();
       const going = await householdOf(leaver.id);
-
-      // Two idle repository connections, so both joins run at once.
-      await Promise.all([householdOf(joiner.id), householdOf(target.id)]);
+      const targetHousehold = await householdOf(target.id);
 
       // Holds back deleting `going` without blocking a member being added to it.
-      const holder = getTestDb().transaction(async (tx) => {
-        await tx
-          .select({ id: households.id })
-          .from(households)
-          .where(eq(households.id, going))
-          .for("no key update");
+      await queueBehindLock(
+        going,
+        [
+          () => joinHousehold(leaver.id, { householdId: targetHousehold }),
+          () => joinHousehold(joiner.id, { householdId: going }),
+        ],
+        "no key update"
+      );
 
-        const leaving = joinHousehold(leaver.id, await householdOf(target.id));
+      await expectEveryAccountHoused([leaver.id, joiner.id, target.id]);
+    });
+  });
 
-        while ((await lockWaiters()) < 1) await new Promise((r) => setTimeout(r, 10));
+  describe("racing a join", () => {
+    it("against deleting the household's last member leaves the joiner housed", async () => {
+      const deleted = await createTestUser();
+      const joiner = await createTestUser();
+      const household = await householdOf(deleted.id);
 
-        let settled = false;
-        const joining = joinHousehold(joiner.id, going).finally(() => (settled = true));
+      await queueBehindLock(household, [
+        () => joinHousehold(joiner.id, { householdId: household }),
+        () => deleteAccount(deleted.id),
+      ]);
 
-        while (!settled && (await lockWaiters()) < 2) await new Promise((r) => setTimeout(r, 10));
+      await expectEveryAccountHoused([joiner.id]);
+      expect(await householdOf(joiner.id)).toBe(household);
+    });
 
-        return [leaving, joining] as const;
-      });
+    it("against rotating the join code refuses the old code", async () => {
+      const admin = await createTestUser();
+      const joiner = await createTestUser();
+      const household = await householdOf(admin.id);
+      const own = await householdOf(joiner.id);
+      const { value } = await regenerateJoinCode(household);
 
-      const [leaving, joining] = await holder;
+      const [, joined] = await queueBehindLock(household, [
+        () => regenerateJoinCode(household),
+        () => joinHousehold(joiner.id, { joinCode: value!.joinCode! }),
+      ]);
 
-      await Promise.allSettled([leaving, joining]);
+      expect(joined).toEqual({ status: "fulfilled", value: { refused: "gone" } });
+      expect(await householdOf(joiner.id)).toBe(own);
+    });
 
-      const memberships = await getTestDb()
-        .select({ userId: householdUsers.userId })
-        .from(householdUsers);
+    it("against a claim's rename keeps the default name on the now shared household", async () => {
+      const alone = await createTestUser();
+      const joiner = await createTestUser();
+      const household = await householdOf(alone.id);
 
-      for (const user of [leaver, joiner, target]) {
-        expect(memberships.filter((m) => m.userId === user.id)).toHaveLength(1);
-      }
+      await queueBehindLock(household, [
+        () => joinHousehold(joiner.id, { householdId: household }),
+        () => renameHouseholdOfOne(alone.id, "The Smiths"),
+      ]);
+
+      expect((await getHouseholdForUser(alone.id))?.name).toBe(NEW_HOUSEHOLD_NAME);
+    });
+  });
+
+  describe("racing an admin transfer against the new admin leaving", () => {
+    it("never installs an admin who no longer lives there", async () => {
+      const { admin, member, householdId } = await sharedHousehold();
+
+      await queueBehindLock(householdId, [
+        () => moveToHouseholdOfOne(householdId, member.id),
+        () => transferHouseholdAdmin(householdId, admin.id, member.id),
+      ]);
+
+      await expectEveryAccountHoused([admin.id, member.id]);
     });
   });
 

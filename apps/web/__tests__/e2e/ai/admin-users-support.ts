@@ -6,7 +6,7 @@ import {
   getHouseholdIdForUser,
   getUsersByHouseholdId,
   joinHousehold,
-  renameHousehold,
+  renameHouseholdOfOne,
 } from "@norish/db/repositories/households";
 
 import type { AIE2EStack } from "./fixture";
@@ -64,10 +64,10 @@ export async function seedHousehold(
 
   if (!id) throw new Error(`No household for ${adminUserId}`);
 
-  await renameHousehold(id, name);
+  await renameHouseholdOfOne(adminUserId, name);
 
   for (const userId of memberIds) {
-    if (userId !== adminUserId) await joinHousehold(userId, id);
+    if (userId !== adminUserId) await joinHousehold(userId, { householdId: id });
   }
 
   return id;

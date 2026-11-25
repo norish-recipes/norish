@@ -44,14 +44,16 @@ vi.mock("@norish/db/repositories/server-config", () => ({
 }));
 vi.mock("@norish/db/repositories/users", () => ({
   countUsers: vi.fn().mockResolvedValue(2),
-  deleteUser: vi.fn(),
   isUserServerOwner: async () => false,
   setUserAdminStatus: async (userId: string, isAdmin: boolean) => {
     if (isAdmin) admins.add(userId);
     else admins.delete(userId);
   },
 }));
-vi.mock("@norish/db/repositories/households", () => ({ getHouseholdForUser: vi.fn() }));
+vi.mock("@norish/db/repositories/households", () => ({
+  getHouseholdForUser: vi.fn(),
+  deleteAccount: vi.fn(async () => null),
+}));
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   isRegistrationEnabled: async () => registration.enabled,
 }));

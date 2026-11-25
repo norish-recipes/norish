@@ -77,7 +77,9 @@ describe("versioned repository behavior", () => {
 
   it("starts household memberships at version 1 and exposes them in the household DTO", async () => {
     const joiningUser = await createTestUser();
-    const outcome = await joinHousehold(joiningUser.id, (await getHouseholdIdForUser(testUserId))!);
+    const outcome = await joinHousehold(joiningUser.id, {
+      householdId: (await getHouseholdIdForUser(testUserId))!,
+    });
 
     expect("joined" in outcome && outcome.joined.version).toBe(1);
 

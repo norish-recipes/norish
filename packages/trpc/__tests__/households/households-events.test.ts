@@ -10,10 +10,8 @@ import {
 } from "../calendar/test-utils";
 
 const householdDb = vi.hoisted(() => ({
-  findHouseholdByJoinCode: vi.fn(),
   getAllergiesForUsers: vi.fn(),
   getHouseholdForUser: vi.fn(),
-  getUsersByHouseholdId: vi.fn(),
   isUserHouseholdAdmin: vi.fn(),
   joinHousehold: vi.fn(),
   kickUserFromHousehold: vi.fn(),
@@ -45,7 +43,7 @@ async function settle() {
   }
 }
 
-/** Every household event and invalidation, in the order they were published. */
+/** Every cache drop, household event and invalidation, in the order they ran. */
 function timeline(): string[] {
   const events = households.published.map((entry) => ({
     order: households.publish.mock.invocationCallOrder[households.published.indexOf(entry)]!,
@@ -55,8 +53,13 @@ function timeline(): string[] {
     order: emitConnectionInvalidation.mock.invocationCallOrder[index]!,
     label: `connection.invalidate:${call[1]}`,
   }));
+  const cacheDrops = householdCache.invalidateHouseholdCacheForUsers.mock.invocationCallOrder.map(
+    (order) => ({ order, label: "cache:drop" })
+  );
 
-  return [...events, ...invalidations].sort((a, b) => a.order - b.order).map((e) => e.label);
+  return [...cacheDrops, ...events, ...invalidations]
+    .sort((a, b) => a.order - b.order)
+    .map((e) => e.label);
 }
 
 describe("household mutations announce before they restart the socket", () => {
@@ -77,26 +80,26 @@ describe("household mutations announce before they restart the socket", () => {
 
   beforeEach(() => {
     households.reset();
+    emitConnectionInvalidation.mockClear();
+    householdCache.invalidateHouseholdCacheForUsers.mockClear();
     householdDb.getAllergiesForUsers.mockResolvedValue([]);
     householdDb.getHouseholdForUser.mockResolvedValue(household);
-    householdDb.getUsersByHouseholdId.mockResolvedValue([{ userId: memberId }]);
     householdDb.isUserHouseholdAdmin.mockResolvedValue(true);
   });
 
-  it("join: the joiner and the household hear it before the invalidation", async () => {
-    householdDb.findHouseholdByJoinCode.mockResolvedValue({
-      id: householdId,
-      joinCodeExpiresAt: null,
-    });
+  it("join: drops the cache, then the joiner and the household hear it before the invalidation", async () => {
     householdDb.joinHousehold.mockResolvedValue({
-      joined: { version: 1 },
+      joined: { householdId, version: 1 },
       leftHouseholdId: "own-household",
+      memberIds: [memberId],
     });
 
     await householdsRouter.createCaller(ctx as never).join({ code: "123456" });
     await settle();
 
+    expect(householdDb.joinHousehold).toHaveBeenCalledWith(user.id, { joinCode: "123456" });
     expect(timeline()).toEqual([
+      "cache:drop",
       "household:created",
       "household:userJoined",
       "connection.invalidate:household-joined",
@@ -110,11 +113,9 @@ describe("household mutations announce before they restart the socket", () => {
     ["shared", /Leave it first/],
     ["holds-things", /cannot join another household yet/],
     ["already-member", /already in this household/],
+    ["gone", /Invalid join code/],
+    ["expired", /join code has expired/],
   ] as const)("join: refuses a %s household and announces nothing", async (refused, message) => {
-    householdDb.findHouseholdByJoinCode.mockResolvedValue({
-      id: householdId,
-      joinCodeExpiresAt: null,
-    });
     householdDb.joinHousehold.mockResolvedValue({ refused });
 
     await expect(
@@ -138,6 +139,7 @@ describe("household mutations announce before they restart the socket", () => {
 
     expect(householdDb.moveToHouseholdOfOne).toHaveBeenCalledWith(householdId, user.id, 3);
     expect(timeline()).toEqual([
+      "cache:drop",
       "household:userLeft",
       "household:created",
       "connection.invalidate:household-left",
@@ -175,6 +177,7 @@ describe("household mutations announce before they restart the socket", () => {
     await settle();
 
     expect(timeline()).toEqual([
+      "cache:drop",
       "household:created",
       "household:userKicked",
       "household:memberRemoved",
@@ -187,17 +190,15 @@ describe("household mutations announce before they restart the socket", () => {
 
   describe("an announcement that fails still rescopes the moved session", () => {
     beforeEach(() => {
-      emitConnectionInvalidation.mockClear();
-      householdCache.invalidateHouseholdCacheForUsers.mockClear();
       households.publish.mockRejectedValueOnce(new Error("valkey down"));
     });
 
     it("join", async () => {
-      householdDb.findHouseholdByJoinCode.mockResolvedValue({
-        id: householdId,
-        joinCodeExpiresAt: null,
+      householdDb.joinHousehold.mockResolvedValue({
+        joined: { householdId, version: 1 },
+        leftHouseholdId: "x",
+        memberIds: [memberId],
       });
-      householdDb.joinHousehold.mockResolvedValue({ joined: { version: 1 }, leftHouseholdId: "x" });
 
       await householdsRouter.createCaller(ctx as never).join({ code: "123456" });
       await settle();

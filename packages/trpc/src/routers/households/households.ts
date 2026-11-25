@@ -6,10 +6,8 @@ import type {
   HouseholdSettingsDto,
 } from "@norish/shared/contracts/dto/household";
 import {
-  findHouseholdByJoinCode,
   getAllergiesForUsers,
   getHouseholdForUser,
-  getUsersByHouseholdId,
   isUserHouseholdAdmin,
   joinHousehold,
   kickUserFromHousehold,
@@ -124,6 +122,7 @@ const JOIN_REFUSALS = {
   "holds-things":
     "Your household already has recipes, groceries or plans of its own, so it cannot join another household yet.",
   gone: "Invalid join code",
+  expired: "This join code has expired",
 } as const;
 
 const join = authedProcedure
@@ -137,44 +136,31 @@ const join = authedProcedure
     // Validate cleaned code format
     JoinCodeSchema.parse(cleaned);
 
-    // Find household by code
-    const household = await findHouseholdByJoinCode(cleaned);
-
-    if (!household) {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: "Invalid join code",
-      });
-    }
-
-    // Check if code is expired
-    if (household.joinCodeExpiresAt && new Date(household.joinCodeExpiresAt) < new Date()) {
-      throw new TRPCError({
-        code: "BAD_REQUEST",
-        message: "This join code has expired",
-      });
-    }
-
-    const householdId = household.id;
-
-    // Fetch existing member IDs for cache invalidation
-    const existingMembers = await getUsersByHouseholdId(householdId);
-    const existingMemberIds = existingMembers.map((u) => u.userId);
-
-    // The move is one transaction; a refusal reaches the caller as the mutation's error.
-    const outcome = await joinHousehold(ctx.user.id, householdId);
+    // The code is checked under the household's lock, in the move's own transaction.
+    const outcome = await joinHousehold(ctx.user.id, { joinCode: cleaned });
 
     if ("refused" in outcome) {
-      throw new TRPCError({ code: "CONFLICT", message: JOIN_REFUSALS[outcome.refused] });
+      const badCode = outcome.refused === "gone" || outcome.refused === "expired";
+
+      throw new TRPCError({
+        code: badCode ? "BAD_REQUEST" : "CONFLICT",
+        message: JOIN_REFUSALS[outcome.refused],
+      });
     }
+
+    const { householdId } = outcome.joined;
 
     log.info({ userId: ctx.user.id, householdId }, "User joined household");
 
     void announceHouseholdJoin(
       {
         householdId,
-        user: { id: ctx.user.id, name: ctx.user.name ?? null, version: outcome.joined.version },
-        memberIds: existingMemberIds,
+        user: {
+          id: ctx.user.id,
+          name: async () => ctx.user.name ?? null,
+          version: outcome.joined.version,
+        },
+        memberIds: outcome.memberIds,
         reason: "household-joined",
       },
       // The joiner's view receives the household before its socket closes.
