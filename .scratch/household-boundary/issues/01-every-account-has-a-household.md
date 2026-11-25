@@ -62,3 +62,9 @@
   7. fixed: migrations run in one transaction (drizzle's migrator), so the trigger now comes before the backfill.
   8. fixed: the test holds the household lock itself, each operation must wait behind it (`pg_blocking_pids`), and every settlement and the invariant are asserted; each race test fails with its lock removed, except the deletion-after-own-join test, which pins the retry.
   - rejected: own expired code answers already-member; interim holds-nothing check; claims matching by name (asked of the maintainer).
+- Review round 4:
+  1. fixed: joining, renaming and deleting try three fresh transactions (`MOVED_ATTEMPTS`), then the join answers `shared`, the rename nothing, and the deletion throws; a test moves the account before each lock lands.
+  2. fixed: the join's name re-check reads under the lock in SQL with `householdNamed`, the expression `findHouseholdByName` uses.
+  3. fixed: the web join button stays disabled until `isJoinCode` passes; the router answers a malformed code with the `gone` refusal ("Invalid join code") through the shared mapping; a card test and a router test.
+  4. fixed: the race helper's lock wait fails after 3 s with what it waited for; a failed wait rolls the test's transaction back and a `finally` settles the started operations.
+  - rejected: no join code after leave or removal (decided, same as sign-up).
