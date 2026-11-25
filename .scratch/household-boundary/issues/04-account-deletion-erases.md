@@ -26,3 +26,19 @@
 - Workers: URL, paste and image imports fail for good (no retry, unstored media swept, nothing published) when the account is gone at the start or their save fails because it went; enrichment ends quietly for a gone recipe (and sweeps a file written after the sweep); Enrich All of a gone admin enrolls nothing; a CalDAV failure of a gone account records nothing. Store lookups already end on a gone Store; CalDAV jobs already took a gone account's entry off.
 - Deviation: self-deletion no longer refuses a household admin with members; it hands the role on as an admin's removal does (copy updated in all locales). The E2E teardown (`closeAndDelete`) still calls the repository `deleteAccount` directly: the same erasure, without sessions, announcements or the file sweep, since loading Better Auth in the Playwright process is out of reach.
 - Repository layer: nothing touched reads or writes outside `packages/db/src/repositories`. Races (20/20 each): join behind a last member's deletion, admin deletion vs a member's leave (both orders), two deletions in one household (both orders), a plan entry for the account's recipe before and behind the deletion; the own-recipe-write races are ticket 03's. Not done: the E2E spec typechecks and lints but was not run.
+- Review round 1:
+  1. Fixed: one queue-layer purge (`remove-account-jobs.ts`) removes the account's waiting, delayed, completed and failed jobs (and its erased recipes') after the commit; a job running then fails as `AccountGoneError` and is removed once it settles.
+  2. Fixed: the deletion sweeps the account's pending upload folders and their Valkey claims.
+  3. Fixed: the account guard fails an in-flight CalDAV job for good (no retry); a sync or failure writes the status's `itemType`, so a note is recorded as one.
+  4. Fixed: a note with its own title keeps it and only loses the link.
+  5. Fixed: past the commit `deleteUserAccount` succeeds, each step and announcement runs on its own and logs its failure; a deleted account's sockets close with 4410 and its other devices clear the Outbox too (an offline device only sees an ordinary expiry).
+  6. Fixed: locked membership writes retry a deadlock (3 tries, backoff); `40P01` answers 503. Races 20/20.
+  7. Fixed: the image import, gallery image and gallery video uploads remove a saved file whose row fails; URL and paste imports already sweep unstored media on failure, generated images already remove theirs.
+  8. Fixed: the nightly media cleanup prunes cookbook folders of no cookbook and files no cover names.
+  9. Fixed: per-table checks (household tables, recipe media, sessions, CalDAV statuses) in all four cases, plus the last member's recipe planned abroad.
+  10. Fixed: the E2E runs under view Everyone and Household (typechecks and lints, not run).
+  11. Fixed: one guard in `createWorker` (`account-jobs.ts`) for every account queue; `accountGone` and `failForGoodIfAccountGone` are gone.
+  12. Not changed: leave publishes `userLeft` to each member and kick publishes `memberRemoved` alone, so neither repeats deletion's `memberRemoved` then `adminTransferred` sequence.
+  13. Fixed: the `deleteUserAccount` and `deleteAccount` comments are two lines (`AccountDeletion.notes` already was one).
+  14. Not changed: auth's typecheck needs it (`storage.ts` imports `heic-convert`, TS7016 without it).
+  - Rejected: catalogue owner set null on deletion (ticket 07 gives foods a household); the remote CalDAV calendar stays; admin self-deletion hands the role on; the E2E teardown.
