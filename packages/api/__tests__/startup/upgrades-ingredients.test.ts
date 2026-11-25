@@ -13,28 +13,30 @@ import {
   applyIngredientSeed,
   listSeededIngredientIds,
 } from "@norish/db/repositories/ingredient-seed";
+import { createStore, findBestIngredientStorePreference } from "@norish/db/repositories/stores";
 import {
   aisleLinks,
   aisles,
-  groceries,
   ingredientAliases,
   ingredients,
-  ingredientStorePreferences,
-  pantryIngredients,
   parkedNameKeyedLinks,
   recipeIngredientFoods,
-  recurringGroceries,
   serverConfig,
   storeProductLinks,
-  stores,
 } from "@norish/db/schema";
 import { forgetSpellingRules } from "@norish/shared-server/ingredients/resolver";
 import { updateIngredientSeedState } from "@norish/shared-server/ingredients/seed/catalogue-seed";
 
 import {
+  addTestGrocery,
+  addTestPantryIngredient,
+  addTestRecurringGrocery,
   createTestRecipe,
   getTestDb,
   insertTestRecipeLine,
+  testGroceryFoods,
+  testHouseholdOf,
+  testPantrySpellings,
 } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 import { seedEntry } from "../../../shared-server/__tests__/helpers/seed-entries";
@@ -107,7 +109,6 @@ describe("the upgrade of ingredients from before 0.25", () => {
   }
 
   it("reads recipe lines, groceries and the pantry as an import does, a heading naming nothing", async () => {
-    const db = getTestDb();
     const recipe = await createTestRecipe(userId);
     const line = await insertTestRecipeLine({
       recipeId: recipe.id,
@@ -116,30 +117,26 @@ describe("the upgrade of ingredients from before 0.25", () => {
       order: "0",
     });
     const heading = await insertTestRecipeLine({ recipeId: recipe.id, name: "# Saus", order: "1" });
-    const [grocery] = await db.insert(groceries).values({ userId, name: "zout" }).returning();
-    const [recurring] = await db
-      .insert(recurringGroceries)
-      .values({ userId, name: "boter", recurrenceRule: "week", nextPlannedFor: "2026-11-01" })
-      .returning();
-    const [pantry] = await db
-      .insert(pantryIngredients)
-      .values({ userId, ingredientId: await oldIngredient("Peper") })
-      .returning();
+    const grocery = await addTestGrocery(userId, { name: "zout" });
+    const { recurringGrocery: recurring } = await addTestRecurringGrocery(userId, {
+      name: "boter",
+      nextPlannedFor: "2026-11-01",
+      alone: true,
+    });
+    const pantry = await addTestPantryIngredient(userId, {
+      ingredientId: await oldIngredient("Peper"),
+    });
 
     await upgradeIngredients();
 
     expect(await lineSpellings(line!.id)).toEqual(["knoflook"]);
     expect(await lineSpellings(heading!.id)).toEqual([]);
 
-    const [groceryNow] = await db.select().from(groceries).where(eq(groceries.id, grocery!.id));
-    const [recurringNow] = await db
-      .select()
-      .from(recurringGroceries)
-      .where(eq(recurringGroceries.id, recurring!.id));
-    const [pantryNow] = await db
-      .select()
-      .from(pantryIngredients)
-      .where(eq(pantryIngredients.id, pantry!.id));
+    const groceryNow = (await testGroceryFoods(userId)).find((row) => row.id === grocery.id);
+    const recurringNow = (await testGroceryFoods(userId, "recurring")).find(
+      (row) => row.id === recurring.id
+    );
+    const pantryNow = (await testPantrySpellings(userId)).find((row) => row.id === pantry.id);
 
     expect(groceryNow!.ingredientId).toBe(seeded.get("en:salt"));
     expect(recurringNow!.ingredientId).toBe(seeded.get("en:butter"));
@@ -157,28 +154,25 @@ describe("the upgrade of ingredients from before 0.25", () => {
     expect(await lineSpellings(line!.id)).toEqual([]);
   });
 
-  it("drops a pantry row naming a food its member already holds", async () => {
-    const db = getTestDb();
+  it("drops a pantry row naming a food its household already holds", async () => {
+    const kept = await addTestPantryIngredient(userId, { ingredientId: seeded.get("en:salt")! });
 
-    await db.insert(pantryIngredients).values({ userId, ingredientId: seeded.get("en:salt")! });
-    const [old] = await db
-      .insert(pantryIngredients)
-      .values({ userId, ingredientId: await oldIngredient("Zout") })
-      .returning();
-
+    await addTestPantryIngredient(userId, { ingredientId: await oldIngredient("Zout") });
     await upgradeIngredients();
 
-    expect(
-      await db.select().from(pantryIngredients).where(eq(pantryIngredients.id, old!.id))
-    ).toEqual([]);
+    expect((await testPantrySpellings(userId)).map((row) => row.id)).toEqual([kept.id]);
   });
 
   it("keys parked links by their grocery's food, else their name's, and drops what cannot stay", async () => {
     const db = getTestDb();
-    const [store] = await db.insert(stores).values({ userId, name: "Shop" }).returning();
+    const store = await createStore(randomUUID(), {
+      householdId: testHouseholdOf(userId),
+      userId,
+      name: "Shop",
+    });
     const [aisle] = await db
       .insert(aisles)
-      .values({ storeId: store!.id, name: "Spices" })
+      .values({ storeId: store.id, name: "Spices" })
       .returning();
     const salt = seeded.get("en:salt")!;
 
@@ -188,26 +182,28 @@ describe("the upgrade of ingredients from before 0.25", () => {
       .where(eq(ingredientAliases.text, "zout"));
 
     // A grocery a member pointed at salt in 0.25: its parked links follow it.
-    await db
-      .insert(groceries)
-      .values({ userId, name: "Fleur de sel", ingredientAliasId: zout!.id, ingredientId: salt });
+    await addTestGrocery(userId, {
+      name: "Fleur de sel",
+      ingredientAliasId: zout!.id,
+      ingredientId: salt,
+    });
     await db
       .insert(aisleLinks)
-      .values({ storeId: store!.id, ingredientId: seeded.get("en:pepper")!, aisleId: aisle!.id });
+      .values({ storeId: store.id, ingredientId: seeded.get("en:pepper")!, aisleId: aisle!.id });
 
     const byGrocery = await park("aisle", {
       normalized_name: "fleur de sel",
-      store_id: store!.id,
+      store_id: store.id,
       aisle_id: aisle!.id,
     });
     const byName = await park("preference", {
       normalized_name: "eggs",
-      store_id: store!.id,
+      store_id: store.id,
       user_id: userId,
     });
     const taken = await park("aisle", {
       normalized_name: "peper",
-      store_id: store!.id,
+      store_id: store.id,
       aisle_id: aisle!.id,
     });
     const storeGone = await park("product", { normalized_name: "zout", store_id: randomUUID() });
@@ -215,14 +211,13 @@ describe("the upgrade of ingredients from before 0.25", () => {
     expect((await upgradeIngredients()).links).toBe(2);
 
     const [aisleLink] = await db.select().from(aisleLinks).where(eq(aisleLinks.id, byGrocery));
-    const [preference] = await db
-      .select({ name: ingredients.name })
-      .from(ingredientStorePreferences)
-      .innerJoin(ingredients, eq(ingredients.id, ingredientStorePreferences.ingredientId))
-      .where(eq(ingredientStorePreferences.id, byName));
+    const preference = await findBestIngredientStorePreference(testHouseholdOf(userId), {
+      id: randomUUID(),
+      name: "eggs",
+    });
 
     expect(aisleLink!.ingredientId).toBe(salt);
-    expect(preference!.name).toBe("eggs");
+    expect(preference?.preference.id).toBe(byName);
     expect(await db.select().from(aisleLinks).where(eq(aisleLinks.id, taken))).toEqual([]);
     expect(
       await db.select().from(storeProductLinks).where(eq(storeProductLinks.id, storeGone))

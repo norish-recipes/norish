@@ -373,17 +373,22 @@ describe("Ingredient Nutrition", () => {
     });
 
     it("still gives the household's own correction the last word", async () => {
-      await saveNutritionCorrection(householdA[0]!, id("en:cumin"), {
-        numbersFood: null,
-        kcal: null,
-        fat: null,
-        carbs: null,
-        protein: null,
-        pieceWeightFood: null,
-        pieceWeight: null,
-        densityFood: null,
-        density: 0.5,
-      });
+      await saveNutritionCorrection(
+        testHouseholdOf(householdA[0]!),
+        householdA[0]!,
+        id("en:cumin"),
+        {
+          numbersFood: null,
+          kcal: null,
+          fat: null,
+          carbs: null,
+          protein: null,
+          pieceWeightFood: null,
+          pieceWeight: null,
+          densityFood: null,
+          density: 0.5,
+        }
+      );
 
       expect((await read("en:cumin", householdA)).density).toMatchObject({
         value: 0.5,
@@ -430,7 +435,12 @@ describe("Ingredient Nutrition", () => {
     };
 
     it("is the last word for the household, and invisible to another", async () => {
-      await saveNutritionCorrection(householdA[1]!, id("en:milk"), semiSkimmed);
+      await saveNutritionCorrection(
+        testHouseholdOf(householdA[1]!),
+        householdA[1]!,
+        id("en:milk"),
+        semiSkimmed
+      );
 
       expect((await read("en:milk", householdA)).numbers).toMatchObject({
         value: { kcal: 47.7 },
@@ -441,16 +451,26 @@ describe("Ingredient Nutrition", () => {
     });
 
     it("takes the most recent correction any member of the household made", async () => {
-      await saveNutritionCorrection(householdA[0]!, id("en:milk"), semiSkimmed);
+      await saveNutritionCorrection(
+        testHouseholdOf(householdA[0]!),
+        householdA[0]!,
+        id("en:milk"),
+        semiSkimmed
+      );
       await new Promise((resolve) => setTimeout(resolve, 5));
-      await saveNutritionCorrection(householdA[1]!, id("en:milk"), {
-        ...semiSkimmed,
-        numbersFood: null,
-        kcal: 50,
-        fat: 2,
-        carbs: 5,
-        protein: 3,
-      });
+      await saveNutritionCorrection(
+        testHouseholdOf(householdA[1]!),
+        householdA[1]!,
+        id("en:milk"),
+        {
+          ...semiSkimmed,
+          numbersFood: null,
+          kcal: 50,
+          fat: 2,
+          carbs: 5,
+          protein: 3,
+        }
+      );
 
       expect((await read("en:milk", householdA)).numbers).toEqual({
         value: { kcal: 50, fat: 2, carbs: 5, protein: 3 },
@@ -460,12 +480,17 @@ describe("Ingredient Nutrition", () => {
     });
 
     it("corrects a piece weight and a density fact by fact, leaving the rest to the sources", async () => {
-      await saveNutritionCorrection(householdA[0]!, id("en:onion"), {
-        ...semiSkimmed,
-        numbersFood: null,
-        pieceWeightFood: "usda:170000",
-        density: 0.5,
-      });
+      await saveNutritionCorrection(
+        testHouseholdOf(householdA[0]!),
+        householdA[0]!,
+        id("en:onion"),
+        {
+          ...semiSkimmed,
+          numbersFood: null,
+          pieceWeightFood: "usda:170000",
+          density: 0.5,
+        }
+      );
 
       expect(await read("en:onion", householdA)).toMatchObject({
         numbers: { value: { kcal: 35 }, source: { kind: "code" } },
@@ -475,14 +500,19 @@ describe("Ingredient Nutrition", () => {
     });
 
     it("reaches a child that borrows from the corrected parent", async () => {
-      await saveNutritionCorrection(householdA[0]!, id("en:onion"), {
-        ...semiSkimmed,
-        numbersFood: null,
-        kcal: 42,
-        fat: 0,
-        carbs: 9,
-        protein: 1,
-      });
+      await saveNutritionCorrection(
+        testHouseholdOf(householdA[0]!),
+        householdA[0]!,
+        id("en:onion"),
+        {
+          ...semiSkimmed,
+          numbersFood: null,
+          kcal: 42,
+          fat: 0,
+          carbs: 9,
+          protein: 1,
+        }
+      );
 
       expect((await read("en:red-onion", householdA)).numbers).toMatchObject({
         value: { kcal: 42 },
@@ -492,7 +522,12 @@ describe("Ingredient Nutrition", () => {
     });
 
     it("outlives a new source table", async () => {
-      await saveNutritionCorrection(householdA[0]!, id("en:milk"), semiSkimmed);
+      await saveNutritionCorrection(
+        testHouseholdOf(householdA[0]!),
+        householdA[0]!,
+        id("en:milk"),
+        semiSkimmed
+      );
       await applySourceTable({ ...TABLE, version: "test-2", fixes: {} });
 
       expect((await read("en:milk", householdA)).numbers).toMatchObject({
@@ -741,10 +776,15 @@ describe("Ingredient Nutrition", () => {
         borrowedFrom: { id: id("en:red-onion") },
       });
 
-      await saveNutritionCorrection(householdA[0]!, id("en:red-onion"), {
-        ...NO_CORRECTION,
-        ...numbers(50),
-      });
+      await saveNutritionCorrection(
+        testHouseholdOf(householdA[0]!),
+        householdA[0]!,
+        id("en:red-onion"),
+        {
+          ...NO_CORRECTION,
+          ...numbers(50),
+        }
+      );
       expect((await read("en:red-onion", householdA)).numbers).toMatchObject({
         value: { kcal: 50 },
         source: { kind: "household" },
@@ -810,10 +850,15 @@ describe("Ingredient Nutrition", () => {
       // Norish's piece fix says a zest is no piece.
       expect(gaps.get(id("en:lemon-zest"))).toMatchObject({ pieceWeight: false });
 
-      await saveNutritionCorrection(householdB[0]!, id("en:red-onion"), {
-        ...NO_CORRECTION,
-        density: 0.9,
-      });
+      await saveNutritionCorrection(
+        testHouseholdOf(householdB[0]!),
+        householdB[0]!,
+        id("en:red-onion"),
+        {
+          ...NO_CORRECTION,
+          density: 0.9,
+        }
+      );
       await saveNutritionEstimate(id("en:brandy"), numbers(230));
 
       const after = await findNutritionGaps([id("en:red-onion"), id("en:brandy")]);
@@ -912,17 +957,22 @@ describe("Ingredient Nutrition", () => {
 
   describe("the catalogue export", () => {
     it("carries each Ingredient's codes and the datasets' numbers, and no household's correction", async () => {
-      await saveNutritionCorrection(householdA[0]!, id("en:onion"), {
-        numbersFood: null,
-        kcal: 99,
-        fat: 9,
-        carbs: 9,
-        protein: 9,
-        pieceWeightFood: null,
-        pieceWeight: 99,
-        densityFood: null,
-        density: null,
-      });
+      await saveNutritionCorrection(
+        testHouseholdOf(householdA[0]!),
+        householdA[0]!,
+        id("en:onion"),
+        {
+          numbersFood: null,
+          kcal: 99,
+          fat: 9,
+          carbs: 9,
+          protein: 9,
+          pieceWeightFood: null,
+          pieceWeight: 99,
+          densityFood: null,
+          density: null,
+        }
+      );
 
       const catalogue = await buildCatalogueExport(new Date("2026-10-01T00:00:00Z"));
       const onion = catalogue.ingredients.find((ingredient) => ingredient.id === id("en:onion"));

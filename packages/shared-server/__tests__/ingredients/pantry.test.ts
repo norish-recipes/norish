@@ -7,12 +7,16 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { createRecipeWithRefs, getRecipeFull } from "@norish/db";
-import { listPantryIngredientsByUserIds } from "@norish/db/repositories/pantry";
+import { listPantryIngredientsByHousehold } from "@norish/db/repositories/pantry";
 import { addPickedToPantry, addToPantry } from "@norish/shared-server/ingredients/pantry";
 import { withResolvedIngredients } from "@norish/shared-server/ingredients/recipe-lines";
 import { pantryIngredientFor } from "@norish/shared/lib/pantry";
 
-import { createTestUser } from "../../../db/__tests__/helpers/db-test-helpers";
+import {
+  createTestUser,
+  joinTestHousehold,
+  testHouseholdOf,
+} from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 
 describe("the Pantry through aliases", () => {
@@ -60,11 +64,15 @@ describe("the Pantry through aliases", () => {
   }
 
   async function pantry() {
-    return listPantryIngredientsByUserIds([userId]);
+    return listPantryIngredientsByHousehold(testHouseholdOf(userId));
   }
 
   it("covers a recipe line that names the same Ingredient with its preparation", async () => {
-    await addToPantry(crypto.randomUUID(), { userId, userIds: [userId], name: "onions" });
+    await addToPantry(crypto.randomUUID(), {
+      userId,
+      householdId: testHouseholdOf(userId),
+      name: "onions",
+    });
 
     const [line] = await recipeLines("onions, diced");
 
@@ -72,7 +80,11 @@ describe("the Pantry through aliases", () => {
   });
 
   it("never covers a different food that merely shares a word", async () => {
-    await addToPantry(crypto.randomUUID(), { userId, userIds: [userId], name: "salt" });
+    await addToPantry(crypto.randomUUID(), {
+      userId,
+      householdId: testHouseholdOf(userId),
+      name: "salt",
+    });
 
     const [line] = await recipeLines("salted butter");
 
@@ -81,39 +93,47 @@ describe("the Pantry through aliases", () => {
 
   it("refuses a second spelling of an Ingredient the household already has", async () => {
     const housemate = await createTestUser();
-    const userIds = [userId, housemate.id];
-    const first = await addToPantry(crypto.randomUUID(), { userId, userIds, name: "Onions" });
+    const householdId = await joinTestHousehold(housemate.id, userId);
+    const first = await addToPantry(crypto.randomUUID(), { userId, householdId, name: "Onions" });
     const second = await addToPantry(crypto.randomUUID(), {
       userId: housemate.id,
-      userIds,
+      householdId,
       name: "onions (red)",
     });
 
     expect(first).toMatchObject([{ created: true }]);
     expect(second).toEqual([{ item: first[0]!.item, created: false }]);
-    expect(await listPantryIngredientsByUserIds(userIds)).toHaveLength(1);
+    expect(await listPantryIngredientsByHousehold(householdId)).toHaveLength(1);
   });
 
   it("refuses a typed text that names no food, and adds nothing", async () => {
     for (const name of ["($0.02)", "200g"]) {
       await expect(
-        addToPantry(crypto.randomUUID(), { userId, userIds: [userId], name })
+        addToPantry(crypto.randomUUID(), { userId, householdId: testHouseholdOf(userId), name })
       ).resolves.toEqual([]);
     }
-    expect(await listPantryIngredientsByUserIds([userId])).toEqual([]);
+    expect(await listPantryIngredientsByHousehold(testHouseholdOf(userId))).toEqual([]);
   });
 
   it("keeps each food a typed text joins, together or offered instead", async () => {
     const [zout, peper, boter, olie] = await recipeLines("zout", "peper", "boter", "olie");
     const id = crypto.randomUUID();
-    const added = await addToPantry(id, { userId, userIds: [userId], name: "zout en peper" });
+    const added = await addToPantry(id, {
+      userId,
+      householdId: testHouseholdOf(userId),
+      name: "zout en peper",
+    });
 
     expect(added).toMatchObject([
       { item: { id, ingredientId: zout!.ingredientId, name: "zout" }, created: true },
       { item: { ingredientId: peper!.ingredientId, name: "peper" }, created: true },
     ]);
     await expect(
-      addToPantry(crypto.randomUUID(), { userId, userIds: [userId], name: "boter of olie" })
+      addToPantry(crypto.randomUUID(), {
+        userId,
+        householdId: testHouseholdOf(userId),
+        name: "boter of olie",
+      })
     ).resolves.toMatchObject([
       { item: { ingredientId: boter!.ingredientId }, created: true },
       { item: { ingredientId: olie!.ingredientId }, created: true },
@@ -125,12 +145,12 @@ describe("the Pantry through aliases", () => {
     const [line] = await recipeLines("onions, diced");
     const first = await addPickedToPantry(crypto.randomUUID(), {
       userId,
-      userIds: [userId],
+      householdId: testHouseholdOf(userId),
       ingredientId: line!.ingredientId!,
     });
     const again = await addPickedToPantry(crypto.randomUUID(), {
       userId,
-      userIds: [userId],
+      householdId: testHouseholdOf(userId),
       ingredientId: line!.ingredientId!,
     });
 
@@ -139,7 +159,7 @@ describe("the Pantry through aliases", () => {
     await expect(
       addPickedToPantry(crypto.randomUUID(), {
         userId,
-        userIds: [userId],
+        householdId: testHouseholdOf(userId),
         ingredientId: crypto.randomUUID(),
       })
     ).resolves.toEqual([]);

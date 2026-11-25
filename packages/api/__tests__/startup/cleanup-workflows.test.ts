@@ -2,7 +2,6 @@
 import fs from "fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { eq } from "drizzle-orm";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -10,19 +9,23 @@ import {
   cleanupOrphanedStepImages,
 } from "@norish/api/startup/media-cleanup";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
+import { listGroceriesByHousehold, markAllDoneInStore } from "@norish/db/repositories/groceries";
 import {
-  groceries,
-  plannedItems,
-  recipeImages,
-  recipeVideos,
-  recurringGroceries,
-  stepImages,
-} from "@norish/db/schema";
+  createPlannedItem,
+  listPlannedItemsByHouseholdAndDateRange,
+} from "@norish/db/repositories/planned-items";
+import { recipeImages, recipeVideos, stepImages } from "@norish/db/schema";
 import { cleanupOldCalendarData } from "@norish/queue/scheduler/old-calendar-cleanup";
 import { cleanupOldGroceries } from "@norish/queue/scheduler/old-groceries-cleanup";
 
 import type { TestDb } from "../../../db/__tests__/helpers/db-test-helpers";
-import { createTestRecipeStep, getTestDb } from "../../../db/__tests__/helpers/db-test-helpers";
+import {
+  addTestGrocery,
+  addTestRecurringGrocery,
+  createTestRecipeStep,
+  getTestDb,
+  testHouseholdOf,
+} from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 
 const testBase = new RepositoryTestBase("cleanup_workflows");
@@ -152,100 +155,61 @@ describe("cleanup workflows", () => {
   });
 
   it("deletes old calendar planned items using SCHEDULER_CLEANUP_MONTHS cutoff", async () => {
-    await db.insert(plannedItems).values([
-      {
-        userId,
-        date: "2026-02-28",
-        slot: "Dinner",
-        itemType: "note",
-        title: "Old item",
-      },
-      {
-        userId,
-        date: "2026-03-01",
-        slot: "Lunch",
-        itemType: "note",
-        title: "Cutoff item",
-      },
-      {
-        userId,
-        date: "2026-03-02",
-        slot: "Breakfast",
-        itemType: "note",
-        title: "Recent item",
-      },
-    ]);
+    const householdId = testHouseholdOf(userId);
+
+    for (const [date, slot, title] of [
+      ["2026-02-28", "Dinner", "Old item"],
+      ["2026-03-01", "Lunch", "Cutoff item"],
+      ["2026-03-02", "Breakfast", "Recent item"],
+    ] as const) {
+      await createPlannedItem({ householdId, userId, date, slot, itemType: "note", title });
+    }
 
     const result = await cleanupOldCalendarData();
 
     expect(result.plannedItemsDeleted).toBe(2);
 
-    const remaining = await db
-      .select({ date: plannedItems.date })
-      .from(plannedItems)
-      .where(eq(plannedItems.userId, userId));
+    const remaining = await listPlannedItemsByHouseholdAndDateRange(
+      householdId,
+      "2000-01-01",
+      "2100-01-01"
+    );
 
-    expect(remaining).toEqual([{ date: "2026-03-02" }]);
+    expect(remaining.map((row) => row.date)).toEqual(["2026-03-02"]);
   });
 
   it("deletes old done groceries and excludes recurring items", async () => {
-    const [recurring] = await db
-      .insert(recurringGroceries)
-      .values({
-        userId,
-        name: "Recurring milk",
-        recurrenceRule: "week",
-        nextPlannedFor: "2026-06-20",
-      })
-      .returning({ id: recurringGroceries.id });
+    const householdId = testHouseholdOf(userId);
+    const { recurringGrocery: recurring } = await addTestRecurringGrocery(userId, {
+      name: "Recurring milk",
+      nextPlannedFor: "2026-06-20",
+      alone: true,
+    });
+    /** A grocery ticked at `doneAt`, as the list ticks it. */
+    const done = async (name: string, doneAt: string, recurringGroceryId: string | null = null) => {
+      const grocery = await addTestGrocery(userId, { name, recurringGroceryId });
 
-    await db.insert(groceries).values([
-      {
-        userId,
-        name: "Delete old done",
-        isDone: true,
-        updatedAt: new Date("2026-02-20T00:00:00Z"),
-      },
-      {
-        userId,
-        name: "Delete cutoff done",
-        isDone: true,
-        updatedAt: new Date("2026-03-01T00:00:00Z"),
-      },
-      {
-        userId,
-        name: "Keep recurring done",
-        isDone: true,
-        recurringGroceryId: recurring.id,
-        updatedAt: new Date("2026-01-15T00:00:00Z"),
-      },
-      {
-        userId,
-        name: "Keep recent done",
-        isDone: true,
-        updatedAt: new Date("2026-03-02T00:00:00Z"),
-      },
-      {
-        userId,
-        name: "Keep old undone",
-        isDone: false,
-        updatedAt: new Date("2026-01-10T00:00:00Z"),
-      },
-    ]);
+      vi.setSystemTime(new Date(doneAt));
+      await markAllDoneInStore(householdId, null, [grocery]);
+      vi.setSystemTime(new Date("2026-06-15T12:00:00Z"));
+    };
+
+    await done("Delete old done", "2026-02-20T00:00:00Z");
+    await done("Delete cutoff done", "2026-03-01T00:00:00Z");
+    await done("Keep recurring done", "2026-01-15T00:00:00Z", recurring.id);
+    await done("Keep recent done", "2026-03-02T00:00:00Z");
+    await addTestGrocery(userId, { name: "Keep old undone" });
 
     const result = await cleanupOldGroceries();
 
     expect(result.deleted).toBe(2);
 
-    const remaining = await db
-      .select({ name: groceries.name })
-      .from(groceries)
-      .where(eq(groceries.userId, userId));
+    const remaining = await listGroceriesByHousehold(householdId);
 
-    expect(remaining.map((row) => row.name)).toEqual([
-      "Keep recurring done",
-      "Keep recent done",
+    expect(remaining.map((row) => row.name).sort()).toEqual([
       "Keep old undone",
+      "Keep recent done",
+      "Keep recurring done",
     ]);
   });
 });

@@ -9,11 +9,12 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createGroceries, createRecipeWithRefs, getRecipeFull } from "@norish/db";
 import { withTransaction } from "@norish/db/drizzle";
 import { deleteCatalogueIngredient } from "@norish/db/repositories/ingredient-catalogue";
-import { groceries, ingredients } from "@norish/db/schema";
+import { ingredients } from "@norish/db/schema";
 import { groceryParts, resolveGroceryNames } from "@norish/shared-server/ingredients/groceries";
 import { withResolvedIngredients } from "@norish/shared-server/ingredients/recipe-lines";
 
 import {
+  addTestGrocery,
   getTestDb,
   mintTestFood,
   testHouseholdOf,
@@ -91,24 +92,20 @@ describe("grocery names through aliases", () => {
 
   it("keeps a grocery's having no food while an edit leaves its text alone, and resolves a new text", async () => {
     const [food] = await resolveGroceryNames([{ name: "deegroller" }], { userId });
-    const [grocery] = await getTestDb()
-      .insert(groceries)
-      .values({
-        userId,
-        name: "deegroller",
-        ingredientAliasId: food!.aliasId,
-        ingredientId: food!.ingredientId,
-      })
-      .returning({ id: groceries.id });
+    const grocery = await addTestGrocery(userId, {
+      name: "deegroller",
+      ingredientAliasId: food!.aliasId,
+      ingredientId: food!.ingredientId,
+    });
 
     await withTransaction((tx) => deleteCatalogueIngredient(tx, food!.ingredientId));
 
     await expect(
-      resolveGroceryNames([{ name: "Deegroller", groceryId: grocery!.id }], { userId })
+      resolveGroceryNames([{ name: "Deegroller", groceryId: grocery.id }], { userId })
     ).resolves.toEqual([null]);
     await expect(getTestDb().select().from(ingredients)).resolves.toHaveLength(0);
 
-    const [renamed] = await resolveGroceryNames([{ name: "deeg", groceryId: grocery!.id }], {
+    const [renamed] = await resolveGroceryNames([{ name: "deeg", groceryId: grocery.id }], {
       userId,
     });
 
@@ -185,6 +182,7 @@ describe("grocery names through aliases", () => {
           {
             id: groceryId,
             groceries: {
+              householdId: testHouseholdOf(userId),
               userId,
               name: "zout en peper",
               ingredientAliasId: zout!.aliasId,

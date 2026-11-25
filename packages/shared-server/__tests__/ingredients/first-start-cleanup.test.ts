@@ -20,13 +20,10 @@ import {
   listSeededIngredientIds,
 } from "@norish/db/repositories/ingredient-seed";
 import {
-  groceries,
   ingredientAliases,
   ingredients,
-  pantryIngredients,
   recipeIngredientFoods,
   recipeIngredients,
-  recurringGroceries,
   serverConfig,
 } from "@norish/db/schema";
 import { parentByAI } from "@norish/shared-server/ingredients/ai-changes";
@@ -40,13 +37,18 @@ import {
 import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
 import {
+  addTestGrocery,
+  addTestPantryIngredient,
+  addTestRecurringGrocery,
   createTestRecipe,
   getRecipeIngredients,
   getSpellingTexts,
   getTestDb,
   insertTestRecipeLine,
   mintTestFood,
+  testGroceryFoods,
   testHouseholdOf,
+  testPantrySpellings,
 } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 import { seedEntry } from "../helpers/seed-entries";
@@ -132,8 +134,7 @@ describe("the first-start cleanup", () => {
       [gyoza.aliasIds[0]!]
     );
 
-    await db.insert(groceries).values({
-      userId,
+    await addTestGrocery(userId, {
       name: "gyoza vellen ((ontdooid))",
       ingredientAliasId: gyoza.aliasIds[0]!,
       ingredientId: gyoza.ingredientId,
@@ -154,13 +155,11 @@ describe("the first-start cleanup", () => {
       [joined.aliasIds[0]!]
     );
 
-    await db.insert(pantryIngredients).values({ userId, ...joinedPointers });
-    await db.insert(recurringGroceries).values({
-      userId,
+    await addTestPantryIngredient(userId, joinedPointers);
+    await addTestRecurringGrocery(userId, {
       name: "zout en peper",
       ...joinedPointers,
-      recurrenceRule: "week",
-      nextPlannedFor: "2027-01-01",
+      alone: true,
     });
 
     const undecided = await oldMint("kokosbloesemsuiker", ["kokosbloesemsuiker"]);
@@ -171,8 +170,7 @@ describe("the first-start cleanup", () => {
     await insertTestRecipeLine({ recipeId: recipe.id, name: "kokosbloesemsuiker", order: "2" }, [
       undecided.aliasIds[0]!,
     ]);
-    await db.insert(groceries).values({
-      userId,
+    await addTestGrocery(userId, {
       name: "Nora reserve eten",
       ingredientAliasId: reserve.aliasIds[0]!,
       ingredientId: reserve.ingredientId,
@@ -215,10 +213,11 @@ describe("the first-start cleanup", () => {
     ).resolves.toEqual([{ name: "gyoza vellen" }]);
     expect(await lineSpellings(gyozaLine.id)).toEqual(["gyoza vellen"]);
     await expect(
-      db
-        .select({ alias: groceries.ingredientAliasId, food: groceries.ingredientId })
-        .from(groceries)
-        .where(eq(groceries.ingredientId, gyoza.ingredientId))
+      testGroceryFoods(userId).then((rows) =>
+        rows
+          .filter((row) => row.ingredientId === gyoza.ingredientId)
+          .map((row) => ({ alias: row.aliasId, food: row.ingredientId }))
+      )
     ).resolves.toEqual([{ alias: gyoza.aliasIds[1], food: gyoza.ingredientId }]);
     const gyozaFoods = (await db.select({ name: ingredients.name }).from(ingredients)).filter(
       (row) => row.name.includes("gyoza")
@@ -230,15 +229,14 @@ describe("the first-start cleanup", () => {
     expect(await exists(joined.ingredientId)).toBe(false);
     expect(await lineSpellings(joinedLine.id)).toEqual(["zout", "peper"]);
     await expect(
-      db.select({ food: pantryIngredients.ingredientId }).from(pantryIngredients)
+      testPantrySpellings(userId).then((rows) => rows.map((row) => ({ food: row.ingredientId })))
     ).resolves.toEqual(
       expect.arrayContaining([{ food: seeded.get("en:salt") }, { food: seeded.get("en:pepper") }])
     );
     await expect(
-      db
-        .select({ name: recurringGroceries.name, food: recurringGroceries.ingredientId })
-        .from(recurringGroceries)
-        .orderBy(asc(recurringGroceries.name))
+      testGroceryFoods(userId, "recurring").then((rows) =>
+        rows.map((row) => ({ name: row.name, food: row.ingredientId }))
+      )
     ).resolves.toEqual([
       { name: "peper", food: seeded.get("en:pepper") },
       { name: "zout", food: seeded.get("en:salt") },
@@ -588,8 +586,7 @@ describe("the first-start cleanup", () => {
   it("deletes a food whose one spelling names nothing; its grocery keeps its text", async () => {
     const junk = await oldMint(")", [")"]);
 
-    await getTestDb().insert(groceries).values({
-      userId,
+    await addTestGrocery(userId, {
       name: ")",
       ingredientAliasId: junk.aliasIds[0]!,
       ingredientId: junk.ingredientId,
@@ -598,7 +595,9 @@ describe("the first-start cleanup", () => {
     await expect(cleanUpCatalogueOnFirstStart()).resolves.toMatchObject({ removed: 1 });
     expect(await exists(junk.ingredientId)).toBe(false);
     await expect(
-      getTestDb().select({ name: groceries.name, food: groceries.ingredientId }).from(groceries)
+      testGroceryFoods(userId).then((rows) =>
+        rows.map((row) => ({ name: row.name, food: row.ingredientId }))
+      )
     ).resolves.toEqual([{ name: ")", food: null }]);
   });
 
@@ -720,8 +719,7 @@ describe("the first-start cleanup", () => {
       [own.aliasIds[0]!]
     );
 
-    await getTestDb().insert(groceries).values({
-      userId,
+    await addTestGrocery(userId, {
       name: "Voor de salade:",
       ingredientAliasId: colon!.aliasId,
       ingredientId: lettuce,
@@ -740,12 +738,17 @@ describe("the first-start cleanup", () => {
       "Voor het beslag:",
     ]);
     // A grocery keeps a food, as a new one of that text would: its own, minted from the clean text.
-    await expect(
-      getTestDb()
-        .select({ name: groceries.name, food: ingredients.name })
-        .from(groceries)
-        .innerJoin(ingredients, eq(ingredients.id, groceries.ingredientId))
-    ).resolves.toEqual([{ name: "Voor de salade:", food: "Voor de salade" }]);
+    const groceryRows = await testGroceryFoods(userId);
+    const foodNames = await getTestDb()
+      .select({ id: ingredients.id, name: ingredients.name })
+      .from(ingredients);
+
+    expect(
+      groceryRows.map((row) => ({
+        name: row.name,
+        food: foodNames.find((food) => food.id === row.ingredientId)?.name,
+      }))
+    ).toEqual([{ name: "Voor de salade:", food: "Voor de salade" }]);
   });
 
   it("lets AI ask about and re-file a food whose parent was confirmed in 0.25, not one chosen since", async () => {

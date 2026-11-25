@@ -15,10 +15,9 @@ import {
 } from "@norish/db/repositories/aisles";
 import { findIngredientByAliasId } from "@norish/db/repositories/ingredient-aliases";
 import { findIngredientAncestors } from "@norish/db/repositories/ingredient-relocation";
-import { listPantryIngredientsByUserIds } from "@norish/db/repositories/pantry";
+import { listPantryIngredientsByHousehold } from "@norish/db/repositories/pantry";
 import { resolveProductLink, upsertProductLink } from "@norish/db/repositories/store-products";
 import { createStore } from "@norish/db/repositories/stores";
-import { groceries } from "@norish/db/schema";
 import {
   CatalogueEditError,
   listIngredients,
@@ -29,7 +28,7 @@ import { addToPantry } from "@norish/shared-server/ingredients/pantry";
 import { resolveIngredients } from "@norish/shared-server/ingredients/resolver";
 import { pantryIngredientFor } from "@norish/shared/lib/pantry";
 
-import { getTestDb, testHouseholdOf } from "../../../db/__tests__/helpers/db-test-helpers";
+import { addTestGrocery, testHouseholdOf } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 
 const GROENTE = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
@@ -85,11 +84,11 @@ describe("Parent Ingredients", () => {
   }
 
   async function pantryCovers(pantryName: string, line: { ingredientId: string }) {
-    const userIds = [actor.userId];
+    const householdId = testHouseholdOf(actor.userId);
 
-    await addToPantry(crypto.randomUUID(), { userId: actor.userId, userIds, name: pantryName });
+    await addToPantry(crypto.randomUUID(), { userId: actor.userId, householdId, name: pantryName });
 
-    return pantryIngredientFor(await listPantryIngredientsByUserIds(userIds), line) !== null;
+    return pantryIngredientFor(await listPantryIngredientsByHousehold(householdId), line) !== null;
   }
 
   it("answers every ancestor of an Ingredient, nearest first", async () => {
@@ -106,7 +105,10 @@ describe("Parent Ingredients", () => {
 
     await expect(pantryCovers("red onion", onion)).resolves.toBe(true);
     await expect(
-      pantryIngredientFor(await listPantryIngredientsByUserIds([actor.userId]), allium)
+      pantryIngredientFor(
+        await listPantryIngredientsByHousehold(testHouseholdOf(actor.userId)),
+        allium
+      )
     ).not.toBeNull();
   });
 
@@ -118,7 +120,11 @@ describe("Parent Ingredients", () => {
 
   it("never lends a parent's Product Link to a child", async () => {
     const { onion, red } = await onionTree();
-    const store = await createStore(crypto.randomUUID(), { userId: actor.userId, name: "Markt" });
+    const store = await createStore(crypto.randomUUID(), {
+      householdId: testHouseholdOf(actor.userId),
+      userId: actor.userId,
+      name: "Markt",
+    });
 
     await upsertProductLink(store.id, onion.ingredientId, null);
 
@@ -129,8 +135,7 @@ describe("Parent Ingredients", () => {
   describe("the Aisle a Store files a kind of a food under", () => {
     async function onTheList(...resolved: Array<{ aliasId: string; ingredientId: string }>) {
       for (const food of resolved) {
-        await getTestDb().insert(groceries).values({
-          userId: actor.userId,
+        await addTestGrocery(actor.userId, {
           name: "x",
           ingredientAliasId: food.aliasId,
           ingredientId: food.ingredientId,
@@ -139,7 +144,11 @@ describe("Parent Ingredients", () => {
     }
 
     async function storeWithAisles() {
-      const store = await createStore(crypto.randomUUID(), { userId: actor.userId, name: "Markt" });
+      const store = await createStore(crypto.randomUUID(), {
+        householdId: testHouseholdOf(actor.userId),
+        userId: actor.userId,
+        name: "Markt",
+      });
 
       await saveStoreAisles(store.id, [
         { id: GROENTE, name: "Groente", version: 0 },
@@ -157,9 +166,9 @@ describe("Parent Ingredients", () => {
       await fileIngredient(storeId, onion.ingredientId, GROENTE);
       await onTheList(red);
 
-      await expect(listInheritedAisleLinks([storeId], [actor.userId])).resolves.toEqual([
-        { storeId, ingredientId: red.ingredientId, aisleId: GROENTE },
-      ]);
+      await expect(
+        listInheritedAisleLinks([storeId], testHouseholdOf(actor.userId))
+      ).resolves.toEqual([{ storeId, ingredientId: red.ingredientId, aisleId: GROENTE }]);
     });
 
     it("is its own where it has one, and never lent to a parent", async () => {
@@ -170,7 +179,9 @@ describe("Parent Ingredients", () => {
       await fileIngredient(storeId, red.ingredientId, KOEL);
       await onTheList(red, onion);
 
-      await expect(listInheritedAisleLinks([storeId], [actor.userId])).resolves.toEqual([]);
+      await expect(
+        listInheritedAisleLinks([storeId], testHouseholdOf(actor.userId))
+      ).resolves.toEqual([]);
     });
 
     it("is answered only for the foods on the household's list", async () => {
@@ -179,7 +190,9 @@ describe("Parent Ingredients", () => {
 
       await fileIngredient(storeId, onion.ingredientId, GROENTE);
 
-      await expect(listInheritedAisleLinks([storeId], [actor.userId])).resolves.toEqual([]);
+      await expect(
+        listInheritedAisleLinks([storeId], testHouseholdOf(actor.userId))
+      ).resolves.toEqual([]);
     });
   });
 

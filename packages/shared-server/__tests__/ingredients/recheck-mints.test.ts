@@ -18,7 +18,7 @@ import {
   fileUndecidedMint,
   listSeededIngredientIds,
 } from "@norish/db/repositories/ingredient-seed";
-import { groceries, ingredients, serverConfig } from "@norish/db/schema";
+import { ingredients, serverConfig } from "@norish/db/schema";
 import { parentByAI } from "@norish/shared-server/ingredients/ai-changes";
 import { listIngredients, markDistinct } from "@norish/shared-server/ingredients/catalogue";
 import { withResolvedIngredients } from "@norish/shared-server/ingredients/recipe-lines";
@@ -27,6 +27,7 @@ import { readIngredientSeedState } from "@norish/shared-server/ingredients/seed/
 import { recheckUndecidedMintsOnRungChange } from "@norish/shared-server/ingredients/seed/recheck-mints";
 
 import {
+  addTestGrocery,
   getTestDb,
   mintTestFood,
   nameInATestRecipe,
@@ -174,8 +175,7 @@ describe("looking at old undecided mints again", () => {
         flagReason: "upgrade",
       });
 
-      await getTestDb().insert(groceries).values({
-        userId: actor.userId,
+      await addTestGrocery(actor.userId, {
         name: text,
         ingredientAliasId: minted.aliasId,
         ingredientId: minted.ingredientId,

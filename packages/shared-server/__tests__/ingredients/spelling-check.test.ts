@@ -9,6 +9,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import type { CatalogueActor } from "@norish/shared-server/ingredients/catalogue";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { withTransaction } from "@norish/db/drizzle";
+import { updateGrocery } from "@norish/db/repositories/groceries";
 import { addIngredientAliases } from "@norish/db/repositories/ingredient-aliases";
 import { addToJunkPile, listJunkFolds } from "@norish/db/repositories/ingredient-junk-pile";
 import {
@@ -17,7 +18,6 @@ import {
 } from "@norish/db/repositories/ingredient-seed";
 import { writeRecipeLineFoodsTx } from "@norish/db/repositories/ingredients";
 import {
-  groceries,
   ingredientAliases,
   ingredients,
   recipeIngredientFoods,
@@ -39,10 +39,12 @@ import { checkSpellingsOf } from "@norish/shared-server/ingredients/spelling-che
 import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
 import {
+  addTestGrocery,
   createTestRecipe,
   getTestDb,
   insertTestRecipeLine,
   mintTestFood,
+  testGroceryFoods,
   testHouseholdOf,
 } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
@@ -286,25 +288,20 @@ describe("AI checks the spellings added to a seeded food", () => {
     const chicken = seeded.get("en:chicken-breast")!;
     const spelled = await added("en:chicken-breast", "boneless");
 
-    await getTestDb()
-      .insert(groceries)
-      .values({
-        userId,
-        name: "boneless",
-        ingredientAliasId: spelled.get("boneless")!,
-        ingredientId: chicken,
-      });
+    await addTestGrocery(userId, {
+      name: "boneless",
+      ingredientAliasId: spelled.get("boneless")!,
+      ingredientId: chicken,
+    });
     answers({ boneless: "not-a-food" });
     await checkSpellingsOf(chicken);
 
     expect(
-      await getTestDb()
-        .select({
-          name: groceries.name,
-          aliasId: groceries.ingredientAliasId,
-          ingredientId: groceries.ingredientId,
-        })
-        .from(groceries)
+      (await testGroceryFoods(userId)).map(({ name, aliasId, ingredientId }) => ({
+        name,
+        aliasId,
+        ingredientId,
+      }))
     ).toEqual([{ name: "boneless", aliasId: null, ingredientId: null }]);
   });
 
@@ -314,14 +311,11 @@ describe("AI checks the spellings added to a seeded food", () => {
     const spelled = await added("en:chicken-breast", "kippendijen");
     const dijLine = await line("500 g kippendijen", spelled.get("kippendijen")!);
 
-    await getTestDb()
-      .insert(groceries)
-      .values({
-        userId,
-        name: "kippendijen",
-        ingredientAliasId: spelled.get("kippendijen")!,
-        ingredientId: breast,
-      });
+    await addTestGrocery(userId, {
+      name: "kippendijen",
+      ingredientAliasId: spelled.get("kippendijen")!,
+      ingredientId: breast,
+    });
     answers({ kippendijen: ["other-food", "chicken thigh"] });
 
     await expect(checkSpellingsOf(breast)).resolves.toMatchObject({
@@ -332,9 +326,7 @@ describe("AI checks the spellings added to a seeded food", () => {
     expect(await lineFoods(dijLine.id)).toEqual([
       { food: "chicken thigh", spelling: "kippendijen" },
     ]);
-    const [grocery] = await getTestDb()
-      .select({ ingredientId: groceries.ingredientId })
-      .from(groceries);
+    const [grocery] = await testGroceryFoods(userId);
 
     expect(grocery?.ingredientId).toBe(thigh);
     expect(await listJunkFolds()).not.toContain("kippendijen");
@@ -377,17 +369,9 @@ describe("AI checks the spellings added to a seeded food", () => {
     const boneless = (await added("en:chicken-breast", "boneless")).get("boneless")!;
     const untouched = await line("boneless, skinless chicken breasts", boneless);
     const edited = await line("boneless", boneless);
-    const [kept, repointed] = await getTestDb()
-      .insert(groceries)
-      .values(
-        ["kept", "repointed"].map(() => ({
-          userId,
-          name: "boneless",
-          ingredientAliasId: boneless,
-          ingredientId: chicken,
-        }))
-      )
-      .returning({ id: groceries.id });
+    const fields = { name: "boneless", ingredientAliasId: boneless, ingredientId: chicken };
+    const kept = await addTestGrocery(userId, fields);
+    const repointed = await addTestGrocery(userId, fields);
 
     answers({ boneless: "not-a-food" });
     await checkSpellingsOf(chicken);
@@ -395,10 +379,11 @@ describe("AI checks the spellings added to a seeded food", () => {
     await getTestDb().transaction((tx) =>
       writeRecipeLineFoodsTx(tx, [{ id: edited.id, aliasIds: [thighSpelling!.id] }])
     );
-    await getTestDb()
-      .update(groceries)
-      .set({ ingredientAliasId: thighSpelling!.id, ingredientId: thigh })
-      .where(eq(groceries.id, repointed!.id));
+    await updateGrocery({
+      id: repointed.id,
+      ingredientAliasId: thighSpelling!.id,
+      ingredientId: thigh,
+    });
     const [change] = await listAIChangesFor(actor);
 
     await undoAIChange(actor, change!.id);
@@ -410,15 +395,11 @@ describe("AI checks the spellings added to a seeded food", () => {
       { food: "chicken thigh", spelling: "chicken thigh" },
     ]);
     const pointed = new Map(
-      (
-        await getTestDb()
-          .select({ id: groceries.id, ingredientId: groceries.ingredientId })
-          .from(groceries)
-      ).map((row) => [row.id, row.ingredientId])
+      (await testGroceryFoods(userId)).map((row) => [row.id, row.ingredientId])
     );
 
-    expect(pointed.get(kept!.id)).toBe(chicken);
-    expect(pointed.get(repointed!.id)).toBe(thigh);
+    expect(pointed.get(kept.id)).toBe(chicken);
+    expect(pointed.get(repointed.id)).toBe(thigh);
   });
 
   it("on Undo, merges back the food its lines minted from the text", async () => {

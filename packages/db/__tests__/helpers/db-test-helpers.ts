@@ -13,10 +13,22 @@ import pg from "pg";
 
 import type { MintIngredientInput } from "@norish/db/repositories/ingredient-aliases";
 import type { FullRecipeDTO, MeasurementSystem } from "@norish/shared/contracts";
+import type { GroceryInsertDto } from "@norish/shared/contracts/dto/groceries";
 import { encrypt, hashToken } from "@norish/config/crypto";
 import { getRecipeFull } from "@norish/db";
+import {
+  createGroceries,
+  deleteGroceryByIds,
+  findGroceryFoods,
+  listGroceriesByHousehold,
+} from "@norish/db/repositories/groceries";
 import { mintIngredientWithAliases } from "@norish/db/repositories/ingredient-aliases";
 import { isFirstLineFood, writeRecipeLineFoodsTx } from "@norish/db/repositories/ingredients";
+import { addPantryIngredients, listPantrySpellings } from "@norish/db/repositories/pantry";
+import {
+  createRecurringGroceries,
+  listRecurringGroceriesByHousehold,
+} from "@norish/db/repositories/recurring-groceries";
 import * as schema from "@norish/db/schema";
 import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
 import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
@@ -439,4 +451,137 @@ export async function householdIdOf(userId: string): Promise<string> {
   if (!row) throw new Error(`No household for ${userId}`);
 
   return row.householdId;
+}
+
+type GroceryFields = Partial<Omit<GroceryInsertDto, "householdId" | "userId">>;
+
+/** A grocery a member puts on their household's list, through the repository. */
+export async function addTestGrocery(userId: string, fields: GroceryFields = {}) {
+  const householdId = await householdIdOf(userId);
+  const { created } = await createGroceries(
+    [
+      {
+        id: crypto.randomUUID(),
+        groceries: {
+          name: null,
+          unit: null,
+          amount: null,
+          isDone: false,
+          recipeIngredientId: null,
+          recurringGroceryId: null,
+          ...fields,
+          householdId,
+          userId,
+        },
+      },
+    ],
+    householdId
+  );
+
+  return created[0]!;
+}
+
+/** A recurring grocery a member adds, with the grocery it puts on the list unless `alone`. */
+export async function addTestRecurringGrocery(
+  userId: string,
+  fields: {
+    name: string;
+    ingredientAliasId?: string | null;
+    ingredientId?: string | null;
+    nextPlannedFor?: string;
+    alone?: boolean;
+  }
+) {
+  const householdId = await householdIdOf(userId);
+  const id = crypto.randomUUID();
+  const food = { ingredientAliasId: fields.ingredientAliasId, ingredientId: fields.ingredientId };
+  const { created } = await createRecurringGroceries(
+    [
+      {
+        recurring: {
+          id,
+          householdId,
+          userId,
+          name: fields.name,
+          ...food,
+          amount: null,
+          unit: null,
+          recurrenceRule: "week",
+          recurrenceInterval: 1,
+          recurrenceWeekday: null,
+          nextPlannedFor: fields.nextPlannedFor ?? "2027-01-01",
+          lastCheckedDate: null,
+        },
+        grocery: {
+          id: crypto.randomUUID(),
+          groceries: {
+            householdId,
+            userId,
+            name: fields.name,
+            ...food,
+            unit: null,
+            amount: null,
+            isDone: false,
+            recipeIngredientId: null,
+            recurringGroceryId: id,
+          },
+        },
+      },
+    ],
+    householdId
+  );
+  const made = created[0]!;
+
+  if (fields.alone) await deleteGroceryByIds([made.grocery], householdId);
+
+  return made;
+}
+
+/** A food a member keeps in their household's Pantry, through the repository. */
+export async function addTestPantryIngredient(
+  userId: string,
+  food: { ingredientId: string; ingredientAliasId?: string | null }
+) {
+  const [added] = await addPantryIngredients(
+    [
+      {
+        id: crypto.randomUUID(),
+        ingredientId: food.ingredientId,
+        ingredientAliasId: food.ingredientAliasId ?? null,
+      },
+    ],
+    { userId, householdId: await householdIdOf(userId) }
+  );
+
+  return added!.item;
+}
+
+/** What each of a member's household's groceries (or recurring groceries) names, by name. */
+export async function testGroceryFoods(
+  userId: string,
+  kind: "groceries" | "recurring" = "groceries"
+) {
+  const householdId = await householdIdOf(userId);
+  const rows =
+    kind === "groceries"
+      ? await listGroceriesByHousehold(householdId)
+      : await listRecurringGroceriesByHousehold(householdId);
+  const foods = await findGroceryFoods(
+    rows.map((row) => row.id),
+    kind
+  );
+
+  return rows
+    .map((row) => ({
+      id: row.id,
+      name: row.name,
+      aliasId: foods.get(row.id)?.food?.aliasId ?? null,
+      ingredientId: row.ingredientId ?? null,
+    }))
+    .sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "") || a.id.localeCompare(b.id));
+}
+
+/** The spellings a member's household's Pantry rows point at, oldest first. */
+export async function testPantrySpellings(userId: string) {
+  return listPantrySpellings(await householdIdOf(userId));
 }

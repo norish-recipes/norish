@@ -19,8 +19,8 @@ import {
 } from "@norish/db/repositories/ingredient-aliases";
 import { listJunkFolds } from "@norish/db/repositories/ingredient-junk-pile";
 import { findIngredientAncestors } from "@norish/db/repositories/ingredient-relocation";
-import { listPantryIngredientsByUserIds } from "@norish/db/repositories/pantry";
-import { groceries, ingredientAliases, ingredients, serverConfig } from "@norish/db/schema";
+import { listPantryIngredientsByHousehold } from "@norish/db/repositories/pantry";
+import { ingredientAliases, ingredients, serverConfig } from "@norish/db/schema";
 import { mergeByAI, parentByAI } from "@norish/shared-server/ingredients/ai-changes";
 import {
   addAlias,
@@ -51,6 +51,7 @@ import { CATALOGUE_LANGUAGES } from "@norish/shared/lib/ingredient-names";
 import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
 import {
+  addTestGrocery,
   getSpellingTexts,
   getTestDb,
   nameInATestRecipe,
@@ -491,8 +492,7 @@ describe("the ingredient catalogue seed", () => {
       const bbq = await resolve("bbq seasoning");
 
       await nameInATestRecipe(actor.userId, chicken.aliasId, "chicken seasoning");
-      await getTestDb().insert(groceries).values({
-        userId: actor.userId,
+      await addTestGrocery(actor.userId, {
         name: "bbq seasoning",
         ingredientAliasId: bbq.aliasId,
         ingredientId: bbq.ingredientId,
@@ -576,8 +576,7 @@ describe("the ingredient catalogue seed", () => {
       await applySeedFile(excerpt);
       const imazalil = await resolve("imazalil");
 
-      await getTestDb().insert(groceries).values({
-        userId: actor.userId,
+      await addTestGrocery(actor.userId, {
         name: "imazalil",
         ingredientAliasId: imazalil.aliasId,
         ingredientId: imazalil.ingredientId,
@@ -668,11 +667,11 @@ describe("the ingredient catalogue seed", () => {
   describe("names in the viewer's language", () => {
     it("gives a Pantry Ingredient its name in every language a viewer may read", async () => {
       await applySeedFile(excerpt);
-      const userIds = [actor.userId];
+      const householdId = testHouseholdOf(actor.userId);
 
-      await addToPantry(crypto.randomUUID(), { userId: actor.userId, userIds, name: "uien" });
+      await addToPantry(crypto.randomUUID(), { userId: actor.userId, householdId, name: "uien" });
 
-      const [item] = await listPantryIngredientsByUserIds(userIds);
+      const [item] = await listPantryIngredientsByHousehold(householdId);
 
       expect(item).toMatchObject({ name: "onion" });
       expect(item?.localeNames).toMatchObject({

@@ -1,6 +1,9 @@
 import type { GroceryDto } from "@norish/shared/contracts/dto/groceries";
 import type { PantryIngredientDto } from "@norish/shared/contracts/dto/pantry";
-import { upsertIngredientStorePreference } from "@norish/db/repositories/stores";
+import {
+  getStoreHouseholdId,
+  upsertIngredientStorePreference,
+} from "@norish/db/repositories/stores";
 
 import type { AIE2EStack } from "./fixture";
 import { callTrpc } from "../harness/trpc";
@@ -20,7 +23,10 @@ export async function seedStorePreference(
   if (!ingredientId) throw new Error(`No food is called ${ingredientName}`);
   const store = await createPlainStore(stack, storeName);
 
-  await upsertIngredientStorePreference(store.userId, ingredientId, store.id);
+  const householdId = await getStoreHouseholdId(store.id);
+
+  if (!householdId || !store.userId) throw new Error(`${storeName} has no household`);
+  await upsertIngredientStorePreference(householdId, store.userId, ingredientId, store.id);
 
   return store.id;
 }

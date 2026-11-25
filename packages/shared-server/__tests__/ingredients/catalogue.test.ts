@@ -11,17 +11,15 @@ import { eq, inArray, sql } from "drizzle-orm";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import type { CatalogueActor } from "@norish/shared-server/ingredients/catalogue";
+import { updateGrocery } from "@norish/db/repositories/groceries";
 import { findIngredientByAliasId } from "@norish/db/repositories/ingredient-aliases";
 import { listJunkFolds } from "@norish/db/repositories/ingredient-junk-pile";
 import { writeGroceryParts } from "@norish/db/repositories/ingredient-relocation";
 import {
-  groceries,
   ingredientAliases,
   ingredients,
-  pantryIngredients,
   recipeIngredientFoods,
   recipeIngredients,
-  recurringGroceries,
 } from "@norish/db/schema";
 import {
   addAlias,
@@ -43,13 +41,18 @@ import { resolveGroceryNames } from "@norish/shared-server/ingredients/groceries
 import { resolveIngredients } from "@norish/shared-server/ingredients/resolver";
 
 import {
+  addTestGrocery,
+  addTestPantryIngredient,
+  addTestRecurringGrocery,
   createTestRecipe,
   createTestUser,
   getRecipeIngredients,
   getSpellingTexts,
   getTestDb,
   insertTestRecipeLine,
+  testGroceryFoods,
   testHouseholdOf,
+  testPantrySpellings,
 } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 
@@ -108,24 +111,16 @@ describe("the ingredient catalogue", () => {
     const recipe = await createTestRecipe(actor.userId);
     const pointers = { ingredientAliasId: food.aliasId, ingredientId: food.ingredientId };
     const line = await insertTestRecipeLine({ recipeId: recipe.id, name: text }, [food.aliasId]);
-    const [grocery] = await db
-      .insert(groceries)
-      .values({ userId: actor.userId, name: text, ...pointers })
-      .returning({ id: groceries.id });
-    const [recurring] = await db
-      .insert(recurringGroceries)
-      .values({
-        userId: actor.userId,
-        name: text,
-        ...pointers,
-        recurrenceRule: "week",
-        nextPlannedFor: "2027-01-01",
-      })
-      .returning({ id: recurringGroceries.id });
+    const grocery = await addTestGrocery(actor.userId, { name: text, ...pointers });
+    const { recurringGrocery: recurring } = await addTestRecurringGrocery(actor.userId, {
+      name: text,
+      ...pointers,
+      alone: true,
+    });
 
-    await db.insert(pantryIngredients).values({ userId: actor.userId, ...pointers });
+    await addTestPantryIngredient(actor.userId, pointers);
 
-    return { recipe: recipe.id, line: line.id, grocery: grocery!.id, recurring: recurring!.id };
+    return { recipe: recipe.id, line: line.id, grocery: grocery.id, recurring: recurring.id };
   }
 
   /** What the rows `nameEverywhere` wrote point at now. */
@@ -139,25 +134,16 @@ describe("the ingredient catalogue", () => {
         eq(recipeIngredientFoods.recipeIngredientId, recipeIngredients.id)
       )
       .where(eq(recipeIngredients.id, rows.line));
-    const pointersOf = async (table: typeof groceries | typeof recurringGroceries, id: string) =>
-      (
-        await db
-          .select({
-            name: table.name,
-            aliasId: table.ingredientAliasId,
-            ingredientId: table.ingredientId,
-          })
-          .from(table)
-          .where(eq(table.id, id))
-      )[0];
-    const grocery = await pointersOf(groceries, rows.grocery);
-    const recurring = await pointersOf(recurringGroceries, rows.recurring);
-    const pantry = await db
-      .select({ aliasId: pantryIngredients.ingredientAliasId })
-      .from(pantryIngredients)
-      .where(eq(pantryIngredients.userId, actor.userId));
+    const pointersOf = async (kind: "groceries" | "recurring", id: string) => {
+      const row = (await testGroceryFoods(actor.userId, kind)).find((held) => held.id === id);
 
-    return { line, grocery, recurring, pantry: pantry.map((row) => row.aliasId) };
+      return row && { name: row.name, aliasId: row.aliasId, ingredientId: row.ingredientId };
+    };
+    const grocery = await pointersOf("groceries", rows.grocery);
+    const recurring = await pointersOf("recurring", rows.recurring);
+    const pantry = await testPantrySpellings(actor.userId);
+
+    return { line, grocery, recurring, pantry: pantry.map((row) => row.ingredientAliasId) };
   }
 
   function refusal(promise: Promise<unknown>) {
@@ -381,12 +367,11 @@ describe("the ingredient catalogue", () => {
           .where(eq(recipeIngredientFoods.recipeIngredientId, lineId))
           .orderBy(recipeIngredientFoods.position)
       ).map((row) => row.ingredientId);
-    const listed = async (table: typeof groceries | typeof recurringGroceries) =>
-      await db
-        .select({ name: table.name, ingredientId: table.ingredientId })
-        .from(table)
-        .where(eq(table.userId, actor.userId))
-        .orderBy(table.name);
+    const listed = async (kind: "groceries" | "recurring") =>
+      (await testGroceryFoods(actor.userId, kind)).map(({ name, ingredientId }) => ({
+        name,
+        ingredientId,
+      }));
     const foods = await db.select({ id: ingredients.id }).from(ingredients);
 
     await deleteIngredient(actor, mix.ingredientId);
@@ -398,8 +383,8 @@ describe("the ingredient catalogue", () => {
     await expect(foodsOf(lines.zout)).resolves.toEqual([zout.ingredientId]);
     await expect(foodsOf(lines.mix)).resolves.toEqual([]);
     // A Grocery names one food, so "zout en peper" is one per food, as typed.
-    for (const table of [groceries, recurringGroceries]) {
-      await expect(listed(table)).resolves.toEqual([
+    for (const kind of ["groceries", "recurring"] as const) {
+      await expect(listed(kind)).resolves.toEqual([
         { name: "peper", ingredientId: peper.ingredientId },
         { name: "zout", ingredientId: zout.ingredientId },
       ]);
@@ -431,20 +416,17 @@ describe("the ingredient catalogue", () => {
   it("leaves a grocery renamed after its text was read for a delete", async () => {
     const db = getTestDb();
     const zout = await mint("zout");
-    const [grocery] = await db
-      .insert(groceries)
-      .values({ userId: actor.userId, name: "zout en peper" })
-      .returning({ id: groceries.id });
+    const grocery = await addTestGrocery(actor.userId, { name: "zout en peper" });
     const parts = [{ name: "zout", aliasId: zout.aliasId, ingredientId: zout.ingredientId }];
 
-    await db.update(groceries).set({ name: "suiker" }).where(eq(groceries.id, grocery!.id));
+    await updateGrocery({ id: grocery.id, name: "suiker" });
     await db.transaction((tx) =>
-      writeGroceryParts(tx, "groceries", [{ id: grocery!.id, name: "zout en peper", parts }])
+      writeGroceryParts(tx, "groceries", [{ id: grocery.id, name: "zout en peper", parts }])
     );
 
-    await expect(
-      db.select({ name: groceries.name, ingredientId: groceries.ingredientId }).from(groceries)
-    ).resolves.toEqual([{ name: "suiker", ingredientId: null }]);
+    await expect(testGroceryFoods(actor.userId)).resolves.toMatchObject([
+      { name: "suiker", ingredientId: null },
+    ]);
   });
 
   it("refuses a name another Ingredient goes by, in any case", async () => {
@@ -663,8 +645,7 @@ describe("the ingredient catalogue", () => {
     await mint("melkpoeder");
     await flag(reserve.ingredientId);
 
-    await getTestDb().insert(groceries).values({
-      userId: actor.userId,
+    await addTestGrocery(actor.userId, {
       name: "Nora reserve melk",
       ingredientAliasId: reserve.aliasId,
       ingredientId: reserve.ingredientId,
@@ -772,8 +753,7 @@ describe("the ingredient catalogue", () => {
 
       await setParent(actor, oven.ingredientId, fries.ingredientId);
       await setParent(actor, treats.ingredientId, nora.ingredientId);
-      await getTestDb().insert(groceries).values({
-        userId: actor.userId,
+      await addTestGrocery(actor.userId, {
         name: "ovenfriet zoete aardappel",
         ingredientAliasId: oven.aliasId,
         ingredientId: oven.ingredientId,
@@ -804,7 +784,6 @@ describe("the ingredient catalogue", () => {
       const db = getTestDb();
       const spelling = { ingredientAliasId: food.aliasId };
       const itself = { ingredientId: food.ingredientId };
-      const repeat = { recurrenceRule: "week", nextPlannedFor: "2027-01-01" };
 
       if (by === "line") {
         const recipe = await createTestRecipe(actor.userId);
@@ -812,22 +791,19 @@ describe("the ingredient catalogue", () => {
         await insertTestRecipeLine({ recipeId: recipe.id, name: "ijsblokjesvorm" }, [food.aliasId]);
       }
       if (by === "grocery-spelling" || by === "grocery-food") {
-        await db.insert(groceries).values({
-          userId: actor.userId,
+        await addTestGrocery(actor.userId, {
           name: "ijsblokjesvorm",
           ...(by === "grocery-spelling" ? spelling : itself),
         });
       }
       if (by === "recurring-spelling" || by === "recurring-food") {
-        await db.insert(recurringGroceries).values({
-          userId: actor.userId,
+        await addTestRecurringGrocery(actor.userId, {
           name: "ijsblokjesvorm",
-          ...repeat,
           ...(by === "recurring-spelling" ? spelling : itself),
+          alone: true,
         });
       }
-      if (by === "pantry")
-        await db.insert(pantryIngredients).values({ userId: actor.userId, ...itself });
+      if (by === "pantry") await addTestPantryIngredient(actor.userId, itself);
 
       await unusedFor(food.ingredientId, 100);
       await sweepUnusedIngredients();
@@ -869,8 +845,7 @@ describe("the ingredient catalogue", () => {
       await sweepUnusedIngredients();
       await expect(unusedSince(salt.ingredientId)).resolves.not.toBeNull();
 
-      await getTestDb().insert(groceries).values({
-        userId: actor.userId,
+      await addTestGrocery(actor.userId, {
         name: "vaatwaszout",
         ingredientAliasId: salt.aliasId,
         ingredientId: salt.ingredientId,
@@ -895,13 +870,12 @@ describe("the ingredient catalogue", () => {
         .values({ text: "amaranth", fold: "amaranth", ingredientId: seeded!.id, seeded: true })
         .returning({ id: ingredientAliases.id });
 
-      await getTestDb().insert(recurringGroceries).values({
-        userId: actor.userId,
+      await addTestRecurringGrocery(actor.userId, {
         name: "waterfilter",
         ingredientAliasId: filter.aliasId,
         ingredientId: filter.ingredientId,
-        recurrenceRule: "year",
         nextPlannedFor: "2027-06-01",
+        alone: true,
       });
       await sweepUnusedIngredients();
       await expect(unusedSince(filter.ingredientId)).resolves.toBeNull();

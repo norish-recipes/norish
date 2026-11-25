@@ -1,5 +1,5 @@
 import { withTransaction } from "@norish/db/drizzle";
-import { deleteGroceryByIds, listGroceriesByUsers } from "@norish/db/repositories/groceries";
+import { deleteGroceryByIds, listGroceriesByHousehold } from "@norish/db/repositories/groceries";
 import { getHouseholdIdForUser } from "@norish/db/repositories/households";
 import { deleteCatalogueIngredient } from "@norish/db/repositories/ingredient-catalogue";
 import { lockTree } from "@norish/db/repositories/ingredient-relocation";
@@ -7,7 +7,7 @@ import { listCatalogueForExport } from "@norish/db/repositories/ingredient-seed"
 import { deleteRecipeById, getAllRecipesForEnrichment } from "@norish/db/repositories/recipes";
 import {
   deleteRecurringGroceryByIds,
-  listRecurringGroceriesByUsers,
+  listRecurringGroceriesByHousehold,
 } from "@norish/db/repositories/recurring-groceries";
 import { getAllUserIds } from "@norish/db/repositories/users";
 
@@ -20,17 +20,22 @@ export async function deleteEveryRecipe(): Promise<void> {
 
 /** Delete every grocery and recurring grocery on the server, ticked or not. */
 export async function deleteEveryGrocery(): Promise<void> {
-  const userIds = await getAllUserIds();
+  const householdIds = new Set<string>();
 
-  for (const userId of userIds) {
+  for (const userId of await getAllUserIds()) {
     const householdId = await getHouseholdIdForUser(userId);
-    const groceries = await listGroceriesByUsers([userId], { includeDone: true });
 
-    if (householdId) await deleteGroceryByIds(groceries, householdId);
+    if (householdId) householdIds.add(householdId);
   }
-  await deleteRecurringGroceryByIds(
-    (await listRecurringGroceriesByUsers(userIds)).map((recurring) => recurring.id)
-  );
+  for (const householdId of householdIds) {
+    await deleteGroceryByIds(
+      await listGroceriesByHousehold(householdId, { includeDone: true }),
+      householdId
+    );
+    await deleteRecurringGroceryByIds(
+      (await listRecurringGroceriesByHousehold(householdId)).map((recurring) => recurring.id)
+    );
+  }
 }
 
 /** Delete these Ingredients; their spellings, links and Pantry rows go with them. */

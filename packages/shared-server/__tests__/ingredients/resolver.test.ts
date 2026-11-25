@@ -40,6 +40,7 @@ import {
   getSpellingTexts,
   getTestDb,
   mintTestFood,
+  testHouseholdOf,
 } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 
@@ -207,7 +208,7 @@ describe("ingredient resolver", () => {
               ingredientId: resolved.ingredientId,
             },
           ],
-          { userId, userIds: [userId] }
+          { userId, householdId: testHouseholdOf(userId) }
         );
       }
     );

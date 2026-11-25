@@ -17,14 +17,14 @@ import {
 } from "@norish/db/repositories/aisles";
 import { findIngredientByAliasId } from "@norish/db/repositories/ingredient-aliases";
 import { renameCatalogueIngredient } from "@norish/db/repositories/ingredient-catalogue";
-import { listPantryIngredientsByUserIds } from "@norish/db/repositories/pantry";
+import { listPantryIngredientsByHousehold } from "@norish/db/repositories/pantry";
 import { resolveProductLink, upsertProductLink } from "@norish/db/repositories/store-products";
 import {
   createStore,
   getIngredientStorePreference,
   upsertIngredientStorePreference,
 } from "@norish/db/repositories/stores";
-import { groceries, ingredients, recurringGroceries } from "@norish/db/schema";
+import { ingredients } from "@norish/db/schema";
 import {
   addAlias,
   CatalogueEditError,
@@ -37,12 +37,15 @@ import { addToPantry } from "@norish/shared-server/ingredients/pantry";
 import { resolveIngredients } from "@norish/shared-server/ingredients/resolver";
 
 import {
+  addTestGrocery,
+  addTestRecurringGrocery,
   createTestRecipe,
   createTestUser,
   getRecipeIngredients,
   getTestDb,
   insertTestRecipeLine,
   joinTestHousehold,
+  testGroceryFoods,
   testHouseholdOf,
 } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
@@ -69,7 +72,13 @@ describe("merging Ingredients and moving aliases", () => {
       memberIds: [user.id],
       isServerAdmin: false,
     };
-    storeId = (await createStore(crypto.randomUUID(), { userId: user.id, name: "Markt" })).id;
+    storeId = (
+      await createStore(crypto.randomUUID(), {
+        householdId: testHouseholdOf(user.id),
+        userId: user.id,
+        name: "Markt",
+      })
+    ).id;
     await saveStoreAisles(storeId, [
       { id: GROENTE, name: "Groente", version: 0 },
       { id: ZUIVEL, name: "Zuivel", version: 0 },
@@ -108,24 +117,17 @@ describe("merging Ingredients and moving aliases", () => {
 
   async function groceryTyped(name: string) {
     const resolved = await typed(name);
-    const [row] = await getTestDb()
-      .insert(groceries)
-      .values({
-        userId: actor.userId,
-        name,
-        ingredientAliasId: resolved.aliasId,
-        ingredientId: resolved.ingredientId,
-      })
-      .returning({ id: groceries.id });
+    const row = await addTestGrocery(actor.userId, {
+      name,
+      ingredientAliasId: resolved.aliasId,
+      ingredientId: resolved.ingredientId,
+    });
 
-    return row!.id;
+    return row.id;
   }
 
   async function groceryFood(id: string) {
-    const [row] = await getTestDb()
-      .select({ ingredientId: groceries.ingredientId })
-      .from(groceries)
-      .where(eq(groceries.id, id));
+    const row = (await testGroceryFoods(actor.userId)).find((held) => held.id === id);
 
     return row?.ingredientId ?? null;
   }
@@ -158,18 +160,13 @@ describe("merging Ingredients and moving aliases", () => {
 
       await insertTestRecipeLine({ recipeId: recipe.id, name: "uien" }, [uien.aliasId]);
       const grocery = await groceryTyped("uien");
-      const [recurring] = await getTestDb()
-        .insert(recurringGroceries)
-        .values({
-          userId: actor.userId,
-          name: "uien",
-          ingredientAliasId: uien.aliasId,
-          ingredientId: uien.ingredientId,
-          recurrenceRule: "week",
-          recurrenceInterval: 1,
-          nextPlannedFor: "2026-10-01",
-        })
-        .returning({ id: recurringGroceries.id });
+      const { recurringGrocery: recurring } = await addTestRecurringGrocery(actor.userId, {
+        name: "uien",
+        ingredientAliasId: uien.aliasId,
+        ingredientId: uien.ingredientId,
+        nextPlannedFor: "2026-10-01",
+        alone: true,
+      });
 
       await mergeIngredients(actor, uien.ingredientId, onion.ingredientId);
 
@@ -181,10 +178,9 @@ describe("merging Ingredients and moving aliases", () => {
         id: onion.ingredientId,
       });
 
-      const [recurringRow] = await getTestDb()
-        .select({ ingredientId: recurringGroceries.ingredientId })
-        .from(recurringGroceries)
-        .where(eq(recurringGroceries.id, recurring!.id));
+      const recurringRow = (await testGroceryFoods(actor.userId, "recurring")).find(
+        (held) => held.id === recurring.id
+      );
 
       expect(recurringRow?.ingredientId).toBe(onion.ingredientId);
     });
@@ -195,14 +191,19 @@ describe("merging Ingredients and moving aliases", () => {
 
       await fileIngredient(storeId, uien.ingredientId, GROENTE);
       await upsertProductLink(storeId, uien.ingredientId, null);
-      await upsertIngredientStorePreference(actor.userId, uien.ingredientId, storeId);
+      await upsertIngredientStorePreference(
+        testHouseholdOf(actor.userId),
+        actor.userId,
+        uien.ingredientId,
+        storeId
+      );
 
       await mergeIngredients(actor, uien.ingredientId, onion.ingredientId);
 
       await expect(aisleOf(onion.ingredientId)).resolves.toBe(GROENTE);
       await expect(resolveProductLink(storeId, onion.ingredientId)).resolves.not.toBeNull();
       await expect(
-        getIngredientStorePreference(actor.userId, onion.ingredientId)
+        getIngredientStorePreference(testHouseholdOf(actor.userId), onion.ingredientId)
       ).resolves.toMatchObject({ storeId });
     });
 
@@ -210,33 +211,54 @@ describe("merging Ingredients and moving aliases", () => {
       const onion = await mint("onion");
       const uien = await mint("uien");
       const other = (
-        await createStore(crypto.randomUUID(), { userId: actor.userId, name: "Ander" })
+        await createStore(crypto.randomUUID(), {
+          householdId: testHouseholdOf(actor.userId),
+          userId: actor.userId,
+          name: "Ander",
+        })
       ).id;
 
       await fileIngredient(storeId, onion.ingredientId, GROENTE);
       await fileIngredient(storeId, uien.ingredientId, ZUIVEL);
-      await upsertIngredientStorePreference(actor.userId, onion.ingredientId, storeId);
-      await upsertIngredientStorePreference(actor.userId, uien.ingredientId, other);
+      await upsertIngredientStorePreference(
+        testHouseholdOf(actor.userId),
+        actor.userId,
+        onion.ingredientId,
+        storeId
+      );
+      await upsertIngredientStorePreference(
+        testHouseholdOf(actor.userId),
+        actor.userId,
+        uien.ingredientId,
+        other
+      );
 
       await mergeIngredients(actor, uien.ingredientId, onion.ingredientId);
 
       await expect(aisleOf(onion.ingredientId)).resolves.toBe(GROENTE);
       await expect(
-        getIngredientStorePreference(actor.userId, onion.ingredientId)
+        getIngredientStorePreference(testHouseholdOf(actor.userId), onion.ingredientId)
       ).resolves.toMatchObject({ storeId });
     });
 
     it("keeps one Pantry Ingredient where a member held both foods", async () => {
       const onion = await mint("onion");
       const uien = await mint("uien");
-      const userIds = [actor.userId];
 
-      await addToPantry(crypto.randomUUID(), { userId: actor.userId, userIds, name: "onion" });
-      await addToPantry(crypto.randomUUID(), { userId: actor.userId, userIds, name: "uien" });
+      await addToPantry(crypto.randomUUID(), {
+        userId: actor.userId,
+        householdId: testHouseholdOf(actor.userId),
+        name: "onion",
+      });
+      await addToPantry(crypto.randomUUID(), {
+        userId: actor.userId,
+        householdId: testHouseholdOf(actor.userId),
+        name: "uien",
+      });
 
       await mergeIngredients(actor, uien.ingredientId, onion.ingredientId);
 
-      const pantry = await listPantryIngredientsByUserIds(userIds);
+      const pantry = await listPantryIngredientsByHousehold(testHouseholdOf(actor.userId));
 
       expect(pantry.map((item) => item.ingredientId)).toEqual([onion.ingredientId]);
     });
@@ -247,14 +269,21 @@ describe("merging Ingredients and moving aliases", () => {
       const housemate = await createTestUser();
 
       await joinTestHousehold(housemate.id, actor.userId);
-      const userIds = [actor.userId, housemate.id];
 
-      await addToPantry(crypto.randomUUID(), { userId: actor.userId, userIds, name: "onion" });
-      await addToPantry(crypto.randomUUID(), { userId: housemate.id, userIds, name: "uien" });
+      await addToPantry(crypto.randomUUID(), {
+        userId: actor.userId,
+        householdId: testHouseholdOf(actor.userId),
+        name: "onion",
+      });
+      await addToPantry(crypto.randomUUID(), {
+        userId: housemate.id,
+        householdId: testHouseholdOf(actor.userId),
+        name: "uien",
+      });
 
       await mergeIngredients(actor, uien.ingredientId, onion.ingredientId);
 
-      const pantry = await listPantryIngredientsByUserIds(userIds);
+      const pantry = await listPantryIngredientsByHousehold(testHouseholdOf(actor.userId));
 
       expect(pantry.map((item) => item.ingredientId)).toEqual([onion.ingredientId]);
     });
@@ -380,16 +409,23 @@ describe("merging Ingredients and moving aliases", () => {
     it("keeps one Pantry Ingredient where the spelling lands on a food the member holds", async () => {
       const onion = await mint("onion");
       const garlic = await mint("garlic");
-      const userIds = [actor.userId];
 
       await addAlias(actor, garlic.ingredientId, "ui");
-      await addToPantry(crypto.randomUUID(), { userId: actor.userId, userIds, name: "onion" });
-      await addToPantry(crypto.randomUUID(), { userId: actor.userId, userIds, name: "ui" });
+      await addToPantry(crypto.randomUUID(), {
+        userId: actor.userId,
+        householdId: testHouseholdOf(actor.userId),
+        name: "onion",
+      });
+      await addToPantry(crypto.randomUUID(), {
+        userId: actor.userId,
+        householdId: testHouseholdOf(actor.userId),
+        name: "ui",
+      });
       const [ui] = await resolveIngredients(["ui"], { userId: actor.userId });
 
       await moveAlias(actor, ui!.aliasId, onion.ingredientId);
 
-      const pantry = await listPantryIngredientsByUserIds(userIds);
+      const pantry = await listPantryIngredientsByHousehold(testHouseholdOf(actor.userId));
 
       expect(pantry.map((item) => item.ingredientId)).toEqual([onion.ingredientId]);
     });
