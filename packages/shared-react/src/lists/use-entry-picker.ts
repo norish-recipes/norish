@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { PickerEntry, PickerKind } from "./entry-matching";
 import { useCategoriesQuery } from "../config";
 import { useConnectivity } from "../offline/react";
+import { answered } from "../offline/settled";
 import { useTRPC } from "../trpc";
 import { createOffer, matchEntries } from "./entry-matching";
 import { useListEntries } from "./use-list-entries";
@@ -41,7 +42,7 @@ export function useEntryPicker({
   const { builtInAliases } = useCategoriesQuery();
   const { entries, isLoading } = useListEntries(kind, recipeId);
   const add = useMutation(trpc.lists.add.mutationOptions());
-  const underWay = useRef(false);
+  const underWayRef = useRef(false);
   const [failedName, setFailedName] = useState<string | null>(null);
   const aliases = kind === "category" ? builtInAliases : undefined;
   const offer = createOffer(kind, entries, typed, aliases);
@@ -53,24 +54,28 @@ export function useEntryPicker({
   );
 
   const createAndSelect = async () => {
-    if (offer.kind !== "create" || isOffline || underWay.current) return;
+    if (offer.kind !== "create" || isOffline || underWayRef.current) return;
 
-    underWay.current = true;
+    underWayRef.current = true;
     setFailedName(null);
 
-    try {
-      const { entry } = await add.mutateAsync({ kind, name: offer.name, recipeId });
+    const added = await answered(add.mutateAsync({ kind, name: offer.name, recipeId }));
 
-      // The list shows it at once, so a repeated Enter finds it instead of offering it again.
-      queryClient.setQueryData(trpc.lists.list.queryKey({ kind, recipeId }), (current) =>
-        current && !current.some((known) => known.id === entry.id) ? [...current, entry] : current
-      );
-      onSelect(entry);
-    } catch {
+    underWayRef.current = false;
+
+    if (!added) {
       setFailedName(offer.name);
-    } finally {
-      underWay.current = false;
+
+      return;
     }
+
+    // The list shows it at once, so a repeated Enter finds it instead of offering it again.
+    queryClient.setQueryData(trpc.lists.list.queryKey({ kind, recipeId }), (current) =>
+      current && !current.some((known) => known.id === added.entry.id)
+        ? [...current, added.entry]
+        : current
+    );
+    onSelect(added.entry);
   };
 
   return {
