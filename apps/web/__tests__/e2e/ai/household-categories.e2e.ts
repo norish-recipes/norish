@@ -81,8 +81,9 @@ test("a household adds Drinks from the form and filters by it; another is never 
           .evaluateAll((all) => all.map((el) => (el as HTMLTextAreaElement).value))
       )
       .toContain("Muddle the mint");
-    await a.page.getByRole("textbox", { name: "Add a category" }).fill("Drinks");
-    await a.page.getByRole("textbox", { name: "Add a category" }).press("Enter");
+    // A new Category is made by the Create row, never by typing it and saving.
+    await a.page.getByRole("combobox", { name: "Add a category" }).fill("Drinks");
+    await a.page.getByRole("option", { name: 'Create "Drinks"' }).click();
     await expect(a.page.getByRole("button", { name: "Drinks", exact: true })).toHaveAttribute(
       "aria-pressed",
       "true"
