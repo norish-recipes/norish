@@ -147,12 +147,6 @@ export async function getRecipeSharesByUserId(
   return rows.map((row) => toRecipeShareSummary(RecipeShareSelectSchema.parse(row)));
 }
 
-export async function getAllRecipeShares(): Promise<RecipeShareSummaryDto[]> {
-  const rows = await db.select().from(recipeShares).orderBy(desc(recipeShares.createdAt));
-
-  return rows.map((row) => toRecipeShareSummary(RecipeShareSelectSchema.parse(row)));
-}
-
 export async function getRecipeShareInventoryByUserId(
   userId: string
 ): Promise<RecipeShareInventoryDto[]> {
