@@ -9,6 +9,7 @@ import {
   cleanupOrphanedStepImages,
 } from "@norish/api/startup/media-cleanup";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
+import { createCookbook, updateCookbook } from "@norish/db/repositories/cookbooks";
 import { listGroceriesByHousehold, markAllDoneInStore } from "@norish/db/repositories/groceries";
 import {
   createPlannedItem,
@@ -142,6 +143,28 @@ describe("cleanup workflows", () => {
     expect(await fileExists(path.join(stepsDir, referencedStepImage))).toBe(true);
     expect(await fileExists(path.join(stepsDir, orphanedStepImage))).toBe(false);
     expect(await fileExists(missingRecipeDir)).toBe(false);
+  });
+
+  it("prunes cookbook folders of no cookbook and the files no cover names", async () => {
+    const cookbook = await createCookbook({ userId, title: "Weeknights" });
+    const cookbookDir = path.join(uploadsDir, "cookbooks", cookbook.id);
+    const goneDir = path.join(uploadsDir, "cookbooks", "22222222-2222-2222-2222-222222222222");
+
+    await createTestFile(path.join(cookbookDir, "cover.jpg"));
+    await createTestFile(path.join(cookbookDir, "replaced.jpg"));
+    await createTestFile(path.join(goneDir, "cover.jpg"));
+    await updateCookbook(
+      cookbook.id,
+      { title: "Weeknights", image: `/cookbooks/${cookbook.id}/cover.jpg` },
+      cookbook.version
+    );
+
+    const result = await cleanupOrphanedImages();
+
+    expect(result).toEqual({ deleted: 2, errors: 0 });
+    expect(await fileExists(path.join(cookbookDir, "cover.jpg"))).toBe(true);
+    expect(await fileExists(path.join(cookbookDir, "replaced.jpg"))).toBe(false);
+    expect(await fileExists(goneDir)).toBe(false);
   });
 
   it("deletes old calendar planned items using SCHEDULER_CLEANUP_MONTHS cutoff", async () => {

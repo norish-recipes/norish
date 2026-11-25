@@ -343,6 +343,11 @@ export async function deleteCookbookById(
   return appliedOutcome(deleted[0]?.householdId ?? null);
 }
 
+/** Every cookbook's id and uploaded cover, for the nightly media cleanup. */
+export async function listCookbookCovers(): Promise<Array<{ id: string; image: string | null }>> {
+  return db.select({ id: cookbooks.id, image: cookbooks.image }).from(cookbooks);
+}
+
 /** Every cookbook this reader may see, under the active sort. */
 export async function listCookbooks(
   ctx: RecipeListContext,
