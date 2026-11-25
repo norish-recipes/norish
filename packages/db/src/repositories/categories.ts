@@ -6,13 +6,7 @@ import { BUILT_IN_CATEGORIES, resolveCategoryName } from "@norish/shared/lib/cat
 import { BUILT_IN_ALIASES } from "@norish/shared/lib/category-matcher";
 
 import type { EntryWriteOptions } from "./list-entries";
-import {
-  entriesByFoldTx,
-  entryName,
-  listEntryNames,
-  recipeHouseholdId,
-  replaceRecipeEntriesByNameTx,
-} from "./list-entries";
+import { listEntryNames, replaceRecipeEntriesByNameTx } from "./list-entries";
 
 // A recipe's Category names in order, as a correlated subquery on `"recipes"`:
 // the query using it must not alias the recipes table.
@@ -45,9 +39,9 @@ export async function recipeHasCategoriesTx(tx: DbTransaction, recipeId: string)
 }
 
 /**
- * Replaces a recipe's Categories with `names`, in that order, from its household's list. A name
- * resolves to a built-in through its aliases, else to the household's entry of that fold; an
- * editor's save (`createEntries` false) names entries it picked, so the exact entry comes first.
+ * Replaces a recipe's Categories with `names`, in that order, from its household's list. Imports
+ * and AI map a name to a built-in through its aliases; an editor's save (`createEntries` false)
+ * attaches only the entries it names, by fold, in the household's list or the instance's.
  */
 export async function attachCategoriesToRecipeByInputTx(
   tx: DbTransaction,
@@ -55,16 +49,10 @@ export async function attachCategoriesToRecipeByInputTx(
   names: readonly string[],
   options: EntryWriteOptions = {}
 ): Promise<void> {
-  const householdId =
-    options.createEntries === false ? await recipeHouseholdId(recipeId, tx) : null;
-  const exact = householdId
-    ? await entriesByFoldTx(tx, "category", householdId, names, { create: false })
-    : new Map();
-  const resolved = names.map(
-    (name) =>
-      exact.get(entryName(name)?.fold ?? "")?.name ??
-      resolveCategoryName(name, BUILT_IN_ALIASES, [])
-  );
+  const resolved =
+    options.createEntries === false
+      ? names
+      : names.map((name) => resolveCategoryName(name, BUILT_IN_ALIASES, []));
 
   await replaceRecipeEntriesByNameTx(tx, "category", recipeId, resolved, options);
 }

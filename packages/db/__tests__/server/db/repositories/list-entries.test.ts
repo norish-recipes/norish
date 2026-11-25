@@ -191,6 +191,17 @@ describe("household lists", () => {
       expect((await getRecipeFull(ann.recipe))?.categories).toEqual(["Dinners"]);
     });
 
+    it("attaches nothing for a picked Category deleted since, even when it is a built-in's alias", async () => {
+      const { entry } = (await addEntry("category", ann.household, "Dinners"))!;
+
+      await deleteEntry("category", ann.household, { id: entry.id, version: entry.version });
+      await updateRecipeWithRefs(ann.recipe, ann.id, { categories: ["Dinners"] }, undefined, {
+        createEntries: false,
+      });
+
+      expect((await getRecipeFull(ann.recipe))?.categories).toEqual([]);
+    });
+
     it("maps an alias to its built-in for the callers that create: imports, AI and the REST routes", async () => {
       await updateRecipeWithRefs(ann.recipe, ann.id, { categories: ["Dinners"] });
 
