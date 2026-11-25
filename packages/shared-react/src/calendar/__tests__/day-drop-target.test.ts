@@ -35,9 +35,9 @@ describe("moveTargetIndex", () => {
     expect(moveTargetIndex(items, items[1]!, "2026-11-14", "Dinner")).toBe(1);
   });
 
-  it("counts only the moved item's owner's plans, as the server does", () => {
+  it("counts every member's plans in the slot, as the server orders the household's", () => {
     expect(moveTargetIndex(items, { ...moved, userId: "housemate" }, "2026-11-14", "Dinner")).toBe(
-      0
+      2
     );
   });
 });

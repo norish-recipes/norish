@@ -6,7 +6,7 @@ import { moveTargetIndex } from "./calendar-cache-merge";
  * drop on no day or on its own day, which moves nothing. */
 export function dayDropTarget(
   items: PlannedItemFromQuery[],
-  dropped: Pick<PlannedItemFromQuery, "id" | "userId" | "date" | "slot">,
+  dropped: Pick<PlannedItemFromQuery, "id" | "date" | "slot">,
   dayKey: string | null
 ) {
   if (!dayKey || dayKey === dropped.date) return null;

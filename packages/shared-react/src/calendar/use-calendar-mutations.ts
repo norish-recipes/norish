@@ -128,7 +128,7 @@ export function useCalendarMutations(): CalendarMutationsResult {
                   userId,
                   date,
                   slot,
-                  sortOrder: moveTargetIndex(items, { id, userId }, date, slot),
+                  sortOrder: moveTargetIndex(items, { id }, date, slot),
                   itemType,
                   recipeId: recipeId ?? null,
                   title: title ?? null,

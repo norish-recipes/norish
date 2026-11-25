@@ -7,20 +7,15 @@ import type { PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { PlannedItemWithRecipePayload } from "@norish/shared/contracts/zod";
 import type { CalendarRange } from "@norish/shared/lib/helpers";
 
-/** Where a moved item lands in its new slot: after its owner's plans there, as the server orders. */
+/** Where a moved item lands in its new slot: after the household's plans there, as the server orders. */
 export function moveTargetIndex(
   items: PlannedItemFromQuery[],
-  moved: Pick<PlannedItemFromQuery, "id" | "userId">,
+  moved: Pick<PlannedItemFromQuery, "id">,
   dayKey: string,
   slot: Slot
 ) {
-  return items.filter(
-    (item) =>
-      item.id !== moved.id &&
-      item.userId === moved.userId &&
-      item.date === dayKey &&
-      item.slot === slot
-  ).length;
+  return items.filter((item) => item.id !== moved.id && item.date === dayKey && item.slot === slot)
+    .length;
 }
 
 function isDateInRange(date: string, { startISO, endISO }: CalendarRange) {
