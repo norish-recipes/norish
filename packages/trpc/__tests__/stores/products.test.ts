@@ -392,6 +392,24 @@ describe("chooseProduct", () => {
       caller.chooseProduct({ storeId: STORE, name: "oude kaas", choice: manualChoice })
     ).rejects.toMatchObject({ code: "NOT_FOUND" });
   });
+
+  it("refuses a by-hand product id another household's product holds, without the database's words", async () => {
+    storeProductsRepository.getStoreProductById.mockResolvedValue(null);
+    storeProductsRepository.createManualProduct.mockRejectedValue(
+      new Error("Failed query: insert into store_products", {
+        cause: Object.assign(new Error("duplicate key"), {
+          code: "23505",
+          constraint: "store_products_pkey",
+        }),
+      })
+    );
+
+    const refusal = await caller
+      .chooseProduct({ storeId: STORE, name: "oude kaas", choice: manualChoice })
+      .catch((error: unknown) => error);
+
+    expect(refusal).toMatchObject({ code: "NOT_FOUND", message: "Not found" });
+  });
 });
 
 describe("searchShop", () => {

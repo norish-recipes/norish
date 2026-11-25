@@ -6,6 +6,7 @@ import type { FullRecipeDTO, HouseholdWithUsersNamesDto, User } from "@norish/sh
 import type { RecipeShareDto } from "@norish/shared/contracts/dto/recipe-shares";
 import type { OperationId } from "@norish/shared/contracts/realtime/envelope";
 import { isUserServerAdmin } from "@norish/db";
+import { isPrimaryKeyCollision } from "@norish/db/repositories/constraint-violation";
 import { getActiveRecipeShareByToken } from "@norish/db/repositories/recipe-shares";
 import { getRecipeFull } from "@norish/db/repositories/recipes";
 import { getCachedHouseholdForUser } from "@norish/shared-server/cache/household";
@@ -74,7 +75,19 @@ const withAuth = middleware(async ({ ctx, next }) => {
  * an expired/absent session keys differently and falls through to `withAuth`.
  * Queries and mutations without the header pass straight through.
  */
-export const authedProcedure = publicProcedure.use(withIdempotency).use(withAuth);
+export const authedProcedure = publicProcedure
+  .use(withIdempotency)
+  .use(withAuth)
+  // A client-made id another household's row holds answers like a missing row, without the database's text.
+  .use(async ({ next }) => {
+    const result = await next();
+
+    if (!result.ok && isPrimaryKeyCollision(result.error)) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Not found" });
+    }
+
+    return result;
+  });
 
 /** Signed in, nothing more: a realtime subscription reads its household itself. */
 export const signedInProcedure = publicProcedure.use(({ ctx, next }) =>
