@@ -23,7 +23,9 @@ export interface StoredRecipe {
  */
 export async function readStoredRecipes(stack: Owner, name: string): Promise<StoredRecipe[]> {
   const recipes = await Promise.all(
-    (await recipeIdsNamed(name)).map((id) => readRecipe(stack.baseURL, stack.ownerCookies, id))
+    (await recipeIdsNamed(stack.baseURL, stack.ownerCookies, name)).map((id) =>
+      readRecipe(stack.baseURL, stack.ownerCookies, id)
+    )
   );
 
   return recipes.flatMap((recipe) =>

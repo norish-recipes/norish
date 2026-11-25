@@ -197,7 +197,9 @@ test.describe("the Chromium browser", () => {
       url: `${site.origin("recipes")}/recipe`,
     });
 
-    await expect.poll(() => recipeIdsNamed(NAME), { timeout: 60_000 }).toHaveLength(1);
+    await expect
+      .poll(() => recipeIdsNamed(aiStack.baseURL, aiStack.ownerCookies, NAME), { timeout: 60_000 })
+      .toHaveLength(1);
     // The browser ran the challenge and came back for the recipe with its cookie.
     expect(
       site.requests
@@ -229,7 +231,11 @@ test.describe("the Chromium browser", () => {
       await callTrpc(aiStack.baseURL, aiStack.ownerCookies, "recipes.importFromUrl", {
         url: `${tokenSite.origin("recipes")}/to/elsewhere`,
       });
-      await expect.poll(() => recipeIdsNamed(name), { timeout: 60_000 }).toHaveLength(1);
+      await expect
+        .poll(() => recipeIdsNamed(aiStack.baseURL, aiStack.ownerCookies, name), {
+          timeout: 60_000,
+        })
+        .toHaveLength(1);
 
       expect(tokenSentTo("recipes.localhost", "/to/elsewhere")).toEqual(["e2e-session"]);
       // The challenge and then the recipe, both without the token.

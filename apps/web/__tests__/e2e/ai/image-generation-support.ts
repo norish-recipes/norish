@@ -58,12 +58,14 @@ export async function readStoredDishColor(
  * and its Dish Colour. Through the repositories: the scenario places the file itself.
  */
 export async function seedRecipePhoto(options: {
+  stack: OwnerApi;
   recipeName: string;
   uploadsDir: string;
   photoPath: string;
   dishColor: string;
 }): Promise<{ url: string }> {
-  const [recipeId] = await recipeIdsNamed(options.recipeName);
+  const { baseURL, ownerCookies } = options.stack;
+  const [recipeId] = await recipeIdsNamed(baseURL, ownerCookies, options.recipeName);
 
   if (!recipeId) throw new Error(`No recipe named ${options.recipeName} to seed a photo onto`);
 

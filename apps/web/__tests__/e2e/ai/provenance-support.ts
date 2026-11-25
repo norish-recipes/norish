@@ -21,7 +21,11 @@ export async function findCuisineIdByName(stack: Owner, name: string): Promise<s
 }
 
 async function storedRecipe(stack: Owner, name: string): Promise<FullRecipeDTO> {
-  const recipe = await readRecipe(stack.baseURL, stack.ownerCookies, await recipeIdNamed(name));
+  const recipe = await readRecipe(
+    stack.baseURL,
+    stack.ownerCookies,
+    await recipeIdNamed(stack.baseURL, stack.ownerCookies, name)
+  );
 
   if (!recipe) throw new Error(`Recipe not found: ${name}`);
 

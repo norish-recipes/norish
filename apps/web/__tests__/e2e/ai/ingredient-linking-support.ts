@@ -12,7 +12,7 @@ export async function readStoredStepIngredients(
   const recipe = await readRecipe(
     stack.baseURL,
     stack.ownerCookies,
-    await recipeIdNamed(recipeName)
+    await recipeIdNamed(stack.baseURL, stack.ownerCookies, recipeName)
   );
 
   return (recipe?.steps ?? [])
@@ -36,10 +36,13 @@ export async function readStoredStepIngredients(
 
 /** One link added beside what the recipe has, in one system: a repository write, as no form adds one alone. */
 export async function supplyStepIngredient(
+  stack: AIE2EStack,
   recipeName: string,
   link: StepIngredientLink
 ): Promise<void> {
-  if (!(await attachStepIngredient(await recipeIdNamed(recipeName), link))) {
+  const recipeId = await recipeIdNamed(stack.baseURL, stack.ownerCookies, recipeName);
+
+  if (!(await attachStepIngredient(recipeId, link))) {
     throw new Error(`Could not attach Step Ingredient on: ${recipeName}`);
   }
 }

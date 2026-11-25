@@ -66,9 +66,9 @@ export async function readCookbookTitles(stack: Owner): Promise<string[]> {
   return (await everyCookbook(stack)).map((cookbook) => cookbook.title);
 }
 
-/** Whether a recipe row still exists, by name. */
-export async function recipeExists(name: string): Promise<boolean> {
-  return (await recipeIdsNamed(name)).length > 0;
+/** Whether a recipe the owner may view still exists, by name. */
+export async function recipeExists(stack: Owner, name: string): Promise<boolean> {
+  return (await recipeIdsNamed(stack.baseURL, stack.ownerCookies, name)).length > 0;
 }
 
 /** Drop the cookbooks of this title, so a scenario that made its own can clean up after it. */

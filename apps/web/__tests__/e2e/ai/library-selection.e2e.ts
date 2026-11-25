@@ -314,7 +314,9 @@ test("Delete removes the selection after a confirmation naming the count", async
     await expect(bar(page)).toBeHidden();
     for (const name of names) await expect(card(page, name)).toBeHidden();
     await expect
-      .poll(async () => (await recipeExists(names[0]!)) || recipeExists(names[1]!))
+      .poll(
+        async () => (await recipeExists(aiStack, names[0]!)) || recipeExists(aiStack, names[1]!)
+      )
       .toBe(false);
   } finally {
     await context.close();
@@ -367,8 +369,8 @@ test("Delete says how many stay when the reader may not delete some", async ({
     await dialog.getByRole("button", { name: "Delete" }).click();
 
     await expect(card(page, memberRecipe)).toBeHidden();
-    await expect.poll(() => recipeExists(memberRecipe)).toBe(false);
-    expect(await recipeExists(names[0]!)).toBe(true);
+    await expect.poll(() => recipeExists(aiStack, memberRecipe)).toBe(false);
+    expect(await recipeExists(aiStack, names[0]!)).toBe(true);
   } finally {
     await context.close();
     await callTrpc(aiStack.baseURL, aiStack.ownerCookies, "admin.updateRecipePermissionPolicy", {
@@ -502,7 +504,7 @@ test("on a cookbook page, Remove takes the selection out and leaves the cookbook
     for (const name of names) await expect(card(page, name)).toBeHidden();
     await expect.poll(() => readCookbookMembers(aiStack, title)).toEqual([]);
     expect(await readCookbookTitles(aiStack)).toContain(title);
-    for (const name of names) expect(await recipeExists(name)).toBe(true);
+    for (const name of names) expect(await recipeExists(aiStack, name)).toBe(true);
   } finally {
     await context.close();
   }
@@ -539,7 +541,7 @@ test("on a cookbook page, Add to cookbook copies and Delete deletes for good", a
     await page.getByRole("dialog").getByRole("button", { name: "Delete" }).click();
 
     await expect(card(page, names[0]!)).toBeHidden();
-    await expect.poll(() => recipeExists(names[0]!)).toBe(false);
+    await expect.poll(() => recipeExists(aiStack, names[0]!)).toBe(false);
     expect(await readCookbookMembers(aiStack, title)).toEqual([names[1]!]);
   } finally {
     await context.close();

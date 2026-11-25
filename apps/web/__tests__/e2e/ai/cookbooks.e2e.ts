@@ -417,7 +417,7 @@ test("the edit panel takes a recipe out of the cookbook it is editing", async ()
     expect(await readCookbookMembers(stack, COOKBOOK_TITLE)).toEqual([]);
   }).toPass({ timeout: 10_000 });
   // Unfiling is never destructive.
-  expect(await recipeExists(RECIPE_NAME)).toBe(true);
+  expect(await recipeExists(stack, RECIPE_NAME)).toBe(true);
 });
 
 test("an uploaded cover replaces the mosaic until it is removed", async () => {
@@ -493,7 +493,7 @@ test("renaming and deleting a cookbook leaves its recipes alone", async () => {
   }).toPass({ timeout: 10_000 });
 
   // Organising is never destructive: the recipe it held is untouched.
-  expect(await recipeExists(RECIPE_NAME)).toBe(true);
+  expect(await recipeExists(stack, RECIPE_NAME)).toBe(true);
   await page.goto("/");
   // The chip choice persisted, so come back to All to see the recipe again.
   await selectChip("all");

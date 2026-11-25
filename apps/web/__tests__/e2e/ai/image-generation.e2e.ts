@@ -120,6 +120,7 @@ test("the manual action replaces the primary image and the page re-tints", async
   await importRecipe(name);
 
   const { url: photoUrl } = await seedRecipePhoto({
+    stack: stack,
     recipeName: name,
     uploadsDir: stack.server.uploadsDir,
     photoPath: SUPPLIED_PHOTO_PATH,
@@ -223,6 +224,7 @@ test.describe("the bulk sweep", () => {
     await importRecipe(GAP_RECIPE);
     await importRecipe(PHOTO_RECIPE);
     await seedRecipePhoto({
+      stack: stack,
       recipeName: PHOTO_RECIPE,
       uploadsDir: stack.server.uploadsDir,
       photoPath: SUPPLIED_PHOTO_PATH,

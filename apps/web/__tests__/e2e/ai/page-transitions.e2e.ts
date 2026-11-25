@@ -105,6 +105,7 @@ for (const reducedMotion of ["reduce", "no-preference"] as const) {
     const id = await seedRecipe(name);
 
     await seedRecipePhoto({
+      stack: aiStack,
       recipeName: name,
       uploadsDir: aiStack.server.uploadsDir,
       photoPath: PHOTO,

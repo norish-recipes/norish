@@ -1914,13 +1914,6 @@ export async function searchRecipesByName(
   return rows.map((r) => ({ id: r.id, name: r.name, image: r.image }));
 }
 
-/** Every recipe named exactly `name`, whoever owns it: for tests that find what a flow stored. */
-export async function listRecipeIdsNamed(name: string): Promise<string[]> {
-  const rows = await db.select({ id: recipes.id }).from(recipes).where(eq(recipes.name, name));
-
-  return rows.map((row) => row.id);
-}
-
 // --- Recipe Images Management ---
 
 export interface RecipeImageInput {

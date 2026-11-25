@@ -3,7 +3,7 @@ import { expect } from "@playwright/test";
 
 import type { LineResolution } from "@norish/db/repositories/ingredients";
 import type { FullRecipeDTO, FullRecipeInsertDTO } from "@norish/shared/contracts";
-import { createRecipeWithRefs, listRecipeIdsNamed } from "@norish/db/repositories/recipes";
+import { createRecipeWithRefs } from "@norish/db/repositories/recipes";
 import { lineNamesNoFood } from "@norish/shared/lib/ingredient-text";
 
 import type { SessionCookies } from "./auth";
@@ -42,14 +42,29 @@ export function createRecipe(
   });
 }
 
-/** The ids of every stored recipe named exactly this, whoever owns it. */
-export function recipeIdsNamed(name: string): Promise<string[]> {
-  return listRecipeIdsNamed(name);
+/** The ids of every recipe named exactly this that the signed-in reader may view, oldest first. */
+export async function recipeIdsNamed(
+  baseURL: string,
+  cookies: SessionCookies,
+  name: string
+): Promise<string[]> {
+  const { recipes } = await queryTrpc<{ recipes: Array<{ id: string; name: string }> }>(
+    baseURL,
+    cookies,
+    "recipes.list",
+    { search: name, searchFields: ["title"], limit: 200, sortMode: "dateAsc" }
+  );
+
+  return recipes.filter((recipe) => recipe.name === name).map((recipe) => recipe.id);
 }
 
-/** The id of the stored recipe named exactly this; fails when there is none. */
-export async function recipeIdNamed(name: string): Promise<string> {
-  const [id] = await recipeIdsNamed(name);
+/** The id of the recipe named exactly this that the reader may view; fails when there is none. */
+export async function recipeIdNamed(
+  baseURL: string,
+  cookies: SessionCookies,
+  name: string
+): Promise<string> {
+  const [id] = await recipeIdsNamed(baseURL, cookies, name);
 
   if (!id) throw new Error(`No recipe is named ${name}`);
 
@@ -113,7 +128,7 @@ export async function recipeNamed(
   cookies: SessionCookies,
   name: string
 ): Promise<FullRecipeDTO | null> {
-  const [id] = await recipeIdsNamed(name);
+  const [id] = await recipeIdsNamed(baseURL, cookies, name);
 
   return id ? await readRecipe(baseURL, cookies, id) : null;
 }

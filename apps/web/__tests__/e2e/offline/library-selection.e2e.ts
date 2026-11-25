@@ -22,8 +22,10 @@ test("a bulk delete made offline keeps the recipe edited meanwhile, and says so"
   const ids: string[] = [];
 
   for (const name of names) ids.push(await seedRecipe(userId, name));
+  const cookies = await signIn(offlineHarness.baseURL, USER_A);
+
   await offlineHarness.context.clearCookies();
-  await offlineHarness.context.addCookies(await signIn(offlineHarness.baseURL, USER_A));
+  await offlineHarness.context.addCookies(cookies);
   await page.setViewportSize({ width: 1280, height: 1600 });
   const frames = recordFrames(page);
 
@@ -58,7 +60,7 @@ test("a bulk delete made offline keeps the recipe edited meanwhile, and says so"
     timeout: 30_000,
   });
   await expect(card(names[2]!)).toBeVisible();
-  expect(await recipeIdsNamed(names[0]!)).toEqual([]);
-  expect(await recipeIdsNamed(names[1]!)).toEqual([]);
-  expect(await recipeIdsNamed(names[2]!)).toEqual([ids[2]]);
+  expect(await recipeIdsNamed(offlineHarness.baseURL, cookies, names[0]!)).toEqual([]);
+  expect(await recipeIdsNamed(offlineHarness.baseURL, cookies, names[1]!)).toEqual([]);
+  expect(await recipeIdsNamed(offlineHarness.baseURL, cookies, names[2]!)).toEqual([ids[2]]);
 });
