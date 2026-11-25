@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { announcementsSettled, householdsRouter } from "@norish/trpc/routers/households/households";
+import { householdsRouter } from "@norish/trpc/routers/households/households";
 
 import {
   createMockAuthedContext,
@@ -38,6 +38,9 @@ vi.mock("@norish/shared-server/logger", () => ({
 
 const { emitConnectionInvalidation } = await import("../mocks/realtime/connection");
 const { households } = await import("../mocks/realtime/households");
+
+/** Mutations announce after they answer; the mocks resolve at once, so one loop turn runs it all. */
+const settled = () => new Promise((resolve) => setImmediate(resolve));
 
 /** Every cache drop, household event and invalidation, in the order they ran. */
 function timeline(): string[] {
@@ -99,7 +102,7 @@ describe("household mutations announce before they restart the socket", () => {
     });
 
     await householdsRouter.createCaller(ctx as never).join({ code: "123456" });
-    await announcementsSettled();
+    await settled();
 
     expect(householdDb.joinHousehold).toHaveBeenCalledWith(user.id, { joinCode: "123456" });
     expect(timeline()).toEqual([
@@ -125,7 +128,7 @@ describe("household mutations announce before they restart the socket", () => {
     await expect(
       householdsRouter.createCaller(ctx as never).join({ code: "123456" })
     ).rejects.toThrow(message);
-    await announcementsSettled();
+    await settled();
 
     expect(timeline()).toEqual([]);
   });
@@ -149,7 +152,7 @@ describe("household mutations announce before they restart the socket", () => {
     householdDb.moveToHouseholdOfOne.mockResolvedValue(moved([memberId, lateJoinerId]));
 
     await householdsRouter.createCaller(ctx as never).leave({ householdId, version: 3 });
-    await announcementsSettled();
+    await settled();
 
     expect(householdDb.moveToHouseholdOfOne).toHaveBeenCalledWith(householdId, user.id, 3);
     expect(timeline()).toEqual([
@@ -198,7 +201,7 @@ describe("household mutations announce before they restart the socket", () => {
     await householdsRouter
       .createCaller(ctx as never)
       .kick({ householdId, userId: memberId, version: 3 });
-    await announcementsSettled();
+    await settled();
 
     expect(timeline()).toEqual([
       "cache:drop",
@@ -231,7 +234,7 @@ describe("household mutations announce before they restart the socket", () => {
       });
 
       await householdsRouter.createCaller(ctx as never).join({ code: "123456" });
-      await announcementsSettled();
+      await settled();
 
       expect(householdCache.invalidateHouseholdCacheForUsers).toHaveBeenCalledWith([
         user.id,
@@ -245,7 +248,7 @@ describe("household mutations announce before they restart the socket", () => {
       householdDb.moveToHouseholdOfOne.mockResolvedValue(moved([memberId]));
 
       await householdsRouter.createCaller(ctx as never).leave({ householdId, version: 3 });
-      await announcementsSettled();
+      await settled();
 
       expect(householdCache.invalidateHouseholdCacheForUsers).toHaveBeenCalledWith([
         user.id,
@@ -261,7 +264,7 @@ describe("household mutations announce before they restart the socket", () => {
       await householdsRouter
         .createCaller(ctx as never)
         .kick({ householdId, userId: memberId, version: 3 });
-      await announcementsSettled();
+      await settled();
 
       expect(householdCache.invalidateHouseholdCacheForUsers).toHaveBeenCalledWith([
         memberId,
@@ -281,7 +284,7 @@ describe("household mutations announce before they restart the socket", () => {
     await householdsRouter
       .createCaller(ctx as never)
       .transferAdmin({ householdId, newAdminId: memberId, version: 3 });
-    await announcementsSettled();
+    await settled();
 
     expect(timeline()).toEqual(["household:adminTransferred"]);
     expect(households.published[0]!.payload).toEqual({
