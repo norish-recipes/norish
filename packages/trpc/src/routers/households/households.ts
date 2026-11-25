@@ -98,6 +98,19 @@ async function householdSettingsFor(userId: string) {
   return toHouseholdDto(household, userId, allergies);
 }
 
+/** The announcement chains mutations leave running after they answer. */
+const announcing = new Set<Promise<unknown>>();
+
+function inBackground(chain: Promise<unknown>): void {
+  announcing.add(chain);
+  void chain.finally(() => announcing.delete(chain));
+}
+
+/** Resolves once every announcement chain started so far has run to its end. */
+export async function announcementsSettled(): Promise<void> {
+  await Promise.all(announcing);
+}
+
 /** Sends `userId` their household as settings show it, ahead of their Scope Change. */
 async function publishHouseholdTo(userId: string): Promise<void> {
   const dto = await householdSettingsFor(userId);
@@ -144,22 +157,24 @@ const join = authedProcedure
 
     log.info({ userId: ctx.user.id, householdId }, "User joined household");
 
-    void announceHouseholdJoin(
-      {
-        householdId,
-        user: {
-          id: ctx.user.id,
-          name: async () => ctx.user.name ?? null,
-          version: outcome.joined.version,
+    inBackground(
+      announceHouseholdJoin(
+        {
+          householdId,
+          user: {
+            id: ctx.user.id,
+            name: async () => ctx.user.name ?? null,
+            version: outcome.joined.version,
+          },
+          memberIds: outcome.memberIds,
+          reason: "household-joined",
         },
-        memberIds: outcome.memberIds,
-        reason: "household-joined",
-      },
-      // The joiner's view receives the household before its socket closes.
-      () => publishHouseholdTo(ctx.user.id)
-    ).catch((err) => {
-      log.error({ err, userId: ctx.user.id }, "Failed to announce household join");
-    });
+        // The joiner's view receives the household before its socket closes.
+        () => publishHouseholdTo(ctx.user.id)
+      ).catch((err) => {
+        log.error({ err, userId: ctx.user.id }, "Failed to announce household join");
+      })
+    );
 
     return { householdId };
   });
@@ -195,47 +210,52 @@ const leave = authedProcedure.input(LeaveHouseholdInputSchema).mutation(async ({
   }
 
   // Remove user async and emit events - fire and forget
-  moveToHouseholdOfOne(householdId, ctx.user.id, version)
-    .then(async (result) => {
-      if (result.stale) {
-        log.info(
-          { userId: ctx.user.id, householdId, version },
-          "Ignoring stale household leave mutation"
-        );
+  inBackground(
+    moveToHouseholdOfOne(householdId, ctx.user.id, version)
+      .then(async (result) => {
+        if (result.stale) {
+          log.info(
+            { userId: ctx.user.id, householdId, version },
+            "Ignoring stale household leave mutation"
+          );
 
-        return;
-      }
-
-      log.info({ userId: ctx.user.id, householdId }, "User left household");
-
-      const { memberIds } = result.value;
-
-      await announceMembershipChange(
-        { userId: ctx.user.id, reason: "household-left", affectedUserIds: memberIds },
-        {
-          // The leaver's view gets its household of one before its socket restarts.
-          toMover: () => publishHouseholdTo(ctx.user.id),
-          toOthers: async () => {
-            for (const memberId of memberIds) {
-              await households.publish("userLeft", { userId: ctx.user.id }, { userId: memberId });
-            }
-          },
+          return;
         }
-      );
-      await chaseLeftBehindEvents(ctx.user.id).catch((err) =>
-        log.error({ err, userId: ctx.user.id }, "Failed to take a left household's plan off CalDAV")
-      );
-    })
-    .catch((err) => {
-      log.error({ err, userId: ctx.user.id }, "Failed to leave household");
-      void households.publish(
-        "failed",
-        {
-          reason: "Failed to leave household",
-        },
-        { userId: ctx.user.id }
-      );
-    });
+
+        log.info({ userId: ctx.user.id, householdId }, "User left household");
+
+        const { memberIds } = result.value;
+
+        await announceMembershipChange(
+          { userId: ctx.user.id, reason: "household-left", affectedUserIds: memberIds },
+          {
+            // The leaver's view gets its household of one before its socket restarts.
+            toMover: () => publishHouseholdTo(ctx.user.id),
+            toOthers: async () => {
+              for (const memberId of memberIds) {
+                await households.publish("userLeft", { userId: ctx.user.id }, { userId: memberId });
+              }
+            },
+          }
+        );
+        await chaseLeftBehindEvents(ctx.user.id).catch((err) =>
+          log.error(
+            { err, userId: ctx.user.id },
+            "Failed to take a left household's plan off CalDAV"
+          )
+        );
+      })
+      .catch((err) => {
+        log.error({ err, userId: ctx.user.id }, "Failed to leave household");
+        void households.publish(
+          "failed",
+          {
+            reason: "Failed to leave household",
+          },
+          { userId: ctx.user.id }
+        );
+      })
+  );
 
   return { success: true };
 });
@@ -276,57 +296,62 @@ const kick = authedProcedure
     }
 
     // Kick user async and emit events
-    kickUserFromHousehold(householdId, userIdToKick, ctx.user.id, version)
-      .then(async (result) => {
-        if (result.stale) {
+    inBackground(
+      kickUserFromHousehold(householdId, userIdToKick, ctx.user.id, version)
+        .then(async (result) => {
+          if (result.stale) {
+            log.info(
+              { userId: ctx.user.id, householdId, userIdToKick, version },
+              "Ignoring stale household kick mutation"
+            );
+
+            return;
+          }
+
           log.info(
-            { userId: ctx.user.id, householdId, userIdToKick, version },
-            "Ignoring stale household kick mutation"
+            { userId: ctx.user.id, householdId, userIdToKick },
+            "User kicked from household"
           );
 
-          return;
-        }
-
-        log.info({ userId: ctx.user.id, householdId, userIdToKick }, "User kicked from household");
-
-        await announceMembershipChange(
-          {
-            userId: userIdToKick,
-            reason: "household-kicked",
-            affectedUserIds: result.value.memberIds,
-          },
-          {
-            // The kicked user gets their household of one and hears why before the socket
-            // closes; the reconnect refetches under the new identity (ADR-0011).
-            toMover: async () => {
-              await publishHouseholdTo(userIdToKick);
-              await households.publish(
-                "userKicked",
-                { householdId, kickedBy: ctx.user.id },
-                { userId: userIdToKick }
-              );
+          await announceMembershipChange(
+            {
+              userId: userIdToKick,
+              reason: "household-kicked",
+              affectedUserIds: result.value.memberIds,
             },
-            toOthers: () =>
-              households.publish("memberRemoved", { userId: userIdToKick }, { householdId }),
-          }
-        );
-        await chaseLeftBehindEvents(userIdToKick).catch((err) =>
-          log.error(
-            { err, userId: userIdToKick },
-            "Failed to take a left household's plan off CalDAV"
-          )
-        );
-      })
-      .catch((err) => {
-        log.error({ err, userId: ctx.user.id }, "Failed to kick user");
-        void households.publish(
-          "failed",
-          {
-            reason: "Failed to kick user from household",
-          },
-          { userId: ctx.user.id }
-        );
-      });
+            {
+              // The kicked user gets their household of one and hears why before the socket
+              // closes; the reconnect refetches under the new identity (ADR-0011).
+              toMover: async () => {
+                await publishHouseholdTo(userIdToKick);
+                await households.publish(
+                  "userKicked",
+                  { householdId, kickedBy: ctx.user.id },
+                  { userId: userIdToKick }
+                );
+              },
+              toOthers: () =>
+                households.publish("memberRemoved", { userId: userIdToKick }, { householdId }),
+            }
+          );
+          await chaseLeftBehindEvents(userIdToKick).catch((err) =>
+            log.error(
+              { err, userId: userIdToKick },
+              "Failed to take a left household's plan off CalDAV"
+            )
+          );
+        })
+        .catch((err) => {
+          log.error({ err, userId: ctx.user.id }, "Failed to kick user");
+          void households.publish(
+            "failed",
+            {
+              reason: "Failed to kick user from household",
+            },
+            { userId: ctx.user.id }
+          );
+        })
+    );
 
     return { success: true };
   });
@@ -349,42 +374,44 @@ const regenerateCode = authedProcedure
     }
 
     // Regenerate code async and emit events
-    regenerateJoinCode(householdId, version)
-      .then((result) => {
-        if (result.stale || !result.value) {
-          log.info(
-            { userId: ctx.user.id, householdId, version },
-            "Ignoring stale household join-code regeneration"
+    inBackground(
+      regenerateJoinCode(householdId, version)
+        .then((result) => {
+          if (result.stale || !result.value) {
+            log.info(
+              { userId: ctx.user.id, householdId, version },
+              "Ignoring stale household join-code regeneration"
+            );
+
+            return;
+          }
+
+          const household = result.value;
+
+          log.info({ userId: ctx.user.id, householdId }, "Join code regenerated");
+
+          // Emit to all household members
+          void households.publish(
+            "joinCodeRegenerated",
+            {
+              joinCode: household.joinCode!,
+              joinCodeExpiresAt: household.joinCodeExpiresAt!.toISOString(),
+              version: household.version,
+            },
+            { householdId }
           );
-
-          return;
-        }
-
-        const household = result.value;
-
-        log.info({ userId: ctx.user.id, householdId }, "Join code regenerated");
-
-        // Emit to all household members
-        void households.publish(
-          "joinCodeRegenerated",
-          {
-            joinCode: household.joinCode!,
-            joinCodeExpiresAt: household.joinCodeExpiresAt!.toISOString(),
-            version: household.version,
-          },
-          { householdId }
-        );
-      })
-      .catch((err) => {
-        log.error({ err, userId: ctx.user.id }, "Failed to regenerate join code");
-        void households.publish(
-          "failed",
-          {
-            reason: "Failed to regenerate join code",
-          },
-          { userId: ctx.user.id }
-        );
-      });
+        })
+        .catch((err) => {
+          log.error({ err, userId: ctx.user.id }, "Failed to regenerate join code");
+          void households.publish(
+            "failed",
+            {
+              reason: "Failed to regenerate join code",
+            },
+            { userId: ctx.user.id }
+          );
+        })
+    );
 
     return { success: true };
   });
@@ -414,42 +441,44 @@ const transferAdmin = authedProcedure
     }
 
     // Transfer admin async and emit events
-    transferHouseholdAdmin(householdId, ctx.user.id, newAdminId, version)
-      .then((result) => {
-        if (result.stale || !result.value) {
-          log.info(
-            { userId: ctx.user.id, householdId, newAdminId, version },
-            "Ignoring stale household admin transfer"
+    inBackground(
+      transferHouseholdAdmin(householdId, ctx.user.id, newAdminId, version)
+        .then((result) => {
+          if (result.stale || !result.value) {
+            log.info(
+              { userId: ctx.user.id, householdId, newAdminId, version },
+              "Ignoring stale household admin transfer"
+            );
+
+            return;
+          }
+
+          const household = result.value;
+
+          log.info({ userId: ctx.user.id, householdId, newAdminId }, "Admin transferred");
+
+          // Emit to all household members
+          void households.publish(
+            "adminTransferred",
+            {
+              oldAdminId: ctx.user.id,
+              newAdminId,
+              version: household.version,
+            },
+            { householdId }
           );
-
-          return;
-        }
-
-        const household = result.value;
-
-        log.info({ userId: ctx.user.id, householdId, newAdminId }, "Admin transferred");
-
-        // Emit to all household members
-        void households.publish(
-          "adminTransferred",
-          {
-            oldAdminId: ctx.user.id,
-            newAdminId,
-            version: household.version,
-          },
-          { householdId }
-        );
-      })
-      .catch((err) => {
-        log.error({ err, userId: ctx.user.id }, "Failed to transfer admin");
-        void households.publish(
-          "failed",
-          {
-            reason: "Failed to transfer admin privileges",
-          },
-          { userId: ctx.user.id }
-        );
-      });
+        })
+        .catch((err) => {
+          log.error({ err, userId: ctx.user.id }, "Failed to transfer admin");
+          void households.publish(
+            "failed",
+            {
+              reason: "Failed to transfer admin privileges",
+            },
+            { userId: ctx.user.id }
+          );
+        })
+    );
 
     return { success: true };
   });
