@@ -14,7 +14,7 @@ import { ForeignHouseholdReferenceError } from "@norish/db/repositories/househol
 import {
   addEntry,
   deleteEntry,
-  entriesForNamesTx,
+  entriesByFoldTx,
   listEntries,
   mergeEntries,
   mergeEntryTx,
@@ -313,7 +313,7 @@ describe("household lists", () => {
         [
           () =>
             db.transaction((tx) =>
-              entriesForNamesTx(tx, "tag", ann.household, ["soja"], { create: true })
+              entriesByFoldTx(tx, "tag", ann.household, ["soja"], { create: true })
             ),
         ]
       );

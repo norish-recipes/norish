@@ -4,7 +4,7 @@ import { db } from "@norish/db/drizzle";
 import { householdUsers, userAllergies, users } from "@norish/db/schema";
 import { entryFold } from "@norish/shared/lib/fold-name";
 
-import { cleanEntryName } from "./list-entries";
+import { entryName } from "./list-entries";
 
 async function readUserAllergies(
   connection: Pick<typeof db, "select">,
@@ -85,7 +85,7 @@ export async function updateUserAllergies(
     const kept = new Map<string, string>();
 
     for (const sent of allergyNames) {
-      const name = storedByFold.get(entryFold(sent)) ?? cleanEntryName(sent);
+      const name = storedByFold.get(entryFold(sent)) ?? entryName(sent)?.name;
 
       if (name && !kept.has(entryFold(name))) kept.set(entryFold(name), name);
     }

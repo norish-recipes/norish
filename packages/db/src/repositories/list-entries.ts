@@ -1,8 +1,5 @@
-/**
- * Tags, Cuisines and Categories as household lists (ADR-0043). A row carries its household, null
- * for an instance entry, and is unique on `entryFold(name)` within the household or the instance;
- * a recipe carries only its own household's entries and instance entries.
- */
+/** Tags, Cuisines and Categories as household lists (ADR-0043): a row is its household's (null for
+ * the instance), unique on its fold there; a recipe carries its household's and the instance's. */
 import type { SQL } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 
@@ -46,34 +43,47 @@ export interface ListEntryRow {
 }
 
 /** An entry with the count of the household's recipes carrying it. */
-export interface ListEntry extends ListEntryRow {
+interface ListEntry extends ListEntryRow {
   recipeCount: number;
 }
 
 /** A household's list, or the instance's entries alone when `householdId` is null. */
 export type ListScope = string | null;
 
-/** A name as a list stores it: no HTML, trimmed; empty when nothing is left. */
-export function cleanEntryName(name: string): string {
-  return stripHtmlTags(name).trim();
+/** A name as a list stores it (no HTML, trimmed) with its fold; null when nothing is left. */
+export function entryName(name: string): { name: string; fold: string } | null {
+  const cleaned = stripHtmlTags(name).trim();
+
+  return cleaned ? { name: cleaned, fold: entryFold(cleaned) } : null;
 }
 
-/** Whether a row is the scope's own: the household's, or an instance entry for the null scope. */
-function ownedBy(scope: ListScope, alias = sql.raw("e")): SQL {
-  return scope === null
-    ? sql`${alias}.household_id IS NULL`
-    : sql`${alias}.household_id = ${scope}::uuid`;
-}
+/**
+ * The rows of a scope: a household's own, or the instance's for null; with `offered`, the instance's
+ * too, as a household's list offers them. The household may be a subquery.
+ */
+export function inScope(
+  scope: ListScope | SQL,
+  { offered = false, alias = sql.raw("e") }: { offered?: boolean; alias?: SQL } = {}
+): SQL {
+  if (scope === null) return sql`${alias}.household_id IS NULL`;
 
-/** The rows a household is offered: its own and the instance's. */
-export function offeredTo(householdId: string, alias = sql.raw("e")): SQL {
-  return sql`(${alias}.household_id = ${householdId}::uuid OR ${alias}.household_id IS NULL)`;
+  const own = sql`${alias}.household_id = ${scope}::uuid`;
+
+  return offered ? sql`(${own} OR ${alias}.household_id IS NULL)` : own;
 }
 
 const ROW_COLUMNS = sql`e.id, e.name, (e.household_id IS NULL) AS instance, e.version`;
 
+/** The entry as its list shows it, without the other columns a query read. */
+const asEntryRow = ({ id, name, instance, version }: ListEntryRow): ListEntryRow => ({
+  id,
+  name,
+  instance,
+  version,
+});
+
 /** A row 0092 could not fold exactly: keyed by " <id>", which no fold can be. */
-export const PENDING_FOLD_PREFIX = " ";
+const PENDING_FOLD_PREFIX = " ";
 
 /** The rows of `kind` waiting for their fold, oldest first. */
 export async function listPendingFoldEntries(kind: ListKind, tx: Db = db) {
@@ -100,7 +110,7 @@ export async function findFoldedTwinTx(
     await tx.execute(sql`
       SELECT e.id, (e.created_at, e.id) < (self.created_at, self.id) AS older
       FROM ${table} e, ${table} self
-      WHERE self.id = ${id}::uuid AND e.id <> self.id AND ${ownedBy(scope)} AND e.name_fold = ${fold}
+      WHERE self.id = ${id}::uuid AND e.id <> self.id AND ${inScope(scope)} AND e.name_fold = ${fold}
     `)
   );
 
@@ -122,11 +132,16 @@ export async function listEntryRows(
 ): Promise<ListEntryRow[]> {
   const { table } = KINDS[kind];
   const result = await connection.execute(sql`
-    SELECT ${ROW_COLUMNS} FROM ${table} e WHERE ${offeredTo(householdId)}
+    SELECT ${ROW_COLUMNS} FROM ${table} e WHERE ${inScope(householdId, { offered: true })}
     ORDER BY lower(e.name), e.id
   `);
 
   return rowsOf<ListEntryRow>(result);
+}
+
+/** {@link listEntryRows}' names. */
+export async function listEntryNames(kind: ListKind, householdId: string): Promise<string[]> {
+  return (await listEntryRows(kind, householdId)).map((entry) => entry.name);
 }
 
 /** {@link listEntryRows} with how many of the household's recipes carry each. */
@@ -137,7 +152,7 @@ export async function listEntries(kind: ListKind, householdId: string): Promise<
       SELECT count(*)::int FROM ${link} l JOIN ${recipes} r ON r.id = l.recipe_id
       WHERE l.${entity} = e.id AND r.household_id = ${householdId}::uuid
     ) AS "recipeCount"
-    FROM ${table} e WHERE ${offeredTo(householdId)}
+    FROM ${table} e WHERE ${inScope(householdId, { offered: true })}
     ORDER BY lower(e.name), e.id
   `);
 
@@ -153,12 +168,12 @@ export async function recipeHouseholdId(recipeId: string, connection: Db = db) {
   return row?.household_id ?? null;
 }
 
-/**
- * The household's entries (or the instance's) for `names`, by fold, creating the missing ones in
- * the household when `create`. Rows are held `FOR KEY SHARE` until the transaction ends, so a
- * merge or delete waits for the attach; a row it removed meanwhile is made again.
- */
-export async function entriesForNamesTx(
+/** How often a find-or-create looks again for a row a concurrent merge or delete removed. */
+const ATTACH_ATTEMPTS = 3;
+
+/** The household's (or instance's) entries for `names`, keyed by fold, the missing ones created
+ * when `create`; held `FOR KEY SHARE`, so a merge or delete waits for the attach. */
+export async function entriesByFoldTx(
   tx: DbTransaction,
   kind: ListKind,
   householdId: string,
@@ -168,18 +183,18 @@ export async function entriesForNamesTx(
   const { table } = KINDS[kind];
   const wanted = new Map<string, string>();
 
-  for (const name of names.map(cleanEntryName)) {
-    if (name && !wanted.has(entryFold(name))) wanted.set(entryFold(name), name);
+  for (const entry of names.flatMap((name) => entryName(name) ?? [])) {
+    if (!wanted.has(entry.fold)) wanted.set(entry.fold, entry.name);
   }
 
   const found = new Map<string, ListEntryRow>();
 
-  for (let attempt = 0; attempt < 3 && found.size < wanted.size; attempt += 1) {
+  for (let attempt = 0; attempt < ATTACH_ATTEMPTS && found.size < wanted.size; attempt += 1) {
     const missing = [...wanted.keys()].filter((fold) => !found.has(fold));
     const rows = rowsOf<ListEntryRow & { name_fold: string }>(
       await tx.execute(sql`
         SELECT ${ROW_COLUMNS}, e.name_fold FROM ${table} e
-        WHERE ${offeredTo(householdId)} AND e.name_fold IN (${sql.join(
+        WHERE ${inScope(householdId, { offered: true })} AND e.name_fold IN (${sql.join(
           missing.map((fold) => sql`${fold}`),
           sql`, `
         )})
@@ -190,14 +205,7 @@ export async function entriesForNamesTx(
 
     // An instance entry wins over a household's own of the same fold.
     for (const row of rows) {
-      if (!found.has(row.name_fold)) {
-        found.set(row.name_fold, {
-          id: row.id,
-          name: row.name,
-          instance: row.instance,
-          version: row.version,
-        });
-      }
+      if (!found.has(row.name_fold)) found.set(row.name_fold, asEntryRow(row));
     }
 
     const absent = missing.filter((fold) => !found.has(fold));
@@ -226,16 +234,14 @@ export async function replaceRecipeEntriesByNameTx(
 
   if (!householdId) return;
 
-  const entries = await entriesForNamesTx(tx, kind, householdId, names, { create: true });
-  const ids = names.flatMap((name) => entries.get(entryFold(cleanEntryName(name)))?.id ?? []);
+  const entries = await entriesByFoldTx(tx, kind, householdId, names, { create: true });
+  const ids = names.flatMap((name) => entries.get(entryName(name)?.fold ?? "")?.id ?? []);
 
   await writeRecipeLinksTx(tx, kind, recipeId, ids);
 }
 
-/**
- * Replaces a recipe's entries with `ids`, in order. An id must be the recipe's household's, an
- * instance entry, or one the recipe already carries; any other is refused.
- */
+/** Replaces a recipe's entries with `ids`, in order: each the recipe's household's, the instance's
+ * or one it carries already, else ForeignHouseholdReferenceError. */
 export async function replaceRecipeEntryIdsTx(
   tx: DbTransaction,
   kind: ListKind,
@@ -250,8 +256,7 @@ export async function replaceRecipeEntryIdsTx(
       await tx.execute(sql`
         SELECT e.id FROM ${table} e
         WHERE e.id IN (${uuidListSql(unique)}) AND (
-          e.household_id IS NULL
-          OR e.household_id = (SELECT household_id FROM ${recipes} WHERE id = ${recipeId}::uuid)
+          ${inScope(sql`(SELECT household_id FROM ${recipes} WHERE id = ${recipeId}::uuid)`, { offered: true })}
           OR EXISTS (SELECT 1 FROM ${link} l WHERE l.recipe_id = ${recipeId}::uuid AND l.${entity} = e.id)
         )
         FOR KEY SHARE
@@ -264,25 +269,34 @@ export async function replaceRecipeEntryIdsTx(
   await writeRecipeLinksTx(tx, kind, recipeId, unique);
 }
 
+/** Inserts `links` (`VALUES` or a `SELECT` of recipe, entry and order), keeping one already there. */
+async function insertLinksTx(tx: DbTransaction, kind: ListKind, links: SQL): Promise<void> {
+  const { link, entity } = KINDS[kind];
+
+  await tx.execute(
+    sql`INSERT INTO ${link} (recipe_id, ${entity}, "order") ${links} ON CONFLICT DO NOTHING`
+  );
+}
+
+/** `VALUES` linking `recipeId` to `ids` in order, the first at `from`. */
+function linkValues(recipeId: string, ids: readonly string[], from = 0): SQL {
+  return sql`VALUES ${sql.join(
+    ids.map((id, index) => sql`(${recipeId}::uuid, ${id}::uuid, ${from + index})`),
+    sql`, `
+  )}`;
+}
+
 async function writeRecipeLinksTx(
   tx: DbTransaction,
   kind: ListKind,
   recipeId: string,
   ids: readonly string[]
 ): Promise<void> {
-  const { link, entity } = KINDS[kind];
   const unique = [...new Set(ids)];
 
-  await tx.execute(sql`DELETE FROM ${link} WHERE recipe_id = ${recipeId}::uuid`);
+  await tx.execute(sql`DELETE FROM ${KINDS[kind].link} WHERE recipe_id = ${recipeId}::uuid`);
 
-  if (unique.length === 0) return;
-
-  await tx.execute(sql`
-    INSERT INTO ${link} (recipe_id, ${entity}, "order") VALUES ${sql.join(
-      unique.map((id, order) => sql`(${recipeId}::uuid, ${id}::uuid, ${order})`),
-      sql`, `
-    )} ON CONFLICT DO NOTHING
-  `);
+  if (unique.length > 0) await insertLinksTx(tx, kind, linkValues(recipeId, unique));
 }
 
 /** A recipe's entry names, in order. */
@@ -302,36 +316,42 @@ export async function recipeEntryNames(
   return rows.map((row) => row.name);
 }
 
-/**
- * Adds the entries of `names` a recipe lacks (by fold) after the ones it has, from its household's
- * list, never removing one; returns the names it added and the recipe's names after.
- */
+/** Adds the entries of `names` a recipe lacks (by fold) after its own, from its household's list,
+ * removing none; answers the names added and all the recipe's names after. */
 export async function appendRecipeEntriesTx(
   tx: DbTransaction,
   kind: ListKind,
   recipeId: string,
   names: readonly string[]
 ): Promise<{ added: string[]; all: string[] }> {
-  const { link, entity } = KINDS[kind];
   const existing = await recipeEntryNames(kind, recipeId, tx);
   const has = new Set(existing.map(entryFold));
   const householdId = await recipeHouseholdId(recipeId, tx);
-  const fresh = names.map(cleanEntryName).filter((name) => name && !has.has(entryFold(name)));
+  const fresh = names.flatMap((name) => entryName(name) ?? []).filter((e) => !has.has(e.fold));
 
   if (!householdId || fresh.length === 0) return { added: [], all: existing };
 
-  const entries = await entriesForNamesTx(tx, kind, householdId, fresh, { create: true });
-  const added = [...new Set(fresh.map(entryFold))].flatMap((fold) => entries.get(fold) ?? []);
+  const entries = await entriesByFoldTx(
+    tx,
+    kind,
+    householdId,
+    fresh.map((entry) => entry.name),
+    { create: true }
+  );
+  const added = [...new Set(fresh.map((entry) => entry.fold))].flatMap(
+    (fold) => entries.get(fold) ?? []
+  );
 
   if (added.length > 0) {
-    await tx.execute(sql`
-      INSERT INTO ${link} (recipe_id, ${entity}, "order") VALUES ${sql.join(
-        added.map(
-          (entry, index) => sql`(${recipeId}::uuid, ${entry.id}::uuid, ${existing.length + index})`
-        ),
-        sql`, `
-      )} ON CONFLICT DO NOTHING
-    `);
+    await insertLinksTx(
+      tx,
+      kind,
+      linkValues(
+        recipeId,
+        added.map((entry) => entry.id),
+        existing.length
+      )
+    );
   }
 
   return {
@@ -340,29 +360,46 @@ export async function appendRecipeEntriesTx(
   };
 }
 
-export type AddEntryResult = { entry: ListEntryRow; created: boolean };
+type AddEntryResult = { entry: ListEntryRow; created: boolean };
 
-/**
- * Adds `name` to the household's list (or the instance's for the null scope). A name the list
- * already has, the instance's included, answers that entry, also when a concurrent add made it.
- */
+/** The scope's entry folded as `fold`, else the instance's; locked for a change when `lock`. */
+async function foldedEntry(
+  connection: Db,
+  kind: ListKind,
+  scope: ListScope,
+  fold: string,
+  lock = false
+): Promise<ListEntryRow | undefined> {
+  const [row] = rowsOf<ListEntryRow>(
+    await connection.execute(sql`
+      SELECT ${ROW_COLUMNS} FROM ${KINDS[kind].table} e
+      WHERE ${inScope(scope, { offered: true })} AND e.name_fold = ${fold}
+      ORDER BY e.household_id NULLS FIRST LIMIT 1 ${lock ? sql`FOR UPDATE` : sql``}
+    `)
+  );
+
+  return row;
+}
+
+/** Adds `name` to the scope's list. A name it has, the instance's included, answers that entry,
+ * also when a concurrent add made it. */
 export async function addEntry(
   kind: ListKind,
   scope: ListScope,
   name: string
 ): Promise<AddEntryResult | null> {
   const { table } = KINDS[kind];
-  const cleaned = cleanEntryName(name);
+  const entry = entryName(name);
 
-  if (!cleaned) return null;
+  if (!entry) return null;
 
-  const fold = entryFold(cleaned);
   const [created] = rowsOf<ListEntryRow>(
     await db.execute(sql`
       INSERT INTO ${table} AS e (household_id, name, name_fold)
-      SELECT ${scope}::uuid, ${cleaned}, ${fold}
+      SELECT ${scope}::uuid, ${entry.name}, ${entry.fold}
       WHERE NOT EXISTS (
-        SELECT 1 FROM ${table} o WHERE o.household_id IS NULL AND o.name_fold = ${fold}
+        SELECT 1 FROM ${table} o
+        WHERE ${inScope(null, { alias: sql.raw("o") })} AND o.name_fold = ${entry.fold}
       )
       ON CONFLICT DO NOTHING
       RETURNING ${ROW_COLUMNS}
@@ -371,13 +408,7 @@ export async function addEntry(
 
   if (created) return { entry: created, created: true };
 
-  const [existing] = rowsOf<ListEntryRow>(
-    await db.execute(sql`
-      SELECT ${ROW_COLUMNS} FROM ${table} e
-      WHERE (${ownedBy(scope)} OR e.household_id IS NULL) AND e.name_fold = ${fold}
-      ORDER BY e.household_id NULLS FIRST LIMIT 1
-    `)
-  );
+  const existing = await foldedEntry(db, kind, scope, entry.fold);
 
   return existing ? { entry: existing, created: false } : null;
 }
@@ -392,11 +423,11 @@ export async function mergeEntryTx(
 ): Promise<ListEntryRow | undefined> {
   const { table, link, entity } = KINDS[kind];
 
-  await tx.execute(sql`
-    INSERT INTO ${link} (recipe_id, ${entity}, "order")
-    SELECT recipe_id, ${targetId}::uuid, "order" FROM ${link} WHERE ${entity} = ${sourceId}::uuid
-    ON CONFLICT DO NOTHING
-  `);
+  await insertLinksTx(
+    tx,
+    kind,
+    sql`SELECT recipe_id, ${targetId}::uuid, "order" FROM ${link} WHERE ${entity} = ${sourceId}::uuid`
+  );
   await tx.execute(sql`DELETE FROM ${link} WHERE ${entity} = ${sourceId}::uuid`);
   await tx.execute(sql`DELETE FROM ${table} WHERE id = ${sourceId}::uuid`);
 
@@ -411,7 +442,7 @@ export async function mergeEntryTx(
 }
 
 /** An entry as a change names it: the version the caller last read. */
-export type EntryRef = { id: string; version: number };
+type EntryRef = { id: string; version: number };
 
 /** The scope's entry `id`, locked for the change. */
 async function lockOwnEntryTx(tx: DbTransaction, kind: ListKind, scope: ListScope, id: string) {
@@ -419,19 +450,17 @@ async function lockOwnEntryTx(tx: DbTransaction, kind: ListKind, scope: ListScop
   const [row] = rowsOf<ListEntryRow & { name_fold: string }>(
     await tx.execute(sql`
       SELECT ${ROW_COLUMNS}, e.name_fold FROM ${table} e
-      WHERE e.id = ${id}::uuid AND ${ownedBy(scope)} FOR UPDATE
+      WHERE e.id = ${id}::uuid AND ${inScope(scope)} FOR UPDATE
     `)
   );
 
   return row;
 }
 
-export type RenameEntryResult = { entry: ListEntryRow; merged: boolean };
+type RenameEntryResult = { entry: ListEntryRow; merged: boolean };
 
-/**
- * Renames the scope's entry, or stale when it changed since `version`. A name the list already
- * has (the instance's included) merges the entry onto that one in the same transaction.
- */
+/** Renames the scope's entry, stale when changed since `version`; a name the list has (the
+ * instance's included) merges the entry onto that one. */
 export async function renameEntry(
   kind: ListKind,
   scope: ListScope,
@@ -439,11 +468,9 @@ export async function renameEntry(
   name: string
 ): Promise<MutationOutcome<RenameEntryResult> | null> {
   const { table } = KINDS[kind];
-  const cleaned = cleanEntryName(name);
+  const entry = entryName(name);
 
-  if (!cleaned) return null;
-
-  const fold = entryFold(cleaned);
+  if (!entry) return null;
 
   for (let attempt = 0; ; attempt += 1) {
     try {
@@ -453,14 +480,8 @@ export async function renameEntry(
         if (!own) return null;
         if (own.version !== version) return staleOutcome<RenameEntryResult>();
 
-        if (own.name_fold !== fold) {
-          const [target] = rowsOf<ListEntryRow>(
-            await tx.execute(sql`
-              SELECT ${ROW_COLUMNS} FROM ${table} e
-              WHERE (${ownedBy(scope)} OR e.household_id IS NULL) AND e.name_fold = ${fold}
-              ORDER BY e.household_id NULLS FIRST LIMIT 1 FOR UPDATE
-            `)
-          );
+        if (own.name_fold !== entry.fold) {
+          const target = await foldedEntry(tx, kind, scope, entry.fold, true);
 
           if (target) {
             const merged = await mergeEntryTx(tx, kind, id, target.id);
@@ -471,7 +492,7 @@ export async function renameEntry(
 
         const [renamed] = rowsOf<ListEntryRow>(
           await tx.execute(sql`
-            UPDATE ${table} AS e SET name = ${cleaned}, name_fold = ${fold}, version = e.version + 1
+            UPDATE ${table} AS e SET name = ${entry.name}, name_fold = ${entry.fold}, version = e.version + 1
             WHERE e.id = ${id}::uuid RETURNING ${ROW_COLUMNS}
           `)
         );
@@ -485,10 +506,8 @@ export async function renameEntry(
   }
 }
 
-/**
- * Merges the scope's entry `source` into `target`, the scope's own or an instance entry, or stale
- * when either changed since its version: the source's recipes carry the target, and the source goes.
- */
+/** Merges the scope's `source` into `target` (its own or an instance entry), stale when either
+ * changed since its version: the source's recipes carry the target, and the source goes. */
 export async function mergeEntries(
   kind: ListKind,
   scope: ListScope,
@@ -503,9 +522,9 @@ export async function mergeEntries(
     // Both rows locked in id order, so two merges of the same pair cannot deadlock.
     const locked = rowsOf<ListEntryRow & { owned: boolean }>(
       await tx.execute(sql`
-        SELECT ${ROW_COLUMNS}, ${ownedBy(scope)} AS owned FROM ${table} e
+        SELECT ${ROW_COLUMNS}, ${inScope(scope)} AS owned FROM ${table} e
         WHERE e.id IN (${uuidListSql([source.id, target.id])})
-          AND (${ownedBy(scope)} OR e.household_id IS NULL)
+          AND ${inScope(scope, { offered: true })}
         ORDER BY e.id FOR UPDATE
       `)
     );
@@ -557,7 +576,7 @@ export async function findOwnEntry(
   const { table } = KINDS[kind];
   const [row] = rowsOf<ListEntryRow>(
     await db.execute(
-      sql`SELECT ${ROW_COLUMNS} FROM ${table} e WHERE e.id = ${id}::uuid AND ${ownedBy(scope)}`
+      sql`SELECT ${ROW_COLUMNS} FROM ${table} e WHERE e.id = ${id}::uuid AND ${inScope(scope)}`
     )
   );
 

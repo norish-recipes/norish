@@ -42,7 +42,7 @@ import { cookbookTitleMatch, listCookbooksByIds } from "./cookbooks";
 import { findLocaleNames } from "./ingredient-aliases";
 import { matchingSearch, nameStartsWith } from "./ingredient-catalogue";
 import { kindWalkSql, lineNamesKindSql } from "./ingredient-kinds";
-import { offeredTo, recipeCarriesFoldsSql } from "./list-entries";
+import { inScope, recipeCarriesFoldsSql } from "./list-entries";
 import { pantryCoverageSql } from "./pantry-coverage";
 import { rowsOf, uuidListSql } from "./raw-sql";
 import { recipeIngredientMatches, recipeSearchMatches } from "./recipe-matches";
@@ -346,7 +346,7 @@ export async function listLibraryDiscover(ctx: RecipeListContext): Promise<Libra
       JOIN ${categories} carried ON carried.name_fold = own.name_fold
       JOIN ${recipeCategories} link ON link.category_id = carried.id
       JOIN ${recipes} ON ${recipes.id} = link.recipe_id
-      WHERE ${offeredTo(ctx.householdId, sql.raw("own"))} AND ${visible}
+      WHERE ${inScope(ctx.householdId, { offered: true, alias: sql.raw("own") })} AND ${visible}
       ORDER BY own.name_fold, own.household_id NULLS FIRST,
         (${PRIMARY_IMAGE_SQL} IS NULL), ${recipes.createdAt} DESC, ${recipes.id} DESC
     `),

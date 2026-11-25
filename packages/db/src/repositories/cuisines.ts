@@ -11,7 +11,7 @@ import { db } from "@norish/db/drizzle";
 import { cuisines, recipeCuisines } from "@norish/db/schema";
 
 import type { ListEntryRow } from "./list-entries";
-import { entriesForNamesTx, listEntryRows, replaceRecipeEntryIdsTx } from "./list-entries";
+import { entriesByFoldTx, listEntryRows, replaceRecipeEntryIdsTx } from "./list-entries";
 
 /** The household's Cuisines and the instance's, by name. */
 export function listCuisinesForHousehold(householdId: string): Promise<ListEntryRow[]> {
@@ -25,7 +25,7 @@ export async function cuisinesForNames(
   options: { create: boolean }
 ): Promise<ListEntryRow[]> {
   const found = await db.transaction((tx) =>
-    entriesForNamesTx(tx, "cuisine", householdId, names, options)
+    entriesByFoldTx(tx, "cuisine", householdId, names, options)
   );
 
   return [...found.values()];
