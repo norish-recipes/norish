@@ -520,6 +520,7 @@ export async function deleteIngredient(
 ): Promise<CatalogueEdit> {
   const { naming, audience } = await withTransaction(async (tx) => {
     const householdId = await assertMayEditIngredient(tx, actor, ingredientId);
+
     // The tree lock, as for every edit that changes what a row points at:
     // a merge into this Ingredient must not land while it goes.
     if (!(await lockFoods(tx, [ingredientId]))) throw new CatalogueEditError("not-found");
