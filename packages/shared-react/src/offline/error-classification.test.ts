@@ -95,6 +95,15 @@ describe("classifyReplayError", () => {
     expect(classifyReplayError(new Error("boom"))).toBe("deterministic");
   });
 
+  it("retries a write its Owner's move overtook, and parks any other conflict", () => {
+    const ownerMoved = { data: { code: "SERVICE_UNAVAILABLE", httpStatus: 503 } };
+
+    expect(classifyReplayError(ownerMoved)).toBe("ambiguous");
+    expect(classifyReplayError({ data: { code: "CONFLICT", httpStatus: 409 } })).toBe(
+      "deterministic"
+    );
+  });
+
   it("treats 401 ahead of any status heuristic", () => {
     expect(classifyReplayError({ data: { code: "UNAUTHORIZED", httpStatus: 401 } })).not.toBe(
       "deterministic"

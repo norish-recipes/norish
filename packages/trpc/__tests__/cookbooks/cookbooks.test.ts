@@ -125,8 +125,9 @@ describe("cookbook procedures", () => {
 
       const { caller } = callerFor();
 
+      // 503, which the Outbox retries; any other conflict stays a 409 it parks.
       await expect(caller.cookbooks.create({ title: "Racing" })).rejects.toMatchObject({
-        code: "CONFLICT",
+        code: "SERVICE_UNAVAILABLE",
         message: "Changed meanwhile, try again",
       });
     });
