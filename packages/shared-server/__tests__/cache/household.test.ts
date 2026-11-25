@@ -108,3 +108,24 @@ it("caches a read and drops it on invalidation", async () => {
 
   await expect(getCachedHouseholdForUser("user-1")).resolves.toEqual(NEW);
 });
+
+it("misses an entry whose generation was lost", async () => {
+  db.getHouseholdForUser.mockResolvedValueOnce(OLD).mockResolvedValue(NEW);
+  await getCachedHouseholdForUser("user-1");
+  await (await getPublisherClient()).del("norish:cache:household:generation:user-1");
+
+  await expect(getCachedHouseholdForUser("user-1")).resolves.toEqual(NEW);
+});
+
+it("misses a fill that stalled across a flush", async () => {
+  const release = stallNextRead();
+  const fill = getCachedHouseholdForUser("user-1");
+
+  await vi.waitFor(() => expect(db.getHouseholdForUser).toHaveBeenCalledOnce());
+  await (await getPublisherClient()).flushall();
+  release(OLD);
+  await fill;
+
+  db.getHouseholdForUser.mockResolvedValue(NEW);
+  await expect(getCachedHouseholdForUser("user-1")).resolves.toEqual(NEW);
+});
