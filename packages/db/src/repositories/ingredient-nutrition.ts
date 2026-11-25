@@ -1,4 +1,5 @@
-import { and, eq, inArray, or, sql } from "drizzle-orm";
+import { and, eq, inArray, notExists, or, sql } from "drizzle-orm";
+import { alias, QueryBuilder } from "drizzle-orm/pg-core";
 
 import type { NutritionCodes } from "@norish/db/schema";
 import { db } from "@norish/db/drizzle";
@@ -18,6 +19,8 @@ import type { RecipeListContext } from "./recipes";
 import { lineageCte } from "./ingredient-kinds";
 import { isFirstLineFood } from "./ingredients";
 import { buildPolicyCondition } from "./recipes";
+
+const ownSystemLine = alias(recipeIngredients, "own");
 
 /**
  * Ingredient Nutrition's reads and its one write (ADR-0039): the source
@@ -188,8 +191,17 @@ export async function countIngredientLinesByUnit(
         or(isFirstLineFood(), eq(recipeIngredients.joined, "together")),
         or(
           eq(recipeIngredients.systemUsed, recipes.systemUsed),
-          sql`not exists (select 1 from ${recipeIngredients} own
-            where own.recipe_id = ${recipes.id} and own.system_used = ${recipes.systemUsed})`
+          notExists(
+            new QueryBuilder()
+              .select({ id: ownSystemLine.id })
+              .from(ownSystemLine)
+              .where(
+                and(
+                  eq(ownSystemLine.recipeId, recipes.id),
+                  eq(ownSystemLine.systemUsed, recipes.systemUsed)
+                )
+              )
+          )
         ),
         visible
       )

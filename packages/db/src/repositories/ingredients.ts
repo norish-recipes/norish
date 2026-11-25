@@ -1,7 +1,8 @@
 import { randomUUID } from "node:crypto";
 import type { SQL } from "drizzle-orm";
-import type { PgTable } from "drizzle-orm/pg-core";
-import { getTableName, inArray, sql } from "drizzle-orm";
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
+import { and, eq, inArray, lt, notExists } from "drizzle-orm";
+import { alias, QueryBuilder } from "drizzle-orm/pg-core";
 import z from "zod";
 
 import type { UnitsMap } from "@norish/config/zod/server-config";
@@ -75,16 +76,23 @@ export function resolvedRecipeLineValues(
   };
 }
 
-/**
- * Keeps each line's first food of `foods`, the line foods table under its own name or an alias.
- * The outer rows are named by that name, so no bare column binds to the subquery's own table.
- */
-export function isFirstLineFood(foods: PgTable = recipeIngredientFoods): SQL {
-  const outer = sql.identifier(getTableName(foods));
+const earlierFood = alias(recipeIngredientFoods, "earlier");
 
-  return sql`not exists (select 1 from ${recipeIngredientFoods} earlier
-    where earlier.recipe_ingredient_id = ${outer}.recipe_ingredient_id
-      and earlier.position < ${outer}.position)`;
+/** Keeps each line's first food of `foods`, the line foods table or an alias of it. */
+export function isFirstLineFood(
+  foods: { recipeIngredientId: AnyPgColumn; position: AnyPgColumn } = recipeIngredientFoods
+): SQL {
+  return notExists(
+    new QueryBuilder()
+      .select({ position: earlierFood.position })
+      .from(earlierFood)
+      .where(
+        and(
+          eq(earlierFood.recipeIngredientId, foods.recipeIngredientId),
+          lt(earlierFood.position, foods.position)
+        )
+      )
+  );
 }
 
 /** A recipe line and the aliases of its foods, in order. */

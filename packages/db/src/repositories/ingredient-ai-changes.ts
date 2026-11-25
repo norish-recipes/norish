@@ -391,7 +391,7 @@ const RETIRED_FLAG_REASONS = ["ai-queued", "ai-off", "ai-unavailable", "ai-key-r
 /** Lift every flag for a retired reason; a food under an open change keeps AI's doubt. How many. */
 export async function clearRetiredFlags(tx: Db): Promise<number> {
   const doubted = sql`exists (select 1 from ${ingredientAIChanges} where ${and(
-    sql`${ingredientAIChanges.ingredientId} = ${ingredients}.id`,
+    eq(ingredientAIChanges.ingredientId, ingredients.id),
     open
   )})`;
   const cleared = await tx

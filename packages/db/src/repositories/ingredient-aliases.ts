@@ -1,5 +1,5 @@
-import { and, asc, between, eq, inArray, isNotNull, like, or, sql } from "drizzle-orm";
-import { alias } from "drizzle-orm/pg-core";
+import { and, asc, between, eq, exists, inArray, isNotNull, like, or, sql } from "drizzle-orm";
+import { alias, QueryBuilder } from "drizzle-orm/pg-core";
 
 import type { FlagReason } from "@norish/shared/contracts/ingredient-catalogue";
 import type { FoodName, LocaleNames } from "@norish/shared/lib/ingredient-names";
@@ -47,6 +47,9 @@ export interface IngredientRow {
   flagged: boolean;
   flagReason: string | null;
 }
+
+const qb = new QueryBuilder();
+const parentRow = alias(ingredients, "p");
 
 const aliasColumns = {
   aliasId: ingredientAliases.id,
@@ -284,8 +287,12 @@ async function mintOnce(input: MintIngredientInput): Promise<IngredientAliasRow[
       : await tx
           .select({
             id: ingredients.id,
-            // Qualified by hand: a bare column here would bind to the subquery's own `id`.
-            spelled: sql<boolean>`exists (select 1 from ${ingredientAliases} a where a.ingredient_id = ${ingredients}.id)`,
+            spelled: exists(
+              qb
+                .select({ id: ingredientAliases.id })
+                .from(ingredientAliases)
+                .where(eq(ingredientAliases.ingredientId, ingredients.id))
+            ).mapWith(Boolean),
           })
           .from(ingredients)
           .where(eq(sql`lower(${ingredients.name})`, sql`lower(${input.name})`))
@@ -305,7 +312,10 @@ async function mintOnce(input: MintIngredientInput): Promise<IngredientAliasRow[
           flagged: input.flagged,
           flagReason: input.flagged ? (input.flagReason ?? null) : null,
           parentId: input.parentId
-            ? sql`(select p.id from ${ingredients} p where p.id = ${input.parentId})`
+            ? sql`${qb
+                .select({ id: parentRow.id })
+                .from(parentRow)
+                .where(eq(parentRow.id, input.parentId))}`
             : null,
           version: sql`${ingredients.version} + 1`,
         })
