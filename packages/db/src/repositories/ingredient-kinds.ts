@@ -1,6 +1,6 @@
 import type { SQL } from "drizzle-orm";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
-import { and, eq, exists, inArray, sql } from "drizzle-orm";
+import { and, eq, exists, inArray, isNotNull, sql } from "drizzle-orm";
 import { alias, QueryBuilder } from "drizzle-orm/pg-core";
 
 import { ingredientAliases, ingredients, recipeIngredientFoods } from "../schema";
@@ -15,6 +15,7 @@ const LINEAGE_DEPTH_MAX = 64;
 const child = alias(ingredients, "child");
 const lineageChild = alias(ingredients, "lineage_child");
 const lineageParent = alias(ingredients, "lineage_parent");
+const ancestryParent = alias(ingredients, "ancestry_parent");
 const qb = new QueryBuilder();
 
 /**
@@ -71,4 +72,28 @@ export function lineageCte(ids: readonly string[]) {
     )
     select id as lineage_id from walk`
   );
+}
+
+/**
+ * The CTE `ancestry(start, ancestor, depth)`: every ancestor of each Ingredient `roots` picks, `depth`
+ * steps up, below `maxDepth`. No recursive CTE in the builder, so the walk is SQL inside a `$with`.
+ */
+export function ancestryCte(roots: SQL, maxDepth: number) {
+  return qb
+    .$with("ancestry", {
+      start: sql<string>`start`.as("start"),
+      ancestor: sql<string>`ancestor`.as("ancestor"),
+      depth: sql<number>`depth`.as("depth"),
+    })
+    .as(
+      sql`with recursive up(start, ancestor, depth) as (
+        select ${ingredients.id}, ${ingredients.parentId}, 1 from ${ingredients}
+        where ${roots} and ${isNotNull(ingredients.parentId)}
+        union all
+        select up.start, ${ancestryParent.parentId}, up.depth + 1 from up
+        join ${ingredients} as ${ancestryParent} on ${ancestryParent.id} = up.ancestor
+        where ${isNotNull(ancestryParent.parentId)} and up.depth < ${maxDepth}
+      )
+      select start, ancestor, depth from up`
+    );
 }

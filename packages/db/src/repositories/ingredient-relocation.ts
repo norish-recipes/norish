@@ -1,5 +1,5 @@
 import type { SQL } from "drizzle-orm";
-import { and, asc, count, eq, exists, inArray, isNotNull, ne, sql } from "drizzle-orm";
+import { and, asc, count, eq, exists, inArray, ne, sql } from "drizzle-orm";
 import { alias, QueryBuilder } from "drizzle-orm/pg-core";
 
 import type { Db, DbTransaction } from "@norish/db/drizzle";
@@ -22,11 +22,11 @@ import { distinctFoods, joinOf } from "@norish/shared/lib/line-foods";
 
 import { moveMergedAIChanges } from "./ingredient-ai-changes";
 import { rowsNaming } from "./ingredient-catalogue";
+import { ancestryCte } from "./ingredient-kinds";
 import { writeRecipeLineFoodsTx } from "./ingredients";
 import { lockPantryFood } from "./pantry";
 
 const qb = new QueryBuilder();
-const parentRow = alias(ingredients, "parent_row");
 
 /**
  * What moves between Ingredients (ADR-0037): a merge, an alias move, a parent. Each takes the tree
@@ -119,24 +119,7 @@ async function ancestorsOf(tx: Db, ids: readonly string[]): Promise<Map<string, 
 
   const answer = new Map(wanted.map((id) => [id, [] as string[]]));
 
-  // No recursive CTE in the builder: the walk is SQL over the schema, read through a builder query.
-  const walked = tx
-    .$with("ancestry", {
-      start: sql<string>`start`.as("start"),
-      ancestor: sql<string>`ancestor`.as("ancestor"),
-      depth: sql<number>`depth`.as("depth"),
-    })
-    .as(
-      sql`with recursive up(start, ancestor, depth) as (
-        select ${ingredients.id}, ${ingredients.parentId}, 1 from ${ingredients}
-        where ${inArray(ingredients.id, wanted)} and ${isNotNull(ingredients.parentId)}
-        union all
-        select up.start, ${parentRow.parentId}, up.depth + 1 from up
-        join ${ingredients} as ${parentRow} on ${parentRow.id} = up.ancestor
-        where ${isNotNull(parentRow.parentId)} and up.depth < ${MAX_DEPTH}
-      )
-      select start::text as start, ancestor::text as ancestor, depth from up`
-    );
+  const walked = ancestryCte(inArray(ingredients.id, wanted), MAX_DEPTH);
   const rows = await tx.with(walked).select().from(walked).orderBy(walked.start, walked.depth);
 
   for (const row of rows) answer.get(row.start)?.push(row.ancestor);
