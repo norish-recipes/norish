@@ -18,11 +18,23 @@ import { auth } from "./auth";
 /** What follows a committed deletion, named for the log when it fails. */
 type Step = readonly [what: string, run: () => Promise<unknown>];
 
-/** Runs each step in order; a failure is logged and the steps after it run all the same. */
+/** Long enough for a sweep; Valkey commands wait out an outage without a bound. */
+const STEP_LIMIT_MS = 30_000;
+
+function withinLimit(run: () => Promise<unknown>): Promise<unknown> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const limit = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`No answer in ${STEP_LIMIT_MS} ms`)), STEP_LIMIT_MS);
+  });
+
+  return Promise.race([run(), limit]).finally(() => clearTimeout(timer));
+}
+
+/** Runs each step in order, each within a time limit; a failure is logged and the rest run. */
 async function runEach(userId: string, steps: Step[]): Promise<void> {
   for (const [what, run] of steps) {
     try {
-      await run();
+      await withinLimit(run);
     } catch (err) {
       log.error({ err, userId }, `After an account deletion, could not ${what}`);
     }

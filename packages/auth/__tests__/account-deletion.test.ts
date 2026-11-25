@@ -190,6 +190,27 @@ describe("deleteUserAccount", () => {
     expect(mocks.sweepUserAvatars).toHaveBeenCalledWith("gone");
   });
 
+  it("goes on past a Valkey step that never answers, logging it", async () => {
+    const { authLogger } = await import("@norish/shared-server/logger");
+    const hang = () => new Promise<never>(() => {});
+
+    vi.useFakeTimers();
+    try {
+      mocks.deleteUserSessions.mockImplementation(hang);
+      mocks.removeJobs.mockImplementation(hang);
+      mocks.sweepPendingUploadsOf.mockImplementation(hang);
+
+      const deleted = deleteUserAccount("gone", mocks.removeJobs);
+
+      await vi.runAllTimersAsync();
+      await expect(deleted).resolves.toBeUndefined();
+      expect(mocks.sweepCookbookImages).toHaveBeenCalledWith("cookbook-1");
+      expect(authLogger.error).toHaveBeenCalledTimes(3);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("keeps the deletion when a file sweep fails, and sweeps the rest", async () => {
     mocks.sweepUserAvatars.mockRejectedValue(new Error("disk"));
 
