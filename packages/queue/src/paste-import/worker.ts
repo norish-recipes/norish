@@ -29,7 +29,11 @@ import { hasRecipeNameIngredientsAndSteps } from "@norish/shared/lib/helpers";
 
 import { createWorker, isFinalFailure } from "../create-worker";
 import { announceUsableRecipe } from "../enrichment/announce";
-import { deleteUnstoredRecipeMedia } from "../import-cleanup";
+import {
+  accountGone,
+  deleteUnstoredRecipeMedia,
+  failForGoodIfAccountGone,
+} from "../import-cleanup";
 import { completeStep, reportStep } from "../job-steps";
 import { QUEUE_NAMES } from "../queue-names";
 
@@ -129,7 +133,7 @@ async function createStructuredRecipe(
     userId,
     await withDishColor(parsed.data),
     { userId }
-  );
+  ).catch(failForGoodIfAccountGone(userId));
 
   if (!created) {
     return null;
@@ -152,8 +156,9 @@ export async function processPasteImportJob(
 
   const started = await accountAudience(userId);
 
+  if (!started) throw accountGone();
   for (const recipeId of recipeIds) {
-    if (started) void recipes.publish("importStarted", { recipeId, url: "[pasted]" }, started);
+    void recipes.publish("importStarted", { recipeId, url: "[pasted]" }, started);
   }
 
   const created: CreateRecipeResult[] = [];
@@ -197,7 +202,7 @@ export async function processPasteImportJob(
       userId,
       await withDishColor(parseResult.recipe),
       { userId }
-    );
+    ).catch(failForGoodIfAccountGone(userId));
 
     if (!textResult) {
       throw new Error("Failed to save imported recipe");

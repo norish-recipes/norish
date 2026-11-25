@@ -32,7 +32,11 @@ import {
   unrecoverable,
 } from "../create-worker";
 import { announceUsableRecipe } from "../enrichment/announce";
-import { deleteUnstoredRecipeMedia } from "../import-cleanup";
+import {
+  accountGone,
+  deleteUnstoredRecipeMedia,
+  failForGoodIfAccountGone,
+} from "../import-cleanup";
 import { completeStep, reportStep } from "../job-steps";
 import { QUEUE_NAMES } from "../queue-names";
 
@@ -54,7 +58,8 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<string> 
   // Emit import started event
   const started = await accountAudience(userId);
 
-  if (started) void recipes.publish("importStarted", { recipeId, url }, started);
+  if (!started) throw accountGone();
+  void recipes.publish("importStarted", { recipeId, url }, started);
 
   // Check if recipe already exists (policy-aware)
   await reportStep(job, "dedupe-check");
@@ -145,7 +150,7 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<string> 
     userId,
     await withDishColor(parseResult.recipe),
     { userId }
-  );
+  ).catch(failForGoodIfAccountGone(userId));
   const createdId = created?.recipeId;
 
   if (!createdId) {

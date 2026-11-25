@@ -10,6 +10,7 @@ import {
   getCaldavSyncStatusByItemId,
   updateCaldavSyncStatus,
 } from "@norish/db/repositories/caldav-sync-status";
+import { getHouseholdIdForUser } from "@norish/db/repositories/households";
 import { findPlannedItemPlace } from "@norish/db/repositories/planned-items";
 import { accountCanViewRecipe } from "@norish/db/repositories/recipes";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
@@ -154,7 +155,8 @@ async function processCaldavSyncJob(job: Job<CaldavSyncJobData>): Promise<void> 
   );
 }
 
-async function handleJobFailed(
+/** Records a failed attempt on the item's status; exported for tests. */
+export async function handleCaldavJobFailed(
   job: Job<CaldavSyncJobData> | undefined,
   error: Error
 ): Promise<void> {
@@ -164,6 +166,9 @@ async function handleJobFailed(
 
   const { userId, itemId, itemType, plannedItemId, eventTitle } = job.data;
   const isFinal = isFinalFailure(job, error);
+
+  // A deleted account keeps no status; its calendar went with its CalDAV settings.
+  if (!(await getHouseholdIdForUser(userId))) return;
 
   const errorMessage = truncateErrorMessage(error.message);
 
@@ -220,5 +225,5 @@ async function handleJobFailed(
 }
 
 export function startCaldavSyncWorker(): void {
-  createWorker(QUEUE_NAMES.CALDAV_SYNC, processCaldavSyncJob, { onFailed: handleJobFailed });
+  createWorker(QUEUE_NAMES.CALDAV_SYNC, processCaldavSyncJob, { onFailed: handleCaldavJobFailed });
 }

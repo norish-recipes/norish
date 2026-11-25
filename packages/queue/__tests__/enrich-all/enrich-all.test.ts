@@ -8,11 +8,15 @@ import type { EnrichAllJobData } from "@norish/queue/contracts/job-types";
 
 const queue = vi.hoisted(() => ({ add: vi.fn(async () => ({ id: "job-1" })) }));
 const enroll = vi.hoisted(() => vi.fn());
+const householdOf = vi.hoisted(() =>
+  vi.fn(async (_userId: string): Promise<string | null> => "hh-1")
+);
 
 vi.mock("@norish/queue/registry", () => ({ getQueues: () => ({ enrichAll: queue }) }));
 vi.mock("@norish/queue/enrichment/bulk", () => ({ enrollEnrichmentForAllRecipes: enroll }));
 vi.mock("@norish/queue/job-steps", () => ({ reportStep: vi.fn(), completeStep: vi.fn() }));
 vi.mock("@norish/queue/create-worker", () => ({ createWorker: vi.fn() }));
+vi.mock("@norish/db/repositories/households", () => ({ getHouseholdIdForUser: householdOf }));
 
 const { addEnrichAllJob, ENRICH_ALL_DEDUPLICATION_ID } =
   await import("@norish/queue/enrich-all/producer");
@@ -41,5 +45,14 @@ describe("Enrich All", () => {
       { userId: "admin-1", householdId: "hh-1" },
       { replaceExisting: true }
     );
+  });
+
+  it("asks for nothing once the administrator's account is gone", async () => {
+    enroll.mockClear();
+    householdOf.mockResolvedValueOnce(null);
+
+    await processEnrichAllJob({ data } as Job<EnrichAllJobData>);
+
+    expect(enroll).not.toHaveBeenCalled();
   });
 });

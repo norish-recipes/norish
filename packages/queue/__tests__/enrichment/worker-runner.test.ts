@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   publishLifecycle: vi.fn(),
   publishRecipeUpdated: vi.fn(),
   reportStep: vi.fn(),
+  deleteRecipeImagesDir: vi.fn(),
 }));
 
 vi.mock("@norish/shared-server/ai/runtime/errors", async (importOriginal) => ({
@@ -26,6 +27,9 @@ vi.mock("../../src/enrichment/announce", () => ({
   publishEnrichmentRecipeUpdated: mocks.publishRecipeUpdated,
 }));
 vi.mock("../../src/job-steps", () => ({ reportStep: mocks.reportStep }));
+vi.mock("@norish/shared-server/media/storage", () => ({
+  deleteRecipeImagesDir: mocks.deleteRecipeImagesDir,
+}));
 
 const { handleEnrichmentJobFailure, runEnrichmentJob } =
   await import("../../src/enrichment/worker-runner");
@@ -52,6 +56,27 @@ describe("runEnrichmentJob", () => {
       [data, "processing"],
       [data, "succeeded"],
     ]);
+  });
+
+  it("ends quietly for a recipe erased before the job ran", async () => {
+    const job = { id: "job-1", data, attemptsMade: 0 } as Job<RecipeEnrichmentJobData>;
+    const execute = vi.fn();
+
+    mocks.getRecipeFull.mockResolvedValue(null);
+
+    await expect(runEnrichmentJob(job, execute)).resolves.toBeUndefined();
+    expect(execute).not.toHaveBeenCalled();
+  });
+
+  it("ends quietly for a recipe erased while the job ran, sweeping what it wrote", async () => {
+    const job = { id: "job-1", data, attemptsMade: 0 } as Job<RecipeEnrichmentJobData>;
+
+    mocks.getRecipeFull.mockResolvedValueOnce({ id: "recipe-1" }).mockResolvedValueOnce(null);
+
+    await expect(
+      runEnrichmentJob(job, vi.fn().mockRejectedValue(new Error("foreign key")))
+    ).resolves.toBeUndefined();
+    expect(mocks.deleteRecipeImagesDir).toHaveBeenCalledWith("recipe-1");
   });
 
   it("stops retrying an AI failure that says a retry cannot succeed", async () => {

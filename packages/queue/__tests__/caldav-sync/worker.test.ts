@@ -10,6 +10,7 @@ import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-tes
 const handlers = vi.hoisted(() => ({
   syncPlannedItem: vi.fn(async () => ({ uid: "event-1" })),
   deletePlannedItem: vi.fn(async () => undefined),
+  truncateErrorMessage: (message: string) => message,
 }));
 const captured = vi.hoisted(() => ({
   processor: undefined as ((job: unknown) => Promise<unknown>) | undefined,
@@ -185,5 +186,23 @@ describe("the CalDAV sync worker", () => {
     await expect(run()).rejects.toThrow();
 
     expect(handlers.deletePlannedItem).toHaveBeenCalledWith(member, entry.id);
+  });
+
+  it("records no failure for an account deleted before its job failed", async () => {
+    const { entry } = await syncJob();
+
+    await households.deleteAccount(member);
+
+    await expect(
+      worker.handleCaldavJobFailed(
+        {
+          id: "job-1",
+          attemptsMade: 1,
+          opts: { attempts: 3 },
+          data: { userId: member, itemId: entry.id },
+        } as never,
+        new Error("CalDAV not configured or disabled")
+      )
+    ).resolves.toBeUndefined();
   });
 });
