@@ -139,7 +139,7 @@ function keyThatFits(source: KeySource, fits: (key: Buffer) => boolean): Buffer 
   throw refusal(
     keys
       ? `${source.current} is not the key this database is encrypted with.`
-      : `The key file ${keyFilePath()} is missing, and this database is encrypted with the key it held.`
+      : `MASTER_KEY is not set, and there is no key file at ${keyFilePath()}. This database is encrypted with a key that one of them held.`
   );
 }
 

@@ -287,10 +287,13 @@ describe("which key boot opens", () => {
       expect(opened).toThrow("used before boot resolved it");
     });
 
-    it("refuses when the key file is gone, generating none", async () => {
+    it("refuses with no MASTER_KEY and no key file, naming both, generating none", async () => {
       const boot = resolveMasterKey();
 
-      await expect(boot).rejects.toThrow(`The key file ${keyFilePath()} is missing`);
+      // The fingerprint does not say which one the instance ran on.
+      await expect(boot).rejects.toThrow(
+        `MASTER_KEY is not set, and there is no key file at ${keyFilePath()}.`
+      );
       await expect(boot).rejects.toThrow(RESTORE);
       expect(await readKeyFile()).toBeNull();
     });
