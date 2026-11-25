@@ -10,6 +10,7 @@ const assertRecipeMediaAccessMock = vi.hoisted(() => vi.fn());
 const releaseRecipeMediaClaimMock = vi.hoisted(() => vi.fn());
 const saveImageBytesMock = vi.hoisted(() => vi.fn());
 const deleteImageByUrlMock = vi.hoisted(() => vi.fn());
+const deleteVideoByUrlMock = vi.hoisted(() => vi.fn());
 const deleteStepImageByUrlMock = vi.hoisted(() => vi.fn());
 const saveVideoBytesMock = vi.hoisted(() => vi.fn());
 const getRecipeImageByIdMock = vi.hoisted(() => vi.fn());
@@ -37,7 +38,7 @@ vi.mock("@norish/shared-server/media/storage", () => ({
   deleteImageByUrl: deleteImageByUrlMock,
   deleteStepImageByUrl: deleteStepImageByUrlMock,
   saveVideoBytes: saveVideoBytesMock,
-  deleteVideoByUrl: vi.fn(),
+  deleteVideoByUrl: deleteVideoByUrlMock,
 }));
 
 vi.mock("@norish/shared-server/media/dish-color", () => ({
@@ -190,6 +191,23 @@ describe("recipe media procedures check the recipe before touching files", () =>
     await videos.uploadGalleryVideo(upload("video", recipeId));
     expect(releaseRecipeMediaClaimMock).toHaveBeenCalledTimes(4);
     expect(releaseRecipeMediaClaimMock).toHaveBeenCalledWith(expect.anything(), recipeId);
+  });
+
+  it("removes an uploaded file whose row cannot be saved, the recipe gone meanwhile", async () => {
+    const { addRecipeImages, addRecipeVideos, getRecipeHouseholdIds } =
+      await import("@norish/db/repositories/recipes");
+    const gone = new Error("violates foreign key constraint");
+
+    vi.mocked(getRecipeHouseholdIds).mockResolvedValue(new Map([[recipeId, household.id]]));
+    vi.mocked(addRecipeImages).mockRejectedValue(gone);
+    vi.mocked(addRecipeVideos).mockRejectedValue(gone);
+    saveVideoBytesMock.mockResolvedValue({ video: `/recipes/${recipeId}/v.mp4`, duration: 1 });
+
+    await imagesProcedures.createCaller(ctx as never).uploadGalleryImage(upload("image", recipeId));
+    await videosProcedures.createCaller(ctx as never).uploadGalleryVideo(upload("video", recipeId));
+
+    expect(deleteImageByUrlMock).toHaveBeenCalledWith(`/recipes/${recipeId}/a.jpg`, recipeId);
+    expect(deleteVideoByUrlMock).toHaveBeenCalledWith(`/recipes/${recipeId}/v.mp4`, recipeId);
   });
 
   it("refuses a media URL outside a recipe folder", async () => {

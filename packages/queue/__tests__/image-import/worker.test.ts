@@ -13,6 +13,7 @@ const updateRecipeDishColor = vi.fn();
 const publishRecipe = vi.fn(async () => undefined);
 const extractRecipeFromImages = vi.fn();
 const saveImageBytes = vi.fn();
+const deleteImageByUrl = vi.fn();
 const dishColorForImageUrl = vi.fn();
 
 vi.mock("@norish/db", () => ({
@@ -76,6 +77,7 @@ vi.mock("@norish/shared-server/logger", () => ({
 }));
 
 vi.mock("@norish/shared-server/media/storage", () => ({
+  deleteImageByUrl,
   deleteRecipeImagesDir: vi.fn(),
   saveImageBytes,
 }));
@@ -162,6 +164,26 @@ describe("processImageImportJob", () => {
         files: [{ data: "", mimeType: "image/jpeg", filename: "recipe.jpg" }],
       })
     );
+  });
+
+  it("removes the saved photo when its row cannot be saved, the recipe gone meanwhile", async () => {
+    const { processImageImportJob } = await import("../../src/image-import/worker");
+
+    addRecipeImages.mockRejectedValueOnce(new Error("violates foreign key constraint"));
+    await processImageImportJob({
+      id: "job-1",
+      attemptsMade: 0,
+      opts: {},
+      updateData: vi.fn(),
+      data: {
+        recipeId: "recipe-123",
+        userId: "user-1",
+        householdId: "household-1",
+        files: [{ data: "aW1n", mimeType: "image/jpeg", filename: "recipe.jpg" }],
+      },
+    } as never);
+
+    expect(deleteImageByUrl).toHaveBeenCalledWith("/recipes/recipe-123/uploaded.jpg", "recipe-123");
   });
 
   it("stores the Dish Colour extracted from the saved image (vision path)", async () => {

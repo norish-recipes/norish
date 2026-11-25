@@ -124,7 +124,11 @@ const uploadGalleryVideo = authedProcedure
             duration: savedVideo.duration,
             order,
           },
-        ]);
+        ]).catch(async (error: unknown) => {
+          // A file with no row (the recipe erased meanwhile, say) would recreate a swept folder.
+          await deleteVideoByUrl(savedVideo.video, recipeId);
+          throw error;
+        });
 
         if (!videoRecord) {
           return { success: false, error: "Failed to create video record" };

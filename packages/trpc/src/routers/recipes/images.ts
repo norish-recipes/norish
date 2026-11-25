@@ -258,7 +258,13 @@ const uploadGalleryImage = authedProcedure
       // linked when the recipe is saved via createRecipeWithRefs
       if ((await getRecipeHouseholdIds([recipeId])).has(recipeId)) {
         // Recipe exists, add to database
-        const [imageRecord] = await addRecipeImages(recipeId, [{ image: url, order }]);
+        const [imageRecord] = await addRecipeImages(recipeId, [{ image: url, order }]).catch(
+          async (error: unknown) => {
+            // A file with no row (the recipe erased meanwhile, say) would recreate a swept folder.
+            await deleteImageByUrl(url, recipeId);
+            throw error;
+          }
+        );
 
         if (!imageRecord) {
           return { success: false, error: "Failed to create image record" };
