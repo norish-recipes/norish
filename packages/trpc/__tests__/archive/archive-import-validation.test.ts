@@ -152,8 +152,7 @@ describe("archiveRouter.importArchive", () => {
     mockArchiveParser.getArchiveInfo.mockResolvedValue({ format: "paprika", count: 1 });
     mockArchiveParser.importArchive.mockImplementation(
       async (
-        _userId: string,
-        _userIds: string[],
+        _importer: unknown,
         _buffer: Buffer,
         onProgress: (current: number, recipe?: unknown) => void
       ) => {
@@ -215,12 +214,7 @@ describe("archiveRouter.importArchive", () => {
 
     mockArchiveParser.getArchiveInfo.mockResolvedValue({ format: "paprika", count: 2 });
     mockArchiveParser.importArchive.mockImplementation(
-      async (
-        _userId: string,
-        _userIds: string[],
-        _buffer: Buffer,
-        onProgress: (...args: unknown[]) => void
-      ) => {
+      async (_importer: unknown, _buffer: Buffer, onProgress: (...args: unknown[]) => void) => {
         onProgress(1, { id: "recipe-overwritten" });
         onProgress(2, { id: "recipe-new" }, undefined, undefined, { inserted, cookbooks: [] });
 
@@ -267,12 +261,7 @@ describe("archiveRouter.importArchive", () => {
 
     mockArchiveParser.getArchiveInfo.mockResolvedValue({ format: "recipe-keeper", count: 2 });
     mockArchiveParser.importArchive.mockImplementation(
-      async (
-        _userId: string,
-        _userIds: string[],
-        _buffer: Buffer,
-        onProgress: (...args: unknown[]) => void
-      ) => {
+      async (_importer: unknown, _buffer: Buffer, onProgress: (...args: unknown[]) => void) => {
         onProgress(1, { id: "recipe-1" }, undefined, undefined, {
           cookbooks: [{ cookbookId: made.id, created: made }],
         });
@@ -326,12 +315,7 @@ describe("archiveRouter.importArchive", () => {
   it("sends what landed after the last boundary when an archive's count is off", async () => {
     mockArchiveParser.getArchiveInfo.mockResolvedValue({ format: "mealie-legacy", count: 3 });
     mockArchiveParser.importArchive.mockImplementation(
-      async (
-        _userId: string,
-        _userIds: string[],
-        _buffer: Buffer,
-        onProgress: (...args: unknown[]) => void
-      ) => {
+      async (_importer: unknown, _buffer: Buffer, onProgress: (...args: unknown[]) => void) => {
         // Only two of the three counted entries were recipes.
         onProgress(1, { id: "recipe-1" });
         onProgress(2, { id: "recipe-2" });

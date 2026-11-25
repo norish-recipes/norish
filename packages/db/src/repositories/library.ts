@@ -44,7 +44,7 @@ import { pantryCoverageSql } from "./pantry-coverage";
 import { rowsOf, uuidListSql } from "./raw-sql";
 import { recipeIngredientMatches, recipeSearchMatches } from "./recipe-matches";
 import { PRIMARY_IMAGE_SQL } from "./recipe-primary-image";
-import { buildOwnerPolicyCondition, listDashboardRecipesByIds, recipeSearchSql } from "./recipes";
+import { buildPolicyCondition, listDashboardRecipesByIds, recipeSearchSql } from "./recipes";
 
 export type LibraryListParams = {
   limit: number;
@@ -164,7 +164,7 @@ export async function listLibrary(
 
   if (includeRecipes) {
     const conditions: SQL[] = [];
-    const policyCondition = await buildOwnerPolicyCondition(ctx, recipes.userId, "view");
+    const policyCondition = await buildPolicyCondition(ctx, recipes.householdId, "view");
 
     if (policyCondition) conditions.push(policyCondition as SQL);
     if (searchSql) conditions.push(searchSql.match);
@@ -250,7 +250,7 @@ export async function listLibrary(
 
   if (includeCookbooks) {
     const conditions: SQL[] = [];
-    const policyCondition = await buildOwnerPolicyCondition(ctx, cookbooks.userId, "view");
+    const policyCondition = await buildPolicyCondition(ctx, cookbooks.householdId, "view");
 
     if (policyCondition) conditions.push(policyCondition as SQL);
     if (cookbookTitleCondition) conditions.push(sql`(${cookbookTitleCondition})`);
@@ -345,7 +345,7 @@ const DISCOVER_TAGS = 12;
 /** What Search offers with no text: up to four Categories holding a visible recipe, built-ins first
  * in their fixed order, and the Tags most used over visible recipes. */
 export async function listLibraryDiscover(ctx: RecipeListContext): Promise<LibraryDiscoverDTO> {
-  const visible = (await buildOwnerPolicyCondition(ctx, recipes.userId, "view")) ?? sql`true`;
+  const visible = (await buildPolicyCondition(ctx, recipes.householdId, "view")) ?? sql`true`;
   const [categoryRows, tagNames] = await Promise.all([
     // A Category's photo is the newest visible recipe that has an image; none when no recipe does.
     db.execute(sql`
@@ -388,7 +388,7 @@ export async function listLibrarySuggestions(
 
   if (!search) return { ingredients: [], tags: [], categories: [] };
 
-  const visible = (await buildOwnerPolicyCondition(ctx, recipes.userId, "view")) ?? sql`true`;
+  const visible = (await buildPolicyCondition(ctx, recipes.householdId, "view")) ?? sql`true`;
   const [foods, tagNames, categoryNames] = await Promise.all([
     matchedFoods(visible, search, except.ingredientIds),
     namesOnVisible(

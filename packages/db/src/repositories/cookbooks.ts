@@ -11,7 +11,7 @@ import type { RecipeListContext } from "./recipes";
 import { cookbookRecipes, cookbooks, recipes, recipeTags, tags } from "../schema";
 import { COOKBOOK_DESCRIPTION_TITLE_LIMIT, CookbookSummarySchema } from "../zodSchemas";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
-import { buildOwnerPolicyCondition, PRIMARY_IMAGE_SQL } from "./recipes";
+import { buildPolicyCondition, PRIMARY_IMAGE_SQL } from "./recipes";
 
 /** How many member images the derived cover mosaic asks for. */
 const COVER_TILE_COUNT = 4;
@@ -58,7 +58,8 @@ END`;
 
 type CookbookRow = {
   id: string;
-  userId: string | null;
+  userId: string;
+  householdId: string;
   title: string;
   image: string | null;
   createdAt: Date;
@@ -69,6 +70,7 @@ type CookbookRow = {
 const COOKBOOK_COLUMNS = {
   id: cookbooks.id,
   userId: cookbooks.userId,
+  householdId: cookbooks.householdId,
   title: cookbooks.title,
   image: cookbooks.image,
   createdAt: cookbooks.createdAt,
@@ -175,7 +177,7 @@ async function memberSummaries(
 
   if (cookbookIds.length === 0) return summaries;
 
-  const policyCondition = await buildOwnerPolicyCondition(ctx, recipes.userId, "view");
+  const policyCondition = await buildPolicyCondition(ctx, recipes.householdId, "view");
   const membership = inArray(cookbookRecipes.cookbookId, cookbookIds);
 
   const [rows, tagsByCookbook] = await Promise.all([
@@ -256,10 +258,7 @@ export async function withMemberSummaries(
   return rows.map((row) => toCookbookSummary(row, members.get(row.id)));
 }
 
-/**
- * The cookbook's owner, or `null` when it is Orphaned — distinguished from a
- * cookbook that is not there at all, which returns `null` for the whole row.
- */
+/** The cookbook as stored, its household included, or null when there is none. */
 export async function getCookbookRow(id: string): Promise<CookbookRow | null> {
   const [row] = await db
     .select(COOKBOOK_COLUMNS)
@@ -275,7 +274,7 @@ export async function getCookbookForViewer(
   ctx: RecipeListContext,
   id: string
 ): Promise<CookbookSummaryDTO | null> {
-  const policyCondition = await buildOwnerPolicyCondition(ctx, cookbooks.userId, "view");
+  const policyCondition = await buildPolicyCondition(ctx, cookbooks.householdId, "view");
   const [row] = await db
     .select(COOKBOOK_COLUMNS)
     .from(cookbooks)
@@ -354,7 +353,7 @@ export async function listCookbooks(
   }: { limit: number; offset?: number; search?: string; sortMode?: SortOrder }
 ): Promise<{ cookbooks: CookbookSummaryDTO[]; total: number }> {
   const conditions: SQL[] = [];
-  const policyCondition = await buildOwnerPolicyCondition(ctx, cookbooks.userId, "view");
+  const policyCondition = await buildPolicyCondition(ctx, cookbooks.householdId, "view");
 
   if (policyCondition) conditions.push(policyCondition);
 
@@ -393,7 +392,7 @@ export async function listCookbooksByIds(
 ): Promise<CookbookSummaryDTO[]> {
   if (ids.length === 0) return [];
 
-  const policyCondition = await buildOwnerPolicyCondition(ctx, cookbooks.userId, "view");
+  const policyCondition = await buildPolicyCondition(ctx, cookbooks.householdId, "view");
   const idCondition = inArray(cookbooks.id, ids);
 
   const rows = await db
@@ -416,7 +415,7 @@ export async function listCookbooksForRecipe(
   ctx: RecipeListContext,
   recipeId: string
 ): Promise<CookbookSummaryDTO[]> {
-  const policyCondition = await buildOwnerPolicyCondition(ctx, cookbooks.userId, "view");
+  const policyCondition = await buildPolicyCondition(ctx, cookbooks.householdId, "view");
   const membership = eq(cookbookRecipes.recipeId, recipeId);
 
   const rows = await db
@@ -439,7 +438,7 @@ export async function listCookbooksForRecipe(
  * from the recipe's own membership read.
  */
 export async function listEditableCookbooks(ctx: RecipeListContext): Promise<CookbookSummaryDTO[]> {
-  const policyCondition = await buildOwnerPolicyCondition(ctx, cookbooks.userId, "edit");
+  const policyCondition = await buildPolicyCondition(ctx, cookbooks.householdId, "edit");
 
   const rows = await db
     .select(COOKBOOK_COLUMNS)
@@ -485,7 +484,7 @@ export async function listCookbookTitlesByRecipeIds(
 
   if (recipeIds.length === 0) return titles;
 
-  const policyCondition = await buildOwnerPolicyCondition(ctx, cookbooks.userId, "view");
+  const policyCondition = await buildPolicyCondition(ctx, cookbooks.householdId, "view");
   const membership = inArray(cookbookRecipes.recipeId, recipeIds);
 
   const rows = await db

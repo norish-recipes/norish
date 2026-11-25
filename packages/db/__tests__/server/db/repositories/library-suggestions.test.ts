@@ -28,7 +28,7 @@ import {
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 function viewer(userId: string): RecipeListContext {
-  return { userId, householdId: testHouseholdOf(userId), isServerAdmin: false };
+  return { userId, householdId: testHouseholdOf(userId) };
 }
 
 describe("the typing suggestions", () => {
@@ -175,7 +175,7 @@ describe("the typing suggestions", () => {
     it("leaves out a food only a recipe the reader cannot see names", async () => {
       await setConfig(
         ServerConfigKeys.RECIPE_PERMISSION_POLICY,
-        { view: "owner", edit: "owner", delete: "owner" },
+        { view: "household", edit: "household", delete: "household" },
         null,
         false
       );
@@ -242,7 +242,7 @@ describe("the typing suggestions", () => {
       it("leaves out an ancestor whose name does not match, and counts only visible recipes", async () => {
         await setConfig(
           ServerConfigKeys.RECIPE_PERMISSION_POLICY,
-          { view: "owner", edit: "owner", delete: "owner" },
+          { view: "household", edit: "household", delete: "household" },
           null,
           false
         );
@@ -357,7 +357,7 @@ describe("the typing suggestions", () => {
     it("leaves out Tags and Categories only on a recipe the reader cannot see", async () => {
       await setConfig(
         ServerConfigKeys.RECIPE_PERMISSION_POLICY,
-        { view: "owner", edit: "owner", delete: "owner" },
+        { view: "household", edit: "household", delete: "household" },
         null,
         false
       );

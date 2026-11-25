@@ -40,10 +40,10 @@ import {
 } from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
-type PermissionLevel = "everyone" | "household" | "owner";
+type PermissionLevel = "everyone" | "household";
 
 function viewer(userId: string): RecipeListContext {
-  return { userId, householdId: testHouseholdOf(userId), isServerAdmin: false };
+  return { userId, householdId: testHouseholdOf(userId) };
 }
 
 async function setPolicy(level: PermissionLevel) {
@@ -777,7 +777,7 @@ describe("the Library union", () => {
 
   describe("the view policy", () => {
     it("filters both kinds", async () => {
-      await setPolicy("owner");
+      await setPolicy("household");
       await createCookbook({ userId: ownerId, title: "Theirs" });
       await createTestRecipe(ownerId, { name: "Also theirs" });
 
@@ -791,23 +791,6 @@ describe("the Library union", () => {
       const seenByEveryone = await listLibrary(viewer(strangerId), base);
 
       expect(seenByEveryone.total).toBeGreaterThanOrEqual(2);
-    });
-
-    it("shows an Orphaned cookbook under every policy", async () => {
-      const cookbook = await createCookbook({ userId: ownerId, title: "Left behind" });
-
-      await getTestDb()
-        .update(cookbooksTable)
-        .set({ userId: null })
-        .where(eq(cookbooksTable.id, cookbook.id));
-
-      for (const level of ["everyone", "household", "owner"] as const) {
-        await setPolicy(level);
-
-        const result = await listLibrary(viewer(strangerId), { ...base, type: "cookbooks" });
-
-        expect(titles(result.items), level).toContain("Left behind");
-      }
     });
   });
 

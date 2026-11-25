@@ -159,7 +159,10 @@ async function zipBytes(files: Record<string, string>) {
 }
 
 async function importFiles(files: Record<string, string>) {
-  const result = await importArchive("user-1", ["user-1"], await zipBytes(files));
+  const result = await importArchive(
+    { userId: "user-1", householdId: "household-1", memberIds: ["user-1"] },
+    await zipBytes(files)
+  );
 
   return { result, dtos: mockCreateResolvedRecipe.mock.calls.map((call) => call[2]) };
 }

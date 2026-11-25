@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { importStatusProcedure } from "@norish/trpc/routers/recipes/recipes";
 
-import { canAccessResource } from "../mocks/permissions";
+import { canAccessResource, policy, resetPermissionsMocks } from "../mocks/permissions";
 import {
   createMockAuthedContext,
   createMockHousehold,
@@ -81,7 +81,7 @@ describe("importStatusProcedure", () => {
     vi.clearAllMocks();
     ctx = createMockAuthedContext(mockUser, mockHousehold);
     mocks.getRecipePermissionPolicy.mockResolvedValue({ view: "household", edit: "household" });
-    canAccessResource.mockResolvedValue(true);
+    resetPermissionsMocks();
   });
 
   function caller() {
@@ -195,7 +195,7 @@ describe("importStatusProcedure", () => {
   });
 
   it("answers not found for a job the viewer may not see", async () => {
-    canAccessResource.mockResolvedValue(false);
+    policy.view = "household";
     mocks.getJob.mockResolvedValue({
       id: RECIPE_ID,
       data: {
@@ -211,11 +211,7 @@ describe("importStatusProcedure", () => {
     await expect(caller().importStatus({ recipeId: RECIPE_ID })).rejects.toThrow(
       "Import job or recipe not found"
     );
-    expect(canAccessResource).toHaveBeenCalledWith(
-      "view",
-      { userId: ctx.user.id, householdId: ctx.householdId, isServerAdmin: ctx.isServerAdmin },
-      "other-user"
-    );
+    expect(canAccessResource).toHaveBeenCalledWith("view", ctx.householdId, "other-household");
   });
 
   it("answers with the existing recipe when the URL was already imported", async () => {

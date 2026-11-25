@@ -43,6 +43,7 @@ vi.mock("@norish/shared-server/media/dish-color", async (importOriginal) => ({
 describe("a gallery upload right after recipes.create", () => {
   const testBase = new RepositoryTestBase("test_media_after_create");
   let user: User;
+  let householdId: string;
   let createCaller: typeof import("../../src/routers/recipes").recipesRouter.createCaller;
   let getRecipeFull: typeof import("@norish/db").getRecipeFull;
   let realtime: FakeRealtimeDomain<typeof recipesRealtime>;
@@ -61,6 +62,9 @@ describe("a gallery upload right after recipes.create", () => {
     const [stored] = await testBase.beforeEachTest();
 
     user = { ...stored, isServerAdmin: false } as User;
+    const { getHouseholdIdForUser } = await import("@norish/db/repositories/households");
+
+    householdId = (await getHouseholdIdForUser(user.id))!;
     mocks.announce.mockReset();
     realtime.reset();
     // The pool is reset per suite; warm it so the first create does not pay for it.
@@ -74,7 +78,7 @@ describe("a gallery upload right after recipes.create", () => {
   const caller = () =>
     createCaller({
       user,
-      household: { id: user.id, users: [{ id: user.id, name: user.name }] },
+      household: { id: householdId, users: [{ id: user.id, name: user.name }] },
       operationId: null,
     } as never);
 
@@ -158,7 +162,7 @@ describe("a gallery upload right after recipes.create", () => {
     expect(announced().map((r) => r.images.map((i) => i.id))).toEqual([[image.id], [image.id]]);
     expect(announced()[1]?.videos.map((v) => v.id)).toEqual([video.id]);
     expect(realtime.published.find((entry) => entry.event === "updated")?.target).toEqual(
-      expect.objectContaining({ viewPolicy: "household", householdId: user.id })
+      expect.objectContaining({ viewPolicy: "household", householdId })
     );
 
     await caller().deleteGalleryImage({ imageId: image.id, version: image.version ?? 1 });

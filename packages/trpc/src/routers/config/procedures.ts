@@ -95,18 +95,15 @@ const localeConfig = publicProcedure.query(async () => {
 });
 
 /**
- * Get all unique tag names visible to the authenticated user. Scoped to the
- * user's household unless the recipe view policy (or server admin role)
- * grants access to all recipes.
+ * Every tag name on a recipe the reader may view: all of them under view Everyone, the
+ * household's otherwise. A server admin is a reader like any other.
  */
 const tags = authedProcedure.query(async ({ ctx }) => {
   log.debug({ userId: ctx.user.id }, "Getting tags");
 
   const policy = await getRecipePermissionPolicy();
   const tagNames =
-    policy.view === "everyone" || ctx.isServerAdmin
-      ? await listAllTagNames()
-      : await listTagNamesForUsers(ctx.userIds);
+    policy.view === "everyone" ? await listAllTagNames() : await listTagNamesForUsers(ctx.userIds);
 
   return { tags: tagNames };
 });

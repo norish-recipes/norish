@@ -25,7 +25,7 @@ import {
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 function viewer(userId: string): RecipeListContext {
-  return { userId, householdId: testHouseholdOf(userId), isServerAdmin: false };
+  return { userId, householdId: testHouseholdOf(userId) };
 }
 
 describe("the discover reads", () => {
@@ -108,7 +108,7 @@ describe("the discover reads", () => {
     it("skips a Category with no recipe the reader can see", async () => {
       await setConfig(
         ServerConfigKeys.RECIPE_PERMISSION_POLICY,
-        { view: "owner", edit: "owner", delete: "owner" },
+        { view: "household", edit: "household", delete: "household" },
         null,
         false
       );
@@ -129,10 +129,10 @@ describe("the discover reads", () => {
         .values({ recipeId: newest, image: "/newest-first.jpg", order: "-1", createdAt: minute() });
       await categorise([older, newest, hidden], "Dinner");
 
-      // `hidden` is newest of all but belongs to a stranger once the policy is owner-only.
+      // `hidden` is newest of all but belongs to a stranger once the policy is household-only.
       await setConfig(
         ServerConfigKeys.RECIPE_PERMISSION_POLICY,
-        { view: "owner", edit: "owner", delete: "owner" },
+        { view: "household", edit: "household", delete: "household" },
         null,
         false
       );
@@ -197,7 +197,7 @@ describe("the discover reads", () => {
     it("leaves out a Tag only on a recipe the reader cannot see", async () => {
       await setConfig(
         ServerConfigKeys.RECIPE_PERMISSION_POLICY,
-        { view: "owner", edit: "owner", delete: "owner" },
+        { view: "household", edit: "household", delete: "household" },
         null,
         false
       );

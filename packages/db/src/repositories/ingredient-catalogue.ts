@@ -35,7 +35,7 @@ import { escapeLike } from "@norish/shared/lib/ingredient-search";
 import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
 import type { RecipeListContext } from "./recipes";
-import { buildOwnerPolicyCondition } from "./recipes";
+import { buildPolicyCondition } from "./recipes";
 
 /**
  * The catalogue as the Ingredients page reads it and edits within one Ingredient (ADR-0037); moves
@@ -696,7 +696,7 @@ export async function listIngredientUses(
   const naming = rowsNaming(ingredientId);
   const household = (householdId: AnyPgColumn) =>
     sql<boolean>`${eq(householdId, viewer.householdId)}`;
-  const openable = (await buildOwnerPolicyCondition(viewer, recipes.userId, "view")) ?? sql`true`;
+  const openable = (await buildPolicyCondition(viewer, recipes.householdId, "view")) ?? sql`true`;
 
   const [lines, groceryRows, recurringRows, pantryRows] = await Promise.all([
     db

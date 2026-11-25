@@ -3,13 +3,13 @@
  * The cookbook router's permission contract.
  *
  * Cookbooks reuse the recipe permission policy (ADR-0027), so what is worth
- * pinning here is that update and delete ask it for `edit` and `delete`
- * respectively, that an Orphaned cookbook does not ask at all, and that a
- * refusal is a refusal rather than a silent no-op.
+ * pinning here is that update and delete ask it for `edit` and `delete` of
+ * the cookbook's household, and that a refusal is a refusal rather than a
+ * silent no-op.
  */
 
 import { TRPCError } from "@trpc/server";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   createCookbook,
@@ -19,7 +19,7 @@ import {
   updateCookbook,
   withMemberSummaries,
 } from "../mocks/cookbooks-repository";
-import { canAccessResource } from "../mocks/permissions";
+import { canAccessResource, policy, resetPermissionsMocks } from "../mocks/permissions";
 import { cookbooks } from "../mocks/realtime/cookbooks";
 import { createMockHousehold, createMockUser } from "../recipes/test-utils";
 
@@ -46,7 +46,7 @@ const appRouter = router({ cookbooks: cookbooksRouter });
 function callerFor(user = createMockUser()) {
   const household = createMockHousehold();
   // The real base context shape: the authed middleware derives householdId,
-  // its members and isServerAdmin from it, so the procedures under test
+  // and its members from it, so the procedures under test
   // see exactly what they see in production.
   const ctx = {
     user,
@@ -62,6 +62,7 @@ function cookbookRow(overrides: Record<string, unknown> = {}) {
   return {
     id: "11111111-1111-4111-8111-111111111111",
     userId: "test-user-id",
+    householdId: "test-household-id",
     title: "Weeknights",
     createdAt: new Date("2026-01-01T00:00:00Z"),
     updatedAt: new Date("2026-01-01T00:00:00Z"),
@@ -75,6 +76,8 @@ function cookbookSummary(overrides: Record<string, unknown> = {}) {
 }
 
 describe("cookbook procedures", () => {
+  beforeEach(() => resetPermissionsMocks());
+
   describe("create", () => {
     it("stores a title against the caller and echoes the new cookbook", async () => {
       const summary = cookbookSummary();
@@ -115,10 +118,10 @@ describe("cookbook procedures", () => {
 
   describe("update", () => {
     it("asks the policy for edit rights and renames when granted", async () => {
-      const row = cookbookRow({ userId: "someone-else" });
+      const row = cookbookRow({ userId: "someone-else", householdId: "another-household" });
 
+      policy.edit = "everyone";
       getCookbookRow.mockResolvedValue(row);
-      canAccessResource.mockResolvedValue(true);
       updateCookbook.mockResolvedValue({
         applied: true,
         stale: false,
@@ -137,15 +140,16 @@ describe("cookbook procedures", () => {
 
       expect(canAccessResource).toHaveBeenCalledWith(
         "edit",
-        { userId: "test-user-id", householdId: "test-household-id", isServerAdmin: false },
-        "someone-else"
+        "test-household-id",
+        "another-household"
       );
       expect(result?.title).toBe("Christmas baking");
     });
 
     it("refuses a reader the policy will not let edit", async () => {
-      getCookbookRow.mockResolvedValue(cookbookRow({ userId: "someone-else" }));
-      canAccessResource.mockResolvedValue(false);
+      getCookbookRow.mockResolvedValue(
+        cookbookRow({ userId: "someone-else", householdId: "another-household" })
+      );
 
       const { caller } = callerFor();
 
@@ -155,32 +159,10 @@ describe("cookbook procedures", () => {
       expect(updateCookbook).not.toHaveBeenCalled();
     });
 
-    it("lets anyone rename an Orphaned cookbook, without consulting the policy", async () => {
-      const row = cookbookRow({ userId: null });
-
-      getCookbookRow.mockResolvedValue(row);
-      updateCookbook.mockResolvedValue({
-        applied: true,
-        stale: false,
-        value: { ...row, title: "Adopted", version: 2 },
-      });
-      withMemberSummaries.mockResolvedValue([
-        cookbookSummary({ userId: null, title: "Adopted", version: 2 }),
-      ]);
-
-      const { caller } = callerFor(createMockUser({ id: "a-stranger" }));
-
-      await expect(
-        caller.cookbooks.update({ id: row.id, version: 1, title: "Adopted" })
-      ).resolves.toMatchObject({ title: "Adopted" });
-      expect(canAccessResource).not.toHaveBeenCalled();
-    });
-
     it("drops a stale rename rather than clobbering a concurrent one", async () => {
       const row = cookbookRow();
 
       getCookbookRow.mockResolvedValue(row);
-      canAccessResource.mockResolvedValue(true);
       updateCookbook.mockResolvedValue({ applied: false, stale: true });
 
       const { caller } = callerFor();
@@ -196,7 +178,6 @@ describe("cookbook procedures", () => {
       const image = `/cookbooks/${row.id}/cover.jpg`;
 
       getCookbookRow.mockResolvedValue(row);
-      canAccessResource.mockResolvedValue(true);
       updateCookbook.mockResolvedValue({
         applied: true,
         stale: false,
@@ -231,10 +212,10 @@ describe("cookbook procedures", () => {
 
   describe("remove", () => {
     it("asks the policy for delete rights", async () => {
-      const row = cookbookRow({ userId: "someone-else" });
+      const row = cookbookRow({ userId: "someone-else", householdId: "another-household" });
 
+      policy.delete = "everyone";
       getCookbookRow.mockResolvedValue(row);
-      canAccessResource.mockResolvedValue(true);
       deleteCookbookById.mockResolvedValue({ applied: true, stale: false, value: undefined });
 
       const { caller } = callerFor();
@@ -245,14 +226,15 @@ describe("cookbook procedures", () => {
       });
       expect(canAccessResource).toHaveBeenCalledWith(
         "delete",
-        { userId: "test-user-id", householdId: "test-household-id", isServerAdmin: false },
-        "someone-else"
+        "test-household-id",
+        "another-household"
       );
     });
 
     it("refuses a reader the policy will not let delete", async () => {
-      getCookbookRow.mockResolvedValue(cookbookRow({ userId: "someone-else" }));
-      canAccessResource.mockResolvedValue(false);
+      getCookbookRow.mockResolvedValue(
+        cookbookRow({ userId: "someone-else", householdId: "another-household" })
+      );
 
       const { caller } = callerFor();
 
@@ -281,11 +263,7 @@ describe("cookbook procedures", () => {
       const result = await caller.cookbooks.list({ cursor: 0, limit: 1 });
 
       expect(listCookbooks).toHaveBeenCalledWith(
-        {
-          userId: "test-user-id",
-          householdId: "test-household-id",
-          isServerAdmin: false,
-        },
+        { userId: "test-user-id", householdId: "test-household-id" },
         { limit: 1, offset: 0, search: undefined, sortMode: "dateDesc" }
       );
       expect(result.nextCursor).toBe(1);

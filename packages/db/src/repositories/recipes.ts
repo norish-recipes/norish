@@ -35,7 +35,6 @@ import type { MutationOutcome } from "./mutation-outcomes";
 import type { StepInsertWithImages } from "./steps";
 import {
   cookbookRecipes,
-  householdUsers,
   recipeFavorites,
   recipeImages,
   recipeIngredients,
@@ -155,29 +154,21 @@ export async function deleteRecipesByIds(
   };
 }
 
-/** The owner of each recipe that exists; Orphaned ones map to null. */
-export async function getRecipeOwnerIds(recipeIds: string[]): Promise<Map<string, string | null>> {
+/** The household of each recipe that exists, which the Permission Policy is decided by. */
+export async function getRecipeHouseholdIds(recipeIds: string[]): Promise<Map<string, string>> {
   if (recipeIds.length === 0) return new Map();
 
   const rows = await db
-    .select({ id: recipes.id, userId: recipes.userId })
+    .select({ id: recipes.id, householdId: recipes.householdId })
     .from(recipes)
     .where(inArray(recipes.id, recipeIds));
 
-  return new Map(rows.map((row) => [row.id, row.userId]));
+  return new Map(rows.map((row) => [row.id, row.householdId]));
 }
 
-/**
- * Get the owner userId for a recipe (for permission checks)
- */
-export async function getRecipeOwnerId(recipeId: string): Promise<string | null> {
-  const [row] = await db
-    .select({ userId: recipes.userId })
-    .from(recipes)
-    .where(eq(recipes.id, recipeId))
-    .limit(1);
-
-  return row?.userId ?? null;
+/** The recipe's household, or null when there is no such recipe. */
+export async function getRecipeHouseholdId(recipeId: string): Promise<string | null> {
+  return (await getRecipeHouseholdIds([recipeId])).get(recipeId) ?? null;
 }
 
 export async function getRecipeByUrl(url: string): Promise<FullRecipeDTO | null> {
@@ -218,7 +209,7 @@ export async function recipeExistsByUrlForPolicy(
     );
   }
 
-  return { exists: existing !== null, existingRecipeId: existing?.id };
+  return { exists: existing !== undefined, existingRecipeId: existing?.id };
 }
 
 /**
@@ -231,7 +222,7 @@ export async function recipeExistsByUrlForPolicy(
  * Returns the existing recipe ID if found, null otherwise.
  */
 export async function findExistingRecipe(
-  userIds: string[],
+  householdId: string,
   url: string | null | undefined,
   title: string,
   notByName: readonly string[] = []
@@ -241,7 +232,7 @@ export async function findExistingRecipe(
   // First try to find by URL if provided (most reliable)
   if (trimmedUrl) {
     const byUrl = await db.query.recipes.findFirst({
-      where: and(inArray(recipes.userId, userIds), eq(recipes.url, trimmedUrl)),
+      where: and(eq(recipes.householdId, householdId), eq(recipes.url, trimmedUrl)),
       columns: { id: true },
     });
 
@@ -258,7 +249,7 @@ export async function findExistingRecipe(
   if (trimmedTitle) {
     const byTitle = await db.query.recipes.findFirst({
       where: and(
-        inArray(recipes.userId, userIds),
+        eq(recipes.householdId, householdId),
         ilike(recipes.name, trimmedTitle),
         // Any URL a stored recipe carries here differs from this one, or the
         // URL lookup above would have found it.
@@ -284,57 +275,30 @@ export async function findExistingRecipe(
   return null;
 }
 
+/** Who is reading: the account and the household it is in. */
 export interface RecipeListContext {
   userId: string;
   householdId: string;
-  isServerAdmin: boolean;
 }
 
 /**
- * Build the SQL condition the recipe permission policy puts on an owner
- * column, for whichever of its three levels the caller is asking about.
- *
- * A row with a null owner — an Orphaned recipe, or an Orphaned cookbook — is
- * always included, at every level and for every action, which is the same
- * answer `assertRecipeAccess` gives one row at a time.
- *
- * The owner column is a parameter because cookbooks answer to this same
- * policy rather than a rule of their own (ADR-0027): a cookbook is exactly as
- * visible as the recipes its owner could see, so the two conditions have to
- * come from one place or they will drift.
+ * The SQL the Permission Policy puts on a recipe's or cookbook's household column for one action:
+ * nothing under Everyone, the reader's own household under Household. A missing row and a hidden
+ * one read the same. Cookbooks answer to this same condition (ADR-0027).
  */
-export async function buildOwnerPolicyCondition(
+export async function buildPolicyCondition(
   ctx: RecipeListContext,
-  ownerColumn: AnyPgColumn,
+  householdColumn: AnyPgColumn,
   action: PolicyAction = "view"
 ) {
   const level = await getRecipePolicyLevel(action);
 
-  // Server admin sees all
-  if (ctx.isServerAdmin) {
-    return undefined;
-  }
-
-  switch (level) {
-    case "everyone":
-      // No filtering needed
-      return undefined;
-
-    case "household":
-      // Own rows + household members' rows + orphaned rows (null owner)
-      return or(
-        inArray(ownerColumn, householdMemberIdsSql(ctx.householdId)),
-        sql`${ownerColumn} IS NULL`
-      );
-  }
+  return level === "household" ? eq(householdColumn, ctx.householdId) : undefined;
 }
 
-/**
- * The recipe list's own view-policy condition — `buildOwnerPolicyCondition`
- * pointed at `recipes.userId`.
- */
+/** The recipe list's own view condition. */
 async function buildViewPolicyCondition(ctx: RecipeListContext) {
-  return buildOwnerPolicyCondition(ctx, recipes.userId, "view");
+  return buildPolicyCondition(ctx, recipes.householdId, "view");
 }
 
 /**
@@ -1062,27 +1026,18 @@ export async function updateRecipeCategories(
   });
 }
 
-/**
- * Every recipe on the server, with the context Recipe Enrichment enrollment
- * needs: the owning user and that user's household. Both are null when the
- * owner's account has been deleted. The schema permits a user in several
- * households; DISTINCT ON keeps one row per recipe, because enrollment needs
- * a household for the recipe, not all of them.
- */
+/** Every recipe on the server, with its Owner and household, for Recipe Enrichment enrollment. */
 export async function getAllRecipesForEnrichment(): Promise<
-  { recipeId: string; userId: string | null; householdId: string | null }[]
+  { recipeId: string; userId: string; householdId: string }[]
 > {
-  const rows = await db
-    .selectDistinctOn([recipes.id], {
+  return await db
+    .select({
       recipeId: recipes.id,
       userId: recipes.userId,
-      householdId: householdUsers.householdId,
+      householdId: recipes.householdId,
     })
     .from(recipes)
-    .leftJoin(householdUsers, eq(householdUsers.userId, recipes.userId))
     .orderBy(recipes.id);
-
-  return rows;
 }
 
 /**
@@ -1936,6 +1891,13 @@ export async function searchRecipesByName(
     .limit(limit);
 
   return rows.map((r) => ({ id: r.id, name: r.name, image: r.image }));
+}
+
+/** Every recipe named exactly `name`, whoever owns it: for tests that find what a flow stored. */
+export async function listRecipeIdsNamed(name: string): Promise<string[]> {
+  const rows = await db.select({ id: recipes.id }).from(recipes).where(eq(recipes.name, name));
+
+  return rows.map((row) => row.id);
 }
 
 // --- Recipe Images Management ---

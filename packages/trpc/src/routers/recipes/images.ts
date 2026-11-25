@@ -5,8 +5,8 @@ import {
   addRecipeImages,
   countRecipeImages,
   deleteRecipeImageById,
+  getRecipeHouseholdId,
   getRecipeImageById,
-  getRecipeOwnerId,
 } from "@norish/db/repositories/recipes";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { refreshDishColorForRecipe } from "@norish/shared-server/media/dish-color";
@@ -27,6 +27,7 @@ import { router } from "../../trpc";
 import {
   announceRecipeUpdated,
   assertRecipeAccess,
+  assertRecipeMediaAccess,
   createSettled,
   mediaRecipeId,
   recipeIdOfMediaUrl,
@@ -81,8 +82,7 @@ const uploadImage = authedProcedure.input(formDataInputSchema).mutation(async ({
     return { success: false, error: "Recipe ID is required" };
   }
 
-  // A recipe not stored yet (the new-recipe form uploads first) is the caller's own.
-  await assertRecipeAccess(ctx, recipeId, "edit");
+  await assertRecipeMediaAccess(ctx, recipeId);
 
   const validation = await extractAndValidateImage(input);
 
@@ -121,7 +121,7 @@ const deleteImage = authedProcedure
       return { success: false, error: "Invalid image URL format" };
     }
 
-    await assertRecipeAccess(ctx, recipeId, "edit");
+    await assertRecipeMediaAccess(ctx, recipeId);
 
     try {
       await deleteImageByUrl(input.url);
@@ -153,7 +153,7 @@ const uploadStepImage = authedProcedure
       return { success: false, error: "Recipe ID is required" };
     }
 
-    await assertRecipeAccess(ctx, recipeId, "edit");
+    await assertRecipeMediaAccess(ctx, recipeId);
 
     const validation = await extractAndValidateImage(input);
 
@@ -187,7 +187,7 @@ const deleteStepImage = authedProcedure
       return { success: false, error: "Invalid image URL format" };
     }
 
-    await assertRecipeAccess(ctx, recipeId, "edit");
+    await assertRecipeMediaAccess(ctx, recipeId);
 
     try {
       await deleteStepImageByUrl(input.url);
@@ -225,7 +225,7 @@ const uploadGalleryImage = authedProcedure
 
     // A create of this id still running links the file once it is stored.
     await createSettled(recipeId);
-    await assertRecipeAccess(ctx, recipeId, "edit");
+    await assertRecipeMediaAccess(ctx, recipeId);
 
     // Check max images limit
     const currentCount = await countRecipeImages(recipeId);
@@ -253,9 +253,9 @@ const uploadGalleryImage = authedProcedure
       // Check if recipe exists in database before inserting into recipe_images
       // For new recipes (created via form), the recipe doesn't exist yet - images will be
       // linked when the recipe is saved via createRecipeWithRefs
-      const recipeOwner = await getRecipeOwnerId(recipeId);
+      const recipeHousehold = await getRecipeHouseholdId(recipeId);
 
-      if (recipeOwner !== null) {
+      if (recipeHousehold !== null) {
         // Recipe exists, add to database
         const [imageRecord] = await addRecipeImages(recipeId, [{ image: url, order }]);
 

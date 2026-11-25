@@ -137,7 +137,10 @@ async function exportZip(blocks: string[], { wrapper = "" } = {}) {
 
 async function importBlocks(blocks: string[]) {
   const bytes = Buffer.from(await (await exportZip(blocks)).generateAsync({ type: "uint8array" }));
-  const result = await importArchive("user-1", ["user-1"], bytes);
+  const result = await importArchive(
+    { userId: "user-1", householdId: "household-1", memberIds: ["user-1"] },
+    bytes
+  );
 
   return { result, dtos: mockCreateResolvedRecipe.mock.calls.map((call) => call[2]) };
 }

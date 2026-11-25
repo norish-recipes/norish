@@ -889,6 +889,19 @@ export const DEFAULT_RECIPE_PERMISSION_POLICY: RecipePermissionPolicy = {
 };
 
 /**
+ * Whether a reader in `readerHouseholdId` may act on a recipe or cookbook of `rowHouseholdId`.
+ * The one rule both servers' checks and the apps' selectors apply; no role reaches past it.
+ */
+export function policyAllows(
+  policy: RecipePermissionPolicy,
+  action: keyof RecipePermissionPolicy,
+  readerHouseholdId: string,
+  rowHouseholdId: string
+): boolean {
+  return policy[action] === "everyone" || readerHouseholdId === rowHouseholdId;
+}
+
+/**
  * Where the ingredient catalogue seed stands (ADR-0038): the validators of
  * the last file applied, so the nightly fetch asks only for a newer one, and
  * whether existing Ingredients have been merged into the seed — a pass that

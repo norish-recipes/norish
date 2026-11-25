@@ -7,47 +7,29 @@ import type { CookbooksRealtime } from "@norish/shared/contracts/realtime/cookbo
 import { canAccessResource } from "@norish/auth/permissions";
 import { getCookbookRow } from "@norish/db/repositories/cookbooks";
 import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
-import { trpcLogger as log } from "@norish/shared-server/logger";
 import { cookbooks } from "@norish/shared-server/realtime/cookbooks";
 
 export type CookbookUserContext = {
   user: { id: string };
   householdId: string;
-  isServerAdmin: boolean;
 };
 
 /**
- * Cookbooks answer to the recipe permission policy, not a rule of their own
- * (ADR-0027), and an Orphaned cookbook is fair game for everyone under every
- * policy — the same answer `assertRecipeAccess` gives for an orphaned recipe.
- *
- * Returns the row so a caller that needs the version or title does not read
- * it twice.
+ * Cookbooks answer to the recipe Permission Policy, not a rule of their own (ADR-0027). One the
+ * reader may not view is not found; one they may view but not `action` is forbidden.
+ * Returns the row so a caller that needs the version or title does not read it twice.
  */
 export async function assertCookbookAccess(
-  ctx: Pick<CookbookUserContext, "user" | "householdId" | "isServerAdmin">,
+  ctx: Pick<CookbookUserContext, "householdId">,
   cookbookId: string,
   action: PermissionAction
 ) {
   const cookbook = await getCookbookRow(cookbookId);
 
-  if (!cookbook) {
+  if (!cookbook || !(await canAccessResource("view", ctx.householdId, cookbook.householdId))) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Cookbook not found" });
   }
-
-  if (cookbook.userId === null) {
-    log.debug({ cookbookId }, `${action} orphaned cookbook`);
-
-    return cookbook;
-  }
-
-  const canAccess = await canAccessResource(
-    action,
-    { userId: ctx.user.id, householdId: ctx.householdId, isServerAdmin: ctx.isServerAdmin },
-    cookbook.userId
-  );
-
-  if (!canAccess) {
+  if (!(await canAccessResource(action, ctx.householdId, cookbook.householdId))) {
     throw new TRPCError({
       code: "FORBIDDEN",
       message: "You do not have permission to access this cookbook",

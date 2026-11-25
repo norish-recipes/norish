@@ -413,21 +413,22 @@ const deleteProcedure = authedProcedure
       input.recipes.map((recipe) => recipe.id),
       "delete"
     );
-    // One already gone is not in the map and counts as deleted.
-    const permitted = input.recipes.filter((recipe) => access.get(recipe.id) !== false);
+    const permitted = input.recipes.filter((recipe) => access.get(recipe.id) === true);
+    // One gone, or out of view, is not in the map and answers as deleted; nothing is touched.
+    const absent = input.recipes.filter((recipe) => !access.has(recipe.id)).map(({ id }) => id);
 
-    const { deletedIds, staleIds } = await deleteRecipesByIds(permitted);
+    const { deletedIds: removed, staleIds } = await deleteRecipesByIds(permitted);
 
     // Only once the rows are gone: a kept recipe still needs its images.
-    await Promise.all(deletedIds.map((id) => deleteRecipeImagesDir(id)));
+    await Promise.all(removed.map((id) => deleteRecipeImagesDir(id)));
 
     const policy = await getRecipePermissionPolicy();
 
-    if (deletedIds.length > 0) {
-      log.info({ userId: ctx.user.id, count: deletedIds.length }, "Recipes deleted");
+    if (removed.length > 0) {
+      log.info({ userId: ctx.user.id, count: removed.length }, "Recipes deleted");
       void recipes.publish(
         "deleted",
-        { ids: deletedIds },
+        { ids: removed },
         { viewPolicy: policy.view, userId: ctx.user.id, householdId: ctx.householdId }
       );
     }
@@ -436,6 +437,8 @@ const deleteProcedure = authedProcedure
       log.info({ userId: ctx.user.id, recipeIds: staleIds }, "Kept recipes edited elsewhere");
       void recipes.publish("deleteKept", { ids: staleIds }, { userId: ctx.user.id });
     }
+
+    const deletedIds = [...removed, ...absent];
 
     return { deletedIds, staleIds };
   });
@@ -533,13 +536,7 @@ export const importStatusProcedure = authedProcedure
   .query(async ({ ctx, input }) => {
     const queue = getQueues().recipeImport;
     let job = await queue.getJob(input.recipeId);
-    const canView =
-      job &&
-      (await canAccessResource(
-        "view",
-        { userId: ctx.user.id, householdId: ctx.householdId, isServerAdmin: ctx.isServerAdmin },
-        job.data.userId
-      ));
+    const canView = job && (await canAccessResource("view", ctx.householdId, job.data.householdId));
 
     if (job && canView) {
       let state = await job.getState();
@@ -639,13 +636,14 @@ const convertMeasurements = authedProcedure
     };
 
     (withAI ? checkAIEnabled() : Promise.resolve(true))
-      .then((aiEnabled) => {
+      .then(async (aiEnabled) => {
         if (!aiEnabled) {
           throw new TRPCError({
             code: "PRECONDITION_FAILED",
             message: "AI features are disabled",
           });
         }
+        await assertRecipeAccess(ctx, recipeId, "edit");
 
         return getRecipeFull(recipeId);
       })
@@ -664,29 +662,7 @@ const convertMeasurements = authedProcedure
           });
         }
 
-        // Check edit permission (uses recipe.userId directly since we have the full recipe)
-        const permissionCheck = recipe.userId
-          ? canAccessResource(
-              "edit",
-              {
-                userId: ctx.user.id,
-                householdId: ctx.householdId,
-                isServerAdmin: ctx.isServerAdmin,
-              },
-              recipe.userId
-            )
-          : Promise.resolve(true);
-
-        return permissionCheck.then((canEdit) => {
-          if (!canEdit) {
-            throw new TRPCError({
-              code: "FORBIDDEN",
-              message: "You do not have permission to edit this recipe",
-            });
-          }
-
-          return recipe;
-        });
+        return recipe;
       })
       .then(async (recipe) => {
         const original = recipe.originalSystem ?? recipe.systemUsed;

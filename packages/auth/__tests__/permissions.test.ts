@@ -1,70 +1,41 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { assertHouseholdAccess, canAccessResource } from "@norish/auth/permissions";
 
+const stored = vi.hoisted(() => ({ policy: null as Record<string, string> | null }));
+
 vi.mock("@norish/db/repositories/server-config", () => ({
-  getConfig: vi.fn().mockResolvedValue({
-    view: "household",
-    edit: "household",
-    delete: "owner",
-  }),
+  getConfig: vi.fn(async () => stored.policy),
 }));
-
-// user1 and user2 share household1; user3 is in household3 on their own.
-const MEMBERS: Record<string, string[]> = {
-  household1: ["user1", "user2"],
-  household3: ["user3"],
-};
-
-vi.mock("@norish/db/repositories/households", () => ({
-  isHouseholdMember: vi.fn(async (householdId: string, userId: string) =>
-    (MEMBERS[householdId] ?? []).includes(userId)
-  ),
-}));
-
-const viewer = (userId: string, householdId: string, isServerAdmin = false) => ({
-  userId,
-  householdId,
-  isServerAdmin,
-});
 
 describe("canAccessResource", () => {
-  describe("owner access", () => {
-    it.each(["view", "edit", "delete"] as const)(
-      "owner can always %s their own resource",
-      async (action) => {
-        expect(await canAccessResource(action, viewer("user1", "household1"), "user1")).toBe(true);
-      }
-    );
+  beforeEach(() => {
+    stored.policy = { view: "everyone", edit: "household", delete: "household" };
   });
 
-  describe("server admin access", () => {
-    it.each(["view", "edit", "delete"] as const)(
-      "server admin can %s any resource",
-      async (action) => {
-        expect(await canAccessResource(action, viewer("user3", "household3", true), "user1")).toBe(
-          true
-        );
-      }
-    );
+  it.each(["view", "edit", "delete"] as const)(
+    "lets the row's own household %s it under any policy",
+    async (action) => {
+      stored.policy = { view: "household", edit: "household", delete: "household" };
+      expect(await canAccessResource(action, "household1", "household1")).toBe(true);
+    }
+  );
+
+  it("lets another household do what the policy opens to everyone, and nothing else", async () => {
+    expect(await canAccessResource("view", "household3", "household1")).toBe(true);
+    expect(await canAccessResource("edit", "household3", "household1")).toBe(false);
+    expect(await canAccessResource("delete", "household3", "household1")).toBe(false);
   });
 
-  describe("household access with policy", () => {
-    it("household member can view resource when policy is 'household'", async () => {
-      expect(await canAccessResource("view", viewer("user2", "household1"), "user1")).toBe(true);
-    });
+  it("hides another household's row under view Household", async () => {
+    stored.policy = { view: "household", edit: "household", delete: "household" };
+    expect(await canAccessResource("view", "household3", "household1")).toBe(false);
+  });
 
-    it("household member can edit resource when policy is 'household'", async () => {
-      expect(await canAccessResource("edit", viewer("user2", "household1"), "user1")).toBe(true);
-    });
-
-    it("household member cannot delete resource when policy is 'owner'", async () => {
-      expect(await canAccessResource("delete", viewer("user2", "household1"), "user1")).toBe(false);
-    });
-
-    it("someone in another household cannot view resource", async () => {
-      expect(await canAccessResource("view", viewer("user3", "household3"), "user1")).toBe(false);
-    });
+  it("falls back to the default policy when none is stored", async () => {
+    stored.policy = null;
+    expect(await canAccessResource("view", "household3", "household1")).toBe(true);
+    expect(await canAccessResource("edit", "household3", "household1")).toBe(false);
   });
 });
 

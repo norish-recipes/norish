@@ -9,7 +9,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { findExistingRecipe } from "@norish/db/repositories/recipes";
 
-import { createTestRecipe } from "../../../helpers/db-test-helpers";
+import { createTestRecipe, testHouseholdOf } from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 describe("findExistingRecipe", () => {
@@ -36,17 +36,17 @@ describe("findExistingRecipe", () => {
       url: "https://a.example/curry",
     });
 
-    expect(await findExistingRecipe([userId], "https://a.example/curry", "Something else")).toBe(
-      recipe.id
-    );
+    expect(
+      await findExistingRecipe(testHouseholdOf(userId), "https://a.example/curry", "Something else")
+    ).toBe(recipe.id);
   });
 
   it("never matches a name across two different URLs", async () => {
     await createTestRecipe(userId, { name: "Pollo al curry", url: "https://a.example/curry" });
 
-    expect(await findExistingRecipe([userId], "https://b.example/curry", "pollo al curry")).toBe(
-      null
-    );
+    expect(
+      await findExistingRecipe(testHouseholdOf(userId), "https://b.example/curry", "pollo al curry")
+    ).toBe(null);
   });
 
   it("matches a name where either recipe has no URL", async () => {
@@ -56,18 +56,24 @@ describe("findExistingRecipe", () => {
       url: "https://a.example/panettone",
     });
 
-    expect(await findExistingRecipe([userId], "https://b.example/t", "tiramisù")).toBe(stored.id);
-    expect(await findExistingRecipe([userId], undefined, "Panettone")).toBe(withUrl.id);
+    expect(
+      await findExistingRecipe(testHouseholdOf(userId), "https://b.example/t", "tiramisù")
+    ).toBe(stored.id);
+    expect(await findExistingRecipe(testHouseholdOf(userId), undefined, "Panettone")).toBe(
+      withUrl.id
+    );
   });
 
   it("finds a same-named recipe the import has not written yet, past one it has", async () => {
     const written = await createTestRecipe(userId, { name: "Quiche", url: null });
     const other = await createTestRecipe(userId, { name: "Quiche", url: null });
 
-    expect(await findExistingRecipe([userId], undefined, "Quiche", [written.id])).toBe(other.id);
-    expect(await findExistingRecipe([userId], undefined, "Quiche", [written.id, other.id])).toBe(
-      null
-    );
+    expect(
+      await findExistingRecipe(testHouseholdOf(userId), undefined, "Quiche", [written.id])
+    ).toBe(other.id);
+    expect(
+      await findExistingRecipe(testHouseholdOf(userId), undefined, "Quiche", [written.id, other.id])
+    ).toBe(null);
   });
 
   it("still matches a recipe the import wrote by its URL", async () => {
@@ -77,7 +83,9 @@ describe("findExistingRecipe", () => {
     });
 
     expect(
-      await findExistingRecipe([userId], "https://a.example/quiche", "Quiche", [written.id])
+      await findExistingRecipe(testHouseholdOf(userId), "https://a.example/quiche", "Quiche", [
+        written.id,
+      ])
     ).toBe(written.id);
   });
 });

@@ -317,15 +317,11 @@ describe("channel selection", () => {
     controller.abort();
   });
 
-  it("subscribes a policy event on household, broadcast and user, with the maxQueue option", async () => {
+  it("subscribes a policy event on household and broadcast, with the maxQueue option", async () => {
     const { iterator, controller } = await subscribe("onImported");
 
     await take(iterator);
-    expect([...hub.sources.keys()]).toEqual([
-      IMPORTED.household,
-      IMPORTED.broadcast,
-      IMPORTED.user,
-    ]);
+    expect([...hub.sources.keys()]).toEqual([IMPORTED.household, IMPORTED.broadcast]);
     expect(hub.subscribe).toHaveBeenCalledWith(
       IMPORTED.household,
       expect.objectContaining({ maxQueue: 7 })
@@ -355,14 +351,13 @@ describe("fresh subscription", () => {
       [id(1), { recipeId: "a" }],
       [id(2), { recipeId: "b" }],
     ]);
-    seedStream(IMPORTED.user, [[id(3), { recipeId: "c" }]]);
 
     const { iterator, controller } = await subscribe("onImported");
     const first = await take(iterator);
 
     expect(first.data).toEqual({ mark: "cursor" });
-    expect(first.cursor).toBe(encodeCursor({ identityHash: hash, ids: [id(2), "0-0", id(3)] }));
-    expect(valkey.xrevrange).toHaveBeenCalledTimes(3);
+    expect(first.cursor).toBe(encodeCursor({ identityHash: hash, ids: [id(2), "0-0"] }));
+    expect(valkey.xrevrange).toHaveBeenCalledTimes(2);
     expect(valkey.xrange).not.toHaveBeenCalled();
     controller.abort();
   });
@@ -532,19 +527,16 @@ describe("resume", () => {
     controller.abort();
   });
 
-  it("merges three channels' replays by id for a policy subscription", async () => {
+  it("merges both channels' replays by id for a policy subscription", async () => {
     seedStream(IMPORTED.household, [
       [id(1), { recipeId: "h1" }],
+      [id(4), { recipeId: "h4" }],
       [id(5), { recipeId: "h5" }],
     ]);
-    seedStream(IMPORTED.broadcast, [
-      [id(2), { recipeId: "b2" }],
-      [id(6), { recipeId: "b6" }],
-    ]);
-    seedStream(IMPORTED.user, [[id(4), { recipeId: "u4" }]]);
+    seedStream(IMPORTED.broadcast, [[id(6), { recipeId: "b6" }]]);
 
     const { iterator, controller } = await subscribe("onImported", {
-      lastEventId: encodeCursor({ identityHash: hash, ids: [id(1), id(2), "0-0"] }),
+      lastEventId: encodeCursor({ identityHash: hash, ids: [id(1), "0-0"] }),
     });
 
     await take(iterator);
@@ -560,11 +552,11 @@ describe("resume", () => {
       });
     }
 
-    // The user channel's cursor was 0-0: it had never been written when the
-    // cursor was minted, so everything in it now came after and is replayed.
-    expect(got.map((g) => g.recipeId)).toEqual(["u4", "h5", "b6"]);
-    expect(got[0]!.cursor).toBe(encodeCursor({ identityHash: hash, ids: [id(1), id(2), id(4)] }));
-    expect(got[2]!.cursor).toBe(encodeCursor({ identityHash: hash, ids: [id(5), id(6), id(4)] }));
+    // The broadcast cursor was 0-0: it had never been written when the cursor
+    // was minted, so everything in it now came after and is replayed.
+    expect(got.map((g) => g.recipeId)).toEqual(["h4", "h5", "b6"]);
+    expect(got[0]!.cursor).toBe(encodeCursor({ identityHash: hash, ids: [id(4), "0-0"] }));
+    expect(got[2]!.cursor).toBe(encodeCursor({ identityHash: hash, ids: [id(5), id(6)] }));
     controller.abort();
   });
 

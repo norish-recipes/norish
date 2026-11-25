@@ -1,9 +1,9 @@
 import type { AIConfig, RecipePermissionPolicy } from "@norish/config/zod/server-config";
 import {
   DEFAULT_RECIPE_PERMISSION_POLICY,
+  policyAllows,
   ServerConfigKeys,
 } from "@norish/config/zod/server-config";
-import { isHouseholdMember } from "@norish/db/repositories/households";
 import { getConfig } from "@norish/db/repositories/server-config";
 
 export async function getRecipePermissionPolicy(): Promise<RecipePermissionPolicy> {
@@ -20,30 +20,13 @@ export async function isAIEnabled(): Promise<boolean> {
 
 export type PermissionAction = "view" | "edit" | "delete";
 
-/** Who is asking: the account, its household, and whether it administers the server. */
-export interface PermissionViewer {
-  userId: string;
-  householdId: string;
-  isServerAdmin: boolean;
-}
-
+/** Whether a reader in `readerHouseholdId` may act on a recipe or cookbook of `rowHouseholdId`. */
 export async function canAccessResource(
   action: PermissionAction,
-  viewer: PermissionViewer,
-  ownerId: string
+  readerHouseholdId: string,
+  rowHouseholdId: string
 ): Promise<boolean> {
-  if (viewer.userId === ownerId || viewer.isServerAdmin) return true;
-
-  const policy = await getRecipePermissionPolicy();
-
-  switch (policy[action]) {
-    case "everyone":
-      return true;
-    case "household":
-      return isHouseholdMember(viewer.householdId, ownerId);
-    default:
-      return false;
-  }
+  return policyAllows(await getRecipePermissionPolicy(), action, readerHouseholdId, rowHouseholdId);
 }
 
 /** Refuses a household row that belongs to another household than the caller's. */

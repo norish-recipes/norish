@@ -2,21 +2,13 @@ import { randomUUID } from "node:crypto";
 import { expect } from "@playwright/test";
 
 import type { LineResolution } from "@norish/db/repositories/ingredients";
-import type { RecipeListContext } from "@norish/db/repositories/recipes";
 import type { FullRecipeDTO, FullRecipeInsertDTO } from "@norish/shared/contracts";
-import { createRecipeWithRefs, searchRecipesByName } from "@norish/db/repositories/recipes";
+import { createRecipeWithRefs, listRecipeIdsNamed } from "@norish/db/repositories/recipes";
 import { lineNamesNoFood } from "@norish/shared/lib/ingredient-text";
 
 import type { SessionCookies } from "./auth";
 import { mintFood } from "./foods";
 import { callTrpc, queryTrpc, TrpcHttpError } from "./trpc";
-
-/** A server admin's view: every recipe and cookbook, whoever owns it. */
-export const ADMIN_VIEW: RecipeListContext = {
-  userId: "",
-  householdId: "",
-  isServerAdmin: true,
-};
 
 /**
  * A recipe with these amount-less lines, saved through tRPC as the recipe form
@@ -51,10 +43,8 @@ export function createRecipe(
 }
 
 /** The ids of every stored recipe named exactly this, whoever owns it. */
-export async function recipeIdsNamed(name: string): Promise<string[]> {
-  const found = await searchRecipesByName(ADMIN_VIEW, name, 100);
-
-  return found.filter((recipe) => recipe.name === name).map((recipe) => recipe.id);
+export function recipeIdsNamed(name: string): Promise<string[]> {
+  return listRecipeIdsNamed(name);
 }
 
 /** The id of the stored recipe named exactly this; fails when there is none. */

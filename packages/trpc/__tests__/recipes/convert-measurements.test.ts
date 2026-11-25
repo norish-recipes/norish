@@ -4,14 +4,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { setActiveSystemForRecipe, writeConvertedCopy } from "@norish/db";
 
 import { recipesRouter } from "../../src/routers/recipes";
-import { canAccessResource } from "../mocks/permissions";
+import { resetPermissionsMocks } from "../mocks/permissions";
 import { recipes } from "../mocks/realtime/recipes";
-import { getRecipeFull } from "../mocks/recipes-repository";
+import { everyRecipeIn, getRecipeFull } from "../mocks/recipes-repository";
 import { createMockAuthedContext, createMockFullRecipe, createMockUser } from "./test-utils";
 
 vi.mock("@norish/db", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@norish/db")>()),
   getRecipeFull: (await import("../mocks/recipes-repository")).getRecipeFull,
+  getRecipeHouseholdIds: (await import("../mocks/recipes-repository")).getRecipeHouseholdIds,
   setActiveSystemForRecipe: vi.fn(),
   writeConvertedCopy: vi.fn(),
 }));
@@ -60,7 +61,8 @@ describe("convertMeasurements", () => {
       .convertMeasurements({ recipeId: id, targetSystem, version: 3, withAI });
 
   beforeEach(() => {
-    vi.mocked(canAccessResource).mockResolvedValue(true);
+    resetPermissionsMocks();
+    everyRecipeIn(ctx.householdId);
     getRecipeFull.mockResolvedValue(recipe);
     vi.mocked(writeConvertedCopy).mockResolvedValue({ applied: false, stale: true });
     vi.mocked(setActiveSystemForRecipe).mockResolvedValue({ applied: false, stale: true });

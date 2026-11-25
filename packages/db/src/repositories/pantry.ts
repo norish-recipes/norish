@@ -8,7 +8,6 @@ import { db, holdLock } from "@norish/db/drizzle";
 import { ingredients, pantryIngredients } from "@norish/db/schema";
 import { PantryIngredientSelectSchema, PantrySuggestionSchema } from "@norish/shared/contracts/zod";
 
-import { householdMemberIdsSql } from "./household-members";
 import { householdRow } from "./household-rows";
 import { findLocaleNames } from "./ingredient-aliases";
 import { coveredCte } from "./pantry-coverage";
@@ -222,15 +221,13 @@ const PantrySuggestionsSchema = z.array(PantrySuggestionSchema);
 
 /**
  * The foods the household's own recipes use most, for an empty Pantry to
- * start from: each food named by the lines of recipes its members own,
+ * start from: each food named by the lines of the household's recipes,
  * ranked by how many of those recipes name it, a recipe counting once per
  * food. Lines that name no food (a heading, a link to another recipe) never
  * count, and a food the Pantry covers (the same Ingredient, or a kept kind
  * of it) is left out.
  */
 export async function listPantrySuggestions(householdId: string): Promise<PantrySuggestionDto[]> {
-  // Recipes are still keyed by their owner (ticket 03), so they are read by the members.
-  const members = householdMemberIdsSql(householdId);
   const rows = await db.execute<{ ingredient_id: string; name: string; recipe_count: number }>(sql`
     with recursive ${coveredCte(householdId)},
     used as (
@@ -239,7 +236,7 @@ export async function listPantrySuggestions(householdId: string): Promise<Pantry
       join recipe_ingredients ri on ri.recipe_id = r.id
       join recipe_ingredient_foods on recipe_ingredient_foods.recipe_ingredient_id = ri.id
       join ingredient_aliases a on a.id = recipe_ingredient_foods.ingredient_alias_id
-      where r.user_id in ${members}
+      where r.household_id = ${householdId}
         and ltrim(ri.name) not like '#%'
         and position('(id:' in ri.name) = 0
       group by a.ingredient_id

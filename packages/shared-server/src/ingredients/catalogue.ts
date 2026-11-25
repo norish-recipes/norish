@@ -60,8 +60,9 @@ import { ingredientIcons } from "./icons";
 import { resolveAgain } from "./resolve-again";
 import { cleanIngredientText, forgetSpellingRules } from "./resolver";
 
-/** Who is editing: what the policy is asked about. `memberIds` is their household, them included. */
+/** Who is editing. `memberIds` is their household, them included; an admin edits seeded rows. */
 export interface CatalogueActor extends RecipeListContext {
+  isServerAdmin: boolean;
   memberIds: readonly string[];
 }
 

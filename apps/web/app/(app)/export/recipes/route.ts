@@ -101,12 +101,6 @@ export async function GET(req: Request) {
     ctx: {
       userId: sessionUser.id,
       householdId: household.id,
-      // The exporter's own reach, from either doorway. An admin's library
-      // already lists every recipe on the instance — `recipes.list` asks the
-      // visibility layer with this same flag — so "everything the exporter can
-      // see" *is* the whole instance for them, and the admin button is
-      // discoverability rather than privileged extra data (ADR-0022).
-      isServerAdmin,
     },
     exporter: {
       name: sessionUser.name ?? null,

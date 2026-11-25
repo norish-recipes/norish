@@ -3,9 +3,9 @@ import { refuseUnlessViewer } from "@/lib/auth/media-session";
 import { serveRecipeStepMedia } from "@/lib/recipe-media";
 import { serverPackage } from "@/lib/server-package";
 
-const { getRecipeOwnerId } = await serverPackage<typeof import("@norish/db/repositories/recipes")>(
-  "@norish/db/repositories/recipes"
-);
+const { getRecipeHouseholdId } = await serverPackage<
+  typeof import("@norish/db/repositories/recipes")
+>("@norish/db/repositories/recipes");
 
 export const runtime = "nodejs";
 
@@ -22,7 +22,7 @@ export async function GET(
     return NextResponse.json({ error: "Invalid recipe ID" }, { status: 400 });
   }
 
-  const refused = await refuseUnlessViewer(req, () => getRecipeOwnerId(id));
+  const refused = await refuseUnlessViewer(req, () => getRecipeHouseholdId(id));
 
   if (refused) return refused;
 

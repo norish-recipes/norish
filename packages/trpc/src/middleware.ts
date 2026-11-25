@@ -66,7 +66,7 @@ const withAuth = middleware(async ({ ctx, next }) => {
  * Authenticated procedure with full context:
  * - User must be logged in
  * - Household context available (ctx.household, ctx.householdId, and its members as ctx.userIds)
- * - Use canAccessResource from @norish/auth/permissions for permission checks
+ * - Recipes and cookbooks: the Permission Policy, through the routers' access helpers
  *
  * `withIdempotency` runs first: any mutation carrying an `x-operation-id` is
  * executed at most once, and a duplicate replay returns the stored response
@@ -142,13 +142,9 @@ export type AuthedProcedureContext = Omit<Context, "household"> & {
 
 /** The caller, as the repositories scope what a viewer may read and edit. */
 export function viewerOf(
-  ctx: Pick<AuthedProcedureContext, "householdId" | "isServerAdmin"> & { user: { id: string } }
+  ctx: Pick<AuthedProcedureContext, "householdId"> & { user: { id: string } }
 ): RecipeListContext {
-  return {
-    userId: ctx.user.id,
-    householdId: ctx.householdId,
-    isServerAdmin: ctx.isServerAdmin,
-  };
+  return { userId: ctx.user.id, householdId: ctx.householdId };
 }
 
 /** The caller as the Ingredient catalogue judges an edit: the viewer, with their household's members. */
@@ -157,7 +153,7 @@ export function actorOf(
     user: { id: string };
   }
 ): CatalogueActor {
-  return { ...viewerOf(ctx), memberIds: ctx.userIds };
+  return { ...viewerOf(ctx), isServerAdmin: ctx.isServerAdmin, memberIds: ctx.userIds };
 }
 
 /**

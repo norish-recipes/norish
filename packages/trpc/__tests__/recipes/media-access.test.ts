@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createMockAuthedContext, createMockHousehold, createMockUser } from "./test-utils";
 
 const assertRecipeAccessMock = vi.hoisted(() => vi.fn());
+const assertRecipeMediaAccessMock = vi.hoisted(() => vi.fn());
 const saveImageBytesMock = vi.hoisted(() => vi.fn());
 const deleteImageByUrlMock = vi.hoisted(() => vi.fn());
 const deleteStepImageByUrlMock = vi.hoisted(() => vi.fn());
@@ -18,6 +19,7 @@ const getCachedHouseholdForUserMock = vi.hoisted(() => vi.fn());
 vi.mock("../../src/routers/recipes/helpers", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../../src/routers/recipes/helpers")>()),
   assertRecipeAccess: assertRecipeAccessMock,
+  assertRecipeMediaAccess: assertRecipeMediaAccessMock,
 }));
 
 vi.mock("@norish/shared-server/realtime/recipes", () => import("../mocks/realtime/recipes"));
@@ -45,7 +47,7 @@ vi.mock("@norish/db/repositories/recipes", () => ({
   countRecipeImages: vi.fn().mockResolvedValue(0),
   deleteRecipeImageById: deleteRecipeImageByIdMock,
   getRecipeImageById: getRecipeImageByIdMock,
-  getRecipeOwnerId: vi.fn().mockResolvedValue(null),
+  getRecipeHouseholdId: vi.fn().mockResolvedValue(null),
   addRecipeVideos: vi.fn(),
   countRecipeVideos: vi.fn().mockResolvedValue(0),
   deleteRecipeVideoById: vi.fn(),
@@ -85,6 +87,7 @@ describe("recipe media procedures check the recipe before touching files", () =>
   beforeEach(() => {
     getCachedHouseholdForUserMock.mockResolvedValue(household);
     assertRecipeAccessMock.mockResolvedValue(undefined);
+    assertRecipeMediaAccessMock.mockResolvedValue(undefined);
     saveImageBytesMock.mockResolvedValue(`/recipes/${recipeId}/a.jpg`);
   });
 
@@ -100,10 +103,10 @@ describe("recipe media procedures check the recipe before touching files", () =>
   it("uploads to a recipe only once the caller may edit it", async () => {
     const caller = imagesProcedures.createCaller(ctx as never);
 
-    assertRecipeAccessMock.mockRejectedValue(forbidden);
+    assertRecipeMediaAccessMock.mockRejectedValue(forbidden);
 
     await expect(caller.uploadGalleryImage(upload("image", recipeId))).rejects.toThrow(forbidden);
-    expect(assertRecipeAccessMock).toHaveBeenCalledWith(expect.anything(), recipeId, "edit");
+    expect(assertRecipeMediaAccessMock).toHaveBeenCalledWith(expect.anything(), recipeId);
     expect(saveImageBytesMock).not.toHaveBeenCalled();
 
     const videos = videosProcedures.createCaller(ctx as never);
@@ -117,6 +120,7 @@ describe("recipe media procedures check the recipe before touching files", () =>
     const otherRecipe = "123e4567-e89b-12d3-a456-426614174999";
 
     assertRecipeAccessMock.mockRejectedValue(forbidden);
+    assertRecipeMediaAccessMock.mockRejectedValue(forbidden);
     getRecipeImageByIdMock.mockResolvedValue({
       id: "123e4567-e89b-12d3-a456-426614174001",
       recipeId: otherRecipe,
@@ -134,6 +138,7 @@ describe("recipe media procedures check the recipe before touching files", () =>
     ).rejects.toThrow(forbidden);
 
     expect(assertRecipeAccessMock).toHaveBeenCalledWith(expect.anything(), otherRecipe, "edit");
+    expect(assertRecipeMediaAccessMock).toHaveBeenCalledWith(expect.anything(), otherRecipe);
     expect(deleteImageByUrlMock).not.toHaveBeenCalled();
     expect(deleteStepImageByUrlMock).not.toHaveBeenCalled();
     expect(deleteRecipeImageByIdMock).not.toHaveBeenCalled();

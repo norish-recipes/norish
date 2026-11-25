@@ -20,7 +20,7 @@ export async function GET(req: Request, { params }: RouteContext<"/cookbooks/[id
 
   const refused = await refuseUnlessViewer(
     req,
-    async () => (await getCookbookRow(id))?.userId ?? null
+    async () => (await getCookbookRow(id))?.householdId ?? null
   );
 
   if (refused) return refused;

@@ -4,7 +4,7 @@ import {
   addRecipeVideos,
   countRecipeVideos,
   deleteRecipeVideoById,
-  getRecipeOwnerId,
+  getRecipeHouseholdId,
   getRecipeVideoById,
 } from "@norish/db/repositories/recipes";
 import { getMaxVideoFileSize } from "@norish/shared-server/config/server-config-loader";
@@ -18,7 +18,13 @@ import { afterCommit } from "../../after-commit";
 import { formDataInputSchema, getUploadedFile } from "../../form-data";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
-import { announceRecipeUpdated, assertRecipeAccess, createSettled, mediaRecipeId } from "./helpers";
+import {
+  announceRecipeUpdated,
+  assertRecipeAccess,
+  assertRecipeMediaAccess,
+  createSettled,
+  mediaRecipeId,
+} from "./helpers";
 
 // --- Shared Helpers ---
 
@@ -79,8 +85,7 @@ const uploadGalleryVideo = authedProcedure
 
     // A create of this id still running links the file once it is stored.
     await createSettled(recipeId);
-    // A recipe not stored yet (the new-recipe form uploads first) is the caller's own.
-    await assertRecipeAccess(ctx, recipeId, "edit");
+    await assertRecipeMediaAccess(ctx, recipeId);
 
     // Check max videos limit
     const currentCount = await countRecipeVideos(recipeId);
@@ -109,9 +114,9 @@ const uploadGalleryVideo = authedProcedure
       const order = orderStr ? parseInt(orderStr, 10) : currentCount;
 
       // Check if recipe exists in database before inserting into recipe_videos
-      const recipeOwner = await getRecipeOwnerId(recipeId);
+      const recipeHousehold = await getRecipeHouseholdId(recipeId);
 
-      if (recipeOwner !== null) {
+      if (recipeHousehold !== null) {
         // Recipe exists, add to database
         const [videoRecord] = await addRecipeVideos(recipeId, [
           {

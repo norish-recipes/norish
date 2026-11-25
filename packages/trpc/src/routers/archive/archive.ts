@@ -243,7 +243,11 @@ async function runArchiveImportAsync(
 
   try {
     // Import archive (auto-detects format)
-    const result = await runArchiveImport(userId, userIds, buffer, onProgress);
+    const result = await runArchiveImport(
+      { userId, householdId, memberIds: userIds },
+      buffer,
+      onProgress
+    );
 
     // An archive whose entries outnumber or fall short of its count never
     // reaches the last boundary, so whatever landed since is sent now.

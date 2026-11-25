@@ -173,7 +173,7 @@ describe("archive import loop favourite extra", () => {
         },
       ]),
       "user-1",
-      ["user-1"]
+      "household-1"
     );
 
     expect(mockAddFavorite).toHaveBeenCalledWith("user-1", "new-recipe-id");
@@ -191,7 +191,7 @@ describe("archive import loop favourite extra", () => {
         { dto: buildDto("archive-recipe-id"), fileName: "recipe_1", importedFavorite: true },
       ]),
       "user-1",
-      ["user-1"]
+      "household-1"
     );
 
     expect(mockUpdateRecipeWithRefs).toHaveBeenCalled();
@@ -208,21 +208,7 @@ describe("archive import loop favourite extra", () => {
     await parser.importRecipeItems(
       itemsOf([{ dto: buildDto("new-recipe-id"), fileName: "recipe_1", importedRating: 3 }]),
       "user-1",
-      ["user-1"]
-    );
-
-    expect(mockAddFavorite).not.toHaveBeenCalled();
-  });
-
-  it("does not apply the favourite without an authenticated importing user", async () => {
-    mockFindExistingRecipe.mockResolvedValue(null);
-    mockCreateRecipeWithRefs.mockResolvedValue({ status: "inserted", recipeId: "new-recipe-id" });
-    mockDashboardRecipe.mockResolvedValue({ id: "new-recipe-id", name: "Marked Soup" });
-
-    await parser.importRecipeItems(
-      itemsOf([{ dto: buildDto("new-recipe-id"), fileName: "recipe_1", importedFavorite: true }]),
-      undefined,
-      ["user-1"]
+      "household-1"
     );
 
     expect(mockAddFavorite).not.toHaveBeenCalled();
@@ -237,7 +223,7 @@ describe("archive import loop favourite extra", () => {
     const result = await parser.importRecipeItems(
       itemsOf([{ dto: buildDto("new-recipe-id"), fileName: "recipe_1", importedFavorite: true }]),
       "user-1",
-      ["user-1"]
+      "household-1"
     );
 
     expect(result.imported).toHaveLength(1);
@@ -260,7 +246,10 @@ describe("archive import loop favourite extra", () => {
     zip.file("recipe.melarecipe", "{}");
     const zipBytes = Buffer.from(await zip.generateAsync({ type: "uint8array" }));
 
-    await parser.importArchive("user-1", ["user-1"], zipBytes);
+    await parser.importArchive(
+      { userId: "user-1", householdId: "household-1", memberIds: ["user-1"] },
+      zipBytes
+    );
 
     expect(mockAddFavorite).toHaveBeenCalledTimes(1);
   });

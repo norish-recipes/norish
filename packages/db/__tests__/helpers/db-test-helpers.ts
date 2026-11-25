@@ -122,13 +122,16 @@ export function testHouseholdOf(userId: string): string {
   return householdId;
 }
 
-/** Moves a fresh test user into another user's household, its own household of one gone. */
+/** Moves a test user, and what they own, into another user's household; theirs of one goes. */
 export async function joinTestHousehold(userId: string, hostId: string): Promise<string> {
   const householdId = testHouseholdOf(hostId);
   const db = getTestDb();
 
+  await db
+    .update(schema.householdUsers)
+    .set({ householdId })
+    .where(eq(schema.householdUsers.userId, userId));
   await db.delete(schema.households).where(eq(schema.households.id, testHouseholdOf(userId)));
-  await db.insert(schema.householdUsers).values({ householdId, userId });
   testHouseholds.set(userId, householdId);
 
   return householdId;

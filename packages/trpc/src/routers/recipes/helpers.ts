@@ -4,7 +4,7 @@ import { z } from "zod";
 import type { PermissionAction } from "@norish/auth/permissions";
 import type { FullRecipeDTO } from "@norish/shared/contracts";
 import { canAccessResource } from "@norish/auth/permissions";
-import { getRecipeFull, getRecipeOwnerId, getRecipeOwnerIds } from "@norish/db";
+import { getRecipeFull, getRecipeHouseholdIds } from "@norish/db";
 import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { recipes } from "@norish/shared-server/realtime/recipes";
@@ -12,7 +12,6 @@ import { recipes } from "@norish/shared-server/realtime/recipes";
 export type RecipeUserContext = {
   user: { id: string };
   householdId: string;
-  isServerAdmin: boolean;
 };
 
 // ponytail: this process's creates only; a second server process would need a shared lock.
@@ -80,67 +79,46 @@ export async function announceRecipeUpdated(
   return stored;
 }
 
+/**
+ * Whether the reader may do `action` to each recipe, under the Permission Policy. A recipe they
+ * may not view is left out, exactly as one that does not exist.
+ */
+export async function recipeAccess(
+  ctx: Pick<RecipeUserContext, "householdId">,
+  recipeIds: string[],
+  action: PermissionAction
+): Promise<Map<string, boolean>> {
+  const households = await getRecipeHouseholdIds(recipeIds);
+  const access = new Map<string, boolean>();
+
+  for (const [recipeId, householdId] of households) {
+    if (!(await canAccessResource("view", ctx.householdId, householdId))) continue;
+    access.set(
+      recipeId,
+      action === "view" || (await canAccessResource(action, ctx.householdId, householdId))
+    );
+  }
+
+  return access;
+}
+
+/** Refuses unless the reader may do `action`; a recipe they may not view is not found. */
 export async function assertRecipeAccess(
-  ctx: Pick<RecipeUserContext, "user" | "householdId" | "isServerAdmin">,
+  ctx: Pick<RecipeUserContext, "householdId">,
   recipeId: string,
   action: PermissionAction
 ): Promise<void> {
-  const ownerId = await getRecipeOwnerId(recipeId);
+  const allowed = (await recipeAccess(ctx, [recipeId], action)).get(recipeId);
 
-  if (ownerId === null) {
-    log.debug({ recipeId }, `${action} orphaned recipe`);
-
-    return;
+  if (allowed === undefined) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Recipe not found" });
   }
-
-  const canAccess = await canAccessResource(
-    action,
-    { userId: ctx.user.id, householdId: ctx.householdId, isServerAdmin: ctx.isServerAdmin },
-    ownerId
-  );
-
-  if (!canAccess) {
+  if (!allowed) {
     throw new TRPCError({
       code: "FORBIDDEN",
       message: "You do not have permission to access this recipe",
     });
   }
-}
-
-/**
- * Whether the reader may do `action` to each of these recipes. Orphaned ones
- * are open to everyone; ones that do not exist are left out of the map.
- */
-export async function recipeAccess(
-  ctx: Pick<RecipeUserContext, "user" | "householdId" | "isServerAdmin">,
-  recipeIds: string[],
-  action: PermissionAction
-): Promise<Map<string, boolean>> {
-  const owners = await getRecipeOwnerIds(recipeIds);
-  const byOwner = new Map<string, Promise<boolean>>();
-  const access = new Map<string, boolean>();
-
-  for (const [recipeId, ownerId] of owners) {
-    if (ownerId === null) {
-      access.set(recipeId, true);
-      continue;
-    }
-
-    let allowed = byOwner.get(ownerId);
-
-    if (!allowed) {
-      allowed = canAccessResource(
-        action,
-        { userId: ctx.user.id, householdId: ctx.householdId, isServerAdmin: ctx.isServerAdmin },
-        ownerId
-      );
-      byOwner.set(ownerId, allowed);
-    }
-
-    access.set(recipeId, await allowed);
-  }
-
-  return access;
 }
 
 /**
@@ -158,27 +136,25 @@ export function recipeIdOfMediaUrl(url: string): string | null {
   return mediaRecipeId(/^\/recipes\/([^/]+)\//.exec(url)?.[1]);
 }
 
+/**
+ * Refuses media work on a recipe the reader may not edit. A recipe not stored yet (the new-recipe
+ * form uploads first) is the caller's own, so its files pass.
+ */
+export async function assertRecipeMediaAccess(
+  ctx: Pick<RecipeUserContext, "householdId">,
+  recipeId: string
+): Promise<void> {
+  if ((await getRecipeHouseholdIds([recipeId])).has(recipeId)) {
+    await assertRecipeAccess(ctx, recipeId, "edit");
+  }
+}
+
+/** The recipe, or null when there is none or the reader may not view it. */
 export async function findRecipeForViewer(
-  ctx: Pick<RecipeUserContext, "user" | "householdId" | "isServerAdmin">,
+  ctx: Pick<RecipeUserContext, "householdId">,
   recipeId: string
 ): Promise<FullRecipeDTO | null> {
-  const recipe = await getRecipeFull(recipeId);
+  const viewable = (await recipeAccess(ctx, [recipeId], "view")).has(recipeId);
 
-  if (!recipe) {
-    return null;
-  }
-
-  if (recipe.userId) {
-    const canView = await canAccessResource(
-      "view",
-      { userId: ctx.user.id, householdId: ctx.householdId, isServerAdmin: ctx.isServerAdmin },
-      recipe.userId
-    );
-
-    if (!canView) {
-      return null;
-    }
-  }
-
-  return recipe;
+  return viewable ? getRecipeFull(recipeId) : null;
 }

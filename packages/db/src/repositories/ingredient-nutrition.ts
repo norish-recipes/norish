@@ -16,7 +16,7 @@ import {
 
 import type { RecipeListContext } from "./recipes";
 import { isFirstLineFood } from "./ingredients";
-import { buildOwnerPolicyCondition } from "./recipes";
+import { buildPolicyCondition } from "./recipes";
 
 /**
  * Ingredient Nutrition's reads and its one write (ADR-0039): the source
@@ -191,7 +191,7 @@ export async function countIngredientLinesByUnit(
   viewer: RecipeListContext,
   ingredientId: string
 ): Promise<Array<{ unit: string | null; lines: number }>> {
-  const visible = await buildOwnerPolicyCondition(viewer, recipes.userId, "view");
+  const visible = await buildPolicyCondition(viewer, recipes.householdId, "view");
   const rows = await db
     .select({ unit: recipeIngredients.unit, lines: sql<number>`count(*)::int` })
     .from(recipeIngredients)

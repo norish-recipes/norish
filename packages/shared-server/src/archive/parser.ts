@@ -448,7 +448,7 @@ export type ImportProgressListener = (
 export async function importRecipeItems(
   items: AsyncGenerator<RecipeImportItemOrError, void, unknown>,
   userId: string,
-  userIds: string[],
+  householdId: string,
   onProgress?: ImportProgressListener
 ): Promise<ImportResult> {
   const imported: RecipeDashboardDTO[] = [];
@@ -484,7 +484,9 @@ export async function importRecipeItems(
 
     try {
       // Check for duplicates
-      const existingId = await findExistingRecipe(userIds, dto.url, dto.name, [...writtenThisRun]);
+      const existingId = await findExistingRecipe(householdId, dto.url, dto.name, [
+        ...writtenThisRun,
+      ]);
 
       if (existingId) {
         const overwriteDto = await rehomeArchiveMediaToRecipe(dto, existingId);
@@ -829,8 +831,7 @@ async function* generateRecipeKeeperRecipes(
  * Import archive (auto-detects Norish, Mela, Mealie, Paprika, Tandoor, or Recipe Keeper format)
  */
 export async function importArchive(
-  userId: string,
-  userIds: string[],
+  importer: { userId: string; householdId: string; memberIds: string[] },
   zipBytes: Buffer,
   onProgress?: ImportProgressListener
 ): Promise<ImportResult> {
@@ -854,7 +855,8 @@ export async function importArchive(
   // Select generator based on format
   let generator: AsyncGenerator<RecipeImportItemOrError, void, unknown>;
   // Another app's categories match the importing household's list.
-  const household = format === ArchiveFormat.NORISH ? [] : await listCategoryNamesForUsers(userIds);
+  const household =
+    format === ArchiveFormat.NORISH ? [] : await listCategoryNamesForUsers(importer.memberIds);
 
   switch (format) {
     case ArchiveFormat.NORISH:
@@ -880,5 +882,5 @@ export async function importArchive(
       break;
   }
 
-  return importRecipeItems(generator, userId, userIds, onProgress);
+  return importRecipeItems(generator, importer.userId, importer.householdId, onProgress);
 }

@@ -3,9 +3,9 @@ import { refuseUnlessViewer } from "@/lib/auth/media-session";
 import { serveRecipeMedia } from "@/lib/recipe-media";
 import { serverPackage } from "@/lib/server-package";
 
-const { getRecipeOwnerId } = await serverPackage<typeof import("@norish/db/repositories/recipes")>(
-  "@norish/db/repositories/recipes"
-);
+const { getRecipeHouseholdId } = await serverPackage<
+  typeof import("@norish/db/repositories/recipes")
+>("@norish/db/repositories/recipes");
 
 const VALID_UUID_PATTERN = /^[a-f0-9-]{36}$/i;
 
@@ -19,7 +19,7 @@ export async function GET(req: Request, { params }: RouteContext<"/recipes/[id]/
     return NextResponse.json({ error: "Invalid recipe ID" }, { status: 400 });
   }
 
-  const refused = await refuseUnlessViewer(req, () => getRecipeOwnerId(id));
+  const refused = await refuseUnlessViewer(req, () => getRecipeHouseholdId(id));
 
   if (refused) return refused;
 

@@ -6,7 +6,6 @@ const { canAccessResource } = await serverPackage<typeof import("@norish/auth/pe
 );
 const { readSessionPrincipal } =
   await serverPackage<typeof import("@norish/auth/session")>("@norish/auth/session");
-const { isUserServerAdmin } = await serverPackage<typeof import("@norish/db")>("@norish/db");
 const { getCachedHouseholdForUser } = await serverPackage<
   typeof import("@norish/shared-server/cache/household")
 >("@norish/shared-server/cache/household");
@@ -30,32 +29,25 @@ export async function refuseWithoutSession(req: Request): Promise<Response | nul
 }
 
 /**
- * The check of a recipe or cookbook media route: the reader must be able to
- * open what the file belongs to, under the recipe permission policy. A file
- * with no owner (an orphaned recipe, or one the new-recipe form has not saved
- * yet) is served to any signed-in reader, as the permission layer answers for
- * it. A refusal is answered as if the file were missing.
+ * The check of a recipe or cookbook media route: the reader must be able to view what the file
+ * belongs to under the Permission Policy, admins included. A file of no recipe yet (one the
+ * new-recipe form has not saved) is served to any signed-in reader; a refusal reads as missing.
  */
 export async function refuseUnlessViewer(
   req: Request,
-  ownerOf: () => Promise<string | null>
+  householdOf: () => Promise<string | null>
 ): Promise<Response | null> {
   const principal = await readSessionPrincipal(req.headers).catch(() => null);
 
   if (!principal) return notFound();
 
-  const ownerId = await ownerOf();
+  const rowHouseholdId = await householdOf();
 
-  if (ownerId === null) return null;
+  if (rowHouseholdId === null) return null;
 
   const household = await getCachedHouseholdForUser(principal.userId);
 
   if (!household) return notFound();
 
-  const viewer = { userId: principal.userId, householdId: household.id, isServerAdmin: false };
-  const allowed =
-    (await canAccessResource("view", viewer, ownerId)) ||
-    (await isUserServerAdmin(principal.userId));
-
-  return allowed ? null : notFound();
+  return (await canAccessResource("view", household.id, rowHouseholdId)) ? null : notFound();
 }
