@@ -1,5 +1,18 @@
 import type { SQL } from "drizzle-orm";
-import { sql } from "drizzle-orm";
+import { eq, isNotNull, sql } from "drizzle-orm";
+import { alias, QueryBuilder } from "drizzle-orm/pg-core";
+
+import {
+  ingredientAliases,
+  ingredients,
+  pantryIngredients,
+  recipeIngredientFoods,
+  recipeIngredients,
+  recipes,
+} from "../schema";
+
+const coveredParent = alias(ingredients, "covered_parent");
+const qb = new QueryBuilder();
 
 /**
  * `covered(ingredient_id, depth)`: every food the household's Pantry covers, the
@@ -7,11 +20,12 @@ import { sql } from "drizzle-orm";
  */
 export function coveredCte(householdId: string): SQL {
   return sql`covered(ingredient_id, depth) as (
-      select p.ingredient_id, 0 from pantry_ingredients p where p.household_id = ${householdId}
+      select ${pantryIngredients.ingredientId}, 0 from ${pantryIngredients}
+      where ${eq(pantryIngredients.householdId, householdId)}
       union
-      select i.parent_id, c.depth + 1 from covered c
-      join ingredients i on i.id = c.ingredient_id
-      where i.parent_id is not null and c.depth < 32
+      select ${coveredParent.parentId}, covered.depth + 1 from covered
+      join ${ingredients} as ${coveredParent} on ${coveredParent.id} = covered.ingredient_id
+      where ${isNotNull(coveredParent.parentId)} and covered.depth < 32
     )`;
 }
 
@@ -23,18 +37,24 @@ export function coveredCte(householdId: string): SQL {
  */
 export function pantryCoverageSql(householdId: string): SQL<number | null> {
   const covered = sql`(with recursive ${coveredCte(householdId)} select ingredient_id from covered)`;
+  const lines = qb
+    .select({
+      lineCovered: sql<boolean>`CASE WHEN ${recipeIngredients.joined} = 'alternatives'
+        THEN bool_or(${ingredientAliases.ingredientId} IN ${covered})
+        ELSE bool_and(${ingredientAliases.ingredientId} IN ${covered})
+      END`.as("line_covered"),
+    })
+    .from(recipeIngredients)
+    .innerJoin(
+      recipeIngredientFoods,
+      eq(recipeIngredientFoods.recipeIngredientId, recipeIngredients.id)
+    )
+    .innerJoin(ingredientAliases, eq(ingredientAliases.id, recipeIngredientFoods.ingredientAliasId))
+    .where(eq(recipeIngredients.recipeId, recipes.id))
+    .groupBy(recipeIngredients.id, recipeIngredients.joined)
+    .as("recipe_lines");
 
-  return sql<number | null>`(
-    SELECT avg(CASE WHEN line_covered THEN 1 ELSE 0 END)::real FROM (
-      SELECT CASE WHEN line.joined = 'alternatives'
-        THEN bool_or(alias.ingredient_id IN ${covered})
-        ELSE bool_and(alias.ingredient_id IN ${covered})
-      END AS line_covered
-      FROM recipe_ingredients line
-      JOIN recipe_ingredient_foods line_food ON line_food.recipe_ingredient_id = line.id
-      JOIN ingredient_aliases alias ON alias.id = line_food.ingredient_alias_id
-      WHERE line.recipe_id = "recipes"."id"
-      GROUP BY line.id, line.joined
-    ) recipe_lines
-  )`;
+  return sql<number | null>`${qb
+    .select({ share: sql`avg(CASE WHEN ${lines.lineCovered} THEN 1 ELSE 0 END)::real` })
+    .from(lines)}`;
 }
