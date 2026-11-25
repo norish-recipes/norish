@@ -124,7 +124,7 @@ const deleteImage = authedProcedure
     await assertRecipeMediaAccess(ctx, recipeId);
 
     try {
-      await deleteImageByUrl(input.url);
+      await deleteImageByUrl(input.url, recipeId);
 
       log.info({ userId: ctx.user.id, url: input.url }, "Recipe image deleted");
 
@@ -190,7 +190,7 @@ const deleteStepImage = authedProcedure
     await assertRecipeMediaAccess(ctx, recipeId);
 
     try {
-      await deleteStepImageByUrl(input.url);
+      await deleteStepImageByUrl(input.url, recipeId);
 
       log.info({ userId: ctx.user.id, url: input.url }, "Step image deleted");
 
@@ -332,7 +332,7 @@ const deleteGalleryImage = authedProcedure
 
       // The row goes first: a stale delete removes nothing, the file included.
       try {
-        await deleteImageByUrl(imageRecord.image);
+        await deleteImageByUrl(imageRecord.image, imageRecord.recipeId);
       } catch (fsError) {
         // Log but don't fail - file might already be deleted
         log.warn(

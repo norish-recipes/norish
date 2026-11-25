@@ -53,6 +53,7 @@ import {
 import { writeResolved } from "@norish/shared-server/ingredients/resolver";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { withDishColor, withDishColorForUpdate } from "@norish/shared-server/media/dish-color";
+import { claimPendingRecipeMedia } from "@norish/shared-server/media/pending-recipe-media";
 import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
 import { recipes } from "@norish/shared-server/realtime/recipes";
 import { convertRecipeMeasurements } from "@norish/shared-server/recipes/measurement-conversion";
@@ -253,11 +254,16 @@ export const createRecipeProcedure = authedProcedure
 
     // The id is answered once the recipe is stored, so media uploaded with it lands on the recipe.
     // The Dish Colour comes from the image it is stored with, overwriting what the client sent.
-    const created = await whileCreating(recipeId, async () =>
-      createResolvedRecipe(recipeId, ctx.user.id, await withDishColor(input), {
+    const created = await whileCreating(recipeId, async () => {
+      // Files another account uploaded for this id are not this create's to take.
+      if (input.id && !(await claimPendingRecipeMedia(recipeId, ctx.user.id))) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Not found" });
+      }
+
+      return createResolvedRecipe(recipeId, ctx.user.id, await withDishColor(input), {
         userId: ctx.user.id,
-      })
-    ).catch((err: unknown) => {
+      });
+    }).catch((err: unknown) => {
       log.error({ err, userId: ctx.user.id, recipeId }, "Failed to create recipe");
       throw err;
     });

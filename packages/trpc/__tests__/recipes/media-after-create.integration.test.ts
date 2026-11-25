@@ -228,4 +228,27 @@ describe("a gallery upload right after recipes.create", () => {
 
     expect(announced()).toEqual([]);
   });
+
+  it("keeps a pending id's files to the account that first uploaded for it", async () => {
+    const { createTestUser } = await import("../../../db/__tests__/helpers/db-test-helpers");
+    const { getHouseholdIdForUser } = await import("@norish/db/repositories/households");
+    const other = { ...(await createTestUser()), isServerAdmin: false } as User;
+    const otherHousehold = (await getHouseholdIdForUser(other.id))!;
+    const asOther = createCaller({
+      user: other,
+      household: { id: otherHousehold, users: [{ id: other.id, name: other.name }] },
+      operationId: null,
+    } as never);
+    const pendingId = crypto.randomUUID();
+
+    expect(await caller().uploadGalleryImage(photo(pendingId, 0))).toMatchObject({ success: true });
+    await expect(asOther.uploadGalleryImage(photo(pendingId, 1))).rejects.toThrow("not found");
+    await expect(
+      asOther.deleteImage({ url: `/recipes/${pendingId}/a.jpg` })
+    ).rejects.toThrow("not found");
+    await expect(asOther.create({ ...recipe("Taken"), id: pendingId })).rejects.toThrow(
+      "Not found"
+    );
+    expect(await caller().create({ ...recipe("Mine"), id: pendingId })).toBe(pendingId);
+  });
 });

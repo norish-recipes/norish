@@ -68,6 +68,7 @@ import {
 } from "./ingredients";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 import { pantryCoverageSql } from "./pantry-coverage";
+import { assertOwnRecipeMedia } from "./recipe-media-references";
 import { PRIMARY_IMAGE_SQL } from "./recipe-primary-image";
 import { getConfig } from "./server-config";
 import {
@@ -817,6 +818,14 @@ export type CreateRecipeResult =
  */
 export type WithIngredientResolutions<T> = T & { ingredientResolutions: IngredientResolutions };
 
+/** The files a recipe's gallery rows name: images, videos and their thumbnails. */
+function galleryMedia(
+  images: ReadonlyArray<{ image: string }> = [],
+  videos: ReadonlyArray<{ video: string; thumbnail?: string | null }> = []
+): Array<string | null | undefined> {
+  return [...images.map((i) => i.image), ...videos.flatMap((v) => [v.video, v.thumbnail])];
+}
+
 export async function createRecipeWithRefs(
   recipeId: string,
   userId: string,
@@ -935,6 +944,8 @@ export async function createRecipeWithRefs(
 
     // Insert gallery images, which hold a recipe's pictures.
     const galleryImages = payload.images ?? [];
+
+    assertOwnRecipeMedia(rid, { gallery: galleryMedia(galleryImages, payload.videos) });
 
     if (galleryImages.length > 0) {
       await tx.insert(recipeImages).values(
@@ -1445,9 +1456,11 @@ async function syncRecipeIngredientsTx(
 
 async function syncStepImagesTx(
   tx: any,
+  recipeId: string,
   stepId: string,
   images: Array<{ id?: string; image: string; order?: unknown; version?: number }>
 ): Promise<void> {
+  assertOwnRecipeMedia(recipeId, { steps: images.map((image) => image.image) });
   const existing = await tx
     .select({ id: stepImages.id })
     .from(stepImages)
@@ -1519,7 +1532,7 @@ async function syncRecipeStepsTx(
         .update(stepsTable)
         .set({ ...values, version: sql`${stepsTable.version} + 1` })
         .where(eq(stepsTable.id, existingStep.id));
-      await syncStepImagesTx(tx, existingStep.id, step.images ?? []);
+      await syncStepImagesTx(tx, recipeId, existingStep.id, step.images ?? []);
       await syncStepIngredientsTx(tx, existingStep.id, step.stepIngredients ?? [], lineIdByOrder);
       continue;
     }
@@ -1530,7 +1543,7 @@ async function syncRecipeStepsTx(
       .returning({ id: stepsTable.id });
 
     if (insertedStep) {
-      await syncStepImagesTx(tx, insertedStep.id, step.images ?? []);
+      await syncStepImagesTx(tx, recipeId, insertedStep.id, step.images ?? []);
       await syncStepIngredientsTx(tx, insertedStep.id, step.stepIngredients ?? [], lineIdByOrder);
     }
   }
@@ -1547,6 +1560,7 @@ async function syncRecipeImagesTx(
   recipeId: string,
   images: NonNullable<FullRecipeUpdateDTO["images"]>
 ): Promise<void> {
+  assertOwnRecipeMedia(recipeId, { gallery: galleryMedia(images) });
   const existing = await tx
     .select({ id: recipeImages.id })
     .from(recipeImages)
@@ -1589,6 +1603,7 @@ async function syncRecipeVideosTx(
   recipeId: string,
   videos: NonNullable<FullRecipeUpdateDTO["videos"]>
 ): Promise<void> {
+  assertOwnRecipeMedia(recipeId, { gallery: galleryMedia([], videos) });
   const existing = await tx
     .select({ id: recipeVideos.id })
     .from(recipeVideos)
@@ -1920,6 +1935,7 @@ export async function addRecipeImages(
   recipeId: string,
   images: RecipeImageInput[]
 ): Promise<{ id: string; image: string; order: number; version: number }[]> {
+  assertOwnRecipeMedia(recipeId, { gallery: galleryMedia(images) });
   if (!images.length) return [];
 
   const inserted = await db
@@ -2028,6 +2044,8 @@ export async function replaceRecipeImages(
   recipeId: string,
   images: RecipeImageInput[]
 ): Promise<{ id: string; image: string; order: number; version: number }[]> {
+  assertOwnRecipeMedia(recipeId, { gallery: galleryMedia(images) });
+
   return db.transaction(async (tx) => {
     // Delete existing images
     await tx.delete(recipeImages).where(eq(recipeImages.recipeId, recipeId));
@@ -2109,6 +2127,7 @@ export async function addRecipeVideos(
     version: number;
   }[]
 > {
+  assertOwnRecipeMedia(recipeId, { gallery: galleryMedia([], videos) });
   if (!videos.length) return [];
 
   const inserted = await db
@@ -2243,6 +2262,8 @@ export async function replaceRecipeVideos(
     version: number;
   }[]
 > {
+  assertOwnRecipeMedia(recipeId, { gallery: galleryMedia([], videos) });
+
   return db.transaction(async (tx) => {
     // Delete existing videos
     await tx.delete(recipeVideos).where(eq(recipeVideos.recipeId, recipeId));

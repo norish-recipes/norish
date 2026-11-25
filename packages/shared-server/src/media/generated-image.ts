@@ -30,7 +30,7 @@ export async function storeGeneratedRecipeImage(recipeId: string, bytes: Buffer)
   if (!replacement) {
     // The recipe vanished between the worker's read and this write. Nothing
     // references the saved file, so remove it rather than orphan it.
-    await deleteImageByUrl(imageUrl).catch((err) => {
+    await deleteImageByUrl(imageUrl, recipeId).catch((err) => {
       log.warn({ err, recipeId, imageUrl }, "Could not remove unreferenced Generated Image file");
     });
     throw new Error(`Recipe not found for Generated Image write: ${recipeId}`);
@@ -39,7 +39,7 @@ export async function storeGeneratedRecipeImage(recipeId: string, bytes: Buffer)
   for (const replacedUrl of replacement.replacedImageUrls) {
     if (replacedUrl === imageUrl) continue;
 
-    await deleteImageByUrl(replacedUrl).catch((err) => {
+    await deleteImageByUrl(replacedUrl, recipeId).catch((err) => {
       log.warn(
         { err, recipeId, replacedUrl },
         "Could not delete the file of a replaced primary image"

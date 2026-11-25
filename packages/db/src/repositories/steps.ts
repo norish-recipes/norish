@@ -9,6 +9,8 @@ import { recipeIngredients, stepImages, stepIngredients, steps } from "@norish/d
 import { StepSelectBaseSchema } from "@norish/shared/contracts/zod/steps";
 import { stripHtmlTags } from "@norish/shared/lib/helpers";
 
+import { assertOwnRecipeMedia } from "./recipe-media-references";
+
 const StepArraySchema = z.array(StepSelectBaseSchema);
 
 export type StepInsertWithImages = StepInsertDto & {
@@ -107,6 +109,9 @@ export async function createManyRecipeStepsTx(
     .filter((s) => s.step.length > 0 && s.recipeId);
 
   if (cleaned.length === 0) return [];
+  for (const step of cleaned) {
+    assertOwnRecipeMedia(step.recipeId, { steps: (step.images ?? []).map((i) => i.image) });
+  }
 
   const seen = new Set<string>();
   const unique = cleaned.filter((s) => {

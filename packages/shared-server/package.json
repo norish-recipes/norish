@@ -10,6 +10,7 @@
     "./embedded-parser": "./src/embedded-parser.ts",
     "./media/ffmpeg": "./src/media/ffmpeg.ts",
     "./media/storage": "./src/media/storage.ts",
+    "./media/pending-recipe-media": "./src/media/pending-recipe-media.ts",
     "./media/avatar-cleanup": "./src/media/avatar-cleanup.ts",
     "./media/dish-color": "./src/media/dish-color.ts",
     "./media/generated-image": "./src/media/generated-image.ts",

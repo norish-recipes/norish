@@ -204,7 +204,7 @@ const deleteGalleryVideo = authedProcedure
 
       // The row goes first: a stale delete removes nothing, the file included.
       try {
-        await deleteVideoByUrl(videoRecord.video);
+        await deleteVideoByUrl(videoRecord.video, videoRecord.recipeId);
       } catch (fsError) {
         // Log but don't fail - file might already be deleted
         log.warn(
