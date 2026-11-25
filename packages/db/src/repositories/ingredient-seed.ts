@@ -1,5 +1,4 @@
 import type { SQL } from "drizzle-orm";
-import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import {
   and,
   eq,
@@ -53,12 +52,26 @@ import { closesCycle, lockFoods, lockTree, moveCatalogueAlias } from "./ingredie
 
 const qb = new QueryBuilder();
 
-/** One update of many rows: each row whose `key` is a pair's first takes that pair's value. */
-function valueByKey(key: AnyPgColumn, pairs: ReadonlyArray<readonly [SQL, SQL]>): SQL {
-  return sql`case ${key} ${sql.join(
-    pairs.map(([match, value]) => sql`when ${match} then ${value}`),
-    sql` `
-  )} end`;
+/** A `(values …) as v(…)` relation for an update-from: its alias and columns are local names. */
+function valuesOf<K extends string>(columns: readonly K[], rows: ReadonlyArray<Record<K, SQL>>) {
+  const v = sql.identifier("v");
+
+  return {
+    from: sql`(values ${sql.join(
+      rows.map(
+        (row) =>
+          sql`(${sql.join(
+            columns.map((column) => row[column]),
+            sql`, `
+          )})`
+      ),
+      sql`, `
+    )}) as ${v}(${sql.join(
+      columns.map((column) => sql.identifier(column)),
+      sql`, `
+    )})`,
+    column: (column: K) => sql`${v}.${sql.identifier(column)}`,
+  };
 }
 
 /** One taxonomy entry as the seed applies it, its spellings already folded. */
@@ -321,20 +334,16 @@ export async function applyIngredientSeed(entries: readonly SeedEntry[]): Promis
 
     // A spelling the entry keeps takes the language the file now gives it first.
     for (const part of chunks(restamps)) {
+      const v = valuesOf(
+        ["fold", "locale"],
+        part.map(({ fold, locale }) => ({ fold: sql`${fold}`, locale: sql`${locale}::text` }))
+      );
+
       await tx
         .update(ingredientAliases)
-        .set({
-          locale: valueByKey(
-            ingredientAliases.fold,
-            part.map(({ fold, locale }) => [sql`${fold}`, sql`${locale}::text`])
-          ),
-        })
-        .where(
-          inArray(
-            ingredientAliases.fold,
-            part.map(({ fold }) => fold)
-          )
-        );
+        .set({ locale: v.column("locale") })
+        .from(v.from)
+        .where(eq(ingredientAliases.fold, v.column("fold")));
     }
 
     // Parents, where no person chose one.
@@ -360,20 +369,19 @@ export async function applyIngredientSeed(entries: readonly SeedEntry[]): Promis
     }
 
     for (const part of chunks(parentUpdates)) {
+      const v = valuesOf(
+        ["id", "parent_id"],
+        part.map(({ id, parentId }) => ({
+          id: sql`${id}::uuid`,
+          parent_id: sql`${parentId}::uuid`,
+        }))
+      );
+
       await tx
         .update(ingredients)
-        .set({
-          parentId: valueByKey(
-            ingredients.id,
-            part.map(({ id, parentId }) => [sql`${id}::uuid`, sql`${parentId}::uuid`])
-          ),
-        })
-        .where(
-          inArray(
-            ingredients.id,
-            part.map(({ id }) => id)
-          )
-        );
+        .set({ parentId: v.column("parent_id") })
+        .from(v.from)
+        .where(eq(ingredients.id, v.column("id")));
     }
     outcome.parentsSet = parentUpdates.length;
 
@@ -391,23 +399,19 @@ export async function applyIngredientSeed(entries: readonly SeedEntry[]): Promis
     }
 
     for (const part of chunks(codeUpdates)) {
+      const v = valuesOf(
+        ["id", "codes"],
+        part.map(({ id, codes }) => ({
+          id: sql`${id}::uuid`,
+          codes: sql`${codes ? JSON.stringify(codes) : null}::jsonb`,
+        }))
+      );
+
       await tx
         .update(ingredients)
-        .set({
-          nutritionCodes: valueByKey(
-            ingredients.id,
-            part.map(({ id, codes }) => [
-              sql`${id}::uuid`,
-              sql`${codes ? JSON.stringify(codes) : null}::jsonb`,
-            ])
-          ),
-        })
-        .where(
-          inArray(
-            ingredients.id,
-            part.map(({ id }) => id)
-          )
-        );
+        .set({ nutritionCodes: v.column("codes") })
+        .from(v.from)
+        .where(eq(ingredients.id, v.column("id")));
     }
     outcome.nutritionChanged = codeUpdates.length;
 
