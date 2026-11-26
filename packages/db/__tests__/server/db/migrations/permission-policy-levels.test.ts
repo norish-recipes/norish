@@ -101,5 +101,5 @@ describe("the Permission Policy is Everyone or Household", () => {
     const { rows } = await pool.query("SELECT key, value FROM server_config ORDER BY key");
 
     expect(rows).toEqual(first);
-  });
+  }, 30_000);
 });

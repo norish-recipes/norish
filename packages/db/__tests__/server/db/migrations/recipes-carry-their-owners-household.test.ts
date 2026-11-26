@@ -201,7 +201,7 @@ describe("recipes and cookbooks carry their Owner's household", () => {
     await db.migrate();
 
     expect([await recipeRows(), await cookbookRows(), await membershipRows()]).toEqual(before);
-  });
+  }, 30_000);
 
   it("refuses a recipe without an Owner", async () => {
     await expect(

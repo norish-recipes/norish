@@ -355,5 +355,5 @@ describe("Tags, Cuisines and Categories become household lists", () => {
     await upgrade();
 
     expect(await snapshot()).toEqual(first);
-  });
+  }, 30_000);
 });

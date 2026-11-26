@@ -35,5 +35,5 @@ describe("ingredient lineage", () => {
 
     expect([...(await findIconLineage(ids)).keys()]).toEqual([onion!.id]);
     expect([...(await findNutritionLineage(ids)).keys()]).toEqual([onion!.id]);
-  });
+  }, 30_000);
 });

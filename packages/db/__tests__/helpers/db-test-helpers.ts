@@ -761,7 +761,11 @@ export async function householdIdOf(userId: string): Promise<string> {
 type GroceryFields = Partial<Omit<GroceryInsertDto, "householdId" | "userId">>;
 
 /** A grocery a member puts on their household's list, through the repository. */
-export async function addTestGrocery(userId: string, fields: GroceryFields = {}) {
+export async function addTestGrocery(
+  userId: string,
+  fields: GroceryFields = {},
+  tx?: Parameters<typeof createGroceries>[2]
+) {
   const householdId = await householdIdOf(userId);
   const { created } = await createGroceries(
     [
@@ -780,7 +784,8 @@ export async function addTestGrocery(userId: string, fields: GroceryFields = {})
         },
       },
     ],
-    householdId
+    householdId,
+    tx
   );
 
   return created[0]!;

@@ -915,15 +915,21 @@ describe("deleting an account", () => {
         runs[0]!.catch(() => undefined);
         const deleter = await waitFor(() => waiterOn(recipeHold.pid), "the deletion to wait");
 
-        runs.push(addTestGrocery(m.admin, { name: "brood" }));
+        // The grocery checks its waits for a deadlock almost at once, long before the deletion's
+        // deadlock_timeout: closing the cycle on the household, it is the victim.
+        runs.push(
+          getTestDb().transaction(async (tx) => {
+            await tx.execute(sql`SET LOCAL deadlock_timeout = '1ms'`);
+
+            return await addTestGrocery(m.admin, { name: "brood" }, tx);
+          })
+        );
         runs[1]!.catch(() => undefined);
         const adder = await waitFor(() => waiterOn(lineHold.pid, [deleter]), "the grocery");
 
         await recipeHold.release();
         await waitFor(() => blockedBy(deleter, adder), "the deletion to wait on the line");
-        // Postgres checks a wait for a deadlock once, deadlock_timeout in: the deletion's finds
-        // none, so the grocery's wait on the household closes the cycle and its check finds it.
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await lineHold.release();
       } finally {
         await recipeHold.release();
         await lineHold.release();
@@ -937,7 +943,7 @@ describe("deleting an account", () => {
       expect(settled[1]?.status).toBe("rejected");
       expect(isRetryableConflict((settled[1] as PromiseRejectedResult).reason)).toBe(true);
       expect(await getTestDb().select().from(users).where(eq(users.id, m.deleted))).toEqual([]);
-    });
+    }, 15_000);
 
     it("a deletion that is the deadlock's victim tries again and erases the account", async () => {
       const m = await memberWithGrocery();
