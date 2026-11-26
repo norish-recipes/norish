@@ -583,7 +583,8 @@
       "plainName": "Преименувано от {from}",
       "notAFood": "Изтрито, защото не е продукт. Редовете в рецептите и покупките запазват текста си.",
       "spellingRemoved": "Преводът {from} е премахнат",
-      "spellingMoved": "Преводът {from} е преместен в {of}"
+      "spellingMoved": "Преводът {from} е преместен в {of}",
+      "toCheck": "{count, plural, other {# за проверка}}"
     },
     "icon": {
       "change": "Смени иконата",

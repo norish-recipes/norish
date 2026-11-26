@@ -583,7 +583,8 @@
       "plainName": "Переименовано из {from}",
       "notAFood": "Удалено, так как это не продукт. Строки рецепта и покупки сохраняют свой текст.",
       "spellingRemoved": "Перевод {from} удалён",
-      "spellingMoved": "Перевод {from} перенесён в {of}"
+      "spellingMoved": "Перевод {from} перенесён в {of}",
+      "toCheck": "{count, plural, other {проверить: #}}"
     },
     "icon": {
       "change": "Изменить значок",

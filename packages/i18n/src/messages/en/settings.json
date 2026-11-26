@@ -583,7 +583,8 @@
       "plainName": "Renamed from {from}",
       "notAFood": "Deleted as not a food. Its recipe lines and groceries keep their text.",
       "spellingRemoved": "Removed the translation {from}",
-      "spellingMoved": "Moved the translation {from} to {of}"
+      "spellingMoved": "Moved the translation {from} to {of}",
+      "toCheck": "{count, plural, other {# to check}}"
     },
     "icon": {
       "change": "Change the icon",

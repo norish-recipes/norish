@@ -583,7 +583,8 @@
       "plainName": "أُعيدت تسميته من {from}",
       "notAFood": "حُذف لأنه ليس مادة غذائية. تحتفظ أسطر الوصفات والمشتريات بنصها.",
       "spellingRemoved": "أُزيلت الترجمة {from}",
-      "spellingMoved": "نُقلت الترجمة {from} إلى {of}"
+      "spellingMoved": "نُقلت الترجمة {from} إلى {of}",
+      "toCheck": "{count, plural, other {# للمراجعة}}"
     },
     "icon": {
       "change": "تغيير الأيقونة",

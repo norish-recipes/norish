@@ -583,7 +583,8 @@
       "plainName": "{from}에서 이름 변경됨",
       "notAFood": "식재료가 아니어서 삭제했습니다. 레시피 줄과 장보기 항목은 텍스트를 유지합니다.",
       "spellingRemoved": "번역 {from}을(를) 삭제함",
-      "spellingMoved": "번역 {from}을(를) {of}(으)로 옮김"
+      "spellingMoved": "번역 {from}을(를) {of}(으)로 옮김",
+      "toCheck": "{count, plural, other {확인할 항목 #개}}"
     },
     "icon": {
       "change": "아이콘 변경",

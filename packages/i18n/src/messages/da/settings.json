@@ -583,7 +583,8 @@
       "plainName": "Omdøbt fra {from}",
       "notAFood": "Slettet, da det ikke er en ingrediens. Opskriftslinjerne og indkøbene beholder deres tekst.",
       "spellingRemoved": "Oversættelsen {from} fjernet",
-      "spellingMoved": "Oversættelsen {from} flyttet til {of}"
+      "spellingMoved": "Oversættelsen {from} flyttet til {of}",
+      "toCheck": "{count, plural, other {# at tjekke}}"
     },
     "icon": {
       "change": "Skift ikonet",

@@ -583,7 +583,8 @@
       "plainName": "Rinominato da {from}",
       "notAFood": "Eliminato, perché non è un alimento. Le righe della ricetta e la spesa mantengono il loro testo.",
       "spellingRemoved": "Traduzione {from} rimossa",
-      "spellingMoved": "Traduzione {from} spostata in {of}"
+      "spellingMoved": "Traduzione {from} spostata in {of}",
+      "toCheck": "{count, plural, other {# da controllare}}"
     },
     "icon": {
       "change": "Cambia icona",

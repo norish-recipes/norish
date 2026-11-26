@@ -583,7 +583,8 @@
       "plainName": "Renombrado desde {from}",
       "notAFood": "Eliminado, porque no es un alimento. Sus líneas de receta y compras conservan su texto.",
       "spellingRemoved": "Traducción {from} quitada",
-      "spellingMoved": "Traducción {from} movida a {of}"
+      "spellingMoved": "Traducción {from} movida a {of}",
+      "toCheck": "{count, plural, other {# por revisar}}"
     },
     "icon": {
       "change": "Cambiar el icono",

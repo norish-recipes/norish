@@ -583,7 +583,8 @@
       "plainName": "Namnet ändrat från {from}",
       "notAFood": "Borttagen eftersom den inte är ett livsmedel. Dess receptrader och inköpsvaror behåller sin text.",
       "spellingRemoved": "Översättningen {from} togs bort",
-      "spellingMoved": "Översättningen {from} flyttades till {of}"
+      "spellingMoved": "Översättningen {from} flyttades till {of}",
+      "toCheck": "{count, plural, other {# att kontrollera}}"
     },
     "icon": {
       "change": "Byt ikon",

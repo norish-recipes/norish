@@ -583,7 +583,8 @@
       "plainName": "Umbenannt von {from}",
       "notAFood": "Gelöscht, da es keine Zutat ist. Rezeptzeilen und Einkäufe behalten ihren Text.",
       "spellingRemoved": "Übersetzung {from} entfernt",
-      "spellingMoved": "Übersetzung {from} nach {of} verschoben"
+      "spellingMoved": "Übersetzung {from} nach {of} verschoben",
+      "toCheck": "{count, plural, other {# zu prüfen}}"
     },
     "icon": {
       "change": "Symbol ändern",

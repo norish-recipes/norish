@@ -583,7 +583,8 @@
       "plainName": "Nimetty uudelleen, oli {from}",
       "notAFood": "Poistettu, koska se ei ole ainesosa. Reseptirivit ja ostokset säilyttävät tekstinsä.",
       "spellingRemoved": "Käännös {from} poistettu",
-      "spellingMoved": "Käännös {from} siirretty kohteeseen {of}"
+      "spellingMoved": "Käännös {from} siirretty kohteeseen {of}",
+      "toCheck": "{count, plural, other {# tarkistettavaa}}"
     },
     "icon": {
       "change": "Vaihda kuvake",

@@ -583,7 +583,8 @@
       "plainName": "Hernoemd van {from}",
       "notAFood": "Verwijderd, want het is geen ingrediënt. De receptregels en boodschappen houden hun tekst.",
       "spellingRemoved": "Vertaling {from} verwijderd",
-      "spellingMoved": "Vertaling {from} verplaatst naar {of}"
+      "spellingMoved": "Vertaling {from} verplaatst naar {of}",
+      "toCheck": "{count, plural, other {# na te kijken}}"
     },
     "icon": {
       "change": "Icoon wijzigen",

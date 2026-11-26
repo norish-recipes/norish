@@ -583,7 +583,8 @@
       "plainName": "Fikk nytt navn, var {from}",
       "notAFood": "Slettet, siden det ikke er en ingrediens. Oppskriftslinjene og innkjøpene beholder teksten sin.",
       "spellingRemoved": "Oversettelsen {from} fjernet",
-      "spellingMoved": "Oversettelsen {from} flyttet til {of}"
+      "spellingMoved": "Oversettelsen {from} flyttet til {of}",
+      "toCheck": "{count, plural, other {# å sjekke}}"
     },
     "icon": {
       "change": "Endre ikonet",

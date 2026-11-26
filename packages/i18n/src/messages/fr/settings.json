@@ -583,7 +583,8 @@
       "plainName": "Renommé depuis {from}",
       "notAFood": "Supprimé, car ce n'est pas un aliment. Ses lignes de recette et ses courses gardent leur texte.",
       "spellingRemoved": "Traduction {from} retirée",
-      "spellingMoved": "Traduction {from} déplacée vers {of}"
+      "spellingMoved": "Traduction {from} déplacée vers {of}",
+      "toCheck": "{count, plural, other {# à vérifier}}"
     },
     "icon": {
       "change": "Changer l’icône",

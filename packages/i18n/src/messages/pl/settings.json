@@ -583,7 +583,8 @@
       "plainName": "Zmieniono nazwę z {from}",
       "notAFood": "Usunięto, bo to nie jest składnik. Wiersze przepisu i zakupy zachowują swój tekst.",
       "spellingRemoved": "Usunięto tłumaczenie {from}",
-      "spellingMoved": "Przeniesiono tłumaczenie {from} do {of}"
+      "spellingMoved": "Przeniesiono tłumaczenie {from} do {of}",
+      "toCheck": "{count, plural, other {# do sprawdzenia}}"
     },
     "icon": {
       "change": "Zmień ikonę",

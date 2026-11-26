@@ -583,7 +583,8 @@
       "plainName": "Перейменовано з {from}",
       "notAFood": "Видалено, бо це не продукт. Рядки рецепта й покупки зберігають свій текст.",
       "spellingRemoved": "Переклад {from} вилучено",
-      "spellingMoved": "Переклад {from} перенесено до {of}"
+      "spellingMoved": "Переклад {from} перенесено до {of}",
+      "toCheck": "{count, plural, other {перевірити: #}}"
     },
     "icon": {
       "change": "Змінити іконку",
