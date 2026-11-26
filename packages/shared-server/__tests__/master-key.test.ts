@@ -4,6 +4,8 @@ import { globSync, mkdtempSync, readFileSync } from "node:fs";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { DrizzleQueryError } from "drizzle-orm";
+import pino from "pino";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { MasterKeyRotation } from "@norish/config/crypto";
@@ -653,6 +655,61 @@ describe("which key boot opens", () => {
           { count: 4 },
           "Share links made before 0.28 kept no token and were revoked; their owners can share again",
         ]);
+      });
+
+      describe("and a step failing", () => {
+        const SECRET = "a-session-token-or-new-ciphertext";
+
+        /** What boot writes for `error`: `log.fatal({ err })`, through pino as the server logs. */
+        function bootLogFor(error: unknown): string {
+          const lines: string[] = [];
+
+          pino({}, { write: (line: string) => void lines.push(line) }).fatal(
+            { err: error },
+            "Server startup failed"
+          );
+
+          return lines.join("");
+        }
+
+        beforeEach(() => {
+          config.MASTER_KEY = keyB.toString("base64");
+          config.MASTER_KEY_PREVIOUS = keyA.toString("base64");
+        });
+
+        it("refuses with Valkey's message, never the command's arguments", async () => {
+          // How ioredis rejects a command: the command's name and arguments on the error.
+          const rejected = Object.assign(new Error("ERR max number of clients reached"), {
+            command: { name: "del", args: [SECRET] },
+          });
+          const error = await masterKey
+            .resolveMasterKey(() => Promise.reject(rejected))
+            .catch((caught: unknown) => caught);
+
+          expect(error).toBeInstanceOf(Error);
+          expect(bootLogFor(error)).toContain(
+            "Ending the stored sessions failed: ERR max number of clients reached"
+          );
+          expect(bootLogFor(error)).not.toContain(SECRET);
+          expect(JSON.stringify(logged)).not.toContain(SECRET);
+        });
+
+        it("refuses with Postgres's code and message, never the statement's parameters", async () => {
+          const deadlock = Object.assign(new Error("deadlock detected"), { code: "40P01" });
+
+          rekeys.failure = new DrizzleQueryError(
+            'update "user" set "email" = $1 where "id" = $2',
+            [SECRET, "a-row-id"],
+            deadlock
+          );
+          const error = await resolveMasterKey().catch((caught: unknown) => caught);
+
+          expect(bootLogFor(error)).toContain("The re-key failed (40P01): deadlock detected");
+          for (const parameter of [SECRET, "a-row-id"]) {
+            expect(bootLogFor(error)).not.toContain(parameter);
+          }
+          expect(JSON.stringify(logged)).not.toContain(SECRET);
+        });
       });
 
       it("opens no key and keeps the key file when the re-key fails, so the next boot retries", async () => {

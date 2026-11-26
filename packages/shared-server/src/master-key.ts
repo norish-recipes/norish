@@ -275,6 +275,19 @@ async function adoptKey(source: KeySource): Promise<[KeySource, string | null]> 
 const keyNamedBy = (source: KeySource, fingerprint: string | null) =>
   keyThatFits(source, (key) => masterKeyFingerprint(key) === fingerprint);
 
+/**
+ * `error` as boot may log it: what failed, with the driver's code and message. Never a command's
+ * arguments or a statement's parameters, which hold session tokens, new ciphertext and row ids.
+ */
+function failed(what: string, error: unknown): Error {
+  // Drizzle wraps the driver's error in one whose message carries the statement's parameters.
+  const driver = error instanceof Error && error.cause !== undefined ? error.cause : error;
+  const code = errorCode(driver);
+  const message = driver instanceof Error ? driver.message : String(driver);
+
+  return new Error(`${what} failed${code === "unknown" ? "" : ` (${code})`}: ${message}`);
+}
+
 /** Move everything from the previous key to the current one; until it commits nothing serves. */
 async function rekey(
   source: KeySource,
@@ -287,10 +300,14 @@ async function rekey(
     "Re-keying to a new Master Key"
   );
   // Before the transaction: a crash after this only repeats it on the next boot.
-  const ended = await endStoredSessions();
+  const ended = await endStoredSessions().catch((error: unknown) => {
+    throw failed("Ending the stored sessions", error);
+  });
   const { columns, revokedShares } = await rekeyMasterKey(masterKeyRotation(previous, current), {
     from: masterKeyFingerprint(previous),
     to: masterKeyFingerprint(current),
+  }).catch((error: unknown) => {
+    throw failed("The re-key", error);
   });
 
   log.info({ columns, ...ended }, "Master Key re-keyed and every session ended");
