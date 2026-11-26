@@ -12,12 +12,12 @@ Add photos to the recipe or to a step.
 
 ## Categories
 
-Under **Tags & Categories**, type a name in **Add a category** and press Enter.
+Under **Tags & Categories**, type a name in **Add a category** and select **Create**.
 Your household can then select it or use it as a filter.
 
 ![Drinks added beside the built-in Categories on the recipe form](/img/screenshots/recipe-form-add-category.png)
 
-A category stays on the list while a recipe in your household uses it.
+A category stays on the list until a household member deletes it.
 
 ## Headings with `#`
 
