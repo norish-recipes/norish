@@ -21,11 +21,11 @@ const config = vi.hoisted(() => ({
   MASTER_KEY: undefined as string | undefined,
   MASTER_KEY_PREVIOUS: undefined as string | undefined,
 }));
-// The database as boot sees it: the stored fingerprint, and each encrypted row's value, newest last.
+// The database as boot sees it: its fingerprint, each encrypted row's value (newest last), and
+// what another boot does meanwhile, while this one counts rows.
 const database = vi.hoisted(() => ({
   fingerprint: null as string | null,
   encrypted: [] as string[],
-  // What another boot does while this one counts rows.
   meanwhile: async () => {},
 }));
 // Every fingerprint boot stored, and every key it opened, in order.

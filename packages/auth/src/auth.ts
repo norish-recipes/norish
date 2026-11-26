@@ -42,16 +42,8 @@ import { getAvailableProviders } from "./providers";
 import { valkeySecondaryStorage } from "./secondary-storage";
 
 /**
- * Creates a wrapped adapter factory that intercepts user email lookups
- * and converts them to use emailHmac for encrypted email lookup.
- *
- * Better Auth queries users with WHERE email = 'plain@email.com',
- * but we store encrypted emails. This wrapper converts email lookups
- * to use the deterministic emailHmac field instead.
- *
- * Rows come back as Postgres holds them, encrypted, but for two emails Better Auth compares: a
- * user found by email carries the address searched for, and a user joined onto an account
- * (an OAuth sign-in) its decrypted email, checked against the provider's verified one.
+ * Finds users by emailHmac, as emails are stored encrypted. Rows stay encrypted but for the emails
+ * Better Auth compares: the address searched for, and the decrypted email of an account's user.
  */
 function createEncryptedEmailAdapter<T extends BetterAuthOptions>(
   baseAdapterFactory: (options: T) => DBAdapter<T>

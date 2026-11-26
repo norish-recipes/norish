@@ -1,8 +1,7 @@
 // @vitest-environment node
 /**
- * A user's email, name and image are stored encrypted, in Postgres and in the session store
- * alike. The real auth config runs against Postgres here, so every response a caller reads is
- * decrypted from ciphertext, and what the session store keeps stays ciphertext.
+ * The real auth config against Postgres: every response decrypts a user's email, name and image
+ * from ciphertext, and the session store keeps only ciphertext.
  */
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
