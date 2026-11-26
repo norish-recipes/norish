@@ -86,3 +86,8 @@ Final review, server round:
 - Verified and fixed (697985a55): Undo restored `undo.spelling.ownerId`; 0093 now nulls the adder on every copied change (merge, spelling, not-a-food and its spellings).
 - Fixed (f7e7393e5, aaf808c67): the search lateral is a builder subquery, array casts are fixed fragments, the test join is `and(eq, eq)` in one helper, the pid query is `backendPid`, shared-server tests use `inRepositoryTransaction`. Left: `select ingredient_id from covered/kinds`, as drizzle 0.45.4's `buildWithCTE` never writes `recursive`.
 - Fixed (2847281cd): `ingredients.countUses` (builder counts) feeds "Used by" and the delete confirmation; `ingredients.recipes` pages by 50 (`useFoodRecipes`); `ingredients.uses` keeps groceries and Pantry.
+
+Re-review of the server round:
+
+4. Fixed (3939f2349): an entry's and a food's recipes page by a cursor on (lowered name, id); `byNextCursor` is generic and the hooks pass the cursor through.
+5. Fixed (f1a0d07cf): the search's lateral fold sits behind `limit 1` (the builder drops `offset 0`), checked on `catalogueIngredientsPageQuery(...).toSQL()`.

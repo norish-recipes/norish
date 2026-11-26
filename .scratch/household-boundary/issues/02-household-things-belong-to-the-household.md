@@ -75,3 +75,7 @@ Final review, server round:
 
 - Fixed (e8f2c8a28): `ownRowIds` in `household-rows.ts` is the one check; Store, grocery, recurring, Pantry and plan reads refuse another household's id with `ForeignHouseholdReferenceError`, answered NOT_FOUND (was a 500). `assertHouseholdAccess` is gone.
 - Fixed (e8f2c8a28, 9172f9ff8): boundary tests run the real procedures on two households' data (toggle both ways, assign, file, Pantry, move, edit, delete); the mock-asserts-mock and hand-built-router tests are gone.
+
+Re-review of the server round:
+
+3. Fixed (e9d677626, 3bfd382e8, 99b2b74d1): product and Pack Size writes carry the household's Stores in the statement; a food's rename, distinct mark and icon carry its checked household; setting a parent, deleting and merging take the tree lock before the checks; removing a spelling reads it again under its food's lock. Sweep: groceries, recurring, plans, Pantry, Stores, aisles and Store deletes already write by household or under a held lock; cookbooks and recipes are checked by the Permission Policy and left as they are (the cookbook delete test keeps a delete landing after a move).

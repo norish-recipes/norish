@@ -87,3 +87,7 @@ Final review, server round:
 
 - Fixed (63987c33a): `ratingFailed` is user-scoped, told only to the account that rated.
 - Fixed (bee32dd45): `getRecipePermissionPolicy` in `repositories/server-config.ts` is the one reader (each level stored, else its default); auth and the config loader re-export it.
+
+Re-review of the server round:
+
+6. Fixed (4ce57fb99, 00b80afbd): `withinView` narrows edit and delete to view; the reader applies it, the schema's refine and the admin card use it.
