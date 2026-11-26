@@ -49,6 +49,9 @@ export function reactNative(alert: unknown) {
   };
 }
 
+/** A wrapper that draws only what it wraps. */
+export const passThrough = ({ children }: Props) => children;
+
 /** `useText` echoing the id, with its values after it. */
 export const echoText = () => (id: string, values?: Record<string, unknown>) =>
   values ? `${id}${JSON.stringify(values)}` : id;
@@ -123,6 +126,27 @@ function FlatListOf({
 
 /** The small kit pieces as DOM buttons and inputs. */
 export const kit = {
+  modalHeader: ({
+    title,
+    secondary = [],
+  }: {
+    title: string;
+    secondary?: { label: string; disabled?: boolean; onPress: () => void }[];
+  }) =>
+    createElement(
+      "header",
+      null,
+      title,
+      secondary.map((action) =>
+        createElement("button", {
+          key: action.label,
+          "data-testid": "header-add",
+          "aria-label": action.label,
+          disabled: action.disabled,
+          onClick: action.onPress,
+        })
+      )
+    ),
   emptyCard: ({
     testID,
     title,

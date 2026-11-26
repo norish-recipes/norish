@@ -2,6 +2,8 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import "../../../../__tests__/mocks/content-setup";
+
 const held = vi.hoisted(() => ({
   router: { push: vi.fn() },
   params: {} as Record<string, string>,
@@ -10,43 +12,10 @@ const held = vi.hoisted(() => ({
   list: {} as { onOpen?: (id: string) => void },
 }));
 
-vi.mock("react-native", async () =>
-  (await import("../../../../__tests__/mocks/content-ui")).reactNative(vi.fn())
-);
-vi.mock("@/lib/i18n/use-text", async () => ({
-  useText: (await import("../../../../__tests__/mocks/content-ui")).echoText,
-}));
 vi.mock("expo-router", () => ({
   useRouter: () => held.router,
   useLocalSearchParams: () => held.params,
 }));
-vi.mock("@/components/modal-header", async () => {
-  const { createElement } = await import("react");
-
-  return {
-    ModalHeader: ({
-      title,
-      secondary,
-    }: {
-      title: string;
-      secondary: { label: string; disabled?: boolean; onPress: () => void }[];
-    }) =>
-      createElement(
-        "header",
-        null,
-        title,
-        secondary.map((action) =>
-          createElement("button", {
-            key: action.label,
-            "data-testid": "header-add",
-            "aria-label": action.label,
-            disabled: action.disabled,
-            onClick: action.onPress,
-          })
-        )
-      ),
-  };
-});
 vi.mock("@/components/segmented", async () => {
   const { createElement } = await import("react");
 

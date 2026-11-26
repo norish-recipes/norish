@@ -2,8 +2,9 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { alert } from "../../../../__tests__/mocks/content-setup";
+
 const held = vi.hoisted(() => ({
-  alert: vi.fn(),
   router: { back: vi.fn(), push: vi.fn() },
   entry: {} as Record<string, unknown>,
   save: vi.fn(),
@@ -11,30 +12,9 @@ const held = vi.hoisted(() => ({
   setName: vi.fn(),
 }));
 
-vi.mock("react-native", async () =>
-  (await import("../../../../__tests__/mocks/content-ui")).reactNative(held.alert)
-);
-vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
-vi.mock("@/hooks/use-token-color", () => ({ useTokenColor: () => undefined }));
-vi.mock("heroui-native", () => ({ Skeleton: () => <i data-testid="skeleton" /> }));
-vi.mock("@/hooks/use-cancel-button", () => ({
-  useCancelButton: () => ({ text: "cancel", style: "cancel" }),
-}));
-vi.mock("@/lib/i18n/use-text", async () => ({
-  useText: (await import("../../../../__tests__/mocks/content-ui")).echoText,
-}));
 vi.mock("expo-router", () => ({
   useRouter: () => held.router,
   useLocalSearchParams: () => ({ kind: "tag", id: "e1" }),
-}));
-vi.mock("@/components/sheet", async () =>
-  (await import("../../../../__tests__/mocks/content-ui")).sheet()
-);
-vi.mock("@/components/modal-header", () => ({
-  destructiveAction: (label: string, onPress: () => void) => ({ label, onPress }),
-}));
-vi.mock("@/components/sheet-input", async () => ({
-  SheetInput: (await import("../../../../__tests__/mocks/content-ui")).kit.sheetInput,
 }));
 vi.mock("@norish/shared-react/lists", async (importActual) => ({
   ...(await importActual<object>()),
@@ -104,7 +84,7 @@ describe("ContentEntryScreen", () => {
     render(<ContentEntryScreen />);
     fireEvent.click(screen.getByTestId("sheet-secondary-common.actions.delete"));
 
-    const [title, body, buttons] = held.alert.mock.calls[0] as [
+    const [title, body, buttons] = alert.mock.calls[0] as [
       string,
       string,
       { text: string; style?: string; onPress?: () => Promise<void> }[],
@@ -123,7 +103,7 @@ describe("ContentEntryScreen", () => {
     held.entry = { deleteImpact: { recipes: 181, scope: "server" } };
     render(<ContentEntryScreen />);
     fireEvent.click(screen.getByTestId("sheet-secondary-common.actions.delete"));
-    expect(held.alert.mock.calls[0]?.[1]).toBe('settings.content.delete.bodyServer{"count":181}');
+    expect(alert.mock.calls[0]?.[1]).toBe('settings.content.delete.bodyServer{"count":181}');
   });
 
   it("is read-only for a member: no Save, no Delete, a locked note, and the name cannot be typed", () => {

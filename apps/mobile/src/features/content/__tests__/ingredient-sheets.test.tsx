@@ -3,6 +3,8 @@ import type { ReactNode } from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import "../../../../__tests__/mocks/content-setup";
+
 const held = vi.hoisted(() => ({
   router: { back: vi.fn(), replace: vi.fn(), push: vi.fn() },
   apply: vi.fn(),
@@ -12,35 +14,7 @@ const held = vi.hoisted(() => ({
   doAdd: vi.fn(),
 }));
 
-vi.mock("react-native", async () =>
-  (await import("../../../../__tests__/mocks/content-ui")).reactNative(vi.fn())
-);
-vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
-vi.mock("@/hooks/use-token-color", () => ({ useTokenColor: () => undefined }));
-vi.mock("heroui-native", () => ({ useThemeColor: () => ["#000"] }));
-vi.mock("react-intl", () => ({ useIntl: () => ({ locale: "en" }) }));
-vi.mock("@/lib/i18n/use-text", async () => ({
-  useText: (await import("../../../../__tests__/mocks/content-ui")).echoText,
-}));
 vi.mock("expo-router", () => ({ useRouter: () => held.router }));
-vi.mock("@/components/sheet", async () =>
-  (await import("../../../../__tests__/mocks/content-ui")).sheet()
-);
-vi.mock("@/components/sheet-input", async () => ({
-  SheetInput: (await import("../../../../__tests__/mocks/content-ui")).kit.sheetInput,
-}));
-vi.mock("@/components/toggle-chip", async () => ({
-  ToggleChip: (await import("../../../../__tests__/mocks/content-ui")).kit.button,
-}));
-vi.mock("@/components/switch", async () => ({
-  Switch: (await import("../../../../__tests__/mocks/content-ui")).kit.button,
-}));
-vi.mock("@/components/empty-card", async () => ({
-  EmptyCard: (await import("../../../../__tests__/mocks/content-ui")).kit.emptyCard,
-}));
-vi.mock("@/components/card-slice", () => ({
-  CardSlice: ({ children }: { children: ReactNode }) => children,
-}));
 vi.mock("@/components/ingredient-icon", () => ({
   IngredientIcon: () => null,
   IngredientIconSlots: ({ children }: { children: ReactNode }) => children,

@@ -3,10 +3,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("react-native", async () => (await import("../mocks/content-ui")).reactNative(vi.fn()));
-vi.mock("@/hooks/use-token-color", () => ({ useTokenColor: () => undefined }));
-vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
-vi.mock("heroui-native", () => ({ useThemeColor: () => ["#000"] }));
+import "../mocks/content-setup";
 
 const { CountRow } = await import("@/components/count-row");
 const { ListHeading } = await import("@/components/list-heading");

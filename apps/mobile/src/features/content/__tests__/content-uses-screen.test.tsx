@@ -2,6 +2,8 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import "../../../../__tests__/mocks/content-setup";
+
 const held = vi.hoisted(() => ({
   router: { dismissAll: vi.fn(), push: vi.fn() },
   uses: {} as Record<string, unknown>,
@@ -9,30 +11,9 @@ const held = vi.hoisted(() => ({
   retry: vi.fn(),
 }));
 
-vi.mock("react-native", async () =>
-  (await import("../../../../__tests__/mocks/content-ui")).reactNative(vi.fn())
-);
-vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
-vi.mock("@/hooks/use-token-color", () => ({ useTokenColor: () => undefined }));
-vi.mock("heroui-native", () => ({ Skeleton: () => <i data-testid="skeleton" /> }));
-vi.mock("@/lib/i18n/use-text", async () => ({
-  useText: (await import("../../../../__tests__/mocks/content-ui")).echoText,
-}));
 vi.mock("expo-router", () => ({
   useRouter: () => held.router,
   useLocalSearchParams: () => ({ kind: "tag", id: "e1" }),
-}));
-vi.mock("@/components/sheet", async () =>
-  (await import("../../../../__tests__/mocks/content-ui")).sheet()
-);
-vi.mock("@/components/card-slice", () => ({
-  CardSlice: ({ children }: { children: React.ReactNode }) => children,
-}));
-vi.mock("@/components/empty-card", async () => ({
-  EmptyCard: (await import("../../../../__tests__/mocks/content-ui")).kit.emptyCard,
-}));
-vi.mock("@/components/pill-button", async () => ({
-  PillButton: (await import("../../../../__tests__/mocks/content-ui")).kit.button,
 }));
 vi.mock("@norish/shared-react/lists", () => ({
   useEntryRecipes: () => ({

@@ -3,6 +3,8 @@ import type { ReactNode } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import "../../../../__tests__/mocks/content-setup";
+
 const held = vi.hoisted(() => ({
   nutrition: { nutrition: null, measure: null } as Record<string, unknown>,
   draft: {} as Record<string, unknown>,
@@ -14,33 +16,6 @@ const held = vi.hoisted(() => ({
   pickFile: vi.fn(),
 }));
 
-vi.mock("react-native", async () =>
-  (await import("../../../../__tests__/mocks/content-ui")).reactNative(vi.fn())
-);
-vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
-vi.mock("@/hooks/use-token-color", () => ({ useTokenColor: () => undefined }));
-vi.mock("heroui-native", () => ({ useThemeColor: () => ["#000"] }));
-vi.mock("react-intl", () => ({
-  useIntl: () => ({ locale: "en", formatNumber: (value: number) => String(value) }),
-}));
-vi.mock("@/lib/i18n/use-text", async () => ({
-  useText: (await import("../../../../__tests__/mocks/content-ui")).echoText,
-}));
-vi.mock("@/components/sheet", async () =>
-  (await import("../../../../__tests__/mocks/content-ui")).sheet()
-);
-vi.mock("@/components/sheet-input", async () => ({
-  SheetInput: (await import("../../../../__tests__/mocks/content-ui")).kit.sheetInput,
-}));
-vi.mock("@/components/toggle-chip", async () => ({
-  ToggleChip: (await import("../../../../__tests__/mocks/content-ui")).kit.button,
-}));
-vi.mock("@/components/pill-button", async () => ({
-  PillButton: (await import("../../../../__tests__/mocks/content-ui")).kit.button,
-}));
-vi.mock("@/components/empty-card", async () => ({
-  EmptyCard: (await import("../../../../__tests__/mocks/content-ui")).kit.emptyCard,
-}));
 vi.mock("@/components/server-image", () => ({ ServerImage: () => <i data-testid="picture" /> }));
 vi.mock("@/hooks/use-photo-source-sheet", () => ({
   usePhotoSourceSheet: () => (_options: unknown, onPicked: (assets: { uri: string }[]) => void) =>

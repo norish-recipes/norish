@@ -3,14 +3,10 @@ import type { ReactNode } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import "../../../../__tests__/mocks/content-setup";
+
 const router = vi.hoisted(() => ({ push: vi.fn() }));
 
-vi.mock("react-native", async () =>
-  (await import("../../../../__tests__/mocks/content-ui")).reactNative(vi.fn())
-);
-vi.mock("@/lib/i18n/use-text", async () => ({
-  useText: (await import("../../../../__tests__/mocks/content-ui")).echoText,
-}));
 vi.mock("expo-router", () => ({ useRouter: () => router }));
 vi.mock("expo-application", () => ({ nativeApplicationVersion: "1", nativeBuildVersion: "1" }));
 vi.mock("@/hooks/use-change-server-address", () => ({ changeServerAddress: vi.fn() }));

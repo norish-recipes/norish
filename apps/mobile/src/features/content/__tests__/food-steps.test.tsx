@@ -3,34 +3,14 @@ import type { ReactNode } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { alert } from "../../../../__tests__/mocks/content-setup";
+
 const held = vi.hoisted(() => ({
-  alert: vi.fn(),
   picker: {} as Record<string, unknown>,
   pick: vi.fn(),
   type: vi.fn(),
 }));
 
-vi.mock("react-native", async () =>
-  (await import("../../../../__tests__/mocks/content-ui")).reactNative(held.alert)
-);
-vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
-vi.mock("@/hooks/use-token-color", () => ({ useTokenColor: () => undefined }));
-vi.mock("react-intl", () => ({ useIntl: () => ({ locale: "en" }) }));
-vi.mock("@/hooks/use-cancel-button", () => ({
-  useCancelButton: () => ({ text: "cancel", style: "cancel" }),
-}));
-vi.mock("@/lib/i18n/use-text", async () => ({
-  useText: (await import("../../../../__tests__/mocks/content-ui")).echoText,
-}));
-vi.mock("@/components/sheet", async () =>
-  (await import("../../../../__tests__/mocks/content-ui")).sheet()
-);
-vi.mock("@/components/sheet-input", async () => ({
-  SheetInput: (await import("../../../../__tests__/mocks/content-ui")).kit.sheetInput,
-}));
-vi.mock("@/components/pill-button", async () => ({
-  PillButton: (await import("../../../../__tests__/mocks/content-ui")).kit.button,
-}));
 vi.mock("@/components/icon-button", () => ({
   IconButton: ({ testID, onPress }: { testID: string; onPress: () => void }) => (
     <button data-testid={testID} onClick={onPress} />
@@ -114,7 +94,7 @@ describe("FoodSpellingsStep", () => {
     render(<FoodSpellingsStep draft={draft} item={item as never} onBack={vi.fn()} />);
     fireEvent.click(screen.getByTestId("food-spelling-remove-sojasaus"));
 
-    const buttons = held.alert.mock.calls[0]?.[2] as { text: string; onPress?: () => void }[];
+    const buttons = alert.mock.calls[0]?.[2] as { text: string; onPress?: () => void }[];
 
     buttons[1]?.onPress?.();
     buttons[2]?.onPress?.();

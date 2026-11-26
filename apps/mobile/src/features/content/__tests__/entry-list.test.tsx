@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
-import type { ReactNode } from "react";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ContentEntry, ContentSection } from "@norish/shared-react/lists";
+
+import "../../../../__tests__/mocks/content-setup";
 
 const held = vi.hoisted(() => ({
   list: {} as Record<string, unknown>,
@@ -12,21 +13,6 @@ const held = vi.hoisted(() => ({
   retry: vi.fn(),
 }));
 
-vi.mock("react-native", async () =>
-  (await import("../../../../__tests__/mocks/content-ui")).reactNative(vi.fn())
-);
-vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
-vi.mock("@/hooks/use-token-color", () => ({ useTokenColor: () => undefined }));
-vi.mock("heroui-native", () => ({ Skeleton: () => null, useThemeColor: () => ["#000"] }));
-vi.mock("@/lib/i18n/use-text", async () => ({
-  useText: (await import("../../../../__tests__/mocks/content-ui")).echoText,
-}));
-vi.mock("@/components/card-slice", () => ({
-  CardSlice: ({ children }: { children: ReactNode }) => children,
-}));
-vi.mock("@/components/empty-card", async () => ({
-  EmptyCard: (await import("../../../../__tests__/mocks/content-ui")).kit.emptyCard,
-}));
 vi.mock("@/components/search-filter-row", async () => {
   const { createElement } = await import("react");
 
