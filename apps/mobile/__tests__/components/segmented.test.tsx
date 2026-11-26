@@ -19,7 +19,10 @@ const host = ({ children, testID, accessibilityRole, accessibilityLabel }: Props
   </div>
 );
 
+const platform = vi.hoisted(() => ({ OS: "android" }));
+
 vi.mock("react-native", () => ({
+  Platform: platform,
   View: host,
   Text: ({ children }: Props) => <span>{children}</span>,
   Pressable: ({
@@ -79,6 +82,16 @@ describe("Segmented", () => {
     expect(screen.getByRole("tablist").getAttribute("aria-label")).toBe("Content");
     expect(screen.getByRole("tablist")).toBe(screen.getByTestId("seg"));
     expect(screen.getAllByRole("tab")).toHaveLength(2);
+  });
+
+  it("is a tab bar of buttons on iOS, the roles VoiceOver speaks as tabs", () => {
+    platform.OS = "ios";
+    segmented("a", false, "Content");
+    platform.OS = "android";
+
+    expect(screen.getByRole("tabbar")).toBe(screen.getByTestId("seg"));
+    expect(screen.getAllByRole("button")).toHaveLength(2);
+    expect(screen.getByTestId("seg-a").getAttribute("aria-selected")).toBe("true");
   });
 
   it("marks the picked tab selected", () => {

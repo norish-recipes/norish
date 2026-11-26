@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import React, { useEffect, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Platform, Pressable, Text, View } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useReducedMotion,
@@ -10,6 +10,12 @@ import { useTokenColor } from "@/hooks/use-token-color";
 import { springTo } from "@/lib/motion/spring";
 
 type Box = { x: number; y: number; width: number; height: number };
+
+/** A tab list's roles: iOS gives `tablist` and `tab` no trait, and speaks a tab bar's buttons as tabs. */
+const tabRoles = () =>
+  Platform.OS === "ios"
+    ? ({ list: "tabbar", tab: "button" } as const)
+    : ({ list: "tablist", tab: "tab" } as const);
 
 /** The kit's segmented control: a sand track, the pick on a solid thumb that slides to a new pick.
  * 44 pt tall, 34 `compact`; `iconOnly` leaves the labels to accessibility. No `value` picks none.
@@ -40,6 +46,7 @@ export function Segmented<Value extends string>({
   const foreground = useTokenColor("foreground");
   const muted = useTokenColor("muted");
   const compact = size === "compact";
+  const roles = tabsLabel ? tabRoles() : ({ list: "radiogroup", tab: "radio" } as const);
   const reduceMotion = useReducedMotion();
   // Each segment's frame in the track, so the thumb can travel between them.
   const [boxes, setBoxes] = useState<Partial<Record<Value, Box>>>({});
@@ -65,7 +72,7 @@ export function Segmented<Value extends string>({
   return (
     <View
       accessibilityLabel={tabsLabel}
-      accessibilityRole={tabsLabel ? "tablist" : "radiogroup"}
+      accessibilityRole={roles.list}
       className={`bg-sand border-stroke flex-row items-center gap-0.5 ${compact ? "h-[34px] rounded-[17px] p-[3px]" : "h-11 rounded-[22px] p-1"} border-[0.5px] ${iconOnly ? "self-start" : ""}`}
       testID={testID}
     >
@@ -84,7 +91,7 @@ export function Segmented<Value extends string>({
           <Pressable
             key={segment.value}
             accessibilityLabel={segment.label}
-            accessibilityRole={tabsLabel ? "tab" : "radio"}
+            accessibilityRole={roles.tab}
             accessibilityState={tabsLabel ? { selected } : { checked: selected }}
             className={`h-full flex-row items-center justify-center gap-1.5 rounded-full ${iconOnly ? (compact ? "w-[34px]" : "w-11") : compact ? "flex-none px-[13px]" : "flex-1"} ${selected && !thumbShown ? "bg-thumb shadow-sm" : ""}`}
             testID={segment.testID}
