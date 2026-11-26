@@ -61,11 +61,8 @@ function foodRef(food: PickedFood): NutritionFoodRef {
   return { dataset: dataset as NutritionFoodRef["dataset"], code: code.join(":"), name: food.name };
 }
 
-/**
- * One fact as the household will have it once the correction lands, to show at once: a label's
- * numbers are exact; a picked food brings what the picker knew of it, and keeps the numbers it did
- * not know until the server says them. Left to the sources, the fact is the server's to say.
- */
+/** One fact as the household will have it once the correction lands: a label's numbers are exact,
+ * a picked food keeps the numbers it did not know until the server says them. */
 function shownFact<T>(
   draft: FactDraft,
   typed: () => T,
@@ -117,11 +114,8 @@ function draftOf<T>(fact: NutritionFact<T> | null, typed: (value: T) => string[]
   return empty;
 }
 
-/**
- * The household's correction of a food's nutrition (ADR-0039), fact by fact, as a draft until
- * `save`: each fact is kept as Norish has it, set to a dataset food, or typed from a label. Mount it
- * afresh for each opening, so the draft starts from what the household has now.
- */
+/** The household's correction of a food's nutrition (ADR-0039), fact by fact, as a draft until
+ * `save`. Mount it afresh for each opening so the draft starts from what the household has. */
 export function useNutritionDraft({
   ingredientId,
   current,

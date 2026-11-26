@@ -33,11 +33,8 @@ async function editedFoods(items: readonly GroceryName[]) {
   return edited;
 }
 
-/**
- * What an item means instead of its name as typed: a `food` it keeps whole (an edit's unchanged
- * text, a one-food line's own text), or, for a line read through the household's catalogue
- * (`readLines`), the `parts` it reads as, or the `meaning` text to resolve where it read none.
- */
+/** What an item means instead of its name as typed: a `food` it keeps whole, or for a line read
+ * through the household's catalogue the `parts` it reads as, or the `meaning` text to resolve. */
 type ItemMeaning =
   | { food: IngredientRef | null }
   | { parts: Array<{ name: string; food: IngredientRef }> }

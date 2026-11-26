@@ -1,7 +1,6 @@
 /**
- * AI checks the spellings people, merges and imports added to seeded foods (ADR-0037; ingredient-
- * cleanup ticket 46), each household's inside its own catalogue (ADR-0042); each removal or move an
- * AI Change.
+ * AI checks the spellings added to seeded foods (ADR-0037), each household's inside its own
+ * catalogue (ADR-0042); each removal or move is an AI Change.
  */
 import { withTransaction } from "@norish/db/drizzle";
 import { listNamesAIReadOnto } from "@norish/db/repositories/ingredient-ai-changes";

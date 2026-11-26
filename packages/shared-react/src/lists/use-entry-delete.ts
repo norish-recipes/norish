@@ -9,11 +9,8 @@ import { useContentWrites } from "./use-content-writes";
 /** How a delete came out: `deleted`, or why not. */
 export type DeleteOutcome = "deleted" | "stale" | "failed";
 
-/**
- * Deleting an entry from where it is listed, no sheet open: `impact` reads what it comes off (the
- * household's recipes, or every household's for a server entry; null when that read fails) and
- * `remove` sends the delete.
- */
+/** Deleting an entry from where it is listed, no sheet open: `impact` reads what it comes off
+ * (null when that read fails) and `remove` sends the delete. */
 export function useEntryDelete(kind: PickerKind) {
   const client = useTRPCClient();
   const writes = useContentWrites(kind);

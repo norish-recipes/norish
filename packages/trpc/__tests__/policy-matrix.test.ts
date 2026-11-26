@@ -1,10 +1,6 @@
 // @vitest-environment node
-/**
- * The Permission Policy through the real procedures and the real access check: view, edit and
- * delete of recipes and cookbooks, under Everyone and Household. A server admin of another
- * household is an ordinary reader; a recipe they may not view reads as missing. Which cookbooks
- * a reader lists is the repositories' SQL, pinned against Postgres in packages/db.
- */
+/** The Permission Policy through the real procedures and access check: view, edit and delete of
+ * recipes and cookbooks under Everyone and Household; another household's admin is an ordinary reader. */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 

@@ -1,9 +1,6 @@
 // @vitest-environment node
-/**
- * "We keep this" on another household's recipe line, with the real guard and repositories
- * (ADR-0042): the Pantry row the server writes names the reader's food and spelling, never the
- * author's, even when the client sends the author's food.
- */
+/** "We keep this" on another household's recipe line (ADR-0042): the Pantry row names the reader's
+ * food and spelling, never the author's, even when the client sends the author's. */
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { User } from "@norish/shared/contracts";

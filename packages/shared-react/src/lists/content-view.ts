@@ -61,11 +61,8 @@ export interface ContentSection {
 
 export type ContentListState = "empty" | "nothingUnused" | "noMatch" | "list";
 
-/**
- * What a list shows: its sections (the server's first for Categories, the household's first
- * otherwise), the search matched on the fold and the unused filter applied, why it is empty, and
- * how many entries the All or Unused choice holds (`count`, which the search does not change).
- */
+/** What a list shows: its sections, the search matched on the fold, the unused filter, why it is
+ * empty, and `count` of the All or Unused choice, which the search does not change. */
 export function contentListView(
   kind: PickerKind,
   entries: readonly ContentEntry[],

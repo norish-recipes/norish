@@ -370,12 +370,8 @@ export interface AddedIngredient extends CatalogueEdit {
   created: boolean;
 }
 
-/**
- * Add a food by hand (`ingredients.add`): a household's food under a clean name, with its name and
- * `spellings` as the household's spellings, which no sweep or AI deletes. A name the household's
- * catalogue or the seed already has answers that food, unchanged; a spelling one of the household's
- * other foods holds refuses the whole add.
- */
+/** Adds a food by hand (`ingredients.add`) as a household food whose spellings no sweep or AI
+ * deletes; a name already in the catalogue or seed answers that food, a held spelling refuses. */
 export async function addIngredient(
   actor: CatalogueActor,
   name: string,

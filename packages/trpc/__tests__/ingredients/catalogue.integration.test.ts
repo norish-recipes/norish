@@ -1,9 +1,6 @@
 // @vitest-environment node
-/**
- * The Ingredients procedures with the real guard and repositories, in two households (ADR-0042):
- * any member edits the household's foods, a food added by hand is the household's, and another
- * household reads, counts and changes none of them by id. A seeded food is the admins'.
- */
+/** The Ingredients procedures with the real guard and repositories in two households (ADR-0042):
+ * foods are the household's, another household changes none by id; a seeded food is the admins'. */
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { User } from "@norish/shared/contracts";

@@ -1,9 +1,6 @@
 // @vitest-environment node
-/**
- * The household lists through their router with the real repositories (ADR-0043): a member
- * changes the household's entries, an admin the instance's Cuisines, nobody the built-in
- * Categories, and another household nothing; an editable recipe's list is its household's.
- */
+/** The household lists through their router (ADR-0043): a member changes the household's entries,
+ * an admin the instance's Cuisines, nobody the built-in Categories, and another household nothing. */
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { User } from "@norish/shared/contracts";

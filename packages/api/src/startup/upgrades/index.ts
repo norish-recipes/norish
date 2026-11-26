@@ -44,7 +44,7 @@ export async function upgradeDataFromOlderReleases(): Promise<void> {
     }
   );
   // Every boot until no name waits for its fold, whatever the steps above did: until then a
-  // waiting name matches no filter or write by its fold (ticket 05, Comments).
+  // waiting name matches no filter or write by its fold.
   await runOnBoot(upgradeHouseholdLists, {
     skipped: "No list names from before 0.28 wait for their fold",
     failed: "Folding list names from before 0.28 failed",
