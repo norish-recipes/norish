@@ -39,7 +39,12 @@ export type { ImportOptions, ImportSettled } from "./use-import-mutations";
 export { useImportMutations } from "./use-import-mutations";
 export { isPasteTooLong, useImportRecipe } from "./use-import-recipe";
 export { useRecipeMutationErrorToast } from "./use-recipe-mutation-error-toast";
-export { useRecipesMutations, type RecipesMutationsResult } from "./use-recipes-mutations";
+export {
+  RecipeChangedElsewhereError,
+  useRecipesMutations,
+  type RecipesMutationsResult,
+  type SaveCallbacks,
+} from "./use-recipes-mutations";
 export { useRecipesQuery } from "./use-recipes-query";
 export {
   useRecipeListSubscription,

@@ -269,10 +269,23 @@ function createOptimisticDashboardRecipe(recipe: FullRecipeDTO): RecipeDashboard
   };
 }
 
+/** `onSaved` only for a save stored or queued while Offline; any other answer is `onFailed`. */
 export type SaveCallbacks = { onSaved: () => void; onFailed: (error: unknown) => void };
 
+/** A save refused as stale: the recipe or its lists changed after the editor opened. */
+export class RecipeChangedElsewhereError extends Error {}
+
+const told = (after: SaveCallbacks) => ({
+  onSuccess: (answer: unknown) =>
+    (answer as { stale?: unknown } | null)?.stale === true
+      ? after.onFailed(new RecipeChangedElsewhereError())
+      : after.onSaved(),
+  onError: (error: unknown) =>
+    shouldPreserveOptimisticUpdate(error) ? after.onSaved() : after.onFailed(error),
+});
+
 export type RecipesMutationsResult = {
-  createRecipe: (input: FullRecipeInsertDTO) => void;
+  createRecipe: (input: FullRecipeInsertDTO, after?: SaveCallbacks) => void;
   /** `after` hears once the save is stored or queued, or that it failed. */
   updateRecipe: (id: string, input: FullRecipeUpdateDTO, after?: SaveCallbacks) => void;
   /** Delete recipes, each at the version the reader saw; one call however many. */
@@ -546,19 +559,12 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
     }
   };
 
-  const createRecipe = (input: FullRecipeInsertDTO): void => {
-    mutateCreate(input);
+  const createRecipe = (input: FullRecipeInsertDTO, after?: SaveCallbacks): void => {
+    mutateCreate(input, after && told(after));
   };
 
   const updateRecipe = (id: string, input: FullRecipeUpdateDTO, after?: SaveCallbacks): void => {
-    mutateUpdate(
-      { id, version: input.version ?? 1, data: input },
-      after && {
-        onSuccess: after.onSaved,
-        onError: (error) =>
-          shouldPreserveOptimisticUpdate(error) ? after.onSaved() : after.onFailed(error),
-      }
-    );
+    mutateUpdate({ id, version: input.version ?? 1, data: input }, after && told(after));
   };
 
   const deleteRecipes = (recipes: Array<{ id: string; version: number }>): void => {

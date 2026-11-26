@@ -130,20 +130,31 @@ function Editor({ mode, initialData, recipeId }: EditorProps & { recipeId: strin
 
       return;
     }
-    guard.allowNavigation();
-    setSaving(true);
-    try {
-      if (mode === "create") {
-        createRecipe({ ...payload, id: recipeId });
-        router.dismissTo(recipeRoute(recipeId));
-      } else if (initialData) {
-        updateRecipe(initialData.id, { ...payload, version: initialData.version });
-        router.back();
-      }
-    } catch (failure) {
-      setSaving(false);
-      guard.disallowNavigation();
-      editor.failSubmit(failure instanceof Error ? failure.message : String(failure));
+    // The editor stays open until the save is stored or queued, so a refusal shows here.
+    const after = (leave: () => void) => ({
+      onSaved: () => {
+        guard.allowNavigation();
+        leave();
+      },
+      onFailed: (failure: unknown) => {
+        setSaving(false);
+        editor.failSave(failure);
+      },
+    });
+
+    if (mode === "create") {
+      setSaving(true);
+      createRecipe(
+        { ...payload, id: recipeId },
+        after(() => router.dismissTo(recipeRoute(recipeId)))
+      );
+    } else if (initialData) {
+      setSaving(true);
+      updateRecipe(
+        initialData.id,
+        { ...payload, version: initialData.version },
+        after(() => router.back())
+      );
     }
   };
 

@@ -15,6 +15,7 @@ import {
   useListEntries,
   useListRecipeId,
 } from "../lists";
+import { usePlatform } from "../platform";
 import { useHydrated } from "../platform/use-hydrated";
 import { useDevicePreference } from "../reader";
 import {
@@ -27,6 +28,7 @@ import {
   validateRecipeForm,
 } from "./recipe-editor";
 import { remapStepRefs } from "./recipe-editor-rows";
+import { RecipeChangedElsewhereError } from "./use-recipes-mutations";
 
 interface UseRecipeEditorFormOptions {
   mode: RecipeEditorMode;
@@ -39,6 +41,7 @@ interface UseRecipeEditorFormOptions {
  * detected system of a new recipe, the Categories offered, validation and the save payload. */
 export function useRecipeEditorForm({ mode, initialData, locale }: UseRecipeEditorFormOptions) {
   const { units, isLoading: isLoadingUnits } = useUnitsQuery();
+  const { toast } = usePlatform();
   // The list of the recipe's own household, which is another's when its edit policy allows.
   const listRecipeId = useListRecipeId(mode === "edit" ? initialData : undefined);
   const { entries: categoryEntries } = useListEntries("category", listRecipeId);
@@ -178,7 +181,16 @@ export function useRecipeEditorForm({ mode, initialData, locale }: UseRecipeEdit
       mode === "edit" ? opened : undefined
     );
   };
-  const failSubmit = (message: string) => setErrors({ submit: message });
+  /** A save not taken leaves the draft as it is and says why. */
+  const failSave = (error: unknown) =>
+    setErrors({
+      submit:
+        error instanceof RecipeChangedElsewhereError
+          ? toast.translate("common.changedElsewhere.title")
+          : error instanceof Error
+            ? error.message
+            : String(error),
+    });
 
   return {
     form,
@@ -187,7 +199,7 @@ export function useRecipeEditorForm({ mode, initialData, locale }: UseRecipeEdit
     isCreatingEntry,
     errors,
     submit,
-    failSubmit,
+    failSave,
     isReady,
     hasUnsavedChanges,
     detectedSystem,

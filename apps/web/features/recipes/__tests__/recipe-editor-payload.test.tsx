@@ -177,6 +177,7 @@ beforeEach(() => {
 });
 
 describe("RecipeEditorScreen save of an untouched recipe", () => {
+  // Its Tags, Cuisines and Categories are left out: a merge made meanwhile on the Content page stays.
   it("sends exactly what it was given, active system only", async () => {
     render(<RecipeEditorScreen initialData={stored} mode="edit" />, {
       wrapper: createTestWrapper(createTestQueryClient()),
@@ -204,10 +205,7 @@ describe("RecipeEditorScreen save of an untouched recipe", () => {
         originCountryName: "China",
         originRegion: "Guangdong",
         provenanceNote: "Cantonese roots.",
-        cuisines: ["cuisine-1"],
         systemUsed: "metric",
-        tags: [{ name: "quick" }, { name: "chicken" }],
-        categories: ["Dinner"],
         recipeIngredients: [
           {
             id: "ing-1",

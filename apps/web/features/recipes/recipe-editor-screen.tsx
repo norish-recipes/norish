@@ -69,11 +69,7 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
   const [lineMoves, setLineMoves] = useState<LineMoves | null>(null);
 
   const navigateBack = () => router.back();
-  const {
-    allowNavigation,
-    confirmNavigation: confirmDiscardChanges,
-    disallowNavigation,
-  } = useUnsavedNavigationGuard({
+  const { allowNavigation, confirmNavigation: confirmDiscardChanges } = useUnsavedNavigationGuard({
     hasUnsavedChanges: editor.hasUnsavedChanges,
     confirmationMessage: t("discardChangesConfirm"),
     onConfirmLeave: navigateBack,
@@ -87,39 +83,27 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
     const recipeData = editor.submit();
 
     if (!recipeData) return;
-    setIsSubmitting(true);
     const editing = mode === "edit" ? initialData : undefined;
-
-    try {
-      if (mode === "create") {
+    // The form stays open until the save is stored or queued, so a refusal shows here.
+    const after = (id: string) => ({
+      onSaved: () => {
         allowNavigation();
-        createRecipe({ ...recipeData, id: recipeId! });
-        router.push(`/recipes/${recipeId!}`);
-      } else if (editing) {
-        // The form stays open until the save is stored or queued, so a failure shows here.
-        updateRecipe(
-          editing.id,
-          { ...recipeData, version: editing.version },
-          {
-            onSaved: () => {
-              allowNavigation();
-              router.push(`/recipes/${editing.id}`);
-            },
-            onFailed: (err) => {
-              setIsSubmitting(false);
-              editor.failSubmit(err instanceof Error ? err.message : String(err));
-            },
-          }
-        );
+        router.push(`/recipes/${id}`);
+      },
+      onFailed: (err: unknown) => {
+        log.error({ err }, "Failed to save recipe");
+        setIsSubmitting(false);
+        editor.failSave(err);
+      },
+    });
 
-        return;
-      }
-    } catch (err) {
-      log.error({ err }, "Failed to save recipe");
-      disallowNavigation();
-      editor.failSubmit((err as Error).message);
+    if (mode === "create" && recipeId) {
+      setIsSubmitting(true);
+      createRecipe({ ...recipeData, id: recipeId }, after(recipeId));
+    } else if (editing) {
+      setIsSubmitting(true);
+      updateRecipe(editing.id, { ...recipeData, version: editing.version }, after(editing.id));
     }
-    setIsSubmitting(false);
   };
   const handleTimeChange = (
     field: "prepMinutes" | "cookMinutes" | "totalMinutes",
