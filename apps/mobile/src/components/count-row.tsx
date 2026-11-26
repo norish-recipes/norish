@@ -10,6 +10,9 @@ import { edgeAt } from "@/lib/card-edges";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Skeleton } from "heroui-native";
 
+/** A row's height. */
+const ROW_HEIGHT = "min-h-[52px]";
+
 /** How far each level of a tree sets its rows in, in points. */
 const INDENT = 24;
 
@@ -84,7 +87,8 @@ export function CountRow({
       {trailing}
     </>
   );
-  const className = "min-h-[52px] min-w-0 flex-1 flex-row items-center gap-3 px-4";
+  const row = `${ROW_HEIGHT} flex-row items-center gap-3 px-4`;
+  const className = `${row} min-w-0 flex-1`;
 
   return (
     <View
@@ -113,6 +117,7 @@ export function CountRow({
       ) : null}
       {onPress && menu.length > 0 ? (
         <NativeMenu
+          fill
           items={menu}
           label={name}
           testID={testID ?? name}
@@ -120,7 +125,7 @@ export function CountRow({
           onPress={onPress}
         >
           {/* Opaque, as the long press lifts a snapshot of the whole row. */}
-          <View className={`${ground} ${className}`}>{content}</View>
+          <View className={`${ground} ${row}`}>{content}</View>
         </NativeMenu>
       ) : onPress ? (
         <Pressable
@@ -143,7 +148,7 @@ export function CountRow({
 /** A loading row, shaped like a counted row's name. */
 export function CountRowSkeleton() {
   return (
-    <View className="min-h-[52px] justify-center px-4">
+    <View className={`${ROW_HEIGHT} justify-center px-4`}>
       <Skeleton className="h-4 w-40 rounded-lg" />
     </View>
   );

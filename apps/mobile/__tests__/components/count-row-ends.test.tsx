@@ -20,7 +20,13 @@ vi.mock("@expo/vector-icons/Ionicons", () => ({
 vi.mock("heroui-native", () => ({ Skeleton: () => null }));
 vi.mock("@/hooks/use-token-color", () => ({ useTokenColor: () => undefined }));
 vi.mock("@/components/card-slice", () => ({ CardSlice: ({ children }: Props) => children }));
-vi.mock("@/components/native-menu", () => ({ NativeMenu: ({ children }: Props) => children }));
+vi.mock("@/components/native-menu", () => ({
+  NativeMenu: ({ children, fill }: Props & { fill?: boolean }) => (
+    <div data-fill={fill ? "true" : undefined} data-testid="menu">
+      {children}
+    </div>
+  ),
+}));
 vi.mock("@/components/on-sheet", () => ({ useOnSheet: () => false }));
 
 const { CountRow } = await import("@/components/count-row");
@@ -47,5 +53,18 @@ describe("CountRow's end", () => {
     render(<CountRow lockLabel="Read-only" name="Italian" onPress={vi.fn()} />);
     expect(screen.getByTestId("icon-lock-closed-outline")).toBeTruthy();
     expect(screen.queryByTestId("icon-chevron-forward")).toBeNull();
+  });
+
+  it("lets a row with a long-press menu fill the row, so its name keeps its width", () => {
+    render(
+      <CountRow
+        count="4"
+        menu={[{ key: "rename", label: "Rename", onPress: vi.fn() }]}
+        name="dinner"
+        testID="row"
+        onPress={vi.fn()}
+      />
+    );
+    expect(screen.getByTestId("menu").dataset.fill).toBe("true");
   });
 });

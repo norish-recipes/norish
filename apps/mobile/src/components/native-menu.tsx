@@ -35,6 +35,9 @@ const NativeMenuView = requireNativeView<
   }
 >("NativeMenu");
 
+/** Grows across a row, where the native view would otherwise shrink to its children. */
+const FILL = { flex: 1, minWidth: 0 } as const;
+
 /** iOS's menu on a UIKit button over `children`, so it scrolls with them; `testID` names the button,
  * `label` and `value` speak for it. With `onPress` it opens on a long press and a tap is `onPress`. */
 export function NativeMenu({
@@ -42,6 +45,7 @@ export function NativeMenu({
   label,
   value,
   testID,
+  fill = false,
   onPress,
   children,
 }: {
@@ -49,6 +53,8 @@ export function NativeMenu({
   label: string;
   value?: string;
   testID: string;
+  /** Takes the rest of a row's width, as the row it wraps would. */
+  fill?: boolean;
   onPress?: () => void;
   children: ReactNode;
 }) {
@@ -64,6 +70,7 @@ export function NativeMenu({
       }))}
       label={label}
       longPress={onPress !== undefined}
+      style={fill ? FILL : undefined}
       onPress={() => onPress?.()}
       // By key: an open menu still shows the items it opened with, which may since have moved.
       value={value}
