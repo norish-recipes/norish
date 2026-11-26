@@ -1,4 +1,4 @@
-import { desc, isNotNull } from "drizzle-orm";
+import { desc, eq, isNotNull, isNull, or } from "drizzle-orm";
 
 import { db } from "@norish/db/drizzle";
 
@@ -39,12 +39,21 @@ export async function findNewestCiphertext(): Promise<string | null> {
   return setting?.valueEnc ?? null;
 }
 
+/** The stored fingerprint of the current Master Key; a row holding none or an empty one is none. */
+export async function getMasterKeyFingerprint(): Promise<string | null> {
+  return (await getConfig<string>(ServerConfigKeys.MASTER_KEY_FINGERPRINT)) || null;
+}
+
 /** Store `fingerprint` unless a fingerprint is there already; the one the database holds after. */
 export async function claimMasterKeyFingerprint(fingerprint: string): Promise<string | null> {
   await db
     .insert(serverConfig)
     .values({ key: ServerConfigKeys.MASTER_KEY_FINGERPRINT, value: fingerprint })
-    .onConflictDoNothing({ target: serverConfig.key });
+    .onConflictDoUpdate({
+      target: serverConfig.key,
+      set: { value: fingerprint, updatedAt: new Date() },
+      setWhere: or(isNull(serverConfig.value), eq(serverConfig.value, "")),
+    });
 
-  return getConfig<string>(ServerConfigKeys.MASTER_KEY_FINGERPRINT);
+  return getMasterKeyFingerprint();
 }

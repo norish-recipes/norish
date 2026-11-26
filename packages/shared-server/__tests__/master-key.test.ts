@@ -13,7 +13,6 @@ import {
   initMasterKey,
   masterKeyFingerprint,
 } from "@norish/config/crypto";
-import { ServerConfigKeys } from "@norish/config/zod/server-config";
 
 import { forgetMasterKey } from "../../config/__tests__/helpers/master-key";
 
@@ -47,18 +46,15 @@ vi.mock("@norish/config/crypto", async (importOriginal) => {
 });
 
 vi.mock("@norish/config/env-config-server", () => ({ SERVER_CONFIG: config }));
-vi.mock("@norish/db/repositories/server-config", () => ({
-  getConfig: async (key: string) =>
-    key === ServerConfigKeys.MASTER_KEY_FINGERPRINT ? database.fingerprint : null,
-}));
 vi.mock("@norish/db/repositories/master-key", () => ({
-  // An insert that keeps a fingerprint already there.
+  // A claim fills an empty fingerprint and keeps one already there.
   claimMasterKeyFingerprint: async (fingerprint: string) => {
     fingerprintWrites.push(fingerprint);
-    database.fingerprint ??= fingerprint;
+    database.fingerprint ||= fingerprint;
 
     return database.fingerprint;
   },
+  getMasterKeyFingerprint: async () => database.fingerprint || null,
   countEncryptedRows: async () => {
     database.meanwhile();
 
@@ -334,6 +330,16 @@ describe("which key boot opens", () => {
       );
       expect(database.fingerprint).toBe(masterKeyFingerprint(keyA));
       expect(openedKeys).toEqual([]);
+    });
+
+    it("adopts MASTER_KEY over a fingerprint row that holds none", async () => {
+      config.MASTER_KEY = keyA.toString("base64");
+      database.fingerprint = "";
+
+      await resolveMasterKey();
+
+      expect(database.fingerprint).toBe(masterKeyFingerprint(keyA));
+      expect(opened()).toBe(lookupBy(keyA));
     });
 
     it("keeps a key file a first boot wrote before it stopped", async () => {

@@ -9,6 +9,7 @@ import {
   claimMasterKeyFingerprint,
   countEncryptedRows,
   findNewestCiphertext,
+  getMasterKeyFingerprint,
 } from "@norish/db/repositories/master-key";
 import { getConfig, setConfig } from "@norish/db/repositories/server-config";
 import { serverConfig, users } from "@norish/db/schema";
@@ -105,6 +106,31 @@ describe("what boot checks a Master Key against", () => {
     expect(await claimMasterKeyFingerprint(first)).toBe(first);
     expect(await claimMasterKeyFingerprint(second)).toBe(first);
     expect(await getConfig(ServerConfigKeys.MASTER_KEY_FINGERPRINT)).toBe(first);
+  });
+
+  it.each([
+    ["no value", null],
+    ["an empty value", ""],
+  ])("counts a fingerprint row with %s as none, and a claim fills it", async (_, value) => {
+    const fingerprint = masterKeyFingerprint(Buffer.alloc(32, 1));
+
+    await getTestDb()
+      .insert(serverConfig)
+      .values({ key: ServerConfigKeys.MASTER_KEY_FINGERPRINT, value });
+
+    expect(await claimMasterKeyFingerprint(fingerprint)).toBe(fingerprint);
+    expect(await getMasterKeyFingerprint()).toBe(fingerprint);
+  });
+
+  it.each([
+    ["no value", null],
+    ["an empty value", ""],
+  ])("reads a fingerprint row with %s as none", async (_, value) => {
+    await getTestDb()
+      .insert(serverConfig)
+      .values({ key: ServerConfigKeys.MASTER_KEY_FINGERPRINT, value });
+
+    expect(await getMasterKeyFingerprint()).toBeNull();
   });
 
   it("gives two claims at once the same fingerprint", async () => {

@@ -5,13 +5,12 @@ import { z } from "zod";
 
 import { initMasterKey, masterKeyFingerprint, masterKeyOpens } from "@norish/config/crypto";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
-import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import {
   claimMasterKeyFingerprint,
   countEncryptedRows,
   findNewestCiphertext,
+  getMasterKeyFingerprint,
 } from "@norish/db/repositories/master-key";
-import { getConfig } from "@norish/db/repositories/server-config";
 import { serverLogger as log } from "@norish/shared-server/logger";
 
 /** The keys a key file holds: `previous` only between a rotation and the boot that re-keys. */
@@ -217,7 +216,7 @@ async function openByFingerprint(fingerprint: string | null): Promise<void> {
  * reachable and before any crypto. Generates one only for an instance that holds nothing encrypted.
  */
 export async function resolveMasterKey(): Promise<void> {
-  const fingerprint = await getConfig<string>(ServerConfigKeys.MASTER_KEY_FINGERPRINT);
+  const fingerprint = await getMasterKeyFingerprint();
 
   // No fingerprint: an instance from before fingerprints, or one that has never started.
   await openByFingerprint(fingerprint ?? (await adoptKey(await keySource())));
@@ -225,7 +224,7 @@ export async function resolveMasterKey(): Promise<void> {
 
 /** Open the key a server's boot resolved, for a tool or script: never generates nor writes one. */
 export async function openMasterKey(): Promise<void> {
-  const fingerprint = await getConfig<string>(ServerConfigKeys.MASTER_KEY_FINGERPRINT);
+  const fingerprint = await getMasterKeyFingerprint();
 
   if (!fingerprint) {
     throw new Error(
