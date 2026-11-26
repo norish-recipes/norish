@@ -100,6 +100,7 @@ export function ContentScreen() {
               label: text(`settings.content.lists.${each}`),
               testID: `content-tab-${each}`,
             }))}
+            tabsLabel={text("settings.tabs.content")}
             testID="content-tabs"
             value={list}
             onChange={setList}

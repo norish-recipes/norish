@@ -12,13 +12,16 @@ import { springTo } from "@/lib/motion/spring";
 type Box = { x: number; y: number; width: number; height: number };
 
 /** The kit's segmented control: a sand track, the pick on a solid thumb that slides to a new pick.
- * 44 pt tall, 34 `compact`; `iconOnly` leaves the labels to accessibility. No `value` picks none. */
+ * 44 pt tall, 34 `compact`; `iconOnly` leaves the labels to accessibility. No `value` picks none.
+ * `tabsLabel` makes it a tab list of that name, for a control that switches views; without it
+ * it is a radio group, for one that picks a value. */
 export function Segmented<Value extends string>({
   segments,
   value,
   testID,
   size = "standard",
   iconOnly = false,
+  tabsLabel,
   onChange,
 }: {
   segments: readonly {
@@ -31,6 +34,7 @@ export function Segmented<Value extends string>({
   testID: string;
   size?: "standard" | "compact";
   iconOnly?: boolean;
+  tabsLabel?: string;
   onChange: (value: Value) => void;
 }) {
   const foreground = useTokenColor("foreground");
@@ -60,7 +64,8 @@ export function Segmented<Value extends string>({
 
   return (
     <View
-      accessibilityRole="tablist"
+      accessibilityLabel={tabsLabel}
+      accessibilityRole={tabsLabel ? "tablist" : "radiogroup"}
       className={`bg-sand border-stroke flex-row items-center gap-0.5 ${compact ? "h-[34px] rounded-[17px] p-[3px]" : "h-11 rounded-[22px] p-1"} border-[0.5px] ${iconOnly ? "self-start" : ""}`}
       testID={testID}
     >
@@ -79,8 +84,8 @@ export function Segmented<Value extends string>({
           <Pressable
             key={segment.value}
             accessibilityLabel={segment.label}
-            accessibilityRole="tab"
-            accessibilityState={{ selected }}
+            accessibilityRole={tabsLabel ? "tab" : "radio"}
+            accessibilityState={tabsLabel ? { selected } : { checked: selected }}
             className={`h-full flex-row items-center justify-center gap-1.5 rounded-full ${iconOnly ? (compact ? "w-[34px]" : "w-11") : compact ? "flex-none px-[13px]" : "flex-1"} ${selected && !thumbShown ? "bg-thumb shadow-sm" : ""}`}
             testID={segment.testID}
             onLayout={({ nativeEvent: { layout } }) =>

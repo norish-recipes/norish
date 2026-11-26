@@ -8,13 +8,13 @@ type Props = {
   children?: ReactNode;
   accessibilityLabel?: string;
   accessibilityRole?: string;
-  accessibilityState?: { selected?: boolean };
+  accessibilityState?: { selected?: boolean; checked?: boolean };
   className?: string;
   testID?: string;
   onPress?: () => void;
 };
-const host = ({ children, testID, accessibilityRole }: Props) => (
-  <div data-testid={testID} role={accessibilityRole}>
+const host = ({ children, testID, accessibilityRole, accessibilityLabel }: Props) => (
+  <div aria-label={accessibilityLabel} data-testid={testID} role={accessibilityRole}>
     {children}
   </div>
 );
@@ -35,6 +35,7 @@ vi.mock("react-native", () => ({
       aria-label={accessibilityLabel}
       className={className}
       aria-selected={accessibilityState?.selected}
+      aria-checked={accessibilityState?.checked}
       role={accessibilityRole}
       data-testid={testID}
       onClick={onPress}
@@ -54,12 +55,13 @@ const segments = [
   { value: "b", label: "B", testID: "seg-b" },
 ] as const;
 
-function segmented(value: "a" | "b" | null, iconOnly = false) {
+function segmented(value: "a" | "b" | null, iconOnly = false, tabsLabel?: string) {
   const onChange = vi.fn();
 
   render(
     <Segmented
       iconOnly={iconOnly}
+      tabsLabel={tabsLabel}
       segments={segments}
       testID="seg"
       value={value}
@@ -71,18 +73,31 @@ function segmented(value: "a" | "b" | null, iconOnly = false) {
 }
 
 describe("Segmented", () => {
-  it("is a tab list of tabs", () => {
-    segmented("a");
+  it("is a labelled tab list of tabs where it switches views", () => {
+    segmented("a", false, "Content");
 
+    expect(screen.getByRole("tablist").getAttribute("aria-label")).toBe("Content");
     expect(screen.getByRole("tablist")).toBe(screen.getByTestId("seg"));
     expect(screen.getAllByRole("tab")).toHaveLength(2);
   });
 
-  it("marks the picked segment selected", () => {
-    segmented("b");
+  it("marks the picked tab selected", () => {
+    segmented("b", false, "Content");
 
     expect(screen.getByTestId("seg-a").getAttribute("aria-selected")).toBe("false");
     expect(screen.getByTestId("seg-b").getAttribute("aria-selected")).toBe("true");
+  });
+
+  it("is a radio group of radios, the picked one checked, where it picks a value", () => {
+    segmented("b");
+
+    expect(screen.getByRole("radiogroup")).toBe(screen.getByTestId("seg"));
+    expect(screen.queryByRole("tablist")).toBeNull();
+    expect(screen.queryAllByRole("tab")).toHaveLength(0);
+    expect(screen.getAllByRole("radio")).toHaveLength(2);
+    expect(screen.getByTestId("seg-a").getAttribute("aria-checked")).toBe("false");
+    expect(screen.getByTestId("seg-b").getAttribute("aria-checked")).toBe("true");
+    expect(screen.getByTestId("seg-b").getAttribute("aria-selected")).toBeNull();
   });
 
   it("fills the picked segment until the thumb is placed, so its first frame shows the pick", () => {
@@ -93,7 +108,7 @@ describe("Segmented", () => {
   });
 
   it("picks none for a null value", () => {
-    segmented(null);
+    segmented(null, false, "Content");
 
     expect(screen.getByTestId("seg-a").getAttribute("aria-selected")).toBe("false");
     expect(screen.getByTestId("seg-b").getAttribute("aria-selected")).toBe("false");

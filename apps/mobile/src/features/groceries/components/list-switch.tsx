@@ -52,6 +52,7 @@ export function ListSwitch({
             testID: "groceries-switch-pantry",
           },
         ]}
+        tabsLabel={intl.formatMessage({ id: "groceries.page.title" })}
         testID="groceries-switch"
         value={section}
         onChange={onChange}

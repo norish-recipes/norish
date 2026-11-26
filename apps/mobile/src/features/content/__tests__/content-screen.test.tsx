@@ -23,15 +23,18 @@ vi.mock("@/components/segmented", async () => {
     Segmented: ({
       segments,
       value,
+      tabsLabel,
       onChange,
     }: {
       segments: { value: string; testID: string }[];
       value: string;
+      tabsLabel?: string;
       onChange: (value: string) => void;
     }) =>
       segments.map((segment) =>
         createElement("button", {
           key: segment.value,
+          "data-tabs": tabsLabel,
           "data-testid": segment.testID,
           "aria-selected": segment.value === value,
           onClick: () => onChange(segment.value),
@@ -76,6 +79,13 @@ describe("ContentScreen", () => {
     expect(screen.getByTestId("ingredients")).toBeTruthy();
     expect(screen.getByTestId("content-tab-ingredients").getAttribute("aria-selected")).toBe(
       "true"
+    );
+  });
+
+  it("is a tab list named Content", () => {
+    render(<ContentScreen />);
+    expect(screen.getByTestId("content-tab-tags").getAttribute("data-tabs")).toBe(
+      "settings.tabs.content"
     );
   });
 
