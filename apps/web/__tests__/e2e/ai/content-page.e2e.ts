@@ -35,10 +35,11 @@ async function openList(
   const page = await context.newPage();
 
   await page.goto(`/settings/content/${list}`);
-  // A list with no entries draws its empty state and no search.
+  // The disabled skeleton toolbar carries the search's test id too: wait for loaded content.
   await expect(
-    page.getByTestId("content-search").or(page.getByTestId("content-empty"))
+    page.getByTestId("content-entry").first().or(page.getByTestId("content-empty"))
   ).toBeVisible();
+  await expect(page.getByTestId("content-loading")).toHaveCount(0);
 
   return { context, page };
 }
@@ -199,9 +200,16 @@ test("household B never sees household A's entries", async ({ browser, aiStack }
     expect(theirs.map((each) => each.name)).not.toContain(secret);
   }
 
+  const own = `${word} Own`;
+
+  await callTrpc(aiStack.baseURL, owner, "lists.add", { kind: "tag", name: own });
+
   const { context, page } = await openList(browser, aiStack.baseURL, OWNER, "tags");
 
   try {
+    // The list has loaded once B's own Tag shows; only then is A's absence a finding.
+    await page.getByTestId("content-search").fill(word);
+    await expect(entry(page, own)).toBeVisible();
     await expect(entry(page, secret)).toHaveCount(0);
 
     // B's own Tag of the same name is a new entry, not A's.
@@ -272,8 +280,10 @@ test("on a desktop each picker row spans the picker with its count at the right 
     const tagsBox = await box(tags);
     const count = await box(tags.locator(".tabular-nums"));
 
-    // The row's padding is 16 px.
-    expect(tagsBox.x + tagsBox.width - (count.x + count.width)).toBeLessThanOrEqual(17);
+    // The row's padding is 16 px, on both sides of that.
+    expect(Math.abs(tagsBox.x + tagsBox.width - (count.x + count.width) - 16)).toBeLessThanOrEqual(
+      2
+    );
   } finally {
     await context.close();
   }
@@ -295,15 +305,16 @@ test("a loading list moves nothing when its entries arrive", async ({ browser, a
   });
   const page = await context.newPage();
 
+  let release = () => {};
+
   try {
     await page.goto("/settings/account");
 
-    let release = () => {};
     const held = new Promise<void>((resolve) => {
       release = resolve;
     });
 
-    await page.route(/lists\.list/, async (route) => {
+    await page.route(/\/lists\.list(?!\w)/, async (route) => {
       await held;
       await route.continue();
     });
@@ -330,6 +341,34 @@ test("a loading list moves nothing when its entries arrive", async ({ browser, a
     expect(
       (await box(page.getByTestId("content-entry").first().locator("xpath=ancestor::ul"))).y
     ).toBe(frame.y);
+  } finally {
+    // A failed assertion must not leave the route held.
+    release();
+    await context.close();
+  }
+});
+
+test("the search field and the All/Unused toggle share a height, and an Ingredients row is 60 px", async ({
+  browser,
+  aiStack,
+}) => {
+  const word = `Con${Date.now().toString(36)}`;
+  const member = await signIn(aiStack.baseURL, MEMBER);
+
+  await callTrpc(aiStack.baseURL, member, "lists.add", { kind: "tag", name: `${word} Tag` });
+  await seedRecipe(await userIdOf(MEMBER), `${word} Dish`, [`${word} flour`]);
+
+  const { context, page } = await openList(browser, aiStack.baseURL, MEMBER, "tags");
+
+  try {
+    const search = await box(page.getByTestId("content-search"));
+    const toggle = await box(page.getByTestId("content-show-all"));
+
+    expect(search.height).toBe(toggle.height);
+
+    await page.goto("/settings/content/ingredients");
+    await expect(page.getByTestId("ingredient-row").first()).toBeVisible();
+    expect((await box(page.getByTestId("ingredient-row").first())).height).toBe(60);
   } finally {
     await context.close();
   }
