@@ -326,7 +326,7 @@ describe("OfflineCacheController", () => {
       expect.objectContaining({
         transport: trpcClient,
         verifySession: expect.any(Function),
-        currentHousehold: async () => "h1",
+        currentHousehold: expect.any(Function),
         refetchActiveQueries: expect.any(Function),
         topUp: warmSetTopUp,
       })
