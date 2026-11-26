@@ -54,11 +54,13 @@ export function SheetInput({
     ) : null;
 
   const end = clear ?? suffix;
+  // A suffix slot whenever one may show, so the field never remounts (and drops the keyboard) as it comes.
+  const ends = Boolean(onClear || suffix);
   const field = `${SHEET_FIELD} ${className ?? ""}`;
   const word = (node: ReactNode) =>
     typeof node === "string" ? <Text className="text-muted text-base">{node}</Text> : node;
 
-  if (!prefix && !end) {
+  if (!prefix && !ends) {
     return <Input {...props} className={`px-4 ${field}`} variant="secondary" />;
   }
 
@@ -71,10 +73,10 @@ export function SheetInput({
       ) : null}
       <InputGroup.Input
         {...props}
-        className={`${prefix ? "" : "pl-4"} ${end ? "" : "pr-4"} ${field}`}
+        className={`${prefix ? "" : "pl-4"} ${ends ? "" : "pr-4"} ${field}`}
         variant="secondary"
       />
-      {end ? (
+      {ends ? (
         <InputGroup.Suffix className="pr-4 pl-1.5" isDecorative={typeof end === "string"}>
           {word(end)}
         </InputGroup.Suffix>
