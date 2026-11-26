@@ -1,6 +1,6 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { HouseholdAdminSettingsDto } from "@norish/shared/contracts/dto/household";
 import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
@@ -34,6 +34,9 @@ export function useHouseholdSubscription() {
       trpc.recipes.get.pathKey(),
     ],
   };
+
+  // Every household write names this read's household; a screen that shows none still needs it.
+  useQuery(trpc.households.get.queryOptions());
 
   // onCreated user-scoped: the reader's household after joining, leaving or being removed
   useRealtimeSubscription<Payload<"created">>(trpc.households.onCreated, {

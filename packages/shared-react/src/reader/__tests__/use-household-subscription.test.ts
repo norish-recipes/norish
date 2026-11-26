@@ -180,6 +180,14 @@ describe("useHouseholdSubscription", () => {
       // The hook should call useSubscription for each event type
       expect(useSubscription).toHaveBeenCalled();
     });
+
+    it("reads the household on a screen that shows none, so a write can name it", async () => {
+      renderHook(() => useHouseholdSubscription(), { wrapper: readerWrapper(queryClient) });
+
+      await waitFor(() =>
+        expect(queryClient.getQueryData(householdQueryKey)).toEqual(createMockHouseholdData())
+      );
+    });
   });
 
   describe("once live", () => {
