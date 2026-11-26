@@ -17,8 +17,7 @@ export function isAnyOf(column: AnyPgColumn, values: readonly string[], type: El
 
 /**
  * A batch update's value for each row: the one of `values` paired with its `key` in `keys`, both
- * bound as one array; text, for the caller to cast. The pairs are aggregated once into a map each
- * row looks up, so any number costs linear time.
+ * bound as one array; text, for the caller to cast. The pairs make one map, built once per statement.
  */
 export function pickedByKey(
   key: AnyPgColumn,
@@ -26,7 +25,7 @@ export function pickedByKey(
   keyType: ElementType,
   values: readonly (string | null)[]
 ): SQL {
-  const pairs = sql`unnest(${arrayParam(keys, keyType)}, ${arrayParam(values, "text")}) as ${sql.identifier("picked")}(${sql.identifier("picked_key")}, ${sql.identifier("picked_value")})`;
+  const pairs = sql`jsonb_object(${arrayParam(keys, keyType)}::text[], ${arrayParam(values, "text")})`;
 
-  return sql`((select jsonb_object_agg(${sql.identifier("picked_key")}, ${sql.identifier("picked_value")}) from ${pairs}) ->> ${key}::text)`;
+  return sql`(${pairs} ->> ${key}::text)`;
 }

@@ -21,6 +21,7 @@ import {
 } from "@norish/db/schema";
 import { distinctFoods, joinOf } from "@norish/shared/lib/line-foods";
 
+import { isAnyOf } from "./array-params";
 import { assertOwnReferences } from "./household-rows";
 import { inCatalogue, ownBeforeSeed } from "./household-scope";
 import { moveMergedAIChanges } from "./ingredient-ai-changes";
@@ -110,7 +111,7 @@ export async function lockIngredients(tx: DbTransaction, ids: readonly string[])
   const rows = await tx
     .select({ id: ingredients.id })
     .from(ingredients)
-    .where(inArray(ingredients.id, [...ids]))
+    .where(isAnyOf(ingredients.id, ids, "uuid"))
     .orderBy(asc(ingredients.id))
     .for("update");
 
