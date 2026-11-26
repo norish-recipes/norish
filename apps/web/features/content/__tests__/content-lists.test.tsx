@@ -116,7 +116,8 @@ async function renderList(
 ) {
   const list = { tag: "tags", cuisine: "cuisines", category: "categories" }[kind] as
     "tags" | "cuisines" | "categories";
-  const base = createTestWrapper(createTestQueryClient(), fakePlatformAdapter());
+  const queryClient = createTestQueryClient();
+  const base = createTestWrapper(queryClient, fakePlatformAdapter());
   const wrapper = ({ children }: { children: ReactNode }) =>
     base({
       children: offline ? (
@@ -135,6 +136,8 @@ async function renderList(
 
   render(<EntryListCard kind={kind} list={list} />, { wrapper });
   await waitFor(() => expect(screen.queryByTestId("content-loading")).not.toBeInTheDocument());
+
+  return queryClient;
 }
 
 const rows = () => screen.queryAllByTestId("content-entry").map((row) => row.dataset.entry);
@@ -479,6 +482,24 @@ describe("an entry's panel", () => {
     await userEvent.click(within(uses).getByTestId("content-entry-uses-more"));
     expect(await within(uses).findByRole("link", { name: "Shake" })).toBeVisible();
     expect(within(uses).queryByTestId("content-entry-uses-more")).not.toBeInTheDocument();
+  });
+
+  it("closes Used by with its panel when the entry goes elsewhere", async () => {
+    entries = [entry("Diner", { recipeCount: 1 })];
+    readAnswers.set("lists.uses", async () => ({
+      recipes: [{ id: "r1", name: "Burger" }],
+      nextCursor: null,
+    }));
+    const queryClient = await renderList("tag");
+    const panel = await open("Diner");
+
+    await userEvent.click(within(panel).getByTestId("content-entry-used"));
+    await screen.findByTestId("content-entry-uses");
+    // A housemate merged it away: the list read again no longer has it.
+    entries = [];
+    await act(() => queryClient.invalidateQueries());
+
+    await waitFor(() => expect(screen.queryByTestId("content-entry-uses")).not.toBeInTheDocument());
   });
 
   it("changes nothing offline: Save and Delete are off, and the panel says why", async () => {

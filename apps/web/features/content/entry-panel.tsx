@@ -169,7 +169,7 @@ export function EntryPanel({
       <EntryUsesPanel
         id={id}
         kind={kind}
-        open={showingUses}
+        open={open && !entry.gone && showingUses}
         onClose={() => setShowingUses(false)}
       />
       <ConfirmModal
