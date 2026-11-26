@@ -38,25 +38,22 @@ export function EntryAddPanel({
   return (
     <AddPanel
       canAdd={add.canAdd}
-      matches={
-        add.typed.trim() === ""
-          ? []
-          : add.matches.map((match) => (
-              <ListRow
-                key={match.id}
-                chevron
-                count={t("recipes", { count: match.recipeCount })}
-                data-testid="content-add-match"
-                name={match.name}
-                onPress={() => onOpenEntry(match.id)}
-              />
-            ))
-      }
+      matches={add.matches.map((match) => (
+        <ListRow
+          key={match.id}
+          chevron
+          count={t("recipes", { count: match.recipeCount })}
+          data-testid="content-add-match"
+          name={match.name}
+          onPress={() => onOpenEntry(match.id)}
+        />
+      ))}
       matchesTitle={t(`panel.already.${kind}`)}
       name={add.typed}
       offline={add.offline}
       open={open}
       problem={copy ? t(copy.key, copy.values) : null}
+      onRetry={add.problem === "loadFailed" ? () => void add.retry() : undefined}
       title={t(`panel.addTitle.${kind}`)}
       onAdd={() => void submit()}
       onNameChange={add.setTyped}

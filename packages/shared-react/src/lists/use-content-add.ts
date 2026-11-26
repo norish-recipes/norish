@@ -16,7 +16,7 @@ const MATCH_LIMIT = 5;
 
 /**
  * The Add flow of one list: the entries the name matches, and a create only where none folds
- * alike (the server decides). An admin may add a Cuisine for the server's list.
+ * alike (the server decides); no name typed lists none. An admin may add a Cuisine for the server's list.
  */
 export function useContentAdd(kind: PickerKind) {
   const { entries, loaded, failed } = useListEntries(kind);
@@ -25,6 +25,8 @@ export function useContentAdd(kind: PickerKind) {
   const [typed, setTyped] = useState("");
   const [forServer, setForServer] = useState(false);
   const [failedAdd, setFailedAdd] = useState(false);
+  // An add went through but the lists could not be read again, so its entry is not on them.
+  const [unlisted, setUnlisted] = useState(false);
   const canAddForServer = isAdmin && kind === "cuisine";
   const toServer = canAddForServer && forServer;
   // A server entry's fold is unique among the server's only; a household's among both.
@@ -32,7 +34,7 @@ export function useContentAdd(kind: PickerKind) {
   const offer: CreateOffer = loaded ? createOffer(kind, pool, typed) : { kind: "none" };
   let problem: ContentAddProblem | null = null;
 
-  if (failed) problem = "loadFailed";
+  if (failed || unlisted) problem = "loadFailed";
   else if (offer.kind === "tooLong") problem = "tooLong";
   else if (failedAdd) problem = "failed";
 
@@ -45,12 +47,14 @@ export function useContentAdd(kind: PickerKind) {
     forServer: toServer,
     setForServer,
     canAddForServer,
-    matches: matchEntries(kind, pool, typed).slice(0, MATCH_LIMIT),
+    matches: typed.trim() === "" ? [] : matchEntries(kind, pool, typed).slice(0, MATCH_LIMIT),
     offer,
     problem,
     max: offer.kind === "tooLong" ? offer.max : undefined,
     offline: writes.offline,
     canAdd: offer.kind === "create" && !writes.offline && !writes.pending,
+    /** Reads the lists again after they failed to load. */
+    retry: async () => setUnlisted(!(await writes.reread())),
     /** Adds the typed name; resolves the entry and whether it was made, or null when it was not. */
     add: async (): Promise<{ entry: PickerEntry; created: boolean } | null> => {
       if (offer.kind !== "create" || writes.offline) return null;
@@ -61,6 +65,13 @@ export function useContentAdd(kind: PickerKind) {
 
       if (result.status !== "saved") {
         setFailedAdd(true);
+
+        return null;
+      }
+
+      if (!result.listed) {
+        // Without the lists the entry's panel cannot open, so say why instead.
+        setUnlisted(true);
 
         return null;
       }

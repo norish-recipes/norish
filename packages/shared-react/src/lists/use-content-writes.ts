@@ -12,9 +12,9 @@ import { useTRPC } from "../trpc";
 
 type ListsOutput = inferRouterOutputs<AppRouter>["lists"];
 
-/** What a write came to: taken, refused as someone else changed the entry first, failed, or not tried offline. */
+/** What a write came to: taken (`listed` is whether the lists were read again after it), refused as someone else changed the entry first, failed, or not tried offline. */
 export type ContentWrite<T> =
-  | { status: "saved"; value: T }
+  | { status: "saved"; value: T; listed: boolean }
   | { status: "stale" }
   | { status: "failed" }
   | { status: "offline" };
@@ -36,7 +36,19 @@ export function useContentWrites(kind: PickerKind) {
   const add = useMutation(trpc.lists.add.mutationOptions());
   const rename = useMutation(trpc.lists.rename.mutationOptions());
   const remove = useMutation(trpc.lists.delete.mutationOptions());
-  const reread = () => queryClient.invalidateQueries({ queryKey: trpc.lists.list.pathKey() });
+  // Whether the lists could be read again.
+  const reread = async () => {
+    try {
+      await queryClient.invalidateQueries(
+        { queryKey: trpc.lists.list.pathKey() },
+        { throwOnError: true }
+      );
+
+      return true;
+    } catch {
+      return false;
+    }
+  };
 
   const run = async <T, F extends T>(
     write: () => Promise<T>,
@@ -49,9 +61,9 @@ export function useContentWrites(kind: PickerKind) {
     if (answer === null) return { status: "failed" };
 
     // The list is read again before this resolves, so what it answers is on it.
-    await reread();
+    const listed = await reread();
 
-    return isFresh(answer) ? { status: "saved", value: answer } : { status: "stale" };
+    return isFresh(answer) ? { status: "saved", value: answer, listed } : { status: "stale" };
   };
   const taken = <T>(_answer: T): _answer is T => true;
   const notStale = <T extends { stale: boolean }>(
@@ -60,6 +72,7 @@ export function useContentWrites(kind: PickerKind) {
 
   return {
     offline: isOffline,
+    reread,
     pending: add.isPending || rename.isPending || remove.isPending,
     /** `instance` adds to the server's list: an admin's Cuisines. */
     add: (name: string, instance = false): Promise<ContentWrite<ListsOutput["add"]>> =>

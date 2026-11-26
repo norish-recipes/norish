@@ -9,7 +9,7 @@ import {
 } from "@norish/shared-react/platform/testing";
 
 import { ConnectivityProvider } from "../../offline/react";
-import { resetTRPCFake, serveTRPC, trpcCalls } from "../../trpc/testing";
+import { keyOf, resetTRPCFake, serveTRPC, trpcCalls } from "../../trpc/testing";
 import { useContentAdd } from "../use-content-add";
 import { useContentEntry } from "../use-content-entry";
 import { useContentList } from "../use-content-list";
@@ -53,8 +53,8 @@ function serve({ admin = false, entries = [], answers = {} }: ServerOptions = {}
   return { reads: () => reads };
 }
 
-function wrapperFor(offline = false) {
-  const base = createTestWrapper(createTestQueryClient(), fakePlatformAdapter());
+function wrapperFor(offline = false, client = createTestQueryClient()) {
+  const base = createTestWrapper(client, fakePlatformAdapter());
 
   if (!offline) return base;
 
@@ -230,7 +230,7 @@ describe("useContentEntry", () => {
     expect(result.current.deleteImpact).toBeNull();
   });
 
-  it("opens an entry the server answered for an Add with its name, once the list has it", async () => {
+  it("opens an entry the server answered for an Add on the list the app already holds, stale", async () => {
     let known = false;
 
     serveTRPC(async (path) => {
@@ -244,12 +244,16 @@ describe("useContentEntry", () => {
       return {};
     });
 
+    // One client throughout, as the app has: the list is cached, old, and does not have the entry.
+    const client = createTestQueryClient();
+    const wrapper = wrapperFor(false, client);
     const { result } = renderHook(
       () => ({ add: useContentAdd("tag"), list: useContentList("tag") }),
-      { wrapper: wrapperFor() }
+      { wrapper }
     );
 
     await waitFor(() => expect(result.current.list.loaded).toBe(true));
+    client.setQueryData(keyOf("lists.list", { kind: "tag" }), [], { updatedAt: 0 });
     act(() => result.current.add.setTyped("Soup"));
 
     let added: Awaited<ReturnType<typeof result.current.add.add>> = null;
@@ -260,12 +264,47 @@ describe("useContentEntry", () => {
     // The entry is on the list by the time Add resolves, so a panel opened on it reads its name.
     expect(result.current.list.entries.map((e) => e.id)).toEqual(["5"]);
 
-    const panel = renderHook(() => useContentEntry("tag", added!.entry.id), {
-      wrapper: wrapperFor(),
+    const panel = renderHook(() => useContentEntry("tag", added!.entry.id), { wrapper });
+
+    expect(panel.result.current.name).toBe("Soup");
+    expect(panel.result.current.gone).toBe(false);
+  });
+
+  it("says the list could not be read when an Add went through but the reread failed, and retries", async () => {
+    let added = false;
+    let down = false;
+
+    serveTRPC(async (path) => {
+      if (path === "lists.list") {
+        if (down) throw new Error("down");
+
+        return added ? [row("5", "Soup")] : [];
+      }
+      if (path === "lists.add") {
+        added = true;
+        down = true;
+
+        return { entry: row("5", "Soup"), created: true };
+      }
+
+      return {};
     });
 
-    await waitFor(() => expect(panel.result.current.name).toBe("Soup"));
-    expect(panel.result.current.gone).toBe(false);
+    const { result } = renderHook(() => useContentAdd("tag"), { wrapper: wrapperFor() });
+
+    await waitFor(() => expect(result.current.offer.kind).toBe("none"));
+    act(() => result.current.setTyped("Soup"));
+    await waitFor(() => expect(result.current.offer.kind).toBe("create"));
+
+    await act(async () => {
+      expect(await result.current.add()).toBeNull();
+    });
+    expect(result.current.problem).toBe("loadFailed");
+
+    down = false;
+    await act(async () => result.current.retry());
+    expect(result.current.problem).toBeNull();
+    expect(result.current.matches.map((e) => e.name)).toEqual(["Soup"]);
   });
 
   it("names the entry when it arrives after the panel opened, not an empty field", async () => {
@@ -293,6 +332,26 @@ describe("useContentEntry", () => {
     });
     expect(result.current.deleteState).toBe("stale");
     expect(result.current.problem).toBeNull();
+  });
+
+  it("forgets why a delete failed once its confirmation closes", async () => {
+    serveTRPC(async (path) => {
+      if (path === "lists.list") return [row("1", "Diner")];
+      if (path === "lists.delete") throw new Error("down");
+
+      return {};
+    });
+
+    const { result } = renderHook(() => useContentEntry("tag", "1"), { wrapper: wrapperFor() });
+
+    await waitFor(() => expect(result.current.deleteState).toBe("ready"));
+    await act(async () => {
+      expect(await result.current.remove()).toBe(false);
+    });
+    expect(result.current.deleteState).toBe("failed");
+    act(() => result.current.resetDelete());
+    expect(result.current.deleteState).toBe("ready");
+    expect(result.current.deleteProblem).toBeNull();
   });
 
   it("says the server's count failed, and reads it again", async () => {
@@ -351,7 +410,8 @@ describe("useContentAdd", () => {
 
     const { result } = renderHook(() => useContentAdd("tag"), { wrapper: wrapperFor() });
 
-    await waitFor(() => expect(result.current.matches).toHaveLength(2));
+    await waitFor(() => expect(result.current.offer.kind).toBe("none"));
+    expect(result.current.matches).toEqual([]);
     act(() => result.current.setTyped("spicy"));
     expect(result.current.matches.map((e) => e.name)).toEqual(["spicyfood", "Spicy & sweet"]);
     expect(result.current.canAdd).toBe(true);

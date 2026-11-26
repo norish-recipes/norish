@@ -5,6 +5,7 @@ import { ActionButton, ActionButtonGroup } from "@/components/shared/action-butt
 import { ListFrame } from "@/components/shared/list-row";
 import { Note } from "@/components/shared/note";
 import { Section } from "@/components/shared/section";
+import { Button } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { NameField } from "./name-field";
@@ -23,6 +24,7 @@ export function AddPanel({
   canAdd,
   onAdd,
   problem,
+  onRetry,
   offline,
   matchesTitle,
   matches,
@@ -36,6 +38,8 @@ export function AddPanel({
   canAdd: boolean;
   onAdd: () => void;
   problem: string | null;
+  /** The problem is a failed read: Retry reads again. */
+  onRetry?: () => void;
   offline: boolean;
   matchesTitle: string;
   /** The rows of the matching entries; none shows no section. */
@@ -49,7 +53,16 @@ export function AddPanel({
   return (
     <Panel open={open} title={title} onOpenChange={onOpenChange}>
       <Panel.Body sections>
-        {problem ? <Note status="warning">{problem}</Note> : null}
+        {problem ? (
+          <Note status="warning">
+            {problem}
+            {onRetry ? (
+              <Button size="sm" variant="tertiary" onPress={onRetry}>
+                {tActions("retry")}
+              </Button>
+            ) : null}
+          </Note>
+        ) : null}
         <Section placement="panel" title={t("panel.name")}>
           <NameField
             data-testid="content-add-name"
