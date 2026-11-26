@@ -34,6 +34,8 @@ export function FoodPickerStep({
     locale,
     onPick: setTarget,
   });
+  // A parent is only a draft; a merge or a move writes at once, so offline it is off.
+  const writesNow = relocation.kind !== "parent";
   const title = text(
     relocation.kind === "move"
       ? "settings.ingredients.moveTo"
@@ -59,8 +61,7 @@ export function FoodPickerStep({
               ? "settings.ingredients.merge"
               : "common.actions.apply"
         ),
-        // A parent is only a draft; a merge or a move writes at once.
-        disabled: !target || (isOffline && relocation.kind !== "parent"),
+        disabled: !target || (isOffline && writesNow),
         onPress: () => {
           if (target) onConfirm(relocation, target);
         },
@@ -115,6 +116,7 @@ export function FoodPickerStep({
           />
         </View>
       ) : null}
+      {isOffline && writesNow ? <SheetNote>{text("settings.content.offline")}</SheetNote> : null}
     </FitSheet>
   );
 }

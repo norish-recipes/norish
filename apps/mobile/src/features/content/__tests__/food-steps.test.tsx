@@ -155,6 +155,7 @@ describe("FoodPickerStep", () => {
     );
     fireEvent.click(screen.getByTestId("food-picker-option"));
     expect((screen.getByTestId("sheet-confirm") as HTMLButtonElement).disabled).toBe(blocked);
+    expect(screen.queryByText("settings.content.offline") !== null).toBe(blocked);
   });
 
   it("applies a pick only once a food is picked", () => {
