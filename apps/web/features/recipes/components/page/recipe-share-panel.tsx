@@ -165,7 +165,7 @@ export default function RecipeSharePanel({ open, onOpenChange }: Props) {
                 <Spinner size="sm" />
               </div>
             ) : shareRows.length === 0 ? (
-              <EmptyState icon={LinkIcon} title={t("empty")} />
+              <EmptyState icon={LinkIcon} title={t("empty")} variant="row" />
             ) : (
               <div className="flex flex-col gap-3">
                 {shareRows.map((share) => (

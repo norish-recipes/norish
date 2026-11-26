@@ -3,7 +3,8 @@
 import { SelectableRow } from "@/components/cookbooks/selectable-row";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
-import { PhotoIcon } from "@heroicons/react/24/outline";
+import { EmptyState } from "@/components/shared/empty-state";
+import { BookOpenIcon, PhotoIcon } from "@heroicons/react/24/outline";
 import { Button, Input, Spinner } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -94,9 +95,11 @@ function CookbookAddRecipesContent({
               <Spinner color="accent" size="sm" />
             </div>
           ) : addable.length === 0 ? (
-            <div className="text-muted flex h-full items-center justify-center px-4 text-center text-base">
-              {hasRecipes ? t("everythingAlreadyIn") : t("noRecipesToAdd")}
-            </div>
+            <EmptyState
+              icon={BookOpenIcon}
+              title={hasRecipes ? t("everythingAlreadyIn") : t("noRecipesToAdd")}
+              variant="row"
+            />
           ) : (
             <div className="divide-border/40 flex flex-col divide-y">
               {addable.map((recipe) => (

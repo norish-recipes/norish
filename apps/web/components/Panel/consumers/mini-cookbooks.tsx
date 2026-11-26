@@ -4,7 +4,9 @@ import CookbookCover from "@/components/cookbooks/cookbook-cover";
 import { SelectableRow } from "@/components/cookbooks/selectable-row";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
+import { EmptyState } from "@/components/shared/empty-state";
 import { PlusIcon, XMarkIcon } from "@heroicons/react/16/solid";
+import { BookmarkSquareIcon } from "@heroicons/react/24/outline";
 import { Button, Input, Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -116,9 +118,7 @@ function MiniCookbooksContent({
         {isLoading ? (
           <div className="text-muted p-4 text-base">…</div>
         ) : cookbooks.length === 0 && pending.length === 0 ? (
-          <div className="text-muted flex flex-1 items-center justify-center px-4 text-center text-base">
-            {t("noneEditable")}
-          </div>
+          <EmptyState icon={BookmarkSquareIcon} title={t("noneEditable")} variant="row" />
         ) : (
           <div className="divide-border/40 flex min-h-0 flex-1 flex-col divide-y overflow-y-auto">
             {pending.map((entry) => (

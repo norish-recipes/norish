@@ -175,7 +175,7 @@ export function ChangedByAIPanel({ open, onClose }: { open: boolean; onClose: ()
 
     switch (row.kind) {
       case "empty":
-        return <EmptyState icon={SparklesIcon} title={t("changedByAI.empty")} />;
+        return <EmptyState icon={SparklesIcon} title={t("changedByAI.empty")} variant="row" />;
       case "heading":
         return (
           <h3

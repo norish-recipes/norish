@@ -185,7 +185,9 @@ export default function SiteAuthTokensCard() {
           </div>
         )}
 
-        {tokens.length === 0 && <EmptyState icon={ShieldCheckIcon} title={t("noTokens")} />}
+        {tokens.length === 0 && (
+          <EmptyState icon={ShieldCheckIcon} title={t("noTokens")} variant="row" />
+        )}
       </SettingsCard>
 
       <ConfirmModal

@@ -53,7 +53,6 @@
     },
     "confirmDelete": "Tem certeza de que deseja excluir {storeName}?",
     "noStoresYet": "Ainda não há lojas",
-    "createStoreHint": "Crie uma loja para organizar suas compras",
     "hasItems": "Esta loja tem {count} item de compra.",
     "hasItemsPlural": "Esta loja tem {count} itens de compra.",
     "whatToDo": "O que você gostaria de fazer com eles?",

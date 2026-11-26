@@ -84,7 +84,9 @@ export default function CuisineVocabularyForm() {
 
       {error && <p className="text-danger text-sm">{t(error)}</p>}
 
-      {!isLoading && cuisines.length === 0 && <EmptyState icon={GlobeAltIcon} title={t("empty")} />}
+      {!isLoading && cuisines.length === 0 && (
+        <EmptyState icon={GlobeAltIcon} title={t("empty")} variant="row" />
+      )}
 
       {/* The vocabulary grows without bound, so the list scrolls inside a fixed
           height rather than pushing the add field off the top of the card. */}

@@ -53,7 +53,6 @@
     },
     "confirmDelete": "Weet je zeker dat je {storeName} wilt verwijderen?",
     "noStoresYet": "Nog geen winkels",
-    "createStoreHint": "Maak een winkel aan om je boodschappen te organiseren",
     "hasItems": "Deze winkel heeft {count} boodschap.",
     "hasItemsPlural": "Deze winkel heeft {count} boodschappen.",
     "whatToDo": "Wat wil je ermee doen?",

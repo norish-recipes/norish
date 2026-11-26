@@ -324,7 +324,7 @@ export default function JobQueueCard() {
                     format.relativeTime(new Date(job.createdAt), now),
                 },
               ]}
-              emptyState={<EmptyState icon={QueueListIcon} title={t("empty")} />}
+              emptyState={<EmptyState icon={QueueListIcon} title={t("empty")} variant="cell" />}
               rowKey={(job: AdminJobRowDTO) => `${job.queue}:${job.id}`}
               rows={pageJobs}
               onRowAction={(job: AdminJobRowDTO) => {

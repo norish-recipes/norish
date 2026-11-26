@@ -33,7 +33,7 @@ export default function ModelListingEmptyState({
   }
 
   if (!refusal) {
-    return <EmptyState className="px-2 py-2" icon={CpuChipIcon} title={t("empty")} />;
+    return <EmptyState icon={CpuChipIcon} title={t("empty")} variant="cell" />;
   }
 
   return (

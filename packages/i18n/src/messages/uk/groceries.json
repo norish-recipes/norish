@@ -53,7 +53,6 @@
     },
     "confirmDelete": "Ви впевнені, що хочете видалити {storeName}?",
     "noStoresYet": "Магазинів ще немає",
-    "createStoreHint": "Створіть магазин, щоб упорядкувати покупки",
     "hasItems": "У цьому магазині позицій: {count}.",
     "hasItemsPlural": "У цьому магазині позицій: {count}.",
     "whatToDo": "Що з ними зробити?",

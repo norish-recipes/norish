@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { IngredientIcon } from "@/components/ingredients/ingredient-icon";
 import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
 import { IconActionButton } from "@/components/shared/action-button";
-import { EmptyStateCard } from "@/components/shared/empty-state";
+import { EmptyState } from "@/components/shared/empty-state";
 import { FIELD_STYLE } from "@/features/groceries/lib/grocery-field";
 import { MagnifyingGlassIcon, PlusIcon } from "@heroicons/react/16/solid";
 import {
@@ -134,12 +134,18 @@ export function PantryScreen() {
           ))}
         </div>
       ) : items.length === 0 ? (
-        <EmptyStateCard data-testid="pantry-empty" icon={ArchiveBoxIcon} title={t("empty")} />
+        <EmptyState
+          data-testid="pantry-empty"
+          icon={ArchiveBoxIcon}
+          title={t("empty")}
+          variant="page"
+        />
       ) : kept.length === 0 ? (
-        <EmptyStateCard
+        <EmptyState
           data-testid="pantry-no-match"
           icon={MagnifyingGlassOutlineIcon}
           title={tStatus("noResults")}
+          variant="page"
         />
       ) : (
         <ul

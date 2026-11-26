@@ -171,16 +171,17 @@ export default function CaldavSyncStatusCard() {
             </Table.Header>
             <Table.Body
               renderEmptyState={() => (
-                <div className="text-muted px-4 py-6 text-sm">
-                  {isLoading ? (
-                    tStatus("loading")
-                  ) : (
-                    <EmptyState
-                      icon={CalendarDaysIcon}
-                      title={syncStatusFilter ? t("emptyFiltered") : t("emptyDefault")}
-                    />
-                  )}
-                </div>
+                <EmptyState
+                  icon={CalendarDaysIcon}
+                  title={
+                    isLoading
+                      ? tStatus("loading")
+                      : syncStatusFilter
+                        ? t("emptyFiltered")
+                        : t("emptyDefault")
+                  }
+                  variant="cell"
+                />
               )}
             >
               {syncStatuses.map((status) => (

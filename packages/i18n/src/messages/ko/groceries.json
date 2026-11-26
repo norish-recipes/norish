@@ -53,7 +53,6 @@
     },
     "confirmDelete": "{storeName}을(를) 삭제하시겠습니까?",
     "noStoresYet": "아직 매장이 없습니다.",
-    "createStoreHint": "장보기 목록을 정리할 매장을 만드세요",
     "hasItems": "이 매장에는 {count}개의 항목이 있습니다.",
     "hasItemsPlural": "이 매장에는 {count}개의 항목이 있습니다.",
     "whatToDo": "해당 항목을 어떻게 처리하시겠습니까?",

@@ -1,12 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
-import { EmptyStateCard } from "@/components/shared/empty-state";
 import { useStructuralSharing } from "@/features/groceries/hooks/use-structural-sharing";
 import { listFoodIds } from "@/features/groceries/lib/list-food-ids";
-import { ShoppingCartIcon } from "@heroicons/react/24/outline";
 import { motion } from "motion/react";
-import { useTranslations } from "next-intl";
 
 import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
 import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
@@ -21,6 +18,7 @@ import { groupGroceriesByIngredient } from "@norish/shared/lib/grocery-grouping"
 
 import { DndGroceryProvider } from "./dnd/dnd-grocery-provider";
 import { DndGroupedGroceryProvider } from "./dnd/dnd-grouped-grocery-provider";
+import { GroceryListEmpty } from "./grocery-list-empty";
 import { GroupedStoreSection } from "./grouped-store-section";
 import { StoreSection } from "./store-section";
 
@@ -70,7 +68,6 @@ function GroceryListContent({
   getRecipeNameForGrocery,
   groupSimilarIngredients = false,
 }: GroceryListProps) {
-  const t = useTranslations("groceries.empty");
   const { units: customUnits } = useUnitsQuery();
   // Where each Store files each name — the one place a grocery's aisle comes
   // from (ADR-0031) — and the one write a drop into an aisle makes.
@@ -107,15 +104,7 @@ function GroceryListContent({
   const hasStores = stores.length > 0;
 
   if (!hasGroceries && !hasStores) {
-    return (
-      <div className="px-4 py-20">
-        <EmptyStateCard
-          className="mx-auto w-full max-w-xl"
-          icon={ShoppingCartIcon}
-          title={t("title")}
-        />
-      </div>
-    );
+    return <GroceryListEmpty />;
   }
 
   const sortedStores = stores.slice().sort((a, b) => a.sortOrder - b.sortOrder);

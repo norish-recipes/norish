@@ -21,10 +21,9 @@ import {
 } from "@norish/shared/contracts/filter-contract";
 
 import CookbookCard from "./cookbook-card";
+import LibraryEmpty from "./library-empty";
 import LibraryGrid from "./library-grid";
-import NoCookbooksText from "./no-cookbooks-text";
 import NoRecipeResults from "./no-recipe-results";
-import NoRecipesText from "./no-recipes-text";
 import RecipeCard from "./recipe-card";
 
 /**
@@ -88,14 +87,11 @@ export default function LibraryView({ variant }: { variant: RecipeViewMode }) {
     );
   };
 
-  const emptyState =
-    filters.libraryType === "cookbooks" && !hasAppliedFilters ? (
-      <NoCookbooksText />
-    ) : hasAppliedFilters ? (
-      <NoRecipeResults onClear={clearFilters} />
-    ) : (
-      <NoRecipesText />
-    );
+  const emptyState = hasAppliedFilters ? (
+    <NoRecipeResults onClear={clearFilters} />
+  ) : (
+    <LibraryEmpty cookbooks={filters.libraryType === "cookbooks"} />
+  );
 
   return (
     <LibraryGrid

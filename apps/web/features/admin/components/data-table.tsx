@@ -86,13 +86,7 @@ export default function DataTable<Row>({
               </Table.Column>
             ))}
           </Table.Header>
-          <Table.Body
-            renderEmptyState={
-              emptyState
-                ? () => <div className="text-muted px-4 py-6 text-sm">{emptyState}</div>
-                : undefined
-            }
-          >
+          <Table.Body renderEmptyState={emptyState ? () => emptyState : undefined}>
             {rows.map((row) => (
               <Table.Row
                 key={rowKey(row)}

@@ -156,7 +156,7 @@ export default function ApiKeyCard() {
           </div>
         )}
 
-        {apiKeys.length === 0 && <EmptyState icon={KeyIcon} title={t("noKeys")} />}
+        {apiKeys.length === 0 && <EmptyState icon={KeyIcon} title={t("noKeys")} variant="row" />}
       </SettingsCard>
 
       <Modal.Backdrop

@@ -53,7 +53,6 @@
     },
     "confirmDelete": "Haluatko varmasti poistaa kaupan {storeName}?",
     "noStoresYet": "Ei vielä kauppoja",
-    "createStoreHint": "Luo kauppa järjestääksesi ostoksesi",
     "hasItems": "Tässä kaupassa on {count} ostos.",
     "hasItemsPlural": "Tässä kaupassa on {count} ostosta.",
     "whatToDo": "Mitä haluat tehdä niille?",

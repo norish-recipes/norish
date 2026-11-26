@@ -53,7 +53,6 @@
     },
     "confirmDelete": "Möchtest du {storeName} wirklich löschen?",
     "noStoresYet": "Noch keine Geschäfte",
-    "createStoreHint": "Erstelle ein Geschäft, um deine Einkaufsliste zu organisieren",
     "hasItems": "Dieses Geschäft hat {count} Eintrag.",
     "hasItemsPlural": "Dieses Geschäft hat {count} Einträge.",
     "whatToDo": "Was möchtest du mit ihnen tun?",

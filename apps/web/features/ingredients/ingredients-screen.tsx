@@ -6,7 +6,7 @@ import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
 import { SettingsCard } from "@/components/settings/settings-card";
 import { SkeletonRows } from "@/components/settings/settings-skeleton";
 import { ActionButton } from "@/components/shared/action-button";
-import { EmptyStateCard } from "@/components/shared/empty-state";
+import { EmptyState } from "@/components/shared/empty-state";
 import { FunnelIcon, SparklesIcon } from "@heroicons/react/16/solid";
 import { BookOpenIcon } from "@heroicons/react/24/outline";
 import { Button } from "@heroui/react";
@@ -129,10 +129,11 @@ export function IngredientsScreen() {
             <SkeletonRows count={5} />
           </div>
         ) : items.length === 0 ? (
-          <EmptyStateCard
+          <EmptyState
             data-testid="ingredients-empty"
             icon={BookOpenIcon}
             title={filters.flaggedOnly ? t("emptyFlagged") : t("empty")}
+            variant="page"
           />
         ) : (
           <IngredientList

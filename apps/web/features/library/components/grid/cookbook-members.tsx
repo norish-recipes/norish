@@ -1,6 +1,6 @@
 "use client";
 
-import { EmptyStateCard } from "@/components/shared/empty-state";
+import { EmptyState } from "@/components/shared/empty-state";
 import { BookOpenIcon, FunnelIcon } from "@heroicons/react/24/outline";
 import { useTranslations } from "next-intl";
 
@@ -82,13 +82,11 @@ export default function CookbookMembers({
   const hasNarrowingFilters = hasAppliedRecipeFilters(filters);
 
   const emptyState = (
-    <div className="px-4 py-16">
-      <EmptyStateCard
-        className="mx-auto w-full max-w-xl"
-        icon={hasNarrowingFilters ? FunnelIcon : BookOpenIcon}
-        title={hasNarrowingFilters ? t("noMatchingMembers") : t("empty")}
-      />
-    </div>
+    <EmptyState
+      icon={hasNarrowingFilters ? FunnelIcon : BookOpenIcon}
+      title={hasNarrowingFilters ? t("noMatchingMembers") : t("empty")}
+      variant="page"
+    />
   );
 
   return (

@@ -266,7 +266,7 @@ function CookbookEditContent({
             <Spinner color="accent" size="sm" />
           </div>
         ) : recipes.length === 0 ? (
-          <EmptyState icon={BookOpenIcon} title={t("empty")} />
+          <EmptyState icon={BookOpenIcon} title={t("empty")} variant="row" />
         ) : (
           <div className="divide-border/40 flex min-h-0 flex-1 flex-col divide-y overflow-y-auto">
             {recipes.map((recipe) => {

@@ -53,7 +53,6 @@
     },
     "confirmDelete": "Are you sure you want to delete {storeName}?",
     "noStoresYet": "No stores yet",
-    "createStoreHint": "Create a store to organize your groceries",
     "hasItems": "This store has {count} grocery item.",
     "hasItemsPlural": "This store has {count} grocery items.",
     "whatToDo": "What would you like to do with them?",

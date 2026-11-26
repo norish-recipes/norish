@@ -1,8 +1,6 @@
 "use client";
 
-import { EmptyStateCard } from "@/components/shared/empty-state";
 import { listFoodIds } from "@/features/groceries/lib/list-food-ids";
-import { ShoppingCartIcon } from "@heroicons/react/24/outline";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
@@ -10,6 +8,7 @@ import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/c
 import { groupGroceriesByRecipe } from "@norish/shared-react/groceries";
 import { useIngredientIcons } from "@norish/shared-react/ingredients";
 
+import { GroceryListEmpty } from "./grocery-list-empty";
 import { RecipeSection } from "./recipe-section";
 
 interface RecipeInfo {
@@ -57,15 +56,7 @@ function GroceryListByRecipeContent({
   const hasGroceries = groceries.length > 0;
 
   if (!hasGroceries) {
-    return (
-      <div className="px-4 py-20">
-        <EmptyStateCard
-          className="mx-auto w-full max-w-xl"
-          icon={ShoppingCartIcon}
-          title={t("empty.title")}
-        />
-      </div>
-    );
+    return <GroceryListEmpty />;
   }
 
   return (

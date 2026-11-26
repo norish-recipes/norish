@@ -53,7 +53,6 @@
     },
     "confirmDelete": "Êtes-vous sûr de vouloir supprimer {storeName} ?",
     "noStoresYet": "Aucun magasin pour le moment",
-    "createStoreHint": "Créez un magasin pour organiser vos courses",
     "hasItems": "Ce magasin contient {count} article.",
     "hasItemsPlural": "Ce magasin contient {count} articles.",
     "whatToDo": "Que souhaitez-vous en faire ?",

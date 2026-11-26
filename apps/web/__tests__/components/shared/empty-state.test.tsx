@@ -12,6 +12,7 @@ describe("EmptyState", () => {
         data-testid="none-yet"
         icon={PlusIcon}
         title="No tags yet"
+        variant="row"
       />
     );
 
@@ -23,5 +24,16 @@ describe("EmptyState", () => {
     expect(title!.textContent).toBe("No tags yet");
     expect(action!.textContent).toBe("Add");
     expect(row.children).toHaveLength(3);
+  });
+
+  it("is a heading on a page and a paragraph inside a card, with the icon hidden", () => {
+    const { rerender } = render(<EmptyState icon={PlusIcon} title="Nothing" variant="page" />);
+
+    expect(screen.getByRole("heading", { name: "Nothing" })).toBeTruthy();
+    expect(document.querySelector("svg")!.getAttribute("aria-hidden")).toBe("true");
+
+    rerender(<EmptyState icon={PlusIcon} title="Nothing" variant="row" />);
+
+    expect(screen.queryByRole("heading")).toBeNull();
   });
 });

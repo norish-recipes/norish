@@ -40,12 +40,12 @@ export default function UsersCard() {
   };
 
   // A failed load must not read as "no users".
-  const emptyState = isLoading ? (
-    t("loading")
-  ) : error ? (
-    t("loadFailed")
-  ) : (
-    <EmptyState icon={UsersIcon} title={t("empty")} />
+  const emptyState = (
+    <EmptyState
+      icon={UsersIcon}
+      title={isLoading ? t("loading") : error ? t("loadFailed") : t("empty")}
+      variant="cell"
+    />
   );
 
   return (

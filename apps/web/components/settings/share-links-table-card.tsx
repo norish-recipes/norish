@@ -181,7 +181,7 @@ export default function ShareLinksTableCard({
         description={t("description")}
         empty={
           !isLoading && shares.length === 0 ? (
-            <EmptyState icon={LinkIcon} title={t("empty")} />
+            <EmptyState icon={LinkIcon} title={t("empty")} variant="row" />
           ) : undefined
         }
         icon={LinkIcon}
