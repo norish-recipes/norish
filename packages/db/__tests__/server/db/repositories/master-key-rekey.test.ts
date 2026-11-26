@@ -175,6 +175,7 @@ describe("re-keying to a new Master Key", () => {
           previous: 1,
           current: 0,
           plaintext: 0,
+          unreadable: 0,
         });
       }
     }
@@ -243,8 +244,34 @@ describe("re-keying to a new Master Key", () => {
     );
 
     initMasterKey(current);
-    expect(counts["user.name"]).toEqual({ previous: 0, current: 0, plaintext: 1 });
+    expect(counts["user.name"]).toEqual({ previous: 0, current: 0, plaintext: 1, unreadable: 0 });
     expect(await getUserByEmail("ada@example.com")).toMatchObject({ name: "Ada Lovelace" });
+  });
+
+  it("leaves ciphertext neither key opens as it is, its lookup hash too, and counts it", async () => {
+    const [before] = await getTestDb().select().from(schema.users);
+    const damaged = Buffer.from(before?.email ?? "", "base64");
+
+    damaged[12] = (damaged[12] ?? 0) ^ 1;
+    await getTestDb()
+      .update(schema.users)
+      .set({ email: damaged.toString("base64"), name: sealedBy(randomBytes(32), "Ada") });
+    const [unreadable] = await getTestDb().select().from(schema.users);
+
+    const { columns: counts } = await rekeyMasterKey(
+      masterKeyRotation(previous, current),
+      fingerprints
+    );
+    const [after] = await getTestDb().select().from(schema.users);
+
+    for (const column of ["user.email", "user.name"]) {
+      expect(counts[column]).toEqual({ previous: 0, current: 0, plaintext: 0, unreadable: 1 });
+    }
+    expect(after).toMatchObject({
+      email: unreadable?.email,
+      name: unreadable?.name,
+      emailHmac: before?.emailHmac,
+    });
   });
 
   it("keeps a value the new key wrote already, and still moves its lookup hash", async () => {
@@ -258,7 +285,7 @@ describe("re-keying to a new Master Key", () => {
     );
     const [user] = await getTestDb().select().from(schema.users);
 
-    expect(counts["user.email"]).toEqual({ previous: 0, current: 1, plaintext: 0 });
+    expect(counts["user.email"]).toEqual({ previous: 0, current: 1, plaintext: 0, unreadable: 0 });
     expect(user?.email).toBe(email);
     initMasterKey(current);
     expect(await getUserByEmail("ada@example.com")).toMatchObject({ id: userId });
@@ -297,6 +324,7 @@ describe("re-keying to a new Master Key", () => {
       previous: 1_201,
       current: 0,
       plaintext: 0,
+      unreadable: 0,
     });
     initMasterKey(current);
     expect(await getDecryptedTokensByUserId(userId)).toHaveLength(1_201);

@@ -81,8 +81,9 @@ vi.mock("@norish/db/repositories/master-key", () => ({
 
     return {
       columns: {
-        "user.email": { previous: 1, current: 0, plaintext: 0 },
-        "user.name": { previous: 0, current: 0, plaintext: 2 },
+        "user.email": { previous: 1, current: 0, plaintext: 0, unreadable: 0 },
+        "user.name": { previous: 0, current: 0, plaintext: 2, unreadable: 0 },
+        "user.image": { previous: 0, current: 0, plaintext: 0, unreadable: 3 },
       },
       revokedShares: 4,
     };
@@ -622,6 +623,22 @@ describe("which key boot opens", () => {
           "Values stored in plain text were encrypted",
         ]);
         expect(said()).not.toContain("ada@example.com");
+      });
+
+      it("logs how many values in each column no key opens, and what that means", async () => {
+        config.MASTER_KEY = keyB.toString("base64");
+        config.MASTER_KEY_PREVIOUS = keyA.toString("base64");
+
+        await resolveMasterKey();
+
+        expect(warnings()).toContainEqual([
+          "warn",
+          { column: "user.image", count: 3 },
+          "Values neither key opens were left as they are: damaged, or encrypted under another key",
+        ]);
+        expect(
+          warnings().filter(([, fields]) => JSON.stringify(fields).includes("user.email"))
+        ).toEqual([]);
       });
 
       it("logs how many share links it revoked for keeping no token", async () => {

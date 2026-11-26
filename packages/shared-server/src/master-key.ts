@@ -287,9 +287,15 @@ async function rekey(source: KeySource, previous: Buffer, current: Buffer): Prom
   });
 
   log.info({ columns, ...ended }, "Master Key re-keyed and every session ended");
-  for (const [column, { plaintext }] of Object.entries(columns)) {
+  for (const [column, { plaintext, unreadable }] of Object.entries(columns)) {
     if (plaintext > 0) {
       log.warn({ column, count: plaintext }, "Values stored in plain text were encrypted");
+    }
+    if (unreadable > 0) {
+      log.warn(
+        { column, count: unreadable },
+        "Values neither key opens were left as they are: damaged, or encrypted under another key"
+      );
     }
   }
   if (revokedShares > 0) {

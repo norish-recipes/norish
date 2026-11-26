@@ -116,14 +116,31 @@ describe("a re-key from the previous key to the current one", () => {
     expect(rotation.reseal(sealed)).toEqual({ sealed, plain: "ada@example.com", was: "current" });
   });
 
-  it("seals a value neither key opens as the plain text it is", () => {
-    const foreign = sealedBy(randomBytes(32), "x");
-
-    for (const value of ["ada@example.com", "bm90IGNpcGhlcnRleHQ=", foreign]) {
+  it("seals a value that is not ciphertext as the plain text it is", () => {
+    for (const value of ["ada@example.com", "bm90IGNpcGhlcnRleHQ=", "/avatars/ada.png"]) {
       const moved = rotation.reseal(value);
 
       expect(moved).toMatchObject({ plain: value, was: "plaintext" });
       expect(openedBy(current, moved.sealed)).toBe(value);
+    }
+  });
+
+  it("leaves ciphertext neither key opens exactly as it is, and reads nothing from it", () => {
+    /** `sealed` with one byte of its authentication tag flipped. */
+    const flippedTag = (sealed: string) => {
+      const data = Buffer.from(sealed, "base64");
+
+      data[12] = (data[12] ?? 0) ^ 1;
+
+      return data.toString("base64");
+    };
+
+    for (const value of [
+      sealedBy(randomBytes(32), "ada@example.com"),
+      flippedTag(sealedBy(previous, "ada@example.com")),
+      flippedTag(sealedBy(current, "ada@example.com")),
+    ]) {
+      expect(rotation.reseal(value)).toEqual({ sealed: value, plain: null, was: "unreadable" });
     }
   });
 

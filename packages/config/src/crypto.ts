@@ -51,11 +51,14 @@ export function encrypt(plain: string): string {
   return encryptWith(derivedKeys().encryption, plain);
 }
 
+const IV_BYTES = 12;
+const TAG_BYTES = 16;
+
 function decryptWith(encryptionKey: Buffer, enc: string): string {
   const data = Buffer.from(enc, "base64");
-  const iv = data.subarray(0, 12);
-  const tag = data.subarray(12, 28);
-  const encrypted = data.subarray(28);
+  const iv = data.subarray(0, IV_BYTES);
+  const tag = data.subarray(IV_BYTES, IV_BYTES + TAG_BYTES);
+  const encrypted = data.subarray(IV_BYTES + TAG_BYTES);
 
   const decipher = crypto.createDecipheriv("aes-256-gcm", encryptionKey, iv);
 
@@ -93,12 +96,22 @@ export function hashToken(token: string): string {
   return lookupWith(derivedKeys().hmac, token);
 }
 
-/** Which key had sealed a value a re-key moved: `plaintext` when neither key opens it. */
-export type SealedBy = "previous" | "current" | "plaintext";
+/** Whether `value` has the shape `encrypt` writes: base64 of an IV, a tag and the data. */
+function isCiphertext(value: string): boolean {
+  const data = Buffer.from(value, "base64");
+
+  return data.length >= IV_BYTES + TAG_BYTES && data.toString("base64") === value;
+}
 
 /**
- * A re-key from `previous` to `current`, its keys kept here. The only place a value no key opens is
- * read as plaintext; one the current key opens already stays as it is.
+ * Which key had sealed a value a re-key met: `plaintext` when it is not ciphertext, `unreadable`
+ * when it is ciphertext neither key opens (damaged, or sealed under another key).
+ */
+export type SealedBy = "previous" | "current" | "plaintext" | "unreadable";
+
+/**
+ * A re-key from `previous` to `current`, its keys kept here. The only place a value that is not
+ * ciphertext is read as plaintext; one the current key opens, or neither does, stays as it is.
  */
 export function masterKeyRotation(previous: Buffer, current: Buffer) {
   const from = deriveKey(previous, "encryption");
@@ -106,7 +119,7 @@ export function masterKeyRotation(previous: Buffer, current: Buffer) {
   const hmac = deriveKey(current, "hmac");
 
   return {
-    reseal(value: string): { sealed: string; plain: string; was: SealedBy } {
+    reseal(value: string): { sealed: string; plain: string | null; was: SealedBy } {
       const opened = openWith(from, value);
 
       if (opened !== null)
@@ -115,6 +128,7 @@ export function masterKeyRotation(previous: Buffer, current: Buffer) {
       const already = openWith(to, value);
 
       if (already !== null) return { sealed: value, plain: already, was: "current" };
+      if (isCiphertext(value)) return { sealed: value, plain: null, was: "unreadable" };
 
       return { sealed: encryptWith(to, value), plain: value, was: "plaintext" };
     },

@@ -160,6 +160,7 @@ async function resealTable(
       previous: 0,
       current: 0,
       plaintext: 0,
+      unreadable: 0,
     }),
   }));
   const fields = Object.fromEntries([
@@ -179,7 +180,7 @@ async function resealTable(
 
     for (const row of rows) {
       const update: Record<string, string> = {};
-      let source: string | undefined;
+      let source: string | null = null;
 
       for (const { column, at, tally } of seals) {
         const value = row[at];
@@ -193,8 +194,8 @@ async function resealTable(
         if (moved !== value) update[at] = moved;
         if (column === lookup?.of) source = plain;
       }
-      // A lookup hash is recomputed where there is one; a missing one stays missing.
-      if (hashAt && source !== undefined && row[hashAt]) update[hashAt] = rotation.lookup(source);
+      // A lookup hash is recomputed from a value that opened; a missing one stays missing.
+      if (hashAt && source !== null && row[hashAt]) update[hashAt] = rotation.lookup(source);
       if (Object.keys(update).length > 0) {
         await tx.update(table).set(update).where(eq(key, row[keyAt]));
       }
