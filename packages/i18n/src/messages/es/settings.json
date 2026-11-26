@@ -664,6 +664,12 @@
         "restartLabel": "Reiniciar servidor",
         "restartDescription": "Aplicar cambios de configuración que requieren reinicio",
         "restartButton": "Reiniciar servidor"
+      },
+      "masterKey": {
+        "label": "Rotar la clave maestra",
+        "description": "Cifrar todo con una clave nueva y retirar la antigua",
+        "button": "Rotar la clave maestra",
+        "pinned": "<code>MASTER_KEY</code> está definida, así que rótala ahí: mueve la clave actual a <code>MASTER_KEY_PREVIOUS</code>, define una nueva <code>MASTER_KEY</code> y reinicia."
       }
     },
     "restart": {
@@ -674,6 +680,13 @@
       "warning2": "El servidor no estará disponible durante unos segundos",
       "warning3": "Asegúrate de que tu despliegue tenga configurado <code>restart: always</code>, o el servidor no volverá a arrancar automáticamente",
       "confirmButton": "Reiniciar"
+    },
+    "rotateMasterKey": {
+      "title": "Rotar la clave maestra",
+      "confirmMessage": "El servidor escribe una clave maestra nueva y se reinicia. Al arrancar, cifra todo con la clave nueva.",
+      "sessions": "Todas las sesiones terminan, incluida la tuya, así que todos vuelven a iniciar sesión",
+      "shareLinks": "Los enlaces para compartir creados antes de 0.28 dejan de funcionar y solo se pueden eliminar",
+      "confirmButton": "Rotar"
     },
     "authProviders": {
       "title": "Proveedores de autenticación",

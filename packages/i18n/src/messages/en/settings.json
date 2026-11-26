@@ -664,6 +664,12 @@
         "restartLabel": "Restart server",
         "restartDescription": "Apply configuration changes that require a restart",
         "restartButton": "Restart server"
+      },
+      "masterKey": {
+        "label": "Rotate master key",
+        "description": "Encrypt everything under a new key and retire the old one",
+        "button": "Rotate master key",
+        "pinned": "<code>MASTER_KEY</code> is set, so rotate it there: move the current key to <code>MASTER_KEY_PREVIOUS</code>, set a new <code>MASTER_KEY</code> and restart."
       }
     },
     "restart": {
@@ -674,6 +680,13 @@
       "warning2": "The server will be unavailable for a few seconds",
       "warning3": "Ensure your deployment has <code>restart: always</code> configured, or the server will not come back online automatically",
       "confirmButton": "Restart"
+    },
+    "rotateMasterKey": {
+      "title": "Rotate master key",
+      "confirmMessage": "The server writes a new master key and restarts. As it starts, it encrypts everything under the new key.",
+      "sessions": "Every session ends, yours included, so everyone signs in again",
+      "shareLinks": "Share links made before 0.28 stop working and can only be deleted",
+      "confirmButton": "Rotate"
     },
     "authProviders": {
       "title": "Authentication providers",

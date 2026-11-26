@@ -18,6 +18,7 @@ export {
   useVideoConfigMutation,
 } from "./use-admin-config-mutations";
 export { useAIKeyRejectionsQuery } from "./use-ai-key-rejections";
+export { useMasterKeyPinned, useRotateMasterKeyMutation } from "./use-master-key";
 export {
   useJobDetailQuery,
   useJobListQuery,

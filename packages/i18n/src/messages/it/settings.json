@@ -664,6 +664,12 @@
         "restartLabel": "Riavvia server",
         "restartDescription": "Applica le modifiche alla configurazione che richiedono un riavvio",
         "restartButton": "Riavvia server"
+      },
+      "masterKey": {
+        "label": "Ruota la chiave principale",
+        "description": "Cifra tutto con una nuova chiave e ritira quella vecchia",
+        "button": "Ruota la chiave principale",
+        "pinned": "<code>MASTER_KEY</code> è impostata, quindi ruotala lì: sposta la chiave attuale in <code>MASTER_KEY_PREVIOUS</code>, imposta una nuova <code>MASTER_KEY</code> e riavvia."
       }
     },
     "restart": {
@@ -674,6 +680,13 @@
       "warning2": "Il server non sarà disponibile per alcuni secondi",
       "warning3": "Assicurati che il tuo deployment abbia <code>restart: always</code> configurato, altrimenti il server non tornerà online automaticamente",
       "confirmButton": "Riavvia"
+    },
+    "rotateMasterKey": {
+      "title": "Ruota la chiave principale",
+      "confirmMessage": "Il server scrive una nuova chiave principale e si riavvia. All'avvio cifra tutto con la nuova chiave.",
+      "sessions": "Tutte le sessioni terminano, compresa la tua, quindi tutti devono accedere di nuovo",
+      "shareLinks": "I link di condivisione creati prima della 0.28 smettono di funzionare e si possono solo eliminare",
+      "confirmButton": "Ruota"
     },
     "authProviders": {
       "title": "Provider di autenticazione",

@@ -664,6 +664,12 @@
         "restartLabel": "Redémarrer le serveur",
         "restartDescription": "Appliquer les modifications nécessitant un redémarrage",
         "restartButton": "Redémarrer le serveur"
+      },
+      "masterKey": {
+        "label": "Changer la clé principale",
+        "description": "Tout chiffrer avec une nouvelle clé et retirer l'ancienne",
+        "button": "Changer la clé principale",
+        "pinned": "<code>MASTER_KEY</code> est définie, changez-la donc à cet endroit : déplacez la clé actuelle vers <code>MASTER_KEY_PREVIOUS</code>, définissez une nouvelle <code>MASTER_KEY</code> et redémarrez."
       }
     },
     "restart": {
@@ -674,6 +680,13 @@
       "warning2": "Le serveur sera indisponible quelques secondes",
       "warning3": "Assurez-vous que votre déploiement inclut <code>restart: always</code>, sinon il ne redémarrera pas automatiquement",
       "confirmButton": "Redémarrer"
+    },
+    "rotateMasterKey": {
+      "title": "Changer la clé principale",
+      "confirmMessage": "Le serveur écrit une nouvelle clé principale et redémarre. Au démarrage, il chiffre tout avec la nouvelle clé.",
+      "sessions": "Toutes les sessions prennent fin, y compris la vôtre, chacun doit donc se reconnecter",
+      "shareLinks": "Les liens de partage créés avant la 0.28 cessent de fonctionner et peuvent seulement être supprimés",
+      "confirmButton": "Changer"
     },
     "authProviders": {
       "title": "Fournisseurs d’authentification",

@@ -664,6 +664,12 @@
         "restartLabel": "Start server på nytt",
         "restartDescription": "Bruk konfigurasjonsendringer som krever en omstart",
         "restartButton": "Start server på nytt"
+      },
+      "masterKey": {
+        "label": "Bytt hovednøkkel",
+        "description": "Krypter alt med en ny nøkkel og pensjoner den gamle",
+        "button": "Bytt hovednøkkel",
+        "pinned": "<code>MASTER_KEY</code> er satt, så bytt den der: flytt den nåværende nøkkelen til <code>MASTER_KEY_PREVIOUS</code>, sett en ny <code>MASTER_KEY</code> og start på nytt."
       }
     },
     "restart": {
@@ -674,6 +680,13 @@
       "warning2": "Serveren vil være utilgjengelig i noen sekunder",
       "warning3": "Sørg for at oppsettet ditt har <code>restart: always</code> konfigurert, ellers vil ikke serveren komme online igjen automatisk",
       "confirmButton": "Start på nytt"
+    },
+    "rotateMasterKey": {
+      "title": "Bytt hovednøkkel",
+      "confirmMessage": "Serveren skriver en ny hovednøkkel og starter på nytt. Når den starter, krypterer den alt med den nye nøkkelen.",
+      "sessions": "Alle økter avsluttes, også din, så alle må logge inn igjen",
+      "shareLinks": "Delelenker laget før 0.28 slutter å virke og kan bare slettes",
+      "confirmButton": "Bytt"
     },
     "authProviders": {
       "title": "Autentiseringsleverandører",

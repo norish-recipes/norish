@@ -664,6 +664,12 @@
         "restartLabel": "Genstart server",
         "restartDescription": "Anvend konfigurationsændringer, der kræver en genstart",
         "restartButton": "Genstart server"
+      },
+      "masterKey": {
+        "label": "Skift hovednøgle",
+        "description": "Krypter alt med en ny nøgle, og pensioner den gamle",
+        "button": "Skift hovednøgle",
+        "pinned": "<code>MASTER_KEY</code> er sat, så skift den der: flyt den nuværende nøgle til <code>MASTER_KEY_PREVIOUS</code>, sæt en ny <code>MASTER_KEY</code>, og genstart."
       }
     },
     "restart": {
@@ -674,6 +680,13 @@
       "warning2": "Serveren vil være utilgængelig i et par sekunder",
       "warning3": "Sørg for, at din opsætning har <code>restart: always</code> konfigureret, ellers vil serveren ikke komme online igen automatisk",
       "confirmButton": "Genstart"
+    },
+    "rotateMasterKey": {
+      "title": "Skift hovednøgle",
+      "confirmMessage": "Serveren skriver en ny hovednøgle og genstarter. Når den starter, krypterer den alt med den nye nøgle.",
+      "sessions": "Alle sessioner afsluttes, også din, så alle skal logge ind igen",
+      "shareLinks": "Delelinks oprettet før 0.28 holder op med at virke og kan kun slettes",
+      "confirmButton": "Skift"
     },
     "authProviders": {
       "title": "Godkendelsesudbydere",

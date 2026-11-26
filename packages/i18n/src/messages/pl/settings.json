@@ -664,6 +664,12 @@
         "restartLabel": "Restart serwera",
         "restartDescription": "Zastosuj zmiany konfiguracji, które wymagają restartu",
         "restartButton": "Uruchom ponownie serwer"
+      },
+      "masterKey": {
+        "label": "Zmień klucz główny",
+        "description": "Zaszyfruj wszystko nowym kluczem i wycofaj stary",
+        "button": "Zmień klucz główny",
+        "pinned": "Ustawiono <code>MASTER_KEY</code>, więc zmień go tam: przenieś obecny klucz do <code>MASTER_KEY_PREVIOUS</code>, ustaw nowy <code>MASTER_KEY</code> i uruchom ponownie."
       }
     },
     "restart": {
@@ -674,6 +680,13 @@
       "warning2": "Serwer będzie niedostępny przez kilka sekund",
       "warning3": "Upewnij się, że wdrożenie ma ustawione <code>restart: always</code>, inaczej serwer może nie uruchomić się ponownie automatycznie",
       "confirmButton": "Restartuj"
+    },
+    "rotateMasterKey": {
+      "title": "Zmiana klucza głównego",
+      "confirmMessage": "Serwer zapisze nowy klucz główny i uruchomi się ponownie. Podczas startu zaszyfruje wszystko nowym kluczem.",
+      "sessions": "Wszystkie sesje się kończą, także Twoja, więc wszyscy muszą zalogować się ponownie",
+      "shareLinks": "Linki do udostępniania utworzone przed 0.28 przestają działać i można je tylko usunąć",
+      "confirmButton": "Zmień"
     },
     "authProviders": {
       "title": "Dostawcy uwierzytelniania",

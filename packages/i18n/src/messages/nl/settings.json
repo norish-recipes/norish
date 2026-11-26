@@ -664,6 +664,12 @@
         "restartLabel": "Server herstarten",
         "restartDescription": "Pas configuratiewijzigingen toe die een herstart vereisen",
         "restartButton": "Server herstarten"
+      },
+      "masterKey": {
+        "label": "Hoofdsleutel vervangen",
+        "description": "Versleutel alles met een nieuwe sleutel en trek de oude in",
+        "button": "Hoofdsleutel vervangen",
+        "pinned": "<code>MASTER_KEY</code> is ingesteld, dus vervang hem daar: zet de huidige sleutel in <code>MASTER_KEY_PREVIOUS</code>, stel een nieuwe <code>MASTER_KEY</code> in en herstart."
       }
     },
     "restart": {
@@ -674,6 +680,13 @@
       "warning2": "De server is enkele seconden niet beschikbaar",
       "warning3": "Zorg ervoor dat je deployment <code>restart: always</code> is geconfigureerd, anders start de server mogelijk niet opnieuw op",
       "confirmButton": "Herstarten"
+    },
+    "rotateMasterKey": {
+      "title": "Hoofdsleutel vervangen",
+      "confirmMessage": "De server schrijft een nieuwe hoofdsleutel en herstart. Bij het opstarten versleutelt hij alles met de nieuwe sleutel.",
+      "sessions": "Elke sessie eindigt, ook die van jou, dus iedereen logt opnieuw in",
+      "shareLinks": "Deellinks van vóór 0.28 werken niet meer en kunnen alleen nog worden verwijderd",
+      "confirmButton": "Vervangen"
     },
     "authProviders": {
       "title": "Authenticatieproviders",

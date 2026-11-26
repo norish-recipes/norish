@@ -664,6 +664,12 @@
         "restartLabel": "Starta om servern",
         "restartDescription": "Tillämpa konfigurationsändringar som kräver omstart",
         "restartButton": "Starta om servern"
+      },
+      "masterKey": {
+        "label": "Byt huvudnyckel",
+        "description": "Kryptera allt med en ny nyckel och pensionera den gamla",
+        "button": "Byt huvudnyckel",
+        "pinned": "<code>MASTER_KEY</code> är satt, så byt den där: flytta den nuvarande nyckeln till <code>MASTER_KEY_PREVIOUS</code>, sätt en ny <code>MASTER_KEY</code> och starta om."
       }
     },
     "restart": {
@@ -674,6 +680,13 @@
       "warning2": "Servern är otillgänglig i några sekunder",
       "warning3": "Se till att installationen har <code>restart: always</code> inställt, annars startar servern inte automatiskt igen",
       "confirmButton": "Starta om"
+    },
+    "rotateMasterKey": {
+      "title": "Byt huvudnyckel",
+      "confirmMessage": "Servern skriver en ny huvudnyckel och startar om. När den startar krypterar den allt med den nya nyckeln.",
+      "sessions": "Alla sessioner avslutas, även din, så alla loggar in igen",
+      "shareLinks": "Delningslänkar som skapades före 0.28 slutar fungera och kan bara tas bort",
+      "confirmButton": "Byt"
     },
     "authProviders": {
       "title": "Inloggningsleverantörer",

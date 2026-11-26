@@ -664,6 +664,12 @@
         "restartLabel": "Reiniciar servidor",
         "restartDescription": "Aplicar alterações de configuração que exigem reinicialização",
         "restartButton": "Reiniciar servidor"
+      },
+      "masterKey": {
+        "label": "Trocar a chave mestra",
+        "description": "Criptografar tudo com uma chave nova e aposentar a antiga",
+        "button": "Trocar a chave mestra",
+        "pinned": "<code>MASTER_KEY</code> está definida, então troque-a lá: mova a chave atual para <code>MASTER_KEY_PREVIOUS</code>, defina uma nova <code>MASTER_KEY</code> e reinicie."
       }
     },
     "restart": {
@@ -674,6 +680,13 @@
       "warning2": "O servidor ficará indisponível por alguns segundos",
       "warning3": "Certifique-se de que sua implantação tenha <code>restart: always</code> configurado, ou o servidor não voltará online automaticamente",
       "confirmButton": "Reiniciar"
+    },
+    "rotateMasterKey": {
+      "title": "Trocar a chave mestra",
+      "confirmMessage": "O servidor grava uma chave mestra nova e reinicia. Ao iniciar, ele criptografa tudo com a chave nova.",
+      "sessions": "Todas as sessões terminam, inclusive a sua, então todos precisam entrar de novo",
+      "shareLinks": "Links de compartilhamento criados antes da 0.28 param de funcionar e só podem ser excluídos",
+      "confirmButton": "Trocar"
     },
     "authProviders": {
       "title": "Provedores de autenticação",

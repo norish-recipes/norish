@@ -664,6 +664,12 @@
         "restartLabel": "Server neu starten",
         "restartDescription": "Konfigurationsänderungen übernehmen, die einen Neustart erfordern",
         "restartButton": "Server neu starten"
+      },
+      "masterKey": {
+        "label": "Hauptschlüssel wechseln",
+        "description": "Alles mit einem neuen Schlüssel verschlüsseln und den alten stilllegen",
+        "button": "Hauptschlüssel wechseln",
+        "pinned": "<code>MASTER_KEY</code> ist gesetzt, wechsle ihn also dort: Verschiebe den aktuellen Schlüssel nach <code>MASTER_KEY_PREVIOUS</code>, setze einen neuen <code>MASTER_KEY</code> und starte neu."
       }
     },
     "restart": {
@@ -674,6 +680,13 @@
       "warning2": "Der Server ist für ein paar Sekunden nicht verfügbar",
       "warning3": "Stelle sicher, dass deine Bereitstellung <code>restart: always</code> konfiguriert hat, sonst startet der Server nicht automatisch neu",
       "confirmButton": "Neu starten"
+    },
+    "rotateMasterKey": {
+      "title": "Hauptschlüssel wechseln",
+      "confirmMessage": "Der Server schreibt einen neuen Hauptschlüssel und startet neu. Beim Start verschlüsselt er alles mit dem neuen Schlüssel.",
+      "sessions": "Jede Sitzung endet, auch deine, sodass sich alle erneut anmelden müssen",
+      "shareLinks": "Freigabe-Links, die vor 0.28 erstellt wurden, funktionieren nicht mehr und können nur noch gelöscht werden",
+      "confirmButton": "Wechseln"
     },
     "authProviders": {
       "title": "Authentifizierungsanbieter",
