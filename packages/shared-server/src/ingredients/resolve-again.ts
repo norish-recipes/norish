@@ -1,9 +1,10 @@
 import type { NamingRow, NamingRows } from "@norish/db/repositories/ingredient-cleanup";
 import type { GroceryPart } from "@norish/db/repositories/ingredient-relocation";
 import { withTransaction } from "@norish/db/drizzle";
+import { lockRecipeHouseholdsTx } from "@norish/db/repositories/household-rows";
 import { findRecipeLineAliases } from "@norish/db/repositories/ingredient-aliases";
 import { findIngredientHouseholds } from "@norish/db/repositories/ingredient-catalogue";
-import { repointLines } from "@norish/db/repositories/ingredient-cleanup";
+import { findLineHouseholds, repointLines } from "@norish/db/repositories/ingredient-cleanup";
 import { writeGroceryParts } from "@norish/db/repositories/ingredient-relocation";
 import { getUnits } from "@norish/shared-server/config/server-config-loader";
 import { groupBy } from "@norish/shared/lib/group-by";
@@ -30,7 +31,13 @@ export async function resolveAgain(
   return await writeResolved(
     async () => {
       const units = await getUnits();
-      const lines = await resolveByHousehold(rows.lines, async (owned, householdId) => {
+      // Read again on every try: a leave or join may have moved a line's recipe meanwhile.
+      const now = await findLineHouseholds(rows.lines.map((line) => line.id));
+      const current = rows.lines.map((line) => ({
+        ...line,
+        householdId: now.get(line.id) ?? line.householdId,
+      }));
+      const lines = await resolveByHousehold(current, async (owned, householdId) => {
         const texts = owned.map(({ name, amount, unit }) =>
           lineMeaning({ text: name ?? "", amount, unit }, units)
         );
@@ -116,6 +123,8 @@ export async function resolveAgain(
     },
     (resolved) =>
       withTransaction(async (tx) => {
+        // Held before the write, so no move takes a recipe elsewhere until it commits.
+        await lockRecipeHouseholdsTx(tx, { lineIds: resolved.lines.map((line) => line.id) });
         await repointLines(tx, resolved.lines);
         await writeGroceryParts(tx, "groceries", resolved.groceries);
         await writeGroceryParts(tx, "recurring", resolved.recurring);

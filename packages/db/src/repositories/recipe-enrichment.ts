@@ -42,6 +42,7 @@ import { rekeyedShares } from "@norish/shared/lib/recipe-nutrition";
 
 import { isAnyOf, pickedByKey } from "./array-params";
 import { attachCategoriesToRecipeByInputTx, recipeHasCategoriesTx } from "./categories";
+import { lockRecipeHouseholdsTx } from "./household-rows";
 import { replaceRecipeEntryIdsTx } from "./list-entries";
 
 /**
@@ -87,6 +88,7 @@ export async function replaceRecipeCategories(
   const validated = validateCategories(categories);
 
   return await db.transaction(async (tx) => {
+    await lockRecipeHouseholdsTx(tx, { recipeIds: [recipeId] });
     const [locked] = await tx
       .select({ id: recipes.id })
       .from(recipes)
@@ -495,6 +497,7 @@ export async function replaceRecipeProvenance(
   const group = normalizeProvenanceGroup(provenance);
 
   return await db.transaction(async (tx) => {
+    await lockRecipeHouseholdsTx(tx, { recipeIds: [recipeId] });
     const updated = await tx
       .update(recipes)
       .set({ ...group, updatedAt: new Date(), version: sql`${recipes.version} + 1` })
@@ -522,6 +525,7 @@ async function fillProvenanceGapsFromClaim(
   cuisineIds: readonly string[]
 ): Promise<boolean> {
   return await db.transaction(async (tx) => {
+    await lockRecipeHouseholdsTx(tx, { recipeIds: [recipeId] });
     const [stored] = await tx
       .select({
         originCountry: recipes.originCountry,

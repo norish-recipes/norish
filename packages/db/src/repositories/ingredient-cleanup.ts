@@ -15,6 +15,7 @@ import {
   recurringGroceries,
 } from "@norish/db/schema";
 
+import { isAnyOf } from "./array-params";
 import { inCatalogue } from "./household-scope";
 import {
   findGroceryRows,
@@ -140,6 +141,18 @@ async function findNamingRows(
   });
 
   return { lines, ...named };
+}
+
+/** The household each line's recipe is in now, read again after a move may have taken it. */
+export async function findLineHouseholds(lineIds: readonly string[]): Promise<Map<string, string>> {
+  if (lineIds.length === 0) return new Map();
+  const rows = await db
+    .select({ id: recipeIngredients.id, householdId: recipes.householdId })
+    .from(recipeIngredients)
+    .innerJoin(recipes, eq(recipes.id, recipeIngredients.recipeId))
+    .where(isAnyOf(recipeIngredients.id, lineIds, "uuid"));
+
+  return new Map(rows.map((row) => [row.id, row.householdId]));
 }
 
 /** Every recipe line naming a food, so the cleanup can read each line's own text again. */

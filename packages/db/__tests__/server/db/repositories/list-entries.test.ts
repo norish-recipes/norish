@@ -31,7 +31,7 @@ import {
   updateRecipeWithRefs,
 } from "@norish/db/repositories/recipes";
 import { appendRecipeTags } from "@norish/db/repositories/tags";
-import { recipeCuisines, recipes, recipeTags, tags } from "@norish/db/schema";
+import { recipes, recipeTags, tags } from "@norish/db/schema";
 import { FullRecipeInsertSchema } from "@norish/shared/contracts/zod";
 
 import {
@@ -218,7 +218,7 @@ describe("household lists", () => {
     });
   });
 
-  it("refuses another household's Cuisine on a recipe, but keeps one the recipe carries", async () => {
+  it("refuses another household's Cuisine on a recipe, but takes the recipe's own of its fold", async () => {
     const own = (await addEntry("cuisine", ann.household, "Grandma's"))!.entry;
     const foreign = (await addEntry("cuisine", bob.household, "Bob's"))!.entry;
     const [instance] = (await listEntries("cuisine", ann.household)).filter((e) => e.instance);
@@ -230,10 +230,11 @@ describe("household lists", () => {
       db.transaction((tx) => replaceRecipeEntryIdsTx(tx, "cuisine", ann.recipe, [foreign.id]))
     ).rejects.toThrow(ForeignHouseholdReferenceError);
 
-    // A recipe that moved household still carries its old household's entry until ticket 09.
-    await getTestDb().insert(recipeCuisines).values({ recipeId: bob.recipe, cuisineId: own.id });
+    // An id read before a move names the household's own entry of its fold, where it has one.
+    const bobs = (await addEntry("cuisine", bob.household, "Grandma's"))!.entry;
+
     await db.transaction((tx) => replaceRecipeEntryIdsTx(tx, "cuisine", bob.recipe, [own.id]));
-    expect((await getRecipeCuisines(bob.recipe)).map((c) => c.name)).toEqual(["Grandma's"]);
+    expect((await getRecipeCuisines(bob.recipe)).map((c) => c.id)).toEqual([bobs.id]);
   });
 
   it("filters across households on the folded name", async () => {

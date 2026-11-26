@@ -18,18 +18,23 @@ import defaultUnits from "@norish/config/units.default.json" with { type: "json"
 import { ServerConfigKeys, UnitsConfigSchema } from "@norish/config/zod/server-config";
 import { dbLogger } from "@norish/db/logger";
 import { getConfig } from "@norish/db/repositories/server-config";
-import { recipeIngredientFoods, recipeIngredients } from "@norish/db/schema";
+import { recipeIngredientFoods, recipeIngredients, recipes } from "@norish/db/schema";
 import {
   RecipeIngredientInputSchema,
   RecipeIngredientSelectWithNameSchema,
   RecipeIngredientsInsertBaseSchema,
 } from "@norish/shared/contracts/zod/recipe-ingredients";
+import { groupBy } from "@norish/shared/lib/group-by";
 import { lineNamesNoFood } from "@norish/shared/lib/ingredient-text";
 import { normalizeUnit } from "@norish/shared/lib/unit-localization";
 
+import { isAnyOf } from "./array-params";
 import { StaleLineHouseholdError } from "./constraint-violation";
-import { assertOwnReferences, ForeignHouseholdReferenceError } from "./household-rows";
-import { recipeHouseholdId } from "./list-entries";
+import {
+  assertOwnReferences,
+  ForeignHouseholdReferenceError,
+  lockRecipeHouseholdsTx,
+} from "./household-rows";
 
 export async function getUnitsForNormalization(): Promise<UnitsMap> {
   const value = await getConfig<unknown>(ServerConfigKeys.UNITS);
@@ -105,12 +110,16 @@ export interface LineFoods {
   aliasIds: readonly string[];
 }
 
-/** Write each line's foods in order, over the ones it had. */
+/**
+ * Write each line's foods in order, over the ones it had. A line resolved in a catalogue its recipe
+ * has left since (a leave or join committed first) is refused, to be resolved again.
+ */
 export async function writeRecipeLineFoodsTx(
   tx: DbTransaction,
   lines: readonly LineFoods[]
 ): Promise<void> {
   if (lines.length === 0) return;
+  await assertLinesFitRecipesTx(tx, lines);
 
   await tx.delete(recipeIngredientFoods).where(
     inArray(
@@ -136,22 +145,39 @@ export interface NewRecipeLine {
   aliasIds: readonly string[];
 }
 
-/**
- * A save resolves its lines before its transaction; where the recipe moved household meanwhile (a
- * leave or join committed first), they name the old catalogue and are resolved again.
- */
-export async function assertLinesFitRecipeTx(
-  tx: DbTransaction,
-  recipeId: string,
-  aliasIds: readonly string[]
-): Promise<void> {
-  const householdId = await recipeHouseholdId(recipeId, tx);
+/** Every line's spellings are its recipe's household's or the seed's, read in the write's transaction. */
+async function assertLinesFitRecipesTx(tx: DbTransaction, lines: readonly LineFoods[]) {
+  const named = lines.filter((line) => line.aliasIds.length > 0);
 
-  if (!householdId || aliasIds.length === 0) return;
-  try {
-    await assertOwnReferences(householdId, { ingredientAliasIds: aliasIds }, tx);
-  } catch (error) {
-    throw error instanceof ForeignHouseholdReferenceError ? new StaleLineHouseholdError() : error;
+  if (named.length === 0) return;
+  const recipeHousehold = new Map(
+    (
+      await tx
+        .select({ id: recipeIngredients.id, householdId: recipes.householdId })
+        .from(recipeIngredients)
+        .innerJoin(recipes, eq(recipes.id, recipeIngredients.recipeId))
+        .where(
+          isAnyOf(
+            recipeIngredients.id,
+            named.map((line) => line.id),
+            "uuid"
+          )
+        )
+    ).map((row) => [row.id, row.householdId])
+  );
+  const byHousehold = groupBy(named, (line) => recipeHousehold.get(line.id) ?? "");
+
+  for (const [householdId, held] of byHousehold) {
+    if (!householdId) continue;
+    try {
+      await assertOwnReferences(
+        householdId,
+        { ingredientAliasIds: held.flatMap((line) => line.aliasIds) },
+        tx
+      );
+    } catch (error) {
+      throw error instanceof ForeignHouseholdReferenceError ? new StaleLineHouseholdError() : error;
+    }
   }
 }
 
@@ -203,6 +229,10 @@ export async function attachIngredientsToRecipeByInputTx(
   }
   const items = parsedInput.data;
 
+  await lockRecipeHouseholdsTx(tx, {
+    recipeIds: [...new Set(items.flatMap((ri) => (ri.recipeId ? [ri.recipeId] : [])))],
+  });
+
   // Get units config for normalization
   const units = await getUnitsForNormalization();
 
@@ -237,13 +267,6 @@ export async function attachIngredientsToRecipeByInputTx(
     throw new Error("Invalid recipeIngredients insert payload");
   }
 
-  for (const recipeId of new Set(validatedRows.data.map((row) => row.recipeId))) {
-    await assertLinesFitRecipeTx(
-      tx,
-      recipeId,
-      lines.filter((line) => line.row.recipeId === recipeId).flatMap((line) => line.aliasIds)
-    );
-  }
   const inserted = await insertRecipeLinesTx(
     tx,
     validatedRows.data.map((row, index) => ({ row, aliasIds: lines[index]!.aliasIds }))

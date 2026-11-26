@@ -74,8 +74,8 @@ import {
 import { attachCategoriesToRecipeByInputTx, RECIPE_CATEGORY_NAMES_SQL } from "./categories";
 import { TakenIdError } from "./constraint-violation";
 import { currentHouseholdIdSql, householdMemberIdsSql } from "./household-members";
+import { lockRecipeHouseholdsTx } from "./household-rows";
 import {
-  assertLinesFitRecipeTx,
   attachIngredientsToRecipeByInputTx,
   getUnitsForNormalization,
   insertRecipeLinesTx,
@@ -1035,6 +1035,7 @@ export async function updateRecipeCategories(
   }
 
   return await db.transaction(async (tx) => {
+    await lockRecipeHouseholdsTx(tx, { recipeIds: [recipeId] });
     const updated = await tx
       .update(recipes)
       .set({ updatedAt: new Date(), version: sql`${recipes.version} + 1` })
@@ -1452,11 +1453,6 @@ async function syncRecipeIngredientsTx(
 
     added.push({ row: { recipeId, ...values }, aliasIds: line.aliasIds });
   }
-  await assertLinesFitRecipeTx(
-    tx,
-    recipeId,
-    [...kept, ...added].flatMap((line) => line.aliasIds)
-  );
   await writeRecipeLineFoodsTx(tx, kept);
   await insertRecipeLinesTx(tx, added);
 
@@ -1672,6 +1668,8 @@ export async function updateRecipeWithRefs(
   const payload = parsed.data;
 
   return await db.transaction(async (tx) => {
+    // The household first, as a leave or join locks it before the recipe row.
+    await lockRecipeHouseholdsTx(tx, { recipeIds: [recipeId] });
     // Update recipe base fields
     const updateData: any = {};
 

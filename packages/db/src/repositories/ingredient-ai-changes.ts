@@ -867,7 +867,9 @@ export async function restoreDeletedFood(
             ),
           })
           .from(recipeIngredients)
-          .where(eq(recipeIngredients.id, lineId))
+          .innerJoin(recipes, eq(recipes.id, recipeIngredients.recipeId))
+          // A line whose recipe left the household since keeps what it names now.
+          .where(and(eq(recipeIngredients.id, lineId), eq(recipes.householdId, householdId)))
       )
       .onConflictDoNothing();
   }

@@ -3,6 +3,7 @@
 import type { SQL } from "drizzle-orm";
 import {
   and,
+  count,
   countDistinct,
   eq,
   inArray,
@@ -10,8 +11,8 @@ import {
   isNull,
   like,
   ne,
+  not,
   notExists,
-  or,
   sql,
 } from "drizzle-orm";
 import { alias, QueryBuilder } from "drizzle-orm/pg-core";
@@ -35,7 +36,7 @@ import { stripHtmlTags } from "@norish/shared/lib/helpers";
 import type { MutationOutcome } from "./mutation-outcomes";
 import { isAnyOf } from "./array-params";
 import { isConstraintViolation } from "./constraint-violation";
-import { ForeignHouseholdReferenceError } from "./household-rows";
+import { ForeignHouseholdReferenceError, lockRecipeHouseholdsTx } from "./household-rows";
 import { inScope, isInstanceRow } from "./household-scope";
 import { lockUntilSettled } from "./lock-until-settled";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
@@ -291,63 +292,91 @@ export async function replaceRecipeEntriesByNameTx(
   names: readonly string[],
   { createEntries = true }: EntryWriteOptions = {}
 ): Promise<void> {
-  const householdId = await recipeHouseholdId(recipeId, tx);
+  const householdId = await lockedRecipeHouseholdTx(tx, recipeId);
 
   if (!householdId) return;
 
   const entries = await entriesByFoldTx(tx, kind, householdId, names, { create: createEntries });
   const ids = names.flatMap((name) => entries.get(entryName(name)?.fold ?? "")?.id ?? []);
 
-  await writeRecipeLinksTx(tx, kind, recipeId, ids);
+  await writeRecipeLinksTx(tx, kind, householdId, recipeId, ids);
 }
 
-/** Replaces a recipe's entries with `ids`, in order: each the recipe's household's, the instance's
- * or one it carries already, else ForeignHouseholdReferenceError. */
+/** The recipe's household, held so no move takes the recipe elsewhere before the commit. */
+async function lockedRecipeHouseholdTx(tx: DbTransaction, recipeId: string) {
+  return (await lockRecipeHouseholdsTx(tx, { recipeIds: [recipeId] })).get(recipeId) ?? null;
+}
+
+/** Replaces a recipe's entries with `ids`, in order: each the recipe's household's or the
+ * instance's; one another household's (read before a move) becomes the household's entry of its
+ * fold where the list has one, else ForeignHouseholdReferenceError. */
 export async function replaceRecipeEntryIdsTx(
   tx: DbTransaction,
   kind: ListKind,
   recipeId: string,
   ids: readonly string[]
 ): Promise<void> {
-  const { table, link, entity } = KINDS[kind];
+  const { table } = KINDS[kind];
+  const householdId = await lockedRecipeHouseholdTx(tx, recipeId);
   const unique = [...new Set(ids)];
 
-  if (unique.length > 0) {
-    const recipeHousehold = tx
-      .select({ householdId: recipes.householdId })
-      .from(recipes)
-      .where(eq(recipes.id, recipeId));
-    // At most one link per recipe and entry, so the join adds no rows; only the entries are held.
-    const allowed = await tx
-      .select({ id: table.id })
-      .from(table)
-      .leftJoin(link, and(eq(link.recipeId, recipeId), eq(entity, table.id)))
-      .where(
-        and(
-          inArray(table.id, unique),
-          or(
-            inScope(table.householdId, sql`(${recipeHousehold})`, { offered: true }),
-            isNotNull(link.recipeId)
-          )
-        )
+  if (!householdId) return;
+  const outside = await tx
+    .select({ id: table.id, name: table.name })
+    .from(table)
+    .where(
+      and(
+        isAnyOf(table.id, unique, "uuid"),
+        not(inScope(table.householdId, householdId, { offered: true }))
       )
-      .for("key share", { of: table });
+    );
+  const found = await entriesByFoldTx(
+    tx,
+    kind,
+    householdId,
+    outside.map((row) => row.name),
+    { create: false }
+  );
+  const homeOf = new Map(
+    outside.map((row) => [row.id, found.get(entryName(row.name)?.fold ?? "")?.id])
+  );
 
-    if (allowed.length !== unique.length) throw new ForeignHouseholdReferenceError();
-  }
-
-  await writeRecipeLinksTx(tx, kind, recipeId, unique);
+  if ([...homeOf.values()].includes(undefined)) throw new ForeignHouseholdReferenceError();
+  await writeRecipeLinksTx(
+    tx,
+    kind,
+    householdId,
+    recipeId,
+    unique.map((id) => homeOf.get(id) ?? id)
+  );
 }
 
-/** Links `recipeId` to `ids` in order, the first at `from`, keeping a link already there. */
+/** Inserts `links`, keeping a link already there; each entry must be `householdId`'s (the recipes'
+ * household, held by the caller) or the instance's, else ForeignHouseholdReferenceError. */
 async function insertLinksTx(
   tx: DbTransaction,
   kind: ListKind,
+  householdId: string,
   links: readonly { recipeId: string; id: string; order: number }[]
 ): Promise<void> {
-  const { link, linkRow } = KINDS[kind];
+  const { table, link, linkRow } = KINDS[kind];
 
   if (links.length === 0) return;
+  const [outside] = await tx
+    .select({ count: count() })
+    .from(table)
+    .where(
+      and(
+        isAnyOf(
+          table.id,
+          links.map((row) => row.id),
+          "uuid"
+        ),
+        not(inScope(table.householdId, householdId, { offered: true }))
+      )
+    );
+
+  if (outside?.count) throw new ForeignHouseholdReferenceError();
 
   await tx
     .insert(link)
@@ -362,13 +391,14 @@ const linksOf = (recipeId: string, ids: readonly string[], from = 0) =>
 async function writeRecipeLinksTx(
   tx: DbTransaction,
   kind: ListKind,
+  householdId: string,
   recipeId: string,
   ids: readonly string[]
 ): Promise<void> {
   const { link } = KINDS[kind];
 
   await tx.delete(link).where(eq(link.recipeId, recipeId));
-  await insertLinksTx(tx, kind, linksOf(recipeId, [...new Set(ids)]));
+  await insertLinksTx(tx, kind, householdId, linksOf(recipeId, [...new Set(ids)]));
 }
 
 /** A recipe's entry names, in order. */
@@ -396,9 +426,9 @@ export async function appendRecipeEntriesTx(
   recipeId: string,
   names: readonly string[]
 ): Promise<{ added: string[]; all: string[] }> {
+  const householdId = await lockedRecipeHouseholdTx(tx, recipeId);
   const existing = await recipeEntryNames(kind, recipeId, tx);
   const has = new Set(existing.map(entryFold));
-  const householdId = await recipeHouseholdId(recipeId, tx);
   const fresh = names.flatMap((name) => entryName(name) ?? []).filter((e) => !has.has(e.fold));
 
   if (!householdId || fresh.length === 0) return { added: [], all: existing };
@@ -417,6 +447,7 @@ export async function appendRecipeEntriesTx(
   await insertLinksTx(
     tx,
     kind,
+    householdId,
     linksOf(
       recipeId,
       added.map((entry) => entry.id),

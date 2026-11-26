@@ -1,12 +1,22 @@
 import type { SQL } from "drizzle-orm";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
-import { and, count, eq, inArray } from "drizzle-orm";
+import { and, count, eq } from "drizzle-orm";
 
-import type { Db } from "@norish/db/drizzle";
+import type { Db, DbTransaction } from "@norish/db/drizzle";
 import { db } from "@norish/db/drizzle";
-import { ingredientAliases, ingredients, recurringGroceries, stores } from "@norish/db/schema";
+import {
+  households,
+  ingredientAliases,
+  ingredients,
+  recipeIngredients,
+  recipes,
+  recurringGroceries,
+  stores,
+} from "@norish/db/schema";
 
+import { isAnyOf } from "./array-params";
 import { outsideCatalogue } from "./household-scope";
+import { lockUntilSettled } from "./lock-until-settled";
 
 /** A household-owned table, as the by-id condition reads it (ADR-0041). */
 interface HouseholdTable {
@@ -31,7 +41,7 @@ export function householdRow(
 
 /** The acting household's rows among `ids`. */
 export function householdRows(table: HouseholdTable, householdId: string, ids: string[]): SQL {
-  return and(inArray(table.id, ids), eq(table.householdId, householdId))!;
+  return and(isAnyOf(table.id, ids, "uuid"), eq(table.householdId, householdId))!;
 }
 
 /** Thrown where a write points a household's row at another household's row. */
@@ -69,7 +79,7 @@ export async function assertOwnReferences(
     const [row] = await tx
       .select({ count: count() })
       .from(table)
-      .where(and(inArray(table.id, ids), where));
+      .where(and(isAnyOf(table.id, ids, "uuid"), where));
 
     return row?.count ?? 0;
   };
@@ -85,4 +95,48 @@ export async function assertOwnReferences(
   ]);
 
   if (checks.includes(false)) throw new ForeignHouseholdReferenceError();
+}
+
+/**
+ * The households of these recipes (or of these lines' recipes), held `FOR KEY SHARE` before any
+ * recipe row, so no leave or join moves them until the commit: a write attaching to a recipe then
+ * reads the household it lands in. A move committed while the lock was awaited is read again.
+ */
+export async function lockRecipeHouseholdsTx(
+  tx: DbTransaction,
+  of: { recipeIds: readonly string[] } | { lineIds: readonly string[] }
+): Promise<Map<string, string>> {
+  const ids = "recipeIds" in of ? of.recipeIds : of.lineIds;
+
+  if (ids.length === 0) return new Map();
+  const read = () =>
+    "recipeIds" in of
+      ? tx
+          .select({ id: recipes.id, householdId: recipes.householdId })
+          .from(recipes)
+          .where(isAnyOf(recipes.id, ids, "uuid"))
+      : tx
+          .select({ id: recipeIngredients.id, householdId: recipes.householdId })
+          .from(recipeIngredients)
+          .innerJoin(recipes, eq(recipes.id, recipeIngredients.recipeId))
+          .where(isAnyOf(recipeIngredients.id, ids, "uuid"));
+  const rows = await lockUntilSettled(
+    read,
+    (fresh) =>
+      tx
+        .select({ id: households.id })
+        .from(households)
+        .where(
+          isAnyOf(
+            households.id,
+            fresh.map((row) => row.householdId),
+            "uuid"
+          )
+        )
+        .orderBy(households.id)
+        .for("key share"),
+    (row) => `${row.id} ${row.householdId}`
+  );
+
+  return new Map(rows.map((row) => [row.id, row.householdId]));
 }

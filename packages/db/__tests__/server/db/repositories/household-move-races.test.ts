@@ -13,6 +13,7 @@ import {
   joinHousehold,
   moveToHouseholdOfOne,
 } from "@norish/db/repositories/households";
+import { findRowsNamingFood } from "@norish/db/repositories/ingredient-cleanup";
 import { mergeCatalogueIngredients } from "@norish/db/repositories/ingredient-relocation";
 import {
   addEntry,
@@ -20,11 +21,14 @@ import {
   deleteEntry,
   mergeEntries,
   recipeEntryNames,
+  replaceRecipeEntryIdsTx,
 } from "@norish/db/repositories/list-entries";
 import * as recipeRepository from "@norish/db/repositories/recipes";
+import { appendRecipeTags } from "@norish/db/repositories/tags";
 import { households, ingredientAliases, ingredients, recipes, tags } from "@norish/db/schema";
 
 import { withResolvedIngredients } from "../../../../../shared-server/src/ingredients/recipe-lines";
+import { resolveAgain } from "../../../../../shared-server/src/ingredients/resolve-again";
 import {
   createTestRecipe,
   createTestUser,
@@ -113,6 +117,56 @@ describe("household move races", () => {
     const [stored] = (await recipeRepository.getRecipeFull(recipe.id))!.recipeIngredients;
 
     expect((await testLineFoodNames(stored!.id!)).map((one) => one.food)).toEqual(["gochujang"]);
+    await expectNothingForeign();
+  });
+
+  it("Tag enrichment finishing after a leave attaches the leaver's household's entry", async () => {
+    const { member, householdId } = await sharedHousehold();
+    const recipe = await createTestRecipe(member.id);
+
+    const settled = await raceBehind(holdRow(households, householdId), [
+      () => moveToHouseholdOfOne(householdId, member.id),
+      () => appendRecipeTags(recipe.id, ["Spicy"]),
+    ]);
+
+    expect(settled.map((one) => one.status)).toEqual(["fulfilled", "fulfilled"]);
+    expect(await recipeEntryNames("tag", recipe.id)).toEqual(["Spicy"]);
+    await expectNothingForeign();
+  });
+
+  it("re-resolution read before a leave resolves the leaver's line in their new household", async () => {
+    const { member, householdId } = await sharedHousehold();
+    const kimchi = await mintTestFood(householdId, "kimchi");
+    const recipe = await createTestRecipe(member.id);
+    const line = await insertTestRecipeLine({ recipeId: recipe.id, name: "kimchi" }, [
+      kimchi.aliasId,
+    ]);
+    const naming = await getTestDb().transaction((tx) =>
+      findRowsNamingFood(tx, kimchi.ingredientId)
+    );
+
+    await moveToHouseholdOfOne(householdId, member.id);
+    await resolveAgain(naming, "repoint");
+
+    expect(await testLineFoodNames(line.id)).toEqual([expect.objectContaining({ food: "kimchi" })]);
+    await expectNothingForeign();
+  });
+
+  it("an editor's Cuisine of the old household takes the leaver's copy of it", async () => {
+    const { member, householdId } = await sharedHousehold();
+    const recipe = await createTestRecipe(member.id);
+
+    await getTestDb().transaction((tx) =>
+      appendRecipeEntriesTx(tx, "cuisine", recipe.id, ["Fusion"])
+    );
+    const fusion = (await addEntry("cuisine", householdId, "Fusion"))!.entry;
+
+    await moveToHouseholdOfOne(householdId, member.id);
+    await getTestDb().transaction((tx) =>
+      replaceRecipeEntryIdsTx(tx, "cuisine", recipe.id, [fusion.id])
+    );
+
+    expect(await recipeEntryNames("cuisine", recipe.id)).toEqual(["Fusion"]);
     await expectNothingForeign();
   });
 

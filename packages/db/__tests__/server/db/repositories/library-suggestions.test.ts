@@ -235,7 +235,8 @@ describe("the typing suggestions", () => {
         await kindOf(poultry, chicken);
         await kindOf(chicken, thighs);
         await recipeNaming(ownerId, [thighs]);
-        await recipeNaming(strangerId, [thighs]);
+        // A recipe names only its own household's foods, so the stranger's names theirs.
+        await recipeNaming(strangerId, [await food("Chicken thighs", strangerId)]);
 
         expect(await names("chick")).toEqual(["Chicken", "Chicken thighs"]);
         expect(await names("poul")).toEqual(["Poultry"]);
