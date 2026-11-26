@@ -1,5 +1,9 @@
 import type { ReactNode } from "react";
 import { ChevronRightIcon, LockClosedIcon } from "@heroicons/react/24/outline";
+import { Skeleton } from "@heroui/react";
+
+/** What a row of a `ListFrame` is made of: its height, gap and padding. */
+const ROW_CLASS = "flex min-h-12 w-full items-center gap-3 px-4";
 
 /** The bordered frame every list of rows sits in. */
 export function ListFrame({ children }: { children: ReactNode }) {
@@ -39,7 +43,7 @@ export function ListRow({
   return (
     <li>
       <button
-        className="hover:bg-default/40 focus-visible:ring-focus flex min-h-12 w-full cursor-[var(--cursor-interactive)] items-center gap-3 px-4 text-start transition-colors focus-visible:ring-2 focus-visible:outline-none"
+        className={`${ROW_CLASS} hover:bg-default/40 focus-visible:ring-focus cursor-[var(--cursor-interactive)] text-start transition-colors focus-visible:ring-2 focus-visible:outline-none`}
         data-entry={entry}
         data-testid={testId}
         type="button"
@@ -60,6 +64,17 @@ export function ListRow({
           <ChevronRightIcon aria-hidden className="text-muted size-4 shrink-0 rtl:rotate-180" />
         ) : null}
       </button>
+    </li>
+  );
+}
+
+/** A row of a `ListFrame` while its entry loads: the row's own height, a name and a count. */
+export function ListRowSkeleton() {
+  return (
+    <li className={ROW_CLASS}>
+      <Skeleton className="h-4 w-40 max-w-full rounded-lg" />
+      <span className="flex-1" />
+      <Skeleton className="h-4 w-12 rounded-lg" />
     </li>
   );
 }

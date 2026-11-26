@@ -4,12 +4,10 @@ import { useState, useTransition } from "react";
 import { useSearchParams } from "next/navigation";
 import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
 import { SettingsCard } from "@/components/settings/settings-card";
-import { SkeletonRows } from "@/components/settings/settings-skeleton";
 import { ActionButton } from "@/components/shared/action-button";
 import { EmptyState } from "@/components/shared/empty-state";
-import { FunnelIcon, SparklesIcon } from "@heroicons/react/16/solid";
+import { SparklesIcon } from "@heroicons/react/16/solid";
 import { BookOpenIcon } from "@heroicons/react/24/outline";
-import { Button } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { useIngredientsSubscription } from "@norish/shared-react/config";
@@ -23,6 +21,7 @@ import type { IngredientFilters } from "./components/ingredient-filters-panel";
 import { ChangedByAIPanel } from "./components/changed-by-ai-panel";
 import DataSourcesCard from "./components/data-sources-card";
 import { IngredientAddPanel } from "./components/ingredient-add-panel";
+import { IngredientFiltersButton } from "./components/ingredient-filters-button";
 import {
   DEFAULT_INGREDIENT_FILTERS,
   hasIngredientFilters,
@@ -30,12 +29,12 @@ import {
 } from "./components/ingredient-filters-panel";
 import { IngredientList } from "./components/ingredient-list";
 import { IngredientSearch } from "./components/ingredient-search";
+import { IngredientRowsSkeleton } from "./components/ingredients-skeleton";
 import { useIngredientTree } from "./hooks/use-ingredient-tree";
 
 /** The catalogue of Ingredients (ADR-0037): a tree of kinds unless searched or filtered. */
 export function IngredientsScreen() {
   const t = useTranslations("settings.ingredients");
-  const tFilters = useTranslations("common.filters");
   const tActions = useTranslations("common.actions");
   const locale = useLocale();
   const [search, setSearch] = useState("");
@@ -120,30 +119,17 @@ export function IngredientsScreen() {
         <IngredientSearch
           busy={settling}
           suffix={
-            <Button
-              isIconOnly
-              aria-label={tFilters("title")}
-              // The dot alone says a filter is on.
-              className="relative"
-              data-testid="ingredients-filters"
-              size="sm"
-              variant="ghost"
+            <IngredientFiltersButton
+              active={hasIngredientFilters(filters)}
               onPress={() => setFiltersOpen(true)}
-            >
-              <FunnelIcon className="size-4" />
-              {hasIngredientFilters(filters) ? (
-                <span className="bg-accent absolute top-1 right-1 inline-flex size-2 rounded-full" />
-              ) : null}
-            </Button>
+            />
           }
           onSearch={onSearch}
         />
 
         {isLoading || (isPlaceholderData && items.length === 0 && !isPaused) ? (
-          // The tab skeleton's rows until an answer lands; a read paused Offline is not loading.
-          <div aria-busy className="flex flex-col gap-4" data-testid="ingredients-loading">
-            <SkeletonRows count={5} />
-          </div>
+          // The skeleton's rows until an answer lands; a read paused Offline is not loading.
+          <IngredientRowsSkeleton />
         ) : items.length === 0 ? (
           <EmptyState
             data-testid="ingredients-empty"

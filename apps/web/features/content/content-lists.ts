@@ -15,6 +15,9 @@ export const ENTRY_KINDS = {
   categories: "category",
 } as const satisfies Partial<Record<ContentList, PickerKind>>;
 
+/** The lists of Tags, Cuisines and Categories, which share one card. */
+export type EntryContentList = keyof typeof ENTRY_KINDS;
+
 export const LIST_ICONS: Record<ContentList, ComponentType<SVGProps<SVGSVGElement>>> = {
   tags: TagIcon,
   cuisines: GlobeAltIcon,

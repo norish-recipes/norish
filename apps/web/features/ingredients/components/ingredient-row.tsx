@@ -4,7 +4,7 @@ import { memo } from "react";
 import { IngredientIcon } from "@/components/ingredients/ingredient-icon";
 import { IngredientStatusChip } from "@/components/ingredients/ingredient-status-chip";
 import { ChevronRightIcon } from "@heroicons/react/24/outline";
-import { Spinner } from "@heroui/react";
+import { Skeleton, Spinner } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
 import type { IngredientItem } from "@norish/shared-react/ingredients";
@@ -12,6 +12,9 @@ import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 
 /** How far each level of the tree is set in from the one above. */
 const INDENT_PX = 24;
+
+/** What a row's button is made of: its icon, two lines and their padding. */
+const ROW_BODY = "flex min-w-0 flex-1 items-center gap-3 rounded-lg px-3 py-3";
 
 /** One Ingredient on a line, indented by `depth`; memoised to re-render only on its item. */
 export const IngredientRow = memo(function IngredientRow({
@@ -77,7 +80,7 @@ export const IngredientRow = memo(function IngredientRow({
         </button>
       ) : null}
       <button
-        className="focus-visible:ring-focus flex min-w-0 flex-1 cursor-[var(--cursor-interactive)] items-center gap-3 rounded-lg px-3 py-3 text-left focus-visible:ring-2 focus-visible:outline-none"
+        className={`${ROW_BODY} focus-visible:ring-focus cursor-[var(--cursor-interactive)] text-left focus-visible:ring-2 focus-visible:outline-none`}
         data-testid="ingredient-toggle"
         type="button"
         onClick={() => onOpen(item.id)}
@@ -110,3 +113,18 @@ export const IngredientRow = memo(function IngredientRow({
     </div>
   );
 });
+
+/** A row while its Ingredient loads: the row's icon and two lines, at the row's own height. */
+export function IngredientRowSkeleton() {
+  return (
+    <li className="flex items-stretch">
+      <div className={ROW_BODY}>
+        <IngredientIcon placeholder src={null} />
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <Skeleton className="h-6 w-40 max-w-full rounded-lg" />
+          <Skeleton className="h-5 w-56 max-w-full rounded-lg" />
+        </div>
+      </div>
+    </li>
+  );
+}

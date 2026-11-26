@@ -1,53 +1,90 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useParams } from "next/navigation";
 import { SettingsCard } from "@/components/settings/settings-card";
-import { SettingsCardsSkeleton, SkeletonRows } from "@/components/settings/settings-skeleton";
-import { BookOpenIcon, CircleStackIcon } from "@heroicons/react/24/outline";
+import { ActionButton } from "@/components/shared/action-button";
+import { ListFrame, ListRowSkeleton } from "@/components/shared/list-row";
+import { Section } from "@/components/shared/section";
 import { Skeleton } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import type { ContentList } from "./content-lists";
+import type { SectionTitle } from "@norish/shared-react/lists";
+
+import type { EntryContentList } from "./content-lists";
 import { DEFAULT_CONTENT_LIST, isContentList, LIST_ICONS } from "./content-lists";
 import { ContentLayout } from "./content-nav";
+import { ContentToolbar } from "./content-toolbar";
 
-/** A list of Tags, Cuisines or Categories while it loads: its card, the search field and grey rows. */
-export function EntryListSkeleton({ list }: { list: ContentList }) {
+/** The sections a list loads into, as its loaded page has them: a heading over rows. */
+const SECTIONS: Record<EntryContentList, { title: SectionTitle | null; rows: number }[]> = {
+  tags: [{ title: null, rows: 6 }],
+  cuisines: [
+    { title: "ownCuisines", rows: 3 },
+    { title: "server", rows: 3 },
+  ],
+  categories: [
+    { title: "builtIn", rows: 4 },
+    { title: "ownCategories", rows: 3 },
+  ],
+};
+
+/**
+ * A list of Tags, Cuisines or Categories while it loads: the loaded card with its toolbar, section
+ * headings and rows, the controls off. The route and the list's own wait both draw it.
+ */
+export function EntryListSkeleton({ list }: { list: EntryContentList }) {
   const t = useTranslations("settings.content");
+  const tActions = useTranslations("common.actions");
 
   return (
     <SettingsCard
+      actions={
+        <ActionButton action="add" isDisabled>
+          {tActions("add")}
+        </ActionButton>
+      }
       aria-busy
       data-testid="content-loading"
       icon={LIST_ICONS[list]}
       title={t(`lists.${list}`)}
     >
-      <Skeleton className="h-10 w-full rounded-xl" />
-      <SkeletonRows count={7} />
+      <ContentToolbar
+        isDisabled
+        list={list}
+        search=""
+        unusedOnly={false}
+        onSearch={() => undefined}
+        onUnusedOnly={() => undefined}
+      />
+      {SECTIONS[list].map(({ title, rows }) => (
+        <Section
+          key={title ?? list}
+          placement="card"
+          title={title ? t(`sections.${title}`) : undefined}
+        >
+          <ListFrame>
+            {Array.from({ length: rows }, (_, row) => (
+              <ListRowSkeleton key={row} />
+            ))}
+          </ListFrame>
+        </Section>
+      ))}
     </SettingsCard>
   );
 }
 
-/** The Ingredients list while it loads: its card and the Data sources card. */
-function IngredientsSkeleton() {
-  return (
-    <SettingsCardsSkeleton
-      cards={[
-        { icon: BookOpenIcon, section: "ingredients", rows: 6 },
-        { icon: CircleStackIcon, section: "ingredients.dataSources", rows: 2 },
-      ]}
-    />
-  );
-}
-
-/** The Content tab while a list loads: the list picker and the card of the list the address names. */
-export default function ContentSkeleton() {
+/**
+ * The Content tab while a list loads: the list picker and the card of the list the address names.
+ * The route hands in the Ingredients skeleton, which another feature owns.
+ */
+export default function ContentSkeleton({ ingredients }: { ingredients: ReactNode }) {
   const { list } = useParams<{ list?: string }>();
   const shown = list && isContentList(list) ? list : DEFAULT_CONTENT_LIST;
 
   return (
     <ContentLayout nav={<Skeleton className="h-12 w-full rounded-xl md:h-56" />}>
-      {shown === "ingredients" ? <IngredientsSkeleton /> : <EntryListSkeleton list={shown} />}
+      {shown === "ingredients" ? ingredients : <EntryListSkeleton list={shown} />}
     </ContentLayout>
   );
 }

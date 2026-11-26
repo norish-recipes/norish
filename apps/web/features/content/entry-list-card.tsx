@@ -5,23 +5,23 @@ import { ActionButton } from "@/components/shared/action-button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ListFrame, ListRow } from "@/components/shared/list-row";
 import { Note } from "@/components/shared/note";
-import { SearchField } from "@/components/shared/search-field";
 import { Section } from "@/components/shared/section";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
-import { Button, ToggleButton, ToggleButtonGroup } from "@heroui/react";
+import { Button } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { PickerKind } from "@norish/shared-react/lists";
 import { useContentList, useContentTarget } from "@norish/shared-react/lists";
 
-import type { ContentList } from "./content-lists";
+import type { EntryContentList } from "./content-lists";
 import { LIST_ICONS } from "./content-lists";
 import { EntryListSkeleton } from "./content-skeleton";
+import { ContentToolbar } from "./content-toolbar";
 import { EntryAddPanel } from "./entry-add-panel";
 import { EntryPanel } from "./entry-panel";
 
 /** A list of Tags, Cuisines or Categories: search, the unused filter, Add, and a panel per entry. */
-export function EntryListCard({ kind, list }: { kind: PickerKind; list: ContentList }) {
+export function EntryListCard({ kind, list }: { kind: PickerKind; list: EntryContentList }) {
   const t = useTranslations("settings.content");
   const tActions = useTranslations("common.actions");
   const { loaded, failed, retry, offline, search, setSearch, unusedOnly, setUnusedOnly, view } =
@@ -103,30 +103,13 @@ export function EntryListCard({ kind, list }: { kind: PickerKind; list: ContentL
   return (
     <>
       <SettingsCard actions={addButton} icon={Icon} title={t(`lists.${list}`)}>
-        <div className="flex flex-wrap items-center gap-2">
-          <SearchField
-            data-testid="content-search"
-            label={t(`search.${list}`)}
-            value={search}
-            onChange={setSearch}
-          />
-          <ToggleButtonGroup
-            aria-label={t("show")}
-            disallowEmptySelection
-            selectedKeys={[unusedOnly ? "unused" : "all"]}
-            selectionMode="single"
-            size="sm"
-            onSelectionChange={(keys) => setUnusedOnly(keys.has("unused"))}
-          >
-            <ToggleButton data-testid="content-show-all" id="all">
-              {t("all")}
-            </ToggleButton>
-            <ToggleButton data-testid="content-show-unused" id="unused">
-              <ToggleButtonGroup.Separator />
-              {t("unused")}
-            </ToggleButton>
-          </ToggleButtonGroup>
-        </div>
+        <ContentToolbar
+          list={list}
+          search={search}
+          unusedOnly={unusedOnly}
+          onSearch={setSearch}
+          onUnusedOnly={setUnusedOnly}
+        />
         {offline ? <Note>{t("offline")}</Note> : null}
         {view.state === "nothingUnused" || view.state === "noMatch" ? notice(view.state) : null}
         {view.sections.map((section) => (

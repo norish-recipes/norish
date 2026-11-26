@@ -8,6 +8,7 @@ export function SearchField({
   value,
   onChange,
   busy = false,
+  isDisabled = false,
   suffix,
   "data-testid": testId,
   iconTestId,
@@ -17,12 +18,20 @@ export function SearchField({
   onChange: (value: string) => void;
   /** The magnifier pulses while the list is being searched. */
   busy?: boolean;
+  /** The list is still loading: the field is there but takes nothing. */
+  isDisabled?: boolean;
   suffix?: ReactNode;
   "data-testid"?: string;
   iconTestId?: string;
 }) {
   return (
-    <TextField aria-label={label} className="min-w-0 flex-1" value={value} onChange={onChange}>
+    <TextField
+      aria-label={label}
+      className="min-w-0 flex-1"
+      isDisabled={isDisabled}
+      value={value}
+      onChange={onChange}
+    >
       <InputGroup variant="secondary">
         <InputGroup.Prefix className="ps-3">
           <MagnifyingGlassIcon
