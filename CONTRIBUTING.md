@@ -150,6 +150,7 @@ Web and mobile use the same layout and share logic in `packages/shared-react`. [
   - `offline/` holds the Outbox and the optimistic updates every domain's mutations use, so every write is Queued and replayed the same way while Offline.
   - `config/` holds `useAuthProvidersQuery` and reference data such as units, tags and recurrence, which every domain reads and none owns.
   - `reader/` holds the signed-in Reader and Account: identity, household, profile, allergies, Sign-in Methods, site tokens, their writes, permissions and Device Preferences, which every domain checks without fetching its own copy. `reader/session-end.ts` holds `useSignOut`, `useSessionExpiry` and `expireSession`, each app's 401 and 4401 callback. Web mounts `useSessionExpiry` in the signed-in shell; mobile mounts it in `AuthProviders` from sign-in until leaving. Web's sign-in screen forgets the Offline Cache when reached with a `callbackUrl`, except after sign-out.
+  - `lists/` holds shared household list and ingredient catalogue hooks.
   - `realtime/` holds the hook every domain's realtime subscription is built on, so each one rereads once live and recovers from a lag the same way.
   - `page-store/` provides `createPageStoreContext`, which returns a provider that creates a store once from the page's key and a hook that selects a slice of it.
 
