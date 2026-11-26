@@ -9,29 +9,20 @@ import { Section } from "@/components/shared/section";
 import { Skeleton } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import type { EntryContentList, SectionTitle } from "@norish/shared-react/lists";
+import type { EntryContentList } from "@norish/shared-react/lists";
 import { isContentList } from "@norish/shared-react/lists";
 
 import { DEFAULT_CONTENT_LIST, LIST_ICONS } from "./content-lists";
 import { ContentLayout } from "./content-nav";
 import { ContentToolbar } from "./content-toolbar";
 
-/** The sections a list loads into, as its loaded page has them: a heading over rows. */
-const SECTIONS: Record<EntryContentList, { title: SectionTitle | null; rows: number }[]> = {
-  tags: [{ title: null, rows: 6 }],
-  cuisines: [
-    { title: "ownCuisines", rows: 3 },
-    { title: "server", rows: 3 },
-  ],
-  categories: [
-    { title: "builtIn", rows: 4 },
-    { title: "ownCategories", rows: 3 },
-  ],
-};
+/** Rows in the one frame a loading list draws; the loaded list's own count is not known yet. */
+const SKELETON_ROWS = 6;
 
 /**
- * A list of Tags, Cuisines or Categories while it loads: the loaded card with its toolbar, section
- * headings and rows, the controls off. The route and the list's own wait both draw it.
+ * A list of Tags, Cuisines or Categories while it loads: the loaded card with its toolbar and one
+ * frame of rows, the controls off. Only what the loaded list always has is drawn, so nothing moves
+ * when it arrives: Tags have no heading, the others always open on one.
  */
 export function EntryListSkeleton({ list }: { list: EntryContentList }) {
   const t = useTranslations("settings.content");
@@ -57,19 +48,13 @@ export function EntryListSkeleton({ list }: { list: EntryContentList }) {
         onSearch={() => undefined}
         onUnusedOnly={() => undefined}
       />
-      {SECTIONS[list].map(({ title, rows }) => (
-        <Section
-          key={title ?? list}
-          placement="card"
-          title={title ? t(`sections.${title}`) : undefined}
-        >
-          <ListFrame>
-            {Array.from({ length: rows }, (_, row) => (
-              <ListRowSkeleton key={row} />
-            ))}
-          </ListFrame>
-        </Section>
-      ))}
+      <Section placement="card" titleLoading={list !== "tags"}>
+        <ListFrame>
+          {Array.from({ length: SKELETON_ROWS }, (_, row) => (
+            <ListRowSkeleton key={row} />
+          ))}
+        </ListFrame>
+      </Section>
     </SettingsCard>
   );
 }

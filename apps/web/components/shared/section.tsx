@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { PanelPortal } from "@/components/Panel/Panel";
 import { InformationCircleIcon } from "@heroicons/react/16/solid";
-import { Button, Tooltip } from "@heroui/react";
+import { Button, Skeleton, Tooltip } from "@heroui/react";
 
 /** Where a section sits: a list card's small heading, or a panel's uppercase label. */
 type Placement = "card" | "panel";
@@ -43,6 +43,7 @@ function SectionHelp({ help }: { help: string }) {
 export function Section({
   placement,
   title,
+  titleLoading = false,
   help,
   "data-testid": testId,
   children,
@@ -50,12 +51,19 @@ export function Section({
   placement: Placement;
   /** Absent where the card has only one part. */
   title?: string;
+  /** The title is not known yet: a bar the heading's size stands in for it. */
+  titleLoading?: boolean;
   help?: string;
   "data-testid"?: string;
   children: ReactNode;
 }) {
   return (
     <section className="flex flex-col gap-2" data-testid={testId}>
+      {titleLoading ? (
+        <SectionHeading placement={placement}>
+          <Skeleton className="h-4 w-28 rounded-lg" />
+        </SectionHeading>
+      ) : null}
       {title ? (
         <SectionHeading placement={placement}>
           {title}
