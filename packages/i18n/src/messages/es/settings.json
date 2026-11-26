@@ -592,7 +592,8 @@
       "failed": "No se pudo crear un icono con esa imagen.",
       "generate": "Generar con IA",
       "generateFailed": "No se pudo generar el icono."
-    }
+    },
+    "keepDistinct": "Mantener separado"
   },
   "admin": {
     "shareLinks": {
@@ -1390,7 +1391,13 @@
       "body": "{count, plural, =0 {Ninguna receta la usa.} one {Se quita de # receta. La receta se queda.} other {Se quita de # recetas. Las recetas se quedan.}}",
       "bodyServer": "{count, plural, =0 {Ninguna receta la usa.} one {Se quita de # receta de todos los hogares de este servidor. La receta se queda.} other {Se quita de # recetas de todos los hogares de este servidor. Las recetas se quedan.}}",
       "countFailed": "No se pudieron contar las recetas que lo usan. Inténtalo de nuevo.",
-      "failed": "No se pudo eliminar. Inténtalo de nuevo."
-    }
+      "failed": "No se pudo eliminar. Inténtalo de nuevo.",
+      "action": {
+        "tag": "Eliminar etiqueta",
+        "cuisine": "Eliminar cocina",
+        "category": "Eliminar categoría"
+      }
+    },
+    "countCell": "{count, plural, =0 {Sin usar} other {#}}"
   }
 }

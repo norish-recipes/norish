@@ -206,6 +206,7 @@ export const kit = {
     isSelected,
     active,
     disabled,
+    accessibilityLabel,
   }: {
     testID?: string;
     label?: string;
@@ -214,10 +215,12 @@ export const kit = {
     isSelected?: boolean;
     active?: boolean;
     disabled?: boolean;
+    accessibilityLabel?: string;
   }) =>
     createElement(
       "button",
       {
+        "aria-label": accessibilityLabel,
         "data-testid": testID,
         disabled,
         "aria-pressed": isSelected ?? active,

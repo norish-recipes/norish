@@ -201,7 +201,7 @@ function FoodSheet({ item }: { item: IngredientItem }) {
         <CardRow
           label={t("parentSection")}
           testID="food-parent"
-          value={parentName ?? "-"}
+          value={parentName}
           onPress={item.canEdit ? () => draft.setRelocation({ kind: "parent" }) : undefined}
         />
         {draft.parent && item.canEdit ? (
@@ -224,9 +224,9 @@ function FoodSheet({ item }: { item: IngredientItem }) {
           onPress={() => setStep("nutrition")}
         />
         {item.flagged && item.canEdit ? (
-          <CardRow label={t("markDistinct")}>
+          <CardRow label={t("keepDistinct")}>
             <Switch
-              accessibilityLabel={t("markDistinct")}
+              accessibilityLabel={t("keepDistinct")}
               disabled={isOffline}
               isSelected={false}
               testID="food-keep-distinct"

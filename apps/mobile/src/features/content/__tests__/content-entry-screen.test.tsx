@@ -44,6 +44,12 @@ vi.mock("@norish/shared-react/lists", async (importActual) => ({
   }),
 }));
 
+vi.mock("@/components/sheet-note", () => ({
+  SheetNote: ({ children, tone }: { children: React.ReactNode; tone?: string }) => (
+    <p data-tone={tone}>{children}</p>
+  ),
+}));
+
 const { ContentEntryScreen } = await import("../screens/content-entry-screen");
 
 describe("ContentEntryScreen", () => {
@@ -81,13 +87,13 @@ describe("ContentEntryScreen", () => {
     expect(
       screen.getByText(
         /settings.content.panel.merge\{"target":"dinner","name":"Diner","count":97\}/
-      )
-    ).toBeTruthy();
+      ).dataset.tone
+    ).toBeUndefined();
   });
 
   it("asks before deleting, with the count, in the native alert, and closes once deleted", async () => {
     render(<ContentEntryScreen />);
-    fireEvent.click(screen.getByTestId("sheet-secondary-common.actions.delete"));
+    fireEvent.click(screen.getByTestId("sheet-secondary-settings.content.delete.action.tag"));
 
     const [title, body, buttons] = alert.mock.calls[0] as [
       string,
@@ -98,6 +104,7 @@ describe("ContentEntryScreen", () => {
     expect(title).toContain("settings.content.delete.title");
     expect(body).toBe('settings.content.delete.body{"count":97}');
     expect(buttons.map((button) => button.style)).toEqual(["cancel", "destructive"]);
+    expect(buttons[1]?.text).toBe("settings.content.delete.action.tag");
     expect(held.remove).not.toHaveBeenCalled();
     await act(async () => void (await buttons[1]!.onPress?.()));
     expect(held.remove).toHaveBeenCalled();
@@ -107,7 +114,7 @@ describe("ContentEntryScreen", () => {
   it("counts every household's recipes for a server entry an admin deletes", () => {
     held.entry = { deleteImpact: { recipes: 181, scope: "server" } };
     render(<ContentEntryScreen />);
-    fireEvent.click(screen.getByTestId("sheet-secondary-common.actions.delete"));
+    fireEvent.click(screen.getByTestId("sheet-secondary-settings.content.delete.action.tag"));
     expect(alert.mock.calls[0]?.[1]).toBe('settings.content.delete.bodyServer{"count":181}');
   });
 
@@ -121,7 +128,7 @@ describe("ContentEntryScreen", () => {
     };
     render(<ContentEntryScreen />);
     expect(screen.queryByTestId("sheet-confirm")).toBeNull();
-    expect(screen.queryByTestId("sheet-secondary-common.actions.delete")).toBeNull();
+    expect(screen.queryByTestId("sheet-secondary-settings.content.delete.action.tag")).toBeNull();
     expect(screen.getByText("settings.content.panel.serverReadOnly")).toBeTruthy();
     expect((screen.getByTestId("content-entry-name") as HTMLInputElement).readOnly).toBe(true);
     expect(screen.getByRole("heading").textContent).toBe("Diner");

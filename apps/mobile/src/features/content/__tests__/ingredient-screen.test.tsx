@@ -180,6 +180,11 @@ describe("IngredientScreen", () => {
     expect(screen.getByTestId("step-correction").getAttribute("data-spoon")).toBe("true");
   });
 
+  it("shows no dash for a food with no parent", () => {
+    render(<IngredientScreen />);
+    expect(screen.getByTestId("food-parent").textContent).not.toContain("-");
+  });
+
   it("draws the picker while a relocation is asked", () => {
     held.draft = { relocation: { kind: "parent" } };
     render(<IngredientScreen />);
@@ -190,6 +195,7 @@ describe("IngredientScreen", () => {
     held.item = food({ flagged: true, flagReason: "similar" });
     render(<IngredientScreen />);
     expect(screen.getByTestId("food-flag").textContent).toContain("flagReasons.similar");
+    expect(screen.getByLabelText("settings.ingredients.keepDistinct")).toBeTruthy();
     fireEvent.click(screen.getByTestId("food-keep-distinct"));
     expect(held.markDistinct).toHaveBeenCalled();
   });

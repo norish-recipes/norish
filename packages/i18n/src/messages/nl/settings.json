@@ -592,7 +592,8 @@
       "failed": "Van deze afbeelding kon geen icoon worden gemaakt.",
       "generate": "Genereren met AI",
       "generateFailed": "Het icoon kon niet worden gegenereerd."
-    }
+    },
+    "keepDistinct": "Apart houden"
   },
   "admin": {
     "shareLinks": {
@@ -1390,7 +1391,13 @@
       "body": "{count, plural, =0 {Geen enkel recept gebruikt het.} one {Het gaat van # recept af. Het recept blijft.} other {Het gaat van # recepten af. De recepten blijven.}}",
       "bodyServer": "{count, plural, =0 {Geen enkel recept gebruikt het.} one {Het gaat van # recept af in elk huishouden op deze server. Het recept blijft.} other {Het gaat van # recepten af in elk huishouden op deze server. De recepten blijven.}}",
       "countFailed": "De recepten die het gebruiken konden niet worden geteld. Probeer het opnieuw.",
-      "failed": "Verwijderen is niet gelukt. Probeer het opnieuw."
-    }
+      "failed": "Verwijderen is niet gelukt. Probeer het opnieuw.",
+      "action": {
+        "tag": "Verwijder tag",
+        "cuisine": "Verwijder keuken",
+        "category": "Verwijder categorie"
+      }
+    },
+    "countCell": "{count, plural, =0 {Niet gebruikt} other {#}}"
   }
 }

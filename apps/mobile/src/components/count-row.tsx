@@ -17,6 +17,7 @@ const INDENT = 24;
 export function CountRow({
   name,
   count,
+  countLabel,
   tag,
   leading,
   depth = 0,
@@ -29,6 +30,8 @@ export function CountRow({
 }: {
   name: string;
   count?: string;
+  /** What the count counts, for a screen reader, which hears the number alone otherwise. */
+  countLabel?: string;
   tag?: ReactNode;
   leading?: ReactNode;
   depth?: number;
@@ -61,7 +64,11 @@ export function CountRow({
         </Text>
         {tag}
       </View>
-      {count ? <Text className="text-muted text-base">{count}</Text> : null}
+      {count ? (
+        <Text accessibilityLabel={countLabel} className="text-muted text-base">
+          {count}
+        </Text>
+      ) : null}
       {trailing ??
         (lockLabel ? (
           <View accessibilityLabel={lockLabel} accessibilityRole="image" accessible>

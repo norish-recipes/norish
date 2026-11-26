@@ -92,7 +92,7 @@ function EntryScreen({ kind, id }: { kind: PickerKind; id: string }) {
       [
         cancel,
         {
-          text: text("common.actions.delete"),
+          text: text(`settings.content.delete.action.${kind}`),
           style: "destructive",
           onPress: async () => {
             if (await entry.remove()) done();
@@ -112,7 +112,7 @@ function EntryScreen({ kind, id }: { kind: PickerKind; id: string }) {
             </SheetNote>
           ) : null}
           {view?.target ? (
-            <SheetNote tone="accent">
+            <SheetNote>
               {text("settings.content.panel.merge", {
                 target: view.target.name,
                 name,
@@ -152,7 +152,7 @@ function EntryScreen({ kind, id }: { kind: PickerKind; id: string }) {
         editable
           ? [
               {
-                ...destructiveAction(text("common.actions.delete"), confirmDelete),
+                ...destructiveAction(text(`settings.content.delete.action.${kind}`), confirmDelete),
                 disabled: entry.offline || entry.pending || entry.deleteState === "counting",
               },
             ]

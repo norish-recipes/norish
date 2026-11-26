@@ -42,7 +42,7 @@ export function EntryList({
         view.state === "empty"
           ? {
               action: {
-                label: text("common.actions.add"),
+                label: text(`settings.content.panel.addTitle.${ENTRY_KINDS[list]}`),
                 icon: "add",
                 testID: "content-add",
                 onPress: onAdd,
@@ -80,7 +80,8 @@ export function EntryList({
         ) : (
           <CardSlice edge={edgeAt(item.index, item.count)}>
             <CountRow
-              count={text("settings.content.recipes", { count: item.item.recipeCount })}
+              count={text("settings.content.countCell", { count: item.item.recipeCount })}
+              countLabel={text("settings.content.recipes", { count: item.item.recipeCount })}
               lockLabel={item.item.editable ? undefined : text("settings.content.readOnly")}
               name={item.item.name}
               testID={`content-entry-${item.item.id}`}

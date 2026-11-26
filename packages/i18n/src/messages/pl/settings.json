@@ -592,7 +592,8 @@
       "failed": "Z tego zdjęcia nie udało się zrobić ikony.",
       "generate": "Wygeneruj z AI",
       "generateFailed": "Nie udało się wygenerować ikony."
-    }
+    },
+    "keepDistinct": "Zachowaj osobno"
   },
   "admin": {
     "shareLinks": {
@@ -1390,7 +1391,13 @@
       "body": "{count, plural, =0 {Żaden przepis tego nie używa.} one {Zniknie z # przepisu. Przepis zostaje.} few {Zniknie z # przepisów. Przepisy zostają.} other {Zniknie z # przepisów. Przepisy zostają.}}",
       "bodyServer": "{count, plural, =0 {Żaden przepis tego nie używa.} one {Zniknie z # przepisu w każdym gospodarstwie na tym serwerze. Przepis zostaje.} few {Zniknie z # przepisów w każdym gospodarstwie na tym serwerze. Przepisy zostają.} other {Zniknie z # przepisów w każdym gospodarstwie na tym serwerze. Przepisy zostają.}}",
       "countFailed": "Nie udało się policzyć przepisów, które tego używają. Spróbuj ponownie.",
-      "failed": "Nie udało się usunąć. Spróbuj ponownie."
-    }
+      "failed": "Nie udało się usunąć. Spróbuj ponownie.",
+      "action": {
+        "tag": "Usuń tag",
+        "cuisine": "Usuń kuchnię",
+        "category": "Usuń kategorię"
+      }
+    },
+    "countCell": "{count, plural, =0 {Nieużywane} other {#}}"
   }
 }

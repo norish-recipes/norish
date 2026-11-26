@@ -592,7 +592,8 @@
       "failed": "Det gick inte att skapa en ikon av den bilden.",
       "generate": "Skapa med AI",
       "generateFailed": "Det gick inte att skapa ikonen."
-    }
+    },
+    "keepDistinct": "Behåll separat"
   },
   "admin": {
     "shareLinks": {
@@ -1390,7 +1391,13 @@
       "body": "{count, plural, =0 {Inget recept använder den.} one {Den tas bort från # recept. Receptet finns kvar.} other {Den tas bort från # recept. Recepten finns kvar.}}",
       "bodyServer": "{count, plural, =0 {Inget recept använder den.} one {Den tas bort från # recept i alla hushåll på den här servern. Receptet finns kvar.} other {Den tas bort från # recept i alla hushåll på den här servern. Recepten finns kvar.}}",
       "countFailed": "Det gick inte att räkna recepten som använder den. Försök igen.",
-      "failed": "Det gick inte att ta bort. Försök igen."
-    }
+      "failed": "Det gick inte att ta bort. Försök igen.",
+      "action": {
+        "tag": "Ta bort tagg",
+        "cuisine": "Ta bort matkultur",
+        "category": "Ta bort kategori"
+      }
+    },
+    "countCell": "{count, plural, =0 {Används inte} other {#}}"
   }
 }

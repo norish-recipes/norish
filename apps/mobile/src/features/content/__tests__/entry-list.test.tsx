@@ -100,6 +100,9 @@ describe("EntryList", () => {
     expect(screen.getByTestId("content-empty").textContent).toContain(
       "settings.content.empty.cuisines"
     );
+    expect(screen.getByTestId("content-add").textContent).toBe(
+      "settings.content.panel.addTitle.cuisine"
+    );
     fireEvent.click(screen.getByTestId("content-add"));
     expect(onAdd).toHaveBeenCalled();
   });
@@ -128,7 +131,9 @@ describe("EntryList", () => {
     expect(screen.getByTestId("heading-instance").textContent).toContain(
       "settings.content.sections.server"
     );
-    expect(screen.getByTestId("content-entry-Manado").textContent).toContain('"count":3');
+    expect(screen.getByTestId("content-entry-Manado").textContent).toContain(
+      'settings.content.countCell{"count":3}'
+    );
     expect(
       within(screen.getByTestId("content-entry-Italian")).getByLabelText(
         "settings.content.readOnly"

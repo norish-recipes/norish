@@ -49,6 +49,11 @@ describe("CountRow", () => {
     expect(onPress).toHaveBeenCalled();
   });
 
+  it("says what its count counts to a screen reader", () => {
+    render(<CountRow count="3" countLabel="3 recipes" name="Diner" />);
+    expect(screen.getByLabelText("3 recipes").textContent).toBe("3");
+  });
+
   it("names its lock mark for a screen reader where the entry is read-only", () => {
     render(<CountRow lockLabel="Read only" name="Italian" />);
     expect(screen.getByLabelText("Read only")).toBeTruthy();
