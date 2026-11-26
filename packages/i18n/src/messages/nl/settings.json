@@ -255,6 +255,7 @@
       "leaveModal": {
         "title": "Verlaat huishouden",
         "confirmMessage": "Weet je zeker dat je {name} wilt verlaten?",
+        "goesAndStays": "Je recepten en kookboeken gaan met je mee, met hun tags en ingrediënten. De boodschappen, voorraadkast, maaltijdplanning en winkels blijven bij het huishouden.",
         "adminWarning": "Je bent de beheerder. Je moet de admin overdragen voordat je vertrekt.",
         "confirmButton": "Verlaat huishouden"
       }
@@ -272,7 +273,7 @@
       "kickModal": {
         "title": "Verwijder gebruiker",
         "confirmMessage": "Weet je zeker dat je {name} uit het huishouden wilt verwijderen?",
-        "warning": "Ze verliezen toegang tot alle gedeelde recepten, boodschappen en agenda-items.",
+        "warning": "Hun recepten en kookboeken gaan met hen mee, met hun tags en ingrediënten. De boodschappen, voorraadkast, maaltijdplanning en winkels blijven bij het huishouden.",
         "confirmButton": "Verwijder gebruiker"
       },
       "transferModal": {
@@ -298,7 +299,7 @@
     },
     "join": {
       "title": "Huishouden joinen",
-      "description": "Voer een join code in om lid te worden van een bestaand huishouden.",
+      "description": "Voer een join code in om lid te worden van een bestaand huishouden. Je huishouden gaat erin op: je recepten, boodschappen, voorraadkast, maaltijdplanning en winkels komen mee.",
       "codeLabel": "Join code",
       "codePlaceholder": "6-cijferige code",
       "submitButton": "Join huishouden"

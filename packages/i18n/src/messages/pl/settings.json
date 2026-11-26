@@ -255,6 +255,7 @@
       "leaveModal": {
         "title": "Opuść gospodarstwo domowe",
         "confirmMessage": "Czy na pewno chcesz opuścić {name}?",
+        "goesAndStays": "Twoje przepisy i książki kucharskie idą z tobą, razem z tagami i składnikami. Zakupy, spiżarnia, plan posiłków i sklepy zostają w gospodarstwie.",
         "adminWarning": "Jesteś administratorem. Przed opuszczeniem musisz przekazać uprawnienia administratora.",
         "confirmButton": "Opuść gospodarstwo domowe"
       }
@@ -272,7 +273,7 @@
       "kickModal": {
         "title": "Usuń użytkownika",
         "confirmMessage": "Czy na pewno chcesz usunąć {name} z gospodarstwa domowego?",
-        "warning": "Utraci dostęp do wszystkich współdzielonych przepisów, list zakupów i wpisów w kalendarzu.",
+        "warning": "Przepisy i książki kucharskie tej osoby idą z nią, razem z tagami i składnikami. Zakupy, spiżarnia, plan posiłków i sklepy zostają w gospodarstwie.",
         "confirmButton": "Usuń użytkownika"
       },
       "transferModal": {
@@ -298,7 +299,7 @@
     },
     "join": {
       "title": "Dołącz do gospodarstwa domowego",
-      "description": "Wpisz kod dołączenia, aby dołączyć do istniejącego gospodarstwa domowego.",
+      "description": "Wpisz kod dołączenia, aby dołączyć do istniejącego gospodarstwa domowego. Twoje gospodarstwo zostanie z nim połączone: przepisy, zakupy, spiżarnia, plan posiłków i sklepy przejdą razem z tobą.",
       "codeLabel": "Kod dołączenia",
       "codePlaceholder": "6-cyfrowy kod",
       "submitButton": "Dołącz do gospodarstwa domowego"

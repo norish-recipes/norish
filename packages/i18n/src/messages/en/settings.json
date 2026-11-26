@@ -255,6 +255,7 @@
       "leaveModal": {
         "title": "Leave household",
         "confirmMessage": "Are you sure you want to leave {name}?",
+        "goesAndStays": "Your recipes and cookbooks go with you, with their tags and ingredients. The groceries, pantry, meal plan and stores stay with the household.",
         "adminWarning": "You are the admin. You must transfer admin privileges before leaving.",
         "confirmButton": "Leave household"
       }
@@ -272,7 +273,7 @@
       "kickModal": {
         "title": "Kick user",
         "confirmMessage": "Are you sure you want to kick {name} from the household?",
-        "warning": "They will lose access to all shared recipes, groceries, and calendar entries.",
+        "warning": "Their recipes and cookbooks go with them, with their tags and ingredients. The groceries, pantry, meal plan and stores stay with the household.",
         "confirmButton": "Kick user"
       },
       "transferModal": {
@@ -298,7 +299,7 @@
     },
     "join": {
       "title": "Join household",
-      "description": "Enter a join code to join an existing household.",
+      "description": "Enter a join code to join an existing household. Your household is merged into it: your recipes, groceries, pantry, meal plan and stores come along.",
       "codeLabel": "Join code",
       "codePlaceholder": "6-digit code",
       "submitButton": "Join household"

@@ -255,6 +255,7 @@
       "leaveModal": {
         "title": "Poistu kotitaloudesta",
         "confirmMessage": "Haluatko varmasti poistua kotitaloudesta {name}?",
+        "goesAndStays": "Reseptisi ja keittokirjasi lähtevät mukaasi tunnisteineen ja aineksineen. Ostokset, ruokakomero, ateriasuunnitelma ja kaupat jäävät kotitaloudelle.",
         "adminWarning": "Olet ylläpitäjä. Sinun on siirrettävä ylläpito-oikeudet ennen poistumista.",
         "confirmButton": "Poistu kotitaloudesta"
       }
@@ -272,7 +273,7 @@
       "kickModal": {
         "title": "Poista käyttäjä",
         "confirmMessage": "Haluatko varmasti poistaa käyttäjän {name} kotitaloudesta?",
-        "warning": "Hän menettää pääsyn kaikkiin jaettuihin resepteihin, ostoksiin ja kalenterimerkintöihin.",
+        "warning": "Hänen reseptinsä ja keittokirjansa lähtevät mukana tunnisteineen ja aineksineen. Ostokset, ruokakomero, ateriasuunnitelma ja kaupat jäävät kotitaloudelle.",
         "confirmButton": "Poista käyttäjä"
       },
       "transferModal": {
@@ -298,7 +299,7 @@
     },
     "join": {
       "title": "Liity kotitalouteen",
-      "description": "Anna liittymiskoodi liittyäksesi olemassa olevaan kotitalouteen.",
+      "description": "Anna liittymiskoodi liittyäksesi olemassa olevaan kotitalouteen. Kotitaloutesi yhdistetään siihen: reseptisi, ostokset, ruokakomero, ateriasuunnitelma ja kaupat tulevat mukaan.",
       "codeLabel": "Liittymiskoodi",
       "codePlaceholder": "6-numeroinen koodi",
       "submitButton": "Liity kotitalouteen"

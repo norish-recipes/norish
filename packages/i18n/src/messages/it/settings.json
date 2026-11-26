@@ -255,6 +255,7 @@
       "leaveModal": {
         "title": "Lascia nucleo familiare",
         "confirmMessage": "Sei sicuro di voler lasciare {name}?",
+        "goesAndStays": "Le tue ricette e i tuoi ricettari vengono con te, con i loro tag e ingredienti. La spesa, la dispensa, il piano pasti e i negozi restano al nucleo familiare.",
         "adminWarning": "Sei l'amministratore. Devi trasferire i privilegi di amministratore prima di uscire.",
         "confirmButton": "Lascia nucleo familiare"
       }
@@ -272,7 +273,7 @@
       "kickModal": {
         "title": "Espelli utente",
         "confirmMessage": "Sei sicuro di voler espellere {name} dal nucleo familiare?",
-        "warning": "Perderà l'accesso a tutte le ricette, la spesa e le voci del calendario condivise.",
+        "warning": "Le sue ricette e i suoi ricettari vanno con questa persona, con i loro tag e ingredienti. La spesa, la dispensa, il piano pasti e i negozi restano al nucleo familiare.",
         "confirmButton": "Espelli utente"
       },
       "transferModal": {
@@ -298,7 +299,7 @@
     },
     "join": {
       "title": "Unisciti a un nucleo familiare",
-      "description": "Inserisci un codice di accesso per unirti a un nucleo familiare esistente.",
+      "description": "Inserisci un codice di accesso per unirti a un nucleo familiare esistente. Il tuo nucleo vi viene unito: ricette, spesa, dispensa, piano pasti e negozi vengono con te.",
       "codeLabel": "Codice di accesso",
       "codePlaceholder": "Codice di 6 cifre",
       "submitButton": "Unisciti al nucleo familiare"

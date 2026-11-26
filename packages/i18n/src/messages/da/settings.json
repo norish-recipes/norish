@@ -255,6 +255,7 @@
       "leaveModal": {
         "title": "Forlad husstand",
         "confirmMessage": "Er du sikker på, at du vil forlade {name}?",
+        "goesAndStays": "Dine opskrifter og kogebøger følger med dig, med deres tags og ingredienser. Indkøb, spisekammer, madplan og butikker bliver i husstanden.",
         "adminWarning": "Du er administrator. Du skal overføre administratorrettigheder, inden du forlader.",
         "confirmButton": "Forlad husstand"
       }
@@ -272,7 +273,7 @@
       "kickModal": {
         "title": "Fjern bruger",
         "confirmMessage": "Er du sikker på, at du vil fjerne {name} fra husstanden?",
-        "warning": "De mister adgang til alle delte opskrifter, indkøbslister og kalenderbegivenheder.",
+        "warning": "Vedkommendes opskrifter og kogebøger følger med, med deres tags og ingredienser. Indkøb, spisekammer, madplan og butikker bliver i husstanden.",
         "confirmButton": "Fjern bruger"
       },
       "transferModal": {
@@ -298,7 +299,7 @@
     },
     "join": {
       "title": "Tilmeld husstand",
-      "description": "Indtast en tilmeldingskode for at tilmelde dig en eksisterende husstand.",
+      "description": "Indtast en tilmeldingskode for at tilmelde dig en eksisterende husstand. Din husstand lægges sammen med den: dine opskrifter, indkøb, spisekammer, madplan og butikker følger med.",
       "codeLabel": "Tilmeldingskode",
       "codePlaceholder": "6-cifret kode",
       "submitButton": "Tilmeld husstand"

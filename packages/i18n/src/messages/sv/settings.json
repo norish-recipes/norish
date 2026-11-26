@@ -255,6 +255,7 @@
       "leaveModal": {
         "title": "Lämna hushåll",
         "confirmMessage": "Vill du lämna {name}?",
+        "goesAndStays": "Dina recept och kokböcker följer med dig, med sina taggar och ingredienser. Inköpslistan, skafferiet, måltidsplanen och butikerna stannar i hushållet.",
         "adminWarning": "Du är administratör. Du måste överföra administratörsbehörigheten innan du lämnar.",
         "confirmButton": "Lämna hushåll"
       }
@@ -272,7 +273,7 @@
       "kickModal": {
         "title": "Ta bort användare",
         "confirmMessage": "Vill du ta bort {name} från hushållet?",
-        "warning": "Användaren förlorar åtkomsten till alla delade recept, inköpslistor och kalenderposter.",
+        "warning": "Deras recept och kokböcker följer med dem, med sina taggar och ingredienser. Inköpslistan, skafferiet, måltidsplanen och butikerna stannar i hushållet.",
         "confirmButton": "Ta bort användare"
       },
       "transferModal": {
@@ -298,7 +299,7 @@
     },
     "join": {
       "title": "Gå med i hushåll",
-      "description": "Ange en inbjudningskod för att gå med i ett befintligt hushåll.",
+      "description": "Ange en inbjudningskod för att gå med i ett befintligt hushåll. Ditt hushåll slås ihop med det: dina recept, inköp, skafferi, måltidsplan och butiker följer med.",
       "codeLabel": "Inbjudningskod",
       "codePlaceholder": "Kod med 6 siffror",
       "submitButton": "Gå med i hushåll"

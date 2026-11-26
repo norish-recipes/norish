@@ -255,6 +255,7 @@
       "leaveModal": {
         "title": "Haushalt verlassen",
         "confirmMessage": "Sind Sie sicher, dass Sie {name} verlassen möchten?",
+        "goesAndStays": "Ihre Rezepte und Kochbücher kommen mit, samt Tags und Zutaten. Einkaufsliste, Vorratskammer, Essensplan und Geschäfte bleiben beim Haushalt.",
         "adminWarning": "Sie sind der Administrator. Sie müssen die Admin-Berechtigung zunächst übertragen.",
         "confirmButton": "Haushalt verlassen"
       }
@@ -272,7 +273,7 @@
       "kickModal": {
         "title": "Benutzer entfernen",
         "confirmMessage": "Sind Sie sicher, dass Sie {name} aus dem Haushalt entfernen möchten?",
-        "warning": "Er/Sie verliert Zugriff auf alle gemeinsamen Rezepte, Einkaufsliste und Kalendereinträge.",
+        "warning": "Seine/ihre Rezepte und Kochbücher gehen mit, samt Tags und Zutaten. Einkaufsliste, Vorratskammer, Essensplan und Geschäfte bleiben beim Haushalt.",
         "confirmButton": "Benutzer entfernen"
       },
       "transferModal": {
@@ -298,7 +299,7 @@
     },
     "join": {
       "title": "Haushalt beitreten",
-      "description": "Geben Sie einen Beitrittscode ein, um einem bestehenden Haushalt beizutreten.",
+      "description": "Geben Sie einen Beitrittscode ein, um einem bestehenden Haushalt beizutreten. Ihr Haushalt geht darin auf: Ihre Rezepte, Einkäufe, Vorratskammer, Essensplan und Geschäfte kommen mit.",
       "codeLabel": "Beitrittscode",
       "codePlaceholder": "6-stelliger Code",
       "submitButton": "Haushalt beitreten"

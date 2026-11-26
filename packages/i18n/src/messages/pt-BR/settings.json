@@ -255,6 +255,7 @@
       "leaveModal": {
         "title": "Sair da casa",
         "confirmMessage": "Tem certeza de que deseja sair de {name}?",
+        "goesAndStays": "Suas receitas e livros de receitas vão com você, com suas tags e ingredientes. As compras, a despensa, o plano de refeições e as lojas ficam com a casa.",
         "adminWarning": "Você é o admin. É necessário transferir os privilégios de admin antes de sair.",
         "confirmButton": "Sair da casa"
       }
@@ -272,7 +273,7 @@
       "kickModal": {
         "title": "Remover usuário",
         "confirmMessage": "Tem certeza de que deseja remover {name} da casa?",
-        "warning": "Essa pessoa perderá acesso a todas as receitas, compras e entradas de calendário compartilhadas.",
+        "warning": "As receitas e livros de receitas dessa pessoa vão com ela, com suas tags e ingredientes. As compras, a despensa, o plano de refeições e as lojas ficam com a casa.",
         "confirmButton": "Remover usuário"
       },
       "transferModal": {
@@ -298,7 +299,7 @@
     },
     "join": {
       "title": "Entrar em uma casa",
-      "description": "Insira um código de entrada para participar de uma casa existente.",
+      "description": "Insira um código de entrada para participar de uma casa existente. Sua casa é unida a ela: suas receitas, compras, despensa, plano de refeições e lojas vêm junto.",
       "codeLabel": "Código de entrada",
       "codePlaceholder": "código de 6 dígitos",
       "submitButton": "Entrar na casa"

@@ -255,6 +255,7 @@
       "leaveModal": {
         "title": "Abandonar hogar",
         "confirmMessage": "¿Seguro que quieres abandonar {name}?",
+        "goesAndStays": "Tus recetas y recetarios se van contigo, con sus etiquetas e ingredientes. La compra, la despensa, el plan de comidas y las tiendas se quedan en el hogar.",
         "adminWarning": "Eres el administrador. Debes transferir los privilegios de admin antes de salir.",
         "confirmButton": "Abandonar hogar"
       }
@@ -272,7 +273,7 @@
       "kickModal": {
         "title": "Expulsar usuario",
         "confirmMessage": "¿Seguro que quieres expulsar a {name} del hogar?",
-        "warning": "Perderá acceso a todas las recetas, listas de la compra y entradas de calendario compartidas.",
+        "warning": "Sus recetas y recetarios se van con esa persona, con sus etiquetas e ingredientes. La compra, la despensa, el plan de comidas y las tiendas se quedan en el hogar.",
         "confirmButton": "Expulsar usuario"
       },
       "transferModal": {
@@ -298,7 +299,7 @@
     },
     "join": {
       "title": "Unirse a un hogar",
-      "description": "Introduce un código de unión para unirte a un hogar existente.",
+      "description": "Introduce un código de unión para unirte a un hogar existente. Tu hogar se fusiona con él: tus recetas, compra, despensa, plan de comidas y tiendas vienen contigo.",
       "codeLabel": "Código de unión",
       "codePlaceholder": "Código de 6 dígitos",
       "submitButton": "Unirse al hogar"

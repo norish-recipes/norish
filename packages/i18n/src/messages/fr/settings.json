@@ -255,6 +255,7 @@
       "leaveModal": {
         "title": "Quitter le foyer",
         "confirmMessage": "Êtes-vous sûr de vouloir quitter {name} ?",
+        "goesAndStays": "Vos recettes et livres de recettes partent avec vous, avec leurs tags et ingrédients. Les courses, le garde-manger, le planning des repas et les magasins restent au foyer.",
         "adminWarning": "Vous êtes l’admin. Vous devez transférer vos privilèges admin avant de partir.",
         "confirmButton": "Quitter le foyer"
       }
@@ -272,7 +273,7 @@
       "kickModal": {
         "title": "Expulser un utilisateur",
         "confirmMessage": "Voulez-vous vraiment expulser {name} du foyer ?",
-        "warning": "Il perdra l’accès à toutes les recettes, courses et entrées de calendrier partagées.",
+        "warning": "Ses recettes et livres de recettes partent avec lui, avec leurs tags et ingrédients. Les courses, le garde-manger, le planning des repas et les magasins restent au foyer.",
         "confirmButton": "Expulser l’utilisateur"
       },
       "transferModal": {
@@ -298,7 +299,7 @@
     },
     "join": {
       "title": "Rejoindre un foyer",
-      "description": "Entrez un code pour rejoindre un foyer existant.",
+      "description": "Entrez un code pour rejoindre un foyer existant. Votre foyer y est fusionné : vos recettes, courses, garde-manger, planning des repas et magasins vous suivent.",
       "codeLabel": "Code d’invitation",
       "codePlaceholder": "Code à 6 chiffres",
       "submitButton": "Rejoindre le foyer"
