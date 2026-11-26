@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ActionButton } from "@/components/shared/action-button";
-import { ModalFooter } from "@/components/shared/confirm-modal";
+import { CancelButton, ModalFooter } from "@/components/shared/confirm-modal";
 import { ArrowPathIcon, StopCircleIcon } from "@heroicons/react/16/solid";
 import {
   CheckCircleIcon,
@@ -272,7 +272,6 @@ function JobDetail({ picked, onClose }: { picked: JobRef; onClose: () => void })
 
   return (
     <>
-      <Modal.CloseTrigger />
       <Modal.Header>
         <div className="flex items-center gap-3">
           {t("detail.title")}
@@ -382,11 +381,13 @@ function JobDetail({ picked, onClose }: { picked: JobRef; onClose: () => void })
             ) : null}
           </>
         ) : null}
+        {confirmAction === "remove" ? (
+          <p className="text-muted text-sm">{t("removeModal.message")}</p>
+        ) : null}
         {actionError ? <p className="text-danger text-sm">{actionError}</p> : null}
       </Modal.Body>
       {confirmAction === "remove" ? (
-        <ModalFooter onCancel={() => setConfirmAction(null)}>
-          <span className="text-muted text-sm">{t("removeModal.message")}</span>
+        <ModalFooter start={<CancelButton onPress={() => setConfirmAction(null)} />}>
           <ActionButton
             action="delete"
             isPending={isRemoving}
@@ -399,26 +400,28 @@ function JobDetail({ picked, onClose }: { picked: JobRef; onClose: () => void })
       ) : (
         <ModalFooter
           start={
-            job && !job.isRepeat && job.state !== "active" ? (
-              <ActionButton action="delete" onPress={() => setConfirmAction("remove")}>
-                {t("actions.remove")}
+            <>
+              <ActionButton action="dismiss" onPress={onClose}>
+                {tActions("close")}
               </ActionButton>
-            ) : null
+              {job && !job.isRepeat && job.state !== "active" ? (
+                <ActionButton action="delete" onPress={() => setConfirmAction("remove")}>
+                  {t("actions.remove")}
+                </ActionButton>
+              ) : null}
+              {job?.state === "active" ? (
+                <ActionButton
+                  action="remove"
+                  icon={StopCircleIcon}
+                  isPending={isCancelling}
+                  onPress={handleCancel}
+                >
+                  {isCancelling ? t("actions.cancelling") : t("actions.cancel")}
+                </ActionButton>
+              ) : null}
+            </>
           }
         >
-          <ActionButton action="dismiss" onPress={onClose}>
-            {tActions("close")}
-          </ActionButton>
-          {job?.state === "active" ? (
-            <ActionButton
-              action="remove"
-              icon={StopCircleIcon}
-              isPending={isCancelling}
-              onPress={handleCancel}
-            >
-              {isCancelling ? t("actions.cancelling") : t("actions.cancel")}
-            </ActionButton>
-          ) : null}
           {job?.state === "failed" || job?.state === "cancelled" ? (
             <ActionButton
               action="apply"

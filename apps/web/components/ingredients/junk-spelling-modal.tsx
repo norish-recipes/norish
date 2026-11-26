@@ -23,24 +23,24 @@ export function JunkSpellingModal({
   return (
     <ConfirmModal
       confirm={
-        <>
-          <ActionButton
-            action="remove"
-            data-testid="ingredient-junk-remove"
-            onPress={() => onRemove(false)}
-          >
-            {t("junkRemove")}
-          </ActionButton>
-          <ActionButton
-            action="delete"
-            data-testid="ingredient-junk-mark"
-            onPress={() => onRemove(true)}
-          >
-            {t("junkMark")}
-          </ActionButton>
-        </>
+        <ActionButton
+          action="delete"
+          data-testid="ingredient-junk-mark"
+          onPress={() => onRemove(true)}
+        >
+          {t("junkMark")}
+        </ActionButton>
       }
       data-testid="ingredient-junk-dialog"
+      start={
+        <ActionButton
+          action="remove"
+          data-testid="ingredient-junk-remove"
+          onPress={() => onRemove(false)}
+        >
+          {t("junkRemove")}
+        </ActionButton>
+      }
       isOpen={alias !== null}
       title={t("junkTitle", { alias: alias ?? "" })}
       onOpenChange={onClose}

@@ -24,7 +24,6 @@ export default function RestartConfirmationModal({
           {t("confirmButton")}
         </ActionButton>
       }
-      headerClassName="flex items-center gap-2"
       isOpen={isOpen}
       title={
         <>

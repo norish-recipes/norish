@@ -195,7 +195,6 @@ export default function ImportFromImageModal({ isOpen, onOpenChange }: ImportFro
         </ActionButton>
       }
       isOpen={isOpen}
-      size="lg"
       title={t("title")}
       onOpenChange={handleOpenChange}
     >

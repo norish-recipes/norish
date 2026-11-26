@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import { ActionButton } from "@/components/shared/action-button";
-import { ModalFooter } from "@/components/shared/confirm-modal";
+import { CancelButton, ModalFooter } from "@/components/shared/confirm-modal";
 import { ServerIcon } from "@heroicons/react/24/outline";
 import { Modal } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -107,7 +107,7 @@ function CaldavConfigEditFields({
           onTrust={async () => connection.trustAndRetest(form.target(await passwordToUse()))}
         />
       </Modal.Body>
-      <ModalFooter isCancelDisabled={saving} onCancel={onClose}>
+      <ModalFooter start={<CancelButton isDisabled={saving} onPress={onClose} />}>
         <ActionButton
           action="test"
           isDisabled={!serverUrl || !username || (!password && !config)}

@@ -167,7 +167,7 @@ export default function CuisineVocabularyForm() {
             {tActions("delete")}
           </ActionButton>
         }
-        headerClassName="text-danger"
+        danger
         isOpen={pendingDelete !== null}
         title={tActions("delete")}
         onOpenChange={() => setPendingDelete(null)}

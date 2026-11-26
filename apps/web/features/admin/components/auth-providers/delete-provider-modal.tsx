@@ -26,7 +26,6 @@ export function DeleteProviderModal({
           {tActions("remove")}
         </ActionButton>
       }
-      headerClassName="flex items-center gap-2"
       isOpen={isOpen}
       title={
         <>

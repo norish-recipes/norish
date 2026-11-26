@@ -350,7 +350,7 @@ export function DeleteCookbookModal({
           {tActions("delete")}
         </ActionButton>
       }
-      headerClassName="text-danger"
+      danger
       isOpen={isOpen}
       title={t("deleteTitle")}
       onOpenChange={onClose}

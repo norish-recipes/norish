@@ -4,37 +4,38 @@ import type { ReactNode } from "react";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { Modal } from "@heroui/react";
 import { useTranslations } from "next-intl";
+import { twMerge } from "tailwind-merge";
 
 type ModalFooterProps = {
-  /** Puts Cancel at the start; `start` wins where a modal has its own way out. */
-  onCancel?: () => void;
-  /** Holds Cancel while the confirmed write runs. */
-  isCancelDisabled?: boolean;
-  /** The way out or destructive action, pinned left. */
+  /** The way out and any destructive action, pinned at the start. */
   start?: ReactNode;
-  /** The primary, last, at the right end. */
+  /** The primary, last, at the end. */
   children: ReactNode;
 };
 
 /** Every modal's footer: the way out on the left, the primary on the right. */
-export function ModalFooter({ onCancel, isCancelDisabled, start, children }: ModalFooterProps) {
+export function ModalFooter({ start, children }: ModalFooterProps) {
+  return (
+    <Modal.Footer>
+      <ActionButtonGroup start={start}>{children}</ActionButtonGroup>
+    </Modal.Footer>
+  );
+}
+
+/** The Cancel every modal's start slot opens with. */
+export function CancelButton({
+  onPress,
+  isDisabled,
+}: {
+  onPress: () => void;
+  isDisabled?: boolean;
+}) {
   const tActions = useTranslations("common.actions");
 
   return (
-    <Modal.Footer>
-      <ActionButtonGroup
-        start={
-          start ??
-          (onCancel ? (
-            <ActionButton action="cancel" isDisabled={isCancelDisabled} onPress={onCancel}>
-              {tActions("cancel")}
-            </ActionButton>
-          ) : null)
-        }
-      >
-        {children}
-      </ActionButtonGroup>
-    </Modal.Footer>
+    <ActionButton action="cancel" isDisabled={isDisabled} onPress={onPress}>
+      {tActions("cancel")}
+    </ActionButton>
   );
 }
 
@@ -43,11 +44,12 @@ type ConfirmModalProps = {
   onOpenChange: (open: boolean) => void;
   title: ReactNode;
   children: ReactNode;
-  /** The primary button, at the right end opposite Cancel. */
+  /** The primary button, at the end opposite Cancel. */
   confirm: ReactNode;
-  size?: "sm" | "md" | "lg";
-  headerClassName?: string;
-  bodyClassName?: string;
+  /** More start-slot actions after Cancel, such as a second way out. */
+  start?: ReactNode;
+  /** A destructive confirm: the title takes the danger colour. */
+  danger?: boolean;
   isCancelDisabled?: boolean;
   "data-testid"?: string;
 };
@@ -59,21 +61,31 @@ export default function ConfirmModal({
   title,
   children,
   confirm,
-  size,
-  headerClassName,
-  bodyClassName,
+  start,
+  danger,
   isCancelDisabled,
   "data-testid": testId,
 }: ConfirmModalProps) {
   return (
     <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={onOpenChange}>
-      <Modal.Container className="z-[1100]" size={size}>
+      <Modal.Container className="z-[1100]">
         <Modal.Dialog data-testid={testId}>
           {({ close }) => (
             <>
-              <Modal.Header className={headerClassName}>{title}</Modal.Header>
-              <Modal.Body className={bodyClassName}>{children}</Modal.Body>
-              <ModalFooter isCancelDisabled={isCancelDisabled} onCancel={close}>
+              <Modal.Header
+                className={twMerge("flex-row items-center gap-2", danger && "text-danger")}
+              >
+                {title}
+              </Modal.Header>
+              <Modal.Body className="flex flex-col">{children}</Modal.Body>
+              <ModalFooter
+                start={
+                  <>
+                    <CancelButton isDisabled={isCancelDisabled} onPress={close} />
+                    {start}
+                  </>
+                }
+              >
                 {confirm}
               </ModalFooter>
             </>

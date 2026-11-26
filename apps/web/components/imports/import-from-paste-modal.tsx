@@ -85,7 +85,6 @@ export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFro
         </>
       }
       isOpen={isOpen}
-      size="lg"
       title={t("title")}
       onOpenChange={handleOpenChange}
     >

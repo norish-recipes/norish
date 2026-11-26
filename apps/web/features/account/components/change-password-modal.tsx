@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ActionButton } from "@/components/shared/action-button";
-import { ModalFooter } from "@/components/shared/confirm-modal";
+import { CancelButton, ModalFooter } from "@/components/shared/confirm-modal";
 import UiSwitch from "@/components/shared/ui-switch";
 import { KeyIcon } from "@heroicons/react/16/solid";
 import { Description, FieldError, Input, Label, Modal, TextField, toast } from "@heroui/react";
@@ -125,7 +125,7 @@ function ChangePasswordForm({ close }: { close: () => void }) {
           <Label>{t("signOutOthers")}</Label>
         </UiSwitch>
       </Modal.Body>
-      <ModalFooter onCancel={close}>
+      <ModalFooter start={<CancelButton onPress={close} />}>
         <ActionButton
           action="save"
           icon={KeyIcon}

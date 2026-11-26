@@ -211,7 +211,7 @@ export function ActionButtonGroup({
   return (
     <div ref={rowRef} className={classNames("flex w-full flex-wrap items-center gap-2", className)}>
       {start ? (
-        <div ref={startRef} className="flex">
+        <div ref={startRef} className="flex gap-2">
           <IconOnlyContext value={iconOnly}>{start}</IconOnlyContext>
         </div>
       ) : null}

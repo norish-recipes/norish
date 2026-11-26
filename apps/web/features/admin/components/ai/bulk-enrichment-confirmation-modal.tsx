@@ -37,7 +37,6 @@ export default function BulkEnrichmentConfirmationModal({
           {replaceExisting ? t("confirmButtonReplace") : t("confirmButton")}
         </ActionButton>
       }
-      headerClassName="flex items-center gap-2"
       isOpen={isOpen}
       title={
         <>

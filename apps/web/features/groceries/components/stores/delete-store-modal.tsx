@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ActionButton } from "@/components/shared/action-button";
-import { ModalFooter } from "@/components/shared/confirm-modal";
+import { CancelButton, ModalFooter } from "@/components/shared/confirm-modal";
 import { Modal, Radio, RadioGroup } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -107,7 +107,7 @@ function DeleteStoreDialog({
 
         {itemCount === 0 && <p className="text-muted text-sm">{t("noItems")}</p>}
       </Modal.Body>
-      <ModalFooter onCancel={onClose}>
+      <ModalFooter start={<CancelButton onPress={onClose} />}>
         <ActionButton action="delete" variant="danger" onPress={handleConfirm}>
           {t("deleteStore")}
         </ActionButton>

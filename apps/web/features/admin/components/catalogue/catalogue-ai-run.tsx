@@ -62,7 +62,6 @@ export function CatalogueAIRun({
         {button}
       </AIButton>
       <ConfirmModal
-        bodyClassName="flex flex-col"
         confirm={
           <AIButton
             className="min-w-28"
@@ -76,7 +75,6 @@ export function CatalogueAIRun({
           </AIButton>
         }
         data-testid={`${testId}-dialog`}
-        headerClassName="flex-row items-center gap-2"
         isOpen={isOpen}
         title={
           <>

@@ -1,7 +1,7 @@
 "use client";
 
 import { ActionButton } from "@/components/shared/action-button";
-import { ModalFooter } from "@/components/shared/confirm-modal";
+import { CancelButton, ModalFooter } from "@/components/shared/confirm-modal";
 import { ExclamationTriangleIcon, EyeIcon } from "@heroicons/react/16/solid";
 import { Button, Modal } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -78,7 +78,7 @@ function DeleteIngredientContent({
           </div>
         ) : null}
       </Modal.Body>
-      <ModalFooter onCancel={onClose}>
+      <ModalFooter start={<CancelButton onPress={onClose} />}>
         <ActionButton
           action="delete"
           data-testid="ingredient-delete-confirm"

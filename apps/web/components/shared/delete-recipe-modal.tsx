@@ -32,7 +32,7 @@ export function DeleteRecipeModal({
           {tActions("delete")}
         </ActionButton>
       }
-      headerClassName="text-danger"
+      danger
       isOpen={isOpen}
       title={t("title")}
       onOpenChange={onClose}

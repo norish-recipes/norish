@@ -102,7 +102,6 @@ export default function ImportRecipeModal({ isOpen, onOpenChange }: ImportRecipe
         </>
       }
       isOpen={isOpen}
-      size="md"
       title={t("title")}
       onOpenChange={handleOpenChange}
     >
