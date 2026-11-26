@@ -4,7 +4,7 @@
 
 **Blocked by:** 05, 07, 10, 14
 
-**Status:** ready-for-agent
+**Status:** done
 
 **Canvas:** https://claude.ai/artifact/PXzHGxBxCU4MmwF8scvixz#page-816ab097d43b, the web boards: `project/WcPage.dc.html` (base) with the `Wb*` and `Wc*` frames.
 
@@ -98,3 +98,5 @@ Not run: the tests that need Postgres or Valkey, Docker was down (the `list-entr
 - Fixed: Ingredients rows are `li` of the frame's own `ul` (`ListFrame virtual`, `ListRow offset`; test on roles), the name line wraps, one two-line rule (`detail`) for row and skeleton, a given `Note` icon replaces the lock (e231dd863, 6d1a59aa9).
 - E2E: `openList` waits for loaded content and the isolation test shows B's own Tag first; the skeleton test releases in `finally` and holds only `lists.list`; picker count within 2 px of the right padding; search and toggle same height; Ingredients row 60 px (d191f06df, 5bccea9c1).
 - The picker counts Ingredients as the boards do (`ingredients.count`, 3735bc643, 97eab36c8). All gates and the spec (x2) pass.
+
+Gatekeeper, 2026-11-26: closed at b3f58639a after the browser render, two fix rounds and an independent gate run (seven gates and the Content E2E spec, all exit 0). Kept on purpose: the shared templates' values (48 px rows, 12 px frame radius, 448 px modal) where the canvas draws 50, 16 and 400. Open for Mike: "Used by" opens as a stacked panel over the entry panel.

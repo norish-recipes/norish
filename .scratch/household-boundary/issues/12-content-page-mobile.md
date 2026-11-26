@@ -4,7 +4,7 @@
 
 **Blocked by:** 05, 07, 10, 14
 
-**Status:** ready-for-agent
+**Status:** done
 
 **Canvas:** https://claude.ai/artifact/PXzHGxBxCU4MmwF8scvixz#page-816ab097d43b, the iPhone boards: `project/CtPage.dc.html` (base) with the `Ct*` frames.
 
@@ -40,3 +40,5 @@
 - Findings round 2: one delete flow (`useEntryDelete` + `useDeleteEntry`) for the sheet's trash and the row menu, which now opens the alert over the list (a failed count toasts and asks nothing); menu order Rename, Show recipes, Delete; the food sheet and Changed by AI show a failed load with Retry (a gone food closes the sheet); Changed by AI is off offline with the note, as is the move picker; the Tags heading counts All/Unused, not the search; `?list=` drives the tab; `Segmented` has tab semantics only with `tabsLabel` (Content tabs, groceries List/Pantry), else radio group; shared `ChipRow` and `Stack`; comments cut to two lines.
 - Device check must look at: the spellings rows (name, chevron, minus; a spelling has no count, the catalogue holds none), long-press Delete over the list with Cancel leaving the list, VoiceOver on Content tabs vs the library lenses and view toggle (radios).
 - Left: per-spelling counts (needs a catalogue query); the relocation write rule stays in `food-picker-step.tsx` (web's relocation panel has no offline gate); library lenses and grid/list toggle kept as radios (they filter or style one list).
+
+Gatekeeper, 2026-11-26: closed at b3f58639a after three fix rounds and an independent gate run (seven gates and the Content E2E spec, all exit 0). Open for the device session: the device check above, and whether a fit sheet can resize in this stack (the Content sheets hold a fixed 0.62 height meanwhile, against the board's "fits its content"; Mike decides with screenshots). Open for Mike: the per-spelling count on `CtSpellings` (needs a new catalogue query), credits and catalogue export on mobile.
