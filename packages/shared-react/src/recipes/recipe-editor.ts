@@ -281,8 +281,8 @@ export function rebaseRecipeForm(
   };
 }
 
-/** A save's payload (servings valid). An edit passes the form it `opened` with: a list left as it
- * was is not sent, so a change made to it elsewhere meanwhile stays. */
+/** A save's payload (servings valid). An edit passes the form it `opened` with: a list or a
+ * clearable field left as it was is not sent, so a change made to it elsewhere meanwhile stays. */
 export function recipeFormPayload(
   form: RecipeFormState & { servings: number },
   opened?: RecipeFormState
@@ -296,29 +296,34 @@ export function recipeFormPayload(
       return to === undefined ? [] : [{ ...ref, ingredientOrder: to }];
     });
 
+  const edited = (key: keyof RecipeFormState) => mine(form[key], opened?.[key]);
+  const decimal = (value: number | null) => (value != null ? value.toString() : null);
+
   return {
     name: form.name.trim(),
-    description: form.description.trim() || null,
-    notes: form.notes.trim() || null,
-    url: form.url.trim() || null,
+    ...(edited("description") && { description: form.description.trim() || null }),
+    ...(edited("notes") && { notes: form.notes.trim() || null }),
+    ...(edited("url") && { url: form.url.trim() || null }),
     servings: form.servings,
-    prepMinutes: form.prepMinutes,
-    cookMinutes: form.cookMinutes,
-    totalMinutes: form.totalMinutes,
-    calories: form.calories,
-    fat: form.fat != null ? form.fat.toString() : null,
-    carbs: form.carbs != null ? form.carbs.toString() : null,
-    protein: form.protein != null ? form.protein.toString() : null,
-    originCountry: form.provenance.originCountry,
-    originCountryName: form.provenance.originCountryName,
-    originRegion: form.provenance.originRegion.trim() || null,
-    provenanceNote: form.provenance.provenanceNote.trim() || null,
-    ...(changed(form.provenance.cuisineIds, opened?.provenance.cuisineIds) && {
+    ...(edited("prepMinutes") && { prepMinutes: form.prepMinutes }),
+    ...(edited("cookMinutes") && { cookMinutes: form.cookMinutes }),
+    ...(edited("totalMinutes") && { totalMinutes: form.totalMinutes }),
+    ...(edited("calories") && { calories: form.calories }),
+    ...(edited("fat") && { fat: decimal(form.fat) }),
+    ...(edited("carbs") && { carbs: decimal(form.carbs) }),
+    ...(edited("protein") && { protein: decimal(form.protein) }),
+    ...(mine(placeOf(form.provenance), opened && placeOf(opened.provenance)) && {
+      originCountry: form.provenance.originCountry,
+      originCountryName: form.provenance.originCountryName,
+      originRegion: form.provenance.originRegion.trim() || null,
+      provenanceNote: form.provenance.provenanceNote.trim() || null,
+    }),
+    ...(mine(form.provenance.cuisineIds, opened?.provenance.cuisineIds) && {
       cuisines: form.provenance.cuisineIds,
     }),
     systemUsed: form.systemUsed,
-    ...(changed(form.tags, opened?.tags) && { tags: form.tags.map((name) => ({ name })) }),
-    ...(changed(form.categories, opened?.categories) && { categories: form.categories }),
+    ...(edited("tags") && { tags: form.tags.map((name) => ({ name })) }),
+    ...(edited("categories") && { categories: form.categories }),
     recipeIngredients: form.ingredients.map((ing, idx) => ({
       id: ing.id,
       version: ing.version,

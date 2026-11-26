@@ -432,6 +432,19 @@ describe("what an edit's save sends of its lists", () => {
     expect(emptied).toMatchObject({ tags: [], categories: [] });
   });
 
+  it("leaves out a field the reader did not change, and sends one they cleared as null", () => {
+    const payload = sent({ ...opened, name: "Renamed" });
+    const untouched = ["description", "notes", "url", "prepMinutes", "cookMinutes"] as const;
+
+    for (const key of [...untouched, "totalMinutes", "calories", "fat", "originCountry"]) {
+      expect(payload).not.toHaveProperty(key);
+    }
+    expect(sent({ ...opened, cookMinutes: null, notes: "" })).toMatchObject({
+      cookMinutes: null,
+      notes: null,
+    });
+  });
+
   it("sends every list for a new recipe", () => {
     expect(valid(opened)).toMatchObject({ tags: [{ name: "quick" }], categories: ["Dinner"] });
   });
