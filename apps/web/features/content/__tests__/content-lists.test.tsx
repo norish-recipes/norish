@@ -48,7 +48,13 @@ vi.mock("@/components/Panel/Panel", () => {
       </div>
     ) : null;
 
-  Panel.Body = ({ children }: { children?: ReactNode }) => <div>{children}</div>;
+  Panel.Body = ({
+    children,
+    "data-testid": testId,
+  }: {
+    children?: ReactNode;
+    "data-testid"?: string;
+  }) => <div data-testid={testId}>{children}</div>;
   Panel.Footer = ({ children }: { children?: ReactNode }) => <div>{children}</div>;
 
   return { default: Panel, PanelPortal: ({ children }: { children: ReactNode }) => children };
@@ -145,7 +151,7 @@ describe("the list", () => {
 
     expect(screen.getByText("sections.ownCuisines")).toBeInTheDocument();
     expect(screen.getByText("sections.server")).toBeInTheDocument();
-    expect(screen.getByText("help.server")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "help.server" })).toBeInTheDocument();
     expect(rows()).toEqual(["Manado", "Italian"]);
     expect(screen.getByRole("button", { name: /^Manado/ })).toHaveTextContent("recipes count=2");
     expect(
@@ -163,7 +169,7 @@ describe("the list", () => {
     entries = [server("Italian", { editable: true })];
     await renderList("cuisine");
 
-    expect(screen.getByText("help.serverAdmin")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "help.serverAdmin" })).toBeInTheDocument();
     expect(screen.queryByRole("img", { name: "readOnly" })).not.toBeInTheDocument();
   });
 
@@ -173,7 +179,7 @@ describe("the list", () => {
 
     expect(rows()).toEqual(["Dinner", "Baking"]);
     expect(screen.getByText("sections.builtIn")).toBeInTheDocument();
-    expect(screen.getByText("help.builtIn")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "help.builtIn" })).toBeInTheDocument();
   });
 
   it("gives Tags one list with no section title", async () => {
@@ -322,6 +328,7 @@ describe("an entry's panel", () => {
     const panel = await open("Dinner");
 
     expect(within(panel).getByText("help.builtIn")).toBeVisible();
+    expect(within(panel).queryByText("panel.server")).not.toBeInTheDocument();
     expect(within(panel).queryByTestId("content-delete")).not.toBeInTheDocument();
   });
 
@@ -356,7 +363,7 @@ describe("an entry's panel", () => {
     await userEvent.click(within(panel).getByTestId("content-save"));
 
     await waitFor(() =>
-      expect(within(screen.getByRole("dialog")).getByText("changedElsewhere.title")).toBeVisible()
+      expect(within(screen.getByRole("dialog")).getByText("panel.stale")).toBeVisible()
     );
     await waitFor(() =>
       expect(sentReads.mock.calls.filter(([path]) => path === "lists.list").length).toBeGreaterThan(
@@ -364,6 +371,53 @@ describe("an entry's panel", () => {
       )
     );
     expect(screen.getByRole("dialog")).toBeVisible();
+  });
+
+  it("says in the confirmation that a delete came to a changed entry, and Done closes both", async () => {
+    entries = [entry("Diner")];
+    answers.delete = { stale: true };
+    await renderList("tag");
+
+    const panel = await open("Diner");
+
+    await userEvent.click(within(panel).getByTestId("content-delete"));
+
+    const modal = screen.getByTestId("content-delete-modal");
+
+    await userEvent.click(within(modal).getByTestId("content-delete-confirm"));
+    await waitFor(() => expect(modal).toHaveTextContent("panel.stale"));
+    expect(within(modal).queryByTestId("content-delete-confirm")).not.toBeInTheDocument();
+    await userEvent.click(within(modal).getByRole("button", { name: "done" }));
+    await waitFor(() =>
+      expect(screen.queryByTestId("content-delete-modal")).not.toBeInTheDocument()
+    );
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("says in the confirmation that the server's count failed, and reads it again on Retry", async () => {
+    admin = true;
+    entries = [server("Italian", { editable: true })];
+
+    let counts = 0;
+
+    readAnswers.set("lists.usage", async () => {
+      counts += 1;
+      if (counts === 1) throw new Error("down");
+
+      return { recipeCount: 181 };
+    });
+    await renderList("cuisine");
+
+    const panel = await open("Italian");
+
+    await userEvent.click(within(panel).getByTestId("content-delete"));
+
+    const modal = screen.getByTestId("content-delete-modal");
+
+    await waitFor(() => expect(modal).toHaveTextContent("delete.countFailed"));
+    await userEvent.click(within(modal).getByRole("button", { name: "retry" }));
+    await waitFor(() => expect(modal).toHaveTextContent("delete.bodyServer count=181"));
+    expect(within(modal).getByTestId("content-delete-confirm")).toBeEnabled();
   });
 
   it("changes nothing offline: Save and Delete are off, and the panel says why", async () => {

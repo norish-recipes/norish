@@ -282,7 +282,13 @@ vi.mock("@/components/Panel/Panel", () => {
       </div>
     ) : null;
 
-  Panel.Body = ({ children }: { children?: ReactNode }) => <div>{children}</div>;
+  Panel.Body = ({
+    children,
+    "data-testid": testId,
+  }: {
+    children?: ReactNode;
+    "data-testid"?: string;
+  }) => <div data-testid={testId}>{children}</div>;
   Panel.Footer = ({ children }: { children?: ReactNode }) => <div>{children}</div>;
 
   return { default: Panel, PanelPortal: ({ children }: { children: ReactNode }) => children };

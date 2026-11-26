@@ -1,23 +1,21 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useState } from "react";
+import { NameField } from "@/components/Panel/name-field";
 import Panel from "@/components/Panel/Panel";
-import { PanelSection } from "@/components/Panel/panel-section";
-import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
+import { SkeletonRows } from "@/components/settings/settings-skeleton";
+import { ActionButton, ActionButtonGroup, ArrowEnd } from "@/components/shared/action-button";
 import ConfirmModal from "@/components/shared/confirm-modal";
 import { Note } from "@/components/shared/note";
-import { ArrowRightIcon } from "@heroicons/react/16/solid";
-import { Chip, Input, TextField } from "@heroui/react";
+import { Section } from "@/components/shared/section";
+import { Button, Chip } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { PickerKind } from "@norish/shared-react/lists";
-import { useContentEntry } from "@norish/shared-react/lists";
+import { problemCopy, useContentEntry } from "@norish/shared-react/lists";
 
-/**
- * One entry of a list. Editable: rename it, or merge it onto the entry its new name folds onto,
- * or delete it. Read only (the server's entries for a member, the built-in Categories for all):
- * its name and use, and Done.
- */
+/** One entry of a list: rename it, merge it onto the entry its new name folds onto, delete it, or read it. */
 export function EntryPanel({
   id,
   kind,
@@ -31,25 +29,13 @@ export function EntryPanel({
 }) {
   const t = useTranslations("settings.content");
   const tActions = useTranslations("common.actions");
-  const tCommon = useTranslations("common");
   const entry = useContentEntry(kind, id);
   const [confirming, setConfirming] = useState(false);
-  const { view } = entry;
-  const editable = entry.access === "edit";
-  const server = entry.entry?.instance === true;
+  const { view, detail } = entry;
+  const editable = detail?.access === "edit";
   const close = () => onOpenChange(false);
-  let problem: string | null = null;
-
-  if (entry.problem === "stale") problem = tCommon("changedElsewhere.title");
-  else if (entry.problem === "tooLong") problem = t("panel.tooLong", { max: view?.max ?? 0 });
-  else if (entry.problem === "failed") problem = t("panel.failed");
-
-  let note: string | null = null;
-
-  if (entry.access === "fixed") note = t("help.builtIn");
-  else if (entry.access === "readOnly") note = t("panel.serverReadOnly");
-  else if (editable && server) note = t("panel.serverEditable");
-
+  const problem = problemCopy(entry.problem, view?.max);
+  const deleteProblem = problemCopy(entry.deleteProblem);
   const save = async () => {
     if (await entry.save()) close();
   };
@@ -59,56 +45,87 @@ export function EntryPanel({
       close();
     }
   };
+  const deleteAction = (
+    <ActionButton
+      action="delete"
+      data-testid="content-delete-confirm"
+      isDisabled={entry.deleteState === "counting" || entry.pending || entry.offline}
+      variant="danger"
+      onPress={() => void remove()}
+    >
+      {tActions("delete")}
+    </ActionButton>
+  );
+  let confirmAction = deleteAction;
+  let confirmBody: ReactNode = null;
+
+  if (entry.deleteState === "stale") {
+    // The lists were read again when the delete came back stale, so closing shows what is there now.
+    confirmAction = (
+      <ActionButton
+        action="done"
+        onPress={() => {
+          setConfirming(false);
+          close();
+        }}
+      >
+        {tActions("done")}
+      </ActionButton>
+    );
+  } else if (entry.deleteState === "countFailed") {
+    confirmAction = <Button onPress={entry.retryCount}>{tActions("retry")}</Button>;
+  }
+
+  if (deleteProblem) confirmBody = <p>{t(deleteProblem.key, deleteProblem.values)}</p>;
+  else if (entry.deleteState === "countFailed") confirmBody = <p>{t("delete.countFailed")}</p>;
+  else if (entry.deleteState === "counting") confirmBody = <SkeletonRows count={1} />;
+  else if (entry.deleteImpact) {
+    confirmBody = (
+      <p>
+        {t(entry.deleteImpact.scope === "server" ? "delete.bodyServer" : "delete.body", {
+          count: entry.deleteImpact.recipes,
+        })}
+      </p>
+    );
+  }
 
   return (
     <>
       <Panel
         open={open && !entry.gone}
         title={editable ? t(`panel.editTitle.${kind}`) : (entry.entry?.name ?? "")}
-        titleAddon={server ? <Chip size="sm">{t("panel.server")}</Chip> : undefined}
+        titleAddon={detail?.badge ? <Chip size="sm">{t("panel.server")}</Chip> : undefined}
         onOpenChange={onOpenChange}
       >
-        <Panel.Body>
-          <div className="flex flex-col gap-5">
-            {note ? <Note>{note}</Note> : null}
-            {problem ? <Note status="warning">{problem}</Note> : null}
-            <PanelSection title={t("panel.name")}>
-              <TextField
-                aria-label={t("panel.name")}
-                isReadOnly={!editable}
-                value={entry.name}
-                onChange={entry.setName}
-              >
-                <Input
-                  data-testid="content-entry-name"
-                  variant="secondary"
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") {
-                      event.preventDefault();
-                      if (entry.canSave) void save();
-                    }
-                  }}
-                />
-              </TextField>
-              {view?.target ? (
-                <Note status="accent">
-                  {t("panel.merge", {
-                    target: view.target.name,
-                    name: entry.entry?.name ?? "",
-                    count: view.moved,
-                  })}
-                </Note>
-              ) : null}
-            </PanelSection>
-            <PanelSection title={t("panel.usedBy")}>
-              <p className="text-base" data-testid="content-entry-used">
-                {t(editable && server ? "panel.usedByOwn" : "recipes", {
-                  count: entry.entry?.recipeCount ?? 0,
+        <Panel.Body sections>
+          {detail?.note ? <Note locked={detail.note.locked}>{t(detail.note.key)}</Note> : null}
+          {problem ? <Note status="warning">{t(problem.key, problem.values)}</Note> : null}
+          <Section placement="panel" title={t("panel.name")}>
+            <NameField
+              data-testid="content-entry-name"
+              readOnly={!editable}
+              value={entry.name}
+              onChange={entry.setName}
+              onSubmit={() => {
+                if (entry.canSave) void save();
+              }}
+            />
+            {view?.target ? (
+              <Note status="accent">
+                {t("panel.merge", {
+                  target: view.target.name,
+                  name: entry.entry?.name ?? "",
+                  count: view.moved,
                 })}
-              </p>
-            </PanelSection>
-            {editable && entry.offline ? <Note>{t("offline")}</Note> : null}
-          </div>
+              </Note>
+            ) : null}
+          </Section>
+          <Section placement="panel" title={t("panel.usedBy")}>
+            <p data-testid="content-entry-used">
+              {t(detail?.usedKey ?? "recipes", { count: entry.entry?.recipeCount ?? 0 })}
+            </p>
+          </Section>
+          {editable && entry.offline ? <Note>{t("offline")}</Note> : null}
         </Panel.Body>
         <Panel.Footer>
           {editable ? (
@@ -127,7 +144,7 @@ export function EntryPanel({
               <ActionButton
                 action="save"
                 data-testid="content-save"
-                icon={view?.action === "merge" ? ArrowRightIcon : undefined}
+                icon={view?.action === "merge" ? ArrowEnd : undefined}
                 isDisabled={!entry.canSave}
                 onPress={() => void save()}
               >
@@ -144,30 +161,14 @@ export function EntryPanel({
         </Panel.Footer>
       </Panel>
       <ConfirmModal
-        confirm={
-          <ActionButton
-            action="delete"
-            data-testid="content-delete-confirm"
-            isDisabled={entry.deleteImpact === null || entry.pending || entry.offline}
-            variant="danger"
-            onPress={() => void remove()}
-          >
-            {tActions("delete")}
-          </ActionButton>
-        }
+        confirm={confirmAction}
         danger
         data-testid="content-delete-modal"
         isOpen={confirming}
         title={t("delete.title", { name: entry.entry?.name ?? "" })}
         onOpenChange={setConfirming}
       >
-        {entry.deleteImpact ? (
-          <p>
-            {t(entry.deleteImpact.scope === "server" ? "delete.bodyServer" : "delete.body", {
-              count: entry.deleteImpact.recipes,
-            })}
-          </p>
-        ) : null}
+        {confirmBody}
       </ConfirmModal>
     </>
   );

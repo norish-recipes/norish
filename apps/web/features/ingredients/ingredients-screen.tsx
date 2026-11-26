@@ -96,6 +96,7 @@ export function IngredientsScreen() {
                 action="edit"
                 data-testid="ingredients-ai-changes-open"
                 icon={SparklesIcon}
+                size="sm"
                 onPress={() => setChangesOpen(true)}
               >
                 {t("changedByAI.open", { count: unsure })}

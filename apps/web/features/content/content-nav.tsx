@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Label, ListBox, Select, Tabs } from "@heroui/react";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { RouterProvider } from "react-aria-components";
 
 import { useContentCounts } from "@norish/shared-react/lists";
@@ -22,7 +22,7 @@ import {
 export function ContentLayout({ nav, children }: { nav: ReactNode; children: ReactNode }) {
   return (
     <div className="flex flex-col gap-4 md:flex-row md:items-start md:gap-6">
-      {nav}
+      <div className="w-full md:w-60 md:shrink-0">{nav}</div>
       <div className="flex min-w-0 flex-1 flex-col gap-6">{children}</div>
     </div>
   );
@@ -31,13 +31,14 @@ export function ContentLayout({ nav, children }: { nav: ReactNode; children: Rea
 function ListLabel({ list, count }: { list: ContentList; count?: number }) {
   const t = useTranslations("settings.content.lists");
   const Icon = LIST_ICONS[list];
+  const format = useFormatter();
 
   return (
     <span className="flex min-w-0 flex-1 items-center gap-2.5">
       <Icon aria-hidden className="size-5 shrink-0" />
       <span className="min-w-0 flex-1 truncate text-start">{t(list)}</span>
       {count === undefined ? null : (
-        <span className="text-muted text-sm tabular-nums">{count}</span>
+        <span className="text-muted text-sm tabular-nums">{format.number(count)}</span>
       )}
     </span>
   );
@@ -60,7 +61,7 @@ export function ContentNav({ list }: { list: ContentList }) {
       >
         <Tabs
           aria-label={t("ariaLabel")}
-          className="hidden w-60 shrink-0 md:flex"
+          className="hidden w-full md:flex"
           orientation="vertical"
           selectedKey={list}
         >
