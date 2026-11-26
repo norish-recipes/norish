@@ -100,10 +100,12 @@ describe("Cuisine repository", () => {
       expect(await addEntry("cuisine", null, "  basque ")).toEqual({
         created: false,
         entry: created!.entry,
+        households: [],
       });
       expect(await addEntry("cuisine", householdId, "BASQUE")).toEqual({
         created: false,
         entry: created!.entry,
+        households: [],
       });
     });
 
