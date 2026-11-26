@@ -129,6 +129,10 @@ vi.mock("../../../../../packages/shared-react/src/recipes/use-recipe-ingredients
     isLoading: false,
   }),
 }));
+// The lines name nothing outside the reader's catalogue, so they are read as stored.
+vi.mock("../../../../../packages/shared-react/src/recipes/use-line-readings", () => ({
+  useLineReadings: () => ({}),
+}));
 vi.mock("../../../../../packages/shared-react/src/recipes/use-linked-recipe-ingredients", () => ({
   useLinkedRecipeIngredients: (ids: string[]) => {
     linkedAskedFor.push(ids);
