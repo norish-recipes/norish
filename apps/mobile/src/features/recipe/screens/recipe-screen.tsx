@@ -10,6 +10,7 @@ import { Skeleton, useThemeColor } from "heroui-native";
 
 import { useDevicePreference, useHiddenItemVisibility } from "@norish/shared-react/reader";
 import {
+  LoadedPageRecipe,
   useAutoConversion,
   useFavoritesMutation,
   useLoadedPageRecipe,
@@ -135,7 +136,9 @@ export function RecipeScreen() {
         />
       </View>
     ) : recipe ? (
-      <RecipePage key={recipe.id} />
+      <LoadedPageRecipe recipe={recipe}>
+        <RecipePage key={recipe.id} />
+      </LoadedPageRecipe>
     ) : (
       <RecipeSkeleton />
     );

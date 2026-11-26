@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { use, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import type {
@@ -12,7 +12,11 @@ import type {
 
 import type { RecipeEnrichmentResult } from "./use-recipe-enrichment";
 import { useTRPC } from "../trpc";
-import { useRecipePageStore, useRecipePageStoreApi } from "./recipe-page-store";
+import {
+  LoadedRecipeContext,
+  useRecipePageStore,
+  useRecipePageStoreApi,
+} from "./recipe-page-store";
 import { scaleIngredients } from "./scale-ingredients";
 import { servingsShown } from "./servings";
 import { useConvertMutation } from "./use-convert-mutation";
@@ -27,9 +31,10 @@ export function usePageRecipe(): FullRecipeDTO | null {
   return data ?? null;
 }
 
-/** The page's recipe, for the pieces drawn once it has loaded. */
+/** The page's recipe, for the pieces drawn inside `LoadedPageRecipe`. */
 export function useLoadedPageRecipe(): FullRecipeDTO {
-  const recipe = usePageRecipe();
+  const held = use(LoadedRecipeContext);
+  const recipe = usePageRecipe() ?? held;
 
   if (!recipe) throw new Error("Recipe not loaded");
 

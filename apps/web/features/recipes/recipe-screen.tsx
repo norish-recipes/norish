@@ -18,6 +18,7 @@ import type { LibraryTypeFilter } from "@norish/shared/contracts";
 import { useIngredientsSubscription } from "@norish/shared-react/config";
 import { useIngredientIcons } from "@norish/shared-react/ingredients";
 import {
+  LoadedPageRecipe,
   RecipePageProvider,
   useAutoConversion,
   useCookbooksSubscription,
@@ -61,21 +62,23 @@ function RecipePageContent({ recipeId, libraryType }: RecipeScreenProps) {
   }
 
   return (
-    <RecipePageTint dishColor={recipe.dishColor}>
-      {/* Desktop layout - smooth fade in */}
-      <div key={`${recipe?.id}-desktop`} className="fade-in hidden md:block">
-        <RecipePageDesktop libraryType={libraryType} onPrint={() => setPrintOpen(true)} />
-      </div>
+    <LoadedPageRecipe recipe={recipe}>
+      <RecipePageTint dishColor={recipe.dishColor}>
+        {/* Desktop layout - smooth fade in */}
+        <div key={`${recipe?.id}-desktop`} className="fade-in hidden md:block">
+          <RecipePageDesktop libraryType={libraryType} onPrint={() => setPrintOpen(true)} />
+        </div>
 
-      {/* Mobile layout - full width, smooth fade in */}
-      <div
-        key={`${recipe?.id}-mobile`}
-        className="fade-in -mx-4 -mt-10 flex w-[calc(100%+2rem)] flex-col md:hidden"
-      >
-        <RecipePageMobile libraryType={libraryType} onPrint={() => setPrintOpen(true)} />
-      </div>
-      <RecipePrint open={printOpen} onOpenChange={setPrintOpen} />
-    </RecipePageTint>
+        {/* Mobile layout - full width, smooth fade in */}
+        <div
+          key={`${recipe?.id}-mobile`}
+          className="fade-in -mx-4 -mt-10 flex w-[calc(100%+2rem)] flex-col md:hidden"
+        >
+          <RecipePageMobile libraryType={libraryType} onPrint={() => setPrintOpen(true)} />
+        </div>
+        <RecipePrint open={printOpen} onOpenChange={setPrintOpen} />
+      </RecipePageTint>
+    </LoadedPageRecipe>
   );
 }
 

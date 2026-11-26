@@ -88,6 +88,7 @@ export { useRecipeFoodsToBuy } from "./use-recipe-foods-to-buy";
 export { useUnitFormatter } from "./use-unit-formatter";
 export {
   createRecipePageStore,
+  LoadedPageRecipe,
   RecipePageProvider,
   RecipePageStores,
   useRecipePageStore,

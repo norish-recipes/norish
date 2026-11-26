@@ -5,7 +5,7 @@ import { View } from "react-native";
 import { Sheet } from "@/components/sheet";
 import { useLocalSearchParams } from "expo-router";
 
-import { useRecipeQuery } from "@norish/shared-react/recipes";
+import { LoadedPageRecipe, useRecipeQuery } from "@norish/shared-react/recipes";
 import { isNotFoundError } from "@norish/shared-react/trpc";
 
 import { RecipeNotFound } from "./recipe-not-found";
@@ -37,7 +37,7 @@ export function RecipeSheetGate({
       title={title}
     >
       {recipe ? (
-        children
+        <LoadedPageRecipe recipe={recipe}>{children}</LoadedPageRecipe>
       ) : isNotFoundError(error) ? (
         // A fit sheet is as tall as its content, which a centred state has none of.
         <View className="h-64">

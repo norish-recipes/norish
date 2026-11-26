@@ -1,9 +1,10 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { createContext } from "react";
 import { createStore } from "zustand";
 
-import type { RecipeConversion } from "@norish/shared/contracts";
+import type { FullRecipeDTO, RecipeConversion } from "@norish/shared/contracts";
 
 import { createPageStoreContext } from "../page-store";
 
@@ -69,3 +70,18 @@ export const useRecipePageStoreApi = recipePage.usePageStoreApi;
 
 /** One slice of the recipe page's store; renders when that slice changes. */
 export const useRecipePageStore = recipePage.usePageStore;
+
+/** The recipe the page's gate rendered with. */
+export const LoadedRecipeContext = createContext<FullRecipeDTO | null>(null);
+
+/** Wraps what a gate draws once its recipe is read: a piece that renders before the gate sees
+ * the recipe gone keeps this one for that frame, instead of throwing. */
+export function LoadedPageRecipe({
+  recipe,
+  children,
+}: {
+  recipe: FullRecipeDTO;
+  children: ReactNode;
+}) {
+  return <LoadedRecipeContext value={recipe}>{children}</LoadedRecipeContext>;
+}
