@@ -53,3 +53,12 @@
 Empty-state variants: `page` is a card under `px-4 py-20`, `max-w-xl`, with an `h2` title; `row` is flat with no padding inside a card, panel or sheet body; `cell` is flat under `px-4 py-6` inside a table or list body.
 
 Kept as built: Cancel without a close X on the import, CalDAV and junk-spelling modals; no Add or hint in the grocery, pantry, ingredients and library empties; the API keys and site tokens cards' header and form; the start slot shrinking to an icon when narrow.
+
+### Review round 2
+
+- 1 fixed: mobile `EmptyCard` takes `placement`, no `className`. `screen` = `mx-5 mt-4` (library, cookbooks lens and cookbook, groceries, pantry notes, search no-results/offline/failed); `section` = `mt-4` (Settings `connection-list`, `failed-load`); `sheet` = no margin (manage stores, pantry add, add to cookbook). Cookbook's `pt-[22px]` wrapper is gone. Pantry add uses the sheet's default inset: its header, `CardSlice`, `ShowMore` and skeleton no longer add their own 20 on a sheet.
+- 2 fixed: ingredients' empty is the `row` variant in its card; pantry's two empties are the `cell` variant on a plain surface under the field (no card, so `row` would float). Every other `page` use is a screen's whole content.
+- 3 fixed: `ModalFrame` (confirm-modal.tsx) has `wide`: `max-w-3xl` and `max-h-[85vh]`; job detail uses it with no size class; the import modals stay default.
+- 4 fixed: `Modal.Heading` in `ConfirmModal` and the job detail header; the footer test finds `getByRole("dialog", { name })`. Not done: other modals that mount their own `Modal.Header` (delete store/ingredient, change password, CalDAV, sign-out, API key, offline status) still have no heading.
+- 5 fixed: the refusal line is the `cell` variant with an alert icon, so both lines of the popover share one inset.
+- Tests: one padding assertion per web variant and per mobile placement.
