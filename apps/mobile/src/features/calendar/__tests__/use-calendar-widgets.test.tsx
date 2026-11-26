@@ -6,6 +6,14 @@ const sync = vi.fn(async () => {});
 const clear = vi.fn(async (_message: string) => {});
 const range = vi.hoisted(() => ({ read: false, household: "h1" }));
 
+const stored = vi.hoisted(() => new Map<string, string>());
+
+vi.mock("@/lib/storage/mmkv", () => ({
+  storage: {
+    getString: (key: string) => stored.get(key),
+    set: (key: string, value: string) => void stored.set(key, value),
+  },
+}));
 vi.mock("expo-linking", () => ({ createURL: (path: string) => path }));
 vi.mock("react-native", () => ({ AppState: { addEventListener: () => ({ remove() {} }) } }));
 vi.mock("react-intl", () => ({
@@ -32,6 +40,7 @@ beforeEach(() => {
   sync.mockClear();
   clear.mockClear();
   range.household = "h1";
+  stored.clear();
 });
 
 describe("useCalendarWidgets", () => {
@@ -54,6 +63,15 @@ describe("useCalendarWidgets", () => {
     range.read = false;
     range.household = "h2";
     rerender();
+
+    expect(clear).toHaveBeenCalledOnce();
+  });
+
+  it("empties the widgets on the first household read after a start, if they show another's plan", () => {
+    range.read = false;
+    renderHook(() => useCalendarWidgets()).unmount();
+    range.household = "h2";
+    renderHook(() => useCalendarWidgets());
 
     expect(clear).toHaveBeenCalledOnce();
   });

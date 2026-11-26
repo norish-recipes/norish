@@ -1,4 +1,4 @@
-import { useEffect, useEffectEvent, useRef } from "react";
+import { useEffect, useEffectEvent } from "react";
 import { AppState } from "react-native";
 import {
   clearCalendarWidgets,
@@ -7,6 +7,7 @@ import {
 } from "@/lib/calendar-widgets";
 import { WIDGET_DATA_DAYS } from "@/lib/calendar-widgets-state";
 import { useText } from "@/lib/i18n/use-text";
+import { storage } from "@/lib/storage/mmkv";
 import { useIntl } from "react-intl";
 
 import { useCalendarQuery, useCalendarRangeRead } from "@norish/shared-react/calendar";
@@ -15,6 +16,9 @@ import { addDays, dateKey, parseDateKey } from "@norish/shared/lib/helpers";
 
 /** Hands the Home Screen widgets the plan whenever it changes here, realtime and this device's
  * writes included, and on every return to the foreground. Pushing never blocks the caller. */
+// The household the widgets' plan is for, kept across starts: a move made elsewhere still clears.
+const SHOWN_FOR_KEY = "calendar-widgets.household";
+
 export function useCalendarWidgets() {
   const intl = useIntl();
   const todayKey = useToday();
@@ -26,7 +30,6 @@ export function useCalendarWidgets() {
   // Not the query's `isRead`: seeded from other ranges, that holds days no read of this one confirmed.
   const read = useCalendarRangeRead(range);
   const household = useHousehold().household?.id ?? null;
-  const shownForRef = useRef(household);
   const message = useText();
   const strings = {
     nothingPlanned: message("calendar.widgets.nothingPlanned"),
@@ -60,8 +63,11 @@ export function useCalendarWidgets() {
   });
 
   useEffect(() => {
-    if (shownForRef.current && household && household !== shownForRef.current) forget();
-    if (household) shownForRef.current = household;
+    if (!household) return;
+    const shownFor = storage.getString(SHOWN_FOR_KEY);
+
+    if (shownFor && shownFor !== household) forget();
+    storage.set(SHOWN_FOR_KEY, household);
   }, [household]);
 
   useEffect(() => sync(), [shape, read, todayKey, intl.locale]);
