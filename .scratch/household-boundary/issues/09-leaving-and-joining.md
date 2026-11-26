@@ -43,3 +43,23 @@ See the spec, "Membership changes".
 - Told: the mover's `created` and Scope Change, then `userJoined`/`userLeft`/`memberRemoved` to who stays; those three now reread every query, as `created` does. Dialogs: leave (web and mobile) and kick say recipes and cookbooks go with tags and ingredients, groceries, pantry, plan and stores stay; the join card says the household of one is merged in. A member of a larger household sees no join card until they leave.
 - Removed: `HELD_BY_*`, `holdsAnything`, the `holds-things` refusal and its copy in all locales. Not run: the E2E (`ai/leaving-and-joining.e2e.ts`) typechecks and lints.
 
+
+Review round 1:
+
+1. Fixed: each joiner food has one target (the household's food of its name, else the one holding the first shared spelling) and merges through `mergeLockedFoods`; a shared spelling's rows take the target's spelling (`deleteCatalogueAlias` with `heirsSeenBy`, same fold first) and the household's spelling stays put; the Pantry dedupes after.
+2. Fixed: the estimate and flag move where the target has none (never onto a seeded food); AI Changes of every kind follow the target, all but merges stranded, and so is any naming a removed spelling or food; a correction's empty groups (numbers, piece weight, density) take the joiner's; a preference moves where the household has none.
+3. Fixed: a copy whose own parent stays behind goes under its nearest seeded ancestor.
+4. Fixed: `insertLinksTx` and `writeRecipeLineFoodsTx` refuse an entry or spelling outside the recipe's household; recipe writes hold its household `FOR KEY SHARE` before the recipe row (`lockRecipeHouseholdsTx`); re-resolution rereads the lines' households each try; a stale Cuisine id takes the household's entry of its fold, else refused; Undo's restored food skips lines that left. Writers under the tree lock check without that lock, which would invert the join's order.
+5. Fixed: the join locks the tree, then sources and targets, rereading until settled; lists, catalogue, then rows.
+6. Kept: inserts wait on the households lock, but a person's food rename takes neither it nor the tree lock, and the name index is an expression no row lock covers. Three attempts, then the `busy` refusal (copy in every locale).
+7. Fixed: `pickedByKey` aggregates once (20,000 keys: 920 to 63 ms); `householdRows`/`assertOwnReferences` bind one array. A join with 300 colliding foods, each with a line and a shared spelling, takes ~1.6 s on the test container (~24 statements per merge, ~7 per shared spelling); not batched.
+8. Fixed: shares that meet add up; the estimate's save rekeys by the lines' foods at save, under the household lock.
+9. Verified and fixed: a removal skips an entry that is the account's plan again.
+10. Fixed: the join races merge the target away and rename into the joiner's name; added the four named cases. Races 20/20, moves 20/20.
+11. Fixed: `sameFoodName`, `foldedIn`; the third lines-and-shares copy went with `giveSpellingRowsTo`.
+12. Fixed: `foodsNamedIn` (where a food lands by name) for leave and join; `takeEntriesOfFoldsTx` for lists.
+13. Fixed: `household-catalogue.ts`; `carry*` for a leave, `mergeHousehold*` for a join; `FoodTargets`.
+14. Fixed: `readerScopedKeys` plus lists, ingredients, stores and Pantry.
+
+- Rejected: a joiner's store preference dropped where the household has one; same-named stores both kept.
+- Not changed: a recipe created while its Owner leaves can still land in the old household (the owner-household trigger reads the membership unlocked).
