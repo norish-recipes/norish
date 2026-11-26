@@ -12,7 +12,7 @@ interface ListedFood {
   name: string;
 }
 
-test("another household's recipe is used through the reader's own catalogue", async ({
+test("under view Everyone another household's recipe is used through the reader's own catalogue", async ({
   browser,
   aiStack,
 }) => {
@@ -23,11 +23,13 @@ test("another household's recipe is used through the reader's own catalogue", as
   // Household A is the member; household B the owner.
   const aCookies = await signIn(aiStack.baseURL, MEMBER);
   const bCookies = aiStack.ownerCookies;
+  // Hidden foods too: one a grocery minted is not on the Ingredients page until a recipe names it.
   const foodsOf = async (cookies: typeof bCookies, search: string) =>
     (
       await queryTrpc<{ items: ListedFood[] }>(aiStack.baseURL, cookies, "ingredients.list", {
         search,
         locale: "en",
+        listedOnly: false,
       })
     ).items;
 
@@ -96,7 +98,15 @@ test("another household's recipe is used through the reader's own catalogue", as
     await expect(
       panel.getByTestId("to-buy-section").getByRole("checkbox", { name: leek })
     ).toBeChecked();
-    await panel.getByTestId("pantry-section").getByRole("checkbox", { name: shallot }).check();
+    // The visible checkbox, clicked as a shopper clicks it; the input under it is hidden.
+    const held = panel.getByTestId("pantry-section").getByRole("checkbox", { name: shallot });
+
+    await panel
+      .getByTestId("pantry-section")
+      .locator('[data-slot="checkbox"]')
+      .filter({ has: page.getByRole("checkbox", { name: shallot }) })
+      .click();
+    await expect(held).toBeChecked();
     await panel.getByRole("button", { name: "Add", exact: true }).click();
     await expect(panel).toBeHidden();
   } finally {
