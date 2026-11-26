@@ -27,6 +27,11 @@ vi.mock("../../lists", async (importOriginal) => ({
   },
 }));
 vi.mock("../../reader", () => ({ useDevicePreference: () => ["short"] }));
+vi.mock("../../platform", async (importOriginal) => {
+  const { fakePlatformAdapter } = await import("../../platform/testing");
+
+  return { ...(await importOriginal<object>()), usePlatform: () => fakePlatformAdapter() };
+});
 
 const at = new Date("2026-05-01T10:00:00.000Z");
 const stored: FullRecipeDTO = {
