@@ -79,30 +79,49 @@ export async function readKeyFile(): Promise<KeyFile | null> {
   }
 }
 
+/** Create `target` readable by this user only, flushed to disk; on a failure no half of it stays. */
+async function createFlushed(target: string, text: string): Promise<void> {
+  const handle = await fs.open(target, "wx", 0o600);
+
+  try {
+    try {
+      await handle.writeFile(text);
+      await handle.sync();
+    } finally {
+      await handle.close();
+    }
+  } catch (error) {
+    await fs.rm(target, { force: true });
+    throw error;
+  }
+}
+
 /**
- * Write the key file in one step, readable by this user only: a crash leaves old or new, never
- * half. It never replaces a key file (EEXIST) unless told to.
+ * Write the key file readable by this user only, whole or not at all where hard links work. It
+ * never replaces a key file (EEXIST) unless told to.
  */
 export async function writeKeyFile(keys: KeyFile, { replace = false } = {}): Promise<void> {
   const file = keyFilePath();
   const dir = path.dirname(file);
   const temp = `${file}.${randomBytes(8).toString("hex")}.tmp`;
+  const text = JSON.stringify(mapKeys(keys, toBase64));
 
   await fs.mkdir(SERVER_CONFIG.UPLOADS_DIR, { recursive: true });
   await fs.mkdir(dir, { recursive: true, mode: 0o700 });
   await fs.chmod(dir, 0o700);
 
   try {
-    const handle = await fs.open(temp, "wx", 0o600);
+    await createFlushed(temp, text);
+    if (replace) {
+      await fs.rename(temp, file);
+    } else {
+      // A link or an exclusive create fails where a file is already, so one first boot's key lands.
+      await fs.link(temp, file).catch((error: unknown) => {
+        if (errorCode(error) === "EEXIST") throw error;
 
-    try {
-      await handle.writeFile(JSON.stringify(mapKeys(keys, toBase64)));
-      await handle.sync();
-    } finally {
-      await handle.close();
+        return createFlushed(file, text);
+      });
     }
-    // A link fails where a file is already, so of two first boots only one key lands.
-    await (replace ? fs.rename(temp, file) : fs.link(temp, file));
   } finally {
     await fs.rm(temp, { force: true });
   }

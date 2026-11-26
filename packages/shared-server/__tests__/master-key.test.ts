@@ -26,7 +26,7 @@ const database = vi.hoisted(() => ({
   fingerprint: null as string | null,
   encrypted: [] as string[],
   // What another boot does while this one counts rows.
-  meanwhile: () => {},
+  meanwhile: async () => {},
 }));
 // Every fingerprint boot stored, and every key it opened, in order.
 const fingerprintWrites = vi.hoisted(() => [] as string[]);
@@ -56,7 +56,7 @@ vi.mock("@norish/db/repositories/master-key", () => ({
   },
   getMasterKeyFingerprint: async () => database.fingerprint || null,
   countEncryptedRows: async () => {
-    database.meanwhile();
+    await database.meanwhile();
 
     return database.encrypted.length;
   },
@@ -103,6 +103,21 @@ function lookupBy(key: Buffer): string {
   return lookup;
 }
 
+const failure = (code: string) => Object.assign(new Error(`${code}: refused`), { code });
+
+/** Files open as usual, but a handle on `target` fails to flush to disk with `code`. */
+function failSyncOf(target: string, code: string) {
+  const open = fs.open;
+
+  vi.spyOn(fs, "open").mockImplementation(async (...args) => {
+    const handle = await open(...args);
+
+    if (args[0] === target) vi.spyOn(handle, "sync").mockRejectedValue(failure(code));
+
+    return handle;
+  });
+}
+
 beforeEach(() => {
   config.UPLOADS_DIR = path.join(
     mkdtempSync(path.join(os.tmpdir(), "master-key-test-")),
@@ -112,7 +127,7 @@ beforeEach(() => {
   config.MASTER_KEY_PREVIOUS = undefined;
   database.fingerprint = null;
   database.encrypted = [];
-  database.meanwhile = () => {};
+  database.meanwhile = async () => {};
   fingerprintWrites.length = 0;
   openedKeys.length = 0;
   logged.length = 0;
@@ -227,6 +242,39 @@ describe("the key file", () => {
     expect(await fs.readdir(keyDir())).toEqual(["master-key.json"]);
   });
 
+  it.each(["EPERM", "ENOTSUP", "EOPNOTSUPP", "ENOSYS"])(
+    "creates the file in place where a hard link fails with %s",
+    async (code) => {
+      const keys = { current: randomBytes(32) };
+
+      vi.spyOn(fs, "link").mockRejectedValue(failure(code));
+      await writeKeyFile(keys);
+
+      expect(await readKeyFile()).toEqual(keys);
+      expect(await modeOf(keyFilePath())).toBe(0o600);
+      expect(await fs.readdir(keyDir())).toEqual(["master-key.json"]);
+    }
+  );
+
+  it("never replaces a key file where hard links fail", async () => {
+    const old = { current: randomBytes(32) };
+
+    await writeKeyFile(old);
+    vi.spyOn(fs, "link").mockRejectedValue(failure("EPERM"));
+
+    await expect(writeKeyFile({ current: randomBytes(32) })).rejects.toThrow("EEXIST");
+    expect(await readKeyFile()).toEqual(old);
+    expect(await fs.readdir(keyDir())).toEqual(["master-key.json"]);
+  });
+
+  it("fails, leaving no half-written file, when the file created in place cannot be flushed", async () => {
+    vi.spyOn(fs, "link").mockRejectedValue(failure("EPERM"));
+    failSyncOf(keyFilePath(), "EIO");
+
+    await expect(writeKeyFile({ current: randomBytes(32) })).rejects.toThrow("EIO");
+    expect(await fs.readdir(keyDir())).toEqual([]);
+  });
+
   it("replaces a key file when told to", async () => {
     const keys = { current: randomBytes(32), previous: randomBytes(32) };
 
@@ -321,7 +369,7 @@ describe("which key boot opens", () => {
 
     it("refuses its own key when another boot stored a fingerprint since it looked", async () => {
       config.MASTER_KEY = keyB.toString("base64");
-      database.meanwhile = () => {
+      database.meanwhile = async () => {
         database.fingerprint = masterKeyFingerprint(keyA);
       };
 
@@ -330,6 +378,29 @@ describe("which key boot opens", () => {
       );
       expect(database.fingerprint).toBe(masterKeyFingerprint(keyA));
       expect(openedKeys).toEqual([]);
+    });
+
+    it("generates a key file where hard links fail", async () => {
+      vi.spyOn(fs, "link").mockRejectedValue(failure("EPERM"));
+
+      await resolveMasterKey();
+
+      const generated = (await readKeyFile())?.current;
+
+      expect(generated).toHaveLength(32);
+      expect(fingerprintWritten()).toBe(generated && masterKeyFingerprint(generated));
+      expect(opened()).toBe(generated && lookupBy(generated));
+    });
+
+    it("adopts the key file another first boot placed meanwhile where hard links fail", async () => {
+      vi.spyOn(fs, "link").mockRejectedValue(failure("EPERM"));
+      database.meanwhile = () => writeKeyFile({ current: keyA });
+
+      await resolveMasterKey();
+
+      expect(await readKeyFile()).toEqual({ current: keyA });
+      expect(fingerprintWritten()).toBe(masterKeyFingerprint(keyA));
+      expect(opened()).toBe(lookupBy(keyA));
     });
 
     it("adopts MASTER_KEY over a fingerprint row that holds none", async () => {
