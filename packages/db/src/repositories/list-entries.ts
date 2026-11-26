@@ -42,7 +42,7 @@ import { ForeignHouseholdReferenceError, lockRecipeHouseholdsTx } from "./househ
 import { inScope, isInstanceRow } from "./household-scope";
 import { lockUntilSettled } from "./lock-until-settled";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
-import { defaultOf } from "./raw-sql";
+import { defaultOf, ONE_ROW } from "./raw-sql";
 
 export type ListKind = "tag" | "cuisine" | "category";
 
@@ -105,9 +105,6 @@ const rowColumns = (table: ListTable) => ({
   instance: isInstanceRow(table.householdId),
   version: table.version,
 });
-
-/** One row to select constants from: the builder has no select without `from`. */
-const ONE_ROW = sql`(values (1)) as ${sql.identifier("one_row")}`;
 
 /** A list's order: by name, then id. */
 const byName = (table: ListTable) => [sql`lower(${table.name})`, table.id];

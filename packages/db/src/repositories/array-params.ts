@@ -2,12 +2,14 @@ import type { SQL } from "drizzle-orm";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
-/** Postgres element types a list is bound as. */
-type ElementType = "uuid" | "text" | "boolean";
+/** The array type of each Postgres element type a list is bound as. */
+const ARRAY_TYPES = { uuid: sql`uuid[]`, text: sql`text[]`, boolean: sql`boolean[]` };
+
+type ElementType = keyof typeof ARRAY_TYPES;
 
 /** A list bound as one array parameter of `type`, however many there are. */
 export function arrayParam(values: readonly (string | boolean | null)[], type: ElementType): SQL {
-  return sql`${sql.param([...values])}::${sql.raw(type)}[]`;
+  return sql`${sql.param([...values])}::${ARRAY_TYPES[type]}`;
 }
 
 /** `column` is one of `values`, bound as one array however many there are. */

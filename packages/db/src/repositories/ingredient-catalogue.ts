@@ -38,6 +38,7 @@ import { escapeLike } from "@norish/shared/lib/ingredient-search";
 import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
 import { inCatalogue, ownBeforeSeed } from "./household-scope";
+import { ONE_ROW } from "./raw-sql";
 
 const qb = new QueryBuilder();
 const kind = alias(ingredients, "k");
@@ -117,12 +118,13 @@ function containsText(text: SQL, word: string, start = false): SQL {
 
 /** The rank's folded name, joined laterally once a matched row (`offset 0` keeps Postgres from
  * inlining it into every use). */
-const SEARCHED = sql.identifier("searched");
-const SEARCHED_NAME = sql.identifier("name");
-const searchedName = {
-  lateral: sql`(select ${folded(ingredients.name)} as ${SEARCHED_NAME} offset 0) ${SEARCHED}`,
-  column: sql`${SEARCHED}.${SEARCHED_NAME}`,
-};
+const searched = qb
+  // Wrapped, or the one-table select would print the outer `ingredients.name` bare.
+  .select({ searchedName: sql`${folded(ingredients.name)}`.as("searched_name") })
+  .from(ONE_ROW)
+  .offset(0)
+  .as("searched");
+const searchedName = { lateral: searched, column: sql`${searched.searchedName}` };
 
 /** A searched text (the name, its translations, the parent's) that is the fold exactly, or
  * (contains) holds every typed word, in any order; `start`: each word at the start of one of the
