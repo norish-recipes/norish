@@ -210,6 +210,8 @@ export async function createGroceries(
       {
         storeIds: prepared.map((item) => item.storeId),
         recurringGroceryIds: prepared.map((item) => item.recurringGroceryId),
+        ingredientIds: prepared.map((item) => item.ingredientId),
+        ingredientAliasIds: prepared.map((item) => item.ingredientAliasId),
       },
       trx
     );
@@ -286,6 +288,8 @@ export async function updateGroceries(
       {
         storeIds: parsed.data.map((g) => g.storeId),
         recurringGroceryIds: parsed.data.map((g) => g.recurringGroceryId),
+        ingredientIds: parsed.data.map((g) => g.ingredientId),
+        ingredientAliasIds: parsed.data.map((g) => g.ingredientAliasId),
       },
       trx
     );

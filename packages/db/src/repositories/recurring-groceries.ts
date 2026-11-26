@@ -69,6 +69,16 @@ export interface CreatedRecurringGroceries extends Pick<CreatedGroceries, "shift
   created: Array<{ recurringGrocery: RecurringGroceryDto; grocery: GroceryDto }>;
 }
 
+/** The foods and spellings rows name, for `assertOwnReferences`. */
+function foodsOf(
+  rows: ReadonlyArray<{ ingredientId?: string | null; ingredientAliasId?: string | null }>
+) {
+  return {
+    ingredientIds: rows.map((row) => row.ingredientId),
+    ingredientAliasIds: rows.map((row) => row.ingredientAliasId),
+  };
+}
+
 /** Create recurring groceries and the grocery each puts on the list, all or none. */
 export async function createRecurringGroceries(
   items: Array<{
@@ -82,6 +92,7 @@ export async function createRecurringGroceries(
     if (items.some(({ recurring }) => recurring.householdId !== householdId)) {
       throw new Error("Recurring groceries are created in the household they are listed for");
     }
+    await assertOwnReferences(householdId, foodsOf(items.map(({ recurring }) => recurring)), trx);
     const rows = await trx
       .insert(recurringGroceries)
       .values(
@@ -125,6 +136,7 @@ export async function updateRecurringGrocery(
     updatedAt: new Date(),
   };
 
+  await assertOwnReferences(householdId, foodsOf([data]));
   const [row] = await db
     .update(recurringGroceries)
     .set({ ...updateData, version: sql`${recurringGroceries.version} + 1` })
@@ -159,7 +171,11 @@ export async function updateRecurringGroceryWithGrocery(
 
   try {
     const result = await tx.transaction(async (trx) => {
-      await assertOwnReferences(householdId, { storeIds: [groceryRef.storeId] }, trx);
+      await assertOwnReferences(
+        householdId,
+        { storeIds: [groceryRef.storeId], ...foodsOf([recurringData]) },
+        trx
+      );
       const [recurringRow] = await trx
         .update(recurringGroceries)
         .set({ ...updateData, version: sql`${recurringGroceries.version} + 1` })
@@ -236,7 +252,11 @@ export async function detachRecurringGrocery(
 
   try {
     const grocery = await tx.transaction(async (trx) => {
-      await assertOwnReferences(householdId, { storeIds: [input.grocery.storeId] }, trx);
+      await assertOwnReferences(
+        householdId,
+        { storeIds: [input.grocery.storeId], ...foodsOf([input.grocery]) },
+        trx
+      );
       const deleted = await trx
         .delete(recurringGroceries)
         .where(

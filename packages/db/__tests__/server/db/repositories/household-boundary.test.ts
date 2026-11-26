@@ -15,7 +15,7 @@ import {
   updateGroceries,
 } from "@norish/db/repositories/groceries";
 import { ForeignHouseholdReferenceError } from "@norish/db/repositories/household-rows";
-import { deletePantryIngredient } from "@norish/db/repositories/pantry";
+import { addPantryIngredients, deletePantryIngredient } from "@norish/db/repositories/pantry";
 import {
   createPlannedItem,
   deletePlannedItem,
@@ -54,7 +54,10 @@ import {
   addTestGrocery,
   addTestPantryIngredient,
   addTestRecurringGrocery,
+  addTestSpelling,
+  createTestIngredient,
   createTestUser,
+  firstSpellingId,
   getTestDb,
   householdIdOf,
   mintTestFood,
@@ -276,6 +279,81 @@ describe("the household boundary", () => {
       )
     ).rejects.toThrow(ForeignHouseholdReferenceError);
     expect((await row(groceries, theirGrocery.id))?.householdId).toBe(a);
+  });
+
+  it("points no grocery, recurring grocery or Pantry Ingredient at another household's food", async () => {
+    const theirs = await mintTestFood(a, "prei");
+    const theirSpelling = await addTestSpelling(
+      (await mintTestFood(b, "ui")).ingredientId,
+      "uien",
+      {
+        householdId: a,
+      }
+    );
+    const seeded = await createTestIngredient({ name: "zout" });
+    const seedSpelling = (await firstSpellingId(seeded!.id))!;
+    const mine = await addTestGrocery(bUser, { name: "kaas" });
+    const { recurringGrocery: myRecurring, grocery: myRecurringGrocery } =
+      await addTestRecurringGrocery(bUser, { name: "boter" });
+    const foreignFoods = [
+      { ingredientId: theirs.ingredientId, ingredientAliasId: seedSpelling },
+      { ingredientId: seeded!.id, ingredientAliasId: theirSpelling },
+    ];
+    const line = (food: { ingredientId: string; ingredientAliasId: string }) => ({
+      id: crypto.randomUUID(),
+      groceries: {
+        householdId: b,
+        userId: bUser,
+        name: "prei",
+        unit: null,
+        amount: null,
+        isDone: false,
+        recipeIngredientId: null,
+        recurringGroceryId: null,
+        ...food,
+      },
+    });
+
+    for (const food of foreignFoods) {
+      await expect(createGroceries([line(food)], b)).rejects.toThrow(
+        ForeignHouseholdReferenceError
+      );
+      await expect(updateGroceries([{ id: mine.id, ...food }], b)).rejects.toThrow(
+        ForeignHouseholdReferenceError
+      );
+      await expect(
+        updateRecurringGrocery({ id: myRecurring.id, version: myRecurring.version, ...food }, b)
+      ).rejects.toThrow(ForeignHouseholdReferenceError);
+      await expect(
+        updateRecurringGroceryWithGrocery(
+          b,
+          { id: myRecurring.id, version: myRecurring.version, ...food },
+          { id: myRecurringGrocery.id, version: myRecurringGrocery.version }
+        )
+      ).rejects.toThrow(ForeignHouseholdReferenceError);
+      await expect(
+        detachRecurringGrocery(b, {
+          recurringGroceryId: myRecurring.id,
+          recurringVersion: myRecurring.version,
+          grocery: { ...myRecurringGrocery, amount: null, unit: null, ...food },
+        })
+      ).rejects.toThrow(ForeignHouseholdReferenceError);
+      await expect(
+        addTestRecurringGrocery(bUser, { name: "prei", ...food, alone: true })
+      ).rejects.toThrow(ForeignHouseholdReferenceError);
+      await expect(
+        addPantryIngredients([{ id: crypto.randomUUID(), ...food }], {
+          userId: bUser,
+          householdId: b,
+        })
+      ).rejects.toThrow(ForeignHouseholdReferenceError);
+    }
+
+    // The seed's food and spelling are every household's.
+    await expect(
+      createGroceries([line({ ingredientId: seeded!.id, ingredientAliasId: seedSpelling })], b)
+    ).resolves.toMatchObject({ created: [{ ingredientId: seeded!.id }] });
+    expect(await getTestDb().select().from(pantryIngredients)).toEqual([]);
   });
 
   /** A grocery of A filed under B's Store and repeating B's recurring grocery, as a past bug left. */

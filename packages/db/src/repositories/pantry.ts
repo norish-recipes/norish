@@ -16,7 +16,7 @@ import {
 } from "@norish/db/schema";
 import { PantryIngredientSelectSchema, PantrySuggestionSchema } from "@norish/shared/contracts/zod";
 
-import { householdRow } from "./household-rows";
+import { assertOwnReferences, householdRow } from "./household-rows";
 import { inCatalogue } from "./household-scope";
 import { findLocaleNames } from "./ingredient-aliases";
 import { coveredCte } from "./pantry-coverage";
@@ -138,6 +138,15 @@ export async function addPantryIngredients(
 ): Promise<PantryAdded[]> {
   return await db.transaction(async (tx) => {
     const foods = [...new Set(items.map((item) => item.ingredientId))];
+
+    await assertOwnReferences(
+      owner.householdId,
+      {
+        ingredientIds: foods,
+        ingredientAliasIds: items.map((item) => item.ingredientAliasId),
+      },
+      tx
+    );
 
     for (const ingredientId of foods.sort((a, b) => a.localeCompare(b))) {
       await lockPantryFood(tx, ingredientId);

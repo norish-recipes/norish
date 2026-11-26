@@ -20,6 +20,7 @@ import {
 } from "@norish/db/schema";
 import { distinctFoods, joinOf } from "@norish/shared/lib/line-foods";
 
+import { assertOwnReferences } from "./household-rows";
 import { inCatalogue, ownBeforeSeed } from "./household-scope";
 import { moveMergedAIChanges } from "./ingredient-ai-changes";
 import { rowsNaming, spellingsSeenBy } from "./ingredient-catalogue";
@@ -417,6 +418,9 @@ export async function splitCatalogueIngredient(
     .from(pantryIngredients)
     .where(eq(pantryIngredients.ingredientId, sourceId));
 
+  for (const householdId of new Set(keepers.map((keeper) => keeper.householdId))) {
+    await assertOwnReferences(householdId, partFoods(parts), tx);
+  }
   for (const part of keepers.length > 0 ? parts : []) {
     await lockPantryFood(tx, part.ingredientId);
     await tx
@@ -432,6 +436,14 @@ export async function splitCatalogueIngredient(
       .onConflictDoNothing();
   }
   await tx.delete(ingredients).where(eq(ingredients.id, sourceId));
+}
+
+/** The foods and spellings parts name, for `assertOwnReferences`. */
+function partFoods(parts: ReadonlyArray<{ aliasId: string | null; ingredientId: string | null }>) {
+  return {
+    ingredientIds: parts.map((part) => part.ingredientId),
+    ingredientAliasIds: parts.map((part) => part.aliasId),
+  };
 }
 
 /** A food a Grocery names, and the name it goes by there. */
@@ -452,6 +464,7 @@ export async function writeGroceryParts(
   rows: ReadonlyArray<{ id: string; name: string | null; parts: readonly GroceryPart[] }>
 ): Promise<void> {
   const table = kind === "groceries" ? groceries : recurringGroceries;
+  const named = new Map<string, GroceryPart[]>();
   const columns = (part: GroceryPart) => ({
     name: part.name,
     ingredientAliasId: part.aliasId,
@@ -471,6 +484,7 @@ export async function writeGroceryParts(
       .returning();
 
     if (!row) continue;
+    named.set(row.householdId, [...(named.get(row.householdId) ?? []), first, ...rest]);
     const { id: _id, version: _version, ...copy } = row;
 
     // ponytail: a copy of a recurring grocery's row recurs with neither; link them if it matters.
@@ -482,4 +496,6 @@ export async function writeGroceryParts(
       });
     }
   }
+  for (const [householdId, parts] of named)
+    await assertOwnReferences(householdId, partFoods(parts), tx);
 }

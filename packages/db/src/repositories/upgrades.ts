@@ -25,6 +25,7 @@ import {
 } from "@norish/db/schema";
 import { entryFold } from "@norish/shared/lib/fold-name";
 
+import { assertOwnReferences } from "./household-rows";
 import {
   findFoldedTwinTx,
   LIST_KINDS,
@@ -185,6 +186,11 @@ export async function setPantryIngredientFood(id: string, food: IngredientRef): 
 
     if (held) await tx.delete(pantryIngredients).where(eq(pantryIngredients.id, id));
     else {
+      await assertOwnReferences(
+        row.householdId,
+        { ingredientIds: [food.ingredientId], ingredientAliasIds: [food.aliasId] },
+        tx
+      );
       await tx
         .update(pantryIngredients)
         .set({ ingredientAliasId: food.aliasId, ingredientId: food.ingredientId })
