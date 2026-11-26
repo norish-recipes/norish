@@ -40,7 +40,11 @@ import {
   wholeSpellingKeys,
 } from "@norish/shared/lib/spelling-keys";
 
+import type { ResolveMode } from "./resolve-mode";
 import { announceMinted, announcingAfter } from "./minted";
+import { mintsIn } from "./resolve-mode";
+
+export type { ResolveMode } from "./resolve-mode";
 
 /**
  * The one module that mints Ingredients and aliases (ADR-0037). A text resolves by its fold, its
@@ -60,18 +64,6 @@ export interface ResolveActor {
   userId: string | null;
   /** The language the text is in, where the caller knows it. */
   locale?: string | null;
-}
-
-/**
- * Who resolves and why: a "person"'s write (AI's pass follows a mint), an "upgrade" pass (mints so
- * flagged), a "repoint" of rows whose food went (no slip, no mint), a "split" part AI found no food for (no slip),
- * a "read" that only looks (no slip, no mint, no write).
- */
-export type ResolveMode = "person" | "upgrade" | "repoint" | "split" | "read";
-
-/** Whether a mode mints a text the catalogue does not know; "repoint" and "read" only find. */
-export function mintsIn(mode: ResolveMode): boolean {
-  return mode !== "repoint" && mode !== "read";
 }
 
 /** One text as written, and the alias and Ingredient it resolved to. */
