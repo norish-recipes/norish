@@ -101,10 +101,13 @@ export function IngredientRelocationPanel({
         ) : null}
       </Panel.Body>
       <Panel.Footer>
-        <ActionButtonGroup>
-          <ActionButton action="cancel" onPress={close}>
-            {tActions("cancel")}
-          </ActionButton>
+        <ActionButtonGroup
+          start={
+            <ActionButton action="cancel" onPress={close}>
+              {tActions("cancel")}
+            </ActionButton>
+          }
+        >
           <ActionButton
             action="apply"
             data-testid="ingredient-relocation-confirm"
