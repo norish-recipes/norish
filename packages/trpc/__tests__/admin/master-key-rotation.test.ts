@@ -141,6 +141,19 @@ describe("rotating the Master Key from the Admin action", () => {
     expect(process.exit).toHaveBeenCalledWith(0);
   });
 
+  it("says the key file does not hold this database's key, staying up and writing nothing", async () => {
+    database.fingerprint = masterKeyFingerprint(randomBytes(32));
+    await writeKeyFile({ current: keyA });
+
+    await expect(createCaller().rotateMasterKey()).resolves.toEqual({
+      success: false,
+      error: "The key file does not hold this database's key, so nothing changed.",
+    });
+    expect(await readKeyFile()).toEqual({ current: keyA });
+    expect(exitsScheduled()).toBe(0);
+    expect(JSON.stringify(logged)).not.toContain(keyA);
+  });
+
   it("is admin-only, writing nothing", async () => {
     await writeKeyFile({ current: keyA });
 

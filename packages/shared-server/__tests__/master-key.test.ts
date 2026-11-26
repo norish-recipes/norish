@@ -996,7 +996,7 @@ describe("which key boot opens", () => {
     it("writes a new key of 32 random bytes and keeps the old one as previous, re-keying nothing", async () => {
       await writeKeyFile({ current: textA });
 
-      await rotate();
+      await expect(rotate()).resolves.toBe(true);
 
       const { current, previous, bytes } = await rotated();
 
@@ -1082,7 +1082,7 @@ describe("which key boot opens", () => {
       database.fingerprint = fingerprint;
       await writeKeyFile({ current: textA });
 
-      await expect(rotate()).rejects.toThrow("is not the key this database is encrypted with.");
+      await expect(rotate()).resolves.toBe(false);
       expect(await readKeyFile()).toEqual({ current: textA });
     });
 

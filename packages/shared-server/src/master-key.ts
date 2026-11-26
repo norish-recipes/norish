@@ -236,12 +236,23 @@ async function keySource(): Promise<KeySource> {
   return { pinned: false, keys: keys && named(keys, fileLabels()) };
 }
 
-/** The current or previous key, whichever `fits` the database, else the refusal naming the key. */
-function pickKey(source: KeySource, fits: (key: Buffer) => boolean) {
+/** The current or previous key, whichever `fits` the database, or null. */
+function findKey(source: KeySource, fits: (key: Buffer) => boolean) {
   const { keys } = source;
 
   if (keys && fits(keys.current.bytes)) return { keys, key: keys.current };
   if (keys?.previous && fits(keys.previous.bytes)) return { keys, key: keys.previous };
+
+  return null;
+}
+
+/** The current or previous key, whichever `fits` the database, else the refusal naming the key. */
+function pickKey(source: KeySource, fits: (key: Buffer) => boolean) {
+  const found = findKey(source, fits);
+
+  if (found) return found;
+  const { keys } = source;
+
   throw refusal(
     keys
       ? `${keys.current.label} is not the key this database is encrypted with.`
@@ -288,9 +299,12 @@ async function adoptKey(source: KeySource): Promise<[KeySource, string | null]> 
   return [{ ...source, keys: source.keys ?? { current: key } }, stored];
 }
 
+const hasFingerprint = (fingerprint: string | null) => (key: Buffer) =>
+  masterKeyFingerprint(key) === fingerprint;
+
 /** The key the database's fingerprint names, current or previous, or the refusal naming it. */
 const keyWithFingerprint = (source: KeySource, fingerprint: string | null) =>
-  pickKey(source, (key) => masterKeyFingerprint(key) === fingerprint);
+  pickKey(source, hasFingerprint(fingerprint));
 
 /** What a driver's error may show in a log: its code and the names Postgres failed on. */
 const SAFE_FIELDS = ["code", "table", "column", "constraint"] as const;
@@ -406,15 +420,19 @@ export async function resolveMasterKey(endStoredSessions: EndStoredSessions): Pr
 /**
  * File mode's rotation: a new `current` beside the key the fingerprint names, so a rotation still
  * waiting for its boot never drops the one key that opens the data. The next boot re-keys.
+ * False, writing nothing, when the key file holds no key the fingerprint names.
  */
-export async function rotateKeyFile(): Promise<void> {
+export async function rotateKeyFile(): Promise<boolean> {
   const source = await keySource();
 
   if (source.pinned) throw new Error("MASTER_KEY pins the key, so the key file is not used.");
-  const { key } = keyWithFingerprint(source, await getMasterKeyFingerprint());
+  const found = findKey(source, hasFingerprint(await getMasterKeyFingerprint()));
 
-  await writeKeyFile({ current: generatedKey(), previous: key.text }, { replace: true });
+  if (!found) return false;
+  await writeKeyFile({ current: generatedKey(), previous: found.key.text }, { replace: true });
   log.info({ source: keyFilePath() }, "New Master Key written; the next boot re-keys to it");
+
+  return true;
 }
 
 /** Open the key the database's fingerprint names, for a tool or script: never generates nor writes one. */

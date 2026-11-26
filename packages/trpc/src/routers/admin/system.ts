@@ -98,12 +98,25 @@ const rotateMasterKey = adminProcedure.mutation(async ({ ctx }) => {
     };
   }
   log.info({ userId: ctx.user.id }, "Master Key rotation requested by admin");
+  let rotated: boolean;
+
   try {
-    await rotateKeyFile();
+    rotated = await rotateKeyFile();
   } catch (error) {
     log.error({ userId: ctx.user.id, err: error }, "Master Key rotation failed, nothing changed");
 
     return { success: false, error: "The new key could not be written, so nothing changed." };
+  }
+  if (!rotated) {
+    log.error(
+      { userId: ctx.user.id },
+      "Master Key rotation refused: the key file does not hold the key this database is encrypted with"
+    );
+
+    return {
+      success: false,
+      error: "The key file does not hold this database's key, so nothing changed.",
+    };
   }
   exitAfterResponse();
 
