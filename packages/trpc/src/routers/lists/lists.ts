@@ -45,7 +45,12 @@ function mayChangeInstance(ctx: ListContext, kind: ListKind): boolean {
 }
 
 /** An entry as the caller's list shows it, with whether they may rename, merge or delete it. */
-function withEditable(ctx: ListContext, kind: ListKind, household: string, entry: ListEntryRow) {
+function withEditable<E extends ListEntryRow>(
+  ctx: ListContext,
+  kind: ListKind,
+  household: string,
+  entry: E
+) {
   const editable = entry.instance ? mayChangeInstance(ctx, kind) : household === ctx.householdId;
 
   return { ...entry, editable };
