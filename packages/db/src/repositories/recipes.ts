@@ -32,7 +32,7 @@ import type {
 } from "@norish/shared/contracts/dto/recipe-ingredient";
 import type { StepDto, StepInsertDto } from "@norish/shared/contracts/dto/steps";
 import type { FilterMode, SearchField, SortOrder } from "@norish/shared/contracts/store-types";
-import type { LineJoin } from "@norish/shared/lib/line-foods";
+import type { LineJoin, LineReadings } from "@norish/shared/lib/line-foods";
 import {
   DEFAULT_RECIPE_PERMISSION_POLICY,
   policyReach,
@@ -549,7 +549,13 @@ export async function listRecipes(
    * Library applies, which is what makes a cookbook's count and its list
    * agree by construction (ADR-0027).
    */
-  options?: { cookbookId?: string; favoritesOnly?: boolean; pantryOnly?: boolean }
+  options?: {
+    cookbookId?: string;
+    favoritesOnly?: boolean;
+    pantryOnly?: boolean;
+    /** With `pantryOnly`, the lines read through the reader's catalogue (`readLinesThrough`). */
+    lineReadings?: LineReadings;
+  }
 ): Promise<{ recipes: RecipeDashboardDTO[]; total: number }> {
   const whereConditions: any[] = [];
 
@@ -576,7 +582,9 @@ export async function listRecipes(
   }
 
   // Members with something at home, most complete first, as the Library orders them.
-  const pantryCoverage = options?.pantryOnly ? pantryCoverageSql(ctx.householdId) : undefined;
+  const pantryCoverage = options?.pantryOnly
+    ? pantryCoverageSql(ctx.householdId, options.lineReadings)
+    : undefined;
 
   if (pantryCoverage) {
     whereConditions.push(sql`${pantryCoverage} > 0`);

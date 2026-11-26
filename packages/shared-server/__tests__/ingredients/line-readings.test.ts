@@ -5,13 +5,18 @@
  */
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { createRecipeWithRefs, getRecipeFull } from "@norish/db";
 import { joinHousehold, moveToHouseholdOfOne } from "@norish/db/repositories/households";
+import { listLibrary } from "@norish/db/repositories/library";
+import { listRecipes } from "@norish/db/repositories/recipes";
+import { setConfig } from "@norish/db/repositories/server-config";
 import { readLinesThrough } from "@norish/shared-server/ingredients/line-readings";
 import { onIngredientsMinted } from "@norish/shared-server/ingredients/minted";
 import { withResolvedIngredients } from "@norish/shared-server/ingredients/recipe-lines";
 
 import {
+  addTestPantryIngredient,
   countTestCatalogueRows,
   createTestIngredient,
   createTestUser,
@@ -128,5 +133,46 @@ describe("lines read through the reader's catalogue", () => {
         foods: [{ ingredientId: own.ingredientId, name: "kapucijners" }],
       },
     });
+  });
+
+  it("covers another household's line by the reader's Pantry, a line it cannot read by none", async () => {
+    await setConfig(
+      ServerConfigKeys.RECIPE_PERMISSION_POLICY,
+      { view: "everyone", edit: "household", delete: "household" },
+      null,
+      false
+    );
+    const ui = await mintTestFood(testHouseholdOf(reader), "ui");
+
+    await addTestPantryIngredient(reader, ui);
+    await recipe(author, ["ui", "prei"]);
+    const viewer = { userId: reader, householdId: testHouseholdOf(reader) };
+    const before = await countTestCatalogueRows();
+    const lineReadings = await readLinesThrough(viewer.householdId, "visible");
+    const library = await listLibrary(viewer, { limit: 10, pantryOnly: true, lineReadings });
+    const members = await listRecipes(
+      viewer,
+      10,
+      0,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      { pantryOnly: true, lineReadings }
+    );
+
+    expect(
+      library.items.map((item) => (item.kind === "recipe" ? item.recipe.pantryCoverage : null))
+    ).toEqual([0.5]);
+    expect(members.recipes.map((one) => one.pantryCoverage)).toEqual([0.5]);
+    // Read as stored, the other household's food is in no Pantry of the reader's.
+    await expect(listLibrary(viewer, { limit: 10, pantryOnly: true })).resolves.toMatchObject({
+      total: 0,
+    });
+    await expect(countTestCatalogueRows()).resolves.toEqual(before);
   });
 });

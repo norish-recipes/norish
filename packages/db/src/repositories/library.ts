@@ -29,6 +29,7 @@ import type {
   SortOrder,
 } from "@norish/shared/contracts";
 import type { IngredientSearch } from "@norish/shared/lib/ingredient-search";
+import type { LineReadings } from "@norish/shared/lib/line-foods";
 import { db } from "@norish/db/drizzle";
 import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
 import { entryFold } from "@norish/shared/lib/fold-name";
@@ -79,6 +80,8 @@ export type LibraryListParams = {
   categories?: RecipeCategory[];
   favoritesOnly?: boolean;
   pantryOnly?: boolean;
+  /** With `pantryOnly`, the lines read through the reader's catalogue (`readLinesThrough`). */
+  lineReadings?: LineReadings;
   type?: LibraryTypeFilter;
   /** An explicit sort orders a search too; only `none` still ranks. */
   sortBeatsRank?: boolean;
@@ -197,7 +200,9 @@ export async function listLibrary(
 
   const branches: LibraryBranch[] = [];
   // Recipes with something at home, most complete first (#679).
-  const pantryCoverage = pantryOnly ? pantryCoverageSql(ctx.householdId) : undefined;
+  const pantryCoverage = pantryOnly
+    ? pantryCoverageSql(ctx.householdId, params.lineReadings)
+    : undefined;
 
   if (includeRecipes) {
     const conditions: SQL[] = [];
