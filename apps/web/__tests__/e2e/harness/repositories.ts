@@ -1,7 +1,7 @@
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
+import { openBase64MasterKey } from "@norish/config/testing";
 import { resetDbConnection } from "@norish/db/drizzle";
 
-import { openBase64MasterKey } from "../../../../../packages/config/__tests__/helpers/master-key";
 import { MASTER_KEY, UNCONNECTED_DATABASE_URL } from "./environment";
 
 export { openBase64MasterKey };

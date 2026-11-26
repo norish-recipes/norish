@@ -6,6 +6,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./crypto": "./src/crypto.ts",
+    "./testing": "./src/testing.ts",
+    "./testing-setup": "./src/testing-setup.ts",
     "./env-config-server": "./src/env-config-server.ts",
     "./zod/server-config": "./src/zod/server-config.ts",
     "./content-indicators.default.json": "./src/content-indicators.default.json",

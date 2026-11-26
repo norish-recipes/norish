@@ -3,7 +3,7 @@ import crypto from "crypto";
 type DerivedKeys = { authSecret: string; encryption: Buffer; hmac: Buffer };
 
 // On globalThis, so the copy of this module the Next bundle carries sees the key boot resolved.
-const DERIVED_KEYS = Symbol.for("norish:master-key");
+export const DERIVED_KEYS = Symbol.for("norish:master-key");
 const shared = globalThis as { [DERIVED_KEYS]?: DerivedKeys };
 
 function deriveKey(masterKey: Buffer, label: string): Buffer {

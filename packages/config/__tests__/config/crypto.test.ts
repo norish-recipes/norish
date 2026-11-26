@@ -14,7 +14,7 @@ import {
 } from "@norish/config/crypto";
 import { getSchemaForConfigKey, ServerConfigKeys } from "@norish/config/zod/server-config";
 
-import { forgetMasterKey } from "../helpers/master-key";
+import { forgetMasterKey } from "../../src/testing";
 
 describe("the Master Key's derived keys", () => {
   beforeEach(() => {

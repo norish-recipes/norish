@@ -17,8 +17,7 @@ import {
   initMasterKey,
   masterKeyFingerprint,
 } from "@norish/config/crypto";
-
-import { forgetMasterKey } from "../../config/__tests__/helpers/master-key";
+import { forgetMasterKey } from "@norish/config/testing";
 
 const config = vi.hoisted(() => ({
   UPLOADS_DIR: "",

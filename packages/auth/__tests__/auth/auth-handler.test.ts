@@ -14,10 +14,10 @@ import Valkey from "ioredis";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { authSecret, initMasterKey } from "@norish/config/crypto";
+import { openBase64MasterKey } from "@norish/config/testing";
 import { getValkeyConnectionOptions } from "@norish/shared-server/valkey/client";
 
 import type { Identity } from "../helpers/identity-provider";
-import { openBase64MasterKey } from "../../../config/__tests__/helpers/master-key";
 import { VALKEY_IMAGE, valkeyUrl } from "../../../shared-server/__tests__/helpers/valkey";
 import { endStoredSessions } from "../../src/secondary-storage";
 import { createIdentityProvider, IDP_CLIENT_ID } from "../helpers/identity-provider";

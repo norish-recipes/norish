@@ -15,6 +15,7 @@ import {
   masterKeyOpens,
   masterKeyRotation,
 } from "@norish/config/crypto";
+import { forgetMasterKey } from "@norish/config/testing";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import * as everyTable from "@norish/db-schema";
 import { getCaldavConfigDecrypted, saveCaldavConfig } from "@norish/db/repositories/caldav-config";
@@ -32,7 +33,6 @@ import {
 import { createUser, getUserByEmail } from "@norish/db/repositories/users";
 import * as schema from "@norish/db/schema";
 
-import { forgetMasterKey } from "../../../../../config/__tests__/helpers/master-key";
 import {
   cleanDatabase,
   createTestRecipe,

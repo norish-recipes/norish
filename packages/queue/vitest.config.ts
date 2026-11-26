@@ -7,7 +7,7 @@ export default defineConfig({
     hookTimeout: 240000,
     testTimeout: 30000,
     include: ["**/*.{test,spec}.{ts,tsx}"],
-    setupFiles: ["../config/__tests__/setup/master-key.ts"],
+    setupFiles: ["@norish/config/testing-setup"],
     env: {
       NODE_ENV: "development",
       DATABASE_URL: "postgresql://test:test@localhost:5432/test",
