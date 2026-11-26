@@ -235,6 +235,32 @@ export function validateRecipeForm(form: RecipeFormState): RecipeFormErrors {
 const changed = (now: readonly string[], was: readonly string[] | undefined) =>
   !was || now.length !== was.length || now.some((value) => !was.includes(value));
 
+const listsOf = (form: RecipeFormState) => ({
+  tags: form.tags,
+  categories: form.categories,
+  cuisineIds: form.provenance.cuisineIds,
+});
+
+/** A draft kept after a stale answer, on the fresh recipe: what the reader typed stays, and each
+ * list they left as `opened` takes the fresh one. `opened` itself rebases as `(opened, opened)`. */
+export function rebaseRecipeForm(
+  form: RecipeFormState,
+  opened: RecipeFormState,
+  fresh: FullRecipeDTO
+): RecipeFormState {
+  const mine = listsOf(form);
+  const was = listsOf(opened);
+  const now = listsOf(initialRecipeForm(fresh));
+  const keep = (key: keyof typeof mine) => (changed(mine[key], was[key]) ? mine[key] : now[key]);
+
+  return {
+    ...form,
+    tags: keep("tags"),
+    categories: keep("categories"),
+    provenance: { ...form.provenance, cuisineIds: keep("cuisineIds") },
+  };
+}
+
 /** A save's payload (servings valid). An edit passes the form it `opened` with: a list left as it
  * was is not sent, so a change made to it elsewhere meanwhile stays. */
 export function recipeFormPayload(

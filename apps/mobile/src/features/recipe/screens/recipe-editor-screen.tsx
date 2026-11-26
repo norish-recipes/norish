@@ -1,7 +1,7 @@
 import type { ComponentRef } from "react";
 import type { TextInput } from "react-native";
 import React, { useRef, useState } from "react";
-import { Alert, Text, View } from "react-native";
+import { Alert, Keyboard, Text, View } from "react-native";
 import { DragScrollView } from "@/components/drag-list/drag-list";
 import { useCategoryLabel } from "@/hooks/use-category-label";
 import { FocusedFieldContext, useFocusedFieldInView } from "@/hooks/use-focused-field-in-view";
@@ -54,8 +54,8 @@ export function RecipeEditorScreen({
   initialData,
   notFound = false,
 }: EditorProps & { notFound?: boolean }) {
-  // The recipe as it opened: a save carries its version, so an edit made meanwhile elsewhere
-  // conflicts rather than being overwritten.
+  // The recipe as it opened: the form's base, so an edit made meanwhile elsewhere conflicts rather
+  // than being overwritten, until a stale answer rebases the form on the fresh recipe.
   const [opened] = useState(initialData);
   const { recipeId } = useRecipeId(mode, opened?.id);
 
@@ -93,8 +93,7 @@ function Editor({ mode, initialData, recipeId }: EditorProps & { recipeId: strin
   const [lineMoves, setLineMoves] = useState<LineMoves | null>(null);
   // A photo still uploading, or an entry being created, is not in the form yet, and a second
   // tap would save twice.
-  const [saving, setSaving] = useState(false);
-  const busy = saving || uploads.isUploading || editor.isCreatingEntry;
+  const busy = editor.isSaving || uploads.isUploading || editor.isCreatingEntry;
   const text = useText();
   const error = (field: "name" | "ingredients" | "steps" | "servings") => {
     const key = editor.errors[field];
@@ -136,23 +135,20 @@ function Editor({ mode, initialData, recipeId }: EditorProps & { recipeId: strin
         guard.allowNavigation();
         leave();
       },
-      onFailed: (failure: unknown) => {
-        setSaving(false);
-        editor.failSave(failure);
-      },
+      onFailed: (failure: unknown) => editor.failSave(failure),
     });
 
+    // Nothing typed while the save is in flight would reach it.
+    Keyboard.dismiss();
     if (mode === "create") {
-      setSaving(true);
       createRecipe(
         { ...payload, id: recipeId },
         after(() => router.dismissTo(recipeRoute(recipeId)))
       );
     } else if (initialData) {
-      setSaving(true);
       updateRecipe(
         initialData.id,
-        { ...payload, version: initialData.version },
+        { ...payload, version: editor.version ?? initialData.version },
         after(() => router.back())
       );
     }
@@ -176,7 +172,7 @@ function Editor({ mode, initialData, recipeId }: EditorProps & { recipeId: strin
         onScroll={onScroll}
       >
         <FocusedFieldContext value={onFieldFocus}>
-          <View className="gap-4 px-5">
+          <View className="gap-4 px-5" pointerEvents={editor.isSaving ? "none" : "auto"}>
             {editor.errors.submit ? (
               <View className="bg-danger-soft rounded-2xl px-4 py-3">
                 <Text className="text-danger text-[15px]">{editor.errors.submit}</Text>

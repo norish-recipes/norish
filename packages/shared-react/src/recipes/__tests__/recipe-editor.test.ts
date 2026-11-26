@@ -9,6 +9,7 @@ import {
   editorStepsOf,
   initialRecipeForm,
   isRecipeFormDirty,
+  rebaseRecipeForm,
   recipeFormPayload,
   validateRecipeForm,
 } from "../recipe-editor";
@@ -433,5 +434,26 @@ describe("what an edit's save sends of its lists", () => {
 
   it("sends every list for a new recipe", () => {
     expect(valid(opened)).toMatchObject({ tags: [{ name: "quick" }], categories: ["Dinner"] });
+  });
+});
+
+describe("a draft kept after a stale answer", () => {
+  const opened = seededForm();
+  const fresh: FullRecipeDTO = {
+    ...stored,
+    version: stored.version + 1,
+    tags: [{ name: "fresh" }],
+    categories: ["Lunch"],
+  };
+
+  it("keeps what the reader typed and changed, and takes the fresh lists they left alone", () => {
+    const draft = { ...opened, name: "Typed", categories: ["Breakfast"] };
+    const rebased = rebaseRecipeForm(draft, opened, fresh);
+
+    expect(rebased).toMatchObject({ name: "Typed", categories: ["Breakfast"], tags: ["fresh"] });
+    expect(rebaseRecipeForm(opened, opened, fresh)).toMatchObject({
+      tags: ["fresh"],
+      categories: ["Lunch"],
+    });
   });
 });

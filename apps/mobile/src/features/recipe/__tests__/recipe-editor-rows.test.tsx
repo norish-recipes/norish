@@ -73,7 +73,11 @@ vi.mock("react-native", () => ({
   ),
   Alert: { alert: vi.fn() },
   ActionSheetIOS: { showActionSheetWithOptions: vi.fn() },
-  Keyboard: { isVisible: () => false, addListener: () => ({ remove: () => {} }) },
+  Keyboard: {
+    isVisible: () => false,
+    addListener: () => ({ remove: () => {} }),
+    dismiss: () => {},
+  },
   KeyboardAvoidingView: ({ children }: Props) => children,
 }));
 vi.mock("react-native-safe-area-context", () => ({
@@ -165,6 +169,14 @@ vi.mock("../hooks/use-editor-uploads", () => ({
       assets.map((asset, order) => ({ image: asset.uri, order })),
     removeGallery: () => {},
     removeStepImage: () => {},
+  }),
+}));
+// A stale answer rereads the recipe; these saves are taken, so none is read.
+vi.mock("@norish/shared-react/trpc", () => ({
+  useTRPC: () => ({
+    recipes: {
+      get: { queryOptions: ({ id }: { id: string }) => ({ queryKey: ["recipes.get", id] }) },
+    },
   }),
 }));
 vi.mock("@norish/shared-react/config", () => ({

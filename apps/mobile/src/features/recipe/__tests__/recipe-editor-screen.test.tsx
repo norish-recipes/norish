@@ -15,6 +15,7 @@ const state = vi.hoisted(() => ({
   dismissTo: vi.fn(),
   alert: vi.fn(),
   failSave: vi.fn(),
+  version: undefined as number | undefined,
   preventRemove: undefined as
     { prevent: boolean; callback: (event: { repeat: () => void }) => void } | undefined,
 }));
@@ -22,6 +23,7 @@ const state = vi.hoisted(() => ({
 vi.mock("react-native", () => ({
   Alert: { alert: state.alert },
   Keyboard: {
+    dismiss: () => {},
     isVisible: () => false,
     addListener: () => ({ remove: () => {} }),
     metrics: () => null,
@@ -90,6 +92,8 @@ vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
     errors: {},
     submit: () => state.payload,
     failSave: state.failSave,
+    version: state.version,
+    isSaving: false,
     hasUnsavedChanges: state.dirty,
     moveLines: vi.fn(),
     changeSystem: vi.fn(),
@@ -109,6 +113,7 @@ describe("RecipeEditorScreen", () => {
   beforeEach(() => {
     state.payload = { name: "Soup" };
     state.dirty = true;
+    state.version = undefined;
     for (const mock of [
       state.create,
       state.update,
@@ -154,6 +159,18 @@ describe("RecipeEditorScreen", () => {
       expect.anything()
     );
     expect(state.back).toHaveBeenCalledOnce();
+  });
+
+  it("saves again at the version the form moved to after a stale answer", () => {
+    state.version = 9;
+    render(<RecipeEditorScreen initialData={stored} mode="edit" />);
+    save();
+
+    expect(state.update).toHaveBeenCalledWith(
+      "recipe-1",
+      { name: "Soup", version: 9 },
+      expect.anything()
+    );
   });
 
   it.each(["create", "edit"] as const)(

@@ -47,7 +47,6 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
   useRecipeListSubscription();
 
   const categoryLabel = useCategoryLabel();
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const t = useTranslations("recipes.form");
   const tValidation = useTranslations("recipes.validation");
   const tCommon = useTranslations("common.actions");
@@ -92,17 +91,18 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
       },
       onFailed: (err: unknown) => {
         log.error({ err }, "Failed to save recipe");
-        setIsSubmitting(false);
         editor.failSave(err);
       },
     });
 
     if (mode === "create" && recipeId) {
-      setIsSubmitting(true);
       createRecipe({ ...recipeData, id: recipeId }, after(recipeId));
     } else if (editing) {
-      setIsSubmitting(true);
-      updateRecipe(editing.id, { ...recipeData, version: editing.version }, after(editing.id));
+      updateRecipe(
+        editing.id,
+        { ...recipeData, version: editor.version ?? editing.version },
+        after(editing.id)
+      );
     }
   };
   const handleTimeChange = (
@@ -137,7 +137,8 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
         )}
       </div>
 
-      <form className="min-w-0 space-y-10">
+      {/* Inert while a save is in flight: what is typed then would be lost when it lands. */}
+      <form className="min-w-0 space-y-10" inert={editor.isSaving}>
         {/* 1. Photos */}
         <section className="min-w-0">
           <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
@@ -453,7 +454,7 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
         <div className="flex justify-end gap-3 border-t pt-6">
           <Button
             className="min-w-24"
-            isDisabled={isSubmitting}
+            isDisabled={editor.isSaving}
             size="lg"
             variant="tertiary"
             onPress={handleCancel}
@@ -462,8 +463,8 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
           </Button>
           <Button
             className="min-w-24"
-            isDisabled={isSubmitting || editor.isCreatingEntry}
-            isPending={isSubmitting}
+            isDisabled={editor.isSaving || editor.isCreatingEntry}
+            isPending={editor.isSaving}
             size="lg"
             variant="primary"
             onPress={handleSubmit}
