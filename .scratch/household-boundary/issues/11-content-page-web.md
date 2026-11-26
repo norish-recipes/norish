@@ -84,3 +84,12 @@ Not run: the tests that need Postgres or Valkey (Docker was down), among them th
 Kept as built: the stores and pantry lists' own look, `ActionButtonGroup`'s className.
 
 Not run: the tests that need Postgres or Valkey, Docker was down (the `list-entries` and `lists.uses` tests among them), and the browser E2E.
+
+
+### Browser check round
+
+- Fixed from the first browser render: the card's actions sit at the right edge on a phone (`SettingsCard`); the picker rows span the picker; Ingredients rows are the shared two-line `ListRow` (60 px, 8/16 padding, icon at the edge, expander gutter only where a food has kinds, outline filter icon); the toolbar controls are one height (36 desktop, 40 phone); the loading list draws the header, toolbar and one frame (heading as a bar, none for Tags); the Merge note shows the merge arrow through a new `Note` `icon` prop.
+- Name field, "Used by" and footer buttons are HeroUI's own 36/40 (the Account page's fields and Save measure the same), so left as they are.
+- The Household B E2E failed because the empty list draws no search (as `WbTagsEmpty`); `openList` now waits for the search or the empty state. New E2E boxes: Add at the right edge on a phone, picker rows, and the first heading and frame not moving when the list arrives.
+- Differs from the ask: the skeleton has no second section, so the check is on the first heading and frame, not the second heading.
+- Playwright runs from two checkouts share `norish-e2e-results` and ports 20000-22000; run with `RUNNER_TEMP` set and not at the same time.
