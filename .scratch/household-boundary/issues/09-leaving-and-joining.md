@@ -82,3 +82,11 @@ Whole-branch review, client round:
 3. Fixed (543c315f2): `markHousehold`/`mayRestore` in `offline/optimistic-updates.ts`; calendar, groceries, Store delete, chosen products, recipe create/update/delete, convert, ratings and favourites restore no snapshot after a change of household. Account mutations keep restoring (the account's own data). Cookbooks, pantry, aisles, lists and ingredients roll back by rereading, so need none.
 7. Fixed (17dbcbc7c, 7fa7983c4): `recipeReadState` in shared-react; a failed recipe read shows web's error card and mobile's EmptyCard with Retry.
 9. Fixed (9d98f5b94, 081f9f17c): the join test now needs a row A made before the join on B's page; the removal test checks the page and B's saved copy hold none of A's grocery or plan; leaving-and-joining checks the admin's open recipe reads as not found. Not done: "the former household's rows are gone" after a join, since joining from a household of one merges them in. Not checked: that the removal E2E fails without fix 2.
+
+Client re-review:
+
+1. Fixed (ae4e6b6c5, caec2b311, 91e24c663): a household write names the household its mutation started in (`x-household-id`, noted at `onMutate`, before a scope's wait); Replay sends the entry's own. `withAuth` refuses a different one (412, `otherHousehold`); none is served as before. Replay parks it `other-household`; mutations never batch, so each request carries one household.
+2. Fixed (c27c3a2fa): Retry all re-stamps an `other-household` entry, and the edits parked behind it, with the current household (old-build entries too); the web modal says so in every locale. Mobile has no Outbox list.
+6. Fixed (44c0d0741): a household change cancels an in-flight `households.get`, which reverts to the state just written.
+7. Fixed (a74613af5, e3ca2aa35): the widgets drop the former plan and photos on a change. Outside the query cache mobile holds expo-image's photo caches (now cleared with the reads); the Outbox, recent searches, timers and library filters are the account's own and stay.
+8. Fixed (fb1e6a720): cookbook, Store, grocery and calendar answers write the cache only in the household their write started in.

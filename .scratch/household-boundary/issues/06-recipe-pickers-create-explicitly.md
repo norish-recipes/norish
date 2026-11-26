@@ -64,3 +64,9 @@ Whole-branch review, client round:
 
 4. Fixed (bfb266705, e1df81de5, 85a65083e): an edit sends Tags, Cuisines and Categories only when the form changed them; an editor `recipes.update` naming a Tag, Category or Cuisine id its lists no longer have answers `stale` and writes nothing. This replaces the silent drop decided above for updates; editor create, imports, AI and REST keep it.
 5. Fixed (2e3a87b1b): `createRecipe` and `updateRecipe` take `SaveCallbacks`; `onSaved` only for a stored or queued save, a stale answer or a refusal is `onFailed` and `failSave` shows it (stale as "Not saved: it changed elsewhere first"). Both editors leave only on `onSaved`.
+
+Client re-review:
+
+3. Fixed (9f3c77f99): a queued edit taking a pending one's place merges into it; fields it leaves out keep the earlier edit's, on the earlier version.
+4. Fixed (a2750da1e): after a stale answer the form rereads the recipe and takes its version and the lists the reader left alone (`rebaseRecipeForm`); from Save to its answer the form is inert (web) or untouchable with the keyboard down (mobile).
+5. Fixed (b271c79ca, 553164eb0): an empty Categories list clears, as Tags and Cuisines already did; a list's change ignores order.
