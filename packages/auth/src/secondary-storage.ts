@@ -1,6 +1,6 @@
 import type { SecondaryStorage } from "better-auth";
 
-import type { EndedSessions } from "@norish/db/repositories/master-key";
+import type { DeletedCounts } from "@norish/db/repositories/master-key";
 import { getPublisherClient } from "@norish/shared-server/valkey/client";
 
 // The expiry is set only by the increment that creates the counter, so a window
@@ -51,8 +51,8 @@ function parseJson(text: string): unknown {
   }
 }
 
-/** What Better Auth stored `value` under `key` as, by both their shapes; null when it did not. */
-function storedAs(key: string, value: string): "session" | "list" | "verification" | null {
+/** The kind of Better Auth entry `value` under `key` is, by both their shapes; null for none. */
+function entryKind(key: string, value: string): "session" | "list" | "verification" | null {
   const stored = parseJson(value);
 
   if (isRecord(stored) && isRecord(stored.session) && stored.session.token === key) {
@@ -77,9 +77,9 @@ function storedAs(key: string, value: string): "session" | "list" | "verificatio
  * Delete every session and verification value Better Auth keeps in Valkey, found by their shape
  * and not through its lists, which sign-ins at once can leave short. Nothing else is touched.
  */
-export async function endStoredSessions(): Promise<EndedSessions> {
+export async function deleteSessionsAndVerifications(): Promise<DeletedCounts> {
   const valkey = await getPublisherClient();
-  const ended: EndedSessions = { sessions: 0, verifications: 0 };
+  const ended: DeletedCounts = { sessions: 0, verifications: 0 };
   let cursor = "0";
 
   do {
@@ -88,7 +88,7 @@ export async function endStoredSessions(): Promise<EndedSessions> {
     const values = keys.length > 0 ? await valkey.mget(...keys) : [];
     const doomed = keys.filter((key, index) => {
       const value = values[index];
-      const kind = typeof value === "string" ? storedAs(key, value) : null;
+      const kind = typeof value === "string" ? entryKind(key, value) : null;
 
       if (kind === "session") ended.sessions += 1;
       if (kind === "verification") ended.verifications += 1;

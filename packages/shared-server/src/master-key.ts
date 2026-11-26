@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 
-import type { EndedSessions } from "@norish/db/repositories/master-key";
+import type { DeletedCounts } from "@norish/db/repositories/master-key";
 import {
   initMasterKey,
   isBase64,
@@ -21,8 +21,8 @@ import {
 } from "@norish/db/repositories/master-key";
 import { serverLogger as log } from "@norish/shared-server/logger";
 
-/** Ends every session the session store keeps; the server's boot hands in Better Auth's. */
-export type EndStoredSessions = () => Promise<EndedSessions>;
+/** Deletes every session and verification value the session store keeps; boot hands in Better Auth's. */
+export type DeleteSessionsAndVerifications = () => Promise<DeletedCounts>;
 
 /**
  * The keys a key file holds, each as the text it was given, which a rewrite never re-encodes.
@@ -368,11 +368,11 @@ function failed(what: string, error: unknown): Error {
 async function rekey(
   previous: NamedKey,
   current: NamedKey,
-  endStoredSessions: EndStoredSessions
+  deleteSessionsAndVerifications: DeleteSessionsAndVerifications
 ): Promise<void> {
   log.info({ from: previous.label, to: current.label }, "Re-keying to a new Master Key");
   // Before the transaction: a crash after this only repeats it on the next boot.
-  const valkey = await endStoredSessions().catch((error: unknown) => {
+  const valkey = await deleteSessionsAndVerifications().catch((error: unknown) => {
     throw failed("Ending the stored sessions", error);
   });
   const rotation = masterKeyRotation(previous.bytes, current.bytes);
@@ -449,7 +449,9 @@ async function warnOfRetiredKeyFile(fingerprint: string): Promise<void> {
  * Pick the Master Key by the database's fingerprint and open it: once, after the database is
  * reachable and before any crypto. Generates one only for an instance that holds nothing encrypted.
  */
-export async function resolveMasterKey(endStoredSessions: EndStoredSessions): Promise<void> {
+export async function resolveMasterKey(
+  deleteSessionsAndVerifications: DeleteSessionsAndVerifications
+): Promise<void> {
   const fingerprint = await getMasterKeyFingerprint();
   const source = await keySource();
 
@@ -462,7 +464,7 @@ export async function resolveMasterKey(endStoredSessions: EndStoredSessions): Pr
   if (key !== keys.current) {
     checkNewKey(keys.current);
     if (!opening.pinned) await flushKeyFile();
-    await rekey(key, keys.current, endStoredSessions);
+    await rekey(key, keys.current, deleteSessionsAndVerifications);
   }
   initMasterKey(keys.current.bytes);
   log.info({ source: keys.current.label }, "Master Key opened");

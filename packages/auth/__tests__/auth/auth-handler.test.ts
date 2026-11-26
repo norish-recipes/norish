@@ -19,7 +19,7 @@ import { getValkeyConnectionOptions } from "@norish/shared-server/valkey/client"
 
 import type { Identity } from "../helpers/identity-provider";
 import { VALKEY_IMAGE, valkeyUrl } from "../../../shared-server/__tests__/helpers/valkey";
-import { endStoredSessions } from "../../src/secondary-storage";
+import { deleteSessionsAndVerifications } from "../../src/secondary-storage";
 import { createIdentityProvider, IDP_CLIENT_ID } from "../helpers/identity-provider";
 
 const { store, client, registration, serverConfig, admins } = vi.hoisted(() => ({
@@ -609,7 +609,7 @@ describe("ending every stored session, as a re-key does", () => {
 
     expect([...ended].filter((key) => !before.includes(key))).toEqual([]);
     expect(verifications).toHaveLength(1);
-    expect(await endStoredSessions()).toEqual({ sessions: 3, verifications: 1 });
+    expect(await deleteSessionsAndVerifications()).toEqual({ sessions: 3, verifications: 1 });
 
     for (const cookie of [ada.cookie, grace.cookie, adaAgain]) {
       expect(await sessionFor(cookie)).toBeNull();
@@ -653,7 +653,10 @@ describe("ending every stored session, as a re-key does", () => {
     expect(later.filter((key) => sessions.includes(key)).length).toBeGreaterThan(0);
     expect(later.filter((key) => others.includes(key)).length).toBeGreaterThan(0);
 
-    expect(await endStoredSessions()).toEqual({ sessions: 1_500, verifications: 1_500 });
+    expect(await deleteSessionsAndVerifications()).toEqual({
+      sessions: 1_500,
+      verifications: 1_500,
+    });
     expect((await valkey.keys("*")).sort()).toEqual(others.sort());
   });
 });

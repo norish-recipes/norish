@@ -17,7 +17,7 @@ import {
   upgradeSettingsFromOlderReleases,
 } from "@norish/api/startup/upgrades";
 import { initializeVideoProcessing } from "@norish/api/startup/video-processing";
-import { endStoredSessions } from "@norish/auth/secondary-storage";
+import { deleteSessionsAndVerifications } from "@norish/auth/secondary-storage";
 import { initializeServerConfig, SERVER_CONFIG } from "@norish/config/env-config-server";
 import { initializeQueues } from "@norish/queue/registry";
 import { startWorkers } from "@norish/queue/start-workers";
@@ -40,7 +40,7 @@ async function main() {
 
   await runMigrations();
   // Before the first step that encrypts, decrypts, signs or hashes.
-  await resolveMasterKey(endStoredSessions);
+  await resolveMasterKey(deleteSessionsAndVerifications);
   log.info("-".repeat(50));
 
   // Before the config sync, which drops the fields an older release's settings still hold.

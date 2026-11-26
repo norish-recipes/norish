@@ -24,7 +24,7 @@ import { getPublisherClient } from "@norish/shared-server/valkey/client";
 import { createTestRecipe, getTestDb } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 import { startValkey, valkeyUrl } from "../../../shared-server/__tests__/helpers/valkey";
-import { endStoredSessions } from "../../src/secondary-storage";
+import { deleteSessionsAndVerifications } from "../../src/secondary-storage";
 
 const AUTH_URL = SERVER_CONFIG.AUTH_URL;
 const EMAIL = "ada@norish.test";
@@ -88,7 +88,7 @@ describe("a Master Key rotation at boot, over real Postgres and Valkey", () => {
 
     // First boot on key A.
     await writeKeyFile({ current: keyA.toString("base64") });
-    await resolveMasterKey(endStoredSessions);
+    await resolveMasterKey(deleteSessionsAndVerifications);
     const first = await bootAuth();
     const signUp = await first.auth.handler(
       request("/sign-up/email", { body: { email: EMAIL, password: PASSWORD, name: "Ada" } })
@@ -133,7 +133,7 @@ describe("a Master Key rotation at boot, over real Postgres and Valkey", () => {
     );
     stored = { before: await valkey.keys("*"), after: [] };
     rows = { before: await countRows(), after: {} };
-    await resolveMasterKey(endStoredSessions);
+    await resolveMasterKey(deleteSessionsAndVerifications);
     stored.after = await valkey.keys("*");
     rows.after = await countRows();
     rekeyLog = info.mock.calls.find(

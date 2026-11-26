@@ -20,7 +20,7 @@ import { getPublisherClient } from "@norish/shared-server/valkey/client";
 
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 import { startValkey, valkeyUrl } from "../../../shared-server/__tests__/helpers/valkey";
-import { endStoredSessions } from "../../src/secondary-storage";
+import { deleteSessionsAndVerifications } from "../../src/secondary-storage";
 
 const AUTH_URL = SERVER_CONFIG.AUTH_URL;
 const EMAIL = "grace@norish.test";
@@ -75,7 +75,7 @@ async function boot() {
   const warn = vi.spyOn(serverLogger, "warn");
 
   try {
-    await resolveMasterKey(endStoredSessions);
+    await resolveMasterKey(deleteSessionsAndVerifications);
 
     return { info: messages(info), warn: messages(warn) };
   } finally {
@@ -102,7 +102,7 @@ describe("a Master Key rotation in env mode, over real Postgres and Valkey", () 
 
     // First boot, pinned on key A.
     pin(keyA);
-    await resolveMasterKey(endStoredSessions);
+    await resolveMasterKey(deleteSessionsAndVerifications);
     const first = await bootAuth();
     const signUp = await first.auth.handler(
       request("/sign-up/email", { body: { email: EMAIL, password: PASSWORD, name: "Grace" } })
@@ -160,7 +160,7 @@ describe("a Master Key rotation in env mode, over real Postgres and Valkey", () 
   it("refuses the old key alone afterwards", async () => {
     pin(keyA);
 
-    await expect(resolveMasterKey(endStoredSessions)).rejects.toThrow(
+    await expect(resolveMasterKey(deleteSessionsAndVerifications)).rejects.toThrow(
       "MASTER_KEY is not the key this database is encrypted with."
     );
     expect(await getMasterKeyFingerprint()).toBe(masterKeyFingerprint(keyB));

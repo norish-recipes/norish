@@ -33,8 +33,8 @@ const fingerprintRow = eq(serverConfig.key, ServerConfigKeys.MASTER_KEY_FINGERPR
 const storedFingerprint = (value: unknown) =>
   typeof value === "string" && value !== "" ? value : null;
 
-/** How many sessions and verification values a session store ended. */
-export type EndedSessions = { sessions: number; verifications: number };
+/** How many sessions and verification values a delete removed. */
+export type DeletedCounts = { sessions: number; verifications: number };
 
 /** Rows that hold encrypted data: every account and every secret setting; the rest belong to an account. */
 export async function countEncryptedRows(): Promise<number> {
@@ -271,7 +271,7 @@ export async function rekeyMasterKey(
 ): Promise<{
   columns: ResealCounts;
   revokedShares: number;
-  ended: EndedSessions;
+  ended: DeletedCounts;
 }> {
   return await db.transaction(async (tx) => {
     // A second re-key waits here until this one commits or rolls back.
@@ -283,7 +283,7 @@ export async function rekeyMasterKey(
     const columns: ResealCounts = {};
 
     for (const sealing of MASTER_KEY_COLUMNS) await resealTable(tx, rotation, sealing, columns);
-    const ended: EndedSessions = {
+    const ended: DeletedCounts = {
       sessions: (await tx.delete(sessions)).rowCount ?? 0,
       verifications: (await tx.delete(verification)).rowCount ?? 0,
     };
