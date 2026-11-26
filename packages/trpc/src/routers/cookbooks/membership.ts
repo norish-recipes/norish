@@ -9,7 +9,7 @@ import {
   removeRecipesFromCookbook,
 } from "@norish/db/repositories/cookbooks";
 import { listRecipes } from "@norish/db/repositories/recipes";
-import { readLinesThrough } from "@norish/shared-server/ingredients/line-readings";
+import { lineReadingsOf } from "@norish/shared-server/ingredients/line-readings";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { cookbookAudience } from "@norish/shared-server/realtime/audience";
 import {
@@ -132,7 +132,7 @@ const recipes = authedProcedure
         favoritesOnly: input.favoritesOnly,
         pantryOnly: input.pantryOnly,
         lineReadings: input.pantryOnly
-          ? await readLinesThrough(ctx.householdId, "visible")
+          ? await lineReadingsOf(ctx.householdId, "visible")
           : undefined,
       }
     );

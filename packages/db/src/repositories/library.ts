@@ -80,7 +80,7 @@ export type LibraryListParams = {
   categories?: RecipeCategory[];
   favoritesOnly?: boolean;
   pantryOnly?: boolean;
-  /** With `pantryOnly`, the lines read through the reader's catalogue (`readLinesThrough`). */
+  /** With `pantryOnly`, the lines read through the reader's catalogue (`lineReadingsOf`). */
   lineReadings?: LineReadings;
   type?: LibraryTypeFilter;
   /** An explicit sort orders a search too; only `none` still ranks. */

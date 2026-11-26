@@ -68,9 +68,9 @@ vi.mock("@norish/db/repositories/households", async (importOriginal) => ({
 vi.mock("@norish/shared-server/config/server-config-loader", () => import("../mocks/config"));
 
 const readRecipeNutrition = vi.hoisted(() => vi.fn());
-const readLinesThrough = vi.hoisted(() => vi.fn());
+const lineReadingsOf = vi.hoisted(() => vi.fn());
 
-vi.mock("@norish/shared-server/ingredients/line-readings", () => ({ readLinesThrough }));
+vi.mock("@norish/shared-server/ingredients/line-readings", () => ({ lineReadingsOf }));
 
 vi.mock("@norish/shared-server/ingredients/nutrition/recipe-nutrition", () => ({
   readRecipeNutrition,
@@ -199,14 +199,14 @@ describe("recipes procedures", () => {
           [hidden, "other-household"],
         ])
       );
-      readLinesThrough.mockResolvedValue({});
+      lineReadingsOf.mockResolvedValue({});
 
       await expect(
         recipesRouter
           .createCaller({ ...ctx, connectionId: null, operationId: null })
           .lineReadings({ recipeIds: [shown, hidden] })
       ).resolves.toEqual({});
-      expect(readLinesThrough).toHaveBeenCalledWith(ctx.householdId, { recipeIds: [shown] });
+      expect(lineReadingsOf).toHaveBeenCalledWith(ctx.householdId, { recipeIds: [shown] });
     });
   });
 

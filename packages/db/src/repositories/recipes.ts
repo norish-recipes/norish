@@ -553,7 +553,7 @@ export async function listRecipes(
     cookbookId?: string;
     favoritesOnly?: boolean;
     pantryOnly?: boolean;
-    /** With `pantryOnly`, the lines read through the reader's catalogue (`readLinesThrough`). */
+    /** With `pantryOnly`, the lines read through the reader's catalogue (`lineReadingsOf`). */
     lineReadings?: LineReadings;
   }
 ): Promise<{ recipes: RecipeDashboardDTO[]; total: number }> {

@@ -43,7 +43,7 @@ import { getRecipeEnrichmentStatus } from "@norish/queue/enrichment/status";
 import { readStepProgress } from "@norish/queue/job-steps";
 import { getQueues } from "@norish/queue/registry";
 import { isVideoParsingEnabled } from "@norish/shared-server/config/server-config-loader";
-import { readLinesThrough } from "@norish/shared-server/ingredients/line-readings";
+import { lineReadingsOf } from "@norish/shared-server/ingredients/line-readings";
 import { readRecipeNutrition } from "@norish/shared-server/ingredients/nutrition/recipe-nutrition";
 import {
   createResolvedRecipe,
@@ -221,7 +221,7 @@ const lineReadingsProcedure = authedProcedure
   .query(async ({ ctx, input }): Promise<LineReadings> => {
     const viewable = [...(await recipeAccess(ctx, input.recipeIds, "view")).keys()];
 
-    return await readLinesThrough(ctx.householdId, { recipeIds: viewable });
+    return await lineReadingsOf(ctx.householdId, { recipeIds: viewable });
   });
 
 export const getEditableProcedure = authedProcedure

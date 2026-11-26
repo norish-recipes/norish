@@ -341,7 +341,7 @@ export async function resolveLineFoods(
 }
 
 /** `resolveLineFoods` as a read: what the household's catalogue already names, writing nothing. */
-export async function readLineFoods(
+export async function knownLineFoods(
   texts: readonly string[],
   householdId: string
 ): Promise<Array<ResolvedFoods | null>> {

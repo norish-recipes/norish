@@ -1,6 +1,6 @@
 import type { GroceryIngredient } from "@norish/shared/lib/grocery-lines";
 import { extractLinkedRecipeIds, isGroceryIngredient } from "@norish/shared/lib/grocery-lines";
-import { foodsToBuy, readThrough } from "@norish/shared/lib/line-foods";
+import { foodsToBuy, linesAsRead } from "@norish/shared/lib/line-foods";
 
 import { useLineReadings } from "./use-line-readings";
 import { useLinkedRecipeIngredients } from "./use-linked-recipe-ingredients";
@@ -23,7 +23,7 @@ export function useRecipeFoodsToBuy(
   );
   const readings = useLineReadings([recipeId, ...linkedIds]);
   const foods = foodsToBuy(
-    readThrough(
+    linesAsRead(
       [
         ...(rawIngredients as GroceryIngredient[]),
         ...(linkedIngredients as GroceryIngredient[]),

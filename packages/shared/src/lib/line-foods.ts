@@ -22,7 +22,7 @@ export interface LineReading {
 export type LineReadings = Readonly<Record<string, LineReading>>;
 
 /** The lines as the reader uses them: each one with a reading takes its foods, the rest as stored. */
-export function readThrough<L extends LineWithFoods>(
+export function linesAsRead<L extends LineWithFoods>(
   lines: readonly L[],
   readings: LineReadings
 ): L[] {

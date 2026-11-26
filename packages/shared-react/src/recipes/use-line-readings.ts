@@ -8,7 +8,7 @@ const NONE: LineReadings = {};
 
 /**
  * How the reader uses these recipes' lines that name a food outside their catalogue (ADR-0042), to
- * apply with `readThrough`; undefined while it reads.
+ * apply with `linesAsRead`; undefined while it reads.
  */
 export function useLineReadings(recipeIds: readonly string[]): LineReadings | undefined {
   const trpc = useTRPC();

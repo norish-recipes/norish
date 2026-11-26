@@ -5,13 +5,13 @@ import { findLinesOutsideCatalogue } from "@norish/db/repositories/line-readings
 import { getUnits } from "@norish/shared-server/config/server-config-loader";
 import { lineFoodText } from "@norish/shared/lib/ingredient-text";
 
-import { readLineFoods } from "./resolver";
+import { knownLineFoods } from "./resolver";
 
 /**
  * How the household uses lines naming a food outside its catalogue (ADR-0042), by line id: each
  * text read in its catalogue as a recipe save would, minting and writing nothing. One batched read.
  */
-export async function readLinesThrough(
+export async function lineReadingsOf(
   householdId: string,
   scope: LineScope
 ): Promise<Record<string, LineReading>> {
@@ -19,7 +19,7 @@ export async function readLinesThrough(
 
   if (lines.length === 0) return {};
   const units = await getUnits();
-  const read = await readLineFoods(
+  const read = await knownLineFoods(
     lines.map((line) =>
       lineFoodText({ text: line.name, amount: line.amount, unit: line.unit }, units)
     ),

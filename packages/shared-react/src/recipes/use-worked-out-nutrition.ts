@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import type { RecipeForNutrition, WorkedOutNutrition } from "@norish/shared/lib/recipe-nutrition";
-import { readThrough } from "@norish/shared/lib/line-foods";
+import { linesAsRead } from "@norish/shared/lib/line-foods";
 import {
   nutritionLinesOf,
   seasoningPhrases,
@@ -31,7 +31,7 @@ export function useWorkedOutNutrition(
     recipe && !supplied && readings
       ? nutritionLinesOf({
           ...recipe,
-          recipeIngredients: readThrough(recipe.recipeIngredients, readings),
+          recipeIngredients: linesAsRead(recipe.recipeIngredients, readings),
         })
       : [];
   const ingredientIds = [

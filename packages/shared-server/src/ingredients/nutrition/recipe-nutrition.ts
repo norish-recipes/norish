@@ -17,7 +17,7 @@ import type {
   WorkedOutNutrition,
 } from "@norish/shared/lib/recipe-nutrition";
 import { getIngredientWords, getUnits } from "@norish/shared-server/config/server-config-loader";
-import { readThrough } from "@norish/shared/lib/line-foods";
+import { linesAsRead } from "@norish/shared/lib/line-foods";
 import {
   nutritionLinesOf,
   seasoningPhrases,
@@ -28,7 +28,7 @@ import {
 import { spellingRules } from "@norish/shared/lib/spelling-keys";
 
 import type { NutritionReader } from "./ingredient-nutrition";
-import { readLinesThrough } from "../line-readings";
+import { lineReadingsOf } from "../line-readings";
 import { resolveIngredientNutrition } from "./ingredient-nutrition";
 
 /** The recipe's worked-out nutrition for the reader's household, or null where it supplies its own. */
@@ -97,9 +97,9 @@ async function readByReader(
 ): Promise<RecipeForNutrition> {
   if (!householdId || suppliesNutrition(recipe)) return recipe;
   const lineIds = recipe.recipeIngredients.flatMap((line) => (line.id ? [line.id] : []));
-  const readings = await readLinesThrough(householdId, { lineIds });
+  const readings = await lineReadingsOf(householdId, { lineIds });
 
-  return { ...recipe, recipeIngredients: readThrough(recipe.recipeIngredients, readings) };
+  return { ...recipe, recipeIngredients: linesAsRead(recipe.recipeIngredients, readings) };
 }
 
 /** The recipe's nutrition per serving for the reader's household. */

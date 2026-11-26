@@ -3,7 +3,7 @@ import {
   listLibraryDiscover,
   listLibrarySuggestions,
 } from "@norish/db/repositories/library";
-import { readLinesThrough } from "@norish/shared-server/ingredients/line-readings";
+import { lineReadingsOf } from "@norish/shared-server/ingredients/line-readings";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import {
   LibraryDiscoverSchema,
@@ -42,9 +42,7 @@ const list = authedProcedure
       categories: input.categories,
       favoritesOnly: input.favoritesOnly,
       pantryOnly: input.pantryOnly,
-      lineReadings: input.pantryOnly
-        ? await readLinesThrough(ctx.householdId, "visible")
-        : undefined,
+      lineReadings: input.pantryOnly ? await lineReadingsOf(ctx.householdId, "visible") : undefined,
       type: input.type,
       sortBeatsRank: input.sortBeatsRank,
       withMatch: input.withMatch,
