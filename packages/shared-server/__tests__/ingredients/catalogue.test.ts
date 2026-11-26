@@ -732,6 +732,19 @@ describe("the ingredient catalogue", () => {
       await renameIngredient({ ...actor, isServerAdmin: true }, onion, "Onions");
     });
 
+    it("announces an admin's spelling on a seeded food to their household, a seed edit to all", async () => {
+      const onion = await seeded("onion");
+      const admin = { ...actor, isServerAdmin: true };
+
+      await addAlias(admin, onion, "uitje");
+      await saveDraft(admin, onion, { add: ["ajuin"], remove: [] });
+      expect(audiences).toEqual([actor.householdId, actor.householdId]);
+
+      audiences = [];
+      await saveDraft(admin, onion, { name: "Onions", add: ["sjalotje"], remove: [] });
+      expect(audiences).toEqual([null]);
+    });
+
     it("refuses a merge across households, and of a seeded food into a household's", async () => {
       const onion = await seeded("onion");
       const mine = await mint("ajuin");

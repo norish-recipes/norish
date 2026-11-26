@@ -343,7 +343,8 @@ async function addAliasIn(
   if (!food) throw new CatalogueEditError("not-found");
 
   const fold = ingredientAliasFold(cleaned);
-  const audience = audienceOf(actor, food.householdId);
+  // The spelling is the adder's household's, on a seeded food too.
+  const audience = actor.householdId;
   const piled = await takeOffJunkPile(tx, actor.householdId, [fold]);
 
   if ((await findIngredientIdByFold(tx, actor.householdId, fold)) === ingredientId) {
@@ -767,6 +768,10 @@ export async function saveDraft(
 
     if (!food) throw new CatalogueEditError("not-found");
 
+    const foodEdited =
+      draft.name !== undefined || draft.parentId !== undefined || draft.icon !== undefined;
+    const audiences = [foodEdited ? audienceOf(actor, food.householdId) : actor.householdId];
+
     if (draft.name !== undefined) await renameIngredientIn(tx, actor, ingredientId, draft.name);
     if (draft.parentId !== undefined) {
       const parented = await setParentIn(tx, actor, ingredientId, draft.parentId);
@@ -774,17 +779,28 @@ export async function saveDraft(
       for (const id of parented.changed) changed.add(id);
     }
     for (const aliasId of draft.remove) {
-      piled += (
-        await removeAliasIn(tx, actor, aliasId, {
-          of: ingredientId,
-          junk: draft.junk?.includes(aliasId),
-        })
-      ).piled;
+      const removed = await removeAliasIn(tx, actor, aliasId, {
+        of: ingredientId,
+        junk: draft.junk?.includes(aliasId),
+      });
+
+      piled += removed.piled;
+      audiences.push(removed.audience);
     }
-    for (const text of draft.add) piled += (await addAliasIn(tx, actor, ingredientId, text)).piled;
+    for (const text of draft.add) {
+      const added = await addAliasIn(tx, actor, ingredientId, text);
+
+      piled += added.piled;
+      audiences.push(added.audience);
+    }
     if (draft.icon !== undefined) await setIconIn(tx, actor, ingredientId, draft.icon);
 
-    return { changed: [...changed], audience: audienceOf(actor, food.householdId), piled };
+    // Everyone hears it once any part reaches past the household.
+    return {
+      changed: [...changed],
+      audience: audiences.includes(null) ? null : actor.householdId,
+      piled,
+    };
   });
 
   if (piled > 0) forgetSpellingRules();
