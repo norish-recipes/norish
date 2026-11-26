@@ -8,7 +8,7 @@
 
 import { randomUUID } from "node:crypto";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
-import { and, asc, eq, inArray, isNull, notInArray, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, notInArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 
@@ -279,6 +279,33 @@ export async function addTestSeedSpelling(ingredientId: string, text: string, lo
   return row!.id;
 }
 
+/**
+ * Give a food one more spelling: its household's by default, or the one given (null: the seed's,
+ * not marked seeded, as a seeded food gains one after the seed); its id.
+ */
+export async function addTestSpelling(
+  ingredientId: string,
+  text: string,
+  { locale = null, householdId }: { locale?: string | null; householdId?: string | null } = {}
+): Promise<string> {
+  const [food] = await getTestDb()
+    .select({ householdId: schema.ingredients.householdId })
+    .from(schema.ingredients)
+    .where(eq(schema.ingredients.id, ingredientId));
+  const [row] = await getTestDb()
+    .insert(schema.ingredientAliases)
+    .values({
+      ingredientId,
+      text,
+      fold: ingredientAliasFold(text),
+      locale,
+      householdId: householdId === undefined ? (food?.householdId ?? null) : householdId,
+    })
+    .returning({ id: schema.ingredientAliases.id });
+
+  return row!.id;
+}
+
 /** Give the seed's spelling of a fold another language, as an earlier seed stamped it. */
 export async function setTestSeedSpellingLocale(fold: string, locale: string): Promise<void> {
   await getTestDb()
@@ -287,6 +314,116 @@ export async function setTestSeedSpellingLocale(fold: string, locale: string): P
     .where(
       and(eq(schema.ingredientAliases.fold, fold), isNull(schema.ingredientAliases.householdId))
     );
+}
+
+/** A household's Ingredient with no spelling at all, as a row from before the catalogue; its id. */
+export async function createTestBareIngredient(name: string, householdId: string): Promise<string> {
+  const [row] = await getTestDb()
+    .insert(schema.ingredients)
+    .values({ name, householdId })
+    .returning({ id: schema.ingredients.id });
+
+  return row!.id;
+}
+
+/** A Store aisle, as the Store editor saves one. */
+export async function createTestAisle(storeId: string, name: string) {
+  const [row] = await getTestDb().insert(schema.aisles).values({ storeId, name }).returning();
+
+  return row!;
+}
+
+/** File a food in a Store's aisle. */
+export async function addTestAisleLink(values: typeof schema.aisleLinks.$inferInsert) {
+  await getTestDb().insert(schema.aisleLinks).values(values);
+}
+
+/** An Aisle Link as stored, by id, or null. */
+export async function readTestAisleLink(id: string) {
+  const [row] = await getTestDb()
+    .select()
+    .from(schema.aisleLinks)
+    .where(eq(schema.aisleLinks.id, id));
+
+  return row ?? null;
+}
+
+/** A Product Link as stored, by id, or null. */
+export async function readTestProductLink(id: string) {
+  const [row] = await getTestDb()
+    .select()
+    .from(schema.storeProductLinks)
+    .where(eq(schema.storeProductLinks.id, id));
+
+  return row ?? null;
+}
+
+/** A link migration 0075 parked, as the upgrade finds it; its id. */
+export async function parkTestLink(
+  id: string,
+  kind: typeof schema.parkedNameKeyedLinks.$inferInsert.kind,
+  link: typeof schema.parkedNameKeyedLinks.$inferInsert.link
+): Promise<string> {
+  await getTestDb().insert(schema.parkedNameKeyedLinks).values({ id, kind, link });
+
+  return id;
+}
+
+/** Every Ingredient as stored. */
+export async function listTestIngredients() {
+  return await getTestDb().select().from(schema.ingredients);
+}
+
+/** A spelling of this fold as stored, any household's or the seed's, or null. */
+export async function readTestSpellingByFold(fold: string) {
+  const [row] = await getTestDb()
+    .select()
+    .from(schema.ingredientAliases)
+    .where(eq(schema.ingredientAliases.fold, fold));
+
+  return row ?? null;
+}
+
+/** The spellings a recipe line names, in order. */
+export async function testLineAliasIds(lineId: string): Promise<string[]> {
+  const rows = await getTestDb()
+    .select({ aliasId: schema.recipeIngredientFoods.ingredientAliasId })
+    .from(schema.recipeIngredientFoods)
+    .where(eq(schema.recipeIngredientFoods.recipeIngredientId, lineId))
+    .orderBy(asc(schema.recipeIngredientFoods.position));
+
+  return rows.map((row) => row.aliasId);
+}
+
+/** The texts of a recipe's lines, in their order. */
+export async function testRecipeLineNames(recipeId: string): Promise<string[]> {
+  const rows = await getTestDb()
+    .select({ name: schema.recipeIngredients.name })
+    .from(schema.recipeIngredients)
+    .where(eq(schema.recipeIngredients.recipeId, recipeId))
+    .orderBy(asc(schema.recipeIngredients.order));
+
+  return rows.map((row) => row.name);
+}
+
+/** The ids of every recipe line, in any recipe, of exactly this text. */
+export async function listTestRecipeLinesNamed(name: string): Promise<string[]> {
+  const rows = await getTestDb()
+    .select({ id: schema.recipeIngredients.id })
+    .from(schema.recipeIngredients)
+    .where(eq(schema.recipeIngredients.name, name));
+
+  return rows.map((row) => row.id);
+}
+
+/** One recipe line as stored, or null once it is gone. */
+export async function readTestRecipeLine(id: string) {
+  const [row] = await getTestDb()
+    .select()
+    .from(schema.recipeIngredients)
+    .where(eq(schema.recipeIngredients.id, id));
+
+  return row ?? null;
 }
 
 /** Every Ingredient's id: how many foods the catalogue holds. */
@@ -309,6 +446,20 @@ export async function testLineFoods(lineId: string): Promise<string[]> {
     .orderBy(asc(schema.recipeIngredientFoods.position));
 
   return rows.map((row) => row.ingredientId);
+}
+
+/** The foods a recipe line names, by name and the spelling it names them by, in order. */
+export async function testLineFoodNames(lineId: string) {
+  return await getTestDb()
+    .select({ food: schema.ingredients.name, spelling: schema.ingredientAliases.text })
+    .from(schema.recipeIngredientFoods)
+    .innerJoin(
+      schema.ingredientAliases,
+      eq(schema.ingredientAliases.id, schema.recipeIngredientFoods.ingredientAliasId)
+    )
+    .innerJoin(schema.ingredients, eq(schema.ingredients.id, schema.ingredientAliases.ingredientId))
+    .where(eq(schema.recipeIngredientFoods.recipeIngredientId, lineId))
+    .orderBy(asc(schema.recipeIngredientFoods.position));
 }
 
 /** A recipe line's text and its first spelling, or undefined once it is gone. */
@@ -543,7 +694,7 @@ export async function getRecipeIngredients(recipeId: string) {
       schema.ingredientAliases,
       eq(schema.ingredientAliases.id, schema.recipeIngredientFoods.ingredientAliasId)
     )
-    .where(sql`${schema.recipeIngredients.recipeId} = ${recipeId}`);
+    .where(eq(schema.recipeIngredients.recipeId, recipeId));
 
   return rows.map(({ line, ingredientId }) => ({ ...line, ingredientId }));
 }
@@ -564,25 +715,7 @@ export async function getSpellingTexts(ingredientId: string): Promise<string[]> 
 export async function getRecipeSteps(recipeId: string) {
   const db = getTestDb();
 
-  return await db
-    .select()
-    .from(schema.steps)
-    .where(sql`${schema.steps.recipeId} = ${recipeId}`);
-}
-
-/**
- * Verify database connection
- */
-export async function verifyDatabaseConnection() {
-  const db = getTestDb();
-
-  try {
-    await db.execute(sql`SELECT 1`);
-
-    return true;
-  } catch {
-    return false;
-  }
+  return await db.select().from(schema.steps).where(eq(schema.steps.recipeId, recipeId));
 }
 
 /** The household every account is in from its first insert. */

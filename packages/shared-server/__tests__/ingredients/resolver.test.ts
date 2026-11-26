@@ -4,7 +4,6 @@
  * in, the alias it resolves to comes out, and an Ingredient is minted only
  * when nothing Norish knows matches.
  */
-import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import defaultUnits from "@norish/config/units.default.json";
@@ -21,7 +20,6 @@ import { mergeCatalogueIngredients } from "@norish/db/repositories/ingredient-re
 import { insertSeededIngredient } from "@norish/db/repositories/ingredient-seed";
 import { addPantryIngredients } from "@norish/db/repositories/pantry";
 import { setConfig } from "@norish/db/repositories/server-config";
-import { ingredients } from "@norish/db/schema";
 import { resolveGroceryNames } from "@norish/shared-server/ingredients/groceries";
 import { onIngredientsMinted } from "@norish/shared-server/ingredients/minted";
 import {
@@ -41,8 +39,9 @@ import { DEFAULT_INGREDIENT_WORDS, ingredientAliasFold } from "@norish/shared/li
 import {
   createTestUser,
   getSpellingTexts,
-  getTestDb,
+  listTestIngredientIds,
   mintTestFood,
+  readTestIngredient,
   testHouseholdOf,
 } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
@@ -534,7 +533,7 @@ describe("ingredient resolver", () => {
     await expect(
       resolveIngredients([")", "—", "($0.02)"], { userId, householdId: testHouseholdOf(userId) })
     ).resolves.toEqual([null, null, null]);
-    await expect(getTestDb().select().from(ingredients)).resolves.toEqual([]);
+    await expect(listTestIngredientIds()).resolves.toEqual([]);
   });
 
   it("a mint that loses the race for one of its spellings joins the winner with the other", async () => {
@@ -606,10 +605,7 @@ describe("ingredient resolver", () => {
 
       const variant = await findIngredientFor(testHouseholdOf(userId), "verse krieltjes");
       const parent = await findIngredientFor(testHouseholdOf(userId), "krieltjes");
-      const [row] = await getTestDb()
-        .select({ parentId: ingredients.parentId })
-        .from(ingredients)
-        .where(eq(ingredients.id, variant!.ingredientId));
+      const row = await readTestIngredient(variant!.ingredientId);
 
       expect(parent!.ingredientId).not.toBe(variant!.ingredientId);
       expect(row?.parentId).toBe(parent!.ingredientId);
@@ -1198,7 +1194,7 @@ describe("ingredient resolver", () => {
         onIngredientsMinted(undefined);
       }
       expect(minted).toEqual([]);
-      await expect(getTestDb().select().from(ingredients)).resolves.toHaveLength(2);
+      await expect(listTestIngredientIds()).resolves.toHaveLength(2);
     });
 
     it("reads the parts a joining word leaves once one is dropped, each joining word with its parts", async () => {
@@ -1210,10 +1206,7 @@ describe("ingredient resolver", () => {
         "boneless and skinless chicken",
         "boneless of salt or pepper",
       ]);
-      const [minted] = await getTestDb()
-        .select({ name: ingredients.name })
-        .from(ingredients)
-        .where(eq(ingredients.id, unknown!.ingredientId!));
+      const minted = await readTestIngredient(unknown!.ingredientId!);
 
       expect(minted?.name).toBe("skinless chicken");
       // English "of" joins a measure, so read beside "salt" and "pepper" it would split nothing.
@@ -1232,7 +1225,7 @@ describe("ingredient resolver", () => {
           householdId: testHouseholdOf(userId),
         })
       ).resolves.toEqual([null]);
-      await expect(getTestDb().select().from(ingredients)).resolves.toHaveLength(0);
+      await expect(listTestIngredientIds()).resolves.toHaveLength(0);
     });
   });
 });

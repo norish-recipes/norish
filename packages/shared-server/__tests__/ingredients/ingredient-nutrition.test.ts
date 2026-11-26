@@ -5,13 +5,11 @@
  * where each came from, through every step of the lookup order, the tree,
  * the lenders that never lend and the household's own corrections.
  */
-import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { SeedEntry } from "@norish/db/repositories/ingredient-seed";
 import type { NutritionCodes } from "@norish/db/schema";
 import type { SourceTable } from "@norish/shared-server/ingredients/nutrition/source-table";
-import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { getRecipeFull } from "@norish/db";
 import {
   saveNutritionCorrection,
@@ -25,7 +23,6 @@ import {
   clearRecipeNutritionEstimate,
   saveRecipeNutritionEstimate,
 } from "@norish/db/repositories/recipe-enrichment";
-import { ingredients, serverConfig } from "@norish/db/schema";
 import { setParent } from "@norish/shared-server/ingredients/catalogue";
 import {
   applySourceTable,
@@ -55,8 +52,8 @@ import { buildCatalogueExport } from "@norish/shared-server/ingredients/seed/cat
 import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
 import {
+  clearTestSeedState,
   createTestUser,
-  getTestDb,
   joinTestHousehold,
   mintTestFood,
   testHouseholdOf,
@@ -199,9 +196,7 @@ describe("Ingredient Nutrition", () => {
     await joinTestHousehold(second!.id, first.id);
     householdA = [first.id, second!.id];
     householdB = [stranger!.id];
-    await getTestDb()
-      .delete(serverConfig)
-      .where(eq(serverConfig.key, ServerConfigKeys.INGREDIENT_SEED_STATE));
+    await clearTestSeedState();
     await applySourceTable(TABLE);
     await applyIngredientSeed(ENTRIES);
 

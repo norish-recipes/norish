@@ -6,13 +6,11 @@
  * a settled name from the words. The language model is mocked at
  * `generateStructured`.
  */
-import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { CatalogueActor } from "@norish/shared-server/ingredients/catalogue";
 import { listAIChanges } from "@norish/db/repositories/ingredient-ai-changes";
 import { adoptPlainName, insertSeededIngredient } from "@norish/db/repositories/ingredient-seed";
-import { ingredientAliases, ingredients } from "@norish/db/schema";
 import { generateStructured } from "@norish/shared-server/ai/runtime/runtime";
 import { isAIEnabled } from "@norish/shared-server/config/server-config-loader";
 import { undoAIChange } from "@norish/shared-server/ingredients/ai-changes";
@@ -22,9 +20,11 @@ import { resolveIngredients } from "@norish/shared-server/ingredients/resolver";
 import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
 import {
+  addTestSpelling,
   getSpellingTexts,
-  getTestDb,
   nameInATestRecipe,
+  readTestIngredient,
+  setTestIngredients,
   testHouseholdOf,
 } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
@@ -73,25 +73,15 @@ describe("Plain Names", () => {
     const [resolved] = await resolveIngredients([text], actor);
 
     await nameInATestRecipe(actor.userId, resolved!.aliasId, text);
-    await getTestDb()
-      .update(ingredients)
-      .set({ flagged: true, flagReason: "upgrade" })
-      .where(eq(ingredients.id, resolved!.ingredientId));
+    await setTestIngredients(resolved!.ingredientId, { flagged: true, flagReason: "upgrade" });
 
     return resolved!.ingredientId;
   }
 
   async function row(id: string) {
-    const [found] = await getTestDb()
-      .select({
-        name: ingredients.name,
-        flagged: ingredients.flagged,
-        nameSettled: ingredients.nameSettled,
-      })
-      .from(ingredients)
-      .where(eq(ingredients.id, id));
+    const { name, flagged, nameSettled } = (await readTestIngredient(id))!;
 
-    return found!;
+    return { name, flagged, nameSettled };
   }
 
   it("renames the food to its plain name, settles it, and lists the rename to undo", async () => {
@@ -186,9 +176,7 @@ describe("Plain Names", () => {
 
   /** Give a food one more spelling, in `locale`. */
   async function spell(ingredientId: string, text: string, locale: string | null = null) {
-    await getTestDb()
-      .insert(ingredientAliases)
-      .values({ ingredientId, text, fold: ingredientAliasFold(text), locale, ownerId: null });
+    await addTestSpelling(ingredientId, text, { locale, householdId: null });
   }
 
   it("merges into a food spelling the plain name only where a recipe line lists it", async () => {

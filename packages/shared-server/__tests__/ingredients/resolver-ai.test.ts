@@ -5,7 +5,6 @@
  * which answers afterwards. The Decision is mocked at `decide` and the language model at the
  * runtime's `generateStructured`; the configuration says whether either may be asked.
  */
-import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createRecipeWithRefs, getRecipeFull } from "@norish/db";
@@ -15,7 +14,6 @@ import { findIngredientByAliasId } from "@norish/db/repositories/ingredient-alia
 import { deleteCatalogueIngredient } from "@norish/db/repositories/ingredient-catalogue";
 import { listJunkFolds } from "@norish/db/repositories/ingredient-junk-pile";
 import { findIngredientAncestors } from "@norish/db/repositories/ingredient-relocation";
-import { ingredients } from "@norish/db/schema";
 import { decide, generateStructured } from "@norish/shared-server/ai/runtime/runtime";
 import {
   isAIEnabled,
@@ -31,7 +29,11 @@ import {
 import { resolveIngredients } from "@norish/shared-server/ingredients/resolver";
 import { askAIAbout } from "@norish/shared-server/ingredients/review";
 
-import { getTestDb, testHouseholdOf } from "../../../db/__tests__/helpers/db-test-helpers";
+import {
+  readTestIngredient,
+  readTestIngredientNamed,
+  testHouseholdOf,
+} from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 import { foodReading, noFoodReading } from "../helpers/ingredient-readings";
 
@@ -134,9 +136,11 @@ describe("ingredient resolver with AI on", () => {
       ]);
       // Both minted whole and unflagged, handed to the pass.
       for (const line of lines.slice(1)) {
-        await expect(
-          getTestDb().select().from(ingredients).where(eq(ingredients.id, line.ingredientId!))
-        ).resolves.toMatchObject([{ name: line.ingredientName, flagged: false, flagReason: null }]);
+        await expect(readTestIngredient(line.ingredientId!)).resolves.toMatchObject({
+          name: line.ingredientName,
+          flagged: false,
+          flagReason: null,
+        });
       }
       expect(minted.sort()).toEqual(
         lines
@@ -202,9 +206,7 @@ describe("ingredient resolver with AI on", () => {
       expectNoAIRequest();
       expect(minted).toEqual([]);
       expect(again.lines).toMatchObject([{ ingredientName: "melted", ingredientId: null }]);
-      await expect(
-        getTestDb().select().from(ingredients).where(eq(ingredients.name, "melted"))
-      ).resolves.toEqual([]);
+      await expect(readTestIngredientNamed("melted")).resolves.toBeNull();
     } finally {
       onIngredientsMinted(undefined);
     }

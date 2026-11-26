@@ -11,12 +11,11 @@ import {
   applyIngredientSeed,
   listSeededIngredientIds,
 } from "@norish/db/repositories/ingredient-seed";
-import { ingredientAliases } from "@norish/db/schema";
 import { listIngredients, setParent } from "@norish/shared-server/ingredients/catalogue";
 import { resolveIngredients } from "@norish/shared-server/ingredients/resolver";
 
 import {
-  getTestDb,
+  addTestSpelling,
   nameInATestRecipe,
   testHouseholdOf,
 } from "../../../db/__tests__/helpers/db-test-helpers";
@@ -251,9 +250,7 @@ describe("a mint's parent from the words of its text", () => {
   });
 
   it("reads a spelling a seeded food gained after the seed as the food's", async () => {
-    await getTestDb()
-      .insert(ingredientAliases)
-      .values({ text: "look", fold: "look", ingredientId: seeded.get("en:garlic")! });
+    await addTestSpelling(seeded.get("en:garlic")!, "look");
 
     expect(await mintOne("verse look")).toMatchObject({
       parent: { id: seeded.get("en:garlic") },
