@@ -116,9 +116,9 @@ async function exists(target: string): Promise<boolean> {
 /** What a filesystem answers when it cannot flush a folder at all, as opposed to failing to. */
 const FLUSH_UNSUPPORTED = new Set(["EINVAL", "ENOTSUP", "EOPNOTSUPP", "EISDIR", "ENOSYS"]);
 
-/** Flush `target`, a file or a folder, to disk. */
-async function flush(target: string): Promise<void> {
-  const handle = await fs.open(target, "r");
+/** Flush `target`, a folder or, opened with "r+" as Windows needs, a file, to disk. */
+async function flush(target: string, flags = "r"): Promise<void> {
+  const handle = await fs.open(target, flags);
 
   try {
     await handle.sync();
@@ -180,7 +180,7 @@ export async function writeKeyFile(keys: KeyFile, { replace = false } = {}): Pro
 
 /** Flush the key file and its folder, so a power cut after a re-key cannot undo the file. */
 async function flushKeyFile(): Promise<void> {
-  await flush(keyFilePath());
+  await flush(keyFilePath(), "r+");
   await flushFolder(path.dirname(keyFilePath()), true);
 }
 

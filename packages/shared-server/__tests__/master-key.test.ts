@@ -952,16 +952,37 @@ describe("which key boot opens", () => {
         expect(opened()).toBe(lookupBy(keyB));
       });
 
-      it.each([
-        ["the key file", keyFilePath],
-        ["its folder", keyDir],
-      ])(
-        "re-keys nothing when %s fails to flush to disk, so the next boot retries",
-        async (_, target) => {
-          await writeKeyFile({ current: textB, previous: textA });
-          failSyncOf("EIO", target());
+      it("flushes the key file through a handle that may write, as Windows asks", async () => {
+        await writeKeyFile({ current: textB, previous: textA });
+        const open = fs.open;
+        const opens = vi.spyOn(fs, "open").mockImplementation(async (...args) => {
+          const handle = await open(...args);
 
-          await expect(resolveMasterKey()).rejects.toThrow("EIO");
+          // Windows refuses to flush a file opened for reading only.
+          if (String(args[0]) === keyFilePath() && (args[1] ?? "r") === "r") {
+            vi.spyOn(handle, "sync").mockRejectedValue(failure("EPERM"));
+          }
+
+          return handle;
+        });
+
+        await resolveMasterKey();
+
+        expect(opens).toHaveBeenCalledWith(keyFilePath(), "r+");
+        expect(opened()).toBe(lookupBy(keyB));
+      });
+
+      it.each([
+        ["the key file", keyFilePath, "EIO"],
+        ["the key file", keyFilePath, "EPERM"],
+        ["its folder", keyDir, "EIO"],
+      ])(
+        "re-keys nothing when %s fails to flush to disk (%s), so the next boot retries",
+        async (_, target, code) => {
+          await writeKeyFile({ current: textB, previous: textA });
+          failSyncOf(code, target());
+
+          await expect(resolveMasterKey()).rejects.toThrow(code);
           expect(rekeys.steps).toEqual([]);
           expect(openedKeys).toEqual([]);
           expect(database.fingerprint).toBe(masterKeyFingerprint(keyA));
