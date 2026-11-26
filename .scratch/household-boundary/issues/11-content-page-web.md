@@ -93,3 +93,8 @@ Not run: the tests that need Postgres or Valkey, Docker was down (the `list-entr
 - The Household B E2E failed because the empty list draws no search (as `WbTagsEmpty`); `openList` now waits for the search or the empty state. New E2E boxes: Add at the right edge on a phone, picker rows, and the first heading and frame not moving when the list arrives.
 - Differs from the ask: the skeleton has no second section, so the check is on the first heading and frame, not the second heading.
 - Playwright runs from two checkouts share `norish-e2e-results` and ports 20000-22000; run with `RUNNER_TEMP` set and not at the same time.
+
+### Last fix round
+- Fixed: Ingredients rows are `li` of the frame's own `ul` (`ListFrame virtual`, `ListRow offset`; test on roles), the name line wraps, one two-line rule (`detail`) for row and skeleton, a given `Note` icon replaces the lock (e231dd863, 6d1a59aa9).
+- E2E: `openList` waits for loaded content and the isolation test shows B's own Tag first; the skeleton test releases in `finally` and holds only `lists.list`; picker count within 2 px of the right padding; search and toggle same height; Ingredients row 60 px (d191f06df, 5bccea9c1).
+- The picker counts Ingredients as the boards do (`ingredients.count`, 3735bc643, 97eab36c8). All gates and the spec (x2) pass.
