@@ -191,10 +191,13 @@ export function IngredientFiltersPanel({
 
       {open ? (
         <Panel.Footer>
-          <ActionButtonGroup>
-            <ActionButton action="reset" onPress={() => apply(DEFAULT_INGREDIENT_FILTERS)}>
-              {tActions("reset")}
-            </ActionButton>
+          <ActionButtonGroup
+            start={
+              <ActionButton action="reset" onPress={() => apply(DEFAULT_INGREDIENT_FILTERS)}>
+                {tActions("reset")}
+              </ActionButton>
+            }
+          >
             <ActionButton
               action="apply"
               data-testid="ingredients-filters-apply"

@@ -366,10 +366,13 @@ function FiltersContent({ onOpenChange }: Omit<FiltersPanelProps, "open">) {
       </Panel.Body>
 
       <Panel.Footer>
-        <ActionButtonGroup>
-          <ActionButton action="reset" onPress={handleReset}>
-            {tActions("reset")}
-          </ActionButton>
+        <ActionButtonGroup
+          start={
+            <ActionButton action="reset" onPress={handleReset}>
+              {tActions("reset")}
+            </ActionButton>
+          }
+        >
           <ActionButton action="apply" onPress={handleApply}>
             {tActions("apply")}
           </ActionButton>
