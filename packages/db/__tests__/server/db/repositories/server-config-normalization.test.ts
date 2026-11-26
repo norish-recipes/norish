@@ -252,4 +252,19 @@ describe("server config normalization", () => {
       edit: "everyone",
     });
   });
+
+  it("reads edit and delete no wider than view, as migration 0091 and the setter keep them", async () => {
+    await deleteConfig(ServerConfigKeys.RECIPE_PERMISSION_POLICY);
+    await getTestDb()
+      .insert(serverConfig)
+      .values({
+        key: ServerConfigKeys.RECIPE_PERMISSION_POLICY,
+        value: { view: "household", edit: "everyone", delete: "everyone" },
+      });
+    expect(await getRecipePermissionPolicy()).toEqual({
+      view: "household",
+      edit: "household",
+      delete: "household",
+    });
+  });
 });

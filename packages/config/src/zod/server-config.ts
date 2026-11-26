@@ -867,6 +867,16 @@ export function isWiderLevel(level: PermissionLevel, than: PermissionLevel): boo
   return level === "everyone" && than === "household";
 }
 
+type PolicyLevels = { view: PermissionLevel; edit: PermissionLevel; delete: PermissionLevel };
+
+/** `policy` with edit and delete narrowed to view where they reach further, as 0091 left them. */
+export function withinView<P extends PolicyLevels>(policy: P): P {
+  const narrowed = (level: PermissionLevel) =>
+    isWiderLevel(level, policy.view) ? policy.view : level;
+
+  return { ...policy, edit: narrowed(policy.edit), delete: narrowed(policy.delete) };
+}
+
 /** View, edit and delete; nobody may edit or delete what they cannot view. */
 export const RecipePermissionPolicySchema = z
   .object({
@@ -875,8 +885,11 @@ export const RecipePermissionPolicySchema = z
     delete: PermissionLevelSchema.default("household"),
   })
   .refine(
-    (policy) =>
-      !isWiderLevel(policy.edit, policy.view) && !isWiderLevel(policy.delete, policy.view),
+    (policy) => {
+      const kept = withinView(policy);
+
+      return kept.edit === policy.edit && kept.delete === policy.delete;
+    },
     { message: "Edit and delete cannot reach further than view" }
   );
 
