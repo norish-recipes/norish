@@ -745,7 +745,7 @@ export async function restoreDeletedFood(
     ownerId: await stillThere(tx, users, food.ownerId),
     parentId: await stillThere(tx, ingredients, food.parentId),
   });
-  const aliases = [];
+  const aliases: Array<typeof ingredientAliases.$inferInsert> = [];
 
   for (const spelling of food.aliases) {
     aliases.push({
