@@ -12,6 +12,7 @@ import { db } from "@norish/db/drizzle";
 import { attachCategoriesToRecipeByInputTx } from "@norish/db/repositories/categories";
 import { getRecipeCuisines } from "@norish/db/repositories/cuisines";
 import { listRecipesCarryingEntry } from "@norish/db/repositories/entry-recipes";
+import { ForeignHouseholdReferenceError } from "@norish/db/repositories/household-rows";
 import {
   addEntry,
   deleteEntry,
@@ -219,7 +220,7 @@ describe("household lists", () => {
     });
   });
 
-  it("keeps the household's and the instance's Cuisines; a stale id takes its fold's entry or goes", async () => {
+  it("keeps the household's and the instance's Cuisines; a stale id takes its fold's entry, else is refused", async () => {
     const own = (await addEntry("cuisine", ann.household, "Grandma's"))!.entry;
     const [instance] = (await listEntries("cuisine", ann.household)).filter((e) => e.instance);
     const bobsCopy = (await addEntry("cuisine", bob.household, "Grandma's"))!.entry;
@@ -232,15 +233,20 @@ describe("household lists", () => {
     );
     expect(await cuisinesOf(ann.recipe)).toEqual([own.id, instance!.id]);
 
-    // Another household's id takes the household's own entry of its fold, else none; an id gone
-    // is dropped too.
+    // Another household's id takes the household's own entry of its fold; an id gone is dropped.
     await db.transaction((tx) =>
       replaceRecipeEntryIdsTx(tx, "cuisine", ann.recipe, [
         bobsCopy.id,
-        bobsOnly.id,
         "00000000-0000-4000-8000-000000000000",
       ])
     );
+    expect(await cuisinesOf(ann.recipe)).toEqual([own.id]);
+    // One of no fold the recipe's list has is refused, as any foreign reference is.
+    await expect(
+      db.transaction((tx) =>
+        replaceRecipeEntryIdsTx(tx, "cuisine", ann.recipe, [instance!.id, bobsOnly.id])
+      )
+    ).rejects.toThrow(ForeignHouseholdReferenceError);
     expect(await cuisinesOf(ann.recipe)).toEqual([own.id]);
   });
 

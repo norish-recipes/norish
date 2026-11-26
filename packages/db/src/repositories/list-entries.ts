@@ -336,7 +336,7 @@ async function lockedRecipeHouseholdTx(tx: DbTransaction, recipeId: string) {
 
 /** Replaces a recipe's entries with `ids`, in order: the recipe's household's and the instance's
  * stay; any other is stale (read before a move) and becomes the instance's entry of its fold, else
- * the household's own, else is dropped, as is an id gone. */
+ * the household's own, else ForeignHouseholdReferenceError. An id gone is dropped. */
 export async function replaceRecipeEntryIdsTx(
   tx: DbTransaction,
   kind: ListKind,
@@ -386,8 +386,11 @@ export async function replaceRecipeEntryIdsTx(
 
       if (!row) return [];
       if (seen(row)) return [id];
+      const home = homeOf.get(row.nameFold);
 
-      return homeOf.get(row.nameFold) ?? [];
+      if (!home) throw new ForeignHouseholdReferenceError();
+
+      return [home];
     })
   );
 }
