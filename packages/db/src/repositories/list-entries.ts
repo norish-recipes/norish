@@ -307,9 +307,9 @@ async function lockedRecipeHouseholdTx(tx: DbTransaction, recipeId: string) {
   return (await lockRecipeHouseholdsTx(tx, { recipeIds: [recipeId] })).get(recipeId) ?? null;
 }
 
-/** Replaces a recipe's entries with `ids`, in order: each the recipe's household's or the
- * instance's; one another household's (read before a move) becomes the household's entry of its
- * fold where the list has one, else ForeignHouseholdReferenceError. */
+/** Replaces a recipe's entries with `ids`, in order: the recipe's household's and the instance's
+ * stay; any other is stale (read before a move) and becomes the household's own entry of its fold,
+ * else the instance's, else is dropped, as is an id gone. */
 export async function replaceRecipeEntryIdsTx(
   tx: DbTransaction,
   kind: ListKind,
@@ -321,33 +321,47 @@ export async function replaceRecipeEntryIdsTx(
   const unique = [...new Set(ids)];
 
   if (!householdId) return;
-  const outside = await tx
-    .select({ id: table.id, name: table.name })
+  const named = await tx
+    .select({ id: table.id, householdId: table.householdId, nameFold: table.nameFold })
     .from(table)
-    .where(
-      and(
-        isAnyOf(table.id, unique, "uuid"),
-        not(inScope(table.householdId, householdId, { offered: true }))
-      )
-    );
-  const found = await entriesByFoldTx(
-    tx,
-    kind,
-    householdId,
-    outside.map((row) => row.name),
-    { create: false }
-  );
-  const homeOf = new Map(
-    outside.map((row) => [row.id, found.get(entryName(row.name)?.fold ?? "")?.id])
-  );
+    .where(isAnyOf(table.id, unique, "uuid"));
+  const seen = (row: { householdId: string | null }) =>
+    row.householdId === householdId || row.householdId === null;
+  const staleFolds = named.filter((row) => !seen(row)).map((row) => row.nameFold);
+  const homes =
+    staleFolds.length === 0
+      ? []
+      : await tx
+          .select({ id: table.id, householdId: table.householdId, nameFold: table.nameFold })
+          .from(table)
+          .where(
+            and(
+              inScope(table.householdId, householdId, { offered: true }),
+              isAnyOf(table.nameFold, staleFolds, "text")
+            )
+          )
+          .for("key share");
+  const homeOf = new Map<string, string>();
 
-  if ([...homeOf.values()].includes(undefined)) throw new ForeignHouseholdReferenceError();
+  // The household's own entry of a fold wins over the instance's.
+  for (const row of homes) {
+    if (!homeOf.has(row.nameFold) || row.householdId !== null) homeOf.set(row.nameFold, row.id);
+  }
+  const byId = new Map(named.map((row) => [row.id, row]));
+
   await writeRecipeLinksTx(
     tx,
     kind,
     householdId,
     recipeId,
-    unique.map((id) => homeOf.get(id) ?? id)
+    unique.flatMap((id) => {
+      const row = byId.get(id);
+
+      if (!row) return [];
+      if (seen(row)) return [id];
+
+      return homeOf.get(row.nameFold) ?? [];
+    })
   );
 }
 

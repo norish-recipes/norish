@@ -218,23 +218,32 @@ describe("household lists", () => {
     });
   });
 
-  it("refuses another household's Cuisine on a recipe, but takes the recipe's own of its fold", async () => {
+  it("keeps the household's and the instance's Cuisines; a stale id takes its fold's entry or goes", async () => {
     const own = (await addEntry("cuisine", ann.household, "Grandma's"))!.entry;
-    const foreign = (await addEntry("cuisine", bob.household, "Bob's"))!.entry;
     const [instance] = (await listEntries("cuisine", ann.household)).filter((e) => e.instance);
+    const bobsCopy = (await addEntry("cuisine", bob.household, "Grandma's"))!.entry;
+    const bobsFusion = (await addEntry("cuisine", bob.household, "Fusion"))!.entry;
+    const fusion = (await addEntry("cuisine", null, "Fusion"))!.entry;
+    const bobsOnly = (await addEntry("cuisine", bob.household, "Bob's"))!.entry;
+    const cuisinesOf = async (recipeId: string) =>
+      (await getRecipeCuisines(recipeId)).map((c) => c.id);
 
     await db.transaction((tx) =>
       replaceRecipeEntryIdsTx(tx, "cuisine", ann.recipe, [own.id, instance!.id])
     );
-    await expect(
-      db.transaction((tx) => replaceRecipeEntryIdsTx(tx, "cuisine", ann.recipe, [foreign.id]))
-    ).rejects.toThrow(ForeignHouseholdReferenceError);
+    expect(await cuisinesOf(ann.recipe)).toEqual([own.id, instance!.id]);
 
-    // An id read before a move names the household's own entry of its fold, where it has one.
-    const bobs = (await addEntry("cuisine", bob.household, "Grandma's"))!.entry;
-
-    await db.transaction((tx) => replaceRecipeEntryIdsTx(tx, "cuisine", bob.recipe, [own.id]));
-    expect((await getRecipeCuisines(bob.recipe)).map((c) => c.id)).toEqual([bobs.id]);
+    // Another household's id takes the household's own entry of its fold, else the instance's,
+    // else none; an id gone is dropped too.
+    await db.transaction((tx) =>
+      replaceRecipeEntryIdsTx(tx, "cuisine", ann.recipe, [
+        bobsCopy.id,
+        bobsFusion.id,
+        bobsOnly.id,
+        "00000000-0000-4000-8000-000000000000",
+      ])
+    );
+    expect(await cuisinesOf(ann.recipe)).toEqual([own.id, fusion.id]);
   });
 
   it("filters across households on the folded name", async () => {
