@@ -34,6 +34,27 @@ describe("ListRow", () => {
   });
 });
 
+describe("ListRow two lines", () => {
+  it("is a taller row with its detail under the name and its icon at the start", () => {
+    render(
+      <ListFrame>
+        <ListRow
+          detail="1 translation"
+          leading={<i data-testid="icon" />}
+          name="Salt"
+          onPress={() => {}}
+        />
+      </ListFrame>
+    );
+
+    const row = screen.getByRole("button");
+
+    expect(row).toHaveTextContent("Salt1 translation");
+    expect(row.className).toContain("min-h-15");
+    expect(row.firstElementChild).toBe(screen.getByTestId("icon"));
+  });
+});
+
 describe("Section", () => {
   it("is a heading over its content, with help as a button whose label is the help", () => {
     render(

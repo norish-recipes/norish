@@ -9,8 +9,8 @@ import type { IngredientTreeRow } from "@norish/shared-react/ingredients";
 
 import { IngredientRow } from "./ingredient-row";
 
-/** A row is two lines of text and its padding; the virtualizer measures the real height. */
-const ESTIMATED_ROW_HEIGHT = 68;
+/** A two-line row is 60 px high; the virtualizer measures the real height. */
+const ESTIMATED_ROW_HEIGHT = 60;
 const ROW_OVERSCAN = 12;
 /** How far below the viewport the end of the list is watched for, so the next page is there before the end is. */
 const LOAD_MORE_MARGIN = "600px";
@@ -49,6 +49,8 @@ export function IngredientList({
   const [atEnd, setAtEnd] = useState(false);
   const { height: windowHeight } = useWindowSize();
   const isEmpty = rows.length === 0;
+  // No gutter for an expander when no row has kinds to fold out.
+  const foldable = rows.some((row) => row.item.kinds > 0);
 
   // Where the list starts on the page, which the virtualizer measures from; read again on resize
   // and once rows arrive.
@@ -120,7 +122,7 @@ export function IngredientList({
                 item={row.item}
                 loadingKinds={row.loading}
                 onOpen={onOpen}
-                onToggleKinds={onToggleKinds}
+                onToggleKinds={foldable ? onToggleKinds : undefined}
               />
             </div>
           );
