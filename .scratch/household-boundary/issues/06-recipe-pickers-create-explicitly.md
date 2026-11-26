@@ -73,3 +73,7 @@ Client re-review:
 Final re-review 2. Fixed (ad7cb1047): `rebaseRecipeForm` rebases field by field against the form as opened (lines and steps included): untouched fields take the fresh value, changed ones keep the reader's; the row editors re-seed on the new version.
 Final re-review 5. Fixed (ae0ba156d): foreign archive parsers carry Tags and Categories only when the source has them, and never Cuisines (`carriedLists`); Norish archives carry all three.
 Final re-review 6. Confirmed and fixed (ff22764b6): the update schema takes null for the times; the editor now sends a cleared time as null, and a queued merge keeps it.
+Release check 1. Fixed (fc65bebad): Recipe Keeper and Mealie carry Tags and Categories only when the recipe has a label; Mela, Paprika and Tandoor already did.
+Release check 2. Fixed (e279b3002, 3181ba1c8): an edit sends description, notes, URL, the three times, calories, fat, carbs, protein and the provenance place only when changed from the recipe as opened (null when cleared); name, servings and system stay always sent.
+Release check 3. Fixed (db365b154): the stale rebase keeps or refreshes lines and steps together, as steps point at lines by position.
+Release check 4. Fixed (56c7b5215): the overwrite already follows the documented order (recipe row, then folds), as the plain update shares its path; the takeover locked the fold before the recipes and now locks them first.
