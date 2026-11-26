@@ -131,6 +131,8 @@ export type PantryQueryResult = {
 export type PickedFood = {
   ingredientId: string;
   name: string;
+  /** The recipe line it was picked off, which the server reads the food through (ADR-0042). */
+  recipeIngredientId?: string;
   localeNames?: LocaleNames;
   ancestorIds?: string[];
 };

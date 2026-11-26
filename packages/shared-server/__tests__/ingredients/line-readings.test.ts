@@ -15,6 +15,7 @@ import { setConfig } from "@norish/db/repositories/server-config";
 import { groceryParts, resolveGroceryNames } from "@norish/shared-server/ingredients/groceries";
 import { lineReadingsOf } from "@norish/shared-server/ingredients/line-readings";
 import { onIngredientsMinted } from "@norish/shared-server/ingredients/minted";
+import { addPickedToPantry } from "@norish/shared-server/ingredients/pantry";
 import { withResolvedIngredients } from "@norish/shared-server/ingredients/recipe-lines";
 import { foodsToBuy, linesAsRead } from "@norish/shared/lib/line-foods";
 import { nutritionLinesOf } from "@norish/shared/lib/recipe-nutrition";
@@ -27,6 +28,7 @@ import {
   createTestUser,
   householdIdOf,
   mintTestFood,
+  readTestIngredient,
   testHouseholdOf,
 } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
@@ -275,5 +277,33 @@ describe("lines read through the reader's catalogue", () => {
     expect(
       library.items.map((item) => (item.kind === "recipe" ? item.recipe.pantryCoverage : null))
     ).toEqual([1]);
+  });
+
+  it("keeps another household's line in the reader's Pantry as the reader's food", async () => {
+    const household = testHouseholdOf(reader);
+    const ui = await mintTestFood(household, "ui");
+    const {
+      lines: [uiLine, tomatenLine],
+    } = await recipe(author, ["ui", "GR CHERRYTOMATEN"]);
+    const actor = { userId: reader, householdId: household };
+    // The sheet could not read the lines, so it keeps the stored foods.
+    const kept = async (line: typeof uiLine) =>
+      (
+        await addPickedToPantry(crypto.randomUUID(), {
+          ...actor,
+          ingredientId: line!.ingredientId!,
+          recipeIngredientId: line!.id,
+        })
+      ).map(({ item }) => item.ingredientId);
+
+    await expect(kept(uiLine)).resolves.toEqual([ui.ingredientId]);
+    const [tomaten] = await kept(tomatenLine);
+
+    // A line it reads as no food is its own text, resolved (here minted) in the reader's household.
+    expect((await readTestIngredient(tomaten!))?.householdId).toBe(household);
+    expect((await readTestIngredient(tomaten!))?.name).toBe("CHERRYTOMATEN");
+    await expect(
+      addPickedToPantry(crypto.randomUUID(), { ...actor, ingredientId: uiLine!.ingredientId! })
+    ).resolves.toEqual([]);
   });
 });

@@ -48,14 +48,19 @@ export function useLinesToBuy<T extends ScaledFood>(
   for (const item of lines) (keptFor(item) ? inPantry : toBuy).push(item);
 
   /** "We keep this": the line's food, or its edited name's resolved food, goes in the Pantry,
-   * whose optimistic row moves the line under "In your pantry" at once. */
-  const keepLine = (item: GroceryIngredient) => {
+   * whose optimistic row moves the line under "In your pantry" at once. The server reads the food
+   * through the line, so a line read as stored still keeps the household's own food. */
+  const keepLine = (item: ScaledFood) => {
     const edited = editedIngredients[item.id]?.name;
 
     void addPantryIngredient(
       edited !== undefined || !item.ingredientId
         ? (edited ?? item.ingredientName)
-        : { ingredientId: item.ingredientId, name: item.ingredientName }
+        : {
+            ingredientId: item.ingredientId,
+            name: item.ingredientName,
+            recipeIngredientId: item.lineId,
+          }
     );
   };
 

@@ -38,7 +38,11 @@ const add = authedProcedure.input(PantryIngredientAddSchema).mutation(async ({ c
   const actor = { userId: ctx.user.id, householdId: ctx.householdId };
   const items =
     "ingredientId" in input
-      ? await addPickedToPantry(id, { ...actor, ingredientId: input.ingredientId })
+      ? await addPickedToPantry(id, {
+          ...actor,
+          ingredientId: input.ingredientId,
+          recipeIngredientId: input.recipeIngredientId,
+        })
       : await addToPantry(id, { ...actor, name: input.name });
   const [first] = items;
 

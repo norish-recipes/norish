@@ -222,7 +222,7 @@ describe("useLinesToBuy", () => {
   });
 
   describe("keepLine", () => {
-    it("keeps a line's own food", () => {
+    it("keeps a line's own food, with the line the server reads it through", () => {
       const { result } = setup();
 
       act(() => result.current.keepLine(result.current.toBuy[0]!));
@@ -230,6 +230,7 @@ describe("useLinesToBuy", () => {
       expect(state.keep).toHaveBeenCalledWith({
         ingredientId: "i-chicken breast",
         name: "chicken breast",
+        recipeIngredientId: "l-chicken",
       });
     });
 
