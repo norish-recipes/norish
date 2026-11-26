@@ -68,3 +68,14 @@
   - For ticket 08: add-to-groceries must not keep a line's food from another household (`keptFoods`); display of a foreign recipe's own foods and icons; REST nutrition.
   - For ticket 09: re-point a leaver's recipe lines when they leave, so deleting the old household's last member drops no line food, and Pantry suggestions name no old household's food.
   - rejected: the names-a-food mark, uses without elsewhere, a household's spelling change listed to that household, an admin's own-to-seed merge, the membership read before a recipe write, the junk rules cache, qualified(), the diacritics constant.
+
+- Review round 2:
+  1. fixed: Keep or Undo of a change whose food is now seeded needs an admin unless it is a merge or a spelling change (which write nothing on the seeded row); `editableBy` is never NULL, so a member's Undo moving a seeded spelling is refused.
+  2. fixed: the mint answers whether it created a food; only a created one is handed to the review, icon and fills.
+  3. fixed: 0093 remaps or strands on every nested id of a not-a-food payload and strands an unknown kind; a stranded change is never actionable (`canAct` false, Keep and Undo refused).
+  4. fixed (verified): `markDistinct` was guarded; Keep's non-merge branch marked a seeded food distinct, and now leaves it unmarked.
+  5. fixed: the match job carries its grocery's id and files under the food that grocery names when it runs.
+  6. fixed (verified): the mint reads its holder and parent, then locks both in id order; a name taken meanwhile starts the mint again.
+  7. fixed: `count()` with numeric decoding; the standalone check selects the kind's id.
+  8. fixed: `spelling-check` counts exactly again (the other eight files' assertions were equivalent); the rerun compares whole rows of every table 0093 writes.
+  - rejected: the recheck folding a minted duplicate into a hand-added food; a migration rerun rewriting AI Changes.
