@@ -1,6 +1,6 @@
 import type { SQL } from "drizzle-orm";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
-import { eq, isNull, or, sql } from "drizzle-orm";
+import { and, eq, isNotNull, isNull, or, sql } from "drizzle-orm";
 
 /**
  * Tables a household shares with the instance, by `household_id`: null is the instance's row (the
@@ -42,7 +42,11 @@ export function editableHouseholds(reader: CatalogueReader): Array<string | null
 
 /** `householdId` is one of the households the reader edits (`editableHouseholds`). */
 export function editableBy(householdId: AnyPgColumn, reader: CatalogueReader): SQL {
-  return or(...editableHouseholds(reader).map((one) => inScope(householdId, one)))!;
+  // False, never NULL, on a seeded row a member does not edit, so `not()` of it holds there.
+  const edits = (one: string | null) =>
+    one === null ? isNull(householdId) : and(isNotNull(householdId), eq(householdId, one))!;
+
+  return or(...editableHouseholds(reader).map(edits))!;
 }
 
 /** Whether a row is the instance's, as a boolean column. */

@@ -487,9 +487,19 @@ function fromOf({ undo }: StoredAIChange): string | null {
   }
 }
 
-/** Whether `actor` may act on a change: a member of the household whose catalogue AI changed. */
+/**
+ * Whether `actor` may act on a change: a member of the household AI changed, never on a stranded
+ * one, and only an admin where Keep or Undo would write a seeded food's parent or name.
+ */
 function mayActOn(actor: CatalogueActor, change: StoredAIChange): boolean {
-  return mayEditOwnedRow(actor, change.householdId);
+  if (change.undo.stranded || !mayEditOwnedRow(actor, change.householdId)) return false;
+
+  return actor.isServerAdmin || !writesSeededFood(change);
+}
+
+/** A merge or a spelling change writes nothing on a seeded food; a parent or a name does. */
+function writesSeededFood({ undo, ingredient }: StoredAIChange): boolean {
+  return ingredient?.householdId === null && undo.kind !== "merge" && undo.kind !== "spelling";
 }
 
 /**
@@ -559,7 +569,8 @@ export async function keepAIChange(
     if (change.undo.kind === "merge") {
       await clearAIFlagUnlessOpen(tx, foodId);
     } else {
-      await keepIngredientDistinct(tx, foodId);
+      // Keeping a spelling change on a seeded food leaves the seed's mark to an admin's edit.
+      if (change.ingredient?.householdId !== null) await keepIngredientDistinct(tx, foodId);
       await refreshAIFlag(tx, foodId, { unsure: false });
     }
 

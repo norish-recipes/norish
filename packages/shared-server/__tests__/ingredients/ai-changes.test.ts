@@ -52,6 +52,7 @@ import {
   listTestAIChanges,
   nameInATestRecipe,
   readTestIngredient,
+  readTestSeedSpelling,
   setTestIngredients,
   testHouseholdOf,
 } from "../../../db/__tests__/helpers/db-test-helpers";
@@ -352,6 +353,72 @@ describe("keeping and undoing AI Changes", () => {
     expect(await getRecipeIngredients(theirs.id)).toMatchObject([
       { name: "melted", ingredientId: null },
     ]);
+  });
+
+  it("leaves a change on a food since taken into the seed to an administrator", async () => {
+    const tonijn = await mint("GR TONIJN UIT BLIK");
+    const red = await mint("red onion");
+    const onion = await mint("onion");
+
+    await renameByAI(tonijn.ingredientId, "GR TONIJN UIT BLIK", "tonijn uit blik");
+    await parentByAI(red.ingredientId, onion.ingredientId, false);
+    await setTestIngredients(tonijn.ingredientId, { householdId: null, offId: "en:tuna" });
+    await setTestIngredients(red.ingredientId, { householdId: null, offId: "en:red-onion" });
+    const before = [
+      await readTestIngredient(tonijn.ingredientId),
+      await readTestIngredient(red.ingredientId),
+    ];
+    const changes = await listAIChanges(actor);
+
+    expect((await listAIChangesFor(actor)).map((change) => change.canAct)).toEqual([false, false]);
+    for (const change of changes) {
+      await expect(undoAIChange(actor, change.id)).rejects.toMatchObject({ refusal: "forbidden" });
+      await expect(keepAIChange(actor, change.id)).rejects.toMatchObject({ refusal: "forbidden" });
+    }
+    await expect(
+      Promise.all([readTestIngredient(tonijn.ingredientId), readTestIngredient(red.ingredientId)])
+    ).resolves.toEqual(before);
+
+    const admin = { ...actor, isServerAdmin: true };
+
+    expect((await listAIChangesFor(admin)).map((change) => change.canAct)).toEqual([true, true]);
+    for (const change of changes) await undoAIChange(admin, change.id);
+    await expect(readTestIngredient(tonijn.ingredientId)).resolves.toMatchObject({
+      name: "GR TONIJN UIT BLIK",
+    });
+  });
+
+  it("refuses a member's Undo that would move a seeded spelling back", async () => {
+    const leek = await insertSeededIngredient({ name: "leek", offId: "en:leek" }, [
+      { text: "leek", fold: "leek", locale: "en" },
+      { text: "poireau", fold: "poireau", locale: "fr" },
+    ]);
+    const prei = await mint("prei");
+    const poireau = (await readTestSeedSpelling("poireau"))!;
+    const changeId = await withTransaction((tx) =>
+      recordAIChange(tx, {
+        householdId: actor.householdId,
+        ingredientId: prei.ingredientId,
+        targetId: leek,
+        sure: true,
+        undo: {
+          kind: "spelling",
+          spelling: {
+            id: poireau.id,
+            text: "poireau",
+            fold: "poireau",
+            locale: "fr",
+            ownerId: null,
+          },
+          lines: [],
+          groceries: [],
+          recurring: [],
+        },
+      })
+    );
+
+    await expect(undoAIChange(actor, changeId)).rejects.toMatchObject({ refusal: "forbidden" });
+    await expect(findIngredientByAliasId(poireau.id)).resolves.toMatchObject({ id: leek });
   });
 
   it("refuses a change already undone", async () => {
