@@ -10,18 +10,44 @@ description: Core server settings, the encryption key, health checks, networking
 
 | Variable     | Description                                                             | Default                                |
 | ------------ | ----------------------------------------------------------------------- | -------------------------------------- |
-| `MASTER_KEY` | Encryption key, at least 32 characters                                  | (required)                             |
 | `AUTH_URL`   | Public URL used for auth callbacks and links                            | `http://localhost:3000`                |
 | `NODE_ENV`   | Runtime environment                                                     | `production` (set by the Docker image) |
 | `HOST`       | Server bind address                                                     | `0.0.0.0`                              |
 | `PORT`       | Server port                                                             | `3000`                                 |
 | `VALKEY_URL` | Valkey connection URL (`valkey://` or `valkeys://`) for events and jobs | (required)                             |
 
-:::info Generate a `MASTER_KEY`
-Generate a key with `openssl rand -base64 32`. Keep it when you move or update
-Norish so it can still read your saved secrets.
+## Master key
 
-:::
+The Master Key protects encrypted data if the database alone is leaked. Norish
+stores it outside the database. Leave `MASTER_KEY` unset or blank to generate a
+key at `<UPLOADS_DIR>/.norish/master-key.json` on first start. To pin a key,
+set `MASTER_KEY` to a key generated with `openssl rand -base64 32`. Back up the
+database and uploads volume together. Run only one Norish process per database.
+
+If the key is wrong or missing, Norish refuses to start and names the missing
+key. Restore `MASTER_KEY` or the uploads volume from a backup. There is no reset.
+
+Session signing always derives from the Master Key. `BETTER_AUTH_SECRET` and
+`BETTER_AUTH_SECRETS` have no effect.
+
+### Rotate the master key
+
+For a generated key, open **Admin**, then **System**, and select **Rotate master
+key**. Confirm with **Rotate**. Configure your deployment to restart Norish
+automatically, for example with `restart: always` in Compose.
+
+![Rotate master key in System settings](/img/screenshots/admin-rotate-master-key-card.png)
+
+![Rotate master key confirmation](/img/screenshots/admin-rotate-master-key.png)
+
+For a pinned key, set `MASTER_KEY_PREVIOUS` to the current `MASTER_KEY` and set
+`MASTER_KEY` to a new key. Restart Norish, then remove `MASTER_KEY_PREVIOUS`
+after the rotating start succeeds.
+
+On the next start, Norish re-encrypts the data under the new key and ends every
+session on web and mobile. Everyone must sign in again. Share links made before
+0.28 stop working and can only be deleted. API keys keep working. If rotation
+fails, Norish retries it on the next start.
 
 ## Database
 
@@ -107,7 +133,7 @@ host and users connect at a different address, add that origin to
 If CalDAV reports an untrusted certificate, verify its fingerprint before
 choosing **Trust** for that connection.
 
-To trust a private certificate authority across Norish, mount its certificate
+To trust a private certificate authority in Norish, mount its certificate
 and set `NODE_EXTRA_CA_CERTS`.
 
 ```yaml
@@ -118,6 +144,11 @@ services:
     volumes:
       - ./my-ca.pem:/certs/my-ca.pem:ro
 ```
+
+Norish passes only `PATH`, `HOME`, `LANG`, `LC_*`, `TZ`, `TMPDIR`,
+`HTTP_PROXY`, `HTTPS_PROXY`, `NO_PROXY` and the lower-case proxy forms to
+yt-dlp, ffmpeg, ffprobe and the embedded parser. Other variables, including CA
+bundle variables, do not reach those processes.
 
 ## Base path
 
