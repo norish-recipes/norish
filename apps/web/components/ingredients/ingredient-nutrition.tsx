@@ -12,10 +12,10 @@ import { useFormatter, useTranslations } from "next-intl";
 
 import type { IngredientNutrition } from "@norish/shared/contracts/ingredient-nutrition";
 import type { SpoonMeasure } from "@norish/shared/lib/spoon-measure";
-import { useIngredientNutritionQuery } from "@norish/shared-react/ingredients";
+import { spoonKey, useIngredientNutritionQuery } from "@norish/shared-react/ingredients";
 import { spoonWeight } from "@norish/shared/lib/spoon-measure";
 
-import { factSource, spoonKey } from "./nutrition-copy";
+import { factSource } from "./nutrition-copy";
 import { NutritionCorrectionPanel } from "./nutrition-correction-panel";
 
 /**

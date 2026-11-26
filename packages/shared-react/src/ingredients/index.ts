@@ -1,6 +1,31 @@
 export type { AIChange, IngredientItem, NamedIngredient, Spelling, StoredIcon } from "./types";
+export type { IngredientFilters } from "./ingredient-filters";
+export { DEFAULT_INGREDIENT_FILTERS, hasIngredientFilters } from "./ingredient-filters";
+export type { IngredientTreeRow } from "./use-ingredient-tree";
+export { useIngredientTree } from "./use-ingredient-tree";
+export type { IconDraft, IngredientPick, Relocation } from "./use-ingredient-draft";
+export { useIngredientDraft } from "./use-ingredient-draft";
+export type { PickerOption } from "./use-ingredient-picker";
+export { useIngredientPicker } from "./use-ingredient-picker";
+export type { ChangeCopyKey } from "./change-copy";
+export { changeCopy } from "./change-copy";
+export type { NutritionCopy } from "./nutrition-copy";
+export { factSourceCopy, sourceCopy, spoonKey } from "./nutrition-copy";
+export type {
+  FactDraft,
+  Mode as NutritionMode,
+  NutritionFactName,
+  PickedFood,
+} from "./use-nutrition-draft";
+export { LABEL_FIELDS, useNutritionDraft } from "./use-nutrition-draft";
+export { useDatasetFoodSearch } from "./use-dataset-food-search";
 
-export { isOpenChange, useAIChangeMutations, useAIChangesQuery } from "./use-ai-changes";
+export {
+  aiChangesView,
+  isOpenChange,
+  useAIChangeMutations,
+  useAIChangesQuery,
+} from "./use-ai-changes";
 export { useIngredientFor } from "./use-ingredient-for";
 export {
   useFoodsByName,

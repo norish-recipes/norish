@@ -10,27 +10,25 @@ import { SparklesIcon } from "@heroicons/react/16/solid";
 import { BookOpenIcon } from "@heroicons/react/24/outline";
 import { useLocale, useTranslations } from "next-intl";
 
+import type { IngredientFilters } from "@norish/shared-react/ingredients";
 import { useIngredientsSubscription } from "@norish/shared-react/config";
 import {
+  DEFAULT_INGREDIENT_FILTERS,
+  hasIngredientFilters,
   isOpenChange,
   useAIChangesQuery,
   useIngredientListQuery,
+  useIngredientTree,
 } from "@norish/shared-react/ingredients";
 
-import type { IngredientFilters } from "./components/ingredient-filters-panel";
 import { ChangedByAIPanel } from "./components/changed-by-ai-panel";
 import DataSourcesCard from "./components/data-sources-card";
 import { IngredientAddPanel } from "./components/ingredient-add-panel";
 import { IngredientFiltersButton } from "./components/ingredient-filters-button";
-import {
-  DEFAULT_INGREDIENT_FILTERS,
-  hasIngredientFilters,
-  IngredientFiltersPanel,
-} from "./components/ingredient-filters-panel";
+import { IngredientFiltersPanel } from "./components/ingredient-filters-panel";
 import { IngredientList } from "./components/ingredient-list";
 import { IngredientSearch } from "./components/ingredient-search";
 import { IngredientRowsSkeleton } from "./components/ingredients-skeleton";
-import { useIngredientTree } from "./hooks/use-ingredient-tree";
 
 /** The catalogue of Ingredients (ADR-0037): a tree of kinds unless searched or filtered. */
 export function IngredientsScreen() {

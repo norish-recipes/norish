@@ -16,6 +16,7 @@ import { twMerge } from "tailwind-merge";
 
 import type { AIChange } from "@norish/shared-react/ingredients";
 import {
+  aiChangesView,
   isOpenChange,
   useAIChangeMutations,
   useAIChangesQuery,
@@ -50,8 +51,7 @@ function rowKey(row: PanelRow): string {
 /** Everything the panel shows, in order, as the rows of one list. */
 function panelRows(changes: AIChange[]): PanelRow[] {
   const out: PanelRow[] = [];
-  const unsure = changes.filter(isOpenChange);
-  const rest = changes.filter((change) => !isOpenChange(change));
+  const { unsure, rest } = aiChangesView(changes);
 
   if (changes.length === 0) out.push({ kind: "empty" });
   if (unsure.length > 0) out.push({ kind: "heading", of: "unsure" });
@@ -140,10 +140,8 @@ export function ChangedByAIPanel({ open, onClose }: { open: boolean; onClose: ()
   const locale = useLocale();
   const changes = useAIChangesQuery((all) => all);
   const { keep, undo, keepAll, undoAll, clear } = useAIChangeMutations();
-  // What Keep all and Undo all answer: the open changes the viewer may act on.
-  const actionable = changes.filter((change) => isOpenChange(change) && change.canAct);
-  const anySettled = changes.some((change) => !isOpenChange(change));
-  const answerAll = actionable.length > 1;
+  const { rest, actionable, answerAll } = aiChangesView(changes);
+  const anySettled = rest.length > 0;
   // The food whose own panel is open over this one.
   const [openId, setOpenId] = useState<string | null>(null);
 

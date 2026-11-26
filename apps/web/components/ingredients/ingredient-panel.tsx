@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useState } from "react";
 import { OnTheListMark } from "@/components/ingredients/on-the-list-mark";
 import Panel from "@/components/Panel/Panel";
 import {
@@ -17,7 +17,7 @@ import { ArrowUturnLeftIcon, ChevronRightIcon, XMarkIcon } from "@heroicons/reac
 import { Button, Chip, Input, Skeleton, TextField } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
-import type { IngredientItem, NamedIngredient, Spelling } from "@norish/shared-react/ingredients";
+import type { IngredientItem, Spelling } from "@norish/shared-react/ingredients";
 import type { PantryIngredientDto } from "@norish/shared/contracts";
 import {
   useGroceriesPantryAndCatalogueSubscriptions,
@@ -30,17 +30,13 @@ import {
   useAIChangeMutations,
   useAIChangesQuery,
   useHeldIngredient,
-  useIngredientMutations,
+  useIngredientDraft,
   useIngredientQuery,
   useIngredientSpellingsQuery,
   useIngredientUsesQuery,
 } from "@norish/shared-react/ingredients";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
-import { cleanSpelling } from "@norish/shared/lib/spelling-keys";
 
-import type { IconDraft } from "./ingredient-icon-field";
-import type { IngredientPick } from "./ingredient-picker";
-import type { Relocation } from "./ingredient-relocation";
 import { AIChangeActions } from "./ai-change-actions";
 import { DeleteIngredientModal } from "./delete-ingredient-modal";
 import { IngredientIconField } from "./ingredient-icon-field";
@@ -49,9 +45,6 @@ import { IngredientRelocationPanel } from "./ingredient-relocation";
 import { IngredientStatusChip } from "./ingredient-status-chip";
 import { JunkSpellingModal } from "./junk-spelling-modal";
 import { changeMessage } from "./review-copy";
-
-/** The parent as the draft holds it: the food picked, or none. */
-type DraftParent = NamedIngredient | null;
 
 /** One Ingredient's panel: fields are a draft until Save; actions patch the cache at once. */
 export function IngredientPanel({
@@ -146,27 +139,29 @@ function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClo
   const t = useTranslations("settings.ingredients");
   const tActions = useTranslations("common.actions");
   const locale = useLocale();
-  const edits = useIngredientMutations();
   const displayName = ingredientDisplayName(item, locale);
+  const draft = useIngredientDraft(item, displayName, onClose);
+  const {
+    name,
+    setName,
+    parent,
+    setParent,
+    added,
+    removed,
+    toggleRemoval,
+    askingJunk,
+    askJunk,
+    setIcon,
+    alias,
+    setAlias,
+    spellingCount,
+    hiddenSpellings,
+    relocation,
+    setRelocation,
+  } = draft;
 
   useGroceriesPantryAndCatalogueSubscriptions();
   const [allSpellings, setAllSpellings] = useState(false);
-  // The server sends the viewer's and the household's spellings; the rest are read once asked for.
-  const hiddenSpellings = item.hiddenSpellings ?? 0;
-
-  // The draft: what the viewer has changed and not yet saved.
-  const [name, setName] = useState(item.name);
-  const [parent, setParent] = useState<DraftParent>(item.parent);
-  const [added, setAdded] = useState<string[]>([]);
-  const [removed, setRemoved] = useState<ReadonlySet<string>>(() => new Set());
-  // Of `removed`, the spellings the viewer says name no food, for the junk pile.
-  const [junk, setJunk] = useState<ReadonlySet<string>>(() => new Set());
-  const [askingJunk, setAskingJunk] = useState<Spelling | null>(null);
-  const [icon, setIcon] = useState<IconDraft>(undefined);
-  // What the row counts: every spelling the food has, and the draft's changes to them.
-  const spellingCount = item.aliases.length + hiddenSpellings + added.length - removed.size;
-  const [alias, setAlias] = useState("");
-  const [relocation, setRelocation] = useState<Relocation | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [showingUses, setShowingUses] = useState(false);
   const aiChanges = useAIChangeMutations();
@@ -180,37 +175,10 @@ function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClo
   const kept = usePantryItem(item.id);
   const { addPantryIngredient, removePantryIngredient } = usePantryMutations();
   const [keeps, setKeeps] = useState<boolean | null>(null);
-
-  // A refused save is read back from the server, which would overwrite the
-  // draft the viewer still has to fix: that one read leaves the draft alone.
-  const keepDraftRef = useRef(false);
-
-  // A change elsewhere (a housemate's, or AI's) shows in the draft where the
-  // viewer has not touched that field.
-  const takeSaved = useEffectEvent(() => {
-    if (keepDraftRef.current) {
-      keepDraftRef.current = false;
-
-      return;
-    }
-    setName(item.name);
-    setParent(item.parent);
-  });
-  const parentId = item.parent?.id ?? null;
-
-  // Keyed on the saved values: the panel's own read brings the same parent as a new object.
-  useEffect(() => takeSaved(), [item.name, parentId]);
-
-  const nextName = name.trim();
-  const nameChanged = nextName !== "" && nextName !== item.name;
-  const parentChanged = (parent?.id ?? null) !== (item.parent?.id ?? null);
-  const iconChanged = icon !== undefined;
-  const catalogueDirty =
-    nameChanged || parentChanged || iconChanged || added.length > 0 || removed.size > 0;
   const pantryChanged = keeps !== null && keeps !== (kept !== null);
-  const dirty = catalogueDirty || pantryChanged;
+  const dirty = draft.dirty || pantryChanged;
 
-  /** Lands the Pantry switch, and the catalogue fields as one edit the draft keeps if refused. */
+  /** Lands the Pantry switch, then the catalogue fields as one edit the draft keeps if refused. */
   const save = async () => {
     if (!dirty) return;
     if (pantryChanged) {
@@ -222,87 +190,12 @@ function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClo
         );
       setKeeps(null);
     }
-    if (!catalogueDirty) return;
-    const draft = { added, removed, junk, parent, icon };
-
-    // The row reads as the draft has it, and the draft is spent, at once.
-    setAdded([]);
-    setRemoved(new Set());
-    setJunk(new Set());
-    setIcon(undefined);
-    const saved = await edits.saveDraft({
-      ingredientId: item.id,
-      ...(nameChanged ? { name: nextName } : {}),
-      ...(parentChanged ? { parent } : {}),
-      add: added,
-      remove: [...removed],
-      junk: [...junk],
-      ...(iconChanged ? { icon } : {}),
-    });
-
-    // A refused draft is the viewer's to fix, so it comes back as it was.
-    if (!saved) {
-      keepDraftRef.current = true;
-      setAdded(draft.added);
-      setRemoved(draft.removed);
-      setJunk(draft.junk);
-      setName(nextName);
-      setParent(draft.parent);
-      setIcon(draft.icon);
-    }
-  };
-
-  /** A spelling typed joins the draft clean, as it is stored; the field clears for the next. */
-  const stageAlias = () => {
-    const text = cleanSpelling(alias.trim());
-
-    if (!text) return;
-    if (!added.includes(text)) setAdded((current) => [...current, text]);
-    setAlias("");
-  };
-
-  const saveRelocation = (asked: Relocation, target: IngredientPick) => {
-    if (asked.kind === "parent") {
-      // A parent joins the draft and lands with Save.
-      if (target.id !== null) setParent(target);
-      setRelocation(null);
-
-      return;
-    }
-    const targetId = target.id;
-
-    setRelocation(null);
-    if (asked.kind === "move") {
-      void edits.moveAlias(item.id, asked.aliasId, targetId);
-
-      return;
-    }
-    if (targetId === null) return;
-    // Merged away, the food is gone: nothing is left to show for it.
-    onClose();
-    void edits.merge({ id: item.id, name: displayName }, { id: targetId, name: target.name });
+    await draft.save();
   };
 
   const confirmDelete = () => {
     setDeleting(false);
-    onClose();
-    void edits.remove(item.id);
-  };
-
-  /** Stage a spelling's removal, onto the junk pile when `asJunk`; staged again, it is kept. */
-  const toggleRemoval = (spelling: Spelling, asJunk = false) => {
-    const pending = removed.has(spelling.id);
-    const toggled = (current: ReadonlySet<string>, on: boolean) => {
-      const next = new Set(current);
-
-      if (on) next.add(spelling.id);
-      else next.delete(spelling.id);
-
-      return next;
-    };
-
-    setRemoved((current) => toggled(current, !pending));
-    setJunk((current) => toggled(current, !pending && asJunk));
+    draft.remove();
   };
 
   /**
@@ -346,7 +239,7 @@ function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClo
             className="text-muted hover:text-foreground ml-1 cursor-[var(--cursor-interactive)]"
             data-testid="ingredient-alias-remove"
             type="button"
-            onClick={() => (pendingRemoval ? toggleRemoval(spelling) : setAskingJunk(spelling))}
+            onClick={() => (pendingRemoval ? toggleRemoval(spelling) : askJunk(spelling))}
           >
             {pendingRemoval ? (
               <ArrowUturnLeftIcon className="size-3" />
@@ -394,7 +287,7 @@ function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClo
                   data-testid="ingredient-mark-distinct"
                   size="sm"
                   variant="secondary"
-                  onPress={() => void edits.markDistinct(item.id)}
+                  onPress={() => void draft.markDistinct()}
                 >
                   <ArrowsRightLeftIcon className="size-4" />
                   {t("markDistinct")}
@@ -406,7 +299,7 @@ function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClo
 
         <Section placement="panel" title={t("nameSection")}>
           <div className="flex items-center gap-3">
-            <IngredientIconField draft={icon} item={item} onDraftChange={setIcon} />
+            <IngredientIconField icons={draft.icons} item={item} onDraftChange={setIcon} />
             {item.canEdit ? (
               <TextField
                 aria-label={t("rename")}
@@ -419,7 +312,7 @@ function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClo
                   variant="secondary"
                   onKeyDown={(event) => {
                     if (event.key === "Enter") void save();
-                    if (event.key === "Escape") setName(item.name);
+                    if (event.key === "Escape") draft.resetName();
                   }}
                 />
               </TextField>
@@ -561,7 +454,7 @@ function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClo
                     className="text-muted hover:text-foreground ml-1 cursor-[var(--cursor-interactive)]"
                     data-testid="ingredient-alias-remove"
                     type="button"
-                    onClick={() => setAdded((current) => current.filter((it) => it !== text))}
+                    onClick={() => draft.unstage(text)}
                   >
                     <XMarkIcon className="size-3" />
                   </button>
@@ -580,7 +473,7 @@ function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClo
                   placeholder={t("addAlias")}
                   variant="secondary"
                   onKeyDown={(event) => {
-                    if (event.key === "Enter") stageAlias();
+                    if (event.key === "Enter") draft.stageAlias();
                   }}
                 />
               </TextField>
@@ -589,7 +482,7 @@ function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClo
                 isDisabled={!alias.trim()}
                 label={t("addAlias")}
                 variant="tertiary"
-                onPress={stageAlias}
+                onPress={draft.stageAlias}
               />
             </div>
           </div>
@@ -607,15 +500,15 @@ function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClo
         ingredient={item}
         relocation={relocation}
         onClose={() => setRelocation(null)}
-        onConfirm={saveRelocation}
+        onConfirm={draft.saveRelocation}
       />
 
       <JunkSpellingModal
         alias={askingJunk?.text ?? null}
-        onClose={() => setAskingJunk(null)}
+        onClose={() => askJunk(null)}
         onRemove={(asJunk) => {
           if (askingJunk) toggleRemoval(askingJunk, asJunk);
-          setAskingJunk(null);
+          askJunk(null);
         }}
       />
 

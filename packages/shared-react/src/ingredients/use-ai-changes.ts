@@ -14,6 +14,20 @@ export function isOpenChange(change: AIChange): boolean {
   return !change.sure && !change.kept;
 }
 
+/** What Changed by AI shows: the open changes, the rest, and what Keep all and Undo all answer. */
+export function aiChangesView(changes: AIChange[]) {
+  const unsure = changes.filter(isOpenChange);
+  // Keep all and Undo all answer the open changes the viewer may act on.
+  const actionable = unsure.filter((change) => change.canAct);
+
+  return {
+    unsure,
+    rest: changes.filter((change) => !isOpenChange(change)),
+    actionable,
+    answerAll: actionable.length > 1,
+  };
+}
+
 const markKept = (ids: ReadonlySet<string>) => (list: AIChange[]) =>
   list.map((it) => (ids.has(it.id) ? { ...it, kept: true } : it));
 const drop = (ids: ReadonlySet<string>) => (list: AIChange[]) =>

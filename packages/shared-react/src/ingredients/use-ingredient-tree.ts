@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 
-import type { IngredientItem } from "@norish/shared-react/ingredients";
-import { useIngredientKinds } from "@norish/shared-react/ingredients";
+import type { IngredientItem } from "./types";
+import { useIngredientKinds } from "./use-ingredient-query";
 
 /** One line of the page's tree: a food, how deep it sits, and whether its kinds are folded out. */
 export interface IngredientTreeRow {
