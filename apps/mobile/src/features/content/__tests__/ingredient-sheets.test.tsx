@@ -9,12 +9,18 @@ const held = vi.hoisted(() => ({
   router: { back: vi.fn(), replace: vi.fn(), push: vi.fn() },
   apply: vi.fn(),
   changes: [] as unknown[],
+  read: { failed: false } as { failed: boolean },
+  retry: vi.fn(),
+  offline: false,
   mutations: { keep: vi.fn(), undo: vi.fn(), keepAll: vi.fn(), undoAll: vi.fn(), clear: vi.fn() },
   add: {} as Record<string, unknown>,
   doAdd: vi.fn(),
 }));
 
 vi.mock("expo-router", () => ({ useRouter: () => held.router }));
+vi.mock("@norish/shared-react/offline/react", () => ({
+  useConnectivity: () => ({ isOffline: held.offline }),
+}));
 vi.mock("@/components/ingredient-icon", () => ({
   IngredientIcon: () => null,
   IngredientIconSlots: ({ children }: { children: ReactNode }) => children,
@@ -27,6 +33,7 @@ vi.mock("@norish/shared-react/ingredients", async (importActual) => {
     useIngredientFiltersStore: (select: (state: unknown) => unknown) =>
       select({ filters: actual.DEFAULT_INGREDIENT_FILTERS, apply: held.apply }),
     useAIChangesQuery: () => held.changes,
+    useAIChangesRead: () => ({ ...held.read, retry: held.retry }),
     useAIChangeMutations: () => held.mutations,
     useIngredientIcons: () => undefined,
     useIngredientAdd: () => ({
@@ -85,6 +92,31 @@ describe("IngredientChangesScreen", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     held.changes = [change("a"), change("b"), change("c", { kept: true })];
+    held.read = { failed: false };
+    held.offline = false;
+  });
+
+  it("says a failed load failed, not that AI changed nothing, and Retry reads it again", () => {
+    held.changes = [];
+    held.read = { failed: true };
+    render(<IngredientChangesScreen />);
+    expect(screen.queryByTestId("ingredient-changes-empty")).toBeNull();
+    fireEvent.click(screen.getByTestId("ingredient-changes-retry"));
+    expect(held.retry).toHaveBeenCalled();
+  });
+
+  it("offline, turns Keep, Undo, Keep all, Undo all and Clear off and says why", () => {
+    held.offline = true;
+    render(<IngredientChangesScreen />);
+    for (const id of [
+      "ingredient-change-keep-a",
+      "ingredient-change-undo-a",
+      "ingredient-changes-undo-all",
+      "sheet-confirm",
+      "sheet-secondary-settings.ingredients.changedByAI.clear",
+    ])
+      expect((screen.getByTestId(id) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText("settings.content.offline")).toBeTruthy();
   });
 
   it("says AI changed nothing", () => {

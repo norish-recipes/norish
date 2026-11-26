@@ -6,6 +6,8 @@ import { PillButton } from "@/components/pill-button";
 import { Section } from "@/components/section";
 import { HeadingRow, sectionRows } from "@/components/section-rows";
 import { FitSheet, Sheet, SheetList } from "@/components/sheet";
+import { SheetNote } from "@/components/sheet-note";
+import { Stack } from "@/components/stack";
 import { edgeAt } from "@/lib/card-edges";
 import { useText } from "@/lib/i18n/use-text";
 import { useRouter } from "expo-router";
@@ -17,7 +19,9 @@ import {
   isOpenChange,
   useAIChangeMutations,
   useAIChangesQuery,
+  useAIChangesRead,
 } from "@norish/shared-react/ingredients";
+import { useConnectivity } from "@norish/shared-react/offline/react";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 
 /** Changed by AI: the last month's changes, open ones first with Keep and Undo; a name opens its food. */
@@ -25,7 +29,9 @@ export function IngredientChangesScreen() {
   const text = useText();
   const router = useRouter();
   const { locale } = useIntl();
+  const { isOffline } = useConnectivity();
   const changes = useAIChangesQuery((all) => all);
+  const { failed, retry } = useAIChangesRead();
   const { keep, undo, keepAll, undoAll, clear } = useAIChangeMutations();
   const { unsure, rest, actionable, answerAll } = aiChangesView(changes);
   const rows = sectionRows(
@@ -47,6 +53,7 @@ export function IngredientChangesScreen() {
           {
             label: text("settings.ingredients.changedByAI.clear"),
             symbol: "xmark" as const,
+            disabled: isOffline,
             onPress: () => {
               // Nothing left to check: the sheet would only say AI changed nothing.
               if (unsure.length === 0) router.back();
@@ -60,12 +67,27 @@ export function IngredientChangesScreen() {
   if (changes.length === 0) {
     return (
       <FitSheet name="ingredient-changes" title={title}>
-        <EmptyCard
-          icon="sparkles-outline"
-          placement="sheet"
-          testID="ingredient-changes-empty"
-          title={text("settings.ingredients.changedByAI.empty")}
-        />
+        {failed ? (
+          <EmptyCard
+            action={{
+              label: text("common.actions.retry"),
+              icon: "refresh-outline",
+              testID: "ingredient-changes-retry",
+              onPress: retry,
+            }}
+            icon="alert-circle-outline"
+            placement="sheet"
+            testID="ingredient-changes-failed"
+            title={text("settings.content.loadFailed")}
+          />
+        ) : (
+          <EmptyCard
+            icon="sparkles-outline"
+            placement="sheet"
+            testID="ingredient-changes-empty"
+            title={text("settings.ingredients.changedByAI.empty")}
+          />
+        )}
       </FitSheet>
     );
   }
@@ -76,6 +98,7 @@ export function IngredientChangesScreen() {
         answerAll
           ? {
               label: text("settings.ingredients.changedByAI.keepAll"),
+              disabled: isOffline,
               onPress: () => void keepAll(actionable),
             }
           : undefined
@@ -86,15 +109,19 @@ export function IngredientChangesScreen() {
     >
       <SheetList
         ListFooterComponent={
-          answerAll ? (
-            <PillButton
-              centred
-              icon="arrow-undo-outline"
-              label={text("settings.ingredients.changedByAI.undoAll")}
-              testID="ingredient-changes-undo-all"
-              onPress={() => void undoAll(actionable)}
-            />
-          ) : undefined
+          <Stack>
+            {answerAll ? (
+              <PillButton
+                centred
+                disabled={isOffline}
+                icon="arrow-undo-outline"
+                label={text("settings.ingredients.changedByAI.undoAll")}
+                testID="ingredient-changes-undo-all"
+                onPress={() => void undoAll(actionable)}
+              />
+            ) : null}
+            {isOffline ? <SheetNote>{text("settings.content.offline")}</SheetNote> : null}
+          </Stack>
         }
         data={rows}
         keyExtractor={(row) => row.key}
@@ -120,6 +147,7 @@ export function IngredientChangesScreen() {
                     ? ingredientDisplayName(change.ingredient, locale)
                     : (change.from ?? "")
                 }
+                disabled={isOffline}
                 testID="ingredient-change"
                 onKeep={change.canAct && isOpenChange(change) ? () => void keep(change) : undefined}
                 onOpen={

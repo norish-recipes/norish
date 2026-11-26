@@ -49,6 +49,14 @@ export function useAIChangesQuery<T>(select: (changes: AIChange[]) => T): T {
   return data ?? select(NO_CHANGES);
 }
 
+/** Whether the changes could not be read, with nothing held to show; `retry` reads them again. */
+export function useAIChangesRead() {
+  const trpc = useTRPC();
+  const { data, isError, refetch } = useQuery(trpc.ingredients.aiChanges.queryOptions());
+
+  return { failed: isError && data === undefined, retry: () => void refetch() };
+}
+
 /**
  * Keep and Undo, one or all, and Clear: an answer shows at once, then Ingredients are read again,
  * which also undoes a refused one.
