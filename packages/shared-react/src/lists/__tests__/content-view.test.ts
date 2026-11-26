@@ -38,6 +38,12 @@ describe("contentListView", () => {
     expect(names(contentListView("tag", mine, "so", true))).toEqual([["household", ["soup"]]]);
   });
 
+  it("counts the entries of the All or Unused choice, whatever the search matches", () => {
+    expect(contentListView("tag", mine, "bbq", false).count).toBe(3);
+    expect(contentListView("tag", mine, "zzz", false).count).toBe(3);
+    expect(contentListView("tag", mine, "bbq", true).count).toBe(2);
+  });
+
   it("says why nothing shows: no entries, nothing unused, or no match", () => {
     expect(contentListView("tag", [], "", false).state).toBe("empty");
     expect(contentListView("tag", [entry("BBQ")], "", true).state).toBe("nothingUnused");

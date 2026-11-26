@@ -185,8 +185,26 @@ describe("EntryList", () => {
         failed: false,
         view: {
           state: "list",
+          count: 3,
           sections: [section({ entries: [entry("a"), entry("b"), entry("c")] })],
         },
+      },
+      vi.fn(),
+      vi.fn(),
+      "tags"
+    );
+    expect(screen.getByTestId("heading-household").textContent).toBe(
+      'settings.content.count.tag{"count":3}'
+    );
+  });
+
+  it("keeps the heading at the whole list's count while a search matches fewer", () => {
+    show(
+      {
+        loaded: true,
+        failed: false,
+        search: "a",
+        view: { state: "list", count: 3, sections: [section({ entries: [entry("a")] })] },
       },
       vi.fn(),
       vi.fn(),
@@ -203,7 +221,11 @@ describe("EntryList", () => {
         loaded: true,
         failed: false,
         unusedOnly: true,
-        view: { state: "list", sections: [section({ entries: [entry("a"), entry("b")] })] },
+        view: {
+          state: "list",
+          count: 2,
+          sections: [section({ entries: [entry("a"), entry("b")] })],
+        },
       },
       vi.fn(),
       vi.fn(),

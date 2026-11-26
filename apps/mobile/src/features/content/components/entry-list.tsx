@@ -84,7 +84,7 @@ export function EntryList({
                 item.section.title
                   ? text(`settings.content.sections.${item.section.title}`)
                   : text(`settings.content.${unusedOnly ? "countUnused" : "count"}.${kind}`, {
-                      count: item.section.entries.length,
+                      count: view.count,
                     })
               }
             />
