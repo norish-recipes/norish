@@ -1,4 +1,4 @@
-// The Content tab's routes: the old Ingredients address redirects to the list with its query, the
+// The Content tab's routes: the old Ingredients address redirects to the list, the
 // bare address to Tags, an unknown list is not found; the list picker links every list.
 import type { ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
@@ -8,7 +8,6 @@ import "@testing-library/jest-dom";
 
 import ContentListPage from "@/app/(app)/settings/content/[list]/page";
 import ContentSettingsPage from "@/app/(app)/settings/content/page";
-import IngredientsSettingsPage from "@/app/(app)/settings/ingredients/page";
 import { ContentNav } from "@/features/content/content-nav";
 
 beforeAll(() => {
@@ -48,13 +47,14 @@ vi.mock("@/features/content/content-screen", () => ({
 }));
 
 describe("the old Ingredients address", () => {
-  it("redirects to the Ingredients list and keeps a deep link's query", async () => {
-    await expect(
-      IngredientsSettingsPage({ searchParams: Promise.resolve({ ingredient: "abc" }) })
-    ).rejects.toThrow("redirect:/settings/content/ingredients?ingredient=abc");
-    await expect(IngredientsSettingsPage({ searchParams: Promise.resolve({}) })).rejects.toThrow(
-      "redirect:/settings/content/ingredients"
-    );
+  it("redirects to the Ingredients list before rendering", async () => {
+    const { default: config } = await import("../../../next.config.js");
+
+    expect(await config.redirects?.()).toContainEqual({
+      source: "/settings/ingredients",
+      destination: "/settings/content/ingredients",
+      permanent: false,
+    });
   });
 });
 
