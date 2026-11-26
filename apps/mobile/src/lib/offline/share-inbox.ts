@@ -123,6 +123,8 @@ function nextStep(outcome: ItemOutcome): "done" | "drop" | "keep" | "stop" {
     case "unreachable":
     case "unauthorized":
       return "stop";
+    // Refused as made for another household: the next try names the current one.
+    case "other-household":
     case "ambiguous":
       // ponytail: no attempt cap, so a share the server always fails is retried on each foreground.
       return "keep";
