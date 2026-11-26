@@ -1,9 +1,6 @@
 // @vitest-environment node
-/**
- * The Permission Policy's one condition against real Postgres, with two households under both
- * view levels: every reader of recipes and cookbooks applies it to the row's household, and a
- * policy change hides or shows what reading across households made, never changing it.
- */
+/** The Permission Policy's one condition on real Postgres: every reader of recipes and cookbooks
+ * applies it to the row's household, and a policy change hides or shows rows, never changes them. */
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 

@@ -1,11 +1,6 @@
 // @vitest-environment node
-/**
- * Migration 0093 on a catalogue of an earlier release: own foods go to their minter's household
- * (the heir's when the minter is gone), a food two households use is split (the minter's keeps the
- * id; the other's copy carries its spellings, the icon, a parent of its own and the AI Changes),
- * and every row follows its household's copy. An AI Change names only its household's rows, else
- * has no Undo. A second run changes nothing.
- */
+/** Migration 0093 on an earlier release's catalogue: own foods go to their minter's household and
+ * a food two households use is split; every row follows its household's copy. A rerun changes nothing. */
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";

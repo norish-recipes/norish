@@ -325,11 +325,8 @@ export async function unparkLink(
   });
 }
 
-/**
- * Folds the Tag, Cuisine and Category names migration 0092 could not fold exactly. Two entries of
- * one list folding alike merge: the older keeps its id, the other's recipes move onto it. Then a
- * household entry folding like an instance entry of its kind merges into that one (ADR-0043).
- */
+/** Folds the Tag, Cuisine and Category names migration 0092 could not fold exactly: fold-alike
+ * entries of one list merge, then a household entry folding like an instance entry merges into it. */
 export async function foldPendingListEntries(): Promise<number> {
   let folded = 0;
 

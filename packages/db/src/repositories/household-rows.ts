@@ -113,11 +113,8 @@ export async function assertOwnReferences(
   if (checks.includes(true)) throw new ForeignHouseholdReferenceError();
 }
 
-/**
- * The households of these recipes (or of these lines' recipes), held `FOR KEY SHARE` before any
- * recipe row, so no leave or join moves them until the commit: a write attaching to a recipe then
- * reads the household it lands in. A move committed while the lock was awaited is read again.
- */
+/** Holds the households of these recipes `FOR KEY SHARE` before any recipe row, so no leave or
+ * join moves them until the commit; a move committed while awaiting the lock is read again. */
 export async function lockRecipeHouseholdsTx(
   tx: DbTransaction,
   of: { recipeIds: readonly string[] } | { lineIds: readonly string[] }

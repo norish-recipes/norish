@@ -286,11 +286,8 @@ function namedByUndo({ undo, ingredient, target }: StoredAIChange) {
   return { foods: foods.filter((id) => id !== null), spellings, moved, rows };
 }
 
-/**
- * Whether Undo of the reader's change stays in the reader's catalogue: every food and spelling it
- * names the household's or the seed's, every spelling it moves theirs to edit (the seed's only for
- * an admin), every row the household's; a row gone since is nothing to touch. Never a stranded one.
- */
+/** Whether Undo of the reader's change stays in the reader's catalogue: every food, spelling and
+ * row it touches is the household's (or the seed's, for an admin); a row gone is nothing to touch. */
 export async function undoStaysIn(
   tx: Db,
   reader: AIChangeReader,
@@ -457,12 +454,8 @@ function undoIds(undo: AIChangeUndo): string[] {
   }
 }
 
-/**
- * A join's AI Changes on the joiner's foods merging away into `targets`: every kind
- * follows its target, and one whose Undo can no longer apply (all but a merge, or one naming a food
- * or spelling in `gone`) is stranded: settled history, sure so never open. Before the merges, which
- * take a source's merges along. Answers the foods of the stranded changes, for their flags.
- */
+/** A join's AI Changes on the joiner's foods merging into `targets`: each follows its target, and
+ * one whose Undo can no longer apply is stranded. Runs before the merges. */
 export async function followJoinTargetsTx(
   tx: DbTransaction,
   householdId: string,

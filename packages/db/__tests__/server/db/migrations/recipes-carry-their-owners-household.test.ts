@@ -1,9 +1,6 @@
 // @vitest-environment node
-/**
- * Migration 0090 on a database as earlier releases left it: Orphaned recipes and cookbooks go to
- * the server owner (or the fallback heir), every row takes its Owner's household, and a second
- * run changes nothing.
- */
+/** Migration 0090 on an earlier release's database: orphaned recipes and cookbooks go to an heir,
+ * every row takes its Owner's household, and a rerun changes nothing. */
 
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";

@@ -177,9 +177,8 @@ export const MOVED_ATTEMPTS = 3;
 const DEADLOCK_ATTEMPTS = 3;
 const DEADLOCK_BACKOFF_MS = 50;
 
-/** One transaction of a locked membership write, run afresh while Postgres picks it as a deadlock's
- * victim, or a merge met a name a housemate gave a food meanwhile (`retryUnique`): a rename takes no
- * lock the join holds, and the unique name index is an expression, which no row lock covers. */
+/** Runs a locked membership write afresh when Postgres picks it as a deadlock victim or a merge
+ * met a name a housemate gave a food meanwhile (`retryUnique`), which no row lock covers. */
 async function lockedTransaction<T>(
   work: (tx: DbTransaction) => Promise<T>,
   { retryUnique = false }: { retryUnique?: boolean } = {}
@@ -295,11 +294,8 @@ export type JoinHouseholdOutcome =
   | { joined: HouseholdUserDto; leftHouseholdId: string; memberIds: string[] }
   | { refused: JoinRefusal };
 
-/**
- * Moves an account into another household, merging the household of one it leaves into it
- * and deleting that one; with `name`, only while the household still carries it (case aside).
- * Refused from a shared household (leave first). `memberIds` are the members it joined.
- */
+/** Moves an account into another household, merging the household of one it leaves into it; with
+ * `name`, only while the household still carries it. Refused from a shared household. */
 export async function joinHousehold(
   userId: string,
   target: { householdId: string; name?: string } | { joinCode: string }

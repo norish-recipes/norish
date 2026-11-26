@@ -71,12 +71,8 @@ async function foodsNamedIn(
   return new Map(rows.map((row) => [row.from, row.to]));
 }
 
-/**
- * After a leave (ADR-0042): no line of the household's recipes names another household's food or
- * spelling. Each such food is copied (name, flags, icon file, AI estimate; its parent where seeded or
- * copied too) with the spellings the lines use, a spelling on a seeded food becomes the household's,
- * and the lines and their AI shares follow. The old rows are held against a change until the commit.
- */
+/** After a leave (ADR-0042): copies each other-household food or spelling the household's lines
+ * name, and points the lines and their AI shares at the copies. */
 export async function carryRecipeFoodsTx(tx: DbTransaction, householdId: string): Promise<void> {
   const leaverLines = qb
     .select({ id: recipeIngredients.id })
@@ -342,12 +338,8 @@ async function fileUnderSeededAncestorTx(
     .where(isAnyOf(ingredients.id, [...nearest.keys()], "uuid"));
 }
 
-/**
- * A household of one's catalogue joins `into` (ADR-0042), its recipes moved: each own food has one
- * target, `into`'s food of its name, else the one holding the first spelling they share, and merges
- * into it; a spelling both hold gives its rows to a spelling of that target and goes; a junk mark both
- * hold stays `into`'s; the rest moves as it is. The tree and the foods are locked before anything.
- */
+/** Merges a household of one's catalogue into `into` (ADR-0042): own foods go to `into`'s food of
+ * their name or first shared spelling. The tree and foods are locked before anything. */
 export async function mergeHouseholdCatalogueTx(
   tx: DbTransaction,
   from: string,

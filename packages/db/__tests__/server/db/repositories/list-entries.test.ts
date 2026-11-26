@@ -1,9 +1,6 @@
 // @vitest-environment node
-/**
- * Tags, Cuisines and Categories as household lists (ADR-0043), against real Postgres with two
- * households: unique on the fold within a household, never offered or attached across one, kept
- * until deleted, merged on a rename; and the races the database decides.
- */
+/** Tags, Cuisines and Categories as household lists (ADR-0043), on real Postgres with two
+ * households: unique on the fold within one, never offered or attached across, merged on rename. */
 import { randomUUID } from "node:crypto";
 import { count, eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";

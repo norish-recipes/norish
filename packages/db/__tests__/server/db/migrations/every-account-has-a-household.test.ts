@@ -1,12 +1,6 @@
 // @vitest-environment node
-/**
- * Every account is in exactly one household (ADR-0041).
- *
- * Run against a database migrated up to the migration before it, seeded with
- * accounts as earlier releases left them: some in a household, some in none,
- * some in two, and households whose admin no longer lives there. Applying the
- * migration a second time changes nothing.
- */
+/** Every account is in exactly one household (ADR-0041), seeded as earlier releases left it
+ * (some in none, some in two, admins gone); applying the migration twice changes nothing. */
 
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";

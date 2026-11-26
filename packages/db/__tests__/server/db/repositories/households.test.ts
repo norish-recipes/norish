@@ -1,9 +1,6 @@
 // @vitest-environment node
-/**
- * Every account is in exactly one household (ADR-0041): an account starts in a
- * household of one, leaving or removal ends in a new one, and joining from a
- * household of one merges it into the joined household.
- */
+/** Every account is in exactly one household (ADR-0041): leaving or removal ends in a new one,
+ * and joining from a household of one merges it into the joined household. */
 import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 

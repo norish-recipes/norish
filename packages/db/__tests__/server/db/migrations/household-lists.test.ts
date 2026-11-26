@@ -1,11 +1,6 @@
 // @vitest-environment node
-/**
- * Migration 0092 and the 0.28 boot upgrade on lists of earlier releases: shared Tag and Category
- * rows split per household (the oldest recipe's household keeps the id), rows folding alike merge,
- * built-ins and Cuisines become instance entries, a household row folding like a built-in merges
- * into it, allergies become names; a second run changes nothing, and every stored fold is
- * `entryFold` of its name.
- */
+/** Migration 0092 and the 0.28 boot upgrade on earlier releases' lists: shared Tag and Category
+ * rows split per household and fold-alike rows merge; a rerun changes nothing. */
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";

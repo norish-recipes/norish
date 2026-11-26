@@ -66,9 +66,8 @@ export async function mergeHouseholdRowsTx(
   }
 }
 
-/** Merges a household of one into `into`, after its member's membership moved (the triggers took
- * the recipes and cookbooks): its lists, then its catalogue (the tree, then the foods), then the
- * rows naming those foods, so a Pantry duplicate is found on the food it ends on. */
+/** Merges a household of one into `into` after its member moved: lists, then the catalogue, then
+ * the rows naming its foods, so a Pantry duplicate is found on the food it ends on. */
 export async function mergeHouseholdTx(
   tx: DbTransaction,
   from: string,
