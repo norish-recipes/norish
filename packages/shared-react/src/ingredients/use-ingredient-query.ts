@@ -10,6 +10,7 @@ import {
 import type { AppRouter } from "@norish/trpc/client";
 
 import { useTRPC } from "../trpc";
+import { isNotFoundError } from "../trpc/not-found";
 
 type IngredientListInput = Omit<inferRouterInputs<AppRouter>["ingredients"]["list"], "cursor">;
 
@@ -69,9 +70,21 @@ export function useIngredientKinds(parentIds: readonly string[], locale: string)
 /** One food read on its own, for a panel whose list no longer lists it. */
 export function useIngredientQuery(ingredientId: string, locale: string) {
   const trpc = useTRPC();
-  const { data } = useQuery(trpc.ingredients.get.queryOptions({ ingredientId, locale }));
+  const { data, error, isError, refetch } = useQuery({
+    ...trpc.ingredients.get.queryOptions({ ingredientId, locale }),
+    // A failed read is shown with Retry at once, not after a silent second try.
+    retry: false,
+  });
+  const gone = data === undefined && isNotFoundError(error);
 
-  return data ?? null;
+  return {
+    item: data ?? null,
+    /** The read failed and nothing is held to show. */
+    failed: isError && data === undefined && !gone,
+    /** The server answered that the food no longer exists. */
+    gone,
+    retry: () => void refetch(),
+  };
 }
 
 /** That read as the cache holds it, never fetched here: what a mounted `useIngredientQuery` read. */

@@ -8,6 +8,8 @@ import { alert } from "../../../../__tests__/mocks/content-setup";
 const held = vi.hoisted(() => ({
   router: { back: vi.fn(), push: vi.fn() },
   item: {} as Record<string, unknown> | null,
+  read: { failed: false, gone: false } as { failed: boolean; gone: boolean },
+  retry: vi.fn(),
   draft: {} as Record<string, unknown>,
   save: vi.fn(),
   remove: vi.fn(),
@@ -65,7 +67,7 @@ vi.mock("../components/food-picker-step", () => ({
 }));
 vi.mock("@norish/shared-react/ingredients", async (importActual) => ({
   ...(await importActual<object>()),
-  useIngredientQuery: () => held.item,
+  useIngredientQuery: () => ({ item: held.item, retry: held.retry, ...held.read }),
   useIngredientUsesQuery: () => ({ uses: held.uses }),
   useIngredientNutritionQuery: () => ({ nutrition: null, measure: null }),
   useAIChangeMutations: () => ({ keep: vi.fn(), undo: vi.fn() }),
@@ -106,6 +108,7 @@ describe("IngredientScreen", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     held.item = food();
+    held.read = { failed: false, gone: false };
     held.draft = {};
     held.offline = false;
     held.unsure = [];
@@ -120,6 +123,22 @@ describe("IngredientScreen", () => {
     held.item = null;
     render(<IngredientScreen />);
     expect(screen.getByTestId("skeleton")).toBeTruthy();
+  });
+
+  it("says a failed read failed, not a skeleton forever, and Retry reads it again", () => {
+    held.item = null;
+    held.read = { failed: true, gone: false };
+    render(<IngredientScreen />);
+    expect(screen.queryByTestId("skeleton")).toBeNull();
+    fireEvent.click(screen.getByTestId("food-retry"));
+    expect(held.retry).toHaveBeenCalled();
+  });
+
+  it("closes when the food no longer exists", () => {
+    held.item = null;
+    held.read = { failed: false, gone: true };
+    render(<IngredientScreen />);
+    expect(held.router.back).toHaveBeenCalled();
   });
 
   it("saves only a changed draft, and closes once it went through", async () => {

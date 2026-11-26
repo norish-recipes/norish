@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Alert, Text } from "react-native";
 import { AiChange } from "@/components/ai-change";
 import { Card, CardRow } from "@/components/card";
+import { EmptyCard } from "@/components/empty-card";
 import { destructiveAction } from "@/components/modal-header";
 import { PillButton } from "@/components/pill-button";
 import { FitSheet } from "@/components/sheet";
@@ -42,12 +43,33 @@ export function IngredientScreen() {
   const text = useText();
   const { locale } = useIntl();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const item = useIngredientQuery(id, locale);
+  const router = useRouter();
+  const { item, failed, gone, retry } = useIngredientQuery(id, locale);
+
+  // A housemate deleted the food while it was open.
+  useEffect(() => {
+    if (gone) router.back();
+  }, [gone, router]);
 
   if (!item || item.id !== id) {
     return (
       <FitSheet name="food" title={text("settings.ingredients.title")}>
-        <SheetFieldSkeleton />
+        {failed ? (
+          <EmptyCard
+            action={{
+              label: text("common.actions.retry"),
+              icon: "refresh-outline",
+              testID: "food-retry",
+              onPress: retry,
+            }}
+            icon="alert-circle-outline"
+            placement="sheet"
+            testID="food-failed"
+            title={text("settings.content.loadFailed")}
+          />
+        ) : (
+          <SheetFieldSkeleton />
+        )}
       </FitSheet>
     );
   }
