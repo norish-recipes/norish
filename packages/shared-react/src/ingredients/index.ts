@@ -28,6 +28,7 @@ export {
   useAIChangesQuery,
   useAIChangesRead,
 } from "./use-ai-changes";
+export { CATALOGUE_EXPORT_PATH, DATA_SOURCE_LINKS } from "./data-sources";
 export { DELETE_TOUCHES } from "./delete-touches";
 export { useIngredientList } from "./use-ingredient-list";
 export { useIngredientFor } from "./use-ingredient-for";
