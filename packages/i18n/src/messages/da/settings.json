@@ -568,6 +568,7 @@
     "changedByAI": {
       "title": "Ændret af AI",
       "open": "{count, plural, =0 {Ændret af AI} other {Ændret af AI · # at tjekke}}",
+      "openCompact": "{count, plural, =0 {Ændret af AI} other {# at tjekke}}",
       "unsure": "Ikke sikker",
       "sure": "Ændret",
       "empty": "AI har ikke ændret noget den seneste måned.",

@@ -568,6 +568,7 @@
     "changedByAI": {
       "title": "Changed by AI",
       "open": "{count, plural, =0 {Changed by AI} other {Changed by AI · # to check}}",
+      "openCompact": "{count, plural, =0 {Changed by AI} other {# to check}}",
       "unsure": "Not sure",
       "sure": "Changed",
       "empty": "AI changed nothing in the last month.",

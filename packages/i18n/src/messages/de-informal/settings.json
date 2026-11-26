@@ -568,6 +568,7 @@
     "changedByAI": {
       "title": "Von KI geändert",
       "open": "{count, plural, =0 {Von KI geändert} other {Von KI geändert · # zu prüfen}}",
+      "openCompact": "{count, plural, =0 {Von KI geändert} other {# zu prüfen}}",
       "unsure": "Nicht sicher",
       "sure": "Geändert",
       "empty": "Die KI hat im letzten Monat nichts geändert.",

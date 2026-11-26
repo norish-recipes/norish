@@ -568,6 +568,7 @@
     "changedByAI": {
       "title": "Gewijzigd door AI",
       "open": "{count, plural, =0 {Gewijzigd door AI} other {Gewijzigd door AI · # na te kijken}}",
+      "openCompact": "{count, plural, =0 {Gewijzigd door AI} other {# na te kijken}}",
       "unsure": "Niet zeker",
       "sure": "Gewijzigd",
       "empty": "AI heeft de afgelopen maand niets gewijzigd.",

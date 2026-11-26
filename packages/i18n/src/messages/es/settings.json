@@ -568,6 +568,7 @@
     "changedByAI": {
       "title": "Cambiado por la IA",
       "open": "{count, plural, =0 {Cambiado por la IA} other {Cambiado por la IA · # por revisar}}",
+      "openCompact": "{count, plural, =0 {Cambiado por la IA} other {# por revisar}}",
       "unsure": "No seguro",
       "sure": "Cambiado",
       "empty": "La IA no ha cambiado nada en el último mes.",

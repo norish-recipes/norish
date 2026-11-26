@@ -568,6 +568,7 @@
     "changedByAI": {
       "title": "Tekoälyn muutokset",
       "open": "{count, plural, =0 {Tekoälyn muutokset} other {Tekoälyn muutokset · # tarkistettavaa}}",
+      "openCompact": "{count, plural, =0 {Tekoälyn muutokset} other {# tarkistettavaa}}",
       "unsure": "Ei varma",
       "sure": "Muutettu",
       "empty": "Tekoäly ei ole muuttanut mitään viimeisen kuukauden aikana.",

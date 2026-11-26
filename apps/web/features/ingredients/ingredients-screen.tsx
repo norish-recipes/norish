@@ -96,10 +96,10 @@ export function IngredientsScreen() {
                 action="edit"
                 data-testid="ingredients-ai-changes-open"
                 icon={SparklesIcon}
-                size="sm"
                 onPress={() => setChangesOpen(true)}
               >
-                {t("changedByAI.open", { count: unsure })}
+                <span className="sm:hidden">{t("changedByAI.openCompact", { count: unsure })}</span>
+                <span className="hidden sm:inline">{t("changedByAI.open", { count: unsure })}</span>
               </ActionButton>
             ) : null}
             <ActionButton
