@@ -31,6 +31,7 @@ import {
   restoreSpelling,
   settleAIChange,
   takeOpenParentChanges,
+  undoStaysIn,
   wasDeletionUndone,
   wasMergeUndone,
   wasParentUndone,
@@ -574,6 +575,9 @@ export async function undoAIChange(
   const { piled, ...edit } = await inEdit(async (tx) => {
     const change = await lockChangeFor(tx, actor, changeId);
     const foodId = change.ingredient?.id;
+
+    // Undo writes only in the actor's catalogue: a change naming another household's rows has none.
+    if (!(await undoStaysIn(tx, actor, change))) throw new CatalogueEditError("forbidden");
     const changed = await reverseChange(tx, change);
     // An Undo says the text names a food, so it leaves the household's pile whoever put it there.
     const piled = await takeOffJunkPile(tx, change.householdId, removedFolds(change));

@@ -1,4 +1,5 @@
-import { and, asc, desc, eq, gt, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
+import { and, asc, desc, eq, gt, inArray, isNotNull, isNull, not, or, sql } from "drizzle-orm";
 import { alias, QueryBuilder } from "drizzle-orm/pg-core";
 
 import type { Db, DbTransaction } from "@norish/db/drizzle";
@@ -13,6 +14,7 @@ import {
   pantryIngredients,
   recipeIngredientFoods,
   recipeIngredients,
+  recipes,
   recurringGroceries,
   users,
 } from "@norish/db/schema";
@@ -113,6 +115,11 @@ export const parentIsOpenAnswer = sql<boolean>`exists (select 1 from ${ingredien
   open
 )})`;
 
+/** A food a change names is listed by name only where it is the change's household's or the seed's. */
+function inChangesCatalogue(householdId: AnyPgColumn) {
+  return or(eq(householdId, ingredientAIChanges.householdId), isNull(householdId));
+}
+
 function selectChanges(tx: Db = db) {
   return tx
     .select({
@@ -132,13 +139,17 @@ function selectChanges(tx: Db = db) {
     })
     .from(ingredientAIChanges)
     .leftJoin(ingredients, eq(ingredients.id, ingredientAIChanges.ingredientId))
-    .leftJoin(targets, eq(targets.id, ingredientAIChanges.targetId))
+    .leftJoin(
+      targets,
+      and(eq(targets.id, ingredientAIChanges.targetId), inChangesCatalogue(targets.householdId))
+    )
     .leftJoin(
       dropped,
       and(
         eq(ingredientAIChanges.kind, "parent"),
         isNull(ingredientAIChanges.targetId),
-        sql`${dropped.id} = (${ingredientAIChanges.undo} ->> 'formerParentId')::uuid`
+        sql`${dropped.id} = (${ingredientAIChanges.undo} ->> 'formerParentId')::uuid`,
+        inChangesCatalogue(dropped.householdId)
       )
     );
 }
@@ -218,6 +229,112 @@ export async function lockAIChange(
     .for("update", { of: ingredientAIChanges });
 
   return row ? toStoredChange(row) : null;
+}
+
+/** `column` is one of `ids`, bound as one array. */
+function amongIds(column: AnyPgColumn, ids: readonly string[]) {
+  return sql`${column} = any(${sql.param([...ids])}::uuid[])`;
+}
+
+/** The foods, spellings and rows a change's Undo reads, moves or points back. */
+function namedByUndo({ undo, ingredient, target }: StoredAIChange) {
+  const foods = [ingredient?.id ?? null, target?.id ?? null];
+  const spellings: string[] = [];
+  const moved: string[] = [];
+  const rows: string[] = [];
+
+  switch (undo.kind) {
+    case "merge":
+      foods.push(undo.parentId);
+      moved.push(...undo.aliasIds);
+      break;
+    case "parent":
+      foods.push(undo.formerParentId);
+      break;
+    case "plain-name":
+      break;
+    case "not-a-food":
+      foods.push(undo.food.parentId);
+      rows.push(
+        ...undo.food.lineFoods.map((food) => food.lineId),
+        ...[...undo.food.groceries, ...undo.food.recurring].map((row) => row.id)
+      );
+      break;
+    case "spelling":
+      moved.push(undo.spelling.id);
+      for (const line of undo.lines) {
+        rows.push(line.id);
+        spellings.push(...line.aliasIds);
+      }
+      rows.push(...undo.groceries, ...undo.recurring, ...Object.keys(undo.left ?? {}));
+      spellings.push(...Object.values(undo.left ?? {}).flat());
+      break;
+  }
+
+  return { foods: foods.filter((id) => id !== null), spellings, moved, rows };
+}
+
+/**
+ * Whether Undo of the reader's change stays in the reader's catalogue: every food and spelling it
+ * names the household's or the seed's, every spelling it moves theirs to edit (the seed's only for
+ * an admin), every row the household's; a row gone since is nothing to touch. Never a stranded one.
+ */
+export async function undoStaysIn(
+  tx: Db,
+  reader: AIChangeReader,
+  change: StoredAIChange
+): Promise<boolean> {
+  if (change.undo.stranded) return false;
+  const { foods, spellings, moved, rows } = namedByUndo(change);
+  const editable = or(
+    eq(ingredientAliases.householdId, reader.householdId),
+    reader.isServerAdmin ? isNull(ingredientAliases.householdId) : undefined
+  );
+  const own = (householdId: AnyPgColumn) => eq(householdId, reader.householdId);
+  const seen = (householdId: AnyPgColumn) => or(own(householdId), isNull(householdId));
+  const outside: Array<() => Promise<unknown[]>> = [
+    () =>
+      tx
+        .select({ id: ingredients.id })
+        .from(ingredients)
+        .where(and(amongIds(ingredients.id, foods), not(seen(ingredients.householdId)!)))
+        .limit(1),
+    () =>
+      tx
+        .select({ id: ingredientAliases.id })
+        .from(ingredientAliases)
+        .where(
+          or(
+            and(
+              amongIds(ingredientAliases.id, spellings),
+              not(seen(ingredientAliases.householdId)!)
+            ),
+            and(amongIds(ingredientAliases.id, moved), not(editable!))
+          )
+        )
+        .limit(1),
+    () =>
+      tx
+        .select({ id: recipeIngredients.id })
+        .from(recipeIngredients)
+        .innerJoin(recipes, eq(recipes.id, recipeIngredients.recipeId))
+        .where(and(amongIds(recipeIngredients.id, rows), not(own(recipes.householdId))))
+        .limit(1),
+    ...[groceries, recurringGroceries].map(
+      (table) => () =>
+        tx
+          .select({ id: table.id })
+          .from(table)
+          .where(and(amongIds(table.id, rows), not(own(table.householdId))))
+          .limit(1)
+    ),
+  ];
+
+  for (const query of outside) {
+    if ((await query()).length > 0) return false;
+  }
+
+  return true;
 }
 
 /** Mark a change kept or undone. */

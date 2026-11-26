@@ -45,8 +45,11 @@ export interface ChangedSpelling {
   left?: Record<string, string[]>;
 }
 
-/** What Undo needs per kind of AI Change. */
-export type AIChangeUndo =
+/**
+ * What Undo needs per kind of AI Change. `stranded`: it named another household's food, spelling or
+ * row at the split into household catalogues (ADR-0042), so it has no Undo.
+ */
+export type AIChangeUndo = (
   | {
       kind: "merge";
       name: string;
@@ -57,7 +60,8 @@ export type AIChangeUndo =
   | { kind: "parent"; formerParentId: string | null }
   | { kind: "plain-name"; formerName: string; name: string }
   | { kind: "not-a-food"; food: DeletedFood }
-  | ({ kind: "spelling" } & ChangedSpelling);
+  | ({ kind: "spelling" } & ChangedSpelling)
+) & { stranded?: true };
 
 /**
  * AI Changes (CONTEXT.md): under `ingredientId` (naming `targetId`); a deleted food's food is in

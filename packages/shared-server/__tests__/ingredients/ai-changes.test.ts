@@ -6,12 +6,14 @@
  * decision about the food. Both follow `edit` on the food the change was
  * about, and a person looking after a food keeps what AI was unsure of.
  */
+import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { CatalogueActor } from "@norish/shared-server/ingredients/catalogue";
 import { withTransaction } from "@norish/db/drizzle";
 import {
   listAIChanges,
+  recordAIChange,
   sweepAIChanges,
   takeOpenParentChanges,
 } from "@norish/db/repositories/ingredient-ai-changes";
@@ -294,6 +296,40 @@ describe("keeping and undoing AI Changes", () => {
     await undoAIChange(actor, change.id);
     expect(await getRecipeIngredients(recipe.id)).toMatchObject([
       { name: "melted", ingredientId: melted.ingredientId },
+    ]);
+  });
+
+  it("refuses an Undo that would point another household's line at the food, changing nothing", async () => {
+    const stranger = await createTestUser();
+    const theirs = await createTestRecipe(stranger.id, { name: "fudge" });
+    const theirLine = await insertTestRecipeLine({ recipeId: theirs.id, name: "melted" });
+    const food = { ingredientId: randomUUID(), aliasId: randomUUID() };
+    const changeId = await withTransaction((tx) =>
+      recordAIChange(tx, {
+        householdId: actor.householdId,
+        sure: true,
+        undo: {
+          kind: "not-a-food",
+          food: {
+            ingredientId: food.ingredientId,
+            name: "melted",
+            ownerId: actor.userId,
+            parentId: null,
+            aliases: [
+              { id: food.aliasId, text: "melted", fold: "melted", locale: null, ownerId: null },
+            ],
+            lineFoods: [{ lineId: theirLine.id, position: 0, aliasId: food.aliasId }],
+            groceries: [],
+            recurring: [],
+          },
+        },
+      })
+    );
+
+    await expect(undoAIChange(actor, changeId)).rejects.toMatchObject({ refusal: "forbidden" });
+    await expect(readTestIngredient(food.ingredientId)).resolves.toBeNull();
+    expect(await getRecipeIngredients(theirs.id)).toMatchObject([
+      { name: "melted", ingredientId: null },
     ]);
   });
 
