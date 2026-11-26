@@ -89,13 +89,6 @@ vi.mock("@norish/db/repositories/master-key", () => ({
     };
   },
 }));
-vi.mock("@norish/shared-server/valkey/session-store", () => ({
-  endStoredSessions: async () => {
-    rekeys.steps.push("sessions ended");
-
-    return { sessions: 3, verifications: 1 };
-  },
-}));
 vi.mock("@norish/shared-server/logger", () => {
   const record =
     (level: string) =>
@@ -111,8 +104,16 @@ vi.mock("@norish/shared-server/logger", () => {
   return { serverLogger: logger, createLogger: () => logger };
 });
 
-const { keyFilePath, openMasterKey, readKeyFile, resolveMasterKey, writeKeyFile } =
-  await import("@norish/shared-server/master-key");
+const masterKey = await import("@norish/shared-server/master-key");
+const { keyFilePath, openMasterKey, readKeyFile, writeKeyFile } = masterKey;
+
+/** Boot's key resolution, handed a session store that only records it was ended. */
+const resolveMasterKey = () =>
+  masterKey.resolveMasterKey(async () => {
+    rekeys.steps.push("sessions ended");
+
+    return { sessions: 3, verifications: 1 };
+  });
 
 const keyDir = () => path.dirname(keyFilePath());
 const modeOf = async (target: string) => (await fs.stat(target)).mode & 0o777;

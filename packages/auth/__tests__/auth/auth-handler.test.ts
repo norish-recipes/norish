@@ -15,11 +15,11 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 
 import { authSecret, initMasterKey } from "@norish/config/crypto";
 import { getValkeyConnectionOptions } from "@norish/shared-server/valkey/client";
-import { endStoredSessions } from "@norish/shared-server/valkey/session-store";
 
 import type { Identity } from "../helpers/identity-provider";
 import { openBase64MasterKey } from "../../../config/__tests__/helpers/master-key";
 import { VALKEY_IMAGE, valkeyUrl } from "../../../shared-server/__tests__/helpers/valkey";
+import { endStoredSessions } from "../../src/secondary-storage";
 import { createIdentityProvider, IDP_CLIENT_ID } from "../helpers/identity-provider";
 
 const { store, client, registration, serverConfig, admins } = vi.hoisted(() => ({

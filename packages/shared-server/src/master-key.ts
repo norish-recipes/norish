@@ -18,7 +18,9 @@ import {
   rekeyMasterKey,
 } from "@norish/db/repositories/master-key";
 import { serverLogger as log } from "@norish/shared-server/logger";
-import { endStoredSessions } from "@norish/shared-server/valkey/session-store";
+
+/** Ends every session the session store keeps; the server's boot hands in Better Auth's. */
+export type EndStoredSessions = () => Promise<{ sessions: number; verifications: number }>;
 
 /** The keys a key file holds: `previous` only between a rotation and the boot that re-keys. */
 export type KeyFile = { current: Buffer; previous?: Buffer };
@@ -274,7 +276,12 @@ const keyNamedBy = (source: KeySource, fingerprint: string | null) =>
   keyThatFits(source, (key) => masterKeyFingerprint(key) === fingerprint);
 
 /** Move everything from the previous key to the current one; until it commits nothing serves. */
-async function rekey(source: KeySource, previous: Buffer, current: Buffer): Promise<void> {
+async function rekey(
+  source: KeySource,
+  previous: Buffer,
+  current: Buffer,
+  endStoredSessions: EndStoredSessions
+): Promise<void> {
   log.info(
     { from: source.labels.previous, to: source.labels.current },
     "Re-keying to a new Master Key"
@@ -321,7 +328,7 @@ async function retirePrevious(source: KeySource, current: Buffer): Promise<void>
  * Pick the Master Key by the database's fingerprint and open it: once, after the database is
  * reachable and before any crypto. Generates one only for an instance that holds nothing encrypted.
  */
-export async function resolveMasterKey(): Promise<void> {
+export async function resolveMasterKey(endStoredSessions: EndStoredSessions): Promise<void> {
   const fingerprint = await getMasterKeyFingerprint();
   const source = await keySource();
 
@@ -331,7 +338,7 @@ export async function resolveMasterKey(): Promise<void> {
     : await adoptKey(source);
   const { keys, key } = keyNamedBy(opening, stored);
 
-  if (key !== keys.current) await rekey(opening, key, keys.current);
+  if (key !== keys.current) await rekey(opening, key, keys.current, endStoredSessions);
   initMasterKey(keys.current);
   log.info({ source: opening.labels.current }, "Master Key opened");
   if (keys.previous) await retirePrevious(opening, keys.current);
