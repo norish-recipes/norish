@@ -5,12 +5,12 @@ import { useEffect, useEffectEvent, useRef, useState } from "react";
 import Link from "next/link";
 import { OnTheListMark } from "@/components/ingredients/on-the-list-mark";
 import Panel from "@/components/Panel/Panel";
-import { PanelSection } from "@/components/Panel/panel-section";
 import {
   ActionButton,
   ActionButtonGroup,
   IconActionButton,
 } from "@/components/shared/action-button";
+import { Section } from "@/components/shared/section";
 import UiSwitch from "@/components/shared/ui-switch";
 import { ArrowsRightLeftIcon, PencilSquareIcon } from "@heroicons/react/16/solid";
 import { ArrowUturnLeftIcon, ChevronRightIcon, XMarkIcon } from "@heroicons/react/24/outline";
@@ -361,134 +361,132 @@ function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClo
 
   return (
     <>
-      <Panel.Body>
-        <div className="flex flex-col gap-5 pb-2" data-testid="ingredient-details">
-          {unsure.length > 0 ? (
-            <PanelSection title={t("changedByAI.unsure")}>
-              <div className="flex flex-col gap-3" data-testid="ingredient-ai-changes">
-                {unsure.map((change) => (
-                  <div
-                    key={change.id}
-                    className="flex flex-wrap items-center justify-between gap-2"
-                    data-kind={change.kind}
-                    data-testid="ingredient-ai-change"
-                  >
-                    <p className="text-sm font-medium">{changeMessage(t, change, locale)}</p>
-                    <AIChangeActions
-                      change={change}
-                      onKeep={(it) => void aiChanges.keep(it)}
-                      onUndo={(it) => void aiChanges.undo(it)}
-                    />
-                  </div>
-                ))}
-              </div>
-            </PanelSection>
-          ) : null}
-          {item.flagged ? (
-            <div className="flex flex-col gap-3" data-testid="ingredient-flag-notice">
-              <p className="text-muted text-sm" data-testid="ingredient-flag-reason">
-                {t(`flagReasons.${item.flagReason ?? "unknown"}`)}
-              </p>
-              {item.canEdit ? (
-                <div className="flex flex-wrap items-center gap-2">
-                  <Button
-                    data-testid="ingredient-mark-distinct"
-                    size="sm"
-                    variant="secondary"
-                    onPress={() => void edits.markDistinct(item.id)}
-                  >
-                    <ArrowsRightLeftIcon className="size-4" />
-                    {t("markDistinct")}
-                  </Button>
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-
-          <PanelSection title={t("nameSection")}>
-            <div className="flex items-center gap-3">
-              <IngredientIconField draft={icon} item={item} onDraftChange={setIcon} />
-              {item.canEdit ? (
-                <TextField
-                  aria-label={t("rename")}
-                  className="min-w-0 flex-1"
-                  value={name}
-                  onChange={setName}
+      <Panel.Body data-testid="ingredient-details" sections>
+        {unsure.length > 0 ? (
+          <Section placement="panel" title={t("changedByAI.unsure")}>
+            <div className="flex flex-col gap-3" data-testid="ingredient-ai-changes">
+              {unsure.map((change) => (
+                <div
+                  key={change.id}
+                  className="flex flex-wrap items-center justify-between gap-2"
+                  data-kind={change.kind}
+                  data-testid="ingredient-ai-change"
                 >
-                  <Input
-                    data-testid="ingredient-name-input"
-                    variant="secondary"
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") void save();
-                      if (event.key === "Escape") setName(item.name);
-                    }}
+                  <p className="text-sm font-medium">{changeMessage(t, change, locale)}</p>
+                  <AIChangeActions
+                    change={change}
+                    onKeep={(it) => void aiChanges.keep(it)}
+                    onUndo={(it) => void aiChanges.undo(it)}
                   />
-                </TextField>
-              ) : (
-                <p className="font-medium">{item.name}</p>
-              )}
+                </div>
+              ))}
             </div>
-            {displayName !== item.name ? (
-              <p className="text-muted text-sm">{t("shownAs", { name: displayName })}</p>
-            ) : null}
-          </PanelSection>
-
-          <PanelSection title={tGroceries("pantry")}>
-            <PantryRow
-              keeping={keeps ?? kept !== null}
-              kept={kept}
-              onKeepingChange={(on) => setKeeps(on === (kept !== null) ? null : on)}
-            />
-          </PanelSection>
-
-          <PanelSection title={t("parentSection")}>
-            <div className="flex flex-wrap items-center gap-2" data-testid="ingredient-parent">
-              {parent ? (
-                // The same height as the button beside it: the pair reads as one row.
-                <Chip className="h-9 px-3 text-sm md:h-8" size="lg" variant="secondary">
-                  {ingredientDisplayName(parent, locale)}
-                  {item.canEdit ? (
-                    <button
-                      aria-label={t("clearParent")}
-                      className="text-muted hover:text-foreground ml-1 cursor-[var(--cursor-interactive)]"
-                      data-testid="ingredient-clear-parent"
-                      type="button"
-                      onClick={() => setParent(null)}
-                    >
-                      <XMarkIcon className="size-4" />
-                    </button>
-                  ) : null}
-                </Chip>
-              ) : null}
-              {item.canEdit ? (
+          </Section>
+        ) : null}
+        {item.flagged ? (
+          <div className="flex flex-col gap-3" data-testid="ingredient-flag-notice">
+            <p className="text-muted text-sm" data-testid="ingredient-flag-reason">
+              {t(`flagReasons.${item.flagReason ?? "unknown"}`)}
+            </p>
+            {item.canEdit ? (
+              <div className="flex flex-wrap items-center gap-2">
                 <Button
-                  data-testid="ingredient-set-parent"
+                  data-testid="ingredient-mark-distinct"
                   size="sm"
                   variant="secondary"
-                  onPress={() => setRelocation({ kind: "parent" })}
+                  onPress={() => void edits.markDistinct(item.id)}
                 >
-                  <PencilSquareIcon className="size-4" />
-                  {parent ? t("changeParent") : t("setParent")}
+                  <ArrowsRightLeftIcon className="size-4" />
+                  {t("markDistinct")}
                 </Button>
-              ) : null}
-            </div>
-          </PanelSection>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
 
-          <PanelSection title={t("spellingsSection")}>
-            <Button
-              fullWidth
-              className="justify-between"
-              data-testid="ingredient-all-spellings"
-              variant="tertiary"
-              onPress={() => setAllSpellings(true)}
-            >
-              {t("spellingsCount", { count: spellingCount })}
-              <ChevronRightIcon className="size-4" />
-            </Button>
-          </PanelSection>
+        <Section placement="panel" title={t("nameSection")}>
+          <div className="flex items-center gap-3">
+            <IngredientIconField draft={icon} item={item} onDraftChange={setIcon} />
+            {item.canEdit ? (
+              <TextField
+                aria-label={t("rename")}
+                className="min-w-0 flex-1"
+                value={name}
+                onChange={setName}
+              >
+                <Input
+                  data-testid="ingredient-name-input"
+                  variant="secondary"
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") void save();
+                    if (event.key === "Escape") setName(item.name);
+                  }}
+                />
+              </TextField>
+            ) : (
+              <p className="font-medium">{item.name}</p>
+            )}
+          </div>
+          {displayName !== item.name ? (
+            <p className="text-muted text-sm">{t("shownAs", { name: displayName })}</p>
+          ) : null}
+        </Section>
 
-          <IngredientNutritionSection ingredientId={item.id} name={displayName} />
-        </div>
+        <Section placement="panel" title={tGroceries("pantry")}>
+          <PantryRow
+            keeping={keeps ?? kept !== null}
+            kept={kept}
+            onKeepingChange={(on) => setKeeps(on === (kept !== null) ? null : on)}
+          />
+        </Section>
+
+        <Section placement="panel" title={t("parentSection")}>
+          <div className="flex flex-wrap items-center gap-2" data-testid="ingredient-parent">
+            {parent ? (
+              // The same height as the button beside it: the pair reads as one row.
+              <Chip className="h-9 px-3 text-sm md:h-8" size="lg" variant="secondary">
+                {ingredientDisplayName(parent, locale)}
+                {item.canEdit ? (
+                  <button
+                    aria-label={t("clearParent")}
+                    className="text-muted hover:text-foreground ml-1 cursor-[var(--cursor-interactive)]"
+                    data-testid="ingredient-clear-parent"
+                    type="button"
+                    onClick={() => setParent(null)}
+                  >
+                    <XMarkIcon className="size-4" />
+                  </button>
+                ) : null}
+              </Chip>
+            ) : null}
+            {item.canEdit ? (
+              <Button
+                data-testid="ingredient-set-parent"
+                size="sm"
+                variant="secondary"
+                onPress={() => setRelocation({ kind: "parent" })}
+              >
+                <PencilSquareIcon className="size-4" />
+                {parent ? t("changeParent") : t("setParent")}
+              </Button>
+            ) : null}
+          </div>
+        </Section>
+
+        <Section placement="panel" title={t("spellingsSection")}>
+          <Button
+            fullWidth
+            className="justify-between"
+            data-testid="ingredient-all-spellings"
+            variant="tertiary"
+            onPress={() => setAllSpellings(true)}
+          >
+            {t("spellingsCount", { count: spellingCount })}
+            <ChevronRightIcon className="size-4" />
+          </Button>
+        </Section>
+
+        <IngredientNutritionSection ingredientId={item.id} name={displayName} />
       </Panel.Body>
 
       <Panel.Footer>
@@ -715,46 +713,44 @@ function IngredientUsesContent({
 
   return (
     <>
-      <Panel.Body>
-        <div className="flex flex-col gap-5 pb-2" data-testid="ingredient-uses">
-          {!data ? <Skeleton className="h-16 w-full rounded-xl" /> : null}
-          {data && data.recipes.length > 0 ? (
-            <PanelSection title={t("recipes")}>
-              <ul className="flex flex-col gap-1 text-sm">
-                {data.recipes.map((recipe) => (
-                  <li key={recipe.id}>
-                    <Link
-                      className="text-accent hover:underline"
-                      href={`/recipes/${recipe.id}`}
-                      onClick={onClose}
-                    >
-                      {recipe.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </PanelSection>
-          ) : null}
-          {data && data.groceries.length > 0 ? (
-            <PanelSection title={t("groceries")}>
-              <ul className="flex flex-col gap-1 text-sm">
-                {data.groceries.map((grocery) => (
-                  <li key={grocery.id}>
-                    {grocery.name}
-                    {grocery.done || grocery.recurring ? (
-                      <span className="text-muted">
-                        {" · "}
-                        {grocery.recurring ? t("repeats") : t("done")}
-                      </span>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
-            </PanelSection>
-          ) : null}
-          {data?.pantry ? <p className="text-sm">{t("pantry")}</p> : null}
-          {unused ? <p className="text-muted text-sm">{t("none")}</p> : null}
-        </div>
+      <Panel.Body data-testid="ingredient-uses" sections>
+        {!data ? <Skeleton className="h-16 w-full rounded-xl" /> : null}
+        {data && data.recipes.length > 0 ? (
+          <Section placement="panel" title={t("recipes")}>
+            <ul className="flex flex-col gap-1 text-sm">
+              {data.recipes.map((recipe) => (
+                <li key={recipe.id}>
+                  <Link
+                    className="text-accent hover:underline"
+                    href={`/recipes/${recipe.id}`}
+                    onClick={onClose}
+                  >
+                    {recipe.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </Section>
+        ) : null}
+        {data && data.groceries.length > 0 ? (
+          <Section placement="panel" title={t("groceries")}>
+            <ul className="flex flex-col gap-1 text-sm">
+              {data.groceries.map((grocery) => (
+                <li key={grocery.id}>
+                  {grocery.name}
+                  {grocery.done || grocery.recurring ? (
+                    <span className="text-muted">
+                      {" · "}
+                      {grocery.recurring ? t("repeats") : t("done")}
+                    </span>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          </Section>
+        ) : null}
+        {data?.pantry ? <p className="text-sm">{t("pantry")}</p> : null}
+        {unused ? <p className="text-muted text-sm">{t("none")}</p> : null}
       </Panel.Body>
       <Panel.Footer>
         <ActionButtonGroup>

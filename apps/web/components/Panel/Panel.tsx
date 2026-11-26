@@ -92,6 +92,12 @@ type PanelSectionProps = {
   className?: string;
 };
 
+type PanelBodyProps = PanelSectionProps & {
+  /** The body holds sections: the gap between them is the panel's. */
+  sections?: boolean;
+  "data-testid"?: string;
+};
+
 const PANEL_MAX_HEIGHT_CLASS = "max-h-[80dvh]";
 
 const BACKDROP_VARIANT_CLASSES: Record<NonNullable<PanelProps["backdropVariant"]>, string> = {
@@ -99,14 +105,16 @@ const BACKDROP_VARIANT_CLASSES: Record<NonNullable<PanelProps["backdropVariant"]
   transparent: "bg-transparent",
 };
 
-function PanelBody({ children, className }: PanelSectionProps) {
+function PanelBody({ children, className, sections, "data-testid": testId }: PanelBodyProps) {
   return (
     <div
       className={twMerge(
         "flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-5 py-2",
+        sections && "gap-5",
         className
       )}
       data-slot="panel-body"
+      data-testid={testId}
     >
       {children}
     </div>

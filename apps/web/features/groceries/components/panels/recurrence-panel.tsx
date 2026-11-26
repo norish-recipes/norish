@@ -36,6 +36,7 @@ type RecurrencePanelProps = {
   returnToPreviousPanel?: () => void;
 };
 const WEEKDAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as const;
+
 export function RecurrencePanel({
   open,
   nested = false,
@@ -93,6 +94,7 @@ export function RecurrencePanel({
   };
   const nextOccurrence = pattern ? calculateNextOccurrence(pattern, getTodayString()) : null;
   const showWeekdaySelector = recurrenceHasWeekday(pattern);
+
   return (
     <Panel
       nested={nested}
@@ -106,7 +108,7 @@ export function RecurrencePanel({
         }
       }}
     >
-      <Panel.Body className="gap-5">
+      <Panel.Body sections>
         {/* Frequency Selector */}
         <div>
           <span className="text-muted mb-2.5 block text-xs font-semibold tracking-wider uppercase">

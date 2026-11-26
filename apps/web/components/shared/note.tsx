@@ -1,12 +1,15 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { LockClosedIcon } from "@heroicons/react/24/outline";
 import { Alert } from "@heroui/react";
 
 interface NoteProps {
   /** `warning` only for real caution; something merely worth knowing stays `default`. */
   status?: "default" | "accent" | "warning" | "danger";
   title?: ReactNode;
+  /** A lock instead of the status's own icon: what the note says cannot be changed. */
+  locked?: boolean;
   children: ReactNode;
   className?: string;
 }
@@ -16,13 +19,15 @@ interface NoteProps {
  * them: an icon that says what kind of note it is, so its words need no
  * "Note:" in front. One shape for every note in a card or a dialog.
  */
-export function Note({ status = "default", title, children, className }: NoteProps) {
+export function Note({ status = "default", title, locked, children, className }: NoteProps) {
   return (
     <Alert
       className={`bg-surface-secondary rounded-2xl shadow-none ${className ?? ""}`}
       status={status}
     >
-      <Alert.Indicator />
+      <Alert.Indicator>
+        {locked ? <LockClosedIcon aria-hidden className="size-5" /> : null}
+      </Alert.Indicator>
       <Alert.Content className="gap-1">
         {title ? <Alert.Title>{title}</Alert.Title> : null}
         <div className="text-muted text-sm">{children}</div>
