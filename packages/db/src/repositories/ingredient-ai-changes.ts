@@ -33,8 +33,9 @@ import {
   users,
 } from "@norish/db/schema";
 
+import type { CatalogueReader } from "./household-scope";
 import { isAnyOf } from "./array-params";
-import { inCatalogue } from "./household-scope";
+import { editableBy, inCatalogue } from "./household-scope";
 import { findGroceryRows, nameIsFree, rowsNaming } from "./ingredient-catalogue";
 import { repointLines } from "./ingredient-cleanup";
 
@@ -44,17 +45,11 @@ import { repointLines } from "./ingredient-cleanup";
  * checked in `@norish/shared-server/ingredients`.
  */
 
-/** Who reads AI Changes: a household, and whether an admin, who also sees the seed's. */
-export interface AIChangeReader {
-  householdId: string;
-  isServerAdmin: boolean;
-}
+/** Who reads AI Changes: those of every household they edit the catalogue of (`editableHouseholds`). */
+export type AIChangeReader = CatalogueReader;
 
 function readBy(reader: AIChangeReader) {
-  return or(
-    eq(ingredientAIChanges.householdId, reader.householdId),
-    reader.isServerAdmin ? isNull(ingredientAIChanges.householdId) : undefined
-  );
+  return editableBy(ingredientAIChanges.householdId, reader);
 }
 
 /**
@@ -302,10 +297,7 @@ export async function undoStaysIn(
 ): Promise<boolean> {
   if (change.undo.stranded) return false;
   const { foods, spellings, moved, rows } = namedByUndo(change);
-  const editable = or(
-    eq(ingredientAliases.householdId, reader.householdId),
-    reader.isServerAdmin ? isNull(ingredientAliases.householdId) : undefined
-  );
+  const editable = editableBy(ingredientAliases.householdId, reader);
   const own = (householdId: AnyPgColumn) => eq(householdId, reader.householdId);
   const seen = (householdId: AnyPgColumn) => inCatalogue(householdId, reader.householdId);
   const outside: Array<() => Promise<unknown[]>> = [
@@ -325,7 +317,7 @@ export async function undoStaysIn(
               isAnyOf(ingredientAliases.id, spellings, "uuid"),
               not(seen(ingredientAliases.householdId))
             ),
-            and(isAnyOf(ingredientAliases.id, moved, "uuid"), not(editable!))
+            and(isAnyOf(ingredientAliases.id, moved, "uuid"), not(editable))
           )
         )
         .limit(1),
@@ -830,7 +822,7 @@ async function pointBack(
   }
 }
 
-/** A spelling as Undo of its removal or move would put it back, with its food and whether seeded. */
+/** A spelling as Undo of its removal or move would put it back, with its food and household. */
 export async function readChangedSpelling(
   tx: DbTransaction,
   aliasId: string
@@ -838,7 +830,6 @@ export async function readChangedSpelling(
   | (ChangedSpelling["spelling"] & {
       ingredientId: string;
       householdId: string | null;
-      seeded: boolean;
     })
   | null
 > {
@@ -851,7 +842,6 @@ export async function readChangedSpelling(
       locale: ingredientAliases.locale,
       ownerId: ingredientAliases.ownerId,
       ingredientId: ingredientAliases.ingredientId,
-      seeded: ingredientAliases.seeded,
     })
     .from(ingredientAliases)
     .where(eq(ingredientAliases.id, aliasId));

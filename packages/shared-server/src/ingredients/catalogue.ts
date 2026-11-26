@@ -18,6 +18,7 @@ import type {
 } from "@norish/shared/lib/ingredient-search";
 import { withTransaction } from "@norish/db/drizzle";
 import { isConstraintViolation } from "@norish/db/repositories/constraint-violation";
+import { editableHouseholds } from "@norish/db/repositories/household-scope";
 import { keepOpenAIChangesOf } from "@norish/db/repositories/ingredient-ai-changes";
 import { findLocaleNames } from "@norish/db/repositories/ingredient-aliases";
 import {
@@ -78,14 +79,14 @@ export class CatalogueEditError extends Error {
   }
 }
 
-/** Whether `actor` may edit a row of `householdId`: their household's, or the seed's (null) as an admin. */
+/** Whether `actor` may edit a row of `householdId` (`editableHouseholds`). */
 export function mayEditOwnedRow(actor: CatalogueActor, householdId: string | null): boolean {
-  return householdId === null ? actor.isServerAdmin : householdId === actor.householdId;
+  return editableHouseholds(actor).includes(householdId);
 }
 
 /** Who hears of an edit to a food of `householdId`: its household, or everyone for an admin's seed edit. */
 export function audienceOf(actor: CatalogueActor, householdId: string | null): string | null {
-  return householdId ?? (actor.isServerAdmin ? null : actor.householdId);
+  return householdId ?? (mayEditOwnedRow(actor, null) ? null : actor.householdId);
 }
 
 /** One spelling as the page shows it, and whether the viewer may remove or move it. */

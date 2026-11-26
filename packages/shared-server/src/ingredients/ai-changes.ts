@@ -344,9 +344,9 @@ async function lockAddedSpelling(
   const read = await readChangedSpelling(tx, aliasId);
 
   if (!read || read.ingredientId !== ingredientId) return "gone";
-  const { ingredientId: _on, seeded, householdId, ...spelling } = read;
+  const { ingredientId: _on, householdId, ...spelling } = read;
 
-  if (seeded || householdId === null) return "seeded";
+  if (householdId === null) return "seeded";
   const target = targetId ? (await findIngredientHouseholds([targetId], tx)).get(targetId) : null;
 
   if (target !== null && target !== householdId) return "gone";

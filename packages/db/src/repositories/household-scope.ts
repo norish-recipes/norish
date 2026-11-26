@@ -26,6 +26,25 @@ export function inCatalogue(householdId: AnyPgColumn, catalogue: Scope): SQL {
   return inScope(householdId, catalogue, { offered: true });
 }
 
+/** Who acts on catalogue rows: a member of `householdId`, and whether a server admin. */
+export interface CatalogueReader {
+  householdId: string;
+  isServerAdmin: boolean;
+}
+
+/**
+ * The one rule for whose catalogue rows a reader edits, and whose AI Changes they see: their
+ * household's, and the seed's (null) for an admin alone.
+ */
+export function editableHouseholds(reader: CatalogueReader): Array<string | null> {
+  return reader.isServerAdmin ? [reader.householdId, null] : [reader.householdId];
+}
+
+/** `householdId` is one of the households the reader edits (`editableHouseholds`). */
+export function editableBy(householdId: AnyPgColumn, reader: CatalogueReader): SQL {
+  return or(...editableHouseholds(reader).map((one) => inScope(householdId, one)))!;
+}
+
 /** Whether a row is the instance's, as a boolean column. */
 export function isInstanceRow(householdId: AnyPgColumn) {
   return isNull(householdId).mapWith(Boolean);
