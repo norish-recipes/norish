@@ -19,46 +19,44 @@
   - orphans go to the server owner's household;
   - an admin no longer sees other households' recipes.
 - [x] **Docs pages:** the permissions or configuration page and the settings pages in `apps/docs/docs/` describe the policy, the Content page and households. `apps/docs/versioned_docs/` and older release notes stay untouched.
-- [ ] **Screenshots** outdated by tickets 11 and 12 are listed for Mike.
+- [x] **Screenshots** outdated by tickets 11 and 12 are listed for Mike.
 
 ## Comments
 
 Documented household ownership, permissions, the Content page and upgrade changes. Updated the relevant ADRs and contributor guidance.
 Screenshots need manual retakes; no images were changed.
 
-Existing screenshots to retake:
+Existing screenshots to retake (under `apps/docs/static/img/screenshots/`):
 
-- `apps/docs/static/img/screenshots/admin-cuisines.png`: Updated admin cuisines.
-- `apps/docs/static/img/screenshots/ingredients-list.png`: Updated ingredients list.
-- `apps/docs/static/img/screenshots/ingredients-page.png`: Updated ingredients page.
-- `apps/docs/static/img/screenshots/ingredients-changed-by-ai.png`: Updated ingredients changed by ai.
-- `apps/docs/static/img/screenshots/ingredients-clean-names.png`: Updated ingredients clean names.
-- `apps/docs/static/img/screenshots/ingredients-delete.png`: Updated ingredients delete.
-- `apps/docs/static/img/screenshots/ingredients-nutrition-correction.png`: Updated ingredients nutrition correction.
-- `apps/docs/static/img/screenshots/ingredients-panel-nutrition.png`: Updated ingredients panel nutrition.
-- `apps/docs/static/img/screenshots/settings-after-planning.png`: Updated settings after planning.
-- `apps/docs/static/img/screenshots/settings-change-password.png`: Updated settings change password.
-- `apps/docs/static/img/screenshots/hidden-items-settings.png`: Updated hidden items settings.
-- `apps/docs/static/img/screenshots/admin-prompts.png`: Updated admin prompts.
-- `apps/docs/static/img/screenshots/admin-decision-model.png`: Updated admin decision model.
-- `apps/docs/static/img/screenshots/admin-image-generation.png`: Updated admin image generation.
-- `apps/docs/static/img/screenshots/admin-clean-up-catalogue.png`: Updated admin clean up catalogue.
-- `apps/docs/static/img/screenshots/admin-fill-gaps.png`: Updated admin fill gaps.
-- `apps/docs/static/img/screenshots/admin-job-details.png`: Updated admin job details.
-- `apps/docs/static/img/screenshots/admin-page-renderers.png`: Updated admin page renderers.
-- `apps/docs/static/img/screenshots/recipe-archive-admin-export.png`: Updated recipe archive admin export.
-- `apps/docs/static/img/screenshots/mobile-settings.png`: Settings with the Content entry.
-- `apps/docs/static/img/screenshots/recipe-form-add-category.png`: Recipe category picker.
-
-- `apps/docs/static/img/screenshots/groceries-clear-list-confirm.png`: Clear list confirmation.
-- `apps/docs/static/img/screenshots/groceries-clear-recipe-confirm.png`: Clear recipe confirmation.
-- `apps/docs/static/img/screenshots/groceries-clear-store-confirm.png`: Clear store confirmation.
-
-The ticket 14 screenshot inventory still needs a complete visual check for affected modals and empty states.
+- `admin-cuisines.png`: The admin card no longer has Cuisines. Not currently embedded.
+- `recipe-archive-admin-export.png`: The admin card no longer has the server-wide export. Not currently embedded.
+- `ingredients-list.png`: Ingredients are inside Content, with a picker and filters. Embedded in Manage ingredients.
+- `ingredients-page.png`: Ingredients are inside Content, with a picker and filters. Not currently embedded.
+- `ingredients-changed-by-ai.png`: The review panel layout changed. Not currently embedded.
+- `ingredients-clean-names.png`: The Content page is behind the new dialog layout. Not currently embedded.
+- `ingredients-delete.png`: The Content page is behind the new dialog layout. Not currently embedded.
+- `ingredients-nutrition-correction.png`: The Content page is behind the nutrition panel. Embedded in Manage ingredients.
+- `ingredients-panel-nutrition.png`: The Content page is behind the nutrition panel. Not currently embedded.
+- `settings-change-password.png`: The modal has a new title layout and Cancel on the left. Embedded in Authentication.
+- `admin-clean-up-catalogue.png`: The modal has a new title layout and Cancel on the left. Embedded in AI provider.
+- `admin-fill-gaps.png`: The modal has a new title layout and Cancel on the left. Embedded in AI provider.
+- `groceries-clear-list-confirm.png`: The modal has a new title layout and Cancel on the left. Not currently embedded.
+- `groceries-clear-recipe-confirm.png`: The modal has a new title layout and Cancel on the left. Not currently embedded.
+- `groceries-clear-store-confirm.png`: The modal has a new title layout and Cancel on the left. Not currently embedded.
+- `admin-job-details.png`: The modal has a wide frame and no close X. Embedded in Admin settings.
+- `admin-job-cancelled.png`: The modal has a wide frame and no close X. Embedded in Admin settings.
+- `bulk-enrichment-image-count.png`: The warning layout changed. Embedded in AI provider.
+- `offline-status-modal.png`: The frame and headings changed. Embedded in Offline.
+- `groceries-aisles-editor.png`: Cancel moved left. Embedded in Shopping.
+- `groceries-store-link.png`: Cancel moved left. Embedded in Shopping.
+- `provenance-form.png`: The Cuisine picker changed. Embedded in Creating and editing recipes.
+- `mobile-settings.png`: Settings has a Content row. Embedded in Use Norish on iPhone.
+- `recipe-form-add-category.png`: The picker has an explicit Create action. Embedded in Creating and editing recipes.
 
 New screenshots needed:
 
-- Web: Content page with its four tabs and household and server entries.
-- Web: An entry showing Used by and the rename, merge and delete actions.
-- Mobile: Content page with its four tabs and household and server entries.
-- Mobile: Long-press menu and an entry showing Used by.
+- Web Content page with the list picker and a list with household and server entries.
+- Web entry panel with Used by, rename turning into Merge, and the delete confirmation.
+- Mobile Content screen with its tabs.
+- Mobile long-press menu and an entry sheet.
+- Permission Policy setting for the households page.
