@@ -93,3 +93,4 @@ Client re-review:
 Final re-review 1. Fixed (aa5071742): one rule (`isAccountScoped`) says which routers are the account's; the link sends them no household, Replay never parks them for one, Retry never stamps one.
 Final re-review 8. Fixed (f0d4962fb): the household the widgets' plan is for is kept in MMKV; a start whose household differs clears them, read or not.
 Release check 5. Fixed (4874cb835): no recorded household counts as another, so the first start after an upgrade clears the widgets and records it.
+- E2E `leaving-and-joining` first run: passed. Now under view Everyone (the old household still reads the moved recipe) and Household (it reads as not found) (e728754d7); run tags start with a letter (de40400ef).

@@ -105,3 +105,4 @@ Whole-branch review, client round:
 
 6. Fixed (9dcb35c3a): a list change rereads `lists.usage` too. `ingredients.countUses` and `ingredients.recipes` were already reread by the `ingredients.pathKey()` invalidation; f8c4f951f pins it with a test.
 8. Fixed (c09345edb): "Used by" is open only while its entry panel is (`open && !entry.gone`).
+- E2E `content-page` first run: 7/7 passed. The household test runs under view Everyone and Household (1b8d969a2). `household-catalogues` failed first: `/settings/ingredients` never redirected (application, 7742120f1, now in next.config).

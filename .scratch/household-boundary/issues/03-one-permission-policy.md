@@ -91,3 +91,4 @@ Final review, server round:
 Re-review of the server round:
 
 6. Fixed (4ce57fb99, 00b80afbd): `withinView` narrows edit and delete to view; the reader applies it, the schema's refine and the admin card use it.
+- E2E `household-library` first run: passed. It now runs under view Everyone (each household and the admin see the others' recipes and cookbooks) and Household (none do) (d5de1ecc6).

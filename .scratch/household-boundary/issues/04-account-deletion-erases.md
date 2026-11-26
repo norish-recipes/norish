@@ -56,3 +56,4 @@
 Final review, server round:
 
 - Fixed (4a22e0dc0): the deadlock test makes the grocery the victim with `SET LOCAL deadlock_timeout = '1ms'`, no sleep, a 15 s timeout; heavy lineage and second-run migration tests have explicit timeouts.
+- E2E `account-deletion` first run: passed under both view levels (after a Docker port-bind timeout under machine load). Run tags start with a letter so no line parses an amount (de40400ef).

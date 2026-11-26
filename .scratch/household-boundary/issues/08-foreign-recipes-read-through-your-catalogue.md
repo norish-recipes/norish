@@ -47,3 +47,4 @@ The recipe itself is never changed. See the spec, "Ingredient catalogue".
   4. fixed: `useWorkedOutNutrition` answers `{ nutrition, isLoading }`; the web card says "Loading..." and mobile shows a skeleton.
   5. fixed: the E2E asserts each grocery row's line, name and food.
   - rejected: the page and its count each filtering by coverage; catalogue merges and moves outside assertOwnReferences; names local to a values relation.
+- E2E `foreign-recipe-read-through` first run: failed (test, 4947c72dc): `.check()` on the hidden checkbox input, and the minted food looked up on the listed page, which hides grocery-minted foods. Runs under view Everyone only, as it needs that level.
