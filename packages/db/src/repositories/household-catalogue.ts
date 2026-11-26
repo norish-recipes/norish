@@ -382,6 +382,7 @@ export async function mergeHouseholdCatalogueTx(
     targets,
     new Set([...targets.keys(), ...sharedSpellings.map((row) => row.id)])
   );
+
   await keepWhatTargetsLackTx(tx, targets);
   await fillCorrectionsTx(tx, from, into, targets);
   for (const [source, target] of targets) {
