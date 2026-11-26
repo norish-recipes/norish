@@ -822,11 +822,12 @@ test("a removed browser holds none of the former household's groceries or plan, 
   try {
     await calendar.goto("/calendar");
     await expect(calendar.getByText(plan).first()).toBeVisible();
+    // The plan shows in the server's first frame, before this tab can save it; closed sooner, it never does.
+    await expect.poll(() => saved(plan), { timeout: 30_000 }).toBe(true);
   } finally {
     await calendar.close();
   }
   await expect(rowFor(pageB, grocery)).toBeVisible();
-  await expect.poll(() => saved(plan), { timeout: 30_000 }).toBe(true);
   await expect.poll(() => saved(grocery), { timeout: 30_000 }).toBe(true);
 
   try {
