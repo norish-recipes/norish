@@ -26,6 +26,39 @@ describe("CountRow", () => {
   });
 });
 
+describe("CountRow in a tree", () => {
+  it("folds with its own button, not by opening the row", () => {
+    const onFold = vi.fn();
+    const onPress = vi.fn();
+    const fold = {
+      foldable: true,
+      expanded: false,
+      label: "Expand",
+      testID: "fold",
+      onPress: onFold,
+    };
+
+    render(<CountRow depth={1} fold={fold} name="Rice" testID="row" onPress={onPress} />);
+    fireEvent.click(screen.getByTestId("fold"));
+    expect(onFold).toHaveBeenCalledTimes(1);
+    expect(onPress).not.toHaveBeenCalled();
+  });
+
+  it("leaves the fold button off a kind that has none, and ends in a trailing node", () => {
+    const fold = {
+      foldable: false,
+      expanded: false,
+      label: "Expand",
+      testID: "fold",
+      onPress: vi.fn(),
+    };
+
+    render(<CountRow fold={fold} name="Basmati" trailing={<i data-testid="end" />} />);
+    expect(screen.getByTestId("fold")).toHaveProperty("disabled", true);
+    expect(screen.getByTestId("end")).toBeTruthy();
+  });
+});
+
 describe("ListHeading", () => {
   it("carries the page's side inset, and none on a sheet, whose body owns it", () => {
     const page = render(<ListHeading testID="h" title="Built in" />);

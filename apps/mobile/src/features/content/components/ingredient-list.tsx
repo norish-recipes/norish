@@ -1,14 +1,13 @@
 import React from "react";
-import { FlatList, Pressable, Text, View } from "react-native";
+import { FlatList } from "react-native";
 import { CardSlice } from "@/components/card-slice";
 import { CountRow } from "@/components/count-row";
 import { EmptyCard } from "@/components/empty-card";
 import { IngredientIcon, IngredientIconSlots } from "@/components/ingredient-icon";
+import { Pill } from "@/components/pill";
 import { SearchFilterRow } from "@/components/search-filter-row";
-import { useTokenColor } from "@/hooks/use-token-color";
 import { edgeAt } from "@/lib/card-edges";
 import { useText } from "@/lib/i18n/use-text";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
@@ -24,14 +23,11 @@ import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 import { AiChangesRow } from "./ai-changes-row";
 import { ContentSkeleton } from "./content-skeleton";
 
-const INDENT = 24;
-
 /** The catalogue of Ingredients: a tree of kinds unless searched or filtered, a page at a time. */
 export function IngredientList() {
   const text = useText();
   const router = useRouter();
   const { locale } = useIntl();
-  const muted = useTokenColor("muted");
   const filters = useIngredientFiltersStore((state) => state.filters);
   const [search, setSearch] = React.useState("");
 
@@ -99,53 +95,41 @@ export function IngredientList() {
 
           return (
             <CardSlice edge={edgeAt(index, rows.length)}>
-              <View className="flex-row items-center">
-                {treeMode ? (
-                  <Pressable
-                    accessibilityLabel={text(
-                      row.expanded
-                        ? "settings.ingredients.collapseKinds"
-                        : "settings.ingredients.expandKinds",
-                      { name }
-                    )}
-                    accessibilityRole="button"
-                    accessibilityState={{ expanded: foldable ? row.expanded : undefined }}
-                    className="w-9 items-center justify-center self-stretch pl-2"
-                    disabled={!foldable}
-                    style={{ marginLeft: row.depth * INDENT }}
-                    testID={`content-kinds-${row.item.id}`}
-                    onPress={() => tree.toggle(row.item.id)}
-                  >
-                    {foldable ? (
-                      <Ionicons
-                        color={muted}
-                        name={row.expanded ? "chevron-down" : "chevron-forward"}
-                        size={16}
-                      />
-                    ) : null}
-                  </Pressable>
-                ) : null}
-                <View className="min-w-0 flex-1">
-                  <CountRow
-                    leading={<IngredientIcon ingredientId={row.item.id} />}
-                    name={name}
-                    tag={
-                      row.item.flagged ? (
-                        <Text className="text-warning-ink bg-warning/30 overflow-hidden rounded-full px-2 py-0.5 text-xs font-medium">
-                          {text("settings.ingredients.flagged")}
-                        </Text>
-                      ) : undefined
-                    }
-                    testID={`content-ingredient-${row.item.id}`}
-                    onPress={() =>
-                      router.push({
-                        pathname: "/settings/ingredient",
-                        params: { id: row.item.id },
-                      })
-                    }
-                  />
-                </View>
-              </View>
+              <CountRow
+                depth={row.depth}
+                fold={
+                  treeMode
+                    ? {
+                        foldable,
+                        expanded: row.expanded,
+                        label: text(
+                          row.expanded
+                            ? "settings.ingredients.collapseKinds"
+                            : "settings.ingredients.expandKinds",
+                          { name }
+                        ),
+                        testID: `content-kinds-${row.item.id}`,
+                        onPress: () => tree.toggle(row.item.id),
+                      }
+                    : undefined
+                }
+                leading={<IngredientIcon ingredientId={row.item.id} />}
+                name={name}
+                tag={
+                  row.item.flagged ? (
+                    <Pill size="tag" tone="warning">
+                      {text("settings.ingredients.flagged")}
+                    </Pill>
+                  ) : undefined
+                }
+                testID={`content-ingredient-${row.item.id}`}
+                onPress={() =>
+                  router.push({
+                    pathname: "/settings/ingredient",
+                    params: { id: row.item.id },
+                  })
+                }
+              />
             </CardSlice>
           );
         }}

@@ -1,17 +1,28 @@
 import type { ReactNode } from "react";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
+import { CardSlice } from "@/components/card-slice";
 import { useTokenColor } from "@/hooks/use-token-color";
+import { edgeAt } from "@/lib/card-edges";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { Skeleton } from "heroui-native";
+
+/** How far each level of a tree sets its rows in, in points. */
+const INDENT = 24;
 
 /** A card slice's row for a named entry: its `leading` picture, the name with a `tag`, the muted
- * `count`, and a lock mark (named by `lockLabel`) where it is read-only, else a chevron. */
+ * `count`, and a lock mark (named by `lockLabel`) where it is read-only, else a chevron. A tree's
+ * row is set in by its `depth` and may carry a `fold` button before it; `trailing` ends the row
+ * in place of the lock or chevron. */
 export function CountRow({
   name,
   count,
   tag,
   leading,
-  indent = 0,
+  depth = 0,
+  fold,
+  trailing,
+  struck = false,
   lockLabel,
   testID,
   onPress,
@@ -20,8 +31,18 @@ export function CountRow({
   count?: string;
   tag?: ReactNode;
   leading?: ReactNode;
-  /** How far the row is set in, in points: a kind under its parent. */
-  indent?: number;
+  depth?: number;
+  /** Folds the kinds under this entry out or in; `foldable` false leaves the cell empty. */
+  fold?: {
+    foldable: boolean;
+    expanded: boolean;
+    label: string;
+    testID: string;
+    onPress: () => void;
+  };
+  trailing?: ReactNode;
+  /** The name struck through, for an entry about to go. */
+  struck?: boolean;
   /** Set where the entry is read-only: the lock mark's accessibility label. */
   lockLabel?: string;
   testID?: string;
@@ -32,40 +53,83 @@ export function CountRow({
     <>
       {leading}
       <View className="min-w-0 flex-1 flex-row items-center gap-2">
-        <Text className="text-foreground shrink text-base" numberOfLines={1}>
+        <Text
+          className={`text-foreground shrink text-base ${struck ? "line-through opacity-60" : ""}`}
+          numberOfLines={1}
+        >
           {name}
         </Text>
         {tag}
       </View>
       {count ? <Text className="text-muted text-base">{count}</Text> : null}
-      {lockLabel ? (
-        <View accessibilityLabel={lockLabel} accessibilityRole="image" accessible>
-          <Ionicons color={muted} name="lock-closed-outline" size={15} />
-        </View>
-      ) : onPress ? (
-        <Ionicons color={muted} name="chevron-forward" size={16} />
-      ) : null}
+      {trailing ??
+        (lockLabel ? (
+          <View accessibilityLabel={lockLabel} accessibilityRole="image" accessible>
+            <Ionicons color={muted} name="lock-closed-outline" size={15} />
+          </View>
+        ) : onPress ? (
+          <Ionicons color={muted} name="chevron-forward" size={16} />
+        ) : null)}
     </>
   );
-  const className = "min-h-[52px] flex-row items-center gap-3 px-4";
+  const className = "min-h-[52px] min-w-0 flex-1 flex-row items-center gap-3 px-4";
 
-  return onPress ? (
-    <Pressable
-      accessibilityRole="button"
-      className={className}
-      style={indent ? { paddingLeft: 16 + indent } : undefined}
-      testID={testID}
-      onPress={onPress}
-    >
-      {content}
-    </Pressable>
-  ) : (
+  return (
     <View
-      className={className}
-      style={indent ? { paddingLeft: 16 + indent } : undefined}
-      testID={testID}
+      className="flex-row items-center"
+      style={depth ? { paddingLeft: depth * INDENT } : undefined}
     >
-      {content}
+      {fold ? (
+        <Pressable
+          accessibilityLabel={fold.label}
+          accessibilityRole="button"
+          accessibilityState={{ expanded: fold.foldable ? fold.expanded : undefined }}
+          className="w-9 items-center justify-center self-stretch pl-2"
+          disabled={!fold.foldable}
+          testID={fold.testID}
+          onPress={fold.onPress}
+        >
+          {fold.foldable ? (
+            <Ionicons
+              color={muted}
+              name={fold.expanded ? "chevron-down" : "chevron-forward"}
+              size={16}
+            />
+          ) : null}
+        </Pressable>
+      ) : null}
+      {onPress ? (
+        <Pressable
+          accessibilityRole="button"
+          className={className}
+          testID={testID}
+          onPress={onPress}
+        >
+          {content}
+        </Pressable>
+      ) : (
+        <View className={className} testID={testID}>
+          {content}
+        </View>
+      )}
     </View>
   );
+}
+
+/** A loading row, shaped like a counted row's name. */
+export function CountRowSkeleton() {
+  return (
+    <View className="min-h-[52px] justify-center px-4">
+      <Skeleton className="h-4 w-40 rounded-lg" />
+    </View>
+  );
+}
+
+/** A card of loading rows. */
+export function CountCardSkeleton({ rows = 6 }: { rows?: number }) {
+  return Array.from({ length: rows }, (_, index) => (
+    <CardSlice key={index} edge={edgeAt(index, rows)}>
+      <CountRowSkeleton />
+    </CardSlice>
+  ));
 }
