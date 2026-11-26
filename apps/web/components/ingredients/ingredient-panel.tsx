@@ -5,6 +5,7 @@ import { useEffect, useEffectEvent, useRef, useState } from "react";
 import Link from "next/link";
 import { OnTheListMark } from "@/components/ingredients/on-the-list-mark";
 import Panel from "@/components/Panel/Panel";
+import { PanelSection } from "@/components/Panel/panel-section";
 import {
   ActionButton,
   ActionButtonGroup,
@@ -363,7 +364,7 @@ function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClo
       <Panel.Body>
         <div className="flex flex-col gap-5 pb-2" data-testid="ingredient-details">
           {unsure.length > 0 ? (
-            <Section title={t("changedByAI.unsure")}>
+            <PanelSection title={t("changedByAI.unsure")}>
               <div className="flex flex-col gap-3" data-testid="ingredient-ai-changes">
                 {unsure.map((change) => (
                   <div
@@ -381,7 +382,7 @@ function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClo
                   </div>
                 ))}
               </div>
-            </Section>
+            </PanelSection>
           ) : null}
           {item.flagged ? (
             <div className="flex flex-col gap-3" data-testid="ingredient-flag-notice">
@@ -404,7 +405,7 @@ function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClo
             </div>
           ) : null}
 
-          <Section title={t("nameSection")}>
+          <PanelSection title={t("nameSection")}>
             <div className="flex items-center gap-3">
               <IngredientIconField draft={icon} item={item} onDraftChange={setIcon} />
               {item.canEdit ? (
@@ -430,17 +431,17 @@ function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClo
             {displayName !== item.name ? (
               <p className="text-muted text-sm">{t("shownAs", { name: displayName })}</p>
             ) : null}
-          </Section>
+          </PanelSection>
 
-          <Section title={tGroceries("pantry")}>
+          <PanelSection title={tGroceries("pantry")}>
             <PantryRow
               keeping={keeps ?? kept !== null}
               kept={kept}
               onKeepingChange={(on) => setKeeps(on === (kept !== null) ? null : on)}
             />
-          </Section>
+          </PanelSection>
 
-          <Section title={t("parentSection")}>
+          <PanelSection title={t("parentSection")}>
             <div className="flex flex-wrap items-center gap-2" data-testid="ingredient-parent">
               {parent ? (
                 // The same height as the button beside it: the pair reads as one row.
@@ -471,9 +472,9 @@ function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClo
                 </Button>
               ) : null}
             </div>
-          </Section>
+          </PanelSection>
 
-          <Section title={t("spellingsSection")}>
+          <PanelSection title={t("spellingsSection")}>
             <Button
               fullWidth
               className="justify-between"
@@ -484,7 +485,7 @@ function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClo
               {t("spellingsCount", { count: spellingCount })}
               <ChevronRightIcon className="size-4" />
             </Button>
-          </Section>
+          </PanelSection>
 
           <IngredientNutritionSection ingredientId={item.id} name={displayName} />
         </div>
@@ -718,7 +719,7 @@ function IngredientUsesContent({
         <div className="flex flex-col gap-5 pb-2" data-testid="ingredient-uses">
           {!data ? <Skeleton className="h-16 w-full rounded-xl" /> : null}
           {data && data.recipes.length > 0 ? (
-            <Section title={t("recipes")}>
+            <PanelSection title={t("recipes")}>
               <ul className="flex flex-col gap-1 text-sm">
                 {data.recipes.map((recipe) => (
                   <li key={recipe.id}>
@@ -732,10 +733,10 @@ function IngredientUsesContent({
                   </li>
                 ))}
               </ul>
-            </Section>
+            </PanelSection>
           ) : null}
           {data && data.groceries.length > 0 ? (
-            <Section title={t("groceries")}>
+            <PanelSection title={t("groceries")}>
               <ul className="flex flex-col gap-1 text-sm">
                 {data.groceries.map((grocery) => (
                   <li key={grocery.id}>
@@ -749,7 +750,7 @@ function IngredientUsesContent({
                   </li>
                 ))}
               </ul>
-            </Section>
+            </PanelSection>
           ) : null}
           {data?.pantry ? <p className="text-sm">{t("pantry")}</p> : null}
           {unused ? <p className="text-muted text-sm">{t("none")}</p> : null}
@@ -777,14 +778,4 @@ function HeldBackSpellings({
   chip: (spelling: Spelling) => ReactNode;
 }) {
   return (useIngredientSpellingsQuery(ingredientId) ?? aliases).map(chip);
-}
-
-/** One part of the panel: a small heading over what it holds. */
-function Section({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section className="flex flex-col gap-2">
-      <h3 className="text-muted text-xs font-semibold tracking-wide uppercase">{title}</h3>
-      {children}
-    </section>
-  );
 }
