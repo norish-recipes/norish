@@ -7,7 +7,7 @@ import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import type { WriteResult } from "../offline/settled";
 import type { AuthProvider } from "./types";
 import { accepted, answered, wentThrough } from "../offline/settled";
-import { usePlatform } from "../platform/platform";
+import { showRefusal, usePlatform } from "../platform/platform";
 import { useTRPC } from "../trpc";
 
 /** Reads the admin config and `also` again, once the server took the write. */
@@ -123,7 +123,7 @@ export function useAuthProviderMutations() {
     trpc.admin.auth.deleteProvider.mutationOptions({
       onSuccess: (result, type) => {
         reread(result);
-        if (!result.success) showError(result.error, `admin-auth-provider:delete:${type}`);
+        if (!result.success) showRefusal(showError, result, `admin-auth-provider:delete:${type}`);
       },
       onError: (error, type) => showError(error, `admin-auth-provider:delete:${type}`),
     })

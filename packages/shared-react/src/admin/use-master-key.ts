@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { accepted } from "../offline/settled";
-import { usePlatform } from "../platform/platform";
+import { showRefusal, usePlatform } from "../platform/platform";
 import { useTRPC } from "../trpc";
 
 /** Whether MASTER_KEY pins the Master Key (env mode); undefined until the server answers. */
@@ -19,12 +19,13 @@ export function useMasterKeyPinned(): boolean | undefined {
 export function useRotateMasterKeyMutation() {
   const trpc = useTRPC();
   const { showError } = usePlatform();
+  const context = "admin-system:rotate-master-key";
   const { mutateAsync } = useMutation(
     trpc.admin.rotateMasterKey.mutationOptions({
       onSuccess: (result) => {
-        if (!result.success) showError(result.error, "admin-system:rotate-master-key");
+        if (!result.success) showRefusal(showError, result, context);
       },
-      onError: (error) => showError(error, "admin-system:rotate-master-key"),
+      onError: (error) => showError(error, context),
     })
   );
 
