@@ -10,13 +10,13 @@ type Icon = ComponentProps<typeof Ionicons>["name"];
 
 /** Where the card sits, each placement carrying its one margin: `screen` is a screen list's,
  * `section` is under a Settings group, `sheet` has none because the sheet body owns the inset. */
-export const EMPTY_CARD_PLACEMENT = {
+const EMPTY_CARD_PLACEMENT = {
   screen: "mx-5",
   section: "mt-4",
   sheet: "",
 } as const;
 
-export type EmptyCardPlacement = keyof typeof EMPTY_CARD_PLACEMENT;
+type EmptyCardPlacement = keyof typeof EMPTY_CARD_PLACEMENT;
 
 /** A list with nothing in it: the area's icon in muted ink on the left, the title on the right and
  * at most one action under them. The card's ground is sand on a sheet, the surface off one. */

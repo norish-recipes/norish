@@ -85,7 +85,7 @@ export interface ListEntryRow {
 }
 
 /** An entry with the count of the household's recipes carrying it. */
-export interface ListEntry extends ListEntryRow {
+interface ListEntry extends ListEntryRow {
   recipeCount: number;
 }
 
@@ -123,7 +123,7 @@ const asEntryRow = ({ id, name, instance, version }: ListEntryRow): ListEntryRow
 
 /** Holds each kind's `folds` until the commit: every write giving an entry a fold takes it, after the
  * household rows and before list rows, so a fold is never the instance's and a household's. */
-export async function lockFoldsTx(
+async function lockFoldsTx(
   tx: DbTransaction,
   folds: Partial<Record<ListKind, readonly string[]>>
 ): Promise<void> {

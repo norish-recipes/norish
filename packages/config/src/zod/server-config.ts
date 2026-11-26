@@ -858,12 +858,12 @@ export const DEFAULT_JOB_RETENTION: JobRetentionConfig = {
 // ============================================================================
 
 /** Who outside a recipe's household may act on it: Everyone, or the Household alone (ADR-0041). */
-export const PermissionLevelSchema = z.enum(["everyone", "household"]);
+const PermissionLevelSchema = z.enum(["everyone", "household"]);
 
 export type PermissionLevel = z.infer<typeof PermissionLevelSchema>;
 
 /** Whether `level` reaches further than `than`. */
-export function isWiderLevel(level: PermissionLevel, than: PermissionLevel): boolean {
+function isWiderLevel(level: PermissionLevel, than: PermissionLevel): boolean {
   return level === "everyone" && than === "household";
 }
 

@@ -15,7 +15,7 @@ import { useTRPC } from "../trpc";
 import { useLineReadings } from "./use-line-readings";
 
 /** Nutrition worked out from the lines, null where none is; `isLoading` while its inputs read. */
-export interface WorkedOutNutritionState {
+interface WorkedOutNutritionState {
   nutrition: WorkedOutNutrition | null;
   isLoading: boolean;
 }

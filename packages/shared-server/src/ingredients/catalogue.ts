@@ -85,7 +85,7 @@ export function mayEditOwnedRow(actor: CatalogueActor, householdId: string | nul
 }
 
 /** Who hears of an edit to a food of `householdId`: its household, or everyone for an admin's seed edit. */
-export function audienceOf(actor: CatalogueActor, householdId: string | null): string | null {
+function audienceOf(actor: CatalogueActor, householdId: string | null): string | null {
   return householdId ?? (mayEditOwnedRow(actor, null) ? null : actor.householdId);
 }
 
@@ -365,7 +365,7 @@ async function addAliasIn(
 }
 
 /** What adding a food by hand came to: the food the household now has, and whether it is new. */
-export interface AddedIngredient extends CatalogueEdit {
+interface AddedIngredient extends CatalogueEdit {
   ingredientId: string;
   created: boolean;
 }

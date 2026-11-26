@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardRow } from "@/components/card";
 import { Checkmark } from "@/components/checkmark";
 
-export type ChoiceCardOption = { id: string; label: string; hint?: string; testID: string };
+type ChoiceCardOption = { id: string; label: string; hint?: string; testID: string };
 
 /** A card of options to pick one from: the `selected` one carries the kit's check, a `hint` goes
  * under a label. */

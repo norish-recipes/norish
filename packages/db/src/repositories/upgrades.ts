@@ -257,7 +257,7 @@ export async function listParkedLinks(): Promise<ParkedLink[]> {
 }
 
 /** What became of a parked link: put back, dropped, or dropped because its aisle or product went. */
-export type Unparked = "restored" | "dropped" | "target-gone";
+type Unparked = "restored" | "dropped" | "target-gone";
 
 /**
  * Put a parked link back keyed by its food, unless its Store (or member) holds a newer one for that

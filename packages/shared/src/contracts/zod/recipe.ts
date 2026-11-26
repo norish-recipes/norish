@@ -24,7 +24,7 @@ export const recipeCategorySchema = StoredCategoryNameSchema;
 // The stored nutrients beyond the four, by the catalogue's keys rather than as any JSON.
 const nutritionExtras = ExtraNutrientsSchema.nullish();
 
-export const RecipeSelectBaseSchema = createSelectSchema(recipes).extend({ nutritionExtras });
+const RecipeSelectBaseSchema = createSelectSchema(recipes).extend({ nutritionExtras });
 export const RecipeInsertBaseSchema = createInsertSchema(recipes)
   .omit({
     id: true,
@@ -34,7 +34,7 @@ export const RecipeInsertBaseSchema = createInsertSchema(recipes)
     householdId: true, // the Owner's, set by the database
   })
   .extend({ nutritionExtras });
-export const RecipeUpdateBaseSchema = createUpdateSchema(recipes)
+const RecipeUpdateBaseSchema = createUpdateSchema(recipes)
   .omit({ householdId: true })
   .extend({ nutritionExtras });
 

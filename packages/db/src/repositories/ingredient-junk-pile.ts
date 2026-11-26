@@ -27,7 +27,7 @@ const marksOf = (householdId: string | null) =>
     : eq(ingredientJunkPile.householdId, householdId);
 
 /** The junk of a household's catalogue: its own marks and the seed's it has not lifted. */
-export function junkOf(householdId: string) {
+function junkOf(householdId: string) {
   return and(
     inCatalogue(ingredientJunkPile.householdId, householdId),
     ne(ingredientJunkPile.reason, NAMES_A_FOOD),

@@ -218,7 +218,7 @@ function searchRank(
 }
 
 /** What a page of the catalogue lists. */
-export interface CatalogueIngredientsQuery {
+interface CatalogueIngredientsQuery {
   /** The reader's household: the page lists the seed and its own foods. */
   householdId: string;
   search: IngredientSearch | null;
@@ -568,7 +568,7 @@ export async function listWholeCatalogueCleanUpIds(householdId: string): Promise
 }
 
 /** The household's listed own foods, or the seed's foods (null): what Fill gaps fills. */
-export async function listListedIngredientIds(householdId: string | null): Promise<string[]> {
+async function listListedIngredientIds(householdId: string | null): Promise<string[]> {
   const rows = await db
     .select({ id: ingredients.id })
     .from(ingredients)
@@ -920,7 +920,7 @@ export interface IngredientUses {
 }
 
 /** How many of the household's rows name a food; groceries include recurring ones. */
-export interface IngredientUseCounts {
+interface IngredientUseCounts {
   recipes: number;
   recipeLines: number;
   groceries: number;

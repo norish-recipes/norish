@@ -122,7 +122,7 @@ export async function withResolvedIngredients<
 }
 
 /** Who writes a recipe: the household its lines resolve in is the recipe's, read when they resolve. */
-export type LineActor = Omit<ResolveActor, "householdId">;
+type LineActor = Omit<ResolveActor, "householdId">;
 
 /** The household a recipe's lines resolve in (ADR-0042): the recipe's, else its Owner's for a new one. */
 export async function lineHousehold(userId: string, recipeId?: string): Promise<string> {

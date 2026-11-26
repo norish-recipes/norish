@@ -19,7 +19,7 @@ import { RemovableChip } from "./detail-cards";
 import { EditorField, EditorInput } from "./editor-parts";
 
 /** The chip, ruled by a hairline, that adds one more. */
-export function AddChip({
+function AddChip({
   label,
   testID,
   onPress,

@@ -5,7 +5,7 @@ import { households } from "@norish/shared-server/realtime/households";
 import { bumpViewEpoch } from "@norish/shared-server/realtime/resume";
 
 /** Who hears a committed membership change: the account that moved, then those who stay. */
-export interface MembershipAnnouncements {
+interface MembershipAnnouncements {
   toMover?: () => Promise<void>;
   toOthers?: () => Promise<void>;
 }

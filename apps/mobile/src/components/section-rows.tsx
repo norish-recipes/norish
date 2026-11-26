@@ -4,7 +4,7 @@ import { View } from "react-native";
 
 /** A flat list's rows: a section's heading where it has one, then its items with their place in
  * the section's card. */
-export type SectionRow<S, I> =
+type SectionRow<S, I> =
   | { type: "heading"; key: string; section: S; first: boolean }
   | { type: "item"; key: string; item: I; index: number; count: number };
 

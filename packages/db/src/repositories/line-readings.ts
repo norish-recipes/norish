@@ -19,7 +19,7 @@ export type LineScope =
   | { of: "visible" };
 
 /** A recipe line's text as stored, for reading it again. */
-export interface StoredLineText {
+interface StoredLineText {
   id: string;
   recipeId: string;
   name: string;

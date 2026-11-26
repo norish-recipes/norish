@@ -47,7 +47,7 @@ import { repointLines } from "./ingredient-cleanup";
  */
 
 /** Who reads AI Changes: those of every household they edit the catalogue of (`editableHouseholds`). */
-export type AIChangeReader = CatalogueReader;
+type AIChangeReader = CatalogueReader;
 
 function readBy(reader: AIChangeReader) {
   return editableBy(ingredientAIChanges.householdId, reader);

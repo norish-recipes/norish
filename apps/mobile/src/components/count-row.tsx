@@ -158,7 +158,7 @@ export function CountRow({
 }
 
 /** A loading row, shaped like a counted row's name. */
-export function CountRowSkeleton() {
+function CountRowSkeleton() {
   return (
     <View className={`${ROW_HEIGHT} justify-center px-4`}>
       <Skeleton className="h-4 w-40 rounded-lg" />

@@ -234,7 +234,7 @@ async function memberIdsIn(tx: DbTransaction, householdId: string): Promise<stri
   return rows.map((row) => row.userId);
 }
 
-export type MovedOutcome = MutationOutcome<{ household: HouseholdDto; memberIds: string[] }>;
+type MovedOutcome = MutationOutcome<{ household: HouseholdDto; memberIds: string[] }>;
 
 /**
  * Takes a member out of a household and into a new household of one, in one transaction
@@ -290,7 +290,7 @@ export async function moveToHouseholdOfOne(
   });
 }
 
-export type JoinHouseholdOutcome =
+type JoinHouseholdOutcome =
   | { joined: HouseholdUserDto; leftHouseholdId: string; memberIds: string[] }
   | { refused: JoinRefusal };
 
