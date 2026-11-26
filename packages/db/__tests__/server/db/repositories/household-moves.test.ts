@@ -394,6 +394,27 @@ describe("household moves", () => {
       await expectNothingForeign();
     });
 
+    it("an estimate read before the leave is saved under the lines' foods at the save", async () => {
+      const { member, householdId } = await sharedHousehold();
+      const kimchi = await mintTestFood(householdId, "kimchi");
+      const recipe = await createTestRecipe(member.id);
+      const line = await insertTestRecipeLine(
+        { recipeId: recipe.id, name: "kimchi", amount: "1", unit: null },
+        [kimchi.aliasId]
+      );
+      const key = (ingredientId: string) =>
+        lineKey({ name: "kimchi", amount: 1, unit: null, ingredientId });
+
+      await moveToHouseholdOfOne(householdId, member.id);
+      await saveRecipeNutritionEstimate(
+        recipe.id,
+        { lines: [{ key: key(kimchi.ingredientId), calories: 4, fat: 0, carbs: 0, protein: 0 }] },
+        new Map([[line.id, [kimchi.ingredientId]]])
+      );
+
+      expect(await sharesOf(recipe.id)).toEqual([key((await lineFood(line.id)).food.id)]);
+    });
+
     it("a merge keys the AI's share again for the merged line", async () => {
       const user = await createTestUser();
       const householdId = await householdOf(user.id);

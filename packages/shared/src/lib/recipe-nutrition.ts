@@ -373,26 +373,48 @@ export function lineKey(
 
 /**
  * Stored shares keyed again after their lines' foods were re-pointed (`foods`: old id to new), so a
- * share is still found; null when no key names one of those foods.
+ * share is still found; two whose keys become one add up. Null when no key names those foods.
  */
-export function rekeyedShares<S extends { key: string }>(
+export function rekeyedShares<S extends EstimatedLine>(
   shares: readonly S[],
   foods: ReadonlyMap<string, string>
 ): S[] | null {
   let changed = false;
-  const rekeyed = shares.map((share) => {
+  const byKey = new Map<string, S>();
+
+  for (const share of shares) {
     const parsed: unknown = JSON.parse(share.key);
+    const food =
+      Array.isArray(parsed) && typeof parsed[0] === "string" ? foods.get(parsed[0]) : undefined;
+    const key =
+      food === undefined ? share.key : JSON.stringify([food, ...(parsed as unknown[]).slice(1)]);
+    const earlier = byKey.get(key);
 
-    if (!Array.isArray(parsed) || typeof parsed[0] !== "string") return share;
-    const food = foods.get(parsed[0]);
+    changed ||= food !== undefined;
+    byKey.set(key, earlier ? addedShares(earlier, share) : { ...share, key });
+  }
 
-    if (food === undefined) return share;
-    changed = true;
+  return changed ? [...byKey.values()] : null;
+}
 
-    return { ...share, key: JSON.stringify([food, ...parsed.slice(1)]) };
-  });
+/** Two shares of one line as one: every number added. */
+function addedShares<S extends EstimatedLine>(a: S, b: S): S {
+  const extras = { ...a.extras };
 
-  return changed ? rekeyed : null;
+  for (const [nutrient, value] of Object.entries(b.extras ?? {}) as Array<
+    [keyof ExtraNutrients, number | undefined]
+  >) {
+    if (value !== undefined) extras[nutrient] = (extras[nutrient] ?? 0) + value;
+  }
+
+  return {
+    ...a,
+    calories: a.calories + b.calories,
+    fat: a.fat + b.fat,
+    carbs: a.carbs + b.carbs,
+    protein: a.protein + b.protein,
+    ...(a.extras || b.extras ? { extras } : {}),
+  };
 }
 
 function isSeasoning(line: NutritionLine, seasoning: readonly string[]): boolean {

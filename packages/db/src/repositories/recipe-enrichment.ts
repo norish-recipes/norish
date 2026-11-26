@@ -22,14 +22,17 @@ import type {
 } from "@norish/shared/lib/recipe-enrichment";
 import { db } from "@norish/db/drizzle";
 import {
+  ingredientAliases,
   recipeCuisines,
   recipeImages,
+  recipeIngredientFoods,
   recipeIngredients,
   recipeNutritionEstimates,
   recipes,
   stepIngredients,
   steps,
 } from "@norish/db/schema";
+import { groupBy } from "@norish/shared/lib/group-by";
 import {
   fillProvenanceGaps,
   hasSubstantiveCategories,
@@ -151,28 +154,51 @@ export async function replaceRecipeNutrition(
  * Store the language model's estimate of the lines a recipe's worked-out
  * nutrition leaves out (ADR-0039): one per-serving share per line, under
  * the line's key, replacing any earlier estimate. Never the recipe's own
- * Nutrition Information. False where the recipe is gone.
+ * Nutrition Information. False where the recipe is gone. `readFoods` is each
+ * line's foods as the estimate read them: a share is keyed by the foods the
+ * line names when it is saved, should a move or merge have re-pointed it since.
  */
 export async function saveRecipeNutritionEstimate(
   recipeId: string,
-  estimate: { lines: EstimatedLineRow[] }
+  estimate: { lines: EstimatedLineRow[] },
+  readFoods: ReadonlyMap<string, readonly (string | null)[]> = new Map()
 ): Promise<boolean> {
-  const [recipe] = await db
-    .select({ id: recipes.id })
-    .from(recipes)
-    .where(eq(recipes.id, recipeId));
+  return await db.transaction(async (tx) => {
+    // Held so no move re-points the lines between the read below and the commit.
+    if (!(await lockRecipeHouseholdsTx(tx, { recipeIds: [recipeId] })).has(recipeId)) return false;
+    const now = await tx
+      .select({
+        lineId: recipeIngredientFoods.recipeIngredientId,
+        ingredientId: ingredientAliases.ingredientId,
+      })
+      .from(recipeIngredientFoods)
+      .innerJoin(
+        ingredientAliases,
+        eq(ingredientAliases.id, recipeIngredientFoods.ingredientAliasId)
+      )
+      .where(isAnyOf(recipeIngredientFoods.recipeIngredientId, [...readFoods.keys()], "uuid"))
+      .orderBy(recipeIngredientFoods.recipeIngredientId, recipeIngredientFoods.position);
+    const foods = new Map<string, string>();
 
-  if (!recipe) return false;
+    for (const [lineId, held] of groupBy(now, (row) => row.lineId)) {
+      readFoods.get(lineId)?.forEach((was, position) => {
+        const is = held[position]?.ingredientId;
 
-  await db
-    .insert(recipeNutritionEstimates)
-    .values({ recipeId, ...estimate, createdAt: new Date() })
-    .onConflictDoUpdate({
-      target: recipeNutritionEstimates.recipeId,
-      set: { ...estimate, createdAt: new Date() },
-    });
+        if (was && is && was !== is) foods.set(was, is);
+      });
+    }
+    const lines = rekeyedShares(estimate.lines, foods) ?? estimate.lines;
 
-  return true;
+    await tx
+      .insert(recipeNutritionEstimates)
+      .values({ recipeId, lines, createdAt: new Date() })
+      .onConflictDoUpdate({
+        target: recipeNutritionEstimates.recipeId,
+        set: { lines, createdAt: new Date() },
+      });
+
+    return true;
+  });
 }
 
 /**

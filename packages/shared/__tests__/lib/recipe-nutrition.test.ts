@@ -738,13 +738,33 @@ describe("rekeyedShares", () => {
     const moved = lineKey({ name: "soja", amount: 2, unit: "tbsp", ingredientId: "old" });
     const kept = lineKey({ name: "salt", amount: null, unit: null, ingredientId: "other" });
     const byText = lineKey({ name: "mystery", amount: 1, unit: null, ingredientId: null });
-    const shares = [moved, kept, byText].map((key) => ({ key, calories: 1 }));
+    const shares = [moved, kept, byText].map((key) => ({
+      key,
+      calories: 1,
+      fat: 0,
+      carbs: 0,
+      protein: 0,
+    }));
+    const share = (key: string) => ({ key, calories: 1, fat: 0, carbs: 0, protein: 0 });
 
     expect(rekeyedShares(shares, new Map([["old", "new"]]))).toEqual([
-      { key: lineKey({ name: "soja", amount: 2, unit: "tbsp", ingredientId: "new" }), calories: 1 },
-      { key: kept, calories: 1 },
-      { key: byText, calories: 1 },
+      share(lineKey({ name: "soja", amount: 2, unit: "tbsp", ingredientId: "new" })),
+      share(kept),
+      share(byText),
     ]);
     expect(rekeyedShares(shares, new Map([["absent", "new"]]))).toBeNull();
+  });
+
+  it("adds up two shares whose keys become one", () => {
+    const key = (ingredientId: string) =>
+      lineKey({ name: "soja", amount: 2, unit: "tbsp", ingredientId });
+    const shares = [
+      { key: key("a"), calories: 10, fat: 1, carbs: 2, protein: 3, extras: { fiber: 1 } },
+      { key: key("b"), calories: 5, fat: 1, carbs: 0, protein: 1, extras: { fiber: 2, salt: 1 } },
+    ];
+
+    expect(rekeyedShares(shares, new Map([["a", "b"]]))).toEqual([
+      { key: key("b"), calories: 15, fat: 2, carbs: 2, protein: 4, extras: { fiber: 3, salt: 1 } },
+    ]);
   });
 });

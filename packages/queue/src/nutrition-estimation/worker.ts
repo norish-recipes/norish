@@ -102,7 +102,20 @@ export async function processNutritionEstimationJob(
 
     await reportStep(job, "saving");
 
-    const saved = await saveRecipeNutritionEstimate(recipe.id, { lines: shares });
+    // Keyed by the lines' foods as they are at the save: a move may have re-pointed them since.
+    const readFoods = new Map(
+      recipe.recipeIngredients.flatMap((line) =>
+        line.id
+          ? [
+              [
+                line.id,
+                line.foods?.length ? line.foods.map((f) => f.ingredientId) : [line.ingredientId],
+              ],
+            ]
+          : []
+      )
+    );
+    const saved = await saveRecipeNutritionEstimate(recipe.id, { lines: shares }, readFoods);
 
     log.info(
       { recipeId: recipe.id, saved, leftOut: gaps.length, origin: job.data.origin },
