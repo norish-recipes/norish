@@ -10,6 +10,7 @@
  */
 import type { NutritionCredit } from "@norish/shared/contracts/ingredient-nutrition";
 import type { ExtraNutrient, ExtraNutrients } from "@norish/shared/contracts/nutrients";
+import type { LineReadings } from "@norish/shared/lib/line-foods";
 import type {
   LeftOutReason,
   NutritionGapEstimate,
@@ -17,7 +18,6 @@ import type {
   WorkedOutNutrition,
 } from "@norish/shared/lib/recipe-nutrition";
 import { getIngredientWords, getUnits } from "@norish/shared-server/config/server-config-loader";
-import { linesAsRead } from "@norish/shared/lib/line-foods";
 import {
   nutritionLinesOf,
   seasoningPhrases,
@@ -35,11 +35,13 @@ import { resolveIngredientNutrition } from "./ingredient-nutrition";
 export async function workOutRecipeNutrition(
   recipe: RecipeForNutrition,
   reader: NutritionReader,
-  estimate: NutritionGapEstimate | null = null
+  estimate: NutritionGapEstimate | null = null,
+  /** The reader's readings of its lines outside their catalogue (`lineReadingsOf`). */
+  readings: LineReadings = {}
 ): Promise<WorkedOutNutrition | null> {
   if (suppliesNutrition(recipe)) return null;
 
-  const lines = nutritionLinesOf(recipe);
+  const lines = nutritionLinesOf(recipe, readings);
   const nutrition = await resolveIngredientNutrition(
     lines.flatMap((line) => (line.ingredientId ? [line.ingredientId] : [])),
     reader
@@ -90,25 +92,23 @@ function storedNumber(value: number | string | null): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-/** The recipe's lines as the reader's household uses them: those outside its catalogue read again. */
-async function readByReader(
-  recipe: RecipeForNutrition,
-  { householdId }: NutritionReader
-): Promise<RecipeForNutrition> {
-  if (!householdId || suppliesNutrition(recipe)) return recipe;
-  const lineIds = recipe.recipeIngredients.flatMap((line) => (line.id ? [line.id] : []));
-  const readings = await lineReadingsOf(householdId, { of: "lines", ids: lineIds });
-
-  return { ...recipe, recipeIngredients: linesAsRead(recipe.recipeIngredients, readings) };
-}
-
 /** The recipe's nutrition per serving for the reader's household. */
 export async function readRecipeNutrition(
-  stored: RecipeForNutrition,
+  recipe: RecipeForNutrition,
   reader: NutritionReader
 ): Promise<RecipeNutritionAnswer> {
-  const recipe = await readByReader(stored, reader);
-  const worked = await workOutRecipeNutrition(recipe, reader, recipe.nutritionEstimate ?? null);
+  const lineIds = recipe.recipeIngredients.flatMap((line) => (line.id ? [line.id] : []));
+  // Its lines outside the household's catalogue read through it (ADR-0042).
+  const readings =
+    reader.householdId && !suppliesNutrition(recipe)
+      ? await lineReadingsOf(reader.householdId, { of: "lines", ids: lineIds })
+      : {};
+  const worked = await workOutRecipeNutrition(
+    recipe,
+    reader,
+    recipe.nutritionEstimate ?? null,
+    readings
+  );
   const { nutritionExtras: extras, extrasCoverage } = withStatedExtras(
     recipe.nutritionExtras,
     worked

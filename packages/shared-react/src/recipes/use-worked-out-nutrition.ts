@@ -3,7 +3,6 @@
 import { useQuery } from "@tanstack/react-query";
 
 import type { RecipeForNutrition, WorkedOutNutrition } from "@norish/shared/lib/recipe-nutrition";
-import { linesAsRead } from "@norish/shared/lib/line-foods";
 import {
   nutritionLinesOf,
   seasoningPhrases,
@@ -27,22 +26,16 @@ export function useWorkedOutNutrition(
   const rules = useSpellingRules();
   const supplied = !recipe || suppliesNutrition(recipe);
   const readings = useLineReadings(supplied ? [] : [recipe.id]);
-  const lines =
-    recipe && !supplied && readings
-      ? nutritionLinesOf({
-          ...recipe,
-          recipeIngredients: linesAsRead(recipe.recipeIngredients, readings),
-        })
-      : [];
+  const lines = recipe && !supplied ? nutritionLinesOf(recipe, readings) : [];
   const ingredientIds = [
-    ...new Set(lines.flatMap((line) => (line.ingredientId ? [line.ingredientId] : []))),
+    ...new Set((lines ?? []).flatMap((line) => (line.ingredientId ? [line.ingredientId] : []))),
   ].sort((a, b) => a.localeCompare(b));
   const { data } = useQuery({
     ...trpc.ingredients.nutritionFor.queryOptions({ ingredientIds }),
     enabled: !supplied && ingredientIds.length > 0,
   });
 
-  if (supplied || !recipe || !readings || (ingredientIds.length > 0 && !data)) return null;
+  if (supplied || !recipe || !lines || (ingredientIds.length > 0 && !data)) return null;
 
   return workOutNutrition({
     lines,

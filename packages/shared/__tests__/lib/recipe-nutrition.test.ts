@@ -507,7 +507,7 @@ describe("a recipe's lines and supplied numbers", () => {
   };
 
   it("works out from the recipe's own measurement system, without its headings", () => {
-    expect(nutritionLinesOf(recipe)).toEqual([
+    expect(nutritionLinesOf(recipe, {})).toEqual([
       { id: "b", name: "200 g onion", amount: 200, unit: "gram", ingredientId: "onion" },
     ]);
   });
@@ -526,11 +526,14 @@ describe("a recipe's lines and supplied numbers", () => {
       unit: "gram",
       systemUsed: "metric",
     });
-    const lines = nutritionLinesOf({
-      ...recipe,
-      servings: 1,
-      recipeIngredients: [joined("alternatives", "d"), joined("together", "e")],
-    });
+    const lines = nutritionLinesOf(
+      {
+        ...recipe,
+        servings: 1,
+        recipeIngredients: [joined("alternatives", "d"), joined("together", "e")],
+      },
+      {}
+    );
 
     expect(lines).toEqual([
       { id: "d", name: "rice", amount: 100, unit: "gram", ingredientId: "rice" },
@@ -541,6 +544,41 @@ describe("a recipe's lines and supplied numbers", () => {
       workOutNutrition({ lines, servings: 1, nutrition: NUTRITION, seasoning: [] }).perServing
         ?.calories
     ).toBe(350 + 350 + 40);
+  });
+
+  it("finds the model's share of a line read through the reader's catalogue as the line was stored", () => {
+    const stored = {
+      ...recipe,
+      servings: 1,
+      recipeIngredients: [
+        {
+          id: "f",
+          ingredientName: "brandy",
+          ingredientId: "their-brandy",
+          amount: 50,
+          unit: "milliliter",
+          systemUsed: "metric",
+        },
+      ],
+    };
+    const [asStored] = nutritionLinesOf(stored, {});
+    const lines = nutritionLinesOf(stored, {
+      f: { ingredientId: "mine", joined: null, foods: [{ ingredientId: "mine", name: "brandy" }] },
+    });
+    const result = workOutNutrition({
+      lines,
+      servings: 1,
+      nutrition: NUTRITION,
+      seasoning: [],
+      estimate: {
+        lines: [{ key: lineKey(asStored!), calories: 10, fat: 0, carbs: 0, protein: 0 }],
+      },
+    });
+
+    // The reader's food decides the numbers (it has none); the stored line finds the share.
+    expect(lines.map((one) => one.ingredientId)).toEqual(["mine"]);
+    expect(result.leftOut).toMatchObject([{ name: "brandy", estimatedByAI: true }]);
+    expect(nutritionLinesOf(stored, undefined)).toBeUndefined();
   });
 
   it("takes any value the recipe supplies as the whole group, and works nothing out beside it", () => {

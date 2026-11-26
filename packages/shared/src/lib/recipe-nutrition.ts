@@ -46,10 +46,10 @@ import {
 import { EXTRA_NUTRIENTS, knownExtras } from "@norish/shared/contracts/nutrients";
 import { foldName } from "@norish/shared/lib/fold-name";
 
-import type { LineWithFoods } from "./line-foods";
+import type { FoodToBuy, LineReadings, LineWithFoods } from "./line-foods";
 import type { SpellingRules } from "./spelling-keys";
 import type { ResolvedUnit } from "./units";
-import { foodsToBuy } from "./line-foods";
+import { foodsToBuy, linesAsRead } from "./line-foods";
 import { BASE_SPELLING_RULES } from "./spelling-keys";
 import { resolveUnit } from "./units";
 
@@ -87,23 +87,46 @@ export function suppliesNutrition(recipe: RecipeForNutrition): boolean {
 }
 
 /**
- * The lines a total is worked out from: those in the recipe's own measurement system, without
- * the `#` headings, each food as it is counted (`foodsToBuy`).
+ * The lines a total is worked out from, as the reader's household reads them (`linesAsRead`): those
+ * in the recipe's own measurement system, without the `#` headings, each food as it is counted
+ * (`foodsToBuy`). A line read otherwise keeps its stored line's `key`; undefined while not loaded.
  */
-export function nutritionLinesOf(recipe: RecipeForNutrition): NutritionLine[] {
+export function nutritionLinesOf(
+  recipe: RecipeForNutrition,
+  readings: LineReadings
+): NutritionLine[];
+export function nutritionLinesOf(
+  recipe: RecipeForNutrition,
+  readings: LineReadings | undefined
+): NutritionLine[] | undefined;
+export function nutritionLinesOf(
+  recipe: RecipeForNutrition,
+  readings: LineReadings | undefined
+): NutritionLine[] | undefined {
   const own = recipe.recipeIngredients.filter((line) => line.systemUsed === recipe.systemUsed);
-
-  return foodsToBuy(
-    (own.length > 0 ? own : recipe.recipeIngredients).filter(
-      (line) => !line.ingredientName.trim().startsWith("#")
-    )
-  ).map((line, index) => ({
+  const stored = (own.length > 0 ? own : recipe.recipeIngredients).filter(
+    (line) => !line.ingredientName.trim().startsWith("#")
+  );
+  const asLine = (line: FoodToBuy<(typeof stored)[number]>, index: number): NutritionLine => ({
     id: line.id ?? `line-${index}`,
     name: line.ingredientName,
     amount: line.amount === null || line.amount === "" ? null : Number(line.amount),
     unit: line.unit,
     ingredientId: line.ingredientId,
-  }));
+  });
+  const read = linesAsRead(stored, readings);
+
+  if (!read) return undefined;
+  const storedKeys = new Map(
+    foodsToBuy(stored).map((food, index) => [asLine(food, index).id, lineKey(asLine(food, index))])
+  );
+
+  return foodsToBuy(read).map((food, index) => {
+    const line = asLine(food, index);
+    const key = food.lineId && readings?.[food.lineId] ? storedKeys.get(line.id) : undefined;
+
+    return key && key !== lineKey(line) ? { ...line, key } : line;
+  });
 }
 
 /** One recipe line, as the arithmetic reads it. */
@@ -115,6 +138,8 @@ export interface NutritionLine {
   /** The unit as the line stores it: a units-map id ("tablespoon", "clove", "to_taste") or a spelling. */
   unit: string | null;
   ingredientId: string | null;
+  /** The line as it was stored, where the reader's catalogue reads it otherwise (`lineKey`). */
+  key?: string;
 }
 
 /** Calories and macros per serving, and the other nutrients any counted line knew. */
@@ -435,7 +460,7 @@ export function workOutNutrition({
         lineId: line.id,
         name: line.name,
         ingredientId: line.ingredientId,
-        key: lineKey(line),
+        key: line.key ?? lineKey(line),
         reason: weighed.reason,
         estimatedByAI: false,
       });

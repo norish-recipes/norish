@@ -18,19 +18,32 @@ export interface LineReading {
   foods: Array<{ ingredientId: string; name: string }>;
 }
 
-/** Each such line's reading, by line id; a line inside the catalogue has none. */
+/**
+ * Each such line's reading, by line id; a line inside the catalogue has none. Undefined is readings
+ * not loaded yet, and nothing is used until they are; `{}` reads every line as stored.
+ */
 export type LineReadings = Readonly<Record<string, LineReading>>;
 
-/** The lines as the reader uses them: each one with a reading takes its foods, the rest as stored. */
+/**
+ * The lines as the reader uses them: each one with a reading takes its foods, the rest as stored;
+ * undefined while the readings have not loaded.
+ */
 export function linesAsRead<L extends LineWithFoods>(
   lines: readonly L[],
   readings: LineReadings
-): L[] {
-  return lines.map((line) => {
-    const reading = line.id ? readings[line.id] : undefined;
-
-    return reading ? { ...line, ...reading } : line;
-  });
+): L[];
+export function linesAsRead<L extends LineWithFoods>(
+  lines: readonly L[],
+  readings: LineReadings | undefined
+): L[] | undefined;
+export function linesAsRead<L extends LineWithFoods>(
+  lines: readonly L[],
+  readings: LineReadings | undefined
+): L[] | undefined {
+  return (
+    readings &&
+    lines.map((line) => (line.id && readings[line.id] ? { ...line, ...readings[line.id] } : line))
+  );
 }
 
 /** A line as one of the foods it is bought and counted by. */

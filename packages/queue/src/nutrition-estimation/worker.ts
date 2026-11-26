@@ -82,7 +82,7 @@ export async function processNutritionEstimationJob(
     }
 
     // The lines as the total read them: each food of an "and" line is one, with the line's amount.
-    const lineById = new Map(nutritionLinesOf(recipe).map((line) => [line.id, line]));
+    const lineById = new Map(nutritionLinesOf(recipe, {}).map((line) => [line.id, line]));
     const shares = await estimateNutritionGap(
       recipe.name,
       recipe.servings ?? 1,

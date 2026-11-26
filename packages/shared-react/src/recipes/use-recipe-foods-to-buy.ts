@@ -22,18 +22,17 @@ export function useRecipeFoodsToBuy(
     systemUsed
   );
   const readings = useLineReadings([recipeId, ...linkedIds]);
-  const foods = foodsToBuy(
-    linesAsRead(
-      [
-        ...(rawIngredients as GroceryIngredient[]),
-        ...(linkedIngredients as GroceryIngredient[]),
-      ].filter(isGroceryIngredient),
-      readings ?? {}
-    )
+  const read = linesAsRead(
+    [
+      ...(rawIngredients as GroceryIngredient[]),
+      ...(linkedIngredients as GroceryIngredient[]),
+    ].filter(isGroceryIngredient),
+    readings
   );
+  const foods = foodsToBuy(read ?? []);
 
   return {
     ...useServingsScaler(foods, originalServings, initialServings),
-    isLoading: isLoading || linkedLoading || !readings,
+    isLoading: isLoading || linkedLoading || !read,
   };
 }
