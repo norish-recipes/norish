@@ -237,13 +237,18 @@ describe("the lists router", () => {
       await replaceRecipeEntryIdsTx(tx, "cuisine", recipe.id, [italian.id]);
     });
 
-    expect(await mine.uses({ kind: "tag", id: soja.id })).toEqual([
-      { id: recipe.id, name: "Soup" },
-    ]);
-    expect(await mine.uses({ kind: "cuisine", id: italian.id })).toEqual([
-      { id: recipe.id, name: "Soup" },
-    ]);
-    expect(await theirs.uses({ kind: "cuisine", id: italian.id })).toEqual([]);
+    expect(await mine.uses({ kind: "tag", id: soja.id })).toEqual({
+      recipes: [{ id: recipe.id, name: "Soup" }],
+      nextCursor: null,
+    });
+    expect(await mine.uses({ kind: "cuisine", id: italian.id })).toEqual({
+      recipes: [{ id: recipe.id, name: "Soup" }],
+      nextCursor: null,
+    });
+    expect(await theirs.uses({ kind: "cuisine", id: italian.id })).toEqual({
+      recipes: [],
+      nextCursor: null,
+    });
     await expect(theirs.uses({ kind: "tag", id: soja.id })).rejects.toThrow("Not found");
   });
 

@@ -486,16 +486,50 @@ describe("household lists", () => {
 
     const [soja] = (await listEntries("tag", ann.household)).filter((e) => e.name === "soja");
 
-    expect(await listRecipesCarryingEntry("cuisine", italian!.id, ann.household)).toEqual([
-      { id: ann.recipe, name: "Ann's soup" },
-      { id: apple.id, name: "Apple pie" },
-    ]);
-    expect(await listRecipesCarryingEntry("cuisine", italian!.id, bob.household)).toEqual([
-      { id: bob.recipe, name: "Bob's stew" },
-    ]);
-    expect(await listRecipesCarryingEntry("tag", soja!.id, ann.household)).toEqual([
-      { id: ann.recipe, name: "Ann's soup" },
-    ]);
-    expect(await listRecipesCarryingEntry("tag", soja!.id, bob.household)).toEqual([]);
+    expect(await listRecipesCarryingEntry("cuisine", italian!.id, ann.household)).toEqual({
+      recipes: [
+        { id: ann.recipe, name: "Ann's soup" },
+        { id: apple.id, name: "Apple pie" },
+      ],
+      hasMore: false,
+    });
+    expect(await listRecipesCarryingEntry("cuisine", italian!.id, bob.household)).toEqual({
+      recipes: [{ id: bob.recipe, name: "Bob's stew" }],
+      hasMore: false,
+    });
+    expect(await listRecipesCarryingEntry("tag", soja!.id, ann.household)).toEqual({
+      recipes: [{ id: ann.recipe, name: "Ann's soup" }],
+      hasMore: false,
+    });
+    expect(await listRecipesCarryingEntry("tag", soja!.id, bob.household)).toEqual({
+      recipes: [],
+      hasMore: false,
+    });
+  });
+
+  it("pages the recipes carrying an entry, ties on a name broken by id, the last page saying no more", async () => {
+    const twin = await createTestRecipe(ann.id, { name: "Ann's soup" });
+    const apple = await createTestRecipe(ann.id, { name: "Apple pie" });
+    const [italian] = (await listEntries("cuisine", ann.household)).filter((e) => e.instance);
+
+    for (const recipe of [ann.recipe, twin.id, apple.id]) {
+      await db.transaction((tx) => replaceRecipeEntryIdsTx(tx, "cuisine", recipe, [italian!.id]));
+    }
+
+    const [firstSoup, secondSoup] = [ann.recipe, twin.id].sort();
+    const page = (offset: number) =>
+      listRecipesCarryingEntry("cuisine", italian!.id, ann.household, { limit: 2, offset });
+
+    expect(await page(0)).toEqual({
+      recipes: [
+        { id: firstSoup, name: "Ann's soup" },
+        { id: secondSoup, name: "Ann's soup" },
+      ],
+      hasMore: true,
+    });
+    expect(await page(2)).toEqual({
+      recipes: [{ id: apple.id, name: "Apple pie" }],
+      hasMore: false,
+    });
   });
 });

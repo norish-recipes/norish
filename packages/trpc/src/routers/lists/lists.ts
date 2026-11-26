@@ -205,9 +205,9 @@ const usage = adminProcedure
     return { recipeCount: await countEntryRecipes(input.kind, input.id) };
   });
 
-/** The household's recipes carrying an entry of its list or the instance's, for "Used by" to open. */
+/** A page of the household's recipes carrying an entry of its list or the instance's, for "Used by". */
 const uses = authedProcedure
-  .input(z.object({ kind: KindSchema, id: z.uuid() }))
+  .input(z.object({ kind: KindSchema, id: z.uuid(), cursor: z.number().int().min(0).default(0) }))
   .query(async ({ ctx, input }) => {
     const known =
       (await findOwnEntry(input.kind, ctx.householdId, input.id)) ??
@@ -215,7 +215,14 @@ const uses = authedProcedure
 
     if (!known) throw new TRPCError({ code: "NOT_FOUND", message: "Not found" });
 
-    return listRecipesCarryingEntry(input.kind, input.id, ctx.householdId);
+    const page = await listRecipesCarryingEntry(input.kind, input.id, ctx.householdId, {
+      offset: input.cursor,
+    });
+
+    return {
+      recipes: page.recipes,
+      nextCursor: page.hasMore ? input.cursor + page.recipes.length : null,
+    };
   });
 
 export const listsProcedures = router({ list, add, rename, merge, delete: remove, usage, uses });
