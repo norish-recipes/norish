@@ -56,7 +56,7 @@ import {
 /**
  * The catalogue seed's writes (ADR-0038): seeded Ingredients, aliases and parents are upserted, and
  * what a person made (an own alias, a merge, a move, a parent) outlives every refresh. The seed reads
- * and writes only the seed's rows: a household's food or spelling is never adopted or changed (ADR-0042).
+ * and writes only the seed's rows: a household's food or spelling is never taken over or changed (ADR-0042).
  */
 
 const qb = new QueryBuilder();

@@ -61,8 +61,8 @@ const CHUNK = 1000;
 
 /**
  * Replace every source food and rule with a table's, in one transaction: a
- * failure leaves the last good ones exactly as they were. Corrections live
- * elsewhere and are never touched.
+ * failure leaves the last good ones exactly as they were. A household's
+ * corrections are its own, and stay as they are.
  */
 export async function replaceNutritionSources(
   foods: readonly NutritionFoodRow[],

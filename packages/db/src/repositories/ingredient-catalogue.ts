@@ -42,8 +42,8 @@ const qb = new QueryBuilder();
 const kind = alias(ingredients, "k");
 const otherFood = alias(ingredients, "o");
 
-/** `column` qualified by its table, also where a single-table select would render it bare. */
-const qualified = (column: AnyPgColumn) => sql`${column.table}.${sql.identifier(column.name)}`;
+/** `column` with its table's name, also where a single-table select would render it bare. */
+const withTableName = (column: AnyPgColumn) => sql`${column.table}.${sql.identifier(column.name)}`;
 
 /** Whether no Ingredient has the `ingredients` row the outer statement is on as its parent. */
 export const hasNoKinds = () =>
@@ -106,7 +106,7 @@ export function folded(value: AnyPgColumn, forWords = false): SQL {
 }
 
 /** Whether a folded text holds `word` as written (`start`: at the start of one of its words). */
-export function holds(text: SQL, word: string, start = false): SQL {
+function containsText(text: SQL, word: string, start = false): SQL {
   const escaped = escapeLike(word);
 
   return start
@@ -119,8 +119,8 @@ export function holds(text: SQL, word: string, start = false): SQL {
 const SEARCHED = sql.identifier("searched");
 const SEARCHED_NAME = sql.identifier("name");
 const searchedName = {
-  join: sql`(select ${folded(ingredients.name)} as ${SEARCHED_NAME} offset 0) ${SEARCHED}`,
-  fold: sql`${SEARCHED}.${SEARCHED_NAME}`,
+  lateral: sql`(select ${folded(ingredients.name)} as ${SEARCHED_NAME} offset 0) ${SEARCHED}`,
+  column: sql`${SEARCHED}.${SEARCHED_NAME}`,
 };
 
 /** A searched text (the name, its translations, the parent's) that is the fold exactly, or
@@ -135,14 +135,14 @@ export function matchingSearch(
   const test = (text: SQL) =>
     search.match === "exact"
       ? sql`${text} = ${search.fold}`
-      : (and(...search.words.map((word) => holds(text, word, start))) ?? sql`true`);
+      : (and(...search.words.map((word) => containsText(text, word, start))) ?? sql`true`);
   // A name also by its lowercased phrase, as before folding: a C-locale database folds non-ASCII away.
   const name = (column: AnyPgColumn) =>
     or(
       test(folded(column, search.match === "contains")),
       search.match === "exact"
         ? sql`lower(${column}) = ${search.fold}`
-        : holds(sql`lower(${column})`, search.fold, start)
+        : containsText(sql`lower(${column})`, search.fold, start)
     ) ?? sql`false`;
   const spellingOf = (ingredientId: AnyPgColumn) =>
     exists(
@@ -170,8 +170,10 @@ export function matchingSearch(
 /** Whether a Tag or Category name starts a word with the typed `fold`: folded, or by its lowercase. */
 export function nameStartsWith(column: AnyPgColumn, fold: string): SQL {
   return (
-    or(holds(folded(column, true), fold, true), holds(sql`lower(${column})`, fold, true)) ??
-    sql`false`
+    or(
+      containsText(folded(column, true), fold, true),
+      containsText(sql`lower(${column})`, fold, true)
+    ) ?? sql`false`
   );
 }
 
@@ -183,7 +185,7 @@ function searchRank(
   householdId: string
 ): SQL {
   const exact = (text: SQL) => sql`${text} = ${search.fold}`;
-  const wordStart = (text: SQL) => holds(text, search.words[0] ?? search.fold, true);
+  const wordStart = (text: SQL) => containsText(text, search.words[0] ?? search.fold, true);
   const translated = (test: (text: SQL) => SQL) =>
     inArray(
       ingredients.id,
@@ -199,7 +201,7 @@ function searchRank(
         )
     );
 
-  return sql`least(case when ${exact(searchedName.fold)} then 0 when ${wordStart(searchedName.fold)} then 1 else 2 end, case when ${translated(exact)} then 0 when ${translated(wordStart)} then 1 else 2 end)`;
+  return sql`least(case when ${exact(searchedName.column)} then 0 when ${wordStart(searchedName.column)} then 1 else 2 end, case when ${translated(exact)} then 0 when ${translated(wordStart)} then 1 else 2 end)`;
 }
 
 /** A page of the catalogue (all, the flagged, or what a search finds by name or spelling): the
@@ -229,9 +231,9 @@ export async function listCatalogueIngredients(query: {
   const ranks = query.search ? [searchRank(query.search, query.languages, query.householdId)] : [];
   const listedKind = query.listedOnly
     ? listedFood({
-        id: qualified(kind.id),
-        offId: qualified(kind.offId),
-        addedByHand: qualified(kind.addedByHand),
+        id: withTableName(kind.id),
+        offId: withTableName(kind.offId),
+        addedByHand: withTableName(kind.addedByHand),
       })
     : undefined;
   const kindsOf = (fields: { n: SQL }) =>
@@ -261,7 +263,7 @@ export async function listCatalogueIngredients(query: {
     .from(ingredients)
     .leftJoin(parents, eq(parents.id, ingredients.parentId))
     .$dynamic();
-  const rows = await (query.search ? page.crossJoinLateral(searchedName.join) : page)
+  const rows = await (query.search ? page.crossJoinLateral(searchedName.lateral) : page)
     .where(
       and(
         inCatalogue(ingredients.householdId, query.householdId),
@@ -375,9 +377,9 @@ function listedFood(food: { id: SQL; offId: SQL; addedByHand: SQL }): SQL {
  */
 export function ingredientIsListed(): SQL {
   return listedFood({
-    id: qualified(ingredients.id),
-    offId: qualified(ingredients.offId),
-    addedByHand: qualified(ingredients.addedByHand),
+    id: withTableName(ingredients.id),
+    offId: withTableName(ingredients.offId),
+    addedByHand: withTableName(ingredients.addedByHand),
   });
 }
 
@@ -392,7 +394,7 @@ function askableByAI(): SQL<boolean> {
     eq(ingredients.keptDistinct, false),
     eq(ingredients.nameChosen, false),
     eq(ingredients.parentChosen, false),
-    namedByARecipeLine(qualified(ingredients.id))
+    namedByARecipeLine(withTableName(ingredients.id))
   )!.mapWith(Boolean);
 }
 
@@ -1003,7 +1005,7 @@ export async function deleteCatalogueIngredient(tx: DbTransaction, id: string): 
  * per call, so importing this module runs no query builder.
  */
 export function ingredientIsNamed(): SQL {
-  const naming = rowsNaming(qualified(ingredients.id));
+  const naming = rowsNaming(withTableName(ingredients.id));
   const any = (table: PgTable, where: SQL | undefined) =>
     exists(
       db
