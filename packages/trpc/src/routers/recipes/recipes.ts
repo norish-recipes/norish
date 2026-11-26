@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import type { EntryWriteOptions } from "@norish/db/repositories/list-entries";
 import type { FullRecipeDTO } from "@norish/shared/contracts";
+import type { LineReadings } from "@norish/shared/lib/line-foods";
 import type { RecipeEnrichmentSkipReason } from "@norish/shared/lib/recipe-enrichment";
 import { isAIEnabled as checkAIEnabled } from "@norish/auth/permissions";
 import {
@@ -42,6 +43,7 @@ import { getRecipeEnrichmentStatus } from "@norish/queue/enrichment/status";
 import { readStepProgress } from "@norish/queue/job-steps";
 import { getQueues } from "@norish/queue/registry";
 import { isVideoParsingEnabled } from "@norish/shared-server/config/server-config-loader";
+import { readLinesThrough } from "@norish/shared-server/ingredients/line-readings";
 import { readRecipeNutrition } from "@norish/shared-server/ingredients/nutrition/recipe-nutrition";
 import {
   createResolvedRecipe,
@@ -208,6 +210,18 @@ export const nutritionProcedure = authedProcedure
     }
 
     return await readRecipeNutrition(recipe, { householdId: ctx.householdId });
+  });
+
+/**
+ * How the reader uses these recipes' lines that name a food outside their catalogue (ADR-0042):
+ * the pantry, the list and the nutrition read them so. A recipe out of view reads nothing.
+ */
+const lineReadingsProcedure = authedProcedure
+  .input(z.object({ recipeIds: z.array(z.uuid()).max(50) }))
+  .query(async ({ ctx, input }): Promise<LineReadings> => {
+    const viewable = [...(await recipeAccess(ctx, input.recipeIds, "view")).keys()];
+
+    return await readLinesThrough(ctx.householdId, { recipeIds: viewable });
   });
 
 export const getEditableProcedure = authedProcedure
@@ -1008,6 +1022,7 @@ export const recipesProcedures = router({
   list: listProcedure,
   get: getProcedure,
   nutrition: nutritionProcedure,
+  lineReadings: lineReadingsProcedure,
   getEditable: getEditableProcedure,
   create,
   update,

@@ -10,7 +10,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import type { SeedEntry } from "@norish/db/repositories/ingredient-seed";
 import type { NutritionCodes } from "@norish/db/schema";
 import type { SourceTable } from "@norish/shared-server/ingredients/nutrition/source-table";
-import { getRecipeFull } from "@norish/db";
+import { createRecipeWithRefs, getRecipeFull } from "@norish/db";
 import {
   saveNutritionCorrection,
   saveNutritionEstimate,
@@ -48,10 +48,12 @@ import {
   readRecipeNutrition,
   workOutRecipeNutrition,
 } from "@norish/shared-server/ingredients/nutrition/recipe-nutrition";
+import { withResolvedIngredients } from "@norish/shared-server/ingredients/recipe-lines";
 import { buildCatalogueExport } from "@norish/shared-server/ingredients/seed/catalogue-export";
 import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
 import {
+  addTestSpelling,
   clearTestSeedState,
   createTestUser,
   joinTestHousehold,
@@ -604,6 +606,72 @@ describe("Ingredient Nutrition", () => {
         }),
       ]);
       await expect(searchDatasetFoods("milk banana")).resolves.toEqual([]);
+    });
+  });
+
+  describe("another household's recipe", () => {
+    /** A's recipe of two "ui" for two: A's own food without numbers; B spells the seeded onion so. */
+    async function theirOnions(calories: number | null = null) {
+      const author = householdA[0]!;
+      const made = crypto.randomUUID();
+
+      await mintTestFood(testHouseholdOf(author), "ui");
+      await addTestSpelling(id("en:onion"), "ui", { householdId: testHouseholdOf(householdB[0]!) });
+      await createRecipeWithRefs(
+        made,
+        author,
+        await withResolvedIngredients(
+          {
+            name: "Onions",
+            servings: 2,
+            calories,
+            systemUsed: "metric",
+            recipeIngredients: [
+              { ingredientId: null, ingredientName: "ui", amount: 2, unit: null, order: 0 },
+            ],
+          },
+          { userId: author, householdId: testHouseholdOf(author) }
+        )
+      );
+
+      return (await getRecipeFull(made))!;
+    }
+
+    it("is worked out from the reader's food and their correction, the recipe left as it is", async () => {
+      const recipe = await theirOnions();
+
+      await correctNutrition(
+        { userId: householdB[0]!, householdId: testHouseholdOf(householdB[0]!) },
+        id("en:onion"),
+        {
+          numbers: { food: "ciqual:19041" },
+          pieceWeight: null,
+          density: null,
+        }
+      );
+
+      // Two seeded onions are 300 g, over two servings, at B's 47.7 kcal per 100 g.
+      const theirs = await readRecipeNutrition(recipe, {
+        householdId: testHouseholdOf(householdB[0]!),
+      });
+
+      expect(theirs.source).toBe("worked-out");
+      expect(theirs.perServing?.calories).toBeCloseTo(71.55);
+      // Its own household reads its own food, which has no numbers.
+      await expect(
+        readRecipeNutrition(recipe, { householdId: testHouseholdOf(householdA[0]!) })
+      ).resolves.toMatchObject({ source: "none" });
+      expect((await getRecipeFull(recipe.id))!.recipeIngredients[0]!.ingredientId).toBe(
+        recipe.recipeIngredients[0]!.ingredientId
+      );
+    });
+
+    it("answers with the recipe's own Nutrition Information where it has some", async () => {
+      const recipe = await theirOnions(320);
+
+      await expect(
+        readRecipeNutrition(recipe, { householdId: testHouseholdOf(householdB[0]!) })
+      ).resolves.toMatchObject({ source: "supplied", perServing: { calories: 320 } });
     });
   });
 

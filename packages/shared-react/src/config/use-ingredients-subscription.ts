@@ -27,6 +27,7 @@ export function useIngredientsSubscription() {
     trpc.stores.aisleLinks.queryKey(),
     trpc.stores.groceryPrices.queryKey(),
     trpc.stores.linkFor.queryKey(),
+    trpc.recipes.lineReadings.queryKey(),
   ];
 
   // Every change to these is announced. Not the whole path: `ingredients.uses` also follows

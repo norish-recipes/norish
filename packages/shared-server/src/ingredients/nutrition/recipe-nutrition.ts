@@ -17,6 +17,7 @@ import type {
   WorkedOutNutrition,
 } from "@norish/shared/lib/recipe-nutrition";
 import { getIngredientWords, getUnits } from "@norish/shared-server/config/server-config-loader";
+import { readThrough } from "@norish/shared/lib/line-foods";
 import {
   nutritionLinesOf,
   seasoningPhrases,
@@ -27,6 +28,7 @@ import {
 import { spellingRules } from "@norish/shared/lib/spelling-keys";
 
 import type { NutritionReader } from "./ingredient-nutrition";
+import { readLinesThrough } from "../line-readings";
 import { resolveIngredientNutrition } from "./ingredient-nutrition";
 
 /** The recipe's worked-out nutrition for the reader's household, or null where it supplies its own. */
@@ -88,11 +90,24 @@ function storedNumber(value: number | string | null): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+/** The recipe's lines as the reader's household uses them: those outside its catalogue read again. */
+async function readByReader(
+  recipe: RecipeForNutrition,
+  { householdId }: NutritionReader
+): Promise<RecipeForNutrition> {
+  if (!householdId || suppliesNutrition(recipe)) return recipe;
+  const lineIds = recipe.recipeIngredients.flatMap((line) => (line.id ? [line.id] : []));
+  const readings = await readLinesThrough(householdId, { lineIds });
+
+  return { ...recipe, recipeIngredients: readThrough(recipe.recipeIngredients, readings) };
+}
+
 /** The recipe's nutrition per serving for the reader's household. */
 export async function readRecipeNutrition(
-  recipe: RecipeForNutrition,
+  stored: RecipeForNutrition,
   reader: NutritionReader
 ): Promise<RecipeNutritionAnswer> {
+  const recipe = await readByReader(stored, reader);
   const worked = await workOutRecipeNutrition(recipe, reader, recipe.nutritionEstimate ?? null);
   const { nutritionExtras: extras, extrasCoverage } = withStatedExtras(
     recipe.nutritionExtras,
