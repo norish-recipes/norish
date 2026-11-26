@@ -136,6 +136,40 @@ export function ytDlpArgs(url: string, options: readonly string[]): string[] {
   return [...options, "--", url];
 }
 
+/** Options whose value is a credential: a saved site header, a proxy URL that may hold a login. */
+const CREDENTIAL_OPTIONS = new Set(["--add-header", "--proxy"]);
+
+/** `text` with every credential in `args` masked, a header's value on its own too. */
+function withoutCredentials(text: string, args: readonly string[]): string {
+  const credentials = args
+    .filter((_, index) => CREDENTIAL_OPTIONS.has(args[index - 1] ?? ""))
+    .flatMap((value) => [value, value.slice(value.indexOf(":") + 1).trim()])
+    .filter(Boolean);
+
+  return credentials.reduce((masked, value) => masked.replaceAll(value, "[redacted]"), text);
+}
+
+/**
+ * Why yt-dlp failed, from its message and output with every credential masked. Node's error is
+ * left out: its message and `cmd` hold the whole command line.
+ */
+function ytDlpFailure(error: unknown, args: readonly string[]): Error {
+  const childError = error as Error & { stdout?: string | Buffer; stderr?: string | Buffer };
+  const stderr = childError.stderr?.toString().trim();
+  const stdout = childError.stdout?.toString().trim();
+  const details = [childError.message];
+
+  if (stderr) {
+    details.push(`Stderr:\n${stderr}`);
+  }
+
+  if (stdout) {
+    details.push(`Stdout:\n${stdout}`);
+  }
+
+  return new Error(withoutCredentials(details.join("\n\n"), args));
+}
+
 async function execYtDlp(url: string, options: string[], cwd?: string): Promise<string> {
   const args = ytDlpArgs(url, options);
 
@@ -151,20 +185,7 @@ async function execYtDlp(url: string, options: string[], cwd?: string): Promise<
 
     return stdout;
   } catch (error: unknown) {
-    const childError = error as Error & { stdout?: string | Buffer; stderr?: string | Buffer };
-    const stderr = childError.stderr?.toString().trim();
-    const stdout = childError.stdout?.toString().trim();
-    const details = [childError.message];
-
-    if (stderr) {
-      details.push(`Stderr:\n${stderr}`);
-    }
-
-    if (stdout) {
-      details.push(`Stdout:\n${stdout}`);
-    }
-
-    throw new Error(details.join("\n\n"), { cause: error });
+    throw ytDlpFailure(error, args);
   }
 }
 
