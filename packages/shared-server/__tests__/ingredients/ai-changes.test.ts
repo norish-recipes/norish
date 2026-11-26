@@ -421,6 +421,22 @@ describe("keeping and undoing AI Changes", () => {
     await expect(findIngredientByAliasId(poireau.id)).resolves.toMatchObject({ id: leek });
   });
 
+  it("never offers or acts on a stranded change", async () => {
+    const red = await mint("red onion");
+    const changeId = await withTransaction((tx) =>
+      recordAIChange(tx, {
+        householdId: actor.householdId,
+        ingredientId: red.ingredientId,
+        sure: false,
+        undo: { kind: "parent", formerParentId: null, stranded: true },
+      })
+    );
+
+    expect(await listAIChangesFor(actor)).toMatchObject([{ id: changeId, canAct: false }]);
+    await expect(undoAIChange(actor, changeId)).rejects.toMatchObject({ refusal: "forbidden" });
+    await expect(keepAIChange(actor, changeId)).rejects.toMatchObject({ refusal: "forbidden" });
+  });
+
   it("refuses a change already undone", async () => {
     const red = await mint("red onion");
     const onion = await mint("onion");

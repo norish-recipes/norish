@@ -166,10 +166,13 @@ CREATE OR REPLACE FUNCTION "pg_temp"."ids_in"(jsonb, uuid, text) RETURNS jsonb L
   FROM jsonb_array_elements_text(coalesce($1, '[]'::jsonb)) WITH ORDINALITY AS t(x, n),
   LATERAL (SELECT CASE $3 WHEN 'spelling' THEN pg_temp.spelling_in(x::uuid, $2) ELSE pg_temp.row_in(x::uuid, $2) END) AS m(y)
 $$;--> statement-breakpoint
--- The ids of a list (or its objects' `key` ids) made the household's; one of another household's is left out.
-CREATE OR REPLACE FUNCTION "pg_temp"."rows_in"(jsonb, uuid, text) RETURNS jsonb LANGUAGE sql STABLE AS $$
-  SELECT coalesce(jsonb_agg(e ORDER BY n) FILTER (WHERE pg_temp.row_in((e ->> $3)::uuid, $2) IS NOT NULL), '[]'::jsonb)
-  FROM jsonb_array_elements(coalesce($1, '[]'::jsonb)) WITH ORDINALITY AS t(e, n)
+-- A list's objects made the household's: the row under key $3 its own, the spelling under key $4 its own or
+-- its copy; an object naming another household's row or spelling is left out.
+CREATE OR REPLACE FUNCTION "pg_temp"."rows_in"(jsonb, uuid, text, text DEFAULT NULL) RETURNS jsonb LANGUAGE sql STABLE AS $$
+  SELECT coalesce(jsonb_agg(CASE WHEN m."s" IS NULL THEN e ELSE e || jsonb_build_object($4, m."s") END ORDER BY n), '[]'::jsonb)
+  FROM jsonb_array_elements(coalesce($1, '[]'::jsonb)) WITH ORDINALITY AS t(e, n),
+  LATERAL (SELECT pg_temp.spelling_in((e ->> $4)::uuid, $2) AS "s") m
+  WHERE ($3 IS NULL OR pg_temp.row_in((e ->> $3)::uuid, $2) IS NOT NULL) AND ((e ->> $4) IS NULL OR m."s" IS NOT NULL)
 $$;--> statement-breakpoint
 CREATE OR REPLACE FUNCTION "pg_temp"."undo_in"(jsonb, uuid) RETURNS jsonb LANGUAGE sql STABLE AS $$
   SELECT CASE $1 ->> 'kind'
@@ -177,10 +180,12 @@ CREATE OR REPLACE FUNCTION "pg_temp"."undo_in"(jsonb, uuid) RETURNS jsonb LANGUA
       'parentId', pg_temp.food_in(($1 ->> 'parentId')::uuid, $2))
     WHEN 'parent' THEN $1 || jsonb_build_object('formerParentId', pg_temp.food_in(($1 ->> 'formerParentId')::uuid, $2))
     WHEN 'not-a-food' THEN jsonb_set($1, '{food}', ($1 -> 'food') || jsonb_build_object(
+      'ingredientId', pg_temp.food_in(($1 -> 'food' ->> 'ingredientId')::uuid, $2),
       'parentId', pg_temp.food_in(($1 -> 'food' ->> 'parentId')::uuid, $2),
-      'lineFoods', pg_temp.rows_in($1 -> 'food' -> 'lineFoods', $2, 'lineId'),
-      'groceries', pg_temp.rows_in($1 -> 'food' -> 'groceries', $2, 'id'),
-      'recurring', pg_temp.rows_in($1 -> 'food' -> 'recurring', $2, 'id')))
+      'aliases', pg_temp.rows_in($1 -> 'food' -> 'aliases', $2, NULL, 'id'),
+      'lineFoods', pg_temp.rows_in($1 -> 'food' -> 'lineFoods', $2, 'lineId', 'aliasId'),
+      'groceries', pg_temp.rows_in($1 -> 'food' -> 'groceries', $2, 'id', 'aliasId'),
+      'recurring', pg_temp.rows_in($1 -> 'food' -> 'recurring', $2, 'id', 'aliasId')))
     WHEN 'spelling' THEN $1 || jsonb_build_object(
       'spelling', ($1 -> 'spelling') || jsonb_build_object('id', pg_temp.spelling_in(($1 -> 'spelling' ->> 'id')::uuid, $2)),
       'lines', (SELECT coalesce(jsonb_agg(e || jsonb_build_object('aliasIds', pg_temp.ids_in(e -> 'aliasIds', $2, 'spelling'))
@@ -198,9 +203,11 @@ CREATE OR REPLACE FUNCTION "pg_temp"."undo_ids"(jsonb) RETURNS SETOF text LANGUA
   SELECT x FROM (
     SELECT $1 ->> 'parentId' UNION ALL SELECT jsonb_array_elements_text($1 -> 'aliasIds')
     UNION ALL SELECT $1 ->> 'formerParentId' UNION ALL SELECT $1 -> 'food' ->> 'parentId'
-    UNION ALL SELECT e ->> 'lineId' FROM jsonb_array_elements($1 -> 'food' -> 'lineFoods') e
-    UNION ALL SELECT e ->> 'id' FROM jsonb_array_elements($1 -> 'food' -> 'groceries') e
-    UNION ALL SELECT e ->> 'id' FROM jsonb_array_elements($1 -> 'food' -> 'recurring') e
+    UNION ALL SELECT $1 -> 'food' ->> 'ingredientId'
+    UNION ALL SELECT e ->> 'id' FROM jsonb_array_elements($1 -> 'food' -> 'aliases') e
+    UNION ALL SELECT x FROM jsonb_array_elements($1 -> 'food' -> 'lineFoods') e, LATERAL (VALUES (e ->> 'lineId'), (e ->> 'aliasId')) v(x)
+    UNION ALL SELECT x FROM jsonb_array_elements($1 -> 'food' -> 'groceries') e, LATERAL (VALUES (e ->> 'id'), (e ->> 'aliasId')) v(x)
+    UNION ALL SELECT x FROM jsonb_array_elements($1 -> 'food' -> 'recurring') e, LATERAL (VALUES (e ->> 'id'), (e ->> 'aliasId')) v(x)
     UNION ALL SELECT $1 -> 'spelling' ->> 'id'
     UNION ALL SELECT e ->> 'id' FROM jsonb_array_elements($1 -> 'lines') e
     UNION ALL SELECT jsonb_array_elements_text(e -> 'aliasIds') FROM jsonb_array_elements($1 -> 'lines') e
@@ -210,13 +217,15 @@ CREATE OR REPLACE FUNCTION "pg_temp"."undo_ids"(jsonb) RETURNS SETOF text LANGUA
   ) ids (x) WHERE x IS NOT NULL
 $$;--> statement-breakpoint
 -- Every change names only its household's foods, spellings and rows, or the seed's. One that named another
--- household's with no copy there keeps none of them, is listed still and cannot be undone (`stranded`).
+-- household's with no copy there keeps none of them, is listed still and cannot be undone (`stranded`), as
+-- is one of a kind this migration does not know.
 UPDATE "ingredient_ai_changes" ch SET "target_id" = m."target_id",
   "undo" = CASE WHEN m."stranded" THEN m."undo" || '{"stranded": true}'::jsonb ELSE m."undo" END
 FROM (
   SELECT c."id", t."target_id", u."undo",
     (c."target_id" IS NOT NULL AND t."target_id" IS NULL)
-      OR (SELECT count(*) FROM pg_temp.undo_ids(c."undo")) <> (SELECT count(*) FROM pg_temp.undo_ids(u."undo")) AS "stranded"
+      OR (SELECT count(*) FROM pg_temp.undo_ids(c."undo")) <> (SELECT count(*) FROM pg_temp.undo_ids(u."undo"))
+      OR coalesce(c."undo" ->> 'kind', '') NOT IN ('merge', 'parent', 'plain-name', 'not-a-food', 'spelling') AS "stranded"
   FROM "ingredient_ai_changes" c
   CROSS JOIN LATERAL (SELECT pg_temp.food_in(c."target_id", c."household_id") AS "target_id") t
   CROSS JOIN LATERAL (SELECT pg_temp.undo_in(c."undo", c."household_id") AS "undo") u

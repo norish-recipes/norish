@@ -87,6 +87,8 @@ describe("each household gets its own catalogue", () => {
     moved: randomUUID(),
     removed: randomUUID(),
     foreignParent: randomUUID(),
+    foreignSpellings: randomUUID(),
+    unknown: randomUUID(),
   };
   let households: { ann: string; bob: string };
 
@@ -316,7 +318,8 @@ describe("each household gets its own catalogue", () => {
        ($1, 'parent', $4, $5, true, $6), ($2, 'merge', $4, NULL, false, $7),
        ($3, 'plain-name', $4, NULL, true, $8), ($9, 'not-a-food', NULL, NULL, true, $10),
        ($11, 'spelling', $13, $4, true, $14), ($12, 'spelling', $15, NULL, true, $16),
-       ($17, 'parent', $13, NULL, false, $18)`,
+       ($17, 'parent', $13, NULL, false, $18), ($19, 'not-a-food', NULL, NULL, true, $20),
+       ($21, 'refile', $13, NULL, true, '{"kind": "refile"}')`,
       [
         change.parent,
         change.merge,
@@ -366,6 +369,22 @@ describe("each household gets its own catalogue", () => {
         change.foreignParent,
         // Ann's food came from under Bob's own food, which Ann has no copy of.
         JSON.stringify({ kind: "parent", formerParentId: food.bobOnly }),
+        change.foreignSpellings,
+        // Only the spellings inside name Bob's: his own food's, which Ann has no copy of.
+        JSON.stringify({
+          kind: "not-a-food",
+          food: {
+            ingredientId: randomUUID(),
+            name: "bob only bits",
+            ownerId: ann,
+            parentId: null,
+            aliases: [{ ...removedSpelling(spelling.bobOnly), text: "bob only" }],
+            lineFoods: [{ lineId: line.ann, position: 2, aliasId: spelling.bobOnly }],
+            groceries: [{ id: grocery.annOnly, aliasId: spelling.bobOnly }],
+            recurring: [],
+          },
+        }),
+        change.unknown,
       ]
     );
     await q(
@@ -670,22 +689,41 @@ describe("each household gets its own catalogue", () => {
         sure: false,
         undo: merge,
       }),
-      // The deleted food named Bob's line: Ann keeps her own rows and no Undo.
-      row({
-        id: change.notAFood,
-        kind: "not-a-food",
-        household_id: households.ann,
-        ingredient_id: null,
-        undo: {
+      ...[
+        // The deleted food named Bob's line: Ann keeps her own rows and no Undo.
+        row({
+          id: change.notAFood,
           kind: "not-a-food",
-          food: expect.objectContaining({
-            parentId: food.kip,
-            lineFoods: [{ lineId: line.ann, position: 1, aliasId: spelling.removed }],
-            groceries: [{ id: grocery.annOnly, aliasId: null }],
-          }),
-          stranded: true,
-        },
-      }),
+          household_id: households.ann,
+          ingredient_id: null,
+          undo: {
+            kind: "not-a-food",
+            food: expect.objectContaining({
+              parentId: food.kip,
+              lineFoods: [{ lineId: line.ann, position: 1, aliasId: spelling.removed }],
+              groceries: [{ id: grocery.annOnly, aliasId: null }],
+            }),
+            stranded: true,
+          },
+        }),
+        // Its spellings inside were Bob's: every object naming one is left out.
+        row({
+          id: change.foreignSpellings,
+          kind: "not-a-food",
+          household_id: households.ann,
+          ingredient_id: null,
+          undo: {
+            kind: "not-a-food",
+            food: expect.objectContaining({
+              aliases: [],
+              lineFoods: [],
+              groceries: [],
+              recurring: [],
+            }),
+            stranded: true,
+          },
+        }),
+      ].sort((a, b) => (a.id as string).localeCompare(b.id as string)),
       ...[
         row({
           id: change.parent,
@@ -711,6 +749,14 @@ describe("each household gets its own catalogue", () => {
         household_id: households.ann,
         ingredient_id: food.kipfilet,
         undo: { kind: "plain-name", formerName: "Kipfilet", name: "kipfilet" },
+      }),
+      // A kind the migration does not know has no Undo.
+      row({
+        id: change.unknown,
+        kind: "refile",
+        household_id: households.ann,
+        ingredient_id: food.annOnly,
+        undo: { kind: "refile", stranded: true },
       }),
       ...[
         row({
@@ -822,6 +868,8 @@ describe("each household gets its own catalogue", () => {
       notAFood: await undoable("ann", change.notAFood),
       removed: await undoable("ann", change.removed),
       foreignParent: await undoable("ann", change.foreignParent),
+      foreignSpellings: await undoable("ann", change.foreignSpellings),
+      unknown: await undoable("ann", change.unknown),
       bobsParent: await undoable("ann", await bobChange("parent", kipfiletB)),
     }).toEqual({
       merge: true,
@@ -831,6 +879,8 @@ describe("each household gets its own catalogue", () => {
       notAFood: false,
       removed: false,
       foreignParent: false,
+      foreignSpellings: false,
+      unknown: false,
       bobsParent: null,
     });
     expect({
