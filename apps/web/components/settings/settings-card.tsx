@@ -19,6 +19,8 @@ interface SettingsCardProps extends Omit<
   actions?: ReactNode;
   /** A card whose whole subject is destructive, like deleting the account. */
   danger?: boolean;
+  /** An empty list's row: the card then drops its header and shows only this. */
+  empty?: ReactNode;
   contentClassName?: string;
   children?: ReactNode;
 }
@@ -35,10 +37,19 @@ export function SettingsCard({
   badges,
   actions,
   danger = false,
+  empty,
   contentClassName,
   children,
   ...cardProps
 }: SettingsCardProps) {
+  if (empty) {
+    return (
+      <Card {...cardProps}>
+        <Card.Content>{empty}</Card.Content>
+      </Card>
+    );
+  }
+
   return (
     <Card {...cardProps}>
       <Card.Header className="flex-row flex-wrap items-center gap-x-2 gap-y-3">

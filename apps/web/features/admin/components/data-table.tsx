@@ -89,7 +89,7 @@ export default function DataTable<Row>({
           <Table.Body
             renderEmptyState={
               emptyState
-                ? () => <div className="text-muted px-4 py-8 text-center text-sm">{emptyState}</div>
+                ? () => <div className="text-muted px-4 py-6 text-sm">{emptyState}</div>
                 : undefined
             }
           >

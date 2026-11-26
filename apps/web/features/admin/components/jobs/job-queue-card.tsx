@@ -5,6 +5,7 @@ import { SettingsCard } from "@/components/settings/settings-card";
 import { SkeletonRows } from "@/components/settings/settings-skeleton";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { ChipButton } from "@/components/shared/chip-button";
+import { EmptyState } from "@/components/shared/empty-state";
 import DataTable from "@/features/admin/components/data-table";
 import { ChevronLeftIcon, ChevronRightIcon, QueueListIcon } from "@heroicons/react/24/outline";
 import {
@@ -323,7 +324,7 @@ export default function JobQueueCard() {
                     format.relativeTime(new Date(job.createdAt), now),
                 },
               ]}
-              emptyState={t("empty")}
+              emptyState={<EmptyState icon={QueueListIcon} title={t("empty")} />}
               rowKey={(job: AdminJobRowDTO) => `${job.queue}:${job.id}`}
               rows={pageJobs}
               onRowAction={(job: AdminJobRowDTO) => {

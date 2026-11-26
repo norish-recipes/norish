@@ -1,5 +1,7 @@
 "use client";
 
+import { EmptyState } from "@/components/shared/empty-state";
+import { CpuChipIcon } from "@heroicons/react/24/outline";
 import { Spinner } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -31,7 +33,7 @@ export default function ModelListingEmptyState({
   }
 
   if (!refusal) {
-    return <div className="text-muted px-2 py-2 text-xs">{t("empty")}</div>;
+    return <EmptyState className="px-2 py-2" icon={CpuChipIcon} title={t("empty")} />;
   }
 
   return (

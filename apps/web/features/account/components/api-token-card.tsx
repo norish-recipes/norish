@@ -9,6 +9,7 @@ import {
   IconActionButton,
 } from "@/components/shared/action-button";
 import ConfirmModal, { ModalFooter } from "@/components/shared/confirm-modal";
+import { EmptyState } from "@/components/shared/empty-state";
 import { usePending } from "@/hooks/use-pending";
 import { ClipboardDocumentIcon, PauseIcon, PlayIcon } from "@heroicons/react/16/solid";
 import { ArrowTopRightOnSquareIcon, KeyIcon } from "@heroicons/react/24/outline";
@@ -155,7 +156,7 @@ export default function ApiKeyCard() {
           </div>
         )}
 
-        {apiKeys.length === 0 && <p className="text-muted py-4 text-base">{t("noKeys")}</p>}
+        {apiKeys.length === 0 && <EmptyState icon={KeyIcon} title={t("noKeys")} />}
       </SettingsCard>
 
       <Modal.Backdrop

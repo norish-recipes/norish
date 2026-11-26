@@ -7,6 +7,7 @@ import { SettingsCard } from "@/components/settings/settings-card";
 import { SkeletonRows } from "@/components/settings/settings-skeleton";
 import { ActionButton, IconActionButton } from "@/components/shared/action-button";
 import ConfirmModal from "@/components/shared/confirm-modal";
+import { EmptyState } from "@/components/shared/empty-state";
 import { PauseIcon, PlayIcon } from "@heroicons/react/16/solid";
 import { LinkIcon } from "@heroicons/react/24/outline";
 import { Chip, Table } from "@heroui/react";
@@ -178,14 +179,17 @@ export default function ShareLinksTableCard({
       <SettingsCard
         badges={<NewFeatureChip showOnVersion="0.18.0" />}
         description={t("description")}
+        empty={
+          !isLoading && shares.length === 0 ? (
+            <EmptyState icon={LinkIcon} title={t("empty")} />
+          ) : undefined
+        }
         icon={LinkIcon}
         title={t("title")}
       >
         {isLoading ? (
           // The tab skeleton's row for this card.
           <SkeletonRows count={1} />
-        ) : shares.length === 0 ? (
-          <p className="text-muted text-base">{t("empty")}</p>
         ) : (
           <Table>
             <Table.ScrollContainer>
