@@ -21,9 +21,8 @@ export interface DeleteImpact {
 }
 
 /**
- * One entry's panel: its name as edited, saved as a rename or, onto another entry's name, a merge;
- * and its delete with how many recipes it comes off (an admin's server entry counts every
- * household's, read from the server). `gone` when it is deleted.
+ * One entry's panel: its name as edited, saved as a rename or a merge, and its delete with the
+ * recipes it comes off (an admin's server entry counts every household's).
  */
 export function useContentEntry(kind: PickerKind, id: string) {
   const trpc = useTRPC();

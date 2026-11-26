@@ -1,8 +1,4 @@
-/**
- * The Content page (ADR-0043), in a browser: a member adds a Tag, renames one onto another (a
- * merge) and deletes one; a member sees a server Cuisine read only while an admin edits and deletes
- * it; and household B never sees household A's entries.
- */
+/** The Content page (ADR-0043) in a browser: Tags added, merged and deleted; server Cuisines; household isolation. */
 import type { Page } from "@playwright/test";
 
 import { userIdOf } from "../harness/accounts";

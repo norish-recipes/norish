@@ -19,9 +19,8 @@ const MATCH_LIMIT = 5;
 export const INGREDIENT_NAME_MAX = 300;
 
 /**
- * The Add flow of the Ingredients list: the foods the typed name finds, and a create only once
- * the search has settled with no food of that name (the server decides; one it answers instead
- * is `created: false`). Needs the server, so not offline.
+ * The Add flow of the Ingredients list: the foods the name finds, and a create once the search
+ * has settled with none of that name (the server decides). Needs the server, so not offline.
  */
 export function useIngredientAdd(locale: string) {
   const trpc = useTRPC();

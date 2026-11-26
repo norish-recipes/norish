@@ -15,9 +15,8 @@ export type ContentAddProblem = "loadFailed" | "tooLong" | "failed";
 const MATCH_LIMIT = 5;
 
 /**
- * The Add flow of one list: the entries the typed name already matches, and a create only where
- * none folds alike (the server decides; an entry it answers instead is `existing`). A server
- * admin may add a Cuisine for the server's list (`canAddForServer`).
+ * The Add flow of one list: the entries the name matches, and a create only where none folds
+ * alike (the server decides). An admin may add a Cuisine for the server's list.
  */
 export function useContentAdd(kind: PickerKind) {
   const { entries, loaded, failed } = useListEntries(kind);
