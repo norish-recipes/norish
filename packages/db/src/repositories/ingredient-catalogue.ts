@@ -920,7 +920,7 @@ export interface IngredientUses {
 }
 
 /** How many of the household's rows name a food; groceries include recurring ones. */
-interface IngredientUseCounts {
+export interface IngredientUseCounts {
   recipes: number;
   recipeLines: number;
   groceries: number;

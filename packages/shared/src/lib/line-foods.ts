@@ -12,7 +12,7 @@ export type LineWithFoods = Partial<
  * A line naming a food outside the reader's catalogue, as the reader uses it (ADR-0042): its text's
  * foods in their own catalogue, none where it names none there.
  */
-interface LineReading {
+export interface LineReading {
   ingredientId: string | null;
   joined: LineJoin | null;
   foods: Array<{ ingredientId: string; name: string }>;

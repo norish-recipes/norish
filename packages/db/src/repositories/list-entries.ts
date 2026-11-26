@@ -85,7 +85,7 @@ export interface ListEntryRow {
 }
 
 /** An entry with the count of the household's recipes carrying it. */
-interface ListEntry extends ListEntryRow {
+export interface ListEntry extends ListEntryRow {
   recipeCount: number;
 }
 
