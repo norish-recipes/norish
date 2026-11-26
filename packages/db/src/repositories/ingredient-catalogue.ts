@@ -323,6 +323,16 @@ export async function listCatalogueIngredients(query: {
   }));
 }
 
+/** How many foods the Ingredients page lists with no search or filter: the household's own and the seed's. */
+export async function countListedIngredients(householdId: string): Promise<number> {
+  const [row] = await db
+    .select({ total: count() })
+    .from(ingredients)
+    .where(and(inCatalogue(ingredients.householdId, householdId), ingredientIsListed()));
+
+  return row?.total ?? 0;
+}
+
 /** Every spelling the household knows one of its or a seeded Ingredient by, oldest first. */
 export async function listCatalogueAliasesOf(
   householdId: string,

@@ -10,7 +10,10 @@ import type { FoodName } from "@norish/shared/lib/ingredient-names";
 import type { SpoonMeasure } from "@norish/shared/lib/spoon-measure";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { findIngredientDisplayNames } from "@norish/db/repositories/ingredient-aliases";
-import { listIngredientUses } from "@norish/db/repositories/ingredient-catalogue";
+import {
+  countListedIngredients,
+  listIngredientUses,
+} from "@norish/db/repositories/ingredient-catalogue";
 import { findIdsInCatalogue } from "@norish/db/repositories/ingredient-nutrition";
 import { findRecipeFoodsOutsideCatalogue } from "@norish/db/repositories/line-readings";
 import { markAIChangesCleared } from "@norish/db/repositories/users";
@@ -154,6 +157,9 @@ const list = authedProcedure
 
     return { items: page.items, nextCursor: page.nextOffset };
   });
+
+/** How many foods the Ingredients page lists with no search or filter, for its heading and picker. */
+const count = authedProcedure.query(({ ctx }) => countListedIngredients(ctx.householdId));
 
 /** The Ingredients that are kinds of one, as the page's tree folds them out under it. */
 const kinds = authedProcedure
@@ -548,6 +554,7 @@ export const ingredientsRouter = router({
   find,
   add,
   list,
+  count,
   kinds,
   get,
   spellings,

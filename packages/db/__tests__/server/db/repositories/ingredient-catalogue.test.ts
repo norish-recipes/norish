@@ -5,6 +5,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { withTransaction } from "@norish/db/drizzle";
 import {
+  countListedIngredients,
   deleteCatalogueAlias,
   forEachCatalogue,
   listCatalogueIngredients,
@@ -265,6 +266,37 @@ describe("listCatalogueIngredients search", () => {
 
   it("lists everything without a search", async () => {
     expect(await names(null)).toEqual(["Chocolate", "Onion", "Red onion"]);
+  });
+});
+
+describe("countListedIngredients", () => {
+  const testBase = new RepositoryTestBase("test_ingredient_count");
+
+  beforeAll(async () => {
+    await testBase.setup();
+  });
+
+  afterAll(async () => {
+    await testBase.teardown();
+  });
+
+  it("counts a household's listed foods and the seed's, never another household's", async () => {
+    const [user] = await testBase.beforeEachTest();
+    const mine = testHouseholdOf(user.id);
+    const theirs = testHouseholdOf((await createTestUser()).id);
+    const db = getTestDb();
+    const before = await countListedIngredients(mine);
+
+    await db.insert(schema.ingredients).values([
+      { name: "Leek", offId: "en:leek" },
+      { name: "Mine", householdId: mine, addedByHand: true },
+      { name: "Mine too", householdId: mine, addedByHand: true },
+      { name: "Unlisted", householdId: mine },
+      { name: "Theirs", householdId: theirs, addedByHand: true },
+    ]);
+
+    expect(await countListedIngredients(mine)).toBe(before + 3);
+    expect(await countListedIngredients(theirs)).toBe(before + 2);
   });
 });
 
