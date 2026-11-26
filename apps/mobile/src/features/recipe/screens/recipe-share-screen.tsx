@@ -18,6 +18,7 @@ import { useIntl } from "react-intl";
 
 import type { CreateRecipeShareInputDto } from "@norish/shared/contracts";
 import {
+  shareLinkActions,
   useLoadedPageRecipe,
   useRecipeShareMutations,
   useRecipeSharesQuery,
@@ -101,7 +102,7 @@ function ShareRow({
             onPress={() => revokeShare(share.id, share.version)}
           />
         ) : null}
-        {share.status === "revoked" ? (
+        {shareLinkActions(share).includes("reactivate") ? (
           <PillButton
             icon="refresh"
             label={t("reactivateModal.confirm")}

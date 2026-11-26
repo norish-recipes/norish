@@ -26,6 +26,7 @@ import { useTranslations } from "next-intl";
 
 import type { CreateRecipeShareInputDto } from "@norish/shared/contracts";
 import {
+  shareLinkActions,
   useLoadedPageRecipe,
   useRecipeShareMutations,
   useRecipeSharesQuery,
@@ -210,7 +211,7 @@ export default function RecipeSharePanel({ open, onOpenChange }: Props) {
                               <PauseIcon className="h-4 w-4" />
                             </Button>
                           )}
-                          {share.status === "revoked" && (
+                          {shareLinkActions(share).includes("reactivate") && (
                             <Button
                               isIconOnly
                               size="sm"

@@ -24,6 +24,7 @@ const getRecipeShareUrlMock = vi.hoisted(() => vi.fn());
 const getUnitsMock = vi.hoisted(() => vi.fn());
 const isTimersEnabledMock = vi.hoisted(() => vi.fn());
 const revokeRecipeShareMock = vi.hoisted(() => vi.fn());
+const reactivateRecipeShareMock = vi.hoisted(() => vi.fn());
 const updateRecipeShareMock = vi.hoisted(() => vi.fn());
 const getCachedHouseholdForUserMock = vi.hoisted(() => vi.fn());
 const isUserServerAdminMock = vi.hoisted(() => vi.fn());
@@ -53,6 +54,7 @@ vi.mock("@norish/db/repositories/recipe-shares", async () => ({
   getRecipeShareUrl: getRecipeShareUrlMock,
   getRecipeSharesByUserId: getRecipeSharesByUserIdMock,
   revokeRecipeShare: revokeRecipeShareMock,
+  reactivateRecipeShare: reactivateRecipeShareMock,
   updateRecipeShare: updateRecipeShareMock,
 }));
 
@@ -535,6 +537,54 @@ describe("recipe share procedures", () => {
       },
       { viewPolicy: "household", householdId: authedCtx.householdId }
     );
+  });
+
+  describe("reactivating a revoked share", () => {
+    const revokedShare = {
+      id: shareId,
+      userId: user.id,
+      recipeId,
+      tokenHash: "hashed",
+      tokenEnc: "encrypted",
+      expiresAt: null,
+      revokedAt: new Date(),
+      lastAccessedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      version: 2,
+    };
+
+    beforeEach(() => {
+      assertRecipeAccessMock.mockResolvedValue(undefined);
+      reactivateRecipeShareMock.mockReset();
+    });
+
+    it("works again for a share whose link was kept", async () => {
+      const caller = recipeSharesProcedures.createCaller(authedCtx as never);
+      const { tokenHash: _, tokenEnc: __, ...summary } = revokedShare;
+
+      getRecipeShareByIdMock.mockResolvedValue(revokedShare);
+      reactivateRecipeShareMock.mockResolvedValue({
+        stale: false,
+        value: { ...summary, revokedAt: null, version: 3, status: "active", hasLink: true },
+      });
+
+      await expect(caller.shareReactivate({ id: shareId, version: 2 })).resolves.toMatchObject({
+        status: "active",
+        stale: false,
+      });
+    });
+
+    it("is refused for a share whose link was not kept, which can only be deleted", async () => {
+      const caller = recipeSharesProcedures.createCaller(authedCtx as never);
+
+      getRecipeShareByIdMock.mockResolvedValue({ ...revokedShare, tokenEnc: null });
+
+      await expect(caller.shareReactivate({ id: shareId, version: 2 })).rejects.toMatchObject({
+        code: "PRECONDITION_FAILED",
+      });
+      expect(reactivateRecipeShareMock).not.toHaveBeenCalled();
+    });
   });
 
   it("emits a policy-scoped realtime event when a share is deleted", async () => {

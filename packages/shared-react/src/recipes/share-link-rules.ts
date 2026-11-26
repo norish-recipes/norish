@@ -2,8 +2,8 @@ import type { RecipeShareSummaryDto } from "@norish/shared/contracts/dto/recipe-
 
 export type ShareLinkAction = "copy" | "revoke" | "reactivate" | "delete";
 
-/** What a share link may be turned into: Copy while it works and has a kept link, revoke or
- * reactivate by its status, delete always. */
+/** What a share link may be turned into: Copy while it works and Reactivate once revoked, both
+ * only with a kept link; revoke while it works; delete always. */
 export function shareLinkActions({
   status,
   hasLink,
@@ -12,7 +12,7 @@ export function shareLinkActions({
     case "active":
       return hasLink ? ["copy", "revoke", "delete"] : ["revoke", "delete"];
     case "revoked":
-      return ["reactivate", "delete"];
+      return hasLink ? ["reactivate", "delete"] : ["delete"];
     case "expired":
       return ["delete"];
   }

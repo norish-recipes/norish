@@ -30,7 +30,8 @@ export function toRecipeShareSummary(share: RecipeShareDto): RecipeShareSummaryD
   return RecipeShareSummarySchema.parse({
     ...share,
     status: getRecipeShareStatus(share),
-    hasLink: share.tokenEnc !== null,
+    // As the re-key reads it: an empty token is none.
+    hasLink: Boolean(share.tokenEnc),
   });
 }
 

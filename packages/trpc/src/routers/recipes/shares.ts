@@ -172,6 +172,13 @@ const reactivate = authedProcedure
 
     await assertRecipeAccess(ctx, share.recipeId, "edit");
 
+    if (!toRecipeShareSummary(share).hasLink) {
+      throw new TRPCError({
+        code: "PRECONDITION_FAILED",
+        message: "A share whose link was not kept can only be deleted",
+      });
+    }
+
     const result = await reactivateRecipeShare(input.id, input.version);
 
     if (result.stale || !result.value) {
