@@ -4,7 +4,6 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import type { EntryWriteOptions } from "@norish/db/repositories/list-entries";
-import type { FullRecipeDTO } from "@norish/shared/contracts";
 import type { LineReadings } from "@norish/shared/lib/line-foods";
 import type { RecipeEnrichmentSkipReason } from "@norish/shared/lib/recipe-enrichment";
 import { isAIEnabled as checkAIEnabled } from "@norish/auth/permissions";
@@ -27,7 +26,6 @@ import {
   RecipeUpdateInputSchema,
   searchRecipesByName,
   setActiveSystemForRecipe,
-  updateRecipeCategories,
   writeConvertedCopy,
 } from "@norish/db";
 import { listCategoryNamesForHousehold } from "@norish/db/repositories/categories";
@@ -64,7 +62,6 @@ import { selectWeightedRandomRecipe } from "@norish/shared-server/recipes/random
 import { FilterMode, SortOrder } from "@norish/shared/contracts";
 import {
   FullRecipeSchema,
-  recipeCategorySchema,
   RecipeListResultSchema,
 } from "@norish/shared/contracts/zod";
 import { addBasePath } from "@norish/shared/lib/base-path";
@@ -404,42 +401,6 @@ export const updateRecipeProcedure = authedProcedure
     }
 
     return applyRecipeUpdate(ctx, input, { createEntries: true });
-  });
-
-const updateCategories = authedProcedure
-  .input(
-    z.object({
-      recipeId: z.uuid(),
-      version: z.number().int().positive(),
-      categories: z.array(recipeCategorySchema),
-    })
-  )
-  .mutation(async ({ ctx, input }) => {
-    await assertRecipeAccess(ctx, input.recipeId, "edit");
-
-    const result = await updateRecipeCategories(input.recipeId, input.categories, input.version);
-
-    if (result.stale) {
-      log.info(
-        { userId: ctx.user.id, recipeId: input.recipeId, version: input.version },
-        "Ignoring stale recipe category update"
-      );
-
-      return { success: true, stale: true };
-    }
-
-    const updated = await getRecipeFull(input.recipeId);
-
-    if (updated) {
-      void recipes.publish(
-        "updated",
-        { recipe: updated },
-        await policyAudience(updated.householdId)
-      );
-      await announceListsChanged(updated.householdId, ["category"]);
-    }
-
-    return { success: true };
   });
 
 /**
@@ -1035,6 +996,5 @@ export const recipesProcedures = router({
   requestEnrichment,
   enrichmentStatus,
   autocomplete,
-  updateCategories,
   getRandomRecipe,
 });
