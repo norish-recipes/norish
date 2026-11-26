@@ -186,48 +186,51 @@ async function removeLeftoverCopies(): Promise<void> {
   }
 }
 
+/** A key, and how a log or a refusal names it at the start of a sentence. */
+type NamedKey = { bytes: Buffer; label: string };
+
 /** Where boot's keys come from: MASTER_KEY pins them, else the key file holds them. */
-type KeySource = {
-  pinned: boolean;
-  keys: KeyFile | null;
-  /** How a log or a refusal names each key, at the start of a sentence. */
-  labels: { current: string; previous: string };
-};
+type KeySource = { pinned: boolean; keys: { current: NamedKey; previous?: NamedKey } | null };
+
+/** How file mode names the key file's keys. */
+const fileLabels = () => ({
+  current: `The key in ${keyFilePath()}`,
+  previous: `The previous key in ${keyFilePath()}`,
+});
+
+/** Each of `keys` beside its label. */
+function named(keys: KeyFile, labels: { current: string; previous: string }) {
+  return {
+    current: { bytes: keys.current, label: labels.current },
+    ...(keys.previous && { previous: { bytes: keys.previous, label: labels.previous } }),
+  };
+}
 
 async function keySource(): Promise<KeySource> {
   const { MASTER_KEY, MASTER_KEY_PREVIOUS } = SERVER_CONFIG;
 
   if (MASTER_KEY) {
+    const keys = mapKeys({ current: MASTER_KEY, previous: MASTER_KEY_PREVIOUS }, fromBase64);
+
     return {
       pinned: true,
-      keys: mapKeys({ current: MASTER_KEY, previous: MASTER_KEY_PREVIOUS }, fromBase64),
-      labels: { current: "MASTER_KEY", previous: "MASTER_KEY_PREVIOUS" },
+      keys: named(keys, { current: "MASTER_KEY", previous: "MASTER_KEY_PREVIOUS" }),
     };
   }
+  const keys = await readKeyFile();
 
-  return {
-    pinned: false,
-    keys: await readKeyFile(),
-    labels: {
-      current: `The key in ${keyFilePath()}`,
-      previous: `The previous key in ${keyFilePath()}`,
-    },
-  };
+  return { pinned: false, keys: keys && named(keys, fileLabels()) };
 }
 
-/** How a log names `key`, one of the source's. */
-const labelOf = (source: KeySource, key: Buffer) =>
-  key === source.keys?.previous ? source.labels.previous : source.labels.current;
-
 /** The current or previous key, whichever `fits` the database, else the refusal naming the key. */
-function keyThatFits(source: KeySource, fits: (key: Buffer) => boolean) {
+function pickKey(source: KeySource, fits: (key: Buffer) => boolean) {
   const { keys } = source;
 
-  if (keys && fits(keys.current)) return { keys, key: keys.current };
-  if (keys?.previous && fits(keys.previous)) return { keys, key: keys.previous };
+  if (keys && fits(keys.current.bytes)) return { keys, key: keys.current };
+  if (keys?.previous && fits(keys.previous.bytes)) return { keys, key: keys.previous };
   throw refusal(
     keys
-      ? `${source.labels.current} is not the key this database is encrypted with.`
+      ? `${keys.current.label} is not the key this database is encrypted with.`
       : `MASTER_KEY is not set, and there is no key file at ${keyFilePath()}. This database is encrypted with a key that one of them held.`
   );
 }
@@ -261,19 +264,19 @@ async function adoptKey(source: KeySource): Promise<[KeySource, string | null]> 
   // A value that does not decrypt, an empty one included, never shows that a key fits.
   const newest = encrypted ? await findNewestCiphertext() : null;
   const key = encrypted
-    ? keyThatFits(source, (candidate) => newest !== null && masterKeyOpens(candidate, newest)).key
-    : (source.keys?.current ?? (await generateKeyFile()));
+    ? pickKey(source, (candidate) => newest !== null && masterKeyOpens(candidate, newest)).key
+    : (source.keys?.current ?? { bytes: await generateKeyFile(), label: fileLabels().current });
   // Another first boot may have stored its fingerprint since this one looked; that one stands.
-  const stored = await claimMasterKeyFingerprint(masterKeyFingerprint(key));
+  const stored = await claimMasterKeyFingerprint(masterKeyFingerprint(key.bytes));
 
-  log.info({ source: labelOf(source, key) }, "Master Key adopted");
+  log.info({ source: key.label }, "Master Key adopted");
 
   return [{ ...source, keys: source.keys ?? { current: key } }, stored];
 }
 
 /** The key the database's fingerprint names, current or previous, or the refusal naming it. */
-const keyNamedBy = (source: KeySource, fingerprint: string | null) =>
-  keyThatFits(source, (key) => masterKeyFingerprint(key) === fingerprint);
+const keyWithFingerprint = (source: KeySource, fingerprint: string | null) =>
+  pickKey(source, (key) => masterKeyFingerprint(key) === fingerprint);
 
 /**
  * `error` as boot may log it: what failed, with the driver's code and message. Never a command's
@@ -290,22 +293,19 @@ function failed(what: string, error: unknown): Error {
 
 /** Move everything from the previous key to the current one; until it commits nothing serves. */
 async function rekey(
-  source: KeySource,
-  previous: Buffer,
-  current: Buffer,
+  previous: NamedKey,
+  current: NamedKey,
   endStoredSessions: EndStoredSessions
 ): Promise<void> {
-  log.info(
-    { from: source.labels.previous, to: source.labels.current },
-    "Re-keying to a new Master Key"
-  );
+  log.info({ from: previous.label, to: current.label }, "Re-keying to a new Master Key");
   // Before the transaction: a crash after this only repeats it on the next boot.
   const ended = await endStoredSessions().catch((error: unknown) => {
     throw failed("Ending the stored sessions", error);
   });
-  const { columns, revokedShares } = await rekeyMasterKey(masterKeyRotation(previous, current), {
-    from: masterKeyFingerprint(previous),
-    to: masterKeyFingerprint(current),
+  const rotation = masterKeyRotation(previous.bytes, current.bytes);
+  const { columns, revokedShares } = await rekeyMasterKey(rotation, {
+    from: masterKeyFingerprint(previous.bytes),
+    to: masterKeyFingerprint(current.bytes),
   }).catch((error: unknown) => {
     throw failed("The re-key", error);
   });
@@ -363,12 +363,12 @@ export async function resolveMasterKey(endStoredSessions: EndStoredSessions): Pr
   const [opening, stored]: [KeySource, string | null] = fingerprint
     ? [source, fingerprint]
     : await adoptKey(source);
-  const { keys, key } = keyNamedBy(opening, stored);
+  const { keys, key } = keyWithFingerprint(opening, stored);
 
-  if (key !== keys.current) await rekey(opening, key, keys.current, endStoredSessions);
-  initMasterKey(keys.current);
-  log.info({ source: opening.labels.current }, "Master Key opened");
-  if (keys.previous) await retirePrevious(opening, keys.current);
+  if (key !== keys.current) await rekey(key, keys.current, endStoredSessions);
+  initMasterKey(keys.current.bytes);
+  log.info({ source: keys.current.label }, "Master Key opened");
+  if (keys.previous) await retirePrevious(opening, keys.current.bytes);
   await removeLeftoverCopies();
 }
 
@@ -382,9 +382,9 @@ export async function openMasterKey(): Promise<void> {
     );
   }
   const source = await keySource();
-  const { key } = keyNamedBy(source, fingerprint);
+  const { key } = keyWithFingerprint(source, fingerprint);
 
   // Until a server's boot re-keys, the data is still the previous key's.
-  initMasterKey(key);
-  log.info({ source: labelOf(source, key) }, "Master Key opened");
+  initMasterKey(key.bytes);
+  log.info({ source: key.label }, "Master Key opened");
 }
