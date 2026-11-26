@@ -453,7 +453,9 @@
       "title": "Datenquellen",
       "notice": "Der Zutatenkatalog basiert auf der Zutatentaxonomie von <off>Open Food Facts</off>, verfügbar unter der <odbl>Open Database License (ODbL)</odbl>. Der Katalog, den Norish daraus aufbaut, steht unter derselben Lizenz.",
       "nutritionNotice": "Die Nährwerte pro 100 g stammen aus <ciqual>CIQUAL 2025</ciqual> und CALNUT (ANSES), <usda>USDA FoodData Central</usda> und <cofid>CoFID</cofid>, verknüpft über die Codes, die Open Food Facts jeder Zutat gibt. Die Korrekturen eines Haushalts sind dessen eigene Werte, nicht die der Datensätze.",
-      "download": "Zutatenkatalog herunterladen (JSON)"
+      "download": "Zutatenkatalog herunterladen (JSON)",
+      "downloadOffline": "Sie können den Katalog herunterladen, wenn Sie online sind.",
+      "downloadFailed": "Der Katalog konnte nicht heruntergeladen werden."
     },
     "nutrition": {
       "section": "Nährwerte",

@@ -453,7 +453,9 @@
       "title": "Gegevensbronnen",
       "notice": "De ingrediëntencatalogus is gevuld met de ingrediëntentaxonomie van <off>Open Food Facts</off>, beschikbaar onder de <odbl>Open Database License (ODbL)</odbl>. De catalogus die Norish ermee opbouwt, wordt onder dezelfde licentie aangeboden.",
       "nutritionNotice": "De voedingswaarde per 100 g komt uit <ciqual>CIQUAL 2025</ciqual> en CALNUT (ANSES), <usda>USDA FoodData Central</usda> en <cofid>CoFID</cofid>, gekoppeld via de codes die Open Food Facts elk ingrediënt geeft. De correcties van een huishouden zijn diens eigen waarden, niet die van de datasets.",
-      "download": "Ingrediëntencatalogus downloaden (JSON)"
+      "download": "Ingrediëntencatalogus downloaden (JSON)",
+      "downloadOffline": "Je kunt de catalogus downloaden als je online bent.",
+      "downloadFailed": "De catalogus kon niet worden gedownload."
     },
     "nutrition": {
       "section": "Voedingswaarde",

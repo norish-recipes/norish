@@ -453,7 +453,9 @@
       "title": "데이터 출처",
       "notice": "재료 카탈로그는 <off>Open Food Facts</off>의 재료 분류 체계를 바탕으로 하며, 이는 <odbl>Open Database License (ODbL)</odbl>로 제공됩니다. Norish가 이를 바탕으로 만든 카탈로그도 같은 라이선스로 제공됩니다.",
       "nutritionNotice": "100 g당 영양 정보는 <ciqual>CIQUAL 2025</ciqual> 및 CALNUT(ANSES), <usda>USDA FoodData Central</usda>, <cofid>CoFID</cofid>에서 가져오며, Open Food Facts가 각 재료에 부여한 코드로 연결됩니다. 가구의 수정 값은 그 가구의 값이며 데이터셋의 값이 아닙니다.",
-      "download": "재료 카탈로그 다운로드 (JSON)"
+      "download": "재료 카탈로그 다운로드 (JSON)",
+      "downloadOffline": "온라인일 때 카탈로그를 내려받을 수 있습니다.",
+      "downloadFailed": "카탈로그를 내려받지 못했습니다."
     },
     "nutrition": {
       "section": "영양 정보",

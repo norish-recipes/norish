@@ -453,7 +453,9 @@
       "title": "Datakilder",
       "notice": "Ingredienskatalogen bygger på ingredienstaksonomien fra <off>Open Food Facts</off>, tilgjengelig under <odbl>Open Database License (ODbL)</odbl>. Katalogen Norish bygger ut fra den, tilbys under samme lisens.",
       "nutritionNotice": "Næringsinnholdet per 100 g kommer fra <ciqual>CIQUAL 2025</ciqual> og CALNUT (ANSES), <usda>USDA FoodData Central</usda> og <cofid>CoFID</cofid>, koblet via kodene Open Food Facts gir hver ingrediens. En husstands rettelser er dens egne verdier, ikke datasettenes.",
-      "download": "Last ned ingredienskatalogen (JSON)"
+      "download": "Last ned ingredienskatalogen (JSON)",
+      "downloadOffline": "Du kan laste ned katalogen når du er på nett.",
+      "downloadFailed": "Katalogen kunne ikke lastes ned."
     },
     "nutrition": {
       "section": "Næringsinnhold",

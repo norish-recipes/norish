@@ -453,7 +453,9 @@
       "title": "Fontes de dados",
       "notice": "O catálogo de ingredientes parte da taxonomia de ingredientes do <off>Open Food Facts</off>, disponível sob a <odbl>Open Database License (ODbL)</odbl>. O catálogo que o Norish constrói a partir dela é oferecido sob a mesma licença.",
       "nutritionNotice": "A informação nutricional por 100 g vem de <ciqual>CIQUAL 2025</ciqual> e CALNUT (ANSES), <usda>USDA FoodData Central</usda> e <cofid>CoFID</cofid>, ligados pelos códigos que o Open Food Facts dá a cada ingrediente. As correções de uma casa são valores dela, não dos conjuntos de dados.",
-      "download": "Baixar o catálogo de ingredientes (JSON)"
+      "download": "Baixar o catálogo de ingredientes (JSON)",
+      "downloadOffline": "Você pode baixar o catálogo quando estiver online.",
+      "downloadFailed": "Não foi possível baixar o catálogo."
     },
     "nutrition": {
       "section": "Informação nutricional",

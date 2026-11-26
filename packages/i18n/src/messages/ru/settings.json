@@ -453,7 +453,9 @@
       "title": "Источники данных",
       "notice": "Каталог ингредиентов основан на таксономии ингредиентов <off>Open Food Facts</off>, доступной по лицензии <odbl>Open Database License (ODbL)</odbl>. Каталог, который Norish строит на её основе, предоставляется по той же лицензии.",
       "nutritionNotice": "Пищевая ценность на 100 г взята из <ciqual>CIQUAL 2025</ciqual> и CALNUT (ANSES), <usda>USDA FoodData Central</usda> и <cofid>CoFID</cofid> по кодам, которые Open Food Facts даёт каждому ингредиенту. Исправления семьи являются её собственными значениями, а не значениями наборов данных.",
-      "download": "Скачать каталог ингредиентов (JSON)"
+      "download": "Скачать каталог ингредиентов (JSON)",
+      "downloadOffline": "Скачать каталог можно, когда вы онлайн.",
+      "downloadFailed": "Не удалось скачать каталог."
     },
     "nutrition": {
       "section": "Пищевая ценность",

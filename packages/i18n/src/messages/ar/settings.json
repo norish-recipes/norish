@@ -453,7 +453,9 @@
       "title": "مصادر البيانات",
       "notice": "كتالوج المكوّنات مبني على تصنيف المكوّنات في <off>Open Food Facts</off>، المتاح بموجب <odbl>رخصة قواعد البيانات المفتوحة (ODbL)</odbl>. والكتالوج الذي يبنيه Norish منه متاح بموجب الرخصة نفسها.",
       "nutritionNotice": "القيم الغذائية لكل 100 غ مأخوذة من <ciqual>CIQUAL 2025</ciqual> وCALNUT (ANSES)، و<usda>USDA FoodData Central</usda> و<cofid>CoFID</cofid>، وتُربط عبر الرموز التي يمنحها Open Food Facts لكل مادة غذائية. تصحيحات المنزل أرقامه الخاصة، وليست أرقام قواعد البيانات.",
-      "download": "تنزيل كتالوج المكوّنات (JSON)"
+      "download": "تنزيل كتالوج المكوّنات (JSON)",
+      "downloadOffline": "يمكنك تنزيل الكتالوج عندما تكون متصلًا بالإنترنت.",
+      "downloadFailed": "تعذّر تنزيل الكتالوج."
     },
     "nutrition": {
       "section": "القيم الغذائية",

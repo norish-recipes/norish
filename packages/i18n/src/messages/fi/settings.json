@@ -453,7 +453,9 @@
       "title": "Tietolähteet",
       "notice": "Ainesosaluettelo perustuu <off>Open Food Factsin</off> ainesosataksonomiaan, joka on saatavilla <odbl>Open Database License (ODbL)</odbl> -lisenssillä. Norishin siitä rakentama luettelo tarjotaan samalla lisenssillä.",
       "nutritionNotice": "Ravintoarvot 100 g:ssa tulevat lähteistä <ciqual>CIQUAL 2025</ciqual> ja CALNUT (ANSES), <usda>USDA FoodData Central</usda> ja <cofid>CoFID</cofid>, yhdistettyinä koodeilla, jotka Open Food Facts antaa kullekin ainekselle. Kotitalouden korjaukset ovat sen omia arvoja, eivät tietoaineistojen.",
-      "download": "Lataa ainesosaluettelo (JSON)"
+      "download": "Lataa ainesosaluettelo (JSON)",
+      "downloadOffline": "Voit ladata luettelon, kun olet verkossa.",
+      "downloadFailed": "Luetteloa ei voitu ladata."
     },
     "nutrition": {
       "section": "Ravintoarvot",
