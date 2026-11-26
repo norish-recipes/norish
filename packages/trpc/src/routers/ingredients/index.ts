@@ -12,6 +12,7 @@ import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { findIngredientDisplayNames } from "@norish/db/repositories/ingredient-aliases";
 import { listIngredientUses } from "@norish/db/repositories/ingredient-catalogue";
 import { findIdsInCatalogue } from "@norish/db/repositories/ingredient-nutrition";
+import { findFoodsRecipeNames } from "@norish/db/repositories/line-readings";
 import { markAIChangesCleared } from "@norish/db/repositories/users";
 import { canDrawImages } from "@norish/shared-server/config/server-config-loader";
 import {
@@ -62,6 +63,7 @@ import type { AuthedProcedureContext } from "../../middleware";
 import { formDataInputSchema, getFormDataString, getUploadedFile } from "../../form-data";
 import { actorOf, authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
+import { canViewRecipe } from "../recipes/helpers";
 import { ingredientsSubscriptions } from "./subscriptions";
 
 /**
@@ -292,15 +294,21 @@ const settleAIChanges = authedProcedure
 /**
  * Which Ingredient Icon each of these foods of the viewer's catalogue shows, by
  * address, or null for the placeholder: what every surface that names foods
- * reads, once for all the foods it shows. Another household's foods are left out.
+ * reads, once for all the foods it shows. Another household's foods are left out,
+ * except those the lines of `recipeId` name, a recipe the viewer may view.
  */
 const icons = authedProcedure
-  .input(z.object({ ids: z.array(z.uuid()).max(500) }))
-  .query(async ({ ctx, input }): Promise<Record<string, string | null>> =>
-    Object.fromEntries(
-      await ingredientIconAddresses([...(await findIdsInCatalogue(ctx.householdId, input.ids))])
-    )
-  );
+  .input(z.object({ ids: z.array(z.uuid()).max(500), recipeId: z.uuid().optional() }))
+  .query(async ({ ctx, input }): Promise<Record<string, string | null>> => {
+    const shown = await findIdsInCatalogue(ctx.householdId, input.ids);
+    const others = input.ids.filter((id) => !shown.has(id));
+
+    if (input.recipeId && others.length > 0 && (await canViewRecipe(ctx, input.recipeId))) {
+      for (const id of await findFoodsRecipeNames(input.recipeId, others)) shown.add(id);
+    }
+
+    return Object.fromEntries(await ingredientIconAddresses([...shown]));
+  });
 
 /** Each of these foods' names by id, with its spellings per language, for the chips that name them;
  * a food that is gone, or another household's, has none. */

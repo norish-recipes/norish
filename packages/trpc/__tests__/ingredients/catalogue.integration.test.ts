@@ -116,6 +116,42 @@ describe("the Ingredients procedures in two households", () => {
     });
   });
 
+  it("shows another household's food through a recipe the reader may view, and no other way", async () => {
+    const { ServerConfigKeys } = await import("@norish/config/zod/server-config");
+    const { setConfig } = await import("@norish/db/repositories/server-config");
+    const setView = (view: "everyone" | "household") =>
+      setConfig(
+        ServerConfigKeys.RECIPE_PERMISSION_POLICY,
+        { view, edit: "household", delete: "household" },
+        null,
+        false
+      );
+    const added = await (await as(housemate)).add({ name: "sterrenmix" });
+    const id = added.ingredient!.id;
+    const line = await helpers.nameInATestRecipe(
+      admin.id,
+      (await helpers.firstSpellingId(id))!,
+      "sterrenmix"
+    );
+    const theirs = await as(stranger);
+
+    await setView("everyone");
+    await expect(theirs.icons({ ids: [id], recipeId: line.recipeId })).resolves.toEqual({
+      [id]: null,
+    });
+    // Not without the recipe, nor through one that does not name it.
+    const other = await helpers.createTestRecipe(admin.id);
+
+    await expect(theirs.icons({ ids: [id] })).resolves.toEqual({});
+    await expect(theirs.icons({ ids: [id], recipeId: other.id })).resolves.toEqual({});
+    await expect(theirs.get({ ingredientId: id })).resolves.toBeNull();
+    await expect(theirs.names({ ids: [id] })).resolves.toEqual({});
+    await expect(theirs.nutritionFor({ ingredientIds: [id] })).resolves.toEqual({});
+
+    await setView("household");
+    await expect(theirs.icons({ ids: [id], recipeId: line.recipeId })).resolves.toEqual({});
+  });
+
   it("leaves a seeded food to admins, and a member's spelling on it to their household", async () => {
     const onion = await seed.insertSeededIngredient({ name: "onion", offId: "en:onion" }, [
       { text: "onion", fold: "onion", locale: "en" },

@@ -69,3 +69,27 @@ export async function findLinesOutsideCatalogue(
       )
     );
 }
+
+/** Which of these foods the recipe's own lines name: what showing that recipe may show of them. */
+export async function findFoodsRecipeNames(
+  recipeId: string,
+  ingredientIds: readonly string[]
+): Promise<string[]> {
+  if (ingredientIds.length === 0) return [];
+  const rows = await db
+    .selectDistinct({ id: ingredientAliases.ingredientId })
+    .from(recipeIngredients)
+    .innerJoin(
+      recipeIngredientFoods,
+      eq(recipeIngredientFoods.recipeIngredientId, recipeIngredients.id)
+    )
+    .innerJoin(ingredientAliases, eq(ingredientAliases.id, recipeIngredientFoods.ingredientAliasId))
+    .where(
+      and(
+        eq(recipeIngredients.recipeId, recipeId),
+        isAnyOf(ingredientAliases.ingredientId, ingredientIds, "uuid")
+      )
+    );
+
+  return rows.map((row) => row.id);
+}

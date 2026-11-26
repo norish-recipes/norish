@@ -44,7 +44,7 @@ function RecipePageContent({ recipeId, libraryType }: RecipeScreenProps) {
 
   useAutoConversion();
   // Every surface of the page names the recipe's foods: its lines, cooking mode, the steps' chips.
-  useIngredientIcons(recipe?.recipeIngredients.map((line) => line.ingredientId) ?? []);
+  useIngredientIcons(recipe?.recipeIngredients.map((line) => line.ingredientId) ?? [], recipeId);
 
   // Still loading — show skeleton while data fetches
   if (isLoading) {

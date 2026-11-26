@@ -60,7 +60,10 @@ function RecipePage() {
   return (
     <TintContext value={tint}>
       {/* The page's lines and the steps' chips name the same foods, so one read covers them. */}
-      <PrefetchIngredientIcons ids={recipe.recipeIngredients.map((line) => line.ingredientId)} />
+      <PrefetchIngredientIcons
+        ids={recipe.recipeIngredients.map((line) => line.ingredientId)}
+        recipeId={recipe.id}
+      />
       <Stack.Screen
         options={{
           // The header floats over the photo: its items stay pinned, with no bar or title behind

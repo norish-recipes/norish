@@ -143,7 +143,10 @@ function CookMode() {
   };
 
   useCookKeepAwake();
-  useIngredientIcons(recipe.recipeIngredients.map((line) => line.ingredientId));
+  useIngredientIcons(
+    recipe.recipeIngredients.map((line) => line.ingredientId),
+    recipe.id
+  );
 
   // A new notification tap while cook mode is open moves it to that timer's step.
   useEffect(() => {
