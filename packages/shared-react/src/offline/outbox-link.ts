@@ -39,7 +39,7 @@ import { householdAtStart } from "./household";
 import { encodedFormDataId, encodeOutboxInput, isEncodedFormData } from "./input-codec";
 import { runIfLeader } from "./leader";
 import { isOutboxReplayContext } from "./replay-client";
-import { isUncaptured } from "./uncaptured";
+import { isAccountScoped, isUncaptured } from "./uncaptured";
 
 const log = createClientLogger("OutboxLink");
 
@@ -146,21 +146,9 @@ function operationOf(context: unknown) {
   };
 }
 
-/** The account's own writes, which no household change makes foreign. */
-const ACCOUNT_ROUTERS: ReadonlySet<string> = new Set([
-  "admin",
-  "user",
-  "caldav",
-  "caldavSubscriptions",
-  "siteAuthTokens",
-]);
-
 /** A live write names the household it started in; a replay names its entry's, set by Replay. */
 function withHousehold(deps: OutboxLinkDependencies, op: Operation): Operation {
-  if (
-    ACCOUNT_ROUTERS.has(op.path.split(".")[0] ?? "") ||
-    isOutboxReplayContext(op.context, deps.replayHeaderValue)
-  ) {
+  if (isAccountScoped(op.path) || isOutboxReplayContext(op.context, deps.replayHeaderValue)) {
     return op;
   }
   const household = householdAtStart(op.input, deps.household);

@@ -65,6 +65,19 @@ describe("outbox status actions", () => {
       ]);
     });
 
+    it("sends a parked account write with no household", async () => {
+      const name = await store.enqueue(
+        newEntry({ id: "a", path: "user.updateName", householdId: null })
+      );
+      await store.park(name.seq, "other-household");
+
+      await requeueParkedEntries("u1", store, "h1");
+
+      expect((await store.forOwner("u1")).map((e) => [e.status, e.householdId])).toEqual([
+        ["pending", null],
+      ]);
+    });
+
     it("leaves another owner's parked entries alone", async () => {
       const other = await store.enqueue(newEntry({ id: "x", ownerId: "u2" }));
       await store.park(other.seq, "deterministic");

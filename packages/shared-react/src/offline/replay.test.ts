@@ -73,6 +73,19 @@ describe("runReplayPass", () => {
     ]);
   });
 
+  it("sends a queued account write whatever household the account is in now", async () => {
+    await store.enqueue(entry({ id: "a", path: "user.updateName", householdId: null }));
+    await store.enqueue(entry({ id: "b", path: "user.updateName", householdId: null }));
+    const { submit, submitted } = stubSubmit({});
+
+    await runReplayPass({ store, submit, ownerId: "u1", householdId: "h1" });
+    await store.enqueue(entry({ id: "c", path: "user.updateName", householdId: null }));
+    await runReplayPass({ store, submit, ownerId: "u1", householdId: "h2" });
+
+    expect(submitted).toEqual(["a", "b", "c"]);
+    expect(await store.loadAll()).toEqual([]);
+  });
+
   it("parks the second of two entries when a removal lands between their sends", async () => {
     await store.enqueue(entry({ id: "a", path: "groceries.create", input: { id: "g1" } }));
     await store.enqueue(entry({ id: "b", path: "groceries.create", input: { id: "g2" } }));

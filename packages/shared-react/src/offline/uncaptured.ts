@@ -25,3 +25,15 @@ const UNCAPTURED_PROCEDURES: ReadonlySet<string> = new Set([
 export const isUncaptured = (path: string): boolean =>
   (path.includes(".") && UNCAPTURED_ROUTERS.has(path.split(".")[0] ?? "")) ||
   UNCAPTURED_PROCEDURES.has(path);
+
+/** The account's own writes, which no household change makes foreign: never household-checked. */
+const ACCOUNT_ROUTERS: ReadonlySet<string> = new Set([
+  "admin",
+  "user",
+  "caldav",
+  "caldavSubscriptions",
+  "siteAuthTokens",
+]);
+
+export const isAccountScoped = (path: string): boolean =>
+  ACCOUNT_ROUTERS.has(path.split(".")[0] ?? "");

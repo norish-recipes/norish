@@ -17,7 +17,7 @@ import type { ReplayOutcome } from "./error-classification";
 import type { OutboxStore } from "./outbox-store";
 import type { OutboxEntry, ParkedReason } from "./outbox-types";
 import { parkedPatch } from "./outbox-store";
-import { isUncaptured } from "./uncaptured";
+import { isAccountScoped, isUncaptured } from "./uncaptured";
 
 /** Attempts a 5xx entry gets before it is parked as retries-exhausted. */
 export const MAX_AMBIGUOUS_ATTEMPTS = 3;
@@ -153,7 +153,7 @@ export async function runReplayPass({
 
   for (const entry of await store.forOwner(ownerId, "pending")) {
     // An early exit only: the server refuses one made for another household when it is sent.
-    if (entry.householdId !== householdId) {
+    if (!isAccountScoped(entry.path) && entry.householdId !== householdId) {
       await store.park(entry.seq, "other-household");
       countParked(entry, "other-household");
 

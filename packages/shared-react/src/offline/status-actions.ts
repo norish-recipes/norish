@@ -1,6 +1,7 @@
 import type { OutboxStore } from "./outbox-store";
 import type { OutboxEntry } from "./outbox-types";
 import { referencesParkedEntity } from "./replay";
+import { isAccountScoped } from "./uncaptured";
 
 /**
  * Bulk Outbox actions for the status modal (commit 9).
@@ -29,6 +30,7 @@ export async function requeueParkedEntries(
   );
   const sentHere = (entry: OutboxEntry) =>
     household !== null &&
+    !isAccountScoped(entry.path) &&
     (entry.parkedReason === "other-household" ||
       (entry.parkedReason === "dependency" && referencesParkedEntity(entry.input, foreign)));
 
