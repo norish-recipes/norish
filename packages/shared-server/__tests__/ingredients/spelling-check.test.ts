@@ -37,6 +37,7 @@ import {
   firstSpellingId,
   getSpellingTexts,
   insertTestRecipeLine,
+  listTestIngredientsNamed,
   mintTestFood,
   readTestIngredientNamed,
   setTestIngredients,
@@ -379,16 +380,16 @@ describe("AI checks the spellings added to a seeded food", () => {
     const salt = seeded.get("en:salt")!;
     const spelled = await added("en:salt", "zeezoutvlokken");
     const flakesLine = await line("zeezoutvlokken", spelled.get("zeezoutvlokken")!);
-    const flakes = () => readTestIngredientNamed("zeezoutvlokken");
+    const flakes = () => listTestIngredientsNamed("zeezoutvlokken");
 
     answers({ zeezoutvlokken: ["other-food", "sea salt flakes"] });
     await checkSpellingsOf(actor.householdId, salt);
-    await expect(flakes()).resolves.not.toBeNull();
+    await expect(flakes()).resolves.toHaveLength(1);
     const [change] = await listAIChangesFor(actor);
 
     await undoAIChange(actor, change!.id);
 
-    await expect(flakes()).resolves.toBeNull();
+    await expect(flakes()).resolves.toEqual([]);
     expect(await spellingsOf(salt)).toEqual(["salt", "zeezoutvlokken"]);
     expect(await lineFoods(flakesLine.id)).toEqual([{ food: "salt", spelling: "zeezoutvlokken" }]);
   });

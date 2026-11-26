@@ -247,12 +247,17 @@ export async function readTestIngredient(id: string) {
   return row ?? null;
 }
 
-/** The Ingredient named exactly this, as stored, or null. */
-export async function readTestIngredientNamed(name: string) {
-  const [row] = await getTestDb()
+/** Every Ingredient named exactly this, as stored. */
+export async function listTestIngredientsNamed(name: string) {
+  return await getTestDb()
     .select()
     .from(schema.ingredients)
     .where(eq(schema.ingredients.name, name));
+}
+
+/** The Ingredient named exactly this, as stored, or null. */
+export async function readTestIngredientNamed(name: string) {
+  const [row] = await listTestIngredientsNamed(name);
 
   return row ?? null;
 }

@@ -911,11 +911,32 @@ describe("each household gets its own catalogue", () => {
   });
 
   it("changes nothing when run again", async () => {
-    const before = await snapshot();
+    // Whole rows of every table the migration writes, in an order no rewrite changes.
+    const everything = async () =>
+      Object.fromEntries(
+        await Promise.all(
+          [
+            "ingredients",
+            "ingredient_aliases",
+            "recipe_ingredient_foods",
+            "groceries",
+            "recurring_groceries",
+            "pantry_ingredients",
+            "aisle_links",
+            "store_product_links",
+            "ingredient_store_preferences",
+            "ingredient_nutrition_corrections",
+            "ingredient_nutrition_estimates",
+            "ingredient_ai_changes",
+            "ingredient_junk_pile",
+          ].map(async (table) => [table, await rows(`SELECT * FROM "${table}" t ORDER BY t::text`)])
+        )
+      );
+    const before = await everything();
 
     await apply(MIGRATION_TAG);
 
-    expect(await snapshot()).toEqual(before);
+    expect(await everything()).toEqual(before);
   });
 });
 
