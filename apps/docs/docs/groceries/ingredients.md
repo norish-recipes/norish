@@ -6,7 +6,7 @@ description: Edit ingredients, translations, nutrition and icons.
 
 # Manage ingredients
 
-In **Settings**, open **Ingredients**. Search with parts of words in any order.
+In **Settings**, open **Content**, then **Ingredients**. Search with parts of words in any order.
 For example, "olive ex" finds "Extra virgin olive oil".
 
 ![The Ingredients catalogue](/img/screenshots/ingredients-list.png)
