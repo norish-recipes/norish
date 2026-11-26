@@ -19,6 +19,7 @@ import {
   entriesByFoldTx,
   entryName,
   listEntries,
+  lockEntryFoldsTx,
   mergeEntries,
   mergeEntryTx,
   recipeEntryNames,
@@ -42,7 +43,7 @@ import {
   getTestDb,
   testHouseholdOf,
 } from "../../../helpers/db-test-helpers";
-import { raceBehind } from "../../../helpers/lock-race";
+import { backendPid, lockWaits, raceBehind, waitFor } from "../../../helpers/lock-race";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 const testBase = new RepositoryTestBase("test_list_entries");
@@ -495,6 +496,111 @@ describe("household lists", () => {
       allTags: ["Vegan"],
     });
     expect((await listEntries("tag", ann.household)).map((e) => e.name)).toEqual(["Vegan"]);
+  });
+
+  describe("one lock per fold", () => {
+    const foldRows = async (fold: string) =>
+      await getTestDb()
+        .select({ id: cuisines.id, householdId: cuisines.householdId })
+        .from(cuisines)
+        .where(eq(cuisines.nameFold, fold));
+
+    it.each([
+      ["the instance first", true],
+      ["the household first", false],
+    ])(
+      "an instance add and a household add of one fold end with one entry: %s",
+      async (_, instanceFirst) => {
+        const fold = `pho${instanceFirst ? "a" : "b"}`;
+        const ops = [
+          () => addEntry("cuisine", null, fold.toUpperCase()),
+          () => addEntry("cuisine", ann.household, fold),
+        ];
+        const runs = await raceBehind(
+          (tx) => lockEntryFoldsTx(tx, "cuisine", [fold]),
+          instanceFirst ? ops : ops.reverse()
+        );
+
+        expect(runs.map((run) => run.status)).toEqual(["fulfilled", "fulfilled"]);
+        expect(await foldRows(fold)).toEqual([{ id: expect.any(String), householdId: null }]);
+      }
+    );
+
+    it("an instance rename racing a Content merge of the same entries surfaces no deadlock", async () => {
+      // The instance entry's id sorts first, so a merge locks it before the household's.
+      const [instanceId, householdsId] = [
+        "00000000-0000-4000-8000-000000000001",
+        "ffffffff-ffff-4fff-bfff-ffffffffffff",
+      ];
+
+      await getTestDb()
+        .insert(cuisines)
+        .values([
+          { id: instanceId, householdId: null, name: "Laos", nameFold: "laos" },
+          { id: householdsId, householdId: ann.household, name: "Lao", nameFold: "lao" },
+        ]);
+      await db.transaction((tx) =>
+        replaceRecipeEntryIdsTx(tx, "cuisine", ann.recipe, [householdsId])
+      );
+      const version = async (id: string) =>
+        (
+          await getTestDb()
+            .select({ id: cuisines.id, version: cuisines.version })
+            .from(cuisines)
+            .where(eq(cuisines.id, id))
+        )[0]!;
+      const [instance, own] = [await version(instanceId), await version(householdsId)];
+      const runs = await raceBehind(
+        (tx) =>
+          tx
+            .select({ id: cuisines.id })
+            .from(cuisines)
+            .where(eq(cuisines.id, instanceId))
+            .for("update"),
+        [
+          () => mergeEntries("cuisine", ann.household, own, instance),
+          () => renameEntry("cuisine", null, instance, "Lao"),
+        ]
+      );
+
+      expect(runs.map((run) => run.status)).toEqual(["fulfilled", "fulfilled"]);
+      expect(await getRecipeCuisines(ann.recipe)).toEqual([
+        expect.objectContaining({ id: instanceId }),
+      ]);
+      expect((await foldRows("lao")).filter((row) => row.householdId !== null)).toEqual([]);
+    });
+
+    it("a takeover keeps no unrelated household's recipe save waiting", async () => {
+      const twin = (await addEntry("cuisine", ann.household, "Hmong"))!.entry;
+
+      await db.transaction((tx) => replaceRecipeEntryIdsTx(tx, "cuisine", ann.recipe, [twin.id]));
+      let takeover: Promise<unknown> = Promise.resolve();
+
+      await getTestDb().transaction(async (tx) => {
+        await tx
+          .select({ id: cuisines.id })
+          .from(cuisines)
+          .where(eq(cuisines.id, twin.id))
+          .for("update");
+        const holder = await backendPid(tx);
+
+        takeover = addEntry("cuisine", null, "Hmong");
+        takeover.catch(() => undefined);
+        await waitFor(
+          async () =>
+            [...(await lockWaits()).values()].find((blockers) => blockers.includes(holder)),
+          "the takeover to wait on the household's entry"
+        );
+        const saved = await Promise.race([
+          updateRecipeWithRefs(bob.recipe, bob.id, { name: "Bob's other stew" }),
+          new Promise((resolve) => setTimeout(() => resolve("waiting"), 2000)),
+        ]);
+
+        expect(saved).toMatchObject({ applied: true });
+      });
+      expect(await takeover).toMatchObject({ created: true });
+      expect(await foldRows("hmong")).toEqual([{ id: expect.any(String), householdId: null }]);
+    });
   });
 
   describe("races the database decides", () => {

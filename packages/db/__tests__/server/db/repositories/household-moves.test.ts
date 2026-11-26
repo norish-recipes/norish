@@ -126,6 +126,23 @@ describe("household moves", () => {
     return added!.entry;
   }
 
+  /** A household Cuisine folding like an instance one, as only a pre-0.28 database holds, on `recipeId`. */
+  async function householdTwinOn(householdId: string, recipeId: string, name: string) {
+    const [twin] = await getTestDb()
+      .insert(cuisines)
+      .values({ householdId, name: name.toLowerCase(), nameFold: name.toLowerCase() })
+      .returning({ id: cuisines.id });
+
+    await getTestDb().insert(recipeCuisines).values({ recipeId, cuisineId: twin!.id, order: 0 });
+  }
+
+  const cuisineRowsOf = async (recipeId: string) =>
+    await getTestDb()
+      .select({ name: cuisines.name, householdId: cuisines.householdId })
+      .from(recipeCuisines)
+      .innerJoin(cuisines, eq(cuisines.id, recipeCuisines.cuisineId))
+      .where(eq(recipeCuisines.recipeId, recipeId));
+
   describe("leaving keeps the recipes' lists", () => {
     it.each(["leave", "remove"] as const)(
       "%s: the household's entries become the new household's, the instance's stay",
@@ -173,6 +190,21 @@ describe("household moves", () => {
         await expectNothingForeign();
       }
     );
+
+    it("maps a carried entry folding like an instance entry onto it, copying no twin", async () => {
+      const { member, householdId } = await sharedHousehold();
+      const leaving = await createTestRecipe(member.id, { name: "Larb" });
+
+      await entryOf("cuisine", null, "Luang");
+      await householdTwinOn(householdId, leaving.id, "Luang");
+      const moved = await moveToHouseholdOfOne(householdId, member.id);
+      const newHousehold = moved.applied ? moved.value.household.id : "";
+
+      expect(await cuisineRowsOf(leaving.id)).toEqual([{ name: "Luang", householdId: null }]);
+      expect(
+        await getTestDb().select().from(cuisines).where(eq(cuisines.householdId, newHousehold))
+      ).toEqual([]);
+    });
 
     it("the old household's rename, merge and delete no longer reach the leaver's recipes", async () => {
       const { admin, member, householdId } = await sharedHousehold();
@@ -796,6 +828,22 @@ describe("household moves", () => {
         lineKey({ name: "soja", amount: 1, unit: null, ingredientId: sojasaus.ingredientId }),
       ]);
       await expectNothingForeign();
+    });
+
+    it("maps a joiner entry folding like an instance entry onto it, copying no twin", async () => {
+      const host = (await createTestUser())!;
+      const joiner = (await createTestUser())!;
+      const into = await householdOf(host.id);
+      const mine = await createTestRecipe(joiner.id);
+
+      await entryOf("cuisine", null, "Isan");
+      await householdTwinOn(await householdOf(joiner.id), mine.id, "Isan");
+      await mergeInto(joiner.id, into);
+
+      expect(await cuisineRowsOf(mine.id)).toEqual([{ name: "Isan", householdId: null }]);
+      expect(
+        await getTestDb().select().from(cuisines).where(eq(cuisines.householdId, into))
+      ).toEqual([]);
     });
 
     it("joins Tags, Cuisines and Categories of a fold to the household's entry", async () => {

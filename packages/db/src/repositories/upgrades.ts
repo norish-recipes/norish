@@ -30,6 +30,7 @@ import {
   findFoldedTwinTx,
   LIST_KINDS,
   listPendingFoldEntries,
+  lockEntryFoldsTx,
   mergeEntryTx,
   setEntryFoldTx,
   takeOverHouseholdTwinsTx,
@@ -334,6 +335,12 @@ export async function foldPendingListEntries(): Promise<number> {
   for (const kind of LIST_KINDS) {
     folded += await db.transaction(async (tx) => {
       const pending = await listPendingFoldEntries(kind, tx);
+
+      await lockEntryFoldsTx(
+        tx,
+        kind,
+        pending.map((entry) => entryFold(entry.name))
+      );
 
       for (const entry of pending) {
         const fold = entryFold(entry.name);

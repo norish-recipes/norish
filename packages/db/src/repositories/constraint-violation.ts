@@ -1,9 +1,9 @@
 /**
- * Whether `error` is Postgres refusing a write on a constraint of this class:
- * `23505` a unique violation, `23503` a foreign-key one. Drizzle wraps the
- * driver's error, so its cause is read too.
+ * Whether `error` is Postgres refusing a write with this code: `23505` a unique violation,
+ * `23503` a foreign-key one, `40P01` a deadlock's victim. Drizzle wraps the driver's error,
+ * so its cause is read too.
  */
-export function isConstraintViolation(error: unknown, code: "23505" | "23503"): boolean {
+export function isConstraintViolation(error: unknown, code: "23505" | "23503" | "40P01"): boolean {
   for (let current = error; current && typeof current === "object";) {
     if ((current as { code?: unknown }).code === code) return true;
     current = (current as { cause?: unknown }).cause;
