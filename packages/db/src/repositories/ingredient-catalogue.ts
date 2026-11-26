@@ -3,6 +3,7 @@ import type { AnyPgColumn, PgTable } from "drizzle-orm/pg-core";
 import {
   and,
   asc,
+  count,
   desc,
   eq,
   exists,
@@ -236,7 +237,7 @@ export async function listCatalogueIngredients(query: {
         addedByHand: withTableName(kind.addedByHand),
       })
     : undefined;
-  const kindsOf = (fields: { n: SQL }) =>
+  const kindsOf = (fields: { n: SQL | AnyPgColumn }) =>
     qb
       .select(fields)
       .from(kind)
@@ -258,7 +259,7 @@ export async function listCatalogueIngredients(query: {
       version: ingredients.version,
       parentId: parents.id,
       parentName: parents.name,
-      kinds: sql<number>`${kindsOf({ n: sql`count(*)::int` })}`,
+      kinds: sql<number>`${kindsOf({ n: count() })}`.mapWith(Number),
     })
     .from(ingredients)
     .leftJoin(parents, eq(parents.id, ingredients.parentId))
@@ -276,7 +277,7 @@ export async function listCatalogueIngredients(query: {
             ? isNull(ingredients.parentId)
             : eq(ingredients.parentId, query.parentId),
         query.standaloneOnly
-          ? and(isNull(ingredients.parentId), notExists(kindsOf({ n: sql`1` })))
+          ? and(isNull(ingredients.parentId), notExists(kindsOf({ n: kind.id })))
           : undefined,
         matchesSearch
       )
