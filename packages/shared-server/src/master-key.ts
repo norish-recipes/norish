@@ -79,20 +79,15 @@ export async function readKeyFile(): Promise<KeyFile | null> {
   }
 }
 
-/** Create `target` readable by this user only, flushed to disk; on a failure no half of it stays. */
+/** Create `target` readable by this user only, flushed to disk. */
 async function createFlushed(target: string, text: string): Promise<void> {
   const handle = await fs.open(target, "wx", 0o600);
 
   try {
-    try {
-      await handle.writeFile(text);
-      await handle.sync();
-    } finally {
-      await handle.close();
-    }
-  } catch (error) {
-    await fs.rm(target, { force: true });
-    throw error;
+    await handle.writeFile(text);
+    await handle.sync();
+  } finally {
+    await handle.close();
   }
 }
 
