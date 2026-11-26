@@ -1350,7 +1350,8 @@ export async function writeConvertedCopy(
   resolutions: IngredientResolutions
 ): Promise<MutationOutcome<void>> {
   return db.transaction(async (tx) => {
-    // The version check takes the row first, so an edit made meanwhile keeps its lines.
+    // The household before the row, as a leave takes them; the version check then keeps an edit's lines.
+    await lockRecipeHouseholdsTx(tx, { recipeIds: [recipeId] });
     if (!(await switchSystemTx(tx, recipeId, conversion.to, version, conversion.from)))
       return staleOutcome();
 

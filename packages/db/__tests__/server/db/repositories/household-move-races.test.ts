@@ -25,7 +25,14 @@ import {
 } from "@norish/db/repositories/list-entries";
 import * as recipeRepository from "@norish/db/repositories/recipes";
 import { appendRecipeTags } from "@norish/db/repositories/tags";
-import { households, ingredientAliases, ingredients, recipes, tags } from "@norish/db/schema";
+import {
+  households,
+  householdUsers,
+  ingredientAliases,
+  ingredients,
+  recipes,
+  tags,
+} from "@norish/db/schema";
 
 import { withResolvedIngredients } from "../../../../../shared-server/src/ingredients/recipe-lines";
 import { resolveAgain } from "../../../../../shared-server/src/ingredients/resolve-again";
@@ -117,6 +124,52 @@ describe("household move races", () => {
     const [stored] = (await recipeRepository.getRecipeFull(recipe.id))!.recipeIngredients;
 
     expect((await testLineFoodNames(stored!.id!)).map((one) => one.food)).toEqual(["gochujang"]);
+    await expectNothingForeign();
+  });
+
+  it("a unit conversion of the leaver's recipe waiting on the leave writes its copy after it", async () => {
+    const { member, householdId } = await sharedHousehold();
+    const recipe = await createTestRecipe(member.id);
+    const holdMembership = (
+      tx: Parameters<Parameters<ReturnType<typeof getTestDb>["transaction"]>[0]>[0]
+    ) =>
+      tx
+        .select({ userId: householdUsers.userId })
+        .from(householdUsers)
+        .where(eq(householdUsers.userId, member.id))
+        .for("update");
+    const line = {
+      recipeId: recipe.id,
+      ingredientId: null,
+      ingredientName: "salt",
+      amount: 1,
+      unit: "tsp",
+      systemUsed: "us" as const,
+      order: 0,
+    };
+
+    // The leave holds the household and waits on its membership; the conversion comes in behind.
+    const settled = await raceBehind(holdMembership, [
+      () => moveToHouseholdOfOne(householdId, member.id),
+      () =>
+        recipeRepository.writeConvertedCopy(
+          recipe.id,
+          { from: "metric", to: "us" },
+          recipe.version,
+          [],
+          [line],
+          new Map([["salt", null]])
+        ),
+    ]);
+
+    expect(settled).toEqual([
+      fulfilled(expect.objectContaining({ applied: true })),
+      fulfilled(expect.objectContaining({ applied: true })),
+    ]);
+    const stored = (await recipeRepository.getRecipeFull(recipe.id))!;
+
+    expect(stored.systemUsed).toBe("us");
+    expect(stored.recipeIngredients.map((one) => one.ingredientName)).toEqual(["salt"]);
     await expectNothingForeign();
   });
 
