@@ -1,6 +1,4 @@
 // @vitest-environment node
-import { initTRPC } from "@trpc/server";
-import superjson from "superjson";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { trpcLogger } from "@norish/shared-server/logger";
@@ -89,27 +87,6 @@ vi.mock("@norish/shared-server/logger", () => ({
   createLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
 }));
 
-// Create a test tRPC instance
-const t = initTRPC.context<ReturnType<typeof createMockAuthedContext>>().create({
-  transformer: superjson,
-});
-
-// Create test caller
-function createTestCaller(ctx: ReturnType<typeof createMockAuthedContext>) {
-  const testRouter = t.router({
-    list: t.procedure.query(async () => {
-      const [groceries, recurringGroceries] = await Promise.all([
-        listGroceriesByHousehold(ctx.householdId),
-        listRecurringGroceriesByHousehold(ctx.householdId),
-      ]);
-
-      return { groceries, recurringGroceries };
-    }),
-  });
-
-  return t.createCallerFactory(testRouter)(ctx);
-}
-
 const openApiGroceriesRouter = router({
   listGroceries: listGroceriesProcedure,
   createGrocery: createGroceryProcedure,
@@ -117,52 +94,6 @@ const openApiGroceriesRouter = router({
   markGroceryUndone: markGroceryUndoneProcedure,
   deleteGrocery: deleteGroceryProcedure,
   assignGroceryToStore: assignGroceryToStoreProcedure,
-});
-
-describe("groceries procedures", () => {
-  const mockUser = createMockUser();
-  const mockHousehold = createMockHousehold();
-  let ctx: ReturnType<typeof createMockAuthedContext>;
-
-  beforeEach(() => {
-    // Every Store a test files a grocery under is the household's own.
-    storesRepository.ownStoreExists.mockResolvedValue(true);
-    ctx = createMockAuthedContext(mockUser, mockHousehold);
-  });
-
-  describe("list", () => {
-    it("returns groceries and recurring groceries for user and household", async () => {
-      const mockGroceries = [
-        createMockGrocery({ id: "g1", name: "Milk" }),
-        createMockGrocery({ id: "g2", name: "Bread" }),
-      ];
-      const mockRecurring = [
-        { id: "r1", name: "Weekly Eggs", recurrenceRule: "week", recurrenceInterval: 1 },
-      ];
-
-      listGroceriesByHousehold.mockResolvedValue(mockGroceries);
-      listRecurringGroceriesByHousehold.mockResolvedValue(mockRecurring);
-
-      const caller = createTestCaller(ctx);
-      const result = await caller.list();
-
-      expect(listGroceriesByHousehold).toHaveBeenCalledWith(ctx.householdId);
-      expect(listRecurringGroceriesByHousehold).toHaveBeenCalledWith(ctx.householdId);
-      expect(result.groceries).toEqual(mockGroceries);
-      expect(result.recurringGroceries).toEqual(mockRecurring);
-    });
-
-    it("returns empty arrays when no groceries exist", async () => {
-      listGroceriesByHousehold.mockResolvedValue([]);
-      listRecurringGroceriesByHousehold.mockResolvedValue([]);
-
-      const caller = createTestCaller(ctx);
-      const result = await caller.list();
-
-      expect(result.groceries).toEqual([]);
-      expect(result.recurringGroceries).toEqual([]);
-    });
-  });
 });
 
 describe("groceries openapi procedures", () => {

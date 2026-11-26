@@ -1,6 +1,4 @@
 // @vitest-environment node
-import { initTRPC } from "@trpc/server";
-import superjson from "superjson";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { trpcLogger } from "@norish/shared-server/logger";
@@ -9,7 +7,6 @@ import { ratingsProcedures } from "@norish/trpc/routers/ratings/ratings";
 import { policy, resetPermissionsMocks } from "../mocks/permissions";
 import {
   getAverageRating,
-  getUserRating,
   getUserRatingWithVersion,
   rateRecipe,
 } from "../mocks/ratings-repository";
@@ -33,10 +30,6 @@ vi.mock("@norish/shared-server/logger", () => ({
   createLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
 }));
 
-const t = initTRPC.context<ReturnType<typeof createMockAuthedContext>>().create({
-  transformer: superjson,
-});
-
 describe("ratings procedures", () => {
   const mockUser = createMockUser();
   const mockHousehold = createMockHousehold();
@@ -49,89 +42,30 @@ describe("ratings procedures", () => {
     ctx = createMockAuthedContext(mockUser, mockHousehold);
   });
 
-  describe("getUserRating", () => {
-    it("returns user rating for recipe", async () => {
-      getUserRating.mockResolvedValue(4);
-      getUserRatingWithVersion.mockResolvedValue({ rating: 4, version: 2 });
+  const caller = () => ratingsProcedures.createCaller(ctx as never);
 
-      const testRouter = t.router({
-        getUserRating: t.procedure
-          .input((v) => v as { recipeId: string })
-          .query(async ({ input }) => {
-            const rating = await getUserRating(ctx.user.id, input.recipeId);
+  it("answers the account's own rating and version of a recipe it may view", async () => {
+    const recipeId = crypto.randomUUID();
 
-            return { recipeId: input.recipeId, userRating: rating };
-          }),
-      });
+    getUserRatingWithVersion.mockResolvedValue({ rating: 4, version: 2 });
 
-      const caller = t.createCallerFactory(testRouter)(ctx);
-      const result = await caller.getUserRating({ recipeId: "recipe-1" });
-
-      expect(getUserRating).toHaveBeenCalledWith(ctx.user.id, "recipe-1");
-      expect(result.userRating).toBe(4);
+    await expect(caller().getUserRating({ recipeId })).resolves.toEqual({
+      recipeId,
+      userRating: 4,
+      version: 2,
     });
-
-    it("returns null when user has not rated", async () => {
-      getUserRating.mockResolvedValue(null);
-      getUserRatingWithVersion.mockResolvedValue({ rating: null, version: null });
-
-      const testRouter = t.router({
-        getUserRating: t.procedure
-          .input((v) => v as { recipeId: string })
-          .query(async ({ input }) => {
-            const rating = await getUserRating(ctx.user.id, input.recipeId);
-
-            return { recipeId: input.recipeId, userRating: rating };
-          }),
-      });
-
-      const caller = t.createCallerFactory(testRouter)(ctx);
-      const result = await caller.getUserRating({ recipeId: "recipe-1" });
-
-      expect(result.userRating).toBeNull();
-    });
+    expect(getUserRatingWithVersion).toHaveBeenCalledWith(ctx.user.id, recipeId);
   });
 
-  describe("getAverage", () => {
-    it("returns average rating and count", async () => {
-      getAverageRating.mockResolvedValue({ averageRating: 4.5, ratingCount: 10 });
+  it("answers a recipe's average and how many rated it", async () => {
+    const recipeId = crypto.randomUUID();
 
-      const testRouter = t.router({
-        getAverage: t.procedure
-          .input((v) => v as { recipeId: string })
-          .query(async ({ input }) => {
-            const stats = await getAverageRating(input.recipeId);
+    getAverageRating.mockResolvedValue({ averageRating: 4.5, ratingCount: 10 });
 
-            return { recipeId: input.recipeId, ...stats };
-          }),
-      });
-
-      const caller = t.createCallerFactory(testRouter)(ctx);
-      const result = await caller.getAverage({ recipeId: "recipe-1" });
-
-      expect(getAverageRating).toHaveBeenCalledWith("recipe-1");
-      expect(result.averageRating).toBe(4.5);
-      expect(result.ratingCount).toBe(10);
-    });
-
-    it("returns null average for unrated recipe", async () => {
-      getAverageRating.mockResolvedValue({ averageRating: null, ratingCount: 0 });
-
-      const testRouter = t.router({
-        getAverage: t.procedure
-          .input((v) => v as { recipeId: string })
-          .query(async ({ input }) => {
-            const stats = await getAverageRating(input.recipeId);
-
-            return { recipeId: input.recipeId, ...stats };
-          }),
-      });
-
-      const caller = t.createCallerFactory(testRouter)(ctx);
-      const result = await caller.getAverage({ recipeId: "recipe-1" });
-
-      expect(result.averageRating).toBeNull();
-      expect(result.ratingCount).toBe(0);
+    await expect(caller().getAverage({ recipeId })).resolves.toEqual({
+      recipeId,
+      averageRating: 4.5,
+      ratingCount: 10,
     });
   });
 
@@ -170,45 +104,23 @@ describe("ratings procedures", () => {
   });
 
   describe("rate", () => {
-    it("creates new rating", async () => {
+    it("rates, and tells the recipe's audience the new average", async () => {
+      const recipeId = crypto.randomUUID();
+
+      ratings.publish.mockClear();
       rateRecipe.mockResolvedValue({ rating: 5, isNew: true });
       getAverageRating.mockResolvedValue({ averageRating: 5, ratingCount: 1 });
 
-      const testRouter = t.router({
-        rate: t.procedure
-          .input((v) => v as { recipeId: string; rating: number })
-          .mutation(async ({ input }) => {
-            await rateRecipe(ctx.user.id, input.recipeId, input.rating);
-
-            return { success: true };
-          }),
+      await expect(caller().rate({ recipeId, rating: 5, version: 1 })).resolves.toEqual({
+        success: true,
       });
-
-      const caller = t.createCallerFactory(testRouter)(ctx);
-      const result = await caller.rate({ recipeId: "recipe-1", rating: 5 });
-
-      expect(rateRecipe).toHaveBeenCalledWith(ctx.user.id, "recipe-1", 5);
-      expect(result.success).toBe(true);
-    });
-
-    it("updates existing rating", async () => {
-      rateRecipe.mockResolvedValue({ rating: 3, isNew: false });
-      getAverageRating.mockResolvedValue({ averageRating: 3.5, ratingCount: 2 });
-
-      const testRouter = t.router({
-        rate: t.procedure
-          .input((v) => v as { recipeId: string; rating: number })
-          .mutation(async ({ input }) => {
-            const result = await rateRecipe(ctx.user.id, input.recipeId, input.rating);
-
-            return { success: true, isNew: result.isNew };
-          }),
-      });
-
-      const caller = t.createCallerFactory(testRouter)(ctx);
-      const result = await caller.rate({ recipeId: "recipe-1", rating: 3 });
-
-      expect(result.isNew).toBe(false);
+      await vi.waitFor(() => expect(ratings.publish).toHaveBeenCalled());
+      expect(rateRecipe).toHaveBeenCalledWith(ctx.user.id, recipeId, 5, 1);
+      expect(ratings.publish).toHaveBeenCalledWith(
+        "ratingUpdated",
+        { recipeId, averageRating: 5, ratingCount: 1 },
+        expect.objectContaining({ householdId: "another-household" })
+      );
     });
 
     it("logs stale rating mutations as no-ops", async () => {
@@ -216,7 +128,7 @@ describe("ratings procedures", () => {
 
       rateRecipe.mockResolvedValue({ rating: 2, isNew: false, stale: true });
 
-      const caller = ratingsProcedures.createCaller(ctx as any);
+      const caller = ratingsProcedures.createCaller(ctx as never);
       const result = await caller.rate({ recipeId, rating: 2, version: 7 });
 
       await Promise.resolve();
@@ -234,7 +146,7 @@ describe("ratings procedures", () => {
       rateRecipe.mockResolvedValue({ rating: null, isNew: false });
       getAverageRating.mockResolvedValue({ averageRating: null, ratingCount: 0 });
 
-      const caller = ratingsProcedures.createCaller(ctx as any);
+      const caller = ratingsProcedures.createCaller(ctx as never);
       const result = await caller.rate({ recipeId, rating: null, version: 3 });
 
       await Promise.resolve();
@@ -264,7 +176,7 @@ describe("ratings procedures", () => {
     });
 
     it("validates rating is between 1 and 5, or null", async () => {
-      const caller = ratingsProcedures.createCaller(ctx as any);
+      const caller = ratingsProcedures.createCaller(ctx as never);
       const validRecipeId = crypto.randomUUID();
 
       await expect(caller.rate({ recipeId: validRecipeId, rating: 0 })).rejects.toThrow();
