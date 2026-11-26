@@ -115,21 +115,24 @@ describe("what boot checks a Master Key against", () => {
     ["no value", null],
     ["JSON null", jsonNull],
     ["an empty value", ""],
-  ])("counts a fingerprint row with %s as none, and one of two claims at once fills it", async (_, value) => {
-    const fingerprints = [1, 2].map((fill) => masterKeyFingerprint(Buffer.alloc(32, fill)));
+  ])(
+    "counts a fingerprint row with %s as none, and one of two claims at once fills it",
+    async (_, value) => {
+      const fingerprints = [1, 2].map((fill) => masterKeyFingerprint(Buffer.alloc(32, fill)));
 
-    await getTestDb()
-      .insert(serverConfig)
-      .values({ key: ServerConfigKeys.MASTER_KEY_FINGERPRINT, value });
-    // Two idle connections, so the claims below really run at once.
-    await Promise.all([getMasterKeyFingerprint(), getMasterKeyFingerprint()]);
+      await getTestDb()
+        .insert(serverConfig)
+        .values({ key: ServerConfigKeys.MASTER_KEY_FINGERPRINT, value });
+      // Two idle connections, so the claims below really run at once.
+      await Promise.all([getMasterKeyFingerprint(), getMasterKeyFingerprint()]);
 
-    const claims = await Promise.all(fingerprints.map(claimMasterKeyFingerprint));
+      const claims = await Promise.all(fingerprints.map(claimMasterKeyFingerprint));
 
-    expect(fingerprints).toContain(claims[0]);
-    expect(claims[1]).toBe(claims[0]);
-    expect(await getMasterKeyFingerprint()).toBe(claims[0]);
-  });
+      expect(fingerprints).toContain(claims[0]);
+      expect(claims[1]).toBe(claims[0]);
+      expect(await getMasterKeyFingerprint()).toBe(claims[0]);
+    }
+  );
 
   it.each([
     ["no value", null],

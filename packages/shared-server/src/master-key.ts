@@ -147,7 +147,9 @@ export async function writeKeyFile(keys: KeyFile, { replace = false } = {}): Pro
         // No hard links: rename the copy in when no key file is there. Only a link keeps two first
         // boots at once exclusive; Norish runs one process per database.
         if (await exists(file)) {
-          throw Object.assign(new Error(`EEXIST: file already exists, ${file}`), { code: "EEXIST" });
+          throw Object.assign(new Error(`EEXIST: file already exists, ${file}`), {
+            code: "EEXIST",
+          });
         }
         await fs.rename(temp, file);
       });
