@@ -2,10 +2,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { canAccessResource } from "@norish/auth/permissions";
 
-const stored = vi.hoisted(() => ({ policy: null as Record<string, string> | null }));
+const stored = vi.hoisted(() => ({ policy: {} as Record<string, string> }));
 
 vi.mock("@norish/db/repositories/server-config", () => ({
-  getConfig: vi.fn(async () => stored.policy),
+  getRecipePermissionPolicy: vi.fn(async () => stored.policy),
 }));
 
 describe("canAccessResource", () => {
@@ -30,11 +30,5 @@ describe("canAccessResource", () => {
   it("hides another household's row under view Household", async () => {
     stored.policy = { view: "household", edit: "household", delete: "household" };
     expect(await canAccessResource("view", "household3", "household1")).toBe(false);
-  });
-
-  it("falls back to the default policy when none is stored", async () => {
-    stored.policy = null;
-    expect(await canAccessResource("view", "household3", "household1")).toBe(true);
-    expect(await canAccessResource("edit", "household3", "household1")).toBe(false);
   });
 });

@@ -35,12 +35,8 @@ import {
   resolveRecipeShareExpiresAt,
   toRecipeShareSummary,
 } from "./recipe-share-helpers";
-import {
-  accountCanViewRecipe,
-  accountViewCondition,
-  getRecipeFull,
-  getRecipePolicy,
-} from "./recipes";
+import { accountCanViewRecipe, accountViewCondition, getRecipeFull } from "./recipes";
+import { getRecipePermissionPolicy } from "./server-config";
 
 type ActiveShareOptions = {
   touchLastAccessedAt?: boolean;
@@ -174,7 +170,7 @@ export async function getRecipeShareInventoryByUserId(
 /** Every account's share links, for admin moderation across households. */
 export async function getRecipeShareInventoryForAdmin(): Promise<AdminRecipeShareInventoryDto[]> {
   const [policy, rows] = await Promise.all([
-    getRecipePolicy(),
+    getRecipePermissionPolicy(),
     db
       .select({
         share: recipeShares,

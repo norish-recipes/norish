@@ -31,6 +31,7 @@ vi.mock("@norish/db/repositories/server-config", () => ({
   getConfig: vi.fn(async (key: string) =>
     key === ServerConfigKeys.RECIPE_PERMISSION_POLICY ? stored.policy : null
   ),
+  getRecipePermissionPolicy: vi.fn(async () => stored.policy),
 }));
 vi.mock("@norish/db", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@norish/db")>()),

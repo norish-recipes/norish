@@ -41,7 +41,6 @@ import {
   DecisionConfigSchema,
   DEFAULT_AUTOMATIC_INGREDIENTS,
   DEFAULT_CUISINE_STRATEGY,
-  DEFAULT_RECIPE_PERMISSION_POLICY,
   DEFAULT_TAG_STRATEGY,
   IngredientWordsConfigSchema,
   IngredientWordsMapSchema,
@@ -333,14 +332,7 @@ export async function getSchedulerCleanupMonths(): Promise<number> {
   return value ?? 3;
 }
 
-/**
- * Get recipe permission policy
- */
-export async function getRecipePermissionPolicy(): Promise<RecipePermissionPolicy> {
-  const value = await getConfig<RecipePermissionPolicy>(ServerConfigKeys.RECIPE_PERMISSION_POLICY);
-
-  return value ?? DEFAULT_RECIPE_PERMISSION_POLICY;
-}
+export { getRecipePermissionPolicy } from "@norish/db/repositories/server-config";
 
 /**
  * Get prompts configuration

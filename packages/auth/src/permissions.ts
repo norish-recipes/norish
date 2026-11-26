@@ -1,16 +1,8 @@
-import type { AIConfig, RecipePermissionPolicy } from "@norish/config/zod/server-config";
-import {
-  DEFAULT_RECIPE_PERMISSION_POLICY,
-  policyAllows,
-  ServerConfigKeys,
-} from "@norish/config/zod/server-config";
-import { getConfig } from "@norish/db/repositories/server-config";
+import type { AIConfig } from "@norish/config/zod/server-config";
+import { policyAllows, ServerConfigKeys } from "@norish/config/zod/server-config";
+import { getConfig, getRecipePermissionPolicy } from "@norish/db/repositories/server-config";
 
-export async function getRecipePermissionPolicy(): Promise<RecipePermissionPolicy> {
-  const value = await getConfig<RecipePermissionPolicy>(ServerConfigKeys.RECIPE_PERMISSION_POLICY);
-
-  return value ?? DEFAULT_RECIPE_PERMISSION_POLICY;
-}
+export { getRecipePermissionPolicy };
 
 export async function isAIEnabled(): Promise<boolean> {
   const aiConfig = await getConfig<AIConfig>(ServerConfigKeys.AI_CONFIG);

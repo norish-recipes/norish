@@ -16,7 +16,6 @@ import {
 import { alias, QueryBuilder } from "drizzle-orm/pg-core";
 import z from "zod";
 
-import type { RecipePermissionPolicy } from "@norish/config/zod/server-config";
 import type { Db } from "@norish/db/drizzle";
 import type {
   FullRecipeDTO,
@@ -33,11 +32,7 @@ import type {
 import type { StepDto, StepInsertDto } from "@norish/shared/contracts/dto/steps";
 import type { FilterMode, SearchField, SortOrder } from "@norish/shared/contracts/store-types";
 import type { LineJoin, LineReadings } from "@norish/shared/lib/line-foods";
-import {
-  DEFAULT_RECIPE_PERMISSION_POLICY,
-  policyReach,
-  ServerConfigKeys,
-} from "@norish/config/zod/server-config";
+import { policyReach } from "@norish/config/zod/server-config";
 import { db } from "@norish/db/drizzle";
 import { dbLogger } from "@norish/db/logger";
 import { entryFold } from "@norish/shared/lib/fold-name";
@@ -91,7 +86,7 @@ import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 import { pantryCoverageSql } from "./pantry-coverage";
 import { assertOwnRecipeMedia } from "./recipe-media-references";
 import { PRIMARY_IMAGE_SQL } from "./recipe-primary-image";
-import { getConfig } from "./server-config";
+import { getRecipePermissionPolicy } from "./server-config";
 import {
   createManyRecipeStepsTx,
   loadIngredientLineIdsByOrderTx,
@@ -110,16 +105,6 @@ const searchStep = alias(stepsTable, "search_step");
  * depends on this package.
  */
 export type PolicyAction = "view" | "edit" | "delete";
-
-export async function getRecipePolicy(executor: Db = db): Promise<RecipePermissionPolicy> {
-  const stored = await getConfig<RecipePermissionPolicy>(
-    ServerConfigKeys.RECIPE_PERMISSION_POLICY,
-    false,
-    executor
-  );
-
-  return { ...DEFAULT_RECIPE_PERMISSION_POLICY, ...stored };
-}
 
 function nonEmpty(s: string | null | undefined): s is string {
   return typeof s === "string" && s.trim().length > 0;
@@ -284,7 +269,7 @@ export async function buildPolicyCondition(
   action: PolicyAction = "view",
   executor: Db = db
 ) {
-  const reach = policyReach(await getRecipePolicy(executor), action, ctx.householdId);
+  const reach = policyReach(await getRecipePermissionPolicy(executor), action, ctx.householdId);
 
   return reach === null ? undefined : eq(householdColumn, reach);
 }
