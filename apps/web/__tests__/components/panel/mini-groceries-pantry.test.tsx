@@ -212,7 +212,7 @@ describe("MiniGroceries with a Pantry", () => {
     groceries = [];
   });
 
-  it("keeps a line's own food with We keep this", () => {
+  it("keeps a line's own food with We keep this, with the line it is read through", () => {
     render(<MiniGroceries open recipeId="r1" onOpenChange={() => undefined} />);
 
     // Only the line to buy offers it: a kept line has no way out from here.
@@ -222,6 +222,7 @@ describe("MiniGroceries with a Pantry", () => {
     expect(addPantryIngredient).toHaveBeenCalledWith({
       ingredientId: "i-chicken breast",
       name: "chicken breast",
+      recipeIngredientId: "i-chicken",
     });
   });
 
