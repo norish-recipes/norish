@@ -39,7 +39,6 @@ export function ContentToolbar({
         isDisabled={isDisabled}
         selectedKeys={[unusedOnly ? "unused" : "all"]}
         selectionMode="single"
-        size="sm"
         onSelectionChange={(keys) => onUnusedOnly(keys.has("unused"))}
       >
         <ToggleButton data-testid="content-show-all" id="all">
