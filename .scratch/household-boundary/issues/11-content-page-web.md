@@ -73,12 +73,13 @@ Not run: the tests that need Postgres or Valkey (Docker was down), among them th
 - A4 fixed: Changed by AI is the size of Add; a phone reads "1 to check" (`changedByAI.openCompact`).
 - A5 fixed: `FieldLink`, the field's own look with the count and a chevron.
 - A6 fixed: the body owns `pb-4`; the nutrition panels lost their inner `pb-2`.
-- B7 not changed, a question: the Ingredients panel's uses are neither paged nor capped (`listIngredientUses` has no limit and the panel has no "show more"), so there is nothing to copy. Proposal: a page of 50 by offset, `useInfiniteQuery` in `useEntryRecipes`, and a Show more button in the uses panel with copy in every locale; say if you want it.
+- B7 (superseded below): the Ingredients panel's uses are neither paged nor capped (`listIngredientUses` has no limit and the panel has no "show more"), so there is nothing to copy. Proposal: a page of 50 by offset, `useInfiniteQuery` in `useEntryRecipes`, and a Show more button in the uses panel with copy in every locale; say if you want it.
 - B8 fixed: "Ann's soup" sorts before "Apple pie"; the other new tests read again, no further slip.
 - B9 fixed: closing the confirmation clears the outcome; a failed delete says `delete.failed`, in every locale.
 - B10 fixed: a failed reread after Add says the list could not be loaded, with Retry in the Add panel.
 - B11 fixed: `useContentAdd` lists no matches for an empty name.
 - B12 fixed: the Add regression test runs on one shared client with the list cached and stale.
+- B7 fixed after the answer: `lists.uses` pages by 50 (offset cursor, id breaks name ties), `useEntryRecipes` is an infinite query, the uses panel has Show more. The Ingredients panel's own uses read is still unbounded; the maintainer may want it paged the same way.
 
 Kept as built: the stores and pantry lists' own look, `ActionButtonGroup`'s className.
 
