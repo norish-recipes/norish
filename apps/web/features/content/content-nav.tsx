@@ -60,12 +60,13 @@ export function ContentNav({ list }: { list: ContentList }) {
       >
         <Tabs
           aria-label={t("ariaLabel")}
+          align="start"
           className="hidden w-full md:flex"
           orientation="vertical"
           selectedKey={list}
         >
           <Tabs.ListContainer className="w-full">
-            <Tabs.List aria-label={t("ariaLabel")}>
+            <Tabs.List aria-label={t("ariaLabel")} className="w-full">
               {CONTENT_LISTS.map((each) => (
                 <Tabs.Tab key={each} href={contentHref(each)} id={each}>
                   <ListLabel count={countOf(each)} list={each} />
