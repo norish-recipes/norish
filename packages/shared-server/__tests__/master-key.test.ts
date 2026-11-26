@@ -509,6 +509,29 @@ describe("which key boot opens", () => {
       expect(openedKeys).toEqual([]);
     });
 
+    it.each([
+      ["the key file", keyFilePath],
+      ["its folder", keyDir],
+      ["the uploads folder", () => config.UPLOADS_DIR],
+    ])(
+      "claims no fingerprint on a retried first boot until %s is flushed to disk",
+      async (_, target) => {
+        failSyncOf("EIO", config.UPLOADS_DIR);
+        await expect(resolveMasterKey()).rejects.toThrow("EIO");
+        const left = bytesOf((await readKeyFile())?.current);
+
+        vi.restoreAllMocks();
+        failSyncOf("EIO", target());
+
+        await expect(resolveMasterKey()).rejects.toThrow("EIO");
+        expect(fingerprintWrites).toEqual([]);
+
+        vi.restoreAllMocks();
+        await resolveMasterKey();
+        expect(fingerprintWritten()).toBe(left && masterKeyFingerprint(left));
+      }
+    );
+
     it("ends two first boots at once on one key, the one the file and the fingerprint hold", async () => {
       await Promise.all([resolveMasterKey(), resolveMasterKey()]);
 

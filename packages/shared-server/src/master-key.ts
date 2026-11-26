@@ -178,7 +178,7 @@ export async function writeKeyFile(keys: KeyFile, { replace = false } = {}): Pro
   if (!replace) await flushFolder(SERVER_CONFIG.UPLOADS_DIR, true);
 }
 
-/** Flush the key file and its folder, so a power cut after a re-key cannot undo the file. */
+/** Flush the key file and its folder, so a power cut after a claim or re-key cannot undo the file. */
 async function flushKeyFile(): Promise<void> {
   await flush(keyFilePath(), "r+");
   await flushFolder(path.dirname(keyFilePath()), true);
@@ -330,6 +330,11 @@ async function adoptKey(source: KeySource): Promise<[KeySource, string | null]> 
 
   // Boot ends on the current key, which is new to this instance unless it opened the data.
   if (found?.key !== keys.current) checkNewKey(keys.current);
+  // A first boot cut short before its flushes leaves the key file; make it durable before the claim.
+  if (!source.pinned && source.keys) {
+    await flushKeyFile();
+    await flushFolder(SERVER_CONFIG.UPLOADS_DIR, true);
+  }
   // Another first boot may have stored its fingerprint since this one looked; that one stands.
   const stored = await claimMasterKeyFingerprint(masterKeyFingerprint(key.bytes));
 
