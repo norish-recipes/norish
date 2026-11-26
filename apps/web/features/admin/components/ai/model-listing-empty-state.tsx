@@ -1,6 +1,6 @@
 "use client";
 
-import { EmptyState } from "@/components/shared/empty-state";
+import { CellSlot, EmptyState } from "@/components/shared/empty-state";
 import { CpuChipIcon, ExclamationCircleIcon } from "@heroicons/react/24/outline";
 import { Spinner } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -26,9 +26,9 @@ export default function ModelListingEmptyState({
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-2">
+      <CellSlot>
         <Spinner size="sm" />
-      </div>
+      </CellSlot>
     );
   }
 
