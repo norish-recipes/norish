@@ -108,26 +108,36 @@ test("another household's recipe is used through the reader's own catalogue", as
     await context.close();
   }
 
-  // B's groceries name B's foods: its own "sjalot", and a "prei" of B's catalogue, none of A's.
-  const groceryFoods = async () => {
+  // Each of B's rows names its own line's food of B's catalogue under B's spelling: its own
+  // "sjalot", and the "prei" adding it made there; none of A's.
+  const lineIds = stored.recipeIngredients.flatMap((line) => (line.id ? [line.id] : []));
+  const rows = async () => {
     const { groceries } = await callTrpc<{ groceries: GroceryDto[] }>(
       aiStack.baseURL,
       bCookies,
       "groceries.list"
     );
 
-    return groceries.flatMap((grocery) =>
-      grocery.name === shallot || grocery.name === leek ? [grocery.ingredientId] : []
-    );
+    return groceries
+      .flatMap((grocery) =>
+        grocery.recipeIngredientId && lineIds.includes(grocery.recipeIngredientId)
+          ? [{ line: grocery.recipeIngredientId, name: grocery.name, food: grocery.ingredientId }]
+          : []
+      )
+      .sort((a, b) => lineIds.indexOf(a.line) - lineIds.indexOf(b.line));
   };
 
-  await expect.poll(async () => (await groceryFoods()).length).toBe(2);
-  const foods = await groceryFoods();
+  await expect.poll(async () => (await rows()).length).toBe(2);
+  const bLeek = (await foodsOf(bCookies, leek)).find((food) => food.name === leek)?.id;
 
-  expect(foods).toContain(bShallot);
-  for (const food of foods) {
-    expect([aShallot, aLeek]).not.toContain(food);
-    // B reads by id only the foods of its own catalogue, the seed's included.
+  expect(bLeek).toBeDefined();
+  expect(bLeek).not.toBe(aLeek);
+  await expect(rows()).resolves.toEqual([
+    { line: lineIds[0], name: shallot, food: bShallot },
+    { line: lineIds[1], name: leek, food: bLeek },
+  ]);
+  for (const food of [bShallot, bLeek]) {
+    // B reads by id only the foods of its own catalogue.
     await expect(
       queryTrpc<ListedFood | null>(aiStack.baseURL, bCookies, "ingredients.get", {
         ingredientId: food,
