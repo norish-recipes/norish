@@ -65,7 +65,7 @@ OIDC_WELLKNOWN: https://auth.example.com/.well-known/openid-configuration
 ### OIDC claim mapping
 
 Map OIDC groups to the server admin role, and to households that members join
-automatically.
+automatically. At sign-in, a household claim matches by name and places an account that is alone in its household. If no household matches, it renames that household.
 
 | Variable                      | Description                                      | Default             |
 | ----------------------------- | ------------------------------------------------ | ------------------- |

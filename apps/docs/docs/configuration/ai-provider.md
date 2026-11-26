@@ -91,7 +91,7 @@ Track or cancel either run in [Job queues](./admin-settings.md#job-queues).
 | Strategy                       | Behaviour                                          |
 | ------------------------------ | -------------------------------------------------- |
 | **Predefined tags only**       | Only the built-in tag list                         |
-| **Predefined + existing tags** | Also tags already used by recipes on this instance |
+| **Predefined + existing tags** | Also tags in the recipe household's list |
 | **AI can create new tags**     | Creates new tags when needed                       |
 
 ### Cuisine strategy
@@ -104,8 +104,7 @@ add to your cuisine list:
 | **Only existing cuisines**  | Pick from the list, anything else is discarded      |
 | **AI can add new cuisines** | Pick from the list, or add an entry that is missing |
 
-Manage the list in **AI & processing** under **Cuisines**. Renaming or deleting
-a cuisine updates recipes that use it. The default is **Only existing cuisines**.
+Manage cuisines in **Settings** under **Content**. The default is **Only existing cuisines**.
 
 ### Image generation
 

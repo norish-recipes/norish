@@ -10,12 +10,9 @@ Open **Settings**, then **Admin**. A badge marks settings that require a restart
 
 ## Permissions
 
-Use **Recipes** to choose who can view, edit or delete someone else's recipe.
-Choose everyone, the household or the owner.
+Use **Recipes** to choose whether Everyone or only the Household can view, edit or delete recipes and cookbooks. Edit and delete cannot be wider than view. Server admins follow the same policy.
 
-**Ingredients** controls who can edit a shared catalogue entry. **Household**
-is the default. Merging entries requires edit permission on both. Anyone can
-add a translation.
+Household lists and ingredients remain within their household. Share-link moderation, the job monitor and admin-started bulk AI enrichment reach across households.
 
 ## Ingredient words
 
@@ -69,9 +66,7 @@ admin access. You can change roles for other accounts except the owner.
 Select the bin button and confirm. To delete your own account, use account
 settings. The owner is protected in this list.
 
-Deletion removes the user's groceries, meal plan, cookbook memberships and
-preferences. Another member takes over their household if one remains. The
-user's recipes become visible to everyone on the server.
+Deletion erases the account's recipes, cookbooks and preferences. Household content stays if other members remain. Another member takes over as household admin if needed. A household with no members is deleted.
 
 :::warning
 Account deletion is permanent.
