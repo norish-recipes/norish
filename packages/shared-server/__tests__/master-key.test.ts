@@ -80,8 +80,11 @@ vi.mock("@norish/db/repositories/master-key", () => ({
     database.fingerprint = fingerprints.to;
 
     return {
-      "user.email": { previous: 1, current: 0, plaintext: 0 },
-      "user.name": { previous: 0, current: 0, plaintext: 2 },
+      columns: {
+        "user.email": { previous: 1, current: 0, plaintext: 0 },
+        "user.name": { previous: 0, current: 0, plaintext: 2 },
+      },
+      revokedShares: 4,
     };
   },
 }));
@@ -619,6 +622,19 @@ describe("which key boot opens", () => {
           "Values stored in plain text were encrypted",
         ]);
         expect(said()).not.toContain("ada@example.com");
+      });
+
+      it("logs how many share links it revoked for keeping no token", async () => {
+        config.MASTER_KEY = keyB.toString("base64");
+        config.MASTER_KEY_PREVIOUS = keyA.toString("base64");
+
+        await resolveMasterKey();
+
+        expect(warnings()).toContainEqual([
+          "warn",
+          { count: 4 },
+          "Share links made before 0.28 kept no token and were revoked; their owners can share again",
+        ]);
       });
 
       it("opens no key and keeps the key file when the re-key fails, so the next boot retries", async () => {

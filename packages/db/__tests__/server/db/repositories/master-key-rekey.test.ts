@@ -32,7 +32,12 @@ import { createUser, getUserByEmail } from "@norish/db/repositories/users";
 import * as schema from "@norish/db/schema";
 
 import { forgetMasterKey } from "../../../../../config/__tests__/helpers/master-key";
-import { cleanDatabase, createTestRecipe, getTestDb } from "../../../helpers/db-test-helpers";
+import {
+  cleanDatabase,
+  createTestRecipe,
+  createTestRecipeShare,
+  getTestDb,
+} from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 const previous = randomBytes(32);
@@ -79,6 +84,8 @@ describe("re-keying to a new Master Key", () => {
   const testBase = new RepositoryTestBase("master_key_rekey");
   let userId: string;
   let shareToken: string;
+  // Shares from before 0.28, which kept only the hash of their token: one active, one revoked.
+  let tokenless: { active?: string; revoked?: string };
 
   beforeAll(async () => {
     await testBase.setup();
@@ -130,6 +137,15 @@ describe("re-keying to a new Master Key", () => {
     shareToken = (
       await createRecipeShare(userId, { recipeId: recipe.id, expiresIn: "forever" })
     ).url.replace("/share/", "");
+    tokenless = {
+      active: (await createTestRecipeShare(userId, recipe.id, { token: "old-a" })).share?.id,
+      revoked: (
+        await createTestRecipeShare(userId, recipe.id, {
+          token: "old-b",
+          revokedAt: new Date("2026-01-01"),
+        })
+      ).share?.id,
+    };
     await getTestDb()
       .insert(schema.sessions)
       .values({ userId, token: "session-token", expiresAt: new Date(Date.now() + 60_000) });
@@ -147,7 +163,10 @@ describe("re-keying to a new Master Key", () => {
   });
 
   it("moves every encrypted column, seeded here, to the new key alone", async () => {
-    const counts = await rekeyMasterKey(masterKeyRotation(previous, current), fingerprints);
+    const { columns: counts } = await rekeyMasterKey(
+      masterKeyRotation(previous, current),
+      fingerprints
+    );
 
     // Each column was seeded, so the check below covers every one.
     for (const { table, sealed } of MASTER_KEY_COLUMNS) {
@@ -194,10 +213,34 @@ describe("re-keying to a new Master Key", () => {
     expect(await getTestDb().select().from(schema.apiKeys)).toEqual(apiKeys);
   });
 
+  it("revokes the share links that kept no token, and counts them", async () => {
+    const shares = async () =>
+      new Map((await getTestDb().select().from(schema.recipeShares)).map((row) => [row.id, row]));
+    const before = await shares();
+
+    const { revokedShares } = await rekeyMasterKey(
+      masterKeyRotation(previous, current),
+      fingerprints
+    );
+    const after = await shares();
+
+    expect(revokedShares).toBe(1);
+    expect(after.get(tokenless.active ?? "")).toMatchObject({
+      revokedAt: expect.any(Date),
+      version: (before.get(tokenless.active ?? "")?.version ?? 0) + 1,
+    });
+    expect(after.get(tokenless.revoked ?? "")).toEqual(before.get(tokenless.revoked ?? ""));
+    initMasterKey(current);
+    expect(await getRecipeShareByToken(shareToken)).toMatchObject({ revokedAt: null });
+  });
+
   it("encrypts a value no key opens as legacy plain text, and counts it", async () => {
     await getTestDb().update(schema.users).set({ name: "Ada Lovelace" });
 
-    const counts = await rekeyMasterKey(masterKeyRotation(previous, current), fingerprints);
+    const { columns: counts } = await rekeyMasterKey(
+      masterKeyRotation(previous, current),
+      fingerprints
+    );
 
     initMasterKey(current);
     expect(counts["user.name"]).toEqual({ previous: 0, current: 0, plaintext: 1 });
@@ -209,7 +252,10 @@ describe("re-keying to a new Master Key", () => {
 
     await getTestDb().update(schema.users).set({ email });
 
-    const counts = await rekeyMasterKey(masterKeyRotation(previous, current), fingerprints);
+    const { columns: counts } = await rekeyMasterKey(
+      masterKeyRotation(previous, current),
+      fingerprints
+    );
     const [user] = await getTestDb().select().from(schema.users);
 
     expect(counts["user.email"]).toEqual({ previous: 0, current: 1, plaintext: 0 });
@@ -242,7 +288,10 @@ describe("re-keying to a new Master Key", () => {
         }))
       );
 
-    const counts = await rekeyMasterKey(masterKeyRotation(previous, current), fingerprints);
+    const { columns: counts } = await rekeyMasterKey(
+      masterKeyRotation(previous, current),
+      fingerprints
+    );
 
     expect(counts["site_auth_tokens.value_enc"]).toEqual({
       previous: 1_201,

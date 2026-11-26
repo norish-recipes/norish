@@ -1,5 +1,16 @@
 import type { PgColumn, PgTable } from "drizzle-orm/pg-core";
-import { asc, desc, eq, getTableColumns, getTableName, gt, isNotNull } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  getTableColumns,
+  getTableName,
+  gt,
+  isNotNull,
+  isNull,
+  or,
+} from "drizzle-orm";
 
 import type { MasterKeyRotation, SealedBy } from "@norish/config/crypto";
 import type { DbTransaction } from "@norish/db/drizzle";
@@ -194,6 +205,34 @@ async function resealTable(
   }
 }
 
+/** End the share links that kept no token, as no hash under a new key can be made for them. */
+async function revokeSharesWithoutToken(tx: DbTransaction): Promise<number> {
+  const now = new Date();
+  let revoked = 0;
+
+  for (;;) {
+    const rows = await tx
+      .select({ id: recipeShares.id, version: recipeShares.version })
+      .from(recipeShares)
+      .where(
+        and(
+          or(isNull(recipeShares.tokenEnc), eq(recipeShares.tokenEnc, "")),
+          isNull(recipeShares.revokedAt)
+        )
+      )
+      .limit(PAGE);
+
+    for (const { id, version } of rows) {
+      await tx
+        .update(recipeShares)
+        .set({ revokedAt: now, updatedAt: now, version: version + 1 })
+        .where(eq(recipeShares.id, id));
+    }
+    revoked += rows.length;
+    if (rows.length < PAGE) return revoked;
+  }
+}
+
 /**
  * Move everything the Master Key with fingerprint `from` sealed under `rotation`'s current key,
  * end every session, and name the current key `to`: in one transaction, or not at all.
@@ -201,7 +240,7 @@ async function resealTable(
 export async function rekeyMasterKey(
   rotation: MasterKeyRotation,
   fingerprints: { from: string; to: string }
-): Promise<ResealCounts> {
+): Promise<{ columns: ResealCounts; revokedShares: number }> {
   return await db.transaction(async (tx) => {
     // The row lock keeps a second re-key out until this one commits or rolls back.
     const [row] = await tx
@@ -214,9 +253,10 @@ export async function rekeyMasterKey(
       throw new Error("The Master Key fingerprint changed before the re-key could start");
     }
 
-    const counts: ResealCounts = {};
+    const revokedShares = await revokeSharesWithoutToken(tx);
+    const columns: ResealCounts = {};
 
-    for (const sealing of MASTER_KEY_COLUMNS) await resealTable(tx, rotation, sealing, counts);
+    for (const sealing of MASTER_KEY_COLUMNS) await resealTable(tx, rotation, sealing, columns);
     await tx.delete(sessions);
     await tx.delete(verification);
     await tx
@@ -224,6 +264,6 @@ export async function rekeyMasterKey(
       .set({ value: fingerprints.to, updatedAt: new Date() })
       .where(fingerprintRow);
 
-    return counts;
+    return { columns, revokedShares };
   });
 }

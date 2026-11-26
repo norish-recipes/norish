@@ -281,7 +281,7 @@ async function rekey(source: KeySource, previous: Buffer, current: Buffer): Prom
   );
   // Before the transaction: a crash after this only repeats it on the next boot.
   const ended = await endStoredSessions();
-  const columns = await rekeyMasterKey(masterKeyRotation(previous, current), {
+  const { columns, revokedShares } = await rekeyMasterKey(masterKeyRotation(previous, current), {
     from: masterKeyFingerprint(previous),
     to: masterKeyFingerprint(current),
   });
@@ -291,6 +291,12 @@ async function rekey(source: KeySource, previous: Buffer, current: Buffer): Prom
     if (plaintext > 0) {
       log.warn({ column, count: plaintext }, "Values stored in plain text were encrypted");
     }
+  }
+  if (revokedShares > 0) {
+    log.warn(
+      { count: revokedShares },
+      "Share links made before 0.28 kept no token and were revoked; their owners can share again"
+    );
   }
 }
 
