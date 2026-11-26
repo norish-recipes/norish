@@ -6,6 +6,8 @@ Offline support (targeting flaky connectivity and backend-down page loads, expli
 
 **The persisted cache is stored one entry per read** under its owner's prefix, not as one dehydrated blob. A save writes only the reads whose data changed and deletes those that left the cache, at the next idle moment after a short throttle: serialising the whole cache on every save freezes a phone's JS thread for 200–330 ms. A launch restores every entry at once, and the 7-day maxAge counts from the owner's newest save, so a cache in use never loses a warmed read for being unchanged.
 
+A household-scoped write records the household it was made for. The server refuses a write made for another household, and Replay parks it. When the household changes, the client clears the former household's saved reads.
+
 ## Consequences
 
 - Offline reads only hit for query keys that were actually fetched; offline search/filtering over cached recipes is degraded by design (a novel search term while Offline finds nothing).

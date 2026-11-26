@@ -5,6 +5,7 @@ Shared, ownerless rows for Tags, Cuisines and Categories cause three problems. N
 **Each is a household list:**
 
 - Rows carry their household and are unique on the folded name within it.
+- A folded name belongs either to the instance list or to household lists, never both. Adding or renaming an instance entry takes over household entries with that name and their recipe links.
 - Instance entries sit beside them: the four built-in Categories (fixed for everyone) and the administrator's Cuisines, which every household is offered.
 - A recipe carries only its own household's entries and instance entries.
 - Entries are added on the Content page, by an explicit "Create" in the recipe picker, and by AI under the permissive strategies. Imports add Tags, and a Norish Recipe Archive also adds its Categories. AI and imports match the list first.
