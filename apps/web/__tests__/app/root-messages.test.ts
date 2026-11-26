@@ -18,6 +18,7 @@ const SETTINGS_ROUTE = [
   "features/admin/",
   "features/calendar/components/caldav/",
   "features/content/",
+  "features/ingredients/ingredients-screen.tsx",
   "features/ingredients/components/ingredient-add-panel.tsx",
   "components/Panel/add-panel.tsx",
   "components/Panel/name-field.tsx",
