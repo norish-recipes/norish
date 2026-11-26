@@ -17,3 +17,7 @@ export type EntryContentList = keyof typeof ENTRY_KINDS;
 
 export const isContentList = (value: unknown): value is ContentList =>
   CONTENT_LISTS.some((list) => list === value);
+
+/** Whether a route's text names a kind of entry, such as a `kind` param that may be anything. */
+export const isEntryKind = (value: unknown): value is PickerKind =>
+  Object.values(ENTRY_KINDS).some((kind) => kind === value);

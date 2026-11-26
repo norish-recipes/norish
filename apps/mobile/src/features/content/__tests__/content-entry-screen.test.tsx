@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { alert } from "../../../../__tests__/mocks/content-setup";
 
 const held = vi.hoisted(() => ({
+  params: { kind: "tag", id: "e1" } as Record<string, string>,
   router: { back: vi.fn(), push: vi.fn() },
   entry: {} as Record<string, unknown>,
   save: vi.fn(),
@@ -14,7 +15,7 @@ const held = vi.hoisted(() => ({
 
 vi.mock("expo-router", () => ({
   useRouter: () => held.router,
-  useLocalSearchParams: () => ({ kind: "tag", id: "e1" }),
+  useLocalSearchParams: () => held.params,
 }));
 vi.mock("@norish/shared-react/lists", async (importActual) => ({
   ...(await importActual<object>()),
@@ -45,6 +46,7 @@ const { ContentEntryScreen } = await import("../screens/content-entry-screen");
 describe("ContentEntryScreen", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    held.params = { kind: "tag", id: "e1" };
     held.entry = {};
     held.save.mockResolvedValue(true);
     held.remove.mockResolvedValue(true);
@@ -146,5 +148,12 @@ describe("ContentEntryScreen", () => {
     held.entry = { gone: true, entry: null };
     render(<ContentEntryScreen />);
     expect(held.router.back).toHaveBeenCalled();
+  });
+
+  it("leaves the sheet when the kind of the route is unknown", () => {
+    held.params = { kind: "ingredients", id: "e1" };
+    render(<ContentEntryScreen />);
+    expect(held.router.back).toHaveBeenCalled();
+    expect(screen.queryByTestId("content-entry-sheet")).toBeNull();
   });
 });

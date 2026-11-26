@@ -4,21 +4,27 @@ import { ChoiceCard } from "@/components/choice-card";
 import { EmptyCard } from "@/components/empty-card";
 import { Section } from "@/components/section";
 import { useText } from "@/lib/i18n/use-text";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 
 import type { PickerKind } from "@norish/shared-react/lists";
 import { problemCopy, useContentAdd } from "@norish/shared-react/lists";
 
 import { EntrySheet } from "../components/entry-sheet";
+import { useEntryRoute } from "../hooks/use-entry-route";
 
 /**
  * Add to a list: the entries the name already matches are listed as you type, and Add is there
  * only when none folds alike. A name the server finds already there opens that entry instead.
  */
 export function ContentAddScreen() {
+  const { kind } = useEntryRoute();
+
+  return kind ? <AddScreen kind={kind} /> : null;
+}
+
+function AddScreen({ kind }: { kind: PickerKind }) {
   const text = useText();
   const router = useRouter();
-  const { kind } = useLocalSearchParams<{ kind: PickerKind }>();
   const add = useContentAdd(kind);
   const copy = problemCopy(add.problem, add.max);
   const openEntry = (id: string) =>

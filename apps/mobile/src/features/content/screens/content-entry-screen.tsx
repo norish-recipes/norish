@@ -7,19 +7,25 @@ import { SheetFieldSkeleton } from "@/components/sheet-input";
 import { SheetNote } from "@/components/sheet-note";
 import { useCancelButton } from "@/hooks/use-cancel-button";
 import { useText } from "@/lib/i18n/use-text";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 
 import type { PickerKind } from "@norish/shared-react/lists";
 import { deleteProblemCopy, problemCopy, useContentEntry } from "@norish/shared-react/lists";
 
 import { EntrySheet } from "../components/entry-sheet";
+import { useEntryRoute } from "../hooks/use-entry-route";
 
 /** One entry of a list: rename it, merge it onto the entry its new name folds onto, delete it, or read it. */
 export function ContentEntryScreen() {
+  const { kind, id } = useEntryRoute();
+
+  return kind ? <EntryScreen id={id} kind={kind} /> : null;
+}
+
+function EntryScreen({ kind, id }: { kind: PickerKind; id: string }) {
   const text = useText();
   const router = useRouter();
   const cancel = useCancelButton();
-  const { kind, id } = useLocalSearchParams<{ kind: PickerKind; id: string }>();
   const entry = useContentEntry(kind, id);
   const { view, detail } = entry;
   const editable = detail?.access === "edit";

@@ -5,7 +5,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import "../../../../__tests__/mocks/content-setup";
 
 const held = vi.hoisted(() => ({
-  router: { dismissAll: vi.fn(), push: vi.fn() },
+  params: { kind: "tag", id: "e1" } as Record<string, string>,
+  router: { back: vi.fn(), dismissAll: vi.fn(), push: vi.fn() },
   uses: {} as Record<string, unknown>,
   loadMore: vi.fn(),
   retry: vi.fn(),
@@ -13,9 +14,10 @@ const held = vi.hoisted(() => ({
 
 vi.mock("expo-router", () => ({
   useRouter: () => held.router,
-  useLocalSearchParams: () => ({ kind: "tag", id: "e1" }),
+  useLocalSearchParams: () => held.params,
 }));
-vi.mock("@norish/shared-react/lists", () => ({
+vi.mock("@norish/shared-react/lists", async (importActual) => ({
+  ...(await importActual<object>()),
   useEntryRecipes: () => ({
     recipes: [{ id: "r1", name: "Soup" }],
     loaded: true,
@@ -33,6 +35,7 @@ const { ContentUsesScreen } = await import("../screens/content-uses-screen");
 describe("ContentUsesScreen", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    held.params = { kind: "tag", id: "e1" };
     held.uses = {};
   });
 
@@ -68,5 +71,12 @@ describe("ContentUsesScreen", () => {
     render(<ContentUsesScreen />);
     fireEvent.click(screen.getByTestId("content-uses-retry"));
     expect(held.retry).toHaveBeenCalled();
+  });
+
+  it("leaves the sheet when the kind of the route is unknown", () => {
+    held.params = { kind: "ingredients", id: "e1" };
+    render(<ContentUsesScreen />);
+    expect(held.router.back).toHaveBeenCalled();
+    expect(screen.queryByTestId("content-uses-sheet")).toBeNull();
   });
 });

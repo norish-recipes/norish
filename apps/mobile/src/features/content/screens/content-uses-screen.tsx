@@ -7,16 +7,23 @@ import { FitSheet, Sheet, SheetList } from "@/components/sheet";
 import { edgeAt } from "@/lib/card-edges";
 import { useText } from "@/lib/i18n/use-text";
 import { recipeRoute } from "@/lib/tab-routes";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 
 import type { PickerKind } from "@norish/shared-react/lists";
 import { useEntryRecipes } from "@norish/shared-react/lists";
 
+import { useEntryRoute } from "../hooks/use-entry-route";
+
 /** The household's recipes carrying one entry, a page at a time; a tap opens the recipe. */
 export function ContentUsesScreen() {
+  const { kind, id } = useEntryRoute();
+
+  return kind ? <UsesScreen id={id} kind={kind} /> : null;
+}
+
+function UsesScreen({ kind, id }: { kind: PickerKind; id: string }) {
   const text = useText();
   const router = useRouter();
-  const { kind, id } = useLocalSearchParams<{ kind: PickerKind; id: string }>();
   const { recipes, loaded, failed, retry, hasMore, loadingMore, loadMore } = useEntryRecipes(
     kind,
     id

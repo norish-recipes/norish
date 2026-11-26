@@ -44,4 +44,4 @@ export type { ContentWrite, EntryRef } from "./use-content-writes";
 export { useContentWrites } from "./use-content-writes";
 export { useEntryRecipes } from "./use-entry-recipes";
 export type { ContentList, EntryContentList } from "./content-lists";
-export { CONTENT_LISTS, ENTRY_KINDS, isContentList } from "./content-lists";
+export { CONTENT_LISTS, ENTRY_KINDS, isContentList, isEntryKind } from "./content-lists";
