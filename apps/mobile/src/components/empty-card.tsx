@@ -8,10 +8,8 @@ import { Button } from "heroui-native";
 
 type Icon = ComponentProps<typeof Ionicons>["name"];
 
-/** Where the card sits, each placement carrying its one margin: `screen` is a screen list's, where
- * its first card would sit (side inset 20; what is above owns the gap, as it does for content),
- * `section` sits under a Settings group on a page that has the side inset, and `sheet` has none
- * because the sheet body owns the inset. */
+/** Where the card sits, each placement carrying its one margin: `screen` is a screen list's,
+ * `section` is under a Settings group, `sheet` has none because the sheet body owns the inset. */
 export const EMPTY_CARD_PLACEMENT = {
   screen: "mx-5",
   section: "mt-4",

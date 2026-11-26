@@ -11,11 +11,8 @@ import { EditorInput } from "./editor-parts";
 /** How many matches show under the field. */
 const SHOWN = 6;
 
-/**
- * A field that searches a list as you type: the entries that match come first, then a
- * "Create 'x'" chip where the list has no entry of that name. Returning picks an entry typed in
- * full; only the Create chip makes one.
- */
+/** A field that searches a list as you type; only its "Create 'x'" chip makes an entry, Returning
+ * picks one typed in full. */
 export function EntryField({
   kind,
   recipeId,

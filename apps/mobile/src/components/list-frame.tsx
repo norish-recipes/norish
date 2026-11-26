@@ -12,8 +12,7 @@ import { useText } from "@/lib/i18n/use-text";
 type Empty = Omit<ComponentProps<typeof EmptyCard>, "placement">;
 
 /** A list under page controls: skeleton while loading, Retry when failed, `blank` when empty, else
- * search, rows or `nothing`, 16 pt under the controls. `testID` prefixes `-skeleton`, `-failed`,
- * `-retry`, `-list`, `-heading`. */
+ * search, rows or `nothing`. `testID` prefixes `-skeleton`, `-failed`, `-retry`, `-list`, `-heading`. */
 export function ListFrame<T>({
   testID,
   loading,
