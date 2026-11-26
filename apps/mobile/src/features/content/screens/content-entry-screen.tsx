@@ -1,39 +1,37 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Alert } from "react-native";
+import React, { useEffect, useState } from "react";
 import { Card, CardRow } from "@/components/card";
 import { EmptyCard } from "@/components/empty-card";
 import { destructiveAction } from "@/components/modal-header";
 import { FitSheet } from "@/components/sheet";
 import { SheetFieldSkeleton } from "@/components/sheet-input";
 import { SheetNote } from "@/components/sheet-note";
-import { useCancelButton } from "@/hooks/use-cancel-button";
 import { useText } from "@/lib/i18n/use-text";
 import { useRouter } from "expo-router";
 
 import type { PickerKind } from "@norish/shared-react/lists";
-import { deleteProblemCopy, problemCopy, useContentEntry } from "@norish/shared-react/lists";
+import { problemCopy, useContentEntry } from "@norish/shared-react/lists";
 
 import { EntrySheet } from "../components/entry-sheet";
+import { useDeleteEntry } from "../hooks/use-delete-entry";
 import { useEntryRoute } from "../hooks/use-entry-route";
 
 /** One entry of a list: rename it, merge it onto the entry its new name folds onto, delete it, or read it. */
 export function ContentEntryScreen() {
-  const { kind, id, intent } = useEntryRoute();
+  const { kind, id } = useEntryRoute();
 
-  return kind ? <EntryScreen id={id} intent={intent} kind={kind} /> : null;
+  return kind ? <EntryScreen id={id} kind={kind} /> : null;
 }
 
-function EntryScreen({ kind, id, intent }: { kind: PickerKind; id: string; intent?: "delete" }) {
+function EntryScreen({ kind, id }: { kind: PickerKind; id: string }) {
   const text = useText();
   const router = useRouter();
-  const cancel = useCancelButton();
+  const confirmDelete = useDeleteEntry(kind);
   const entry = useContentEntry(kind, id);
   const { view, detail } = entry;
   const editable = detail?.access === "edit";
   // A save or delete closes the sheet itself; the lists then drop the entry and must not close it again.
   const [closing, setClosing] = useState(false);
   const problem = problemCopy(entry.problem, view?.max);
-  const deleteProblem = deleteProblemCopy(entry.deleteProblem);
 
   // Closed once a housemate deletes the entry.
   useEffect(() => {
@@ -63,43 +61,14 @@ function EntryScreen({ kind, id, intent }: { kind: PickerKind; id: string; inten
     );
   }
 
-  const name = entry.entry.name;
+  const target = entry.entry;
+  const name = target.name;
   const done = () => {
     setClosing(true);
     router.back();
   };
   const save = async () => {
     if (await entry.save()) done();
-  };
-  const confirmDelete = () => {
-    entry.resetDelete();
-
-    if (entry.deleteState === "countFailed") {
-      entry.retryCount();
-
-      return;
-    }
-    if (!entry.deleteImpact) return;
-
-    Alert.alert(
-      text("settings.content.delete.title", { name }),
-      text(
-        entry.deleteImpact.scope === "server"
-          ? "settings.content.delete.bodyServer"
-          : "settings.content.delete.body",
-        { count: entry.deleteImpact.recipes }
-      ),
-      [
-        cancel,
-        {
-          text: text(`settings.content.delete.action.${kind}`),
-          style: "destructive",
-          onPress: async () => {
-            if (await entry.remove()) done();
-          },
-        },
-      ]
-    );
   };
 
   return (
@@ -152,24 +121,17 @@ function EntryScreen({ kind, id, intent }: { kind: PickerKind; id: string; inten
         editable
           ? [
               {
-                ...destructiveAction(text(`settings.content.delete.action.${kind}`), confirmDelete),
-                disabled: entry.offline || entry.pending || entry.deleteState === "counting",
+                ...destructiveAction(
+                  text(`settings.content.delete.action.${kind}`),
+                  () => void confirmDelete(target, done)
+                ),
+                disabled: entry.offline || entry.pending,
               },
             ]
           : undefined
       }
       title={editable ? text(`settings.content.panel.editTitle.${kind}`) : name}
     >
-      <AskOnce
-        ask={confirmDelete}
-        ready={intent === "delete" && editable && !entry.offline && entry.deleteState === "ready"}
-      />
-      {deleteProblem ? (
-        <SheetNote tone="problem">{text(`settings.content.${deleteProblem.key}`)}</SheetNote>
-      ) : null}
-      {entry.deleteState === "countFailed" ? (
-        <SheetNote tone="problem">{text("settings.content.delete.countFailed")}</SheetNote>
-      ) : null}
       <Card>
         <CardRow
           first
@@ -183,17 +145,4 @@ function EntryScreen({ kind, id, intent }: { kind: PickerKind; id: string; inten
       </Card>
     </EntrySheet>
   );
-}
-
-/** Runs `ask` once, when `ready`: the long-press menu's Delete opens the sheet already asking. */
-function AskOnce({ ready, ask }: { ready: boolean; ask: () => void }) {
-  const askedRef = useRef(false);
-
-  useEffect(() => {
-    if (!ready || askedRef.current) return;
-    askedRef.current = true;
-    ask();
-  }, [ready, ask]);
-
-  return null;
 }

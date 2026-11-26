@@ -1,16 +1,23 @@
 // @vitest-environment jsdom
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ContentEntry, ContentSection } from "@norish/shared-react/lists";
 
-import "../../../../__tests__/mocks/content-setup";
+import { alert } from "../../../../__tests__/mocks/content-setup";
 
 const held = vi.hoisted(() => ({
   list: {} as Record<string, unknown>,
   setSearch: vi.fn(),
   setUnusedOnly: vi.fn(),
   retry: vi.fn(),
+  impact: vi.fn(),
+  remove: vi.fn(),
+  showError: vi.fn(),
+}));
+
+vi.mock("@norish/shared-react/platform", () => ({
+  usePlatform: () => ({ showError: held.showError }),
 }));
 
 vi.mock("@/components/search-filter-row", async () => {
@@ -52,6 +59,7 @@ vi.mock("@norish/shared-react/lists", async (importActual) => ({
     offline: false,
     ...held.list,
   }),
+  useEntryDelete: () => ({ impact: held.impact, remove: held.remove, offline: false }),
 }));
 
 const { EntryList } = await import("../components/entry-list");
@@ -223,11 +231,60 @@ describe("EntryList", () => {
       expect(onUses).toHaveBeenCalledWith("Diner");
       fireEvent.click(screen.getByTestId("content-entry-Diner-menu-rename"));
       expect(onOpen).toHaveBeenLastCalledWith("Diner");
-      fireEvent.click(screen.getByTestId("content-entry-Diner-menu-delete"));
-      expect(onOpen).toHaveBeenLastCalledWith("Diner", "delete");
       expect(
         screen.getByTestId("content-entry-Diner-menu-delete").getAttribute("data-destructive")
       ).toBe("true");
+    });
+
+    it("orders the menu Rename, Show recipes, Delete", () => {
+      show(listed([entry("Diner")]));
+      expect(
+        screen
+          .getAllByTestId(/^content-entry-Diner-menu-/)
+          .map((item) => item.getAttribute("data-testid"))
+      ).toEqual([
+        "content-entry-Diner-menu-rename",
+        "content-entry-Diner-menu-uses",
+        "content-entry-Diner-menu-delete",
+      ]);
+    });
+
+    it("deletes from the list with the count in an alert, opening no sheet", async () => {
+      const onOpen = vi.fn();
+
+      held.impact.mockResolvedValue({ recipes: 97, scope: "household" });
+      held.remove.mockResolvedValue("deleted");
+      show(listed([entry("Diner", { recipeCount: 97 })]), onOpen, vi.fn(), "tags");
+      await act(async () => fireEvent.click(screen.getByTestId("content-entry-Diner-menu-delete")));
+
+      const [title, body, buttons] = alert.mock.calls[0] as [
+        string,
+        string,
+        { text: string; style?: string; onPress?: () => Promise<void> }[],
+      ];
+
+      expect(title).toContain("settings.content.delete.title");
+      expect(body).toBe('settings.content.delete.body{"count":97}');
+      expect(buttons.map((button) => button.style)).toEqual(["cancel", "destructive"]);
+      expect(onOpen).not.toHaveBeenCalled();
+      expect(held.remove).not.toHaveBeenCalled();
+      await act(async () => void (await buttons[1]!.onPress?.()));
+      expect(held.remove).toHaveBeenCalledWith(expect.objectContaining({ id: "Diner" }));
+    });
+
+    it("says the count failed, asks nothing and deletes nothing", async () => {
+      held.impact.mockResolvedValue(null);
+      show(listed([entry("Italian", { instance: true })]), vi.fn(), vi.fn(), "cuisines");
+      await act(async () =>
+        fireEvent.click(screen.getByTestId("content-entry-Italian-menu-delete"))
+      );
+      expect(alert).not.toHaveBeenCalled();
+      expect(held.remove).not.toHaveBeenCalled();
+      expect(held.showError).toHaveBeenCalledWith(
+        null,
+        expect.any(String),
+        "settings.content.delete.countFailed"
+      );
     });
 
     it("gives a read-only entry no menu", () => {

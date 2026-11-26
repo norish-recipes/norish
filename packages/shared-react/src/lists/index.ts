@@ -42,6 +42,8 @@ export type { ContentTarget } from "./use-content-target";
 export { useContentTarget } from "./use-content-target";
 export type { ContentWrite, EntryRef } from "./use-content-writes";
 export { useContentWrites } from "./use-content-writes";
+export type { DeleteOutcome } from "./use-entry-delete";
+export { useEntryDelete } from "./use-entry-delete";
 export { useEntryRecipes } from "./use-entry-recipes";
 export type { ContentList, EntryContentList } from "./content-lists";
 export { CONTENT_LISTS, ENTRY_KINDS, isContentList, isEntryKind } from "./content-lists";

@@ -10,6 +10,7 @@ import { useText } from "@/lib/i18n/use-text";
 import type { EntryContentList } from "@norish/shared-react/lists";
 import { ENTRY_KINDS, useContentList } from "@norish/shared-react/lists";
 
+import { useDeleteEntry } from "../hooks/use-delete-entry";
 import { LIST_ICONS } from "../utils/content-lists";
 
 /** A list of Tags, Cuisines or Categories: search, the unused filter, the household's entries and the server's.
@@ -21,8 +22,7 @@ export function EntryList({
   onAdd,
 }: {
   list: EntryContentList;
-  /** Opens the entry; `delete` has its sheet ask to delete it at once. */
-  onOpen: (id: string, intent?: "delete") => void;
+  onOpen: (id: string) => void;
   onUses: (id: string) => void;
   onAdd: () => void;
 }) {
@@ -30,6 +30,7 @@ export function EntryList({
   const kind = ENTRY_KINDS[list];
   const { loaded, failed, retry, offline, search, setSearch, unusedOnly, setUnusedOnly, view } =
     useContentList(kind);
+  const confirmDelete = useDeleteEntry(kind);
   const icon = LIST_ICONS[list];
   const rows = sectionRows(
     view.sections.map((section) => ({
@@ -97,6 +98,16 @@ export function EntryList({
               menu={
                 item.item.editable
                   ? [
+                      ...(offline
+                        ? []
+                        : [
+                            {
+                              key: "rename",
+                              label: text("settings.content.menu.rename"),
+                              systemImage: "pencil",
+                              onPress: () => onOpen(item.item.id),
+                            },
+                          ]),
                       {
                         key: "uses",
                         label: text("settings.content.menu.showRecipes"),
@@ -107,17 +118,11 @@ export function EntryList({
                         ? []
                         : [
                             {
-                              key: "rename",
-                              label: text("settings.content.menu.rename"),
-                              systemImage: "pencil",
-                              onPress: () => onOpen(item.item.id),
-                            },
-                            {
                               key: "delete",
                               label: text("common.actions.delete"),
                               systemImage: "trash",
                               destructive: true,
-                              onPress: () => onOpen(item.item.id, "delete"),
+                              onPress: () => void confirmDelete(item.item),
                             },
                           ]),
                     ]

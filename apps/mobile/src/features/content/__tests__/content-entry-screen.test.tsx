@@ -12,6 +12,12 @@ const held = vi.hoisted(() => ({
   remove: vi.fn(),
   setName: vi.fn(),
   retry: vi.fn(),
+  impact: vi.fn(),
+  showError: vi.fn(),
+}));
+
+vi.mock("@norish/shared-react/platform", () => ({
+  usePlatform: () => ({ showError: held.showError }),
 }));
 
 vi.mock("expo-router", () => ({
@@ -33,15 +39,10 @@ vi.mock("@norish/shared-react/lists", async (importActual) => ({
     offline: false,
     pending: false,
     canSave: true,
-    deleteImpact: { recipes: 97, scope: "household" },
-    deleteState: "ready",
-    deleteProblem: null,
-    resetDelete: vi.fn(),
-    retryCount: vi.fn(),
     save: held.save,
-    remove: held.remove,
     ...held.entry,
   }),
+  useEntryDelete: () => ({ impact: held.impact, remove: held.remove, offline: false }),
 }));
 
 vi.mock("@/components/sheet-note", () => ({
@@ -58,7 +59,8 @@ describe("ContentEntryScreen", () => {
     held.params = { kind: "tag", id: "e1" };
     held.entry = {};
     held.save.mockResolvedValue(true);
-    held.remove.mockResolvedValue(true);
+    held.remove.mockResolvedValue("deleted");
+    held.impact.mockResolvedValue({ recipes: 97, scope: "household" });
   });
 
   it("saves the name and closes", async () => {
@@ -93,7 +95,9 @@ describe("ContentEntryScreen", () => {
 
   it("asks before deleting, with the count, in the native alert, and closes once deleted", async () => {
     render(<ContentEntryScreen />);
-    fireEvent.click(screen.getByTestId("sheet-secondary-settings.content.delete.action.tag"));
+    await act(async () =>
+      fireEvent.click(screen.getByTestId("sheet-secondary-settings.content.delete.action.tag"))
+    );
 
     const [title, body, buttons] = alert.mock.calls[0] as [
       string,
@@ -111,10 +115,12 @@ describe("ContentEntryScreen", () => {
     expect(held.router.back).toHaveBeenCalled();
   });
 
-  it("counts every household's recipes for a server entry an admin deletes", () => {
-    held.entry = { deleteImpact: { recipes: 181, scope: "server" } };
+  it("counts every household's recipes for a server entry an admin deletes", async () => {
+    held.impact.mockResolvedValue({ recipes: 181, scope: "server" });
     render(<ContentEntryScreen />);
-    fireEvent.click(screen.getByTestId("sheet-secondary-settings.content.delete.action.tag"));
+    await act(async () =>
+      fireEvent.click(screen.getByTestId("sheet-secondary-settings.content.delete.action.tag"))
+    );
     expect(alert.mock.calls[0]?.[1]).toBe('settings.content.delete.bodyServer{"count":181}');
   });
 
@@ -143,15 +149,47 @@ describe("ContentEntryScreen", () => {
     });
   });
 
-  it("shows a skeleton while the entry is read, and says a delete went stale", () => {
+  it("shows a skeleton while the entry is read", () => {
     held.entry = { entry: null };
-    const { unmount } = render(<ContentEntryScreen />);
-
-    expect(screen.getByTestId("skeleton")).toBeTruthy();
-    unmount();
-    held.entry = { deleteProblem: "stale" };
     render(<ContentEntryScreen />);
-    expect(screen.getByText("settings.content.panel.stale")).toBeTruthy();
+    expect(screen.getByTestId("skeleton")).toBeTruthy();
+  });
+
+  it("says a delete went stale or failed, and stays open", async () => {
+    held.remove.mockResolvedValue("stale");
+    render(<ContentEntryScreen />);
+    await act(async () =>
+      fireEvent.click(screen.getByTestId("sheet-secondary-settings.content.delete.action.tag"))
+    );
+
+    const [, , buttons] = alert.mock.calls[0] as [
+      string,
+      string,
+      { onPress?: () => Promise<void> }[],
+    ];
+
+    await act(async () => void (await buttons[1]!.onPress?.()));
+    expect(held.showError).toHaveBeenCalledWith(
+      null,
+      expect.any(String),
+      "settings.content.panel.stale"
+    );
+    expect(held.router.back).not.toHaveBeenCalled();
+  });
+
+  it("says the count failed, asks nothing and deletes nothing", async () => {
+    held.impact.mockResolvedValue(null);
+    render(<ContentEntryScreen />);
+    await act(async () =>
+      fireEvent.click(screen.getByTestId("sheet-secondary-settings.content.delete.action.tag"))
+    );
+    expect(alert).not.toHaveBeenCalled();
+    expect(held.remove).not.toHaveBeenCalled();
+    expect(held.showError).toHaveBeenCalledWith(
+      null,
+      expect.any(String),
+      "settings.content.delete.countFailed"
+    );
   });
 
   it("closes when a housemate deletes the entry", () => {
@@ -173,16 +211,5 @@ describe("ContentEntryScreen", () => {
     expect(screen.queryByTestId("skeleton")).toBeNull();
     fireEvent.click(screen.getByTestId("content-entry-retry"));
     expect(held.retry).toHaveBeenCalled();
-  });
-
-  it("asks to delete at once when opened from the long-press menu, and not otherwise", () => {
-    held.params = { kind: "tag", id: "e1", intent: "delete" };
-    render(<ContentEntryScreen />);
-    expect(alert).toHaveBeenCalledTimes(1);
-  });
-
-  it("does not ask to delete on a plain open", () => {
-    render(<ContentEntryScreen />);
-    expect(alert).not.toHaveBeenCalled();
   });
 });

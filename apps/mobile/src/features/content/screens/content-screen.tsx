@@ -33,11 +33,8 @@ const entries = (list: EntryContentList): ListScreen => ({
       key={list}
       list={list}
       onAdd={add}
-      onOpen={(id, intent) =>
-        go({
-          pathname: "/settings/content-entry",
-          params: { kind: ENTRY_KINDS[list], id, ...(intent ? { intent } : {}) },
-        })
+      onOpen={(id) =>
+        go({ pathname: "/settings/content-entry", params: { kind: ENTRY_KINDS[list], id } })
       }
       onUses={(id) =>
         go({ pathname: "/settings/content-uses", params: { kind: ENTRY_KINDS[list], id } })
