@@ -1,7 +1,8 @@
 import type { SheetSearchInput } from "@/components/sheet-search-field";
 import React, { useState } from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 import Animated from "react-native-reanimated";
+import { EmptyCard } from "@/components/empty-card";
 import { IngredientIconSlots } from "@/components/ingredient-icon";
 import { SectionLabel } from "@/components/section-label";
 import { Sheet, SheetList } from "@/components/sheet";
@@ -72,9 +73,12 @@ export function PantryAddScreen() {
                 <FoodRowsSkeleton rows={3} testID="pantry-add-searching" />
               </Animated.View>
             ) : typed === "" ? undefined : (
-              <Text className="text-muted px-5 py-6 text-center" testID="pantry-add-none">
-                {intl.formatMessage({ id: "common.status.noResults" })}
-              </Text>
+              <EmptyCard
+                className="bg-sand mx-5"
+                icon="search-outline"
+                testID="pantry-add-none"
+                title={intl.formatMessage({ id: "common.status.noResults" })}
+              />
             )
           }
           ListFooterComponent={more ? <ShowMore onPress={() => setShowAll(true)} /> : undefined}
