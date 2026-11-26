@@ -382,6 +382,7 @@ export function rekeyedShares<S extends EstimatedLine>(
   shares: readonly S[],
   foods: FoodTargets
 ): S[] | null {
+  if (foods.size === 0) return null;
   let changed = false;
   const byKey = new Map<string, S>();
 
