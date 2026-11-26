@@ -65,7 +65,7 @@ A refusal names which key is missing and says the only way out is restoring `MAS
 
 ### Rotation trigger
 
-- **File mode:** the Admin action writes a fresh key as `current`, moves the old one to `previous`, and calls the existing restart (`packages/trpc/src/routers/admin/system.ts`). The confirmation says every session ends, the admin's own included.
+- **File mode:** the Admin action writes a fresh key as `current`, keeps as `previous` the key the database's fingerprint names (so two rotations before a boot never drop the key the data is on), and calls the existing restart (`packages/trpc/src/routers/admin/system.ts`). The confirmation says every session ends, the admin's own included, and that share links made before 0.28 stop working.
 - **Env mode:** the Admin card shows the env-pair instruction in place of the button.
 - Admin settings stay web-only. Mobile only needs to land on sign-in when its session ends.
 
