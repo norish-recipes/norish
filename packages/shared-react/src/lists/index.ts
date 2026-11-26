@@ -37,7 +37,7 @@ export {
 export { useContentAdd } from "./use-content-add";
 export type { ContentEntryProblem, DeleteImpact, DeleteState } from "./use-content-entry";
 export { useContentEntry } from "./use-content-entry";
-export { useContentCounts, useContentList } from "./use-content-list";
+export { useContentCounts, useContentList, useIngredientCount } from "./use-content-list";
 export type { ContentTarget } from "./use-content-target";
 export { useContentTarget } from "./use-content-target";
 export type { ContentWrite, EntryRef } from "./use-content-writes";

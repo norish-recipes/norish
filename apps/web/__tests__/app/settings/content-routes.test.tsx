@@ -37,8 +37,9 @@ vi.mock("next-intl", () => ({
 }));
 vi.mock("@norish/shared-react/lists", async (importActual) => ({
   ...(await importActual<object>()),
-  useContentCounts: () => ({ tag: 89, cuisine: 32, category: 6 }),
+  useContentCounts: () => ({ tag: 89, cuisine: 32, category: 6, ingredient: 1204 }),
 }));
+vi.mock("@norish/shared-react/config", () => ({ useIngredientsSubscription: () => undefined }));
 vi.mock("@/features/ingredients/ingredients-screen", () => ({ IngredientsScreen: () => null }));
 vi.mock("@/features/content/content-screen", () => ({
   ContentScreen: ({ list, ingredients }: { list: string; ingredients: ReactNode }) => (
@@ -87,6 +88,6 @@ describe("the list picker", () => {
     ]);
     expect(tabs[1]).toHaveAttribute("aria-selected", "true");
     expect(tabs[0]).toHaveTextContent("89");
-    expect(tabs[3]).toHaveTextContent(/^ingredients$/);
+    expect(tabs[3]).toHaveTextContent("1,204");
   });
 });

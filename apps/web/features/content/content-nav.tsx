@@ -7,6 +7,7 @@ import { useFormatter, useTranslations } from "next-intl";
 import { RouterProvider } from "react-aria-components";
 
 import type { ContentList } from "@norish/shared-react/lists";
+import { useIngredientsSubscription } from "@norish/shared-react/config";
 import {
   CONTENT_LISTS,
   ENTRY_KINDS,
@@ -48,9 +49,11 @@ export function ContentNav({ list }: { list: ContentList }) {
   const t = useTranslations("settings.content");
   const router = useRouter();
   const counts = useContentCounts();
-  // The Ingredients catalogue is paged, so it shows no count.
+
+  // The picker draws the Ingredients count, which a change to the catalogue moves.
+  useIngredientsSubscription();
   const countOf = (each: ContentList) =>
-    each === "ingredients" ? undefined : counts[ENTRY_KINDS[each]];
+    counts[each === "ingredients" ? "ingredient" : ENTRY_KINDS[each]];
 
   return (
     <>
