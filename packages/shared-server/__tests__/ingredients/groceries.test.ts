@@ -8,14 +8,20 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { createGroceries, createRecipeWithRefs, getRecipeFull } from "@norish/db";
 import { withTransaction } from "@norish/db/drizzle";
+import { joinHousehold, moveToHouseholdOfOne } from "@norish/db/repositories/households";
 import { deleteCatalogueIngredient } from "@norish/db/repositories/ingredient-catalogue";
 import { groceryParts, resolveGroceryNames } from "@norish/shared-server/ingredients/groceries";
 import { withResolvedIngredients } from "@norish/shared-server/ingredients/recipe-lines";
 
 import {
   addTestGrocery,
+  createTestIngredient,
+  createTestUser,
+  householdIdOf,
   listTestIngredientIds,
   mintTestFood,
+  readTestIngredient,
+  readTestSpelling,
   testHouseholdOf,
 } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
@@ -39,12 +45,12 @@ describe("grocery names through aliases", () => {
     await testBase.teardown();
   });
 
-  async function recipeLine(text: string) {
+  async function recipeLine(text: string, ownerId = userId) {
     const recipeId = crypto.randomUUID();
 
     await createRecipeWithRefs(
       recipeId,
-      userId,
+      ownerId,
       await withResolvedIngredients(
         {
           name: "Soup",
@@ -53,11 +59,11 @@ describe("grocery names through aliases", () => {
             { ingredientId: null, ingredientName: text, amount: 1, unit: null, order: 0 },
           ],
         },
-        { userId, householdId: testHouseholdOf(userId) }
+        { userId: ownerId, householdId: await householdIdOf(ownerId) }
       )
     );
 
-    return (await getRecipeFull(recipeId))!.recipeIngredients[0]!;
+    return { ...(await getRecipeFull(recipeId))!.recipeIngredients[0]!, recipeId };
   }
 
   it("recognises a name typed by hand as the food a recipe line names", async () => {
@@ -237,6 +243,74 @@ describe("grocery names through aliases", () => {
           { name: "zout", ...edit, id: undefined },
         ],
       ]);
+    });
+  });
+
+  describe("a line naming a food outside the reader's catalogue", () => {
+    /** Each answer's food and spelling, with the household each belongs to (null: the seed). */
+    async function homes(refs: Array<{ aliasId: string; ingredientId: string } | null>) {
+      return await Promise.all(
+        refs.map(async (ref) => ({
+          food: (await readTestIngredient(ref!.ingredientId))!.householdId,
+          spelling: (await readTestSpelling(ref!.aliasId))!.householdId,
+        }))
+      );
+    }
+
+    it("goes on another household's list as that household's food, or the seed's", async () => {
+      await createTestIngredient({ name: "zout" });
+      const reader = (await createTestUser())!.id;
+      const readerHousehold = testHouseholdOf(reader);
+      const theirs = await mintTestFood(readerHousehold, "ui");
+      const [ui, zout, prei] = [
+        await recipeLine("ui"),
+        await recipeLine("zout"),
+        await recipeLine("prei"),
+      ];
+
+      const resolved = await resolveGroceryNames(
+        [ui, zout, prei].map((line) => ({
+          name: line.ingredientName,
+          recipeIngredientId: line.id,
+        })),
+        { userId: reader, householdId: readerHousehold }
+      );
+
+      expect(resolved[0]?.ingredientId).toBe(theirs.ingredientId);
+      // A seeded food is everyone's, so the line keeps it.
+      expect(resolved[1]?.ingredientId).toBe(zout.ingredientId);
+      expect(resolved[2]?.ingredientId).not.toBe(prei.ingredientId);
+      await expect(homes(resolved)).resolves.toEqual([
+        { food: readerHousehold, spelling: readerHousehold },
+        { food: null, spelling: null },
+        { food: readerHousehold, spelling: readerHousehold },
+      ]);
+      await expect(
+        groceryParts(readerHousehold, [{ name: "ui", recipeIngredientId: ui.id }])
+      ).resolves.toEqual([[{ name: "ui", recipeIngredientId: ui.id }]]);
+    });
+
+    it("is read again for a member who left, whose recipe still names the old household's food", async () => {
+      const leaver = (await createTestUser())!.id;
+
+      await joinHousehold(leaver, { householdId: testHouseholdOf(userId) });
+      const line = await recipeLine("kapucijners", leaver);
+
+      await moveToHouseholdOfOne(testHouseholdOf(userId), leaver);
+      const newHousehold = await householdIdOf(leaver);
+      const [resolved] = await resolveGroceryNames(
+        [{ name: line.ingredientName, recipeIngredientId: line.id }],
+        { userId: leaver, householdId: newHousehold }
+      );
+
+      expect(resolved?.ingredientId).not.toBe(line.ingredientId);
+      await expect(homes([resolved!])).resolves.toEqual([
+        { food: newHousehold, spelling: newHousehold },
+      ]);
+      // The recipe keeps its own food.
+      expect((await getRecipeFull(line.recipeId))!.recipeIngredients[0]!.ingredientId).toBe(
+        line.ingredientId
+      );
     });
   });
 });

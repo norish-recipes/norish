@@ -1,6 +1,7 @@
 import type { IngredientRef } from "@norish/db/repositories/ingredient-aliases";
 import { findGroceryFoods } from "@norish/db/repositories/groceries";
 import { findRecipeLineAliases } from "@norish/db/repositories/ingredient-aliases";
+import { findLinesOutsideCatalogue } from "@norish/db/repositories/line-readings";
 import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
 import type { ResolveActor } from "./resolver";
@@ -26,21 +27,31 @@ async function editedFoods(items: readonly GroceryName[]) {
   return edited;
 }
 
-/** The food an item keeps, if any: an edit's unchanged text, or a one-food line's own text. */
+/**
+ * The food an item keeps, if any: an edit's unchanged text, or a one-food line's own text where the
+ * line names nothing outside the household's catalogue; such a line's text is resolved again.
+ */
 async function keptFoods(
-  items: readonly GroceryName[]
+  items: readonly GroceryName[],
+  householdId: string
 ): Promise<Array<{ food: IngredientRef | null } | undefined>> {
-  const [lines, edited] = await Promise.all([
-    findRecipeLineAliases(
-      items.flatMap((item) => (item.recipeIngredientId ? [item.recipeIngredientId] : []))
-    ),
+  const lineIds = items.flatMap((item) =>
+    item.recipeIngredientId ? [item.recipeIngredientId] : []
+  );
+  const [lines, outside, edited] = await Promise.all([
+    findRecipeLineAliases(lineIds),
+    findLinesOutsideCatalogue(householdId, { lineIds }),
     editedFoods(items),
   ]);
+  const readAgain = new Set(outside.map((line) => line.id));
 
   return items.map((item) => {
     const fold = ingredientAliasFold(cleanIngredientText(item.name ?? ""));
     const grocery = item.groceryId ? edited.get(item.groceryId) : undefined;
-    const line = item.recipeIngredientId ? lines.get(item.recipeIngredientId) : undefined;
+    const line =
+      item.recipeIngredientId && !readAgain.has(item.recipeIngredientId)
+        ? lines.get(item.recipeIngredientId)
+        : undefined;
 
     if (!fold) return undefined;
     if (grocery && ingredientAliasFold(cleanIngredientText(grocery.name ?? "")) === fold) {
@@ -62,7 +73,7 @@ export async function resolveGroceryNames(
   actor: ResolveActor
 ): Promise<Array<IngredientRef | null>> {
   const texts = items.map((item) => cleanIngredientText(item.name ?? ""));
-  const kept = await keptFoods(items);
+  const kept = await keptFoods(items, actor.householdId);
   const toResolve = texts.filter((text, index) => text && !kept[index]);
   const answers = await resolveIngredients(toResolve, actor);
   const resolved = new Map(toResolve.map((text, index) => [text, answers[index]]));
@@ -87,7 +98,7 @@ export async function groceryParts<T extends GroceryName & { id?: string | null 
   items: readonly T[]
 ): Promise<Array<[T, ...T[]]>> {
   const [kept, split] = await Promise.all([
-    keptFoods(items),
+    keptFoods(items, householdId),
     typedParts(householdId, items, { alternatives: "first" }),
   ]);
 
