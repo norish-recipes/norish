@@ -26,7 +26,14 @@ export type {
   SectionHelp,
   SectionTitle,
 } from "./content-view";
-export { contentListView, entryAccess, entryDetail, problemCopy, renameView } from "./content-view";
+export {
+  contentListView,
+  deleteProblemCopy,
+  entryAccess,
+  entryDetail,
+  problemCopy,
+  renameView,
+} from "./content-view";
 export { useContentAdd } from "./use-content-add";
 export type { ContentEntryProblem, DeleteImpact, DeleteState } from "./use-content-entry";
 export { useContentEntry } from "./use-content-entry";

@@ -1388,7 +1388,8 @@
       "title": "Slette “{name}”?",
       "body": "{count, plural, =0 {Ingen oppskrift bruker det.} one {Det fjernes fra # oppskrift. Oppskriften blir.} other {Det fjernes fra # oppskrifter. Oppskriftene blir.}}",
       "bodyServer": "{count, plural, =0 {Ingen oppskrift bruker det.} one {Det fjernes fra # oppskrift i alle husholdninger på denne serveren. Oppskriften blir.} other {Det fjernes fra # oppskrifter i alle husholdninger på denne serveren. Oppskriftene blir.}}",
-      "countFailed": "Kunne ikke telle oppskriftene som bruker den. Prøv igjen."
+      "countFailed": "Kunne ikke telle oppskriftene som bruker den. Prøv igjen.",
+      "failed": "Kunne ikke slette. Prøv igjen."
     }
   }
 }

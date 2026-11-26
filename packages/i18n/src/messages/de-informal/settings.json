@@ -1388,7 +1388,8 @@
       "title": "„{name}“ löschen?",
       "body": "{count, plural, =0 {Kein Rezept verwendet es.} one {Es wird von # Rezept entfernt. Das Rezept bleibt.} other {Es wird von # Rezepten entfernt. Die Rezepte bleiben.}}",
       "bodyServer": "{count, plural, =0 {Kein Rezept verwendet es.} one {Es wird von # Rezept in jedem Haushalt auf diesem Server entfernt. Das Rezept bleibt.} other {Es wird von # Rezepten in jedem Haushalt auf diesem Server entfernt. Die Rezepte bleiben.}}",
-      "countFailed": "Die Rezepte, die es verwenden, konnten nicht gezählt werden. Versuche es erneut."
+      "countFailed": "Die Rezepte, die es verwenden, konnten nicht gezählt werden. Versuche es erneut.",
+      "failed": "Das konnte nicht gelöscht werden. Versuche es erneut."
     }
   }
 }

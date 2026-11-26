@@ -86,6 +86,8 @@ export function useContentEntry(kind: PickerKind, id: string) {
     deleteState,
     /** Why the last delete did not go through. */
     deleteProblem: deleteOutcome satisfies ContentEntryProblem | null,
+    /** Forgets why the last delete did not go through, as its confirmation closes. */
+    resetDelete: () => setDeleteOutcome(null),
     /** Reads the server's count again after it failed. */
     retryCount: () => void server.refetch(),
     /** Renames, or merges onto the entry the name folds onto; resolves whether it was saved. */

@@ -394,6 +394,32 @@ describe("an entry's panel", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
+  it("says in the confirmation that a delete failed, and forgets it once the confirmation closes", async () => {
+    entries = [entry("Diner")];
+    writeAnswers.set("lists.delete", async () => {
+      throw new Error("down");
+    });
+    await renderList("tag");
+
+    const panel = await open("Diner");
+
+    await userEvent.click(within(panel).getByTestId("content-delete"));
+    await userEvent.click(
+      within(screen.getByTestId("content-delete-modal")).getByTestId("content-delete-confirm")
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId("content-delete-modal")).toHaveTextContent("delete.failed")
+    );
+    await userEvent.click(
+      within(screen.getByTestId("content-delete-modal")).getByRole("button", { name: "cancel" })
+    );
+    await waitFor(() =>
+      expect(screen.queryByTestId("content-delete-modal")).not.toBeInTheDocument()
+    );
+    await userEvent.click(within(panel).getByTestId("content-delete"));
+    expect(screen.getByTestId("content-delete-modal")).not.toHaveTextContent("delete.failed");
+  });
+
   it("says in the confirmation that the server's count failed, and reads it again on Retry", async () => {
     admin = true;
     entries = [server("Italian", { editable: true })];

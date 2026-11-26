@@ -14,7 +14,7 @@ import { Button, Chip } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { PickerKind } from "@norish/shared-react/lists";
-import { problemCopy, useContentEntry } from "@norish/shared-react/lists";
+import { deleteProblemCopy, problemCopy, useContentEntry } from "@norish/shared-react/lists";
 
 import { EntryUsesPanel } from "./entry-uses-panel";
 
@@ -39,7 +39,7 @@ export function EntryPanel({
   const editable = detail?.access === "edit";
   const close = () => onOpenChange(false);
   const problem = problemCopy(entry.problem, view?.max);
-  const deleteProblem = problemCopy(entry.deleteProblem);
+  const deleteProblem = deleteProblemCopy(entry.deleteProblem);
   const save = async () => {
     if (await entry.save()) close();
   };
@@ -80,7 +80,7 @@ export function EntryPanel({
     confirmAction = <Button onPress={entry.retryCount}>{tActions("retry")}</Button>;
   }
 
-  if (deleteProblem) confirmBody = <p>{t(deleteProblem.key, deleteProblem.values)}</p>;
+  if (deleteProblem) confirmBody = <p>{t(deleteProblem.key)}</p>;
   else if (entry.deleteState === "countFailed") confirmBody = <p>{t("delete.countFailed")}</p>;
   else if (entry.deleteState === "counting") confirmBody = <SkeletonRows count={1} />;
   else if (entry.deleteImpact) {
@@ -181,7 +181,10 @@ export function EntryPanel({
         data-testid="content-delete-modal"
         isOpen={confirming}
         title={t("delete.title", { name: entry.entry?.name ?? "" })}
-        onOpenChange={setConfirming}
+        onOpenChange={(isOpen) => {
+          setConfirming(isOpen);
+          if (!isOpen) entry.resetDelete();
+        }}
       >
         {confirmBody}
       </ConfirmModal>

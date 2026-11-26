@@ -1388,7 +1388,8 @@
       "title": "Delete “{name}”?",
       "body": "{count, plural, =0 {No recipe uses it.} one {It comes off # recipe. The recipe stays.} other {It comes off # recipes. The recipes stay.}}",
       "bodyServer": "{count, plural, =0 {No recipe uses it.} one {It comes off # recipe in every household on this server. The recipe stays.} other {It comes off # recipes in every household on this server. The recipes stay.}}",
-      "countFailed": "Could not count the recipes that use it. Try again."
+      "countFailed": "Could not count the recipes that use it. Try again.",
+      "failed": "Could not delete that. Try again."
     }
   }
 }

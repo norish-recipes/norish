@@ -1388,7 +1388,8 @@
       "title": "Poistetaanko ”{name}”?",
       "body": "{count, plural, =0 {Mikään resepti ei käytä sitä.} one {Se poistetaan # reseptistä. Resepti säilyy.} other {Se poistetaan # reseptistä. Reseptit säilyvät.}}",
       "bodyServer": "{count, plural, =0 {Mikään resepti ei käytä sitä.} one {Se poistetaan # reseptistä jokaisessa tämän palvelimen kotitaloudessa. Resepti säilyy.} other {Se poistetaan # reseptistä jokaisessa tämän palvelimen kotitaloudessa. Reseptit säilyvät.}}",
-      "countFailed": "Sitä käyttävien reseptien määrää ei voitu hakea. Yritä uudelleen."
+      "countFailed": "Sitä käyttävien reseptien määrää ei voitu hakea. Yritä uudelleen.",
+      "failed": "Poistaminen ei onnistunut. Yritä uudelleen."
     }
   }
 }

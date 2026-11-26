@@ -116,6 +116,13 @@ export function problemCopy(problem: ContentProblem | null, max = 0) {
   return { key: key[problem], values: undefined };
 }
 
+/** The copy key that says a delete did not go through. */
+export function deleteProblemCopy(problem: "stale" | "failed" | null) {
+  if (problem === null) return null;
+
+  return { key: problem === "failed" ? ("delete.failed" as const) : ("panel.stale" as const) };
+}
+
 export type RenameProblem = "empty" | "tooLong";
 
 /**

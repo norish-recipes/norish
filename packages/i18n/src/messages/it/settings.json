@@ -1388,7 +1388,8 @@
       "title": "Eliminare “{name}”?",
       "body": "{count, plural, =0 {Nessuna ricetta lo usa.} one {Viene tolto da # ricetta. La ricetta resta.} other {Viene tolto da # ricette. Le ricette restano.}}",
       "bodyServer": "{count, plural, =0 {Nessuna ricetta lo usa.} one {Viene tolto da # ricetta di ogni nucleo familiare di questo server. La ricetta resta.} other {Viene tolto da # ricette di ogni nucleo familiare di questo server. Le ricette restano.}}",
-      "countFailed": "Impossibile contare le ricette che lo usano. Riprova."
+      "countFailed": "Impossibile contare le ricette che lo usano. Riprova.",
+      "failed": "Impossibile eliminare. Riprova."
     }
   }
 }

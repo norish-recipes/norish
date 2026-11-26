@@ -1388,7 +1388,8 @@
       "title": "Supprimer « {name} » ?",
       "body": "{count, plural, =0 {Aucune recette ne l’utilise.} one {Il est retiré de # recette. La recette reste.} other {Il est retiré de # recettes. Les recettes restent.}}",
       "bodyServer": "{count, plural, =0 {Aucune recette ne l’utilise.} one {Il est retiré de # recette de chaque foyer de ce serveur. La recette reste.} other {Il est retiré de # recettes de chaque foyer de ce serveur. Les recettes restent.}}",
-      "countFailed": "Impossible de compter les recettes qui l’utilisent. Réessayez."
+      "countFailed": "Impossible de compter les recettes qui l’utilisent. Réessayez.",
+      "failed": "Impossible de supprimer. Réessayez."
     }
   }
 }

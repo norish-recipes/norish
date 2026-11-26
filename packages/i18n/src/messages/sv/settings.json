@@ -1388,7 +1388,8 @@
       "title": "Ta bort ”{name}”?",
       "body": "{count, plural, =0 {Inget recept använder den.} one {Den tas bort från # recept. Receptet finns kvar.} other {Den tas bort från # recept. Recepten finns kvar.}}",
       "bodyServer": "{count, plural, =0 {Inget recept använder den.} one {Den tas bort från # recept i alla hushåll på den här servern. Receptet finns kvar.} other {Den tas bort från # recept i alla hushåll på den här servern. Recepten finns kvar.}}",
-      "countFailed": "Det gick inte att räkna recepten som använder den. Försök igen."
+      "countFailed": "Det gick inte att räkna recepten som använder den. Försök igen.",
+      "failed": "Det gick inte att ta bort. Försök igen."
     }
   }
 }
