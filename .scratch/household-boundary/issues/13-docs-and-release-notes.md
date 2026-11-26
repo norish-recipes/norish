@@ -19,7 +19,7 @@
   - orphans go to the server owner's household;
   - an admin no longer sees other households' recipes.
 - [x] **Docs pages:** the permissions or configuration page and the settings pages in `apps/docs/docs/` describe the policy, the Content page and households. `apps/docs/versioned_docs/` and older release notes stay untouched.
-- [x] **Screenshots** outdated by tickets 11 and 12 are listed for Mike.
+- [ ] **Screenshots** outdated by tickets 11 and 12 are listed for Mike.
 
 ## Comments
 
@@ -49,6 +49,12 @@ Existing screenshots to retake:
 - `apps/docs/static/img/screenshots/recipe-archive-admin-export.png`: Updated recipe archive admin export.
 - `apps/docs/static/img/screenshots/mobile-settings.png`: Settings with the Content entry.
 - `apps/docs/static/img/screenshots/recipe-form-add-category.png`: Recipe category picker.
+
+- `apps/docs/static/img/screenshots/groceries-clear-list-confirm.png`: Clear list confirmation.
+- `apps/docs/static/img/screenshots/groceries-clear-recipe-confirm.png`: Clear recipe confirmation.
+- `apps/docs/static/img/screenshots/groceries-clear-store-confirm.png`: Clear store confirmation.
+
+The ticket 14 screenshot inventory still needs a complete visual check for affected modals and empty states.
 
 New screenshots needed:
 
