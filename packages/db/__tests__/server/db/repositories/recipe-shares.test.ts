@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
+import { hasKeptLink, keptNoLink } from "@norish/db/repositories/recipe-share-helpers";
 import {
   createRecipeShare,
   deleteRecipeShare,
@@ -117,6 +118,36 @@ describe("recipe share repository", () => {
     expect(fetched).not.toBeNull();
     if (!fetched) return;
     expect(getRecipeShareUrl({ ...fetched, tokenEnc: "not-a-ciphertext" })).toBeNull();
+  });
+
+  it("tells the shares that kept no link alike in a query and on a row", async () => {
+    const kept = await createRecipeShare(testUserId, {
+      recipeId: testRecipeId,
+      expiresIn: "forever",
+    });
+    const { share: none } = await createTestRecipeShare(testUserId, testRecipeId, { token: "a" });
+    const { share: empty } = await createTestRecipeShare(testUserId, testRecipeId, { token: "b" });
+    const db = getTestDb();
+
+    await db
+      .update(schema.recipeShares)
+      .set({ tokenEnc: "" })
+      .where(eq(schema.recipeShares.id, empty?.id ?? ""));
+    const queried = await db
+      .select({ id: schema.recipeShares.id })
+      .from(schema.recipeShares)
+      .where(keptNoLink);
+    const rows = await db.select().from(schema.recipeShares);
+    const linkless = [none?.id, empty?.id].sort();
+
+    expect(queried.map(({ id }) => id).sort()).toEqual(linkless);
+    expect(
+      rows
+        .filter((row) => !hasKeptLink(row))
+        .map(({ id }) => id)
+        .sort()
+    ).toEqual(linkless);
+    expect(kept.hasLink).toBe(true);
   });
 
   it("has no link for a share made before tokens were kept", async () => {

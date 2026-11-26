@@ -11,7 +11,6 @@ import {
   isNotNull,
   isNull,
   ne,
-  or,
 } from "drizzle-orm";
 
 import type { MasterKeyRotation, SealedBy } from "@norish/config/crypto";
@@ -24,6 +23,7 @@ import { recipeShares } from "../schema/recipe-shares";
 import { serverConfig } from "../schema/server-config";
 import { siteAuthTokens } from "../schema/site-auth-tokens";
 import { ServerConfigKeys } from "../zodSchemas/server-config";
+import { keptNoLink } from "./recipe-share-helpers";
 import { getConfig } from "./server-config";
 
 const secretSetting = isNotNull(serverConfig.valueEnc);
@@ -236,13 +236,7 @@ async function revokeSharesWithoutToken(tx: DbTransaction): Promise<number> {
       tx
         .select({ id: recipeShares.id, version: recipeShares.version })
         .from(recipeShares)
-        .where(
-          and(
-            or(isNull(recipeShares.tokenEnc), eq(recipeShares.tokenEnc, "")),
-            isNull(recipeShares.revokedAt),
-            after
-          )
-        )
+        .where(and(keptNoLink, isNull(recipeShares.revokedAt), after))
         .orderBy(asc(recipeShares.id))
         .limit(limit),
     (lastRow) => gt(recipeShares.id, lastRow.id),

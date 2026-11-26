@@ -44,6 +44,7 @@ vi.mock("@norish/shared-server/config/server-config-loader", () => ({
 }));
 
 vi.mock("@norish/db/repositories/recipe-shares", async () => ({
+  hasKeptLink: (await import("@norish/db/repositories/recipe-share-helpers")).hasKeptLink,
   toRecipeShareSummary: (await import("@norish/db/repositories/recipe-share-helpers"))
     .toRecipeShareSummary,
   createRecipeShare: createRecipeShareMock,

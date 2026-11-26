@@ -26,6 +26,7 @@ import type { MutationOutcome } from "./mutation-outcomes";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 import {
   getRecipeShareStatus,
+  hasKeptLink,
   mapRecipeToPublicRecipeView,
   resolveRecipeShareExpiresAt,
   toRecipeShareSummary,
@@ -94,7 +95,7 @@ export async function getRecipeShareById(id: string): Promise<RecipeShareDto | n
 
 /** The share's link while it is active, or null; a share with no stored token has no link. */
 export function getRecipeShareUrl(share: RecipeShareDto): string | null {
-  if (share.tokenEnc === null || getRecipeShareStatus(share) !== "active") return null;
+  if (!hasKeptLink(share) || getRecipeShareStatus(share) !== "active") return null;
 
   try {
     return `/share/${decrypt(share.tokenEnc)}`;
@@ -291,6 +292,7 @@ export async function getPublicRecipeView(
 
 export {
   getRecipeShareStatus,
+  hasKeptLink,
   mapRecipeToPublicRecipeView,
   resolveRecipeShareExpiresAt,
   toRecipeShareSummary,

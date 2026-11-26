@@ -14,6 +14,7 @@ import {
   getRecipeShareInventoryByUserId,
   getRecipeSharesByUserId,
   getRecipeShareUrl,
+  hasKeptLink,
   reactivateRecipeShare,
   revokeRecipeShare,
   toRecipeShareSummary,
@@ -172,7 +173,7 @@ const reactivate = authedProcedure
 
     await assertRecipeAccess(ctx, share.recipeId, "edit");
 
-    if (!toRecipeShareSummary(share).hasLink) {
+    if (!hasKeptLink(share)) {
       throw new TRPCError({
         code: "PRECONDITION_FAILED",
         message: "A share whose link was not kept can only be deleted",
