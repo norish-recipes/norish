@@ -26,9 +26,9 @@ import {
 
 import type { MutationOutcome } from "./mutation-outcomes";
 import { isConstraintViolation, isRetryableConflict } from "./constraint-violation";
+import { homeRecipeFoodsTx } from "./household-catalogue";
 import { mergeHouseholdTx } from "./household-merge";
 import { listHouseholdIconFiles } from "./ingredient-icons";
-import { homeRecipeFoodsTx } from "./ingredient-relocation";
 import { homeRecipeEntriesTx } from "./list-entries";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 import { turnPlannedRecipesIntoNotes } from "./planned-items";

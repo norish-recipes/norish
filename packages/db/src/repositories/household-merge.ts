@@ -14,7 +14,7 @@ import {
   stores,
 } from "@norish/db/schema";
 
-import { mergeCatalogueIntoTx } from "./ingredient-relocation";
+import { mergeCatalogueIntoTx } from "./household-catalogue";
 import { moveHouseholdEntriesTx } from "./list-entries";
 
 const qb = new QueryBuilder();
