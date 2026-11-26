@@ -320,7 +320,7 @@ describe("useHouseholdSubscription", () => {
   });
 
   describe("a membership change", () => {
-    it("rereads the recipes and cookbooks a member joining or leaving brings or takes", () => {
+    it("rereads everything a member joining or leaving brings or takes", () => {
       queryClient.setQueryData(householdQueryKey, createMockHouseholdData(null, "user-1"));
       const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
 
@@ -333,9 +333,7 @@ describe("useHouseholdSubscription", () => {
           );
         });
 
-        expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: [["recipes"]] });
-        expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: [["calendar"]] });
-        expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: [["groceries"]] });
+        expect(invalidateSpy).toHaveBeenCalledWith();
       }
     });
 
