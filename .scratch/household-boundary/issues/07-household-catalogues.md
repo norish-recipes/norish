@@ -4,7 +4,7 @@
 
 **Blocked by:** 02
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] **Columns:** `ingredients`, `ingredient_aliases` and `ingredient_junk_pile` get `household_id` (null means the seed).
   - A spelling's fold and an Ingredient's name are unique within a household and among the seed.
