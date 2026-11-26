@@ -6,8 +6,10 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { MasterKeyRotation } from "@norish/config/crypto";
 import {
   authSecret,
+  decrypt,
   encrypt,
   hmacIndex,
   initMasterKey,
@@ -32,6 +34,12 @@ const database = vi.hoisted(() => ({
 const fingerprintWrites = vi.hoisted(() => [] as string[]);
 const openedKeys = vi.hoisted(() => [] as Buffer[]);
 const logged = vi.hoisted(() => [] as unknown[][]);
+// What a re-key did, in order, and how the next one ends: committing, or failing with an error.
+const rekeys = vi.hoisted(() => ({
+  steps: [] as string[],
+  calls: [] as { rotation: MasterKeyRotation; fingerprints: { from: string; to: string } }[],
+  failure: null as Error | null,
+}));
 
 vi.mock("@norish/config/crypto", async (importOriginal) => {
   const crypto = await importOriginal<typeof import("@norish/config/crypto")>();
@@ -61,6 +69,28 @@ vi.mock("@norish/db/repositories/master-key", () => ({
     return database.encrypted.length;
   },
   findNewestCiphertext: async () => database.encrypted.at(-1) ?? null,
+  // A transaction: it moves the fingerprint when it commits, and nothing when it fails.
+  rekeyMasterKey: async (
+    rotation: MasterKeyRotation,
+    fingerprints: { from: string; to: string }
+  ) => {
+    rekeys.steps.push("transaction");
+    rekeys.calls.push({ rotation, fingerprints });
+    if (rekeys.failure) throw rekeys.failure;
+    database.fingerprint = fingerprints.to;
+
+    return {
+      "user.email": { previous: 1, current: 0, plaintext: 0 },
+      "user.name": { previous: 0, current: 0, plaintext: 2 },
+    };
+  },
+}));
+vi.mock("@norish/shared-server/valkey/session-store", () => ({
+  endStoredSessions: async () => {
+    rekeys.steps.push("sessions ended");
+
+    return { sessions: 3, verifications: 1 };
+  },
 }));
 vi.mock("@norish/shared-server/logger", () => {
   const record =
@@ -135,6 +165,9 @@ beforeEach(() => {
   fingerprintWrites.length = 0;
   openedKeys.length = 0;
   logged.length = 0;
+  rekeys.steps.length = 0;
+  rekeys.calls.length = 0;
+  rekeys.failure = null;
   forgetMasterKey();
 });
 
@@ -362,15 +395,18 @@ describe("which key boot opens", () => {
       expect(opened).toThrow("used before boot resolved it");
     });
 
-    it("refuses to re-key yet when only MASTER_KEY_PREVIOUS opens the data", async () => {
+    it("claims MASTER_KEY_PREVIOUS when only it opens the data, then re-keys to MASTER_KEY", async () => {
       config.MASTER_KEY = keyB.toString("base64");
       config.MASTER_KEY_PREVIOUS = keyA.toString("base64");
       database.encrypted = [sealedBy(keyA, "ada@example.com")];
 
-      await expect(resolveMasterKey()).rejects.toThrow(
-        "MASTER_KEY_PREVIOUS is the key this database is encrypted with"
-      );
-      expect(fingerprintWrites).toEqual([]);
+      await resolveMasterKey();
+
+      expect(fingerprintWrites).toEqual([masterKeyFingerprint(keyA)]);
+      expect(rekeys.calls.map(({ fingerprints }) => fingerprints)).toEqual([
+        { from: masterKeyFingerprint(keyA), to: masterKeyFingerprint(keyB) },
+      ]);
+      expect(opened()).toBe(lookupBy(keyB));
     });
 
     it("generates a key file on a first boot and opens that key", async () => {
@@ -541,14 +577,121 @@ describe("which key boot opens", () => {
       expect(await readKeyFile()).toEqual({ current: keyB });
     });
 
-    it("refuses to re-key yet when the previous key matches", async () => {
-      config.MASTER_KEY = keyB.toString("base64");
-      config.MASTER_KEY_PREVIOUS = keyA.toString("base64");
+    describe("and the previous key matching it", () => {
+      const said = () => JSON.stringify(logged);
 
-      await expect(resolveMasterKey()).rejects.toThrow(
-        "MASTER_KEY_PREVIOUS is the key this database is encrypted with"
-      );
-      expect(opened).toThrow("used before boot resolved it");
+      it("ends every session, then re-keys from MASTER_KEY_PREVIOUS to MASTER_KEY", async () => {
+        config.MASTER_KEY = keyB.toString("base64");
+        config.MASTER_KEY_PREVIOUS = keyA.toString("base64");
+
+        await resolveMasterKey();
+
+        expect(rekeys.steps).toEqual(["sessions ended", "transaction"]);
+        expect(rekeys.calls.map(({ fingerprints }) => fingerprints)).toEqual([
+          { from: masterKeyFingerprint(keyA), to: masterKeyFingerprint(keyB) },
+        ]);
+        expect(database.fingerprint).toBe(masterKeyFingerprint(keyB));
+        expect(opened()).toBe(lookupBy(keyB));
+        expect(said()).toContain("MASTER_KEY_PREVIOUS is no longer needed and can be removed");
+      });
+
+      it("hands the re-key the two keys, which read the previous key's data into the new key", async () => {
+        config.MASTER_KEY = keyB.toString("base64");
+        config.MASTER_KEY_PREVIOUS = keyA.toString("base64");
+
+        await resolveMasterKey();
+
+        const moved = rekeys.calls[0]?.rotation.reseal(sealedBy(keyA, "ada@example.com"));
+
+        initMasterKey(keyB);
+        expect(moved?.sealed && decrypt(moved.sealed)).toBe("ada@example.com");
+      });
+
+      it("logs how many values in each column were plain text, and never a value", async () => {
+        config.MASTER_KEY = keyB.toString("base64");
+        config.MASTER_KEY_PREVIOUS = keyA.toString("base64");
+
+        await resolveMasterKey();
+
+        expect(warnings()).toContainEqual([
+          "warn",
+          { column: "user.name", count: 2 },
+          "Values stored in plain text were encrypted",
+        ]);
+        expect(said()).not.toContain("ada@example.com");
+      });
+
+      it("opens no key and keeps the key file when the re-key fails, so the next boot retries", async () => {
+        await writeKeyFile({ current: keyB, previous: keyA });
+        rekeys.failure = new Error("disk gone");
+
+        await expect(resolveMasterKey()).rejects.toThrow("disk gone");
+        expect(openedKeys).toEqual([]);
+        expect(database.fingerprint).toBe(masterKeyFingerprint(keyA));
+        expect(await readKeyFile()).toEqual({ current: keyB, previous: keyA });
+
+        rekeys.failure = null;
+        await resolveMasterKey();
+        expect(opened()).toBe(lookupBy(keyB));
+      });
+
+      it("re-keys from the key file's previous key, then leaves no copy of it", async () => {
+        await writeKeyFile({ current: keyB, previous: keyA });
+
+        await resolveMasterKey();
+
+        expect(rekeys.calls).toHaveLength(1);
+        expect(opened()).toBe(lookupBy(keyB));
+        expect(await readKeyFile()).toEqual({ current: keyB });
+        expect(await fs.readdir(keyDir())).toEqual(["master-key.json"]);
+        expect(await fs.readFile(keyFilePath(), "utf8")).not.toContain(keyA.toString("base64"));
+      });
+
+      it("then starts plainly on the next boot", async () => {
+        await writeKeyFile({ current: keyB, previous: keyA });
+        await resolveMasterKey();
+        rekeys.calls.length = 0;
+
+        await resolveMasterKey();
+
+        expect(rekeys.calls).toEqual([]);
+        expect(opened()).toBe(lookupBy(keyB));
+      });
+    });
+
+    describe("and a previous key that is retired already", () => {
+      it("drops it from a key file a crash left it in after the re-key committed", async () => {
+        database.fingerprint = masterKeyFingerprint(keyB);
+        await writeKeyFile({ current: keyB, previous: keyA });
+
+        await resolveMasterKey();
+
+        expect(rekeys.calls).toEqual([]);
+        expect(opened()).toBe(lookupBy(keyB));
+        expect(await readKeyFile()).toEqual({ current: keyB });
+      });
+
+      it("drops one that equals the current key", async () => {
+        await writeKeyFile({ current: keyA, previous: keyA });
+
+        await resolveMasterKey();
+
+        expect(rekeys.calls).toEqual([]);
+        expect(await readKeyFile()).toEqual({ current: keyA });
+      });
+
+      it("says MASTER_KEY_PREVIOUS can go in env mode", async () => {
+        config.MASTER_KEY = keyA.toString("base64");
+        config.MASTER_KEY_PREVIOUS = keyB.toString("base64");
+
+        await resolveMasterKey();
+
+        expect(rekeys.calls).toEqual([]);
+        expect(opened()).toBe(lookupBy(keyA));
+        expect(warnings()).toEqual([
+          ["warn", "MASTER_KEY_PREVIOUS is no longer needed and can be removed"],
+        ]);
+      });
     });
 
     const leftover = () => `${keyFilePath()}.0123456789abcdef.tmp`;
@@ -582,12 +725,13 @@ describe("which key boot opens", () => {
       expect(warnings()).toHaveLength(1);
     });
 
-    it("refuses to re-key yet when the key file's previous key matches", async () => {
-      await writeKeyFile({ current: keyB, previous: keyA });
+    it("refuses when neither the key file's key nor its previous one matches", async () => {
+      await writeKeyFile({ current: keyB, previous: randomBytes(32) });
 
       await expect(resolveMasterKey()).rejects.toThrow(
-        `The previous key in ${keyFilePath()} is the key this database is encrypted with`
+        `The key in ${keyFilePath()} is not the key this database is encrypted with.`
       );
+      expect(rekeys.calls).toEqual([]);
     });
   });
 
@@ -609,6 +753,17 @@ describe("which key boot opens", () => {
 
       expect(opened()).toBe(lookupBy(keyA));
       expect(fingerprintWrites).toEqual([]);
+    });
+
+    it("opens the previous key while a re-key is pending, as the data is still under it", async () => {
+      database.fingerprint = masterKeyFingerprint(keyA);
+      await writeKeyFile({ current: keyB, previous: keyA });
+
+      await openMasterKey();
+
+      expect(opened()).toBe(lookupBy(keyA));
+      expect(rekeys.calls).toEqual([]);
+      expect(await readKeyFile()).toEqual({ current: keyB, previous: keyA });
     });
 
     it("refuses a key the fingerprint does not name", async () => {

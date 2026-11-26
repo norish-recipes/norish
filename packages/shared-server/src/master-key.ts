@@ -3,15 +3,22 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 
-import { initMasterKey, masterKeyFingerprint, masterKeyOpens } from "@norish/config/crypto";
+import {
+  initMasterKey,
+  masterKeyFingerprint,
+  masterKeyOpens,
+  masterKeyRotation,
+} from "@norish/config/crypto";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import {
   claimMasterKeyFingerprint,
   countEncryptedRows,
   findNewestCiphertext,
   getMasterKeyFingerprint,
+  rekeyMasterKey,
 } from "@norish/db/repositories/master-key";
 import { serverLogger as log } from "@norish/shared-server/logger";
+import { endStoredSessions } from "@norish/shared-server/valkey/session-store";
 
 /** The keys a key file holds: `previous` only between a rotation and the boot that re-keys. */
 export type KeyFile = { current: Buffer; previous?: Buffer };
@@ -206,20 +213,19 @@ async function keySource(): Promise<KeySource> {
   };
 }
 
-/** The current key when it `fits` the database, else the refusal naming the key that is wrong. */
-function keyThatFits(source: KeySource, fits: (key: Buffer) => boolean): Buffer {
-  const { keys, labels } = source;
+/** How a log names `key`, one of the source's. */
+const labelOf = (source: KeySource, key: Buffer) =>
+  key === source.keys?.previous ? source.labels.previous : source.labels.current;
 
-  if (keys && fits(keys.current)) return keys.current;
-  // ponytail: refuses until boot can re-key; ticket 03 re-encrypts here instead.
-  if (keys?.previous && fits(keys.previous)) {
-    throw new Error(
-      `${labels.previous} is the key this database is encrypted with, and re-encrypting it under a new key is not available yet. Put the previous key back as the current one.`
-    );
-  }
+/** The current or previous key, whichever `fits` the database, else the refusal naming the key. */
+function keyThatFits(source: KeySource, fits: (key: Buffer) => boolean) {
+  const { keys } = source;
+
+  if (keys && fits(keys.current)) return { keys, key: keys.current };
+  if (keys?.previous && fits(keys.previous)) return { keys, key: keys.previous };
   throw refusal(
     keys
-      ? `${labels.current} is not the key this database is encrypted with.`
+      ? `${source.labels.current} is not the key this database is encrypted with.`
       : `MASTER_KEY is not set, and there is no key file at ${keyFilePath()}. This database is encrypted with a key that one of them held.`
   );
 }
@@ -253,20 +259,50 @@ async function adoptKey(source: KeySource): Promise<[KeySource, string | null]> 
   // A value that does not decrypt, an empty one included, never shows that a key fits.
   const newest = encrypted ? await findNewestCiphertext() : null;
   const key = encrypted
-    ? keyThatFits(source, (candidate) => newest !== null && masterKeyOpens(candidate, newest))
+    ? keyThatFits(source, (candidate) => newest !== null && masterKeyOpens(candidate, newest)).key
     : (source.keys?.current ?? (await generateKeyFile()));
   // Another first boot may have stored its fingerprint since this one looked; that one stands.
   const stored = await claimMasterKeyFingerprint(masterKeyFingerprint(key));
 
-  log.info({ source: source.labels.current }, "Master Key adopted");
+  log.info({ source: labelOf(source, key) }, "Master Key adopted");
 
   return [{ ...source, keys: source.keys ?? { current: key } }, stored];
 }
 
-/** Open the key the database's fingerprint names, or refuse naming the key that is missing. */
-function openByFingerprint(source: KeySource, fingerprint: string | null): void {
-  initMasterKey(keyThatFits(source, (key) => masterKeyFingerprint(key) === fingerprint));
-  log.info({ source: source.labels.current }, "Master Key opened");
+/** The key the database's fingerprint names, current or previous, or the refusal naming it. */
+const keyNamedBy = (source: KeySource, fingerprint: string | null) =>
+  keyThatFits(source, (key) => masterKeyFingerprint(key) === fingerprint);
+
+/** Move everything from the previous key to the current one; until it commits nothing serves. */
+async function rekey(source: KeySource, previous: Buffer, current: Buffer): Promise<void> {
+  log.info(
+    { from: source.labels.previous, to: source.labels.current },
+    "Re-keying to a new Master Key"
+  );
+  // Before the transaction: a crash after this only repeats it on the next boot.
+  const ended = await endStoredSessions();
+  const columns = await rekeyMasterKey(masterKeyRotation(previous, current), {
+    from: masterKeyFingerprint(previous),
+    to: masterKeyFingerprint(current),
+  });
+
+  log.info({ columns, ...ended }, "Master Key re-keyed and every session ended");
+  for (const [column, { plaintext }] of Object.entries(columns)) {
+    if (plaintext > 0) {
+      log.warn({ column, count: plaintext }, "Values stored in plain text were encrypted");
+    }
+  }
+}
+
+/** Retire a previous key the database no longer needs: the key file drops it, env mode says so. */
+async function retirePrevious(source: KeySource, current: Buffer): Promise<void> {
+  if (source.pinned) {
+    log.warn("MASTER_KEY_PREVIOUS is no longer needed and can be removed");
+
+    return;
+  }
+  await writeKeyFile({ current }, { replace: true });
+  log.info({ source: keyFilePath() }, "Previous Master Key removed from the key file");
 }
 
 /**
@@ -281,12 +317,16 @@ export async function resolveMasterKey(): Promise<void> {
   const [opening, stored]: [KeySource, string | null] = fingerprint
     ? [source, fingerprint]
     : await adoptKey(source);
+  const { keys, key } = keyNamedBy(opening, stored);
 
-  openByFingerprint(opening, stored);
+  if (key !== keys.current) await rekey(opening, key, keys.current);
+  initMasterKey(keys.current);
+  log.info({ source: opening.labels.current }, "Master Key opened");
+  if (keys.previous) await retirePrevious(opening, keys.current);
   await removeLeftoverCopies();
 }
 
-/** Open the key a server's boot resolved, for a tool or script: never generates nor writes one. */
+/** Open the key the database's fingerprint names, for a tool or script: never generates nor writes one. */
 export async function openMasterKey(): Promise<void> {
   const fingerprint = await getMasterKeyFingerprint();
 
@@ -295,5 +335,10 @@ export async function openMasterKey(): Promise<void> {
       "This database has no Master Key fingerprint yet. Start the Norish server on it once first."
     );
   }
-  openByFingerprint(await keySource(), fingerprint);
+  const source = await keySource();
+  const { key } = keyNamedBy(source, fingerprint);
+
+  // Until a server's boot re-keys, the data is still the previous key's.
+  initMasterKey(key);
+  log.info({ source: labelOf(source, key) }, "Master Key opened");
 }
