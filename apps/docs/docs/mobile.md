@@ -71,7 +71,7 @@ Set the app language in iPhone settings for use before signing in.
 
 Under **Household**, see members or leave your household. Admins can remove
 members, make another member admin, and copy, share or regenerate the join code.
-If you have no household, create one or join with a code.
+Every account starts in a household of one. Leave a shared household to start a new household of one, then join another with a code. Your recipes and cookbooks go with you. Joining merges your household of one into the household you join.
 
 ![Household members and join code](/img/screenshots/mobile-settings-household.png)
 
