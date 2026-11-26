@@ -37,14 +37,18 @@ export function authSecret(): string {
   return derivedKeys().authSecret;
 }
 
-export function encrypt(plain: string): string {
+function encryptWith(encryptionKey: Buffer, plain: string): string {
   const iv = crypto.randomBytes(12);
-  const cipher = crypto.createCipheriv("aes-256-gcm", derivedKeys().encryption, iv);
+  const cipher = crypto.createCipheriv("aes-256-gcm", encryptionKey, iv);
 
   const encrypted = Buffer.concat([cipher.update(plain, "utf8"), cipher.final()]);
   const tag = cipher.getAuthTag();
 
   return Buffer.concat([iv, tag, encrypted]).toString("base64");
+}
+
+export function encrypt(plain: string): string {
+  return encryptWith(derivedKeys().encryption, plain);
 }
 
 function decryptWith(encryptionKey: Buffer, enc: string): string {
@@ -64,21 +68,59 @@ export function decrypt(enc: string): string {
   return decryptWith(derivedKeys().encryption, enc);
 }
 
-/** Whether `masterKey` wrote `enc`, without making it the key in use. */
-export function masterKeyOpens(masterKey: Buffer, enc: string): boolean {
+/** `enc` in plain text, or null when `encryptionKey` did not write it. */
+function openWith(encryptionKey: Buffer, enc: string): string | null {
   try {
-    decryptWith(deriveKey(masterKey, "encryption"), enc);
-
-    return true;
+    return decryptWith(encryptionKey, enc);
   } catch {
-    return false;
+    return null;
   }
 }
 
+/** Whether `masterKey` wrote `enc`, without making it the key in use. */
+export function masterKeyOpens(masterKey: Buffer, enc: string): boolean {
+  return openWith(deriveKey(masterKey, "encryption"), enc) !== null;
+}
+
+const lookupWith = (hmacKey: Buffer, value: string) =>
+  crypto.createHmac("sha256", hmacKey).update(value).digest("hex");
+
 export function hmacIndex(value: string): string {
-  return crypto.createHmac("sha256", derivedKeys().hmac).update(value).digest("hex");
+  return lookupWith(derivedKeys().hmac, value);
 }
 
 export function hashToken(token: string): string {
-  return crypto.createHmac("sha256", derivedKeys().hmac).update(token).digest("hex");
+  return lookupWith(derivedKeys().hmac, token);
 }
+
+/** Which key had sealed a value a re-key moved: `plaintext` when neither key opens it. */
+export type SealedBy = "previous" | "current" | "plaintext";
+
+/**
+ * A re-key from `previous` to `current`, its keys kept here. The only place a value no key opens is
+ * read as plaintext; one the current key opens already stays as it is.
+ */
+export function masterKeyRotation(previous: Buffer, current: Buffer) {
+  const from = deriveKey(previous, "encryption");
+  const to = deriveKey(current, "encryption");
+  const hmac = deriveKey(current, "hmac");
+
+  return {
+    reseal(value: string): { sealed: string; plain: string; was: SealedBy } {
+      const opened = openWith(from, value);
+
+      if (opened !== null)
+        return { sealed: encryptWith(to, opened), plain: opened, was: "previous" };
+
+      const already = openWith(to, value);
+
+      if (already !== null) return { sealed: value, plain: already, was: "current" };
+
+      return { sealed: encryptWith(to, value), plain: value, was: "plaintext" };
+    },
+    /** `hmacIndex` and `hashToken` under the current key. */
+    lookup: (plain: string) => lookupWith(hmac, plain),
+  };
+}
+
+export type MasterKeyRotation = ReturnType<typeof masterKeyRotation>;
