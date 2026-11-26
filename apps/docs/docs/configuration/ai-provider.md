@@ -88,11 +88,11 @@ Track or cancel either run in [Job queues](./admin-settings.md#job-queues).
 
 **Tag strategy** decides which tags auto-tagging may use:
 
-| Strategy                       | Behaviour                                          |
-| ------------------------------ | -------------------------------------------------- |
-| **Predefined tags only**       | Only the built-in tag list                         |
+| Strategy                       | Behaviour                                |
+| ------------------------------ | ---------------------------------------- |
+| **Predefined tags only**       | Only the built-in tag list               |
 | **Predefined + existing tags** | Also tags in the recipe household's list |
-| **AI can create new tags**     | Creates new tags when needed                       |
+| **AI can create new tags**     | Creates new tags when needed             |
 
 ### Cuisine strategy
 
