@@ -5,10 +5,10 @@ import React, { useState } from "react";
 import { Alert, Image, ScrollView, Text, View } from "react-native";
 import { Card, CardRow } from "@/components/card";
 import { HintButton } from "@/components/hint-button";
+import { Ionicons } from "@/components/icon";
 import { IconButton } from "@/components/icon-button";
 import { Sheet, SheetBody } from "@/components/sheet";
 import { usePhotoPicker } from "@/hooks/use-photo-picker";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { File } from "expo-file-system";
 import { useIntl } from "react-intl";
 

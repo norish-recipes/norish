@@ -1,5 +1,5 @@
 import React from "react";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { Ionicons } from "@/components/icon";
 import { Checkbox, useThemeColor } from "heroui-native";
 
 /** The kit's multi-select tick, a circle, for a row that carries the press itself; the row's accessibility state says whether it is ticked. */

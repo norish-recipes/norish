@@ -1,9 +1,9 @@
 import type { ComponentProps } from "react";
 import React from "react";
 import { Text, View } from "react-native";
+import { Ionicons } from "@/components/icon";
 import { useOnSheet } from "@/components/on-sheet";
 import { useTokenColor } from "@/hooks/use-token-color";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { Button } from "heroui-native";
 
 type Icon = ComponentProps<typeof Ionicons>["name"];

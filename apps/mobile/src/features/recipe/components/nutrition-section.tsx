@@ -2,12 +2,12 @@ import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 import { AnimatedNumber } from "@/components/animated-number";
+import { Ionicons } from "@/components/icon";
 import { Stepper } from "@/components/stepper";
 import { useTokenColor } from "@/hooks/use-token-color";
 import { EASE_OUT } from "@/lib/motion/ease";
 import { timedTo } from "@/lib/motion/timed";
 import { plainText } from "@/lib/plain-text";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { Skeleton, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 

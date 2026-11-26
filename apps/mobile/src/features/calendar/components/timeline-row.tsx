@@ -5,9 +5,9 @@ import { Pressable, Text, useWindowDimensions, View } from "react-native";
 import { CardSlice, ItemSlice } from "@/components/card-slice";
 import { DayTitle, formatDay } from "@/components/day-card";
 import { DragPressable, useIsCarried, useIsLifted } from "@/components/drag-list/drag-list";
+import { Ionicons } from "@/components/icon";
 import { PlannedThumb } from "@/components/planned-thumb";
 import { spokenLabel } from "@/lib/spoken-label";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 

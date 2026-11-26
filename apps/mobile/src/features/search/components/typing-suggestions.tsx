@@ -5,10 +5,10 @@ import { View } from "react-native";
 import { Card, CardRow } from "@/components/card";
 import { CardPhoto } from "@/components/card-photo";
 import { HighlightedText } from "@/components/highlighted-text";
+import { Ionicons } from "@/components/icon";
 import { IngredientIcon, IngredientIconSlots } from "@/components/ingredient-icon";
 import { Section } from "@/components/section";
 import { useTokenColor } from "@/hooks/use-token-color";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { Skeleton } from "heroui-native";
 import { useIntl } from "react-intl";
 

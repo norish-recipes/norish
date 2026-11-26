@@ -2,10 +2,10 @@ import type { HeaderItem } from "@/lib/header-item";
 import React, { useState } from "react";
 import { View } from "react-native";
 import { FiltersButton } from "@/components/filters-button";
+import { Ionicons } from "@/components/icon";
 import { RollingText } from "@/components/rolling-text";
 import { Segmented } from "@/components/segmented";
 import { lightImpact } from "@/lib/haptics";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 

@@ -1,9 +1,9 @@
 import React from "react";
 import { View } from "react-native";
 import { EmptyCard } from "@/components/empty-card";
+import { Ionicons } from "@/components/icon";
 import { IconButton } from "@/components/icon-button";
 import { SheetInput } from "@/components/sheet-input";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { TextField, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";

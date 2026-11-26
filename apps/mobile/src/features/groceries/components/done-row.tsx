@@ -2,8 +2,8 @@ import type { Measurable } from "@/hooks/use-focused-field-in-view";
 import React from "react";
 import { Pressable, Text } from "react-native";
 import Animated from "react-native-reanimated";
+import { Ionicons } from "@/components/icon";
 import { usePopOnChange } from "@/lib/motion/pop-on-change";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 

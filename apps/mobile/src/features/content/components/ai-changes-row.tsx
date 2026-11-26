@@ -1,9 +1,9 @@
 import React from "react";
 import { Card } from "@/components/card";
 import { CountRow } from "@/components/count-row";
+import { Ionicons } from "@/components/icon";
 import { useTokenColor } from "@/hooks/use-token-color";
 import { useText } from "@/lib/i18n/use-text";
-import Ionicons from "@expo/vector-icons/Ionicons";
 
 import { useAIChangeCounts } from "@norish/shared-react/ingredients";
 

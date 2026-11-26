@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 import React from "react";
 import { Pressable, View } from "react-native";
+import { Ionicons } from "@/components/icon";
 import { useTokenColor } from "@/hooks/use-token-color";
 import { lightImpact } from "@/lib/haptics";
-import Ionicons from "@expo/vector-icons/Ionicons";
 
 function Step({
   icon,

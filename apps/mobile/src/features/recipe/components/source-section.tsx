@@ -1,7 +1,7 @@
 import React from "react";
 import { Linking, Pressable, Text, View } from "react-native";
+import { Ionicons } from "@/components/icon";
 import { useTokenColor } from "@/hooks/use-token-color";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 

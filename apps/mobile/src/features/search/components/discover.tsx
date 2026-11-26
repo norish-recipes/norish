@@ -3,12 +3,12 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { Card, CardRow } from "@/components/card";
 import { CardPhoto } from "@/components/card-photo";
+import { Ionicons } from "@/components/icon";
 import { PressableScale } from "@/components/pressable-scale";
 import { Section } from "@/components/section";
 import { ToggleChip } from "@/components/toggle-chip";
 import { useCategoryLabel } from "@/hooks/use-category-label";
 import { useTokenColor } from "@/hooks/use-token-color";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { Skeleton } from "heroui-native";
 import { useIntl } from "react-intl";
 

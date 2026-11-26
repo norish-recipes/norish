@@ -1,9 +1,9 @@
 import type { ComponentProps, ReactElement, ReactNode } from "react";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
+import { Ionicons } from "@/components/icon";
 import { NativeMenu } from "@/components/native-menu";
 import { spokenLabel } from "@/lib/spoken-label";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 
 import { useConnectivity } from "@norish/shared-react/offline/react";

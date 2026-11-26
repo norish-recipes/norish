@@ -3,13 +3,13 @@ import type { ReactNode } from "react";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { CardSlice } from "@/components/card-slice";
+import { Ionicons } from "@/components/icon";
 import { NativeMenu } from "@/components/native-menu";
 import { useOnSheet } from "@/components/on-sheet";
 import { Pill } from "@/components/pill";
 import { useTokenColor } from "@/hooks/use-token-color";
 import { edgeAt } from "@/lib/card-edges";
 import { spokenLabel } from "@/lib/spoken-label";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { Skeleton } from "heroui-native";
 
 /** A row's height: the Settings row's, so a Content list and Settings rows line up. */

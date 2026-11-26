@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { AnimatedNumber } from "@/components/animated-number";
+import { Ionicons } from "@/components/icon";
 import { useCategoryLabel } from "@/hooks/use-category-label";
 import { useTokenColor } from "@/hooks/use-token-color";
 import { plainText } from "@/lib/plain-text";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 

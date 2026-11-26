@@ -1,7 +1,7 @@
 import type { ComponentProps, ReactNode } from "react";
 import React from "react";
 import { Pressable, Text } from "react-native";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { Ionicons } from "@/components/icon";
 import { Input, InputGroup, Skeleton, TextArea, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 

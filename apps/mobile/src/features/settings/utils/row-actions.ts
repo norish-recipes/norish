@@ -1,4 +1,4 @@
-import type Ionicons from "@expo/vector-icons/Ionicons";
+import type { Ionicons } from "@/components/icon";
 import type { ComponentProps } from "react";
 
 /** What a settings row's long-press action does; each has one colour and icon everywhere. */

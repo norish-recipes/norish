@@ -2,7 +2,7 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { AmountName, amountNameLabel } from "@/components/amount-name";
 import { DragPressable } from "@/components/drag-list/drag-list";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { Ionicons } from "@/components/icon";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 

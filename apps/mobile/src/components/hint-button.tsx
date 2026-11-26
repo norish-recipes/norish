@@ -1,6 +1,6 @@
 import React from "react";
 import { Alert, Pressable, Text, View } from "react-native";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { Ionicons } from "@/components/icon";
 import { useThemeColor } from "heroui-native";
 
 /** The small (i) beside a label or title: its hint opens in an alert. */

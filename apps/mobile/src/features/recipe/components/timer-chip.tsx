@@ -2,9 +2,9 @@ import type { ComponentRef, RefObject } from "react";
 import type { LayoutRectangle } from "react-native";
 import React, { useEffect, useRef } from "react";
 import { ActionSheetIOS, Pressable, Text, useWindowDimensions, View } from "react-native";
+import { Ionicons } from "@/components/icon";
 import { TimerRing } from "@/components/timer-ring";
 import { mediumImpact } from "@/lib/haptics";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 

@@ -3,8 +3,8 @@ import React, { use } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { useIsCarried, useIsLifted } from "@/components/drag-list/drag-list";
 import { HintButton } from "@/components/hint-button";
+import { Ionicons } from "@/components/icon";
 import { FocusedFieldContext } from "@/hooks/use-focused-field-in-view";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { withUniwind } from "uniwind";
 

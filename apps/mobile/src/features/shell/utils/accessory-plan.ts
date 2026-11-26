@@ -1,5 +1,5 @@
+import type { Ionicons } from "@/components/icon";
 import type { GroceriesSection } from "@/lib/groceries-section";
-import type Ionicons from "@expo/vector-icons/Ionicons";
 import type { Href } from "expo-router";
 import type { ComponentProps } from "react";
 import { cookbookIdOf, cookModeRoute, TAB_ROUTES } from "@/lib/tab-routes";

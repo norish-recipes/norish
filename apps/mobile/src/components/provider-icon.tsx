@@ -1,6 +1,5 @@
 import React from "react";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { Ionicons, MaterialCommunityIcons } from "@/components/icon";
 
 /** The web provider list's Iconify ids as Ionicons names; an unmapped provider gets a shield. */
 const ICONIFY_TO_IONICONS: Record<string, React.ComponentProps<typeof Ionicons>["name"]> = {

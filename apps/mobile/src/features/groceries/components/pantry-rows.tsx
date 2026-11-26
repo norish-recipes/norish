@@ -2,12 +2,12 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { CardSlice } from "@/components/card-slice";
 import { EmptyCard } from "@/components/empty-card";
+import { Ionicons } from "@/components/icon";
 import { IconButton } from "@/components/icon-button";
 import { IngredientIcon } from "@/components/ingredient-icon";
 import { useOnSheet } from "@/components/on-sheet";
 import { OnTheListChip } from "@/components/on-the-list-chip";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { Skeleton, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 

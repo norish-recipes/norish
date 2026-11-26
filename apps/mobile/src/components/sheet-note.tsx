@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import React from "react";
 import { Text, View } from "react-native";
+import { Ionicons } from "@/components/icon";
 import { useTokenColor } from "@/hooks/use-token-color";
-import Ionicons from "@expo/vector-icons/Ionicons";
 
 const TONES = { plain: "text-muted", accent: "text-accent-text", problem: "text-danger" } as const;
 

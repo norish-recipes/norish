@@ -1,6 +1,6 @@
 import React from "react";
 import { View } from "react-native";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { MaterialCommunityIcons } from "@/components/material-icon";
 import { useThemeColor } from "heroui-native";
 
 import { DragHandle } from "./drag-list";

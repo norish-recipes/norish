@@ -3,8 +3,8 @@ import type { DerivedValue } from "react-native-reanimated";
 import React from "react";
 import { View } from "react-native";
 import Animated, { Extrapolation, interpolate, useAnimatedStyle } from "react-native-reanimated";
+import { MaterialCommunityIcons } from "@/components/material-icon";
 import { Segmented } from "@/components/segmented";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { useIntl } from "react-intl";
 
 // The switch's height, over which it fades as it rises under the bar.

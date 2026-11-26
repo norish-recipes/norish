@@ -1,10 +1,10 @@
 import React from "react";
 import { Text } from "react-native";
+import { Ionicons } from "@/components/icon";
 import { IngredientIcon } from "@/components/ingredient-icon";
 import { PressableScale } from "@/components/pressable-scale";
 import { useCategoryLabel } from "@/hooks/use-category-label";
 import { useTokenColor } from "@/hooks/use-token-color";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { Skeleton } from "heroui-native";
 import { useIntl } from "react-intl";
 
