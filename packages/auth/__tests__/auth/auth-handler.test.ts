@@ -562,29 +562,58 @@ describe("sign-out", () => {
 });
 
 describe("ending every stored session, as a re-key does", () => {
-  it("deletes Better Auth's sessions and verification values in Valkey, and no other key", async () => {
+  /** The session token a session cookie carries, signature off. */
+  const tokenOf = (cookie: string) =>
+    decodeURIComponent(/session_token=([^;]+)/.exec(cookie)?.[1] ?? "").split(".")[0] ?? "";
+
+  it("deletes every session and verification value Better Auth stored, and no other key", async () => {
     const ada = await signUpWithPassword();
     const grace = await signUpWithPassword("grace@norish.test");
+    const adaAgain = cookiesFrom(
+      await authModule.auth.handler(
+        post("/sign-in/email", { email: "ada@norish.test", password: "ada-password-1" })
+      )
+    );
+    const lists = [`active-sessions-${ada.userId}`, `active-sessions-${grace.userId}`];
 
+    // Two sign-ins at once rewrite a list from one read, so it can miss a session.
+    const adaList = JSON.parse((await valkey.get(lists[0] ?? "")) ?? "[]") as unknown[];
+
+    await valkey.set(lists[0] ?? "", JSON.stringify(adaList.slice(1)));
+    // A list with an entry Better Auth would not write is not its list, and stays; the session stops.
+    const graceList = JSON.parse((await valkey.get(lists[1] ?? "")) ?? "[]") as unknown[];
+
+    await valkey.set(lists[1] ?? "", JSON.stringify([...graceList, { token: 42 }]));
     // A sign-in left at the provider keeps its state as a verification value.
     await authModule.auth.handler(post("/sign-in/social", { provider: "oidc", callbackURL: "/" }));
-    for (const key of ["bull:caldav-sync:1", "norish:pending-recipe-media:r1", "plain-key"]) {
-      await valkey.set(key, "[]");
+    const verifications = (await valkey.keys("verification:*")).sort();
+
+    // What else shares the database, Better Auth's names and look-alikes included.
+    await valkey.hset("bull:caldav-sync:1", { data: "{}" });
+    await valkey.xadd("bull:caldav-sync:events", "*", "event", "added");
+    await valkey.rpush("verification:a-list", "x");
+    await valkey.hset("active-sessions-a-hash", { token: "x" });
+    for (const [key, value] of Object.entries({
+      "norish:pending-recipe-media:r1": "[]",
+      "a-session-of-another-key": JSON.stringify({ session: { token: "x", userId: "u" } }),
+      "active-sessions-not-a-list": JSON.stringify({ token: "x" }),
+      "verification:not-json": "not json",
+      "verification:of-another-identifier": JSON.stringify({ identifier: "x", value: "v" }),
+    })) {
+      await valkey.set(key, value);
     }
 
+    const tokens = [ada.cookie, grace.cookie, adaAgain].map(tokenOf);
+    const ended = new Set([...tokens, lists[0], ...verifications]);
     const before = await valkey.keys("*");
-    const lists = before.filter((key) => key.startsWith("active-sessions-"));
-    const tokens = (await Promise.all(lists.map((list) => valkey.get(list)))).flatMap((list) =>
-      (JSON.parse(list ?? "[]") as { token: string }[]).map(({ token }) => token)
-    );
-    const verifications = before.filter((key) => key.startsWith("verification:"));
-    const ended = new Set([...lists, ...tokens, ...verifications]);
 
-    expect([lists.length, tokens.length, verifications.length]).toEqual([2, 2, 1]);
-    expect(await endStoredSessions()).toEqual({ sessions: 2, verifications: 1 });
+    expect([...ended].filter((key) => !before.includes(key))).toEqual([]);
+    expect(verifications).toHaveLength(1);
+    expect(await endStoredSessions()).toEqual({ sessions: 3, verifications: 1 });
 
-    expect(await sessionFor(ada.cookie)).toBeNull();
-    expect(await sessionFor(grace.cookie)).toBeNull();
+    for (const cookie of [ada.cookie, grace.cookie, adaAgain]) {
+      expect(await sessionFor(cookie)).toBeNull();
+    }
     expect((await valkey.keys("*")).sort()).toEqual(before.filter((key) => !ended.has(key)).sort());
   });
 });

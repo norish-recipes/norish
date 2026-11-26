@@ -34,53 +34,70 @@ export const valkeySecondaryStorage: SecondaryStorage = {
   },
 };
 
-// Better Auth keeps a session under its bare token, listed in `active-sessions-<userId>`, and each
-// verification value under `verification:<identifier>`, in the Valkey database VALKEY_URL names.
-const SESSION_LISTS = "active-sessions-*";
-const VERIFICATIONS = "verification:*";
+// Better Auth keeps each session under its bare token, a user's sessions listed in
+// `active-sessions-<userId>`, and each verification value under `verification:<identifier>`.
+const SESSION_LIST = "active-sessions-";
+const VERIFICATION = "verification:";
 
-/** The tokens a session list names; none when it is not one. */
-function tokensIn(list: string | null): string[] {
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+function parseJson(text: string): unknown {
   try {
-    const parsed: unknown = JSON.parse(list ?? "[]");
-    const tokens = Array.isArray(parsed) ? parsed.map((entry) => entry?.token) : [];
-
-    return tokens.every((token) => typeof token === "string") ? tokens : [];
+    return JSON.parse(text);
   } catch {
-    return [];
+    return undefined;
   }
 }
 
-/** Visit the keys matching `match`, a page at a time. */
-async function forEachPage(match: string, visit: (keys: string[]) => Promise<void>) {
+/** What Better Auth stored `value` under `key` as, by both their shapes; null when it did not. */
+function storedAs(key: string, value: string): "session" | "list" | "verification" | null {
+  const stored = parseJson(value);
+
+  if (isRecord(stored) && isRecord(stored.session) && stored.session.token === key) {
+    return typeof stored.session.userId === "string" ? "session" : null;
+  }
+  if (key.startsWith(SESSION_LIST)) {
+    const reference = (entry: unknown) =>
+      isRecord(entry) && typeof entry.token === "string" && typeof entry.expiresAt === "number";
+
+    return Array.isArray(stored) && stored.every(reference) ? "list" : null;
+  }
+  if (key.startsWith(VERIFICATION) && isRecord(stored)) {
+    const own = stored.identifier === key.slice(VERIFICATION.length);
+
+    return own && typeof stored.value === "string" ? "verification" : null;
+  }
+
+  return null;
+}
+
+/**
+ * Delete every session and verification value Better Auth keeps in Valkey, found by their shape
+ * and not through its lists, which sign-ins at once can leave short. Nothing else is touched.
+ */
+export async function endStoredSessions(): Promise<{ sessions: number; verifications: number }> {
   const valkey = await getPublisherClient();
+  const ended = { sessions: 0, verifications: 0 };
   let cursor = "0";
 
   do {
-    const [next, keys] = await valkey.scan(cursor, "MATCH", match, "COUNT", 500);
+    const [next, keys] = await valkey.scan(cursor, "COUNT", 500, "TYPE", "string");
+    // MGET answers null for a key that is gone or no longer a string, where GET would fail.
+    const values = keys.length > 0 ? await valkey.mget(...keys) : [];
+    const doomed = keys.filter((key, index) => {
+      const value = values[index];
+      const kind = typeof value === "string" ? storedAs(key, value) : null;
+
+      if (kind === "session") ended.sessions += 1;
+      if (kind === "verification") ended.verifications += 1;
+
+      return kind !== null;
+    });
 
     cursor = next;
-    if (keys.length > 0) await visit(keys);
+    if (doomed.length > 0) await valkey.del(...doomed);
   } while (cursor !== "0");
-}
 
-/** Delete every session and verification value Better Auth keeps in Valkey, and nothing else. */
-export async function endStoredSessions(): Promise<{ sessions: number; verifications: number }> {
-  const valkey = await getPublisherClient();
-  let sessions = 0;
-  let verifications = 0;
-
-  await forEachPage(SESSION_LISTS, async (lists) => {
-    for (const list of lists) {
-      const tokens = tokensIn(await valkey.get(list));
-
-      if (tokens.length > 0) sessions += await valkey.del(...tokens);
-    }
-    await valkey.del(...lists);
-  });
-  await forEachPage(VERIFICATIONS, async (keys) => {
-    verifications += await valkey.del(...keys);
-  });
-
-  return { sessions, verifications };
+  return ended;
 }
