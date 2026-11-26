@@ -70,3 +70,8 @@
   6. fixed: `announcementsSettled` and its set are gone; the test waits one loop turn, which runs out the mocks' promises.
   7. fixed: the test seeds a newer same-named grocery in another household.
   - rejected: an in-flight request keeps its earlier read; moved to ticket 04: survivors' cached roster after an account deletion.
+
+Final review, server round:
+
+- Fixed (e8f2c8a28): `ownRowIds` in `household-rows.ts` is the one check; Store, grocery, recurring, Pantry and plan reads refuse another household's id with `ForeignHouseholdReferenceError`, answered NOT_FOUND (was a 500). `assertHouseholdAccess` is gone.
+- Fixed (e8f2c8a28, 9172f9ff8): boundary tests run the real procedures on two households' data (toggle both ways, assign, file, Pantry, move, edit, delete); the mock-asserts-mock and hand-built-router tests are gone.

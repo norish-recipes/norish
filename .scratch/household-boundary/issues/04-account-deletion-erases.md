@@ -52,3 +52,7 @@
   7. Fixed: the running-job tests wait on the processor's entry; both deadlock tests close the cycle on the intended victim. 30/30 each file.
   8. Fixed: the step-image rows are read before the deletion and checked gone after.
   - Rejected: a claim re-made in the instant of the sweep; a real failure reported as account gone; tokens left when Valkey was down; a 4410 during an ordinary expiry.
+
+Final review, server round:
+
+- Fixed (4a22e0dc0): the deadlock test makes the grocery the victim with `SET LOCAL deadlock_timeout = '1ms'`, no sleep, a 15 s timeout; heavy lineage and second-run migration tests have explicit timeouts.

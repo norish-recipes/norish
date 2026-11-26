@@ -75,3 +75,9 @@ Review round 2:
 6. Fixed: the list announce is asserted once the create answers, before the after-commit wait.
 
 Rejected: attach or detach not bumping the entry version; queue-time matching when the importer moves before the job runs; an extra announce from the extend strategy.
+
+Final review, server round:
+
+- Fixed (22bddda6c): manual allergy detection asks about the recipe's household's allergies.
+- Fixed (667b7bde4, df322f3c3): instance entries first everywhere. An instance add or rename takes over the households' entries of its fold in one transaction (every household row, then their recipes, then the entries; `lists.changed` to each); a household add or rename holds its household first, so it never shadows one. The boot fold merges a household entry folding like an instance entry into it ("Breakfast!", "Bréakfast"); 0092 unchanged.
+- Fixed (ea2eb174c): another household's Cuisine id with no entry of its fold is refused (NOT_FOUND), no longer dropped.

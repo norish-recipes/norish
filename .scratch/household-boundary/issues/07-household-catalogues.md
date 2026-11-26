@@ -79,3 +79,10 @@
   7. fixed: `count()` with numeric decoding; the standalone check selects the kind's id.
   8. fixed: `spelling-check` counts exactly again (the other eight files' assertions were equivalent); the rerun compares whole rows of every table 0093 writes.
   - rejected: the recheck folding a minted duplicate into a hand-added food; a migration rerun rewriting AI Changes.
+
+Final review, server round:
+
+- Fixed (65bd2a2b2): a spelling an admin adds to a seeded food is announced to their household; a draft touching the seeded food itself still reaches everyone.
+- Verified and fixed (697985a55): Undo restored `undo.spelling.ownerId`; 0093 now nulls the adder on every copied change (merge, spelling, not-a-food and its spellings).
+- Fixed (f7e7393e5, aaf808c67): the search lateral is a builder subquery, array casts are fixed fragments, the test join is `and(eq, eq)` in one helper, the pid query is `backendPid`, shared-server tests use `inRepositoryTransaction`. Left: `select ingredient_id from covered/kinds`, as drizzle 0.45.4's `buildWithCTE` never writes `recursive`.
+- Fixed (2847281cd): `ingredients.countUses` (builder counts) feeds "Used by" and the delete confirmation; `ingredients.recipes` pages by 50 (`useFoodRecipes`); `ingredients.uses` keeps groceries and Pantry.

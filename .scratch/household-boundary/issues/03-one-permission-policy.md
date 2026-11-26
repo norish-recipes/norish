@@ -82,3 +82,8 @@
 - Share-link moderation restored (Mike, 2026-11-25): the admin card lists every account's links (recipe, owner, status, created, expires) and revokes, reactivates and deletes them through `shareListAdmin`/`share{Revoke,Reactivate,Delete}Admin`, on `adminProcedure` only; events go to `recipeAudience` read at publish.
   - A link whose maker may no longer view its recipe is listed with an "Inactive" chip in place of Active (`makerMayView: false`) and can still be revoked or deleted.
   - Unchanged from ticket 03: such a link stays inactive on the public page, out of the maker's inventory, and every non-admin share procedure still needs ownership plus edit access.
+
+Final review, server round:
+
+- Fixed (63987c33a): `ratingFailed` is user-scoped, told only to the account that rated.
+- Fixed (bee32dd45): `getRecipePermissionPolicy` in `repositories/server-config.ts` is the one reader (each level stored, else its default); auth and the config loader re-export it.

@@ -55,3 +55,7 @@ Review round 2:
 6. Fixed: the Maestro seed makes Tags and Categories with `lists.add` before `recipes.create`; no other fixture sends names to a creating path.
 
 Rejected: an Owner moving household while a housemate edits their recipe; the REST create tested through a test router; the E2E blurring before save.
+
+Final review, server round:
+
+- Fixed (776002851): `recipes.updateCategories` had no caller (apps, REST) and is deleted with its allowlist entry.
