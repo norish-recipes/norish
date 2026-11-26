@@ -420,6 +420,27 @@ describe("an entry's panel", () => {
     expect(within(modal).getByTestId("content-delete-confirm")).toBeEnabled();
   });
 
+  it("opens the recipes carrying the entry from Used by, each a link to the recipe", async () => {
+    entries = [entry("Diner", { recipeCount: 2 })];
+    readAnswers.set("lists.uses", async () => [
+      { id: "r1", name: "Burger" },
+      { id: "r2", name: "Fries" },
+    ]);
+    await renderList("tag");
+
+    const panel = await open("Diner");
+
+    await userEvent.click(within(panel).getByTestId("content-entry-used"));
+
+    const uses = await screen.findByTestId("content-entry-uses");
+
+    expect(await within(uses).findByRole("link", { name: "Burger" })).toHaveAttribute(
+      "href",
+      "/recipes/r1"
+    );
+    expect(within(uses).getByRole("link", { name: "Fries" })).toBeVisible();
+  });
+
   it("changes nothing offline: Save and Delete are off, and the panel says why", async () => {
     entries = [entry("Diner")];
     await renderList("tag", { offline: true });
