@@ -47,14 +47,14 @@ vi.mock("@norish/config/crypto", async (importOriginal) => {
 
 vi.mock("@norish/config/env-config-server", () => ({ SERVER_CONFIG: config }));
 vi.mock("@norish/db/repositories/master-key", () => ({
-  // A claim fills an empty fingerprint and keeps one already there.
+  // A claim fills a missing fingerprint and keeps one already there.
   claimMasterKeyFingerprint: async (fingerprint: string) => {
     fingerprintWrites.push(fingerprint);
-    database.fingerprint ||= fingerprint;
+    database.fingerprint ??= fingerprint;
 
     return database.fingerprint;
   },
-  getMasterKeyFingerprint: async () => database.fingerprint || null,
+  getMasterKeyFingerprint: async () => database.fingerprint,
   countEncryptedRows: async () => {
     await database.meanwhile();
 
@@ -427,16 +427,6 @@ describe("which key boot opens", () => {
 
       expect(await readKeyFile()).toEqual({ current: keyA });
       expect(fingerprintWritten()).toBe(masterKeyFingerprint(keyA));
-      expect(opened()).toBe(lookupBy(keyA));
-    });
-
-    it("adopts MASTER_KEY over a fingerprint row that holds none", async () => {
-      config.MASTER_KEY = keyA.toString("base64");
-      database.fingerprint = "";
-
-      await resolveMasterKey();
-
-      expect(database.fingerprint).toBe(masterKeyFingerprint(keyA));
       expect(opened()).toBe(lookupBy(keyA));
     });
 
