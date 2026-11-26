@@ -599,8 +599,8 @@ const lockedColumns = (table: ListTable) => ({
 });
 
 /**
- * Before an instance entry takes `fold`: the households holding it (until settled), the fold,
- * their recipes carrying it, then every entry of the fold and `also`, by id; answers those entries.
+ * Before an instance entry takes `fold`: the households holding it (until settled), their recipes
+ * carrying it, the fold, then every entry of the fold and `also`, by id; answers those entries.
  */
 async function lockTakeoverTx(
   tx: DbTransaction,
@@ -627,25 +627,30 @@ async function lockTakeoverTx(
       (id) => id
     );
 
-  // Households first; one that took the fold before the fold lock landed is locked after it.
+  const lockRecipes = () =>
+    tx
+      .select({ id: recipes.id })
+      .from(recipes)
+      .where(
+        inArray(
+          recipes.id,
+          qb
+            .select({ id: link.recipeId })
+            .from(link)
+            .innerJoin(table, eq(table.id, entity))
+            .where(twin)
+        )
+      )
+      .orderBy(recipes.id)
+      .for("key share");
+
+  // Households and recipes before the fold, as a recipe write takes its row first; one that took
+  // the fold before the fold lock landed is locked after it.
   await lockHolders();
+  await lockRecipes();
   await lockEntryFoldsTx(tx, kind, [fold]);
   await lockHolders();
-  await tx
-    .select({ id: recipes.id })
-    .from(recipes)
-    .where(
-      inArray(
-        recipes.id,
-        qb
-          .select({ id: link.recipeId })
-          .from(link)
-          .innerJoin(table, eq(table.id, entity))
-          .where(twin)
-      )
-    )
-    .orderBy(recipes.id)
-    .for("key share");
+  await lockRecipes();
 
   return await tx
     .select(lockedColumns(table))
