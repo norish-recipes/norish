@@ -37,6 +37,7 @@ import { isAnyOf } from "./array-params";
 import { isConstraintViolation } from "./constraint-violation";
 import { ForeignHouseholdReferenceError } from "./household-rows";
 import { inScope, isInstanceRow } from "./household-scope";
+import { lockUntilSettled } from "./lock-until-settled";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 import { defaultOf } from "./raw-sql";
 
@@ -615,25 +616,40 @@ async function homeEntriesTx(
 export async function homeRecipeEntriesTx(tx: DbTransaction, householdId: string): Promise<void> {
   for (const kind of LIST_KINDS) {
     const { table, link, entity } = KINDS[kind];
-    const carried = await tx
-      .select({ id: table.id })
-      .from(table)
-      .where(
-        and(
-          isNotNull(table.householdId),
-          ne(table.householdId, householdId),
-          inArray(
-            table.id,
-            qb
-              .select({ id: entity })
-              .from(link)
-              .innerJoin(recipes, eq(recipes.id, link.recipeId))
-              .where(eq(recipes.householdId, householdId))
+    const carried = await lockUntilSettled(
+      () =>
+        tx
+          .select({ id: table.id })
+          .from(table)
+          .where(
+            and(
+              isNotNull(table.householdId),
+              ne(table.householdId, householdId),
+              inArray(
+                table.id,
+                qb
+                  .select({ id: entity })
+                  .from(link)
+                  .innerJoin(recipes, eq(recipes.id, link.recipeId))
+                  .where(eq(recipes.householdId, householdId))
+              )
+            )
+          ),
+      (rows) =>
+        tx
+          .select({ id: table.id })
+          .from(table)
+          .where(
+            isAnyOf(
+              table.id,
+              rows.map((row) => row.id),
+              "uuid"
+            )
           )
-        )
-      )
-      .orderBy(table.id)
-      .for("share");
+          .orderBy(table.id)
+          .for("share"),
+      (row) => row.id
+    );
 
     await homeEntriesTx(
       tx,

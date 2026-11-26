@@ -31,6 +31,7 @@ import { moveMergedAIChanges } from "./ingredient-ai-changes";
 import { rowsNaming, spellingsSeenBy } from "./ingredient-catalogue";
 import { ancestryCte } from "./ingredient-kinds";
 import { writeRecipeLineFoodsTx } from "./ingredients";
+import { lockUntilSettled } from "./lock-until-settled";
 import { lockPantryFood } from "./pantry";
 import { defaultOf } from "./raw-sql";
 import { rekeyNutritionSharesTx } from "./recipe-enrichment";
@@ -289,22 +290,56 @@ export async function homeRecipeFoodsTx(tx: DbTransaction, householdId: string):
     .where(eq(recipes.householdId, householdId));
   const foreign = (column: typeof ingredients.householdId | typeof ingredientAliases.householdId) =>
     and(isNotNull(column), ne(column, householdId));
-  const used = await tx
-    .selectDistinct({ id: ingredientAliases.id, foodId: ingredientAliases.ingredientId })
-    .from(ingredientAliases)
-    .innerJoin(
-      recipeIngredientFoods,
-      eq(recipeIngredientFoods.ingredientAliasId, ingredientAliases.id)
-    )
-    .where(
-      and(
-        inArray(recipeIngredientFoods.recipeIngredientId, homeLines),
-        foreign(ingredientAliases.householdId)
-      )
-    );
+  // Foods before spellings, as a deletion takes them: a rename, merge or delete waits for the move.
+  const used = await lockUntilSettled(
+    () =>
+      tx
+        .selectDistinct({ id: ingredientAliases.id, foodId: ingredientAliases.ingredientId })
+        .from(ingredientAliases)
+        .innerJoin(
+          recipeIngredientFoods,
+          eq(recipeIngredientFoods.ingredientAliasId, ingredientAliases.id)
+        )
+        .where(
+          and(
+            inArray(recipeIngredientFoods.recipeIngredientId, homeLines),
+            foreign(ingredientAliases.householdId)
+          )
+        ),
+    async (rows) => {
+      await tx
+        .select({ id: ingredients.id })
+        .from(ingredients)
+        .where(
+          and(
+            isAnyOf(
+              ingredients.id,
+              rows.map((row) => row.foodId),
+              "uuid"
+            ),
+            foreign(ingredients.householdId)
+          )
+        )
+        .orderBy(ingredients.id)
+        .for("share");
+      await tx
+        .select({ id: ingredientAliases.id })
+        .from(ingredientAliases)
+        .where(
+          isAnyOf(
+            ingredientAliases.id,
+            rows.map((row) => row.id),
+            "uuid"
+          )
+        )
+        .orderBy(ingredientAliases.id)
+        .for("share");
+    },
+    (row) => `${row.id} ${row.foodId}`
+  );
 
   if (used.length === 0) return;
-  // Foods before spellings, as a deletion takes them: a rename, merge or delete waits for the move.
+  const spellingIds = used.map((row) => row.id);
   const copied = (
     await tx
       .select({ id: ingredients.id })
@@ -319,22 +354,6 @@ export async function homeRecipeFoodsTx(tx: DbTransaction, householdId: string):
           foreign(ingredients.householdId)
         )
       )
-      .orderBy(ingredients.id)
-      .for("share")
-  ).map((row) => row.id);
-  const spellingIds = (
-    await tx
-      .select({ id: ingredientAliases.id })
-      .from(ingredientAliases)
-      .where(
-        isAnyOf(
-          ingredientAliases.id,
-          used.map((row) => row.id),
-          "uuid"
-        )
-      )
-      .orderBy(ingredientAliases.id)
-      .for("share")
   ).map((row) => row.id);
   const old = alias(ingredients, "old_food");
   const copy = alias(ingredients, "home_food");
