@@ -14,6 +14,7 @@ describe("replaying a recipe save", () => {
     runReplayPass({
       store,
       ownerId: "u1",
+      householdId: "h1",
       submit: (entry: OutboxEntry) =>
         replayOutboxEntry({ recipes: { update: { mutate } } }, entry, "test-outbox"),
     });
@@ -24,6 +25,7 @@ describe("replaying a recipe save", () => {
     await store.enqueue({
       id: "save",
       ownerId: "u1",
+      householdId: "h1",
       path: "recipes.update",
       input: { id: "recipe-1", version: 1, data: { name: "Mine" } },
       entityId: null,

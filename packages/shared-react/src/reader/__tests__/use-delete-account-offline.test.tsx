@@ -33,6 +33,7 @@ describe("deleting the Account while Offline", () => {
           createOutboxLink<AppRouter>({
             store: { enqueue } as unknown as OutboxStore,
             owner: () => "reader-1",
+            household: () => "h1",
             replayHeaderValue: "test-outbox",
           }),
           // The server cannot be reached.

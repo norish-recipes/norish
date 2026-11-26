@@ -40,6 +40,8 @@ interface RecoveryDependencies {
   owner: () => string | null;
   submit: ReplaySubmit;
   verifySession: (ownerId: string) => Promise<SessionVerdict>;
+  /** The household the server has the session in, read fresh; null when it can't be read. */
+  currentHousehold: () => Promise<string | null>;
   refetchActiveQueries: () => Promise<unknown>;
   topUp: () => Promise<unknown>;
   wait?: (delayMs: number) => Promise<void>;
@@ -74,6 +76,7 @@ export function createRecovery({
   owner,
   submit,
   verifySession,
+  currentHousehold,
   refetchActiveQueries,
   topUp,
   wait = waitFor,
@@ -132,7 +135,25 @@ export function createRecovery({
           return null;
         }
 
-        return runReplayPass({ store, submit, ownerId: batchOwner });
+        if ((await store.forOwner(batchOwner)).length === 0) {
+          return {
+            removed: 0,
+            parked: 0,
+            conflicted: [],
+            remaining: 0,
+            halted: null,
+            retryAfterMs: null,
+          };
+        }
+
+        // An entry is sent only into the household it was made for, as the server has it now.
+        const householdId = await currentHousehold().catch(() => null);
+
+        if (householdId === null) {
+          return null;
+        }
+
+        return runReplayPass({ store, submit, ownerId: batchOwner, householdId });
       }, locks());
 
       if (!attempt) {

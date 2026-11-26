@@ -77,6 +77,8 @@ interface RecoveryTransport {
   transport: OutboxMutationClient;
   /** Whether the live session still belongs to the Outbox owner about to Replay. */
   verifySession: (ownerId: string) => Promise<"match" | "mismatch" | "unverifiable">;
+  /** The household the server has the session in, read fresh; null when it can't be read. */
+  currentHousehold: () => Promise<string | null>;
   refetchActiveQueries: () => Promise<unknown>;
   topUp: () => Promise<unknown>;
 }
@@ -122,6 +124,7 @@ export function createOfflineEngine(options: OfflineEngineOptions): OfflineEngin
     outboxLink: createOutboxLink<AppRouter>({
       store: outbox,
       owner: cache.owner,
+      household: cache.household,
       replayHeaderValue,
       wholeEdits: new Set(["recipes.update"]),
       timedWrites: new Set(SCOPED_WRITES),
@@ -129,12 +132,13 @@ export function createOfflineEngine(options: OfflineEngineOptions): OfflineEngin
       onConflict: () => recovery?.reportConflict(),
     }),
     probe: (probeOptions) => probeBackendReachable(probeUrl(), probeOptions),
-    createRecovery: ({ transport, verifySession, refetchActiveQueries, topUp }) =>
+    createRecovery: ({ transport, verifySession, currentHousehold, refetchActiveQueries, topUp }) =>
       (recovery = createRecovery({
         store: outbox,
         owner: cache.owner,
         submit: (entry) => replayOutboxEntry(transport, entry, replayHeaderValue),
         verifySession,
+        currentHousehold,
         refetchActiveQueries,
         topUp,
         locks,

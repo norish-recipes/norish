@@ -17,6 +17,7 @@ const REPLAY_HEADER_VALUE = "test-outbox";
 
 const enqueue = vi.fn(async (_entry: NewOutboxEntry) => ({}) as OutboxEntry);
 const owner = vi.fn<() => string | null>(() => "u1");
+const household = () => "h1";
 
 type FakeOp = {
   type: "mutation" | "query";
@@ -29,6 +30,8 @@ function runLink(op: FakeOp, terminal: () => ReturnType<typeof observable>) {
   const link = createOutboxLink({
     store: { enqueue } as unknown as OutboxStore,
     owner,
+    household: () => "h1",
+    household,
     replayHeaderValue: REPLAY_HEADER_VALUE,
   })({} as never);
 
@@ -68,6 +71,7 @@ describe("createOutboxLink", () => {
     expect(enqueue).toHaveBeenCalledWith(
       expect.objectContaining({
         ownerId: "u1",
+        householdId: "h1",
         path: "groceries.create",
         input: { id: "g1", name: "Milk" },
         entityId: "g1", // the client-minted create id
@@ -253,6 +257,7 @@ describe("createOutboxLink: a whole edit waits behind its pending save", () => {
     link = createOutboxLink({
       store,
       owner,
+      household: () => "h1",
       replayHeaderValue: REPLAY_HEADER_VALUE,
       wholeEdits: new Set(["recipes.update"]),
       onConflict,
@@ -322,7 +327,7 @@ describe("createOutboxLink: a whole edit waits behind its pending save", () => {
       return { kind: "success" as const };
     });
 
-    const pass = await runReplayPass({ store, submit, ownerId: "u1" });
+    const pass = await runReplayPass({ store, submit, ownerId: "u1", householdId: "h1" });
 
     expect(submit).toHaveBeenCalledTimes(1);
     expect(pass).toMatchObject({ removed: 1, parked: 0 });
@@ -393,6 +398,7 @@ describe("createOutboxLink: a whole edit waits behind its pending save", () => {
     await store.enqueue({
       id: "other",
       ownerId: "u1",
+      householdId: "h1",
       path: "recipes.update",
       input: edit("Other tab"),
       entityId: null,
@@ -453,7 +459,12 @@ describe("createOutboxLink: a whole edit waits behind its pending save", () => {
   it("still sends a favourite queued behind a refused edit of its recipe", async () => {
     await save(edit("Mine"), unreachable);
     await new Promise<void>((resolve) =>
-      createOutboxLink({ store, owner, replayHeaderValue: REPLAY_HEADER_VALUE })({} as never)({
+      createOutboxLink({
+        store,
+        owner,
+        household: () => "h1",
+        replayHeaderValue: REPLAY_HEADER_VALUE,
+      })({} as never)({
         op: {
           type: "mutation",
           path: "favorites.toggle",
@@ -467,7 +478,7 @@ describe("createOutboxLink: a whole edit waits behind its pending save", () => {
       kind: entry.path === "recipes.update" ? ("conflict" as const) : ("success" as const),
     }));
 
-    const pass = await runReplayPass({ store, submit, ownerId: "u1" });
+    const pass = await runReplayPass({ store, submit, ownerId: "u1", householdId: "h1" });
 
     expect(submit.mock.calls.map(([entry]) => entry.path)).toEqual([
       "recipes.update",
@@ -489,6 +500,7 @@ describe("createOutboxLink: a send with no answer", () => {
     createOutboxLink({
       store: { enqueue } as unknown as OutboxStore,
       owner,
+      household: () => "h1",
       replayHeaderValue: REPLAY_HEADER_VALUE,
       timedWrites: new Set(["groceries.toggle"]),
     })({} as never);

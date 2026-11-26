@@ -34,6 +34,7 @@ describe("a cookbook created Offline", () => {
           createOutboxLink<AppRouter>({
             store,
             owner: () => "reader-1",
+            household: () => "h1",
             replayHeaderValue: "test-outbox",
           }),
           // The server cannot be reached.
@@ -68,6 +69,7 @@ describe("a cookbook created Offline", () => {
     await runReplayPass({
       store,
       ownerId: "reader-1",
+      householdId: "h1",
       submit: (entry) => replayOutboxEntry(client, entry, "test-outbox"),
     });
 

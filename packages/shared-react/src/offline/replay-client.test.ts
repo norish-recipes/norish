@@ -11,6 +11,7 @@ function entry(overrides: Partial<OutboxEntry> = {}): OutboxEntry {
     seq: 1,
     id: "e",
     ownerId: "u1",
+    householdId: "h1",
     path: "groceries.create",
     input: { id: "g1" },
     entityId: "g1",

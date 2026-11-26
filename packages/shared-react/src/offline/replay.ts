@@ -95,10 +95,13 @@ export async function runReplayPass({
   store,
   submit,
   ownerId,
+  householdId,
 }: {
   store: OutboxStore;
   submit: ReplaySubmit;
   ownerId: string;
+  /** The household the server has the account in now; an entry made for another can't apply. */
+  householdId: string;
 }): Promise<ReplayPassResult> {
   const parkedEntityIds = new Set<string>();
 
@@ -149,6 +152,13 @@ export async function runReplayPass({
   };
 
   for (const entry of await store.forOwner(ownerId, "pending")) {
+    if (entry.householdId !== householdId) {
+      await store.park(entry.seq, "deterministic");
+      countParked(entry, "deterministic");
+
+      continue;
+    }
+
     if (referencesParkedEntity(entry.input, parkedEntityIds)) {
       await store.park(entry.seq, "dependency");
       countParked(entry, "dependency");

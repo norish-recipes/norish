@@ -17,6 +17,7 @@ function pendingEntry(seq: number): OutboxEntry {
     seq,
     id: `entry-${seq}`,
     ownerId: "u1",
+    householdId: "h1",
     path: "groceries.create",
     input: {},
     entityId: null,
@@ -325,6 +326,7 @@ describe("OfflineCacheController", () => {
       expect.objectContaining({
         transport: trpcClient,
         verifySession: expect.any(Function),
+        currentHousehold: async () => "h1",
         refetchActiveQueries: expect.any(Function),
         topUp: warmSetTopUp,
       })

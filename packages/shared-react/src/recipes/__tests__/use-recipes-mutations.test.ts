@@ -429,6 +429,7 @@ describe("useRecipesMutations", () => {
             await outbox.enqueue({
               id: "first",
               ownerId: "u1",
+              householdId: "h1",
               path: "recipes.update",
               input,
               entityId: null,

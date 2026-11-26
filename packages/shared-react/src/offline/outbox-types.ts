@@ -27,6 +27,8 @@ export interface OutboxEntry {
   id: string;
   /** Cache/session owner this entry belongs to (per-user Replay, ADR-0005). */
   ownerId: string;
+  /** The household it was made for: Replay never sends it into another (ADR-0033). */
+  householdId: string | null;
   /** tRPC procedure path, e.g. `"groceries.create"`. */
   path: string;
   /** The encoded mutation input (may hold upload blobs; see {@link ./input-codec}). */

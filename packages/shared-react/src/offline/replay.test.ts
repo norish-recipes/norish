@@ -16,6 +16,7 @@ function entry(overrides: Partial<NewOutboxEntry> = {}): NewOutboxEntry {
   return {
     id: "e",
     ownerId: "u1",
+    householdId: "h1",
     path: "groceries.toggle",
     input: {},
     entityId: null,
@@ -49,10 +50,24 @@ describe("runReplayPass", () => {
     await store.enqueue(entry({ id: "b", path: "groceries.toggle" }));
     const { submit, submitted } = stubSubmit({});
 
-    await runReplayPass({ store, submit, ownerId: "u1" });
+    await runReplayPass({ store, submit, ownerId: "u1", householdId: "h1" });
 
     expect(submitted).toEqual(["b"]);
     expect(await store.loadAll()).toEqual([]);
+  });
+
+  it("parks, unsent, an entry made for a household the account is no longer in", async () => {
+    await store.enqueue(entry({ id: "a", householdId: "h-old" }));
+    await store.enqueue(entry({ id: "b" }));
+    const { submit, submitted } = stubSubmit({});
+
+    const result = await runReplayPass({ store, submit, ownerId: "u1", householdId: "h1" });
+
+    expect(submitted).toEqual(["b"]);
+    expect(result).toMatchObject({ removed: 1, parked: 1, halted: null });
+    expect((await store.forOwner("u1", "parked")).map((e) => [e.id, e.parkedReason])).toEqual([
+      ["a", "deterministic"],
+    ]);
   });
 
   it("removes every entry on a clean drain, in FIFO order", async () => {
@@ -61,7 +76,7 @@ describe("runReplayPass", () => {
     await store.enqueue(entry({ id: "c" }));
 
     const { submit, submitted } = stubSubmit({});
-    const result = await runReplayPass({ store, submit, ownerId: "u1" });
+    const result = await runReplayPass({ store, submit, ownerId: "u1", householdId: "h1" });
 
     expect(submitted).toEqual(["a", "b", "c"]);
     expect(result).toMatchObject({ removed: 3, parked: 0, remaining: 0, halted: null });
@@ -73,7 +88,7 @@ describe("runReplayPass", () => {
     await store.enqueue(entry({ id: "b" }));
 
     const { submit } = stubSubmit({ a: "deterministic" });
-    const result = await runReplayPass({ store, submit, ownerId: "u1" });
+    const result = await runReplayPass({ store, submit, ownerId: "u1", householdId: "h1" });
 
     expect(result).toMatchObject({ removed: 1, parked: 1, halted: null });
     expect((await store.forOwner("u1", "parked")).map((e) => e.id)).toEqual(["a"]);
@@ -84,7 +99,7 @@ describe("runReplayPass", () => {
     await store.enqueue(entry({ id: "a" }));
 
     const { submit } = stubSubmit({ a: "conflict" });
-    await runReplayPass({ store, submit, ownerId: "u1" });
+    await runReplayPass({ store, submit, ownerId: "u1", householdId: "h1" });
 
     expect((await store.forOwner("u1", "conflicted")).map((e) => e.id)).toEqual(["a"]);
   });
@@ -94,7 +109,7 @@ describe("runReplayPass", () => {
     await store.enqueue(entry({ id: "b" }));
 
     const { submit, submitted } = stubSubmit({ a: "unauthorized" });
-    const result = await runReplayPass({ store, submit, ownerId: "u1" });
+    const result = await runReplayPass({ store, submit, ownerId: "u1", householdId: "h1" });
 
     expect(result.halted).toBe("unauthorized");
     expect(submitted).toEqual(["a"]); // b was never attempted
@@ -106,7 +121,7 @@ describe("runReplayPass", () => {
     await store.enqueue(entry({ id: "b" }));
 
     const { submit, submitted } = stubSubmit({ a: "unreachable" });
-    const result = await runReplayPass({ store, submit, ownerId: "u1" });
+    const result = await runReplayPass({ store, submit, ownerId: "u1", householdId: "h1" });
 
     expect(result.halted).toBe("unreachable");
     expect(submitted).toEqual(["a"]);
@@ -117,7 +132,7 @@ describe("runReplayPass", () => {
     await store.enqueue(entry({ id: "a" }));
 
     const { submit } = stubSubmit({ a: "ambiguous" });
-    const result = await runReplayPass({ store, submit, ownerId: "u1" });
+    const result = await runReplayPass({ store, submit, ownerId: "u1", householdId: "h1" });
 
     expect(result.halted).toBe("retry");
     expect(result.retryAfterMs).toBe(retryDelayMs(1));
@@ -131,7 +146,7 @@ describe("runReplayPass", () => {
     await store.enqueue(entry({ id: "b" }));
 
     const { submit } = stubSubmit({ a: "ambiguous" });
-    const result = await runReplayPass({ store, submit, ownerId: "u1" });
+    const result = await runReplayPass({ store, submit, ownerId: "u1", householdId: "h1" });
 
     // a parks (exhausted), b still drains.
     expect(result.halted).toBeNull();
@@ -152,7 +167,7 @@ describe("runReplayPass", () => {
     );
 
     const { submit, submitted } = stubSubmit({ create: "deterministic" });
-    const result = await runReplayPass({ store, submit, ownerId: "u1" });
+    const result = await runReplayPass({ store, submit, ownerId: "u1", householdId: "h1" });
 
     // The dependent edit is parked without ever being submitted.
     expect(submitted).toEqual(["create"]);
@@ -174,7 +189,7 @@ describe("runReplayPass", () => {
     );
 
     const { submit, submitted } = stubSubmit({});
-    await runReplayPass({ store, submit, ownerId: "u1" });
+    await runReplayPass({ store, submit, ownerId: "u1", householdId: "h1" });
 
     expect(submitted).toEqual([]); // nothing submittable — the only pending entry depends on a parked create
     expect((await store.forOwner("u1", "parked")).map((e) => e.id)).toContain("tick");
@@ -190,7 +205,7 @@ describe("runReplayPass", () => {
       await store.enqueue(entry({ id: "later", path: laterPath, input: laterInput }));
       const { submit, submitted } = stubSubmit({ edit: "conflict" });
 
-      await runReplayPass({ store, submit, ownerId: "u1" });
+      await runReplayPass({ store, submit, ownerId: "u1", householdId: "h1" });
 
       expect(submitted).toEqual(["edit", "later"]);
       expect((await store.loadAll()).map((e) => [e.id, e.status])).toEqual([
@@ -208,7 +223,7 @@ describe("runReplayPass", () => {
     await store.enqueue(entry({ id: "later", input: { cookbookId: "c1" } }));
     const { submit, submitted } = stubSubmit({});
 
-    await runReplayPass({ store, submit, ownerId: "u1" });
+    await runReplayPass({ store, submit, ownerId: "u1", householdId: "h1" });
 
     expect(submitted).toEqual(["later"]);
   });
@@ -229,7 +244,7 @@ describe("runReplayPass", () => {
     await store.park(held.seq, "dependency");
     const { submit, submitted } = stubSubmit({});
 
-    await runReplayPass({ store, submit, ownerId: "u1" });
+    await runReplayPass({ store, submit, ownerId: "u1", householdId: "h1" });
 
     expect(submitted).toEqual(["freed"]);
     expect((await store.loadAll()).map((e) => [e.id, e.status, e.parkedReason])).toEqual([
@@ -265,7 +280,7 @@ describe("runReplayPass", () => {
 
       return change(seq, next);
     };
-    await runReplayPass({ store, submit: stubSubmit({}).submit, ownerId: "u1" });
+    await runReplayPass({ store, submit: stubSubmit({}).submit, ownerId: "u1", householdId: "h1" });
 
     expect(replaced).toBe(true);
     expect((await storage.outbox.all()).at(-1)).toMatchObject({
@@ -276,11 +291,11 @@ describe("runReplayPass", () => {
   });
 
   it("only touches the given owner's entries", async () => {
-    await store.enqueue(entry({ id: "mine", ownerId: "u1" }));
+    await store.enqueue(entry({ id: "mine", ownerId: "u1", householdId: "h1" }));
     await store.enqueue(entry({ id: "theirs", ownerId: "u2" }));
 
     const { submit, submitted } = stubSubmit({});
-    await runReplayPass({ store, submit, ownerId: "u1" });
+    await runReplayPass({ store, submit, ownerId: "u1", householdId: "h1" });
 
     expect(submitted).toEqual(["mine"]);
     expect(await store.size("u2")).toBe(1);

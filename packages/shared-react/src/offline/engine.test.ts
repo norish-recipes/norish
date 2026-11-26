@@ -7,6 +7,7 @@ import type { LockManagerLike } from "./leader";
 import type { OutboxEntry } from "./outbox-types";
 import type { OfflineStorage } from "./storage";
 import { createOfflineEngine } from "./engine";
+import { householdQueryKey } from "./household";
 import { MUTATION_SEND_TIMEOUT_MS } from "./outbox-link";
 import { runReplayPass } from "./replay";
 import { OUTBOX_REPLAY_HEADER } from "./replay-client";
@@ -16,7 +17,7 @@ function engineOver(
   storage: OfflineStorage = createMemoryStorage(),
   locks?: () => LockManagerLike | null
 ) {
-  return createOfflineEngine({
+  const engine = createOfflineEngine({
     storage,
     locks,
     replayHeaderValue: "test-outbox",
@@ -24,6 +25,14 @@ function engineOver(
     buster: "test",
     calendarRanges: () => [],
   });
+
+  // The household the account is in, as the server named it.
+  engine.queryClient.setQueryData(householdQueryKey(), {
+    household: { id: "h1" },
+    currentUserId: "u1",
+  } as never);
+
+  return engine;
 }
 
 /** Run one mutation through the engine's Outbox link over a transport that fails it. */
@@ -149,6 +158,7 @@ describe("createOfflineEngine", () => {
     const recovery = engine.createRecovery({
       transport: {},
       verifySession: async () => "match",
+      currentHousehold: async () => "h1",
       refetchActiveQueries: async () => {},
       topUp: async () => {},
     });
@@ -171,6 +181,7 @@ describe("createOfflineEngine", () => {
     const pending = (input: unknown, path = "recipes.update") => ({
       id: path,
       ownerId: "u1",
+      householdId: "h1",
       path,
       input,
       entityId: null,
@@ -207,6 +218,7 @@ describe("createOfflineEngine", () => {
           recipes: { update: { mutate: update } },
         },
         verifySession: async () => "match",
+        currentHousehold: async () => "h1",
         refetchActiveQueries: async () => {},
         topUp: async () => {},
       });
@@ -241,13 +253,18 @@ describe("createOfflineEngine", () => {
           (resolve) => (answer = (kind) => resolve({ kind }))
         );
       });
-      const sending = runReplayPass({ store: engine.outbox, submit, ownerId: "u1" });
+      const sending = runReplayPass({
+        store: engine.outbox,
+        submit,
+        ownerId: "u1",
+        householdId: "h1",
+      });
 
       await new Promise((resolve) => setTimeout(resolve, 0));
       await saveRecipe(engine, edit("Second"), unreachable);
       answer("success");
       await sending;
-      await runReplayPass({ store: engine.outbox, submit, ownerId: "u1" });
+      await runReplayPass({ store: engine.outbox, submit, ownerId: "u1", householdId: "h1" });
 
       expect(sent).toEqual([edit("First"), edit("Second")]);
       expect(await engine.outbox.size("u1")).toBe(0);
@@ -272,6 +289,7 @@ describe("createOfflineEngine", () => {
       const recovery = engine.createRecovery({
         transport: { recipes: { update: { mutate: update } } },
         verifySession: async () => "match",
+        currentHousehold: async () => "h1",
         refetchActiveQueries: async () => {},
         topUp: async () => {},
       });
@@ -303,6 +321,7 @@ describe("createOfflineEngine", () => {
     await engine.outbox.enqueue({
       id: "dormant",
       ownerId: "u0",
+      householdId: "h1",
       path: "groceries.create",
       input: { id: "g0" },
       entityId: "g0",
@@ -316,6 +335,7 @@ describe("createOfflineEngine", () => {
       .createRecovery({
         transport: { groceries: { create: { mutate } } },
         verifySession: async () => "match",
+        currentHousehold: async () => "h1",
         refetchActiveQueries: async () => {},
         topUp: async () => {},
       })
@@ -336,6 +356,7 @@ describe("createOfflineEngine", () => {
     const parked = await engine.outbox.enqueue({
       id: "p",
       ownerId: "u1",
+      householdId: "h1",
       path: "groceries.create",
       input: {},
       entityId: null,
@@ -355,6 +376,7 @@ describe("createOfflineEngine", () => {
     const entry = (id: string, ownerId = "u1") => ({
       id,
       ownerId,
+      householdId: "h1",
       path: "groceries.create",
       input: { id },
       entityId: id,
@@ -430,6 +452,7 @@ describe("createOfflineEngine", () => {
       const recovery = engine.createRecovery({
         transport: { groceries: { create: { mutate } } },
         verifySession: async () => "match",
+        currentHousehold: async () => "h1",
         refetchActiveQueries: async () => {},
         topUp: async () => {},
       });

@@ -143,6 +143,7 @@ describe("grocery writes made offline, replayed", () => {
         await store.enqueue({
           id: `entry-${queued}`,
           ownerId: OWNER,
+          householdId: "h1",
           path: `groceries.${path}`,
           input: structuredClone(input),
           entityId: null,
@@ -186,6 +187,7 @@ describe("grocery writes made offline, replayed", () => {
     runReplayPass({
       store,
       ownerId: OWNER,
+      householdId: "h1",
       submit: (entry: OutboxEntry) => replayOutboxEntry(client, entry, "test-outbox"),
     });
 

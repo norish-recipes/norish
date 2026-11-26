@@ -66,6 +66,8 @@ interface OutboxLinkDependencies {
   store: OutboxStore;
   /** The applied cache owner; admission fails while there is none. */
   owner: () => string | null;
+  /** The household the client holds the account to be in, which an entry records. */
+  household: () => string | null;
   replayHeaderValue: string;
   /** Procedures that save a whole entity at the version it was read at; they create nothing. */
   wholeEdits?: ReadonlySet<string>;
@@ -106,7 +108,7 @@ function entityIdOf(input: unknown): string | null {
 
 /** Durably admit the mutation to the Outbox; rejects when persistence fails. */
 async function captureToOutbox(
-  { store, owner, wholeEdits }: OutboxLinkDependencies,
+  { store, owner, household, wholeEdits }: OutboxLinkDependencies,
   path: string,
   input: unknown,
   context: unknown
@@ -116,6 +118,7 @@ async function captureToOutbox(
   return store.enqueue({
     id: createClientId(),
     ownerId: captureOwner(owner),
+    householdId: household(),
     path,
     input: encodedInput,
     entityId: wholeEdits?.has(path) ? null : entityIdOf(encodedInput),
