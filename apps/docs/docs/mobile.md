@@ -71,9 +71,11 @@ Set the app language in iPhone settings for use before signing in.
 
 Under **Household**, see members or leave your household. Admins can remove
 members, make another member admin, and copy, share or regenerate the join code.
-Every account starts in a household of one. Leave a shared household to start a new household of one, then join another with a code. Your recipes and cookbooks go with you. Joining merges your household of one into the household you join.
+Every account starts in a household of one. Leave a shared household to start a new household of one, then join another with a code. Your recipes and cookbooks go with you, along with copies of the Tags, Cuisines, Categories and foods your recipes use. Groceries, pantry, stores and the meal plan stay behind. A household admin hands over the role before leaving. Joining brings your groceries, pantry, stores, meal plan, lists and foods into the household you join. See [Households](/households).
 
 ![Household members and join code](/img/screenshots/mobile-settings-household.png)
+
+Use [Content](/content) to manage your household's lists and ingredients.
 
 Under **Connections**, manage site authentication tokens, API keys and recipe
 share links. Copy a new API key when it appears. For an active recipe share link

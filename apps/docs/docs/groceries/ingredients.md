@@ -6,7 +6,7 @@ description: Edit ingredients, translations, nutrition and icons.
 
 # Manage ingredients
 
-In **Settings**, open **Content**, then **Ingredients**. Search with parts of words in any order.
+In **Settings**, open [Content](/content), then **Ingredients**. Search with parts of words in any order.
 For example, "olive ex" finds "Extra virgin olive oil".
 
 ![The Ingredients catalogue](/img/screenshots/ingredients-list.png)
@@ -33,7 +33,7 @@ Select the ingredient's icon to **Upload a picture**, **Generate with AI**, or
 
 ## Review AI changes {#ai-cleanup}
 
-If your administrator has enabled [AI cleanup](../configuration/ai-provider.md#ingredient-catalogue),
+If your administrator has enabled [AI cleanup](/configuration/ai-provider#ingredient-catalogue),
 open **Changed by AI** to review recent edits. Choose **Keep** or **Undo**,
 including for ingredients that were merged or deleted.
 

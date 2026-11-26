@@ -82,7 +82,7 @@ keeps existing values.
 
 ![Fill gaps](/img/screenshots/admin-fill-gaps.png)
 
-Track or cancel either run in [Job queues](./admin-settings.md#job-queues).
+Track or cancel either run in [Job queues](/configuration/admin-settings#job-queues).
 
 ### Tag strategy
 
@@ -96,7 +96,7 @@ Track or cancel either run in [Job queues](./admin-settings.md#job-queues).
 
 ### Cuisine strategy
 
-**Cuisine strategy** decides whether [provenance](../recipes/creating-and-editing.md#recipe-origin) may
+**Cuisine strategy** decides whether [provenance](/recipes/creating-and-editing#recipe-origin) may
 add to your cuisine list:
 
 | Strategy                    | Behaviour                                           |
@@ -122,7 +122,7 @@ image model.
 
 Matching providers share the endpoint and API key.
 
-The image provider also draws [ingredient icons](../groceries/ingredients.md#change-an-icon).
+The image provider also draws [ingredient icons](/groceries/ingredients#change-an-icon).
 
 ### Decision Model
 
@@ -141,13 +141,13 @@ use it with or without a general AI provider.
 
 Import triage always runs when the Decision Model is enabled. If the model
 fails or is unsure, Norish uses the AI provider when available. Open the
-[job details](./admin-settings.md#job-queues) to see which models ran.
+[job details](/configuration/admin-settings#job-queues) to see which models ran.
 
 ### Enriching existing recipes
 
 In **AI & processing**, open **Bulk enrichment** and select **Enrich** to run
 every enabled enrichment on existing recipes. Check progress in
-[Job queues](./admin-settings.md#job-queues).
+[Job queues](/configuration/admin-settings#job-queues).
 
 ![Bulk enrichment image count](/img/screenshots/bulk-enrichment-image-count.png)
 
