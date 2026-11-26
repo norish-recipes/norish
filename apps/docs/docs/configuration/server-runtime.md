@@ -21,11 +21,15 @@ description: Core server settings, the encryption key, health checks, networking
 The Master Key protects encrypted data if the database alone is leaked. Norish
 stores it outside the database. Leave `MASTER_KEY` unset or blank to generate a
 key at `<UPLOADS_DIR>/.norish/master-key.json` on first start. To pin a key,
-set `MASTER_KEY` to a key generated with `openssl rand -base64 32`. Back up the
-database and uploads volume together. Run only one Norish process per database.
+set `MASTER_KEY`. A key set for the first time, or a new rotation key, must be
+base64; generate one with `openssl rand -base64 32`. A key the instance already
+uses keeps working in its existing form. Back up the database and uploads volume
+together. Run only one Norish process per database.
 
 If the key is wrong or missing, Norish refuses to start and names the missing
 key. Restore `MASTER_KEY` or the uploads volume from a backup. There is no reset.
+If the instance ran under an earlier `MASTER_KEY`, put that key in
+`MASTER_KEY_PREVIOUS` beside the current `MASTER_KEY`.
 
 Session signing always derives from the Master Key. `BETTER_AUTH_SECRET` and
 `BETTER_AUTH_SECRETS` have no effect.
@@ -42,7 +46,9 @@ automatically, for example with `restart: always` in Compose.
 
 For a pinned key, set `MASTER_KEY_PREVIOUS` to the current `MASTER_KEY` and set
 `MASTER_KEY` to a new key. Restart Norish, then remove `MASTER_KEY_PREVIOUS`
-after the rotating start succeeds.
+after the rotating start succeeds. After pinning a key on an instance that used
+a generated key, `<UPLOADS_DIR>/.norish/master-key.json` holds a retired key and
+can be deleted; Norish logs its path and never deletes the file itself.
 
 On the next start, Norish re-encrypts the data under the new key and ends every
 session on web and mobile. Everyone must sign in again. Share links made before
