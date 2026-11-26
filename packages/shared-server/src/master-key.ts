@@ -114,16 +114,21 @@ async function exists(target: string): Promise<boolean> {
 /** What a filesystem answers when it cannot flush a folder at all, as opposed to failing to. */
 const FLUSH_UNSUPPORTED = new Set(["EINVAL", "ENOTSUP", "EOPNOTSUPP", "EISDIR", "ENOSYS"]);
 
+/** Flush `target`, a file or a folder, to disk. */
+async function flush(target: string): Promise<void> {
+  const handle = await fs.open(target, "r");
+
+  try {
+    await handle.sync();
+  } finally {
+    await handle.close();
+  }
+}
+
 /** Flush a new name in `dir` to disk; a filesystem that cannot flush a folder only warns. */
 async function flushFolder(dir: string, mustLand: boolean): Promise<void> {
   try {
-    const handle = await fs.open(dir, "r");
-
-    try {
-      await handle.sync();
-    } finally {
-      await handle.close();
-    }
+    await flush(dir);
   } catch (error) {
     if (mustLand && !FLUSH_UNSUPPORTED.has(errorCode(error))) throw error;
     log.warn({ path: dir, err: error }, "Could not flush the key file's folder to disk");
@@ -167,6 +172,14 @@ export async function writeKeyFile(keys: KeyFile, { replace = false } = {}): Pro
   }
   // A crash that undoes a replacement leaves the old file, which still holds the data's key.
   await flushFolder(dir, !replace);
+  // A first boot may have made the key folder, whose name the uploads folder holds.
+  if (!replace) await flushFolder(SERVER_CONFIG.UPLOADS_DIR, true);
+}
+
+/** Flush the key file and its folder, so a power cut after a re-key cannot undo the file. */
+async function flushKeyFile(): Promise<void> {
+  await flush(keyFilePath());
+  await flushFolder(path.dirname(keyFilePath()), true);
 }
 
 /** Remove the copies a crash mid-write left beside the key file; failing only warns. */
@@ -410,7 +423,10 @@ export async function resolveMasterKey(endStoredSessions: EndStoredSessions): Pr
     : await adoptKey(source);
   const { keys, key } = keyWithFingerprint(opening, stored);
 
-  if (key !== keys.current) await rekey(key, keys.current, endStoredSessions);
+  if (key !== keys.current) {
+    if (!opening.pinned) await flushKeyFile();
+    await rekey(key, keys.current, endStoredSessions);
+  }
   initMasterKey(keys.current.bytes);
   log.info({ source: keys.current.label }, "Master Key opened");
   if (keys.previous) await retirePrevious(opening, keys.current.text);

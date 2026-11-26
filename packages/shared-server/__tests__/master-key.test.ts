@@ -351,6 +351,22 @@ describe("the key file", () => {
     await expect(writeKeyFile({ current: newKey() })).rejects.toThrow("EIO");
   });
 
+  it("flushes the uploads folder too, which holds the new key folder's name", async () => {
+    failSyncOf("EIO", config.UPLOADS_DIR);
+
+    await expect(writeKeyFile({ current: newKey() })).rejects.toThrow("EIO");
+  });
+
+  it("places the key file when the uploads folder cannot be flushed at all, and says so", async () => {
+    const keys = { current: newKey() };
+
+    failSyncOf("ENOTSUP", config.UPLOADS_DIR);
+    await writeKeyFile(keys);
+
+    expect(await readKeyFile()).toEqual(keys);
+    expect(warnings()).toHaveLength(1);
+  });
+
   it("replaces a key file when told to", async () => {
     const keys = { current: newKey(), previous: newKey() };
 
@@ -483,6 +499,14 @@ describe("which key boot opens", () => {
       expect(await modeOf(keyFilePath())).toBe(0o600);
       expect(fingerprintWritten()).toBe(generated && masterKeyFingerprint(generated));
       expect(opened()).toBe(generated && lookupBy(generated));
+    });
+
+    it("claims no fingerprint on a first boot whose uploads folder fails to flush to disk", async () => {
+      failSyncOf("EIO", config.UPLOADS_DIR);
+
+      await expect(resolveMasterKey()).rejects.toThrow("EIO");
+      expect(fingerprintWrites).toEqual([]);
+      expect(openedKeys).toEqual([]);
     });
 
     it("ends two first boots at once on one key, the one the file and the fingerprint hold", async () => {
@@ -800,6 +824,41 @@ describe("which key boot opens", () => {
         rekeys.failure = null;
         await resolveMasterKey();
         expect(opened()).toBe(lookupBy(keyB));
+      });
+
+      it.each([
+        ["the key file", keyFilePath],
+        ["its folder", keyDir],
+      ])(
+        "re-keys nothing when %s fails to flush to disk, so the next boot retries",
+        async (_, target) => {
+          await writeKeyFile({ current: textB, previous: textA });
+          failSyncOf("EIO", target());
+
+          await expect(resolveMasterKey()).rejects.toThrow("EIO");
+          expect(rekeys.steps).toEqual([]);
+          expect(openedKeys).toEqual([]);
+          expect(database.fingerprint).toBe(masterKeyFingerprint(keyA));
+          expect(await readKeyFile()).toEqual({ current: textB, previous: textA });
+
+          vi.restoreAllMocks();
+          await resolveMasterKey();
+          expect(opened()).toBe(lookupBy(keyB));
+        }
+      );
+
+      it("re-keys when the key file's folder cannot be flushed at all, and says so", async () => {
+        await writeKeyFile({ current: textB, previous: textA });
+        failSyncOf("ENOTSUP", keyDir());
+
+        await resolveMasterKey();
+
+        expect(rekeys.steps).toEqual(["sessions ended", "transaction"]);
+        expect(warnings()).toContainEqual([
+          "warn",
+          { path: keyDir(), err: expect.objectContaining({ code: "ENOTSUP" }) },
+          "Could not flush the key file's folder to disk",
+        ]);
       });
 
       it("re-keys from the key file's previous key, then leaves no copy of it", async () => {
