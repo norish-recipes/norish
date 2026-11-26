@@ -58,7 +58,7 @@ export function IngredientFiltersScreen() {
       ]}
       title={text("common.filters.title")}
     >
-      <SheetBody contentClassName="gap-4">
+      <SheetBody>
         <Section title={text("settings.ingredients.searchMatch")}>
           <View className="flex-row flex-wrap gap-2">
             {INGREDIENT_SEARCH_MATCHES.map((match) => (

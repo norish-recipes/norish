@@ -44,7 +44,7 @@ export function IngredientAddScreen() {
       name="ingredient-add"
       title={text("settings.content.panel.addTitle.ingredient")}
     >
-      <SheetBody contentClassName="gap-4">
+      <SheetBody>
         <SheetInput
           accessibilityLabel={text("settings.content.panel.name")}
           autoCapitalize="none"

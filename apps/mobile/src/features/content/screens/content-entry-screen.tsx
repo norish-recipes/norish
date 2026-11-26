@@ -108,7 +108,7 @@ export function ContentEntryScreen() {
       }
       title={editable ? text(`settings.content.panel.editTitle.${kind}`) : name}
     >
-      <SheetBody contentClassName="gap-4">
+      <SheetBody>
         <SheetInput
           accessibilityLabel={text("settings.content.panel.name")}
           editable={editable}

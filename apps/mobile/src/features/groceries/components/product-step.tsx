@@ -122,7 +122,7 @@ export function ProductStep({
       title={text("groceries.mobile.product")}
       onClose={onBack}
     >
-      <SheetBody contentClassName="gap-4">
+      <SheetBody>
         <TextField>
           <SheetInput
             // eslint-disable-next-line jsx-a11y-x/no-autofocus -- the search opens focused, which also asks the Store what it knows

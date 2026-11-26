@@ -79,7 +79,7 @@ function PlannedItemSheet({ item, sheet }: { item: PlannedItemFromQuery; sheet: 
           : title
       }
     >
-      <SheetBody>
+      <SheetBody contentClassName="">
         {recipeId ? (
           <View className="mb-3">
             <Card>

@@ -69,7 +69,7 @@ export function FoodPickerStep({
       title={title}
       onClose={onBack}
     >
-      <SheetBody contentClassName="gap-4">
+      <SheetBody>
         <SheetNote>{question}</SheetNote>
         <SheetInput
           accessibilityLabel={title}

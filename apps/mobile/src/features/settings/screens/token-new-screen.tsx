@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { OfflineCapsule } from "@/components/offline-capsule";
 import { Sheet, SheetBody } from "@/components/sheet";
 import { useText } from "@/lib/i18n/use-text";
 import { useNavigation, useRouter } from "expo-router";
@@ -7,7 +8,6 @@ import { useConnectivity } from "@norish/shared-react/offline/react";
 import { siteAuthTokenForm, useSiteAuthTokenMutations } from "@norish/shared-react/reader";
 
 import { ChoiceRow } from "../components/choice-row";
-import { OfflineCapsule } from "@/components/offline-capsule";
 import { SettingsField } from "../components/settings-form";
 import { SettingsGroup } from "../components/settings-group";
 import { settingsWrite, tellWentThroughLate } from "../utils/settings-write";
@@ -68,7 +68,7 @@ export function TokenNewScreen() {
       name="settings-token-new"
       title={text("settings.user.siteAuthTokens.addButton")}
     >
-      <SheetBody contentClassName="gap-4">
+      <SheetBody>
         <OfflineCapsule />
         <SettingsField
           autoCapitalize="none"

@@ -66,7 +66,7 @@ export function FoodSpellingsStep({
       title={text("settings.ingredients.spellingsSection")}
       onClose={onBack}
     >
-      <SheetBody contentClassName="gap-4">
+      <SheetBody>
         {adding ? (
           <SheetInput
             autoCapitalize="none"

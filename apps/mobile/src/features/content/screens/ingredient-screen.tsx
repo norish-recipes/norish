@@ -150,7 +150,7 @@ function FoodSheet({ item }: { item: IngredientItem }) {
       }
       title={displayName}
     >
-      <SheetBody contentClassName="gap-4">
+      <SheetBody>
         <View className="flex-row items-start gap-3">
           <FoodIconField icons={draft.icons} item={item} onDraftChange={draft.setIcon} />
           <View className="min-w-0 flex-1">

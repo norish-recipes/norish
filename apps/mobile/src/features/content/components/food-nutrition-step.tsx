@@ -52,7 +52,7 @@ export function FoodNutritionStep({
       title={t("section")}
       onClose={onBack}
     >
-      <SheetBody contentClassName="gap-4">
+      <SheetBody>
         {none ? (
           <EmptyCard
             icon="nutrition-outline"

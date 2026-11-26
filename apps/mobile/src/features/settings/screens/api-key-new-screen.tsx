@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Text, View } from "react-native";
+import { OfflineCapsule } from "@/components/offline-capsule";
 import { PillButton } from "@/components/pill-button";
 import { Sheet, SheetBody } from "@/components/sheet";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
@@ -14,7 +15,6 @@ import {
   useApiKeyMutations,
 } from "@norish/shared-react/reader";
 
-import { OfflineCapsule } from "@/components/offline-capsule";
 import { SettingsField } from "../components/settings-form";
 import { settingsWrite, tellWentThroughLate } from "../utils/settings-write";
 
@@ -76,7 +76,7 @@ export function ApiKeyNewScreen() {
         name="settings-api-key-new-created"
         title={text("settings.user.apiKeys.generatedModal.title")}
       >
-        <SheetBody contentClassName="gap-4">
+        <SheetBody>
           <OfflineCapsule />
           <Text className="text-warning-ink text-base">
             {text("settings.user.apiKeys.generatedModal.warning")}
@@ -123,7 +123,7 @@ export function ApiKeyNewScreen() {
       name="settings-api-key-new"
       title={text("settings.user.apiKeys.createKey")}
     >
-      <SheetBody contentClassName="gap-4">
+      <SheetBody>
         <OfflineCapsule />
         <SettingsField
           label={text("settings.user.apiKeys.keyNameLabel")}

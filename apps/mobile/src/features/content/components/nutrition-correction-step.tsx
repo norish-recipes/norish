@@ -81,7 +81,7 @@ export function NutritionCorrectionStep({
       title={t("correctTitle", { name })}
       onClose={onClose}
     >
-      <SheetBody contentClassName="gap-4">
+      <SheetBody>
         <SheetNote>{t("correctIntro")}</SheetNote>
         {facts.map((fact) => (
           <FactEditor
