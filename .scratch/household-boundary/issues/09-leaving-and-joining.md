@@ -9,7 +9,7 @@ See the spec, "Membership changes".
 
 **Blocked by:** 03, 05, 07
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] **Leave and remove** (one shared path) move the person's recipes and cookbooks to the new household, with their images, videos and share links. Then:
   - their Tags, Cuisines and Categories are matched on the folded name in the new household and created where missing;
