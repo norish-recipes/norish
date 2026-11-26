@@ -39,3 +39,12 @@ export const FIT_SHEET_OPTIONS = {
   sheetAllowedDetents: "fitToContents",
   contentStyle: { backgroundColor: "transparent" },
 } as const satisfies NativeStackNavigationOptions;
+
+/** A sheet whose content grows or swaps after its first layout (a skeleton, matches, steps). A
+ *  fit sheet in a nested stack keeps its first height and would clip it: one fixed height holds all. */
+export const GROWING_SHEET_OPTIONS = {
+  ...SHEET_OPTIONS,
+  sheetGrabberVisible: false,
+  sheetAllowedDetents: [0.62],
+  sheetExpandsWhenScrolledToEdge: false,
+} as const satisfies NativeStackNavigationOptions;
