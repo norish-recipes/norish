@@ -13,6 +13,7 @@ import {
   getUserRatingWithVersion,
   rateRecipe,
 } from "../mocks/ratings-repository";
+import { ratings } from "../mocks/realtime/ratings";
 import { everyRecipeIn, resetRecipesMocks } from "../mocks/recipes-repository";
 import { createMockAuthedContext, createMockHousehold, createMockUser } from "./test-utils";
 
@@ -243,6 +244,22 @@ describe("ratings procedures", () => {
       expect(trpcLogger.info).toHaveBeenCalledWith(
         { userId: ctx.user.id, recipeId, rating: null, isNew: false },
         "Recipe rating removed"
+      );
+    });
+
+    it("tells only the account that rated when the rating fails", async () => {
+      const recipeId = crypto.randomUUID();
+
+      policy.view = "everyone";
+      ratings.publish.mockClear();
+      rateRecipe.mockRejectedValue(new Error("database down"));
+      await ratingsProcedures.createCaller(ctx as never).rate({ recipeId, rating: 4, version: 1 });
+      await vi.waitFor(() => expect(ratings.publish).toHaveBeenCalled());
+
+      expect(ratings.publish).toHaveBeenCalledWith(
+        "ratingFailed",
+        { recipeId, reason: "database down" },
+        { userId: ctx.user.id }
       );
     });
 

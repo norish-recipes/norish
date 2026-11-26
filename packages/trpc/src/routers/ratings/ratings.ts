@@ -21,12 +21,6 @@ async function ratingAudience(ctx: UserContext, recipeId: string) {
   return (await recipeAudience(recipeId)) ?? (await accountAudience(ctx.user.id));
 }
 
-async function emitRatingFailed(ctx: UserContext, recipeId: string, reason: string): Promise<void> {
-  const audience = await ratingAudience(ctx, recipeId);
-
-  if (audience) void ratings.publish("ratingFailed", { recipeId, reason }, audience);
-}
-
 const rate = authedProcedure.input(RatingInputSchema).mutation(async ({ ctx, input }) => {
   const { recipeId, rating, version } = input;
 
@@ -62,7 +56,11 @@ const rate = authedProcedure.input(RatingInputSchema).mutation(async ({ ctx, inp
       const error = err as Error;
 
       log.error({ err: error, userId: ctx.user.id, recipeId }, "Failed to rate recipe");
-      emitRatingFailed(ctx, recipeId, error.message || "Failed to rate recipe");
+      void ratings.publish(
+        "ratingFailed",
+        { recipeId, reason: error.message || "Failed to rate recipe" },
+        { userId: ctx.user.id }
+      );
     });
 
   return { success: true };
