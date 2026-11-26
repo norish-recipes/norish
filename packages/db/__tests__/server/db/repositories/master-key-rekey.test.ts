@@ -8,6 +8,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import type { MasterKeyRotation } from "@norish/config/crypto";
 import {
+  decrypt,
   encrypt,
   initMasterKey,
   masterKeyFingerprint,
@@ -64,6 +65,28 @@ async function snapshot() {
 
 /** `table.column`, as the re-key counts it. */
 const columnName = (table: PgTable, column: PgColumn) => `${getTableName(table)}.${column.name}`;
+
+/** Every value in a re-keyed column, per row, as `key` reads it: null and "" as they are. */
+async function openedValues(key: Buffer) {
+  const values: Record<string, unknown> = {};
+
+  initMasterKey(key);
+  for (const { table, key: rowKey, sealed } of MASTER_KEY_COLUMNS) {
+    const fields = Object.fromEntries(sealed.map((column) => [columnName(table, column), column]));
+
+    for (const { row, ...columns } of await getTestDb()
+      .select({ ...fields, row: rowKey })
+      .from(table)) {
+      for (const [column, value] of Object.entries(columns)) {
+        values[`${column} of ${String(row)}`] =
+          typeof value === "string" && value !== "" ? decrypt(value) : value;
+      }
+    }
+  }
+  forgetMasterKey();
+
+  return values;
+}
 
 /** Every value in a re-keyed column, with the column it is in. */
 async function sealedValues() {
@@ -162,7 +185,8 @@ describe("re-keying to a new Master Key", () => {
     await testBase.teardown();
   });
 
-  it("moves every encrypted column, seeded here, to the new key alone", async () => {
+  it("moves every encrypted column, seeded here, to the new key alone, every value kept", async () => {
+    const before = await openedValues(previous);
     const { columns: counts } = await rekeyMasterKey(
       masterKeyRotation(previous, current),
       fingerprints
@@ -188,6 +212,8 @@ describe("re-keying to a new Master Key", () => {
         previous: false,
       });
     }
+    // Per row and field, optional ones included: a re-key that cleared one would show here.
+    expect(await openedValues(current)).toEqual(before);
     expect(await getMasterKeyFingerprint()).toBe(fingerprints.to);
   });
 
