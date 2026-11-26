@@ -55,7 +55,8 @@ vi.mock("@/components/search-filter-row", async () => {
       ),
   };
 });
-vi.mock("@norish/shared-react/lists", () => ({
+vi.mock("@norish/shared-react/lists", async (importActual) => ({
+  ...(await importActual<object>()),
   useContentList: () => ({
     retry: held.retry,
     setSearch: held.setSearch,

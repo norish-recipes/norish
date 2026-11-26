@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { View } from "react-native";
 import { ModalHeader } from "@/components/modal-header";
+import { OfflineCapsule } from "@/components/offline-capsule";
 import { useText } from "@/lib/i18n/use-text";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { useIngredientFiltersStore } from "@norish/shared-react/ingredients";
+import { ENTRY_KINDS, isContentList } from "@norish/shared-react/lists";
 import { useConnectivity } from "@norish/shared-react/offline/react";
 
 import { ContentTabs } from "../components/content-tabs";
 import { EntryList } from "../components/entry-list";
 import { IngredientList } from "../components/ingredient-list";
-import { OfflineCapsule } from "@/components/offline-capsule";
-import { ENTRY_KINDS, isContentList, LIST_ONE } from "../utils/content-lists";
+import { LIST_ONE } from "../utils/content-lists";
 
 /** Content: Tags, Cuisines, Categories and Ingredients as segmented tabs on one screen; the plus adds to the one shown. */
 export function ContentScreen() {

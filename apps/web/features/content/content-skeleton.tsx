@@ -9,10 +9,10 @@ import { Section } from "@/components/shared/section";
 import { Skeleton } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import type { SectionTitle } from "@norish/shared-react/lists";
+import type { EntryContentList, SectionTitle } from "@norish/shared-react/lists";
+import { isContentList } from "@norish/shared-react/lists";
 
-import type { EntryContentList } from "./content-lists";
-import { DEFAULT_CONTENT_LIST, isContentList, LIST_ICONS } from "./content-lists";
+import { DEFAULT_CONTENT_LIST, LIST_ICONS } from "./content-lists";
 import { ContentLayout } from "./content-nav";
 import { ContentToolbar } from "./content-toolbar";
 

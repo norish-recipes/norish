@@ -8,11 +8,10 @@ import { SearchFilterRow } from "@/components/search-filter-row";
 import { edgeAt } from "@/lib/card-edges";
 import { useText } from "@/lib/i18n/use-text";
 
-import type { ContentEntry, ContentSection } from "@norish/shared-react/lists";
-import { useContentList } from "@norish/shared-react/lists";
+import type { ContentEntry, ContentSection, EntryContentList } from "@norish/shared-react/lists";
+import { ENTRY_KINDS, useContentList } from "@norish/shared-react/lists";
 
-import type { EntryContentList } from "../utils/content-lists";
-import { ENTRY_KINDS, LIST_ICONS } from "../utils/content-lists";
+import { LIST_ICONS } from "../utils/content-lists";
 import { ContentSkeleton } from "./content-skeleton";
 
 type Row =

@@ -27,6 +27,7 @@ export {
   useAIChangeMutations,
   useAIChangesQuery,
 } from "./use-ai-changes";
+export { DELETE_TOUCHES } from "./delete-touches";
 export { useIngredientList } from "./use-ingredient-list";
 export { useIngredientFor } from "./use-ingredient-for";
 export {

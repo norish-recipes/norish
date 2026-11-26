@@ -3,8 +3,8 @@ import { View } from "react-native";
 import { Segmented } from "@/components/segmented";
 import { useText } from "@/lib/i18n/use-text";
 
-import type { ContentList } from "../utils/content-lists";
-import { CONTENT_LISTS } from "../utils/content-lists";
+import type { ContentList } from "@norish/shared-react/lists";
+import { CONTENT_LISTS } from "@norish/shared-react/lists";
 
 /** The Content page's four lists as segmented tabs; a screen reader hears the selected one. */
 export function ContentTabs({

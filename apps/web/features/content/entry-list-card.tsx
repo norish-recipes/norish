@@ -10,10 +10,9 @@ import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { Button } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import type { PickerKind } from "@norish/shared-react/lists";
+import type { EntryContentList, PickerKind } from "@norish/shared-react/lists";
 import { useContentList, useContentTarget } from "@norish/shared-react/lists";
 
-import type { EntryContentList } from "./content-lists";
 import { LIST_ICONS } from "./content-lists";
 import { EntryListSkeleton } from "./content-skeleton";
 import { ContentToolbar } from "./content-toolbar";

@@ -16,6 +16,7 @@ import { useIntl } from "react-intl";
 import type { IngredientItem } from "@norish/shared-react/ingredients";
 import {
   changeCopy,
+  DELETE_TOUCHES,
   isOpenChange,
   useAIChangeMutations,
   useAIChangesQuery,
@@ -31,8 +32,6 @@ import { FoodNutritionStep } from "../components/food-nutrition-step";
 import { FoodPickerStep } from "../components/food-picker-step";
 import { FoodSpellingsStep } from "../components/food-spellings-step";
 import { NutritionCorrectionStep } from "../components/nutrition-correction-step";
-
-const TOUCHES = ["recipeLines", "groceries", "pantry"] as const;
 
 type Step = "food" | "spellings" | "nutrition" | { correct: boolean };
 
@@ -109,7 +108,7 @@ function FoodSheet({ item }: { item: IngredientItem }) {
   }
 
   const confirmDelete = () => {
-    const touched = TOUCHES.filter((key) => (uses?.counts[key] ?? 0) > 0);
+    const touched = DELETE_TOUCHES.filter((key) => (uses?.counts[key] ?? 0) > 0);
 
     Alert.alert(
       t("deleteTitle", { name: displayName }),

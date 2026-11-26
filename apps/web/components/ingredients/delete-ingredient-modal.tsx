@@ -11,9 +11,7 @@ import { ExclamationTriangleIcon, EyeIcon } from "@heroicons/react/16/solid";
 import { Button, Modal } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { useIngredientUsesQuery } from "@norish/shared-react/ingredients";
-
-const DELETE_TOUCHES = ["recipeLines", "groceries", "pantry"] as const;
+import { DELETE_TOUCHES, useIngredientUsesQuery } from "@norish/shared-react/ingredients";
 
 /** Asks before an Ingredient goes, saying how many lines, groceries and pantry items it touches. */
 export function DeleteIngredientModal({

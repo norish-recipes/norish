@@ -2,8 +2,9 @@
 
 import type { ReactNode } from "react";
 
-import type { ContentList } from "./content-lists";
-import { ENTRY_KINDS } from "./content-lists";
+import type { ContentList } from "@norish/shared-react/lists";
+import { ENTRY_KINDS } from "@norish/shared-react/lists";
+
 import { ContentLayout, ContentNav } from "./content-nav";
 import { EntryListCard } from "./entry-list-card";
 
