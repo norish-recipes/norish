@@ -14,9 +14,9 @@ import { Skeleton } from "heroui-native";
 const INDENT = 24;
 
 /** A card slice's row for a named entry: its `leading` picture, the name with a `tag`, the muted
- * `count`, and a lock mark (named by `lockLabel`) where it is read-only, else a chevron. A tree's
- * row is set in by its `depth` and may carry a `fold` button before it; `trailing` ends the row
- * in place of the lock or chevron. */
+ * `count`, and a lock mark (named by `lockLabel`) where it is read-only, else a chevron where it opens. A
+ * tree's row is set in by its `depth` and may carry a `fold` button before it; `trailing`, a
+ * control of its own, ends the row after the lock or chevron. */
 export function CountRow({
   name,
   count,
@@ -76,14 +76,14 @@ export function CountRow({
           {count}
         </Text>
       ) : null}
-      {trailing ??
-        (lockLabel ? (
-          <View accessibilityLabel={lockLabel} accessibilityRole="image" accessible>
-            <Ionicons color={muted} name="lock-closed-outline" size={15} />
-          </View>
-        ) : onPress ? (
-          <Ionicons color={muted} name="chevron-forward" size={16} />
-        ) : null)}
+      {lockLabel ? (
+        <View accessibilityLabel={lockLabel} accessibilityRole="image" accessible>
+          <Ionicons color={muted} name="lock-closed-outline" size={15} />
+        </View>
+      ) : onPress ? (
+        <Ionicons color={muted} name="chevron-forward" size={16} />
+      ) : null}
+      {trailing}
     </>
   );
   const className = "min-h-[52px] min-w-0 flex-1 flex-row items-center gap-3 px-4";
