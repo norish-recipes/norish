@@ -151,6 +151,7 @@
     "cannotSearchHint": "Norish could not read a search page out of {store}'s shop link. Correct it in Manage Stores and prices follow.",
     "packAmount": "Amount per pack",
     "packUnit": "Unit",
+    "noUnit": "No unit",
     "productPage": "Product page",
     "invalidUrl": "Enter a web address, like https://www.dirk.nl/…",
     "invalidPack": "Enter both an amount and a unit, or neither",

@@ -169,8 +169,8 @@ export function ProductDetailsPanel({
               <PanelPortal>
                 <Select.Popover>
                   <ListBox>
-                    <ListBox.Item id={NO_UNIT} textValue="—">
-                      <span className="text-muted">—</span>
+                    <ListBox.Item id={NO_UNIT} textValue={t("noUnit")}>
+                      <span className="text-muted">{t("noUnit")}</span>
                       <ListBox.ItemIndicator />
                     </ListBox.Item>
                     {UNIT_IDS.map((unit) => (

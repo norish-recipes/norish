@@ -151,6 +151,7 @@
     "cannotSearchHint": "Norish가 {store}의 상점 링크에서 검색 페이지를 읽지 못했습니다. 상점 관리에서 고치면 가격이 따라옵니다.",
     "packAmount": "포장 단위 수량",
     "packUnit": "단위",
+    "noUnit": "단위 없음",
     "productPage": "제품 페이지",
     "invalidUrl": "https://www.dirk.nl/… 같은 웹 주소를 입력하세요",
     "invalidPack": "수량과 단위를 모두 입력하거나 둘 다 비워 두세요",

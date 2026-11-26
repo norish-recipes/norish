@@ -151,6 +151,7 @@
     "cannotSearchHint": "Norish ei saanut hakusivua kaupan {store} linkistä. Korjaa se kohdassa Hallinnoi kauppoja, niin hinnat seuraavat perässä.",
     "packAmount": "Määrä pakkauksessa",
     "packUnit": "Yksikkö",
+    "noUnit": "Ei yksikköä",
     "productPage": "Tuotesivu",
     "invalidUrl": "Anna verkko-osoite, esimerkiksi https://www.dirk.nl/…",
     "invalidPack": "Anna sekä määrä että yksikkö, tai jätä molemmat tyhjiksi",

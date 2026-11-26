@@ -151,6 +151,7 @@
     "cannotSearchHint": "Norish n'a pas pu tirer de page de recherche du lien de {store}. Corrigez-le dans Gérer les magasins et les prix suivront.",
     "packAmount": "Quantité par paquet",
     "packUnit": "Unité",
+    "noUnit": "Aucune unité",
     "productPage": "Page du produit",
     "invalidUrl": "Saisissez une adresse web, comme https://www.dirk.nl/…",
     "invalidPack": "Saisissez une quantité et une unité, ou aucune des deux",

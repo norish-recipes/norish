@@ -151,6 +151,7 @@
     "cannotSearchHint": "Norish nie odczytał strony wyszukiwania z linku sklepu {store}. Popraw go w Zarządzaj sklepami, a ceny się pojawią.",
     "packAmount": "Ilość w opakowaniu",
     "packUnit": "Jednostka",
+    "noUnit": "Brak jednostki",
     "productPage": "Strona produktu",
     "invalidUrl": "Wpisz adres strony, np. https://www.dirk.nl/…",
     "invalidPack": "Podaj zarówno ilość, jak i jednostkę, albo żadnej z nich",

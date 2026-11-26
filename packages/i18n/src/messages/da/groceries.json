@@ -151,6 +151,7 @@
     "cannotSearchHint": "Norish kunne ikke læse en søgeside ud af butikslinket til {store}. Ret det under Administrer butikker, så følger priserne.",
     "packAmount": "Mængde pr. pakke",
     "packUnit": "Enhed",
+    "noUnit": "Ingen enhed",
     "productPage": "Produktside",
     "invalidUrl": "Indtast en webadresse, som https://www.dirk.nl/…",
     "invalidPack": "Indtast både en mængde og en enhed, eller ingen af delene",

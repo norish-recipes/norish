@@ -151,6 +151,7 @@
     "cannotSearchHint": "Norish kon geen zoekpagina uit de winkellink van {store} lezen. Pas hem aan bij Winkels beheren en de prijzen volgen.",
     "packAmount": "Hoeveelheid per verpakking",
     "packUnit": "Eenheid",
+    "noUnit": "Geen eenheid",
     "productPage": "Productpagina",
     "invalidUrl": "Voer een webadres in, zoals https://www.dirk.nl/…",
     "invalidPack": "Vul een hoeveelheid én een eenheid in, of geen van beide",

@@ -151,6 +151,7 @@
     "cannotSearchHint": "لم يستطع Norish استخراج صفحة بحث من رابط متجر {store}. صحّحه من إدارة المتاجر لتظهر الأسعار.",
     "packAmount": "الكمية في العبوة",
     "packUnit": "الوحدة",
+    "noUnit": "بدون وحدة",
     "productPage": "صفحة المنتج",
     "invalidUrl": "أدخل عنوان موقع، مثل https://www.dirk.nl/…",
     "invalidPack": "أدخل الكمية والوحدة معًا، أو اتركهما فارغتين",
