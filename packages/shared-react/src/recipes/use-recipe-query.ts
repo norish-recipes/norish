@@ -6,7 +6,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { FullRecipeDTO } from "@norish/shared/contracts";
 
-import { isNotFoundError, useTRPC } from "../trpc";
+import { useTRPC } from "../trpc";
+import { isNotFoundError } from "../trpc/not-found";
 
 /** What a recipe page shows for its read: the recipe, a skeleton while it is read, not found, or
  * the failed read with Retry. */
