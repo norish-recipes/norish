@@ -17,6 +17,8 @@ const SETTINGS_ROUTE = [
   "features/account/",
   "features/admin/",
   "features/calendar/components/caldav/",
+  "features/content/",
+  "features/ingredients/components/ingredient-add-panel.tsx",
 ];
 
 describe("the root layout's client messages", () => {
