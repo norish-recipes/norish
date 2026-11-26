@@ -87,7 +87,7 @@ describe("a Master Key rotation at boot, over real Postgres and Valkey", () => {
     const valkey = await getPublisherClient();
 
     // First boot on key A.
-    await writeKeyFile({ current: keyA });
+    await writeKeyFile({ current: keyA.toString("base64") });
     await resolveMasterKey(endStoredSessions);
     const first = await bootAuth();
     const signUp = await first.auth.handler(
@@ -127,7 +127,10 @@ describe("a Master Key rotation at boot, over real Postgres and Valkey", () => {
     const info = vi.spyOn(serverLogger, "info");
 
     // The rotation: a new key in the file, the old one beside it, and a boot.
-    await writeKeyFile({ current: keyB, previous: keyA }, { replace: true });
+    await writeKeyFile(
+      { current: keyB.toString("base64"), previous: keyA.toString("base64") },
+      { replace: true }
+    );
     stored = { before: await valkey.keys("*"), after: [] };
     rows = { before: await countRows(), after: {} };
     await resolveMasterKey(endStoredSessions);
@@ -152,7 +155,7 @@ describe("a Master Key rotation at boot, over real Postgres and Valkey", () => {
   });
 
   it("starts on the new key and drops the old one from the key file", async () => {
-    expect(await readKeyFile()).toEqual({ current: keyB });
+    expect(await readKeyFile()).toEqual({ current: keyB.toString("base64") });
   });
 
   it("ends every session Better Auth stored in Valkey, and keeps every other key", async () => {

@@ -22,24 +22,18 @@ import { serverLogger as log } from "@norish/shared-server/logger";
 /** Ends every session the session store keeps; the server's boot hands in Better Auth's. */
 export type EndStoredSessions = () => Promise<{ sessions: number; verifications: number }>;
 
-/** The keys a key file holds: `previous` only between a rotation and the boot that re-keys. */
-export type KeyFile = { current: Buffer; previous?: Buffer };
+/**
+ * The keys a key file holds, each as the text it was given, which a rewrite never re-encodes.
+ * `previous` only between a rotation and the boot that re-keys.
+ */
+export type KeyFile = { current: string; previous?: string };
 
 const fromBase64 = (key: string) => Buffer.from(key, "base64");
-const toBase64 = (key: Buffer) => key.toString("base64");
 
 const KeyFileSchema = z.object({
   current: MasterKeySchema,
   previous: MasterKeySchema.optional(),
 });
-
-/** `keys` with each key converted, and `previous` only when there is one. */
-function mapKeys<From, To>(keys: { current: From; previous?: From }, convert: (key: From) => To) {
-  return {
-    current: convert(keys.current),
-    ...(keys.previous === undefined ? {} : { previous: convert(keys.previous) }),
-  };
-}
 
 const errorCode = (error: unknown) =>
   error instanceof Error && "code" in error ? String(error.code) : "unknown";
@@ -84,7 +78,7 @@ export async function readKeyFile(): Promise<KeyFile | null> {
   await tighten(path.dirname(keyFilePath()), 0o700);
 
   try {
-    return mapKeys(KeyFileSchema.parse(JSON.parse(text)), fromBase64);
+    return KeyFileSchema.parse(JSON.parse(text));
   } catch {
     throw refusal(`${keyFilePath()} is not a Norish key file.`);
   }
@@ -141,7 +135,7 @@ export async function writeKeyFile(keys: KeyFile, { replace = false } = {}): Pro
   const file = keyFilePath();
   const dir = path.dirname(file);
   const temp = `${file}.${randomBytes(8).toString("hex")}.tmp`;
-  const text = JSON.stringify(mapKeys(keys, toBase64));
+  const text = JSON.stringify(keys);
 
   await fs.mkdir(SERVER_CONFIG.UPLOADS_DIR, { recursive: true });
   await fs.mkdir(dir, { recursive: true, mode: 0o700 });
@@ -188,8 +182,8 @@ async function removeLeftoverCopies(): Promise<void> {
   }
 }
 
-/** A key, and how a log or a refusal names it at the start of a sentence. */
-type NamedKey = { bytes: Buffer; label: string };
+/** A key as given and as bytes, and how a log or a refusal names it at the start of a sentence. */
+type NamedKey = { text: string; bytes: Buffer; label: string };
 
 /** Where boot's keys come from: MASTER_KEY pins them, else the key file holds them. */
 type KeySource = { pinned: boolean; keys: { current: NamedKey; previous?: NamedKey } | null };
@@ -200,11 +194,17 @@ const fileLabels = () => ({
   previous: `The previous key in ${keyFilePath()}`,
 });
 
+const namedKey = (text: string, label: string): NamedKey => ({
+  text,
+  bytes: fromBase64(text),
+  label,
+});
+
 /** Each of `keys` beside its label. */
 function named(keys: KeyFile, labels: { current: string; previous: string }) {
   return {
-    current: { bytes: keys.current, label: labels.current },
-    ...(keys.previous && { previous: { bytes: keys.previous, label: labels.previous } }),
+    current: namedKey(keys.current, labels.current),
+    ...(keys.previous && { previous: namedKey(keys.previous, labels.previous) }),
   };
 }
 
@@ -212,7 +212,7 @@ async function keySource(): Promise<KeySource> {
   const { MASTER_KEY, MASTER_KEY_PREVIOUS } = SERVER_CONFIG;
 
   if (MASTER_KEY) {
-    const keys = mapKeys({ current: MASTER_KEY, previous: MASTER_KEY_PREVIOUS }, fromBase64);
+    const keys = { current: MASTER_KEY, previous: MASTER_KEY_PREVIOUS };
 
     return {
       pinned: true,
@@ -238,8 +238,8 @@ function pickKey(source: KeySource, fits: (key: Buffer) => boolean) {
 }
 
 /** A new key file, or the one another first boot wrote at the same time. */
-async function generateKeyFile(): Promise<Buffer> {
-  const key = randomBytes(32);
+async function generateKeyFile(): Promise<string> {
+  const key = randomBytes(32).toString("base64");
 
   try {
     await writeKeyFile({ current: key });
@@ -267,7 +267,7 @@ async function adoptKey(source: KeySource): Promise<[KeySource, string | null]> 
   const newest = encrypted ? await findNewestCiphertext() : null;
   const key = encrypted
     ? pickKey(source, (candidate) => newest !== null && masterKeyOpens(candidate, newest)).key
-    : (source.keys?.current ?? { bytes: await generateKeyFile(), label: fileLabels().current });
+    : (source.keys?.current ?? namedKey(await generateKeyFile(), fileLabels().current));
   // Another first boot may have stored its fingerprint since this one looked; that one stands.
   const stored = await claimMasterKeyFingerprint(masterKeyFingerprint(key.bytes));
 
@@ -350,7 +350,7 @@ async function rekey(
 }
 
 /** Retire a previous key the database no longer needs: the key file drops it, env mode says so. */
-async function retirePrevious(source: KeySource, current: Buffer): Promise<void> {
+async function retirePrevious(source: KeySource, current: string): Promise<void> {
   if (source.pinned) {
     log.warn("MASTER_KEY_PREVIOUS is no longer needed and can be removed");
 
@@ -387,7 +387,7 @@ export async function resolveMasterKey(endStoredSessions: EndStoredSessions): Pr
   if (key !== keys.current) await rekey(key, keys.current, endStoredSessions);
   initMasterKey(keys.current.bytes);
   log.info({ source: keys.current.label }, "Master Key opened");
-  if (keys.previous) await retirePrevious(opening, keys.current.bytes);
+  if (keys.previous) await retirePrevious(opening, keys.current.text);
   await removeLeftoverCopies();
 }
 

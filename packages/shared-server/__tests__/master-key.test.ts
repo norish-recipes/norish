@@ -164,6 +164,10 @@ function failSyncOf(code: string, ...targets: string[]) {
 
 const warnings = () => logged.filter(([level]) => level === "warn");
 
+/** A key's text as a generated one is written: base64 of 32 random bytes. */
+const newKey = () => randomBytes(32).toString("base64");
+const bytesOf = (text: string | undefined) => text && Buffer.from(text, "base64");
+
 beforeEach(() => {
   config.UPLOADS_DIR = path.join(
     mkdtempSync(path.join(os.tmpdir(), "master-key-test-")),
@@ -189,7 +193,7 @@ afterEach(() => {
 
 describe("the key file", () => {
   it("lives under the uploads, readable by this user only, in a folder no one else can list", async () => {
-    const current = randomBytes(32);
+    const current = newKey();
 
     await writeKeyFile({ current });
 
@@ -200,7 +204,7 @@ describe("the key file", () => {
   });
 
   it("keeps a previous key beside the current one", async () => {
-    const keys = { current: randomBytes(32), previous: randomBytes(32) };
+    const keys = { current: newKey(), previous: newKey() };
 
     await writeKeyFile(keys);
 
@@ -211,13 +215,13 @@ describe("the key file", () => {
     await fs.mkdir(keyDir(), { recursive: true, mode: 0o755 });
     await fs.chmod(keyDir(), 0o755);
 
-    await writeKeyFile({ current: randomBytes(32) });
+    await writeKeyFile({ current: newKey() });
 
     expect(await modeOf(keyDir())).toBe(0o700);
   });
 
   it("tightens a file and folder a restore left open, and says so", async () => {
-    const keys = { current: randomBytes(32) };
+    const keys = { current: newKey() };
 
     await writeKeyFile(keys);
     await fs.chmod(keyFilePath(), 0o644);
@@ -230,7 +234,7 @@ describe("the key file", () => {
   });
 
   it("still opens the key when it cannot tighten the file, and says so", async () => {
-    const keys = { current: randomBytes(32) };
+    const keys = { current: newKey() };
 
     await writeKeyFile(keys);
     await fs.chmod(keyFilePath(), 0o644);
@@ -268,22 +272,22 @@ describe("the key file", () => {
   });
 
   it("never replaces a key file unless told to", async () => {
-    const old = { current: randomBytes(32) };
+    const old = { current: newKey() };
 
     await writeKeyFile(old);
 
-    await expect(writeKeyFile({ current: randomBytes(32) })).rejects.toThrow("EEXIST");
+    await expect(writeKeyFile({ current: newKey() })).rejects.toThrow("EEXIST");
     expect(await readKeyFile()).toEqual(old);
     expect(await fs.readdir(keyDir())).toEqual(["master-key.json"]);
   });
 
   it("leaves the old file whole, and no half-written one, when a replace fails", async () => {
-    const old = { current: randomBytes(32) };
+    const old = { current: newKey() };
 
     await writeKeyFile(old);
     vi.spyOn(fs, "rename").mockRejectedValueOnce(new Error("disk gone"));
 
-    await expect(writeKeyFile({ current: randomBytes(32) }, { replace: true })).rejects.toThrow(
+    await expect(writeKeyFile({ current: newKey() }, { replace: true })).rejects.toThrow(
       "disk gone"
     );
 
@@ -294,7 +298,7 @@ describe("the key file", () => {
   it.each(["EPERM", "ENOTSUP", "EOPNOTSUPP", "ENOSYS"])(
     "places the file whole where a hard link fails with %s, never writing it in place",
     async (code) => {
-      const keys = { current: randomBytes(32) };
+      const keys = { current: newKey() };
       const open = vi.spyOn(fs, "open");
 
       vi.spyOn(fs, "link").mockRejectedValue(failure(code));
@@ -308,18 +312,18 @@ describe("the key file", () => {
   );
 
   it("never replaces a key file where hard links fail", async () => {
-    const old = { current: randomBytes(32) };
+    const old = { current: newKey() };
 
     await writeKeyFile(old);
     vi.spyOn(fs, "link").mockRejectedValue(failure("EPERM"));
 
-    await expect(writeKeyFile({ current: randomBytes(32) })).rejects.toThrow("EEXIST");
+    await expect(writeKeyFile({ current: newKey() })).rejects.toThrow("EEXIST");
     expect(await readKeyFile()).toEqual(old);
     expect(await fs.readdir(keyDir())).toEqual(["master-key.json"]);
   });
 
   it("keeps a key file it placed when a flush fails, as another boot may have read it", async () => {
-    const keys = { current: randomBytes(32) };
+    const keys = { current: newKey() };
 
     vi.spyOn(fs, "link").mockRejectedValue(failure("EPERM"));
     failSyncOf("EIO", keyFilePath(), keyDir());
@@ -331,7 +335,7 @@ describe("the key file", () => {
   it.each(["EINVAL", "ENOTSUP", "EOPNOTSUPP", "EISDIR", "ENOSYS"])(
     "places the key file when its folder cannot be flushed (%s), and says so",
     async (code) => {
-      const keys = { current: randomBytes(32) };
+      const keys = { current: newKey() };
 
       failSyncOf(code, keyDir());
       await writeKeyFile(keys);
@@ -344,23 +348,43 @@ describe("the key file", () => {
   it("fails when flushing its folder fails for real", async () => {
     failSyncOf("EIO", keyDir());
 
-    await expect(writeKeyFile({ current: randomBytes(32) })).rejects.toThrow("EIO");
+    await expect(writeKeyFile({ current: newKey() })).rejects.toThrow("EIO");
   });
 
   it("replaces a key file when told to", async () => {
-    const keys = { current: randomBytes(32), previous: randomBytes(32) };
+    const keys = { current: newKey(), previous: newKey() };
 
-    await writeKeyFile({ current: randomBytes(32) });
+    await writeKeyFile({ current: newKey() });
     await writeKeyFile(keys, { replace: true });
 
     expect(await readKeyFile()).toEqual(keys);
     expect(await modeOf(keyFilePath())).toBe(0o600);
+  });
+
+  it("writes a key back as the text it was given when a rewrite keeps it as previous", async () => {
+    // A key's bytes skip what is not base64, so their base64 can fall under 32 characters.
+    const given = "an older key, kept as it was given!!";
+    const current = newKey();
+
+    await fs.mkdir(keyDir(), { recursive: true });
+    await fs.writeFile(keyFilePath(), JSON.stringify({ current: given }));
+    const old = await readKeyFile();
+
+    await writeKeyFile({ current, previous: old?.current }, { replace: true });
+
+    expect(JSON.parse(await fs.readFile(keyFilePath(), "utf8"))).toEqual({
+      current,
+      previous: given,
+    });
+    expect(await readKeyFile()).toEqual({ current, previous: given });
   });
 });
 
 describe("which key boot opens", () => {
   const keyA = randomBytes(32);
   const keyB = randomBytes(32);
+  const textA = keyA.toString("base64");
+  const textB = keyB.toString("base64");
   const fingerprintWritten = () => fingerprintWrites[0];
   const opened = () => hmacIndex("ada@example.com");
   const RESTORE = "The only way back is restoring MASTER_KEY";
@@ -447,13 +471,13 @@ describe("which key boot opens", () => {
       expect(moved?.was).toBe("previous");
       expect(moved?.sealed && decrypt(moved.sealed)).toBe("ada@example.com");
       expect(opened()).toBe(lookupBy(generated));
-      expect(await readKeyFile()).toEqual({ current: generated });
+      expect(await readKeyFile()).toEqual({ current: generated.toString("base64") });
     });
 
     it("generates a key file on a first boot and opens that key", async () => {
       await resolveMasterKey();
 
-      const generated = (await readKeyFile())?.current;
+      const generated = bytesOf((await readKeyFile())?.current);
 
       expect(generated).toHaveLength(32);
       expect(await modeOf(keyFilePath())).toBe(0o600);
@@ -464,7 +488,7 @@ describe("which key boot opens", () => {
     it("ends two first boots at once on one key, the one the file and the fingerprint hold", async () => {
       await Promise.all([resolveMasterKey(), resolveMasterKey()]);
 
-      const kept = (await readKeyFile())?.current;
+      const kept = bytesOf((await readKeyFile())?.current);
 
       expect(kept).toHaveLength(32);
       expect(database.fingerprint).toBe(kept && masterKeyFingerprint(kept));
@@ -489,7 +513,7 @@ describe("which key boot opens", () => {
 
       await resolveMasterKey();
 
-      const generated = (await readKeyFile())?.current;
+      const generated = bytesOf((await readKeyFile())?.current);
 
       expect(generated).toHaveLength(32);
       expect(fingerprintWritten()).toBe(generated && masterKeyFingerprint(generated));
@@ -498,21 +522,21 @@ describe("which key boot opens", () => {
 
     it("adopts the key file another first boot placed meanwhile where hard links fail", async () => {
       vi.spyOn(fs, "link").mockRejectedValue(failure("EPERM"));
-      database.meanwhile = () => writeKeyFile({ current: keyA });
+      database.meanwhile = () => writeKeyFile({ current: textA });
 
       await resolveMasterKey();
 
-      expect(await readKeyFile()).toEqual({ current: keyA });
+      expect(await readKeyFile()).toEqual({ current: textA });
       expect(fingerprintWritten()).toBe(masterKeyFingerprint(keyA));
       expect(opened()).toBe(lookupBy(keyA));
     });
 
     it("keeps a key file a first boot wrote before it stopped", async () => {
-      await writeKeyFile({ current: keyA });
+      await writeKeyFile({ current: textA });
 
       await resolveMasterKey();
 
-      expect(await readKeyFile()).toEqual({ current: keyA });
+      expect(await readKeyFile()).toEqual({ current: textA });
       expect(fingerprintWritten()).toBe(masterKeyFingerprint(keyA));
     });
 
@@ -568,7 +592,7 @@ describe("which key boot opens", () => {
     });
 
     it("opens the key file's key when it matches", async () => {
-      await writeKeyFile({ current: keyA });
+      await writeKeyFile({ current: textA });
 
       await resolveMasterKey();
 
@@ -577,7 +601,7 @@ describe("which key boot opens", () => {
     });
 
     it("ignores the key file in env mode", async () => {
-      await writeKeyFile({ current: keyB });
+      await writeKeyFile({ current: textB });
       config.MASTER_KEY = keyA.toString("base64");
 
       await resolveMasterKey();
@@ -610,12 +634,12 @@ describe("which key boot opens", () => {
     });
 
     it("refuses a key file whose key does not match", async () => {
-      await writeKeyFile({ current: keyB });
+      await writeKeyFile({ current: textB });
 
       await expect(resolveMasterKey()).rejects.toThrow(
         `The key in ${keyFilePath()} is not the key this database is encrypted with.`
       );
-      expect(await readKeyFile()).toEqual({ current: keyB });
+      expect(await readKeyFile()).toEqual({ current: textB });
     });
 
     describe("and the previous key matching it", () => {
@@ -765,13 +789,13 @@ describe("which key boot opens", () => {
       });
 
       it("opens no key and keeps the key file when the re-key fails, so the next boot retries", async () => {
-        await writeKeyFile({ current: keyB, previous: keyA });
+        await writeKeyFile({ current: textB, previous: textA });
         rekeys.failure = new Error("disk gone");
 
         await expect(resolveMasterKey()).rejects.toThrow("The re-key failed");
         expect(openedKeys).toEqual([]);
         expect(database.fingerprint).toBe(masterKeyFingerprint(keyA));
-        expect(await readKeyFile()).toEqual({ current: keyB, previous: keyA });
+        expect(await readKeyFile()).toEqual({ current: textB, previous: textA });
 
         rekeys.failure = null;
         await resolveMasterKey();
@@ -779,19 +803,38 @@ describe("which key boot opens", () => {
       });
 
       it("re-keys from the key file's previous key, then leaves no copy of it", async () => {
-        await writeKeyFile({ current: keyB, previous: keyA });
+        await writeKeyFile({ current: textB, previous: textA });
 
         await resolveMasterKey();
 
         expect(rekeys.calls).toHaveLength(1);
         expect(opened()).toBe(lookupBy(keyB));
-        expect(await readKeyFile()).toEqual({ current: keyB });
+        expect(await readKeyFile()).toEqual({ current: textB });
         expect(await fs.readdir(keyDir())).toEqual(["master-key.json"]);
         expect(await fs.readFile(keyFilePath(), "utf8")).not.toContain(keyA.toString("base64"));
       });
 
+      it("keeps a current key's text as it was given, so the next boot starts plainly", async () => {
+        const given = "my own key, typed by hand. 2026: ok!";
+        const fingerprint = masterKeyFingerprint(Buffer.from(given, "base64"));
+
+        await fs.mkdir(keyDir(), { recursive: true });
+        await fs.writeFile(keyFilePath(), JSON.stringify({ current: given, previous: textA }));
+        await resolveMasterKey();
+
+        expect(database.fingerprint).toBe(fingerprint);
+        expect(JSON.parse(await fs.readFile(keyFilePath(), "utf8"))).toEqual({ current: given });
+
+        await resolveMasterKey();
+
+        expect(rekeys.calls).toHaveLength(1);
+        expect(database.fingerprint).toBe(fingerprint);
+        expect(opened()).toBe(lookupBy(Buffer.from(given, "base64")));
+        expect(said()).not.toContain(given);
+      });
+
       it("then starts plainly on the next boot", async () => {
-        await writeKeyFile({ current: keyB, previous: keyA });
+        await writeKeyFile({ current: textB, previous: textA });
         await resolveMasterKey();
         rekeys.calls.length = 0;
 
@@ -827,22 +870,22 @@ describe("which key boot opens", () => {
 
       it("still starts, says so, and drops it on the first boot that can", async () => {
         database.fingerprint = masterKeyFingerprint(keyB);
-        await writeKeyFile({ current: keyB, previous: keyA });
+        await writeKeyFile({ current: textB, previous: textA });
         const unlock = await lockKeyFolder();
 
         await resolveMasterKey();
 
         expect(opened()).toBe(lookupBy(keyB));
         expect(errors()).toEqual([["error", { path: keyFilePath(), code: "EPERM" }, RETAINED]]);
-        expect(await readKeyFile()).toEqual({ current: keyB, previous: keyA });
+        expect(await readKeyFile()).toEqual({ current: textB, previous: textA });
 
         await unlock();
         await resolveMasterKey();
-        expect(await readKeyFile()).toEqual({ current: keyB });
+        expect(await readKeyFile()).toEqual({ current: textB });
       });
 
       it("still starts right after the re-key commits, the database on the new key", async () => {
-        await writeKeyFile({ current: keyB, previous: keyA });
+        await writeKeyFile({ current: textB, previous: textA });
         const unlock = await lockKeyFolder();
 
         await resolveMasterKey();
@@ -855,29 +898,29 @@ describe("which key boot opens", () => {
         await unlock();
         await resolveMasterKey();
         expect(rekeys.calls).toHaveLength(1);
-        expect(await readKeyFile()).toEqual({ current: keyB });
+        expect(await readKeyFile()).toEqual({ current: textB });
       });
     });
 
     describe("and a previous key that is retired already", () => {
       it("drops it from a key file a crash left it in after the re-key committed", async () => {
         database.fingerprint = masterKeyFingerprint(keyB);
-        await writeKeyFile({ current: keyB, previous: keyA });
+        await writeKeyFile({ current: textB, previous: textA });
 
         await resolveMasterKey();
 
         expect(rekeys.calls).toEqual([]);
         expect(opened()).toBe(lookupBy(keyB));
-        expect(await readKeyFile()).toEqual({ current: keyB });
+        expect(await readKeyFile()).toEqual({ current: textB });
       });
 
       it("drops one that equals the current key", async () => {
-        await writeKeyFile({ current: keyA, previous: keyA });
+        await writeKeyFile({ current: textA, previous: textA });
 
         await resolveMasterKey();
 
         expect(rekeys.calls).toEqual([]);
-        expect(await readKeyFile()).toEqual({ current: keyA });
+        expect(await readKeyFile()).toEqual({ current: textA });
       });
 
       it("says MASTER_KEY_PREVIOUS can go in env mode", async () => {
@@ -897,7 +940,7 @@ describe("which key boot opens", () => {
     const leftover = () => `${keyFilePath()}.0123456789abcdef.tmp`;
 
     it("removes the copies a crash mid-write left beside the key file", async () => {
-      await writeKeyFile({ current: keyA });
+      await writeKeyFile({ current: textA });
       await fs.writeFile(leftover(), JSON.stringify({ current: keyB.toString("base64") }));
 
       await resolveMasterKey();
@@ -915,7 +958,7 @@ describe("which key boot opens", () => {
     });
 
     it("still starts when it cannot remove a leftover copy, and says so", async () => {
-      await writeKeyFile({ current: keyA });
+      await writeKeyFile({ current: textA });
       await fs.writeFile(leftover(), JSON.stringify({ current: keyB.toString("base64") }));
       vi.spyOn(fs, "rm").mockRejectedValue(failure("EACCES"));
 
@@ -926,7 +969,7 @@ describe("which key boot opens", () => {
     });
 
     it("refuses when neither the key file's key nor its previous one matches", async () => {
-      await writeKeyFile({ current: keyB, previous: randomBytes(32) });
+      await writeKeyFile({ current: textB, previous: newKey() });
 
       await expect(resolveMasterKey()).rejects.toThrow(
         `The key in ${keyFilePath()} is not the key this database is encrypted with.`
@@ -947,7 +990,7 @@ describe("which key boot opens", () => {
 
     it("opens the key the fingerprint names, writing nothing", async () => {
       database.fingerprint = masterKeyFingerprint(keyA);
-      await writeKeyFile({ current: keyA });
+      await writeKeyFile({ current: textA });
 
       await openMasterKey();
 
@@ -957,13 +1000,13 @@ describe("which key boot opens", () => {
 
     it("opens the previous key while a re-key is pending, as the data is still under it", async () => {
       database.fingerprint = masterKeyFingerprint(keyA);
-      await writeKeyFile({ current: keyB, previous: keyA });
+      await writeKeyFile({ current: textB, previous: textA });
 
       await openMasterKey();
 
       expect(opened()).toBe(lookupBy(keyA));
       expect(rekeys.calls).toEqual([]);
-      expect(await readKeyFile()).toEqual({ current: keyB, previous: keyA });
+      expect(await readKeyFile()).toEqual({ current: textB, previous: textA });
     });
 
     it("refuses a key the fingerprint does not name", async () => {
