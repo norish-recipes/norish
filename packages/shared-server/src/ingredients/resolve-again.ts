@@ -6,6 +6,7 @@ import { findIngredientHouseholds } from "@norish/db/repositories/ingredient-cat
 import { repointLines } from "@norish/db/repositories/ingredient-cleanup";
 import { writeGroceryParts } from "@norish/db/repositories/ingredient-relocation";
 import { getUnits } from "@norish/shared-server/config/server-config-loader";
+import { groupBy } from "@norish/shared/lib/group-by";
 import { lineFoodText, lineNamesNoFood } from "@norish/shared/lib/ingredient-text";
 
 import type { ResolveMode } from "./resolver";
@@ -138,14 +139,11 @@ async function resolveByHousehold<R extends NamingRow, T>(
   rows: readonly R[],
   resolve: (held: R[], householdId: string) => Promise<T[]>
 ): Promise<T[]> {
-  const byHousehold = new Map<string, R[]>();
   const resolved: T[] = [];
 
-  for (const row of rows) {
-    byHousehold.set(row.householdId, [...(byHousehold.get(row.householdId) ?? []), row]);
-  }
-  for (const [householdId, held] of byHousehold)
+  for (const [householdId, held] of groupBy(rows, (row) => row.householdId)) {
     resolved.push(...(await resolve(held, householdId)));
+  }
 
   return resolved;
 }

@@ -6,7 +6,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { withTransaction } from "@norish/db/drizzle";
 import {
   deleteCatalogueAlias,
-  listCatalogueHouseholds,
+  forEachCatalogue,
   listCatalogueIngredients,
   listIngredientUses,
 } from "@norish/db/repositories/ingredient-catalogue";
@@ -481,7 +481,7 @@ describe("insertSeededIngredient", () => {
   });
 });
 
-describe("listCatalogueHouseholds", () => {
+describe("forEachCatalogue", () => {
   const testBase = new RepositoryTestBase("test_catalogue_households");
 
   beforeAll(async () => {
@@ -496,7 +496,7 @@ describe("listCatalogueHouseholds", () => {
     await testBase.teardown();
   });
 
-  it("lists every household holding a food or a spelling of its own, a seeded food's included", async () => {
+  it("runs in every household holding a food or a spelling of its own, a seeded food's included", async () => {
     const [withFood, withSpelling, without] = [
       testHouseholdOf((await createTestUser()).id),
       testHouseholdOf((await createTestUser()).id),
@@ -505,16 +505,14 @@ describe("listCatalogueHouseholds", () => {
     const leek = (await createTestIngredient({ name: "leek" }))!;
 
     await createTestIngredient({ name: "prei", householdId: withFood });
-    await getTestDb()
-      .insert(schema.ingredientAliases)
-      .values({
-        householdId: withSpelling,
-        text: "stokprei",
-        fold: "stokprei",
-        ingredientId: leek.id,
-      });
+    await getTestDb().insert(schema.ingredientAliases).values({
+      householdId: withSpelling,
+      text: "stokprei",
+      fold: "stokprei",
+      ingredientId: leek.id,
+    });
 
-    const listed = await listCatalogueHouseholds();
+    const listed = await forEachCatalogue(async (householdId) => householdId);
 
     expect(listed.sort()).toEqual([withFood, withSpelling].sort());
     expect(listed).not.toContain(without);

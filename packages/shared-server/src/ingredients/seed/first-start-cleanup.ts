@@ -13,7 +13,7 @@ import {
   deleteUnnamedOwnFoods,
   findCatalogueAliasOwner,
   findIngredientIdByFold,
-  listCatalogueHouseholds,
+  forEachCatalogue,
   unflagHiddenFoods,
   unmarkChosenParents,
 } from "@norish/db/repositories/ingredient-catalogue";
@@ -191,8 +191,10 @@ async function cleanUpCatalogue(from: number): Promise<CleanupOutcome> {
   }
 
   // 6. A hidden food has no flag (`unflagHiddenFoods`), household by household.
-  for (const householdId of await listCatalogueHouseholds()) {
-    outcome.unflagged += await underTreeLock((tx) => unflagHiddenFoods(tx, householdId));
+  for (const unflagged of await forEachCatalogue((householdId) =>
+    underTreeLock((tx) => unflagHiddenFoods(tx, householdId))
+  )) {
+    outcome.unflagged += unflagged;
   }
 
   // 8. A flag says only that AI changed a food unsure (`clearRetiredFlags`).

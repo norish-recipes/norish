@@ -23,6 +23,7 @@ import {
 } from "@norish/db/repositories/ingredient-seed";
 import { getIngredientWords, getUnits } from "@norish/shared-server/config/server-config-loader";
 import { dbLogger } from "@norish/shared-server/logger";
+import { groupBy } from "@norish/shared/lib/group-by";
 import { stripHtmlTags } from "@norish/shared/lib/helpers";
 import { catalogueLanguagesFor, norishReads } from "@norish/shared/lib/ingredient-names";
 import { namesNoFood } from "@norish/shared/lib/ingredient-text";
@@ -622,12 +623,15 @@ async function resolveTexts(
  * finds only foods already there. Once written, as a parent must be listed.
  */
 async function adoptEarlierVariants(mintedIds: readonly string[]): Promise<void> {
-  const byHousehold = new Map<string, string[]>();
+  const minted = [...(await findIngredientHouseholds(mintedIds))].flatMap(([id, householdId]) =>
+    householdId ? [{ id, householdId }] : []
+  );
 
-  for (const [id, householdId] of await findIngredientHouseholds(mintedIds)) {
-    if (householdId) byHousehold.set(householdId, [...(byHousehold.get(householdId) ?? []), id]);
-  }
-  for (const [householdId, ids] of byHousehold) {
+  for (const [householdId, ids] of groupBy(
+    minted,
+    (food) => food.householdId,
+    (food) => food.id
+  )) {
     for (const variant of await listParentlessMintsSpelledWith(householdId, ids)) {
       const parentId = await (await readName(householdId, variant.name)).parent(variant.id);
 

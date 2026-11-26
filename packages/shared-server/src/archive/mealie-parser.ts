@@ -6,6 +6,7 @@ import { serverLogger as log } from "@norish/shared-server/logger";
 import { FullRecipeInsertDTO } from "@norish/shared/contracts";
 import { sortSourceCategories } from "@norish/shared/lib/category-matcher";
 import { inferSystemUsedFromParsed } from "@norish/shared/lib/determine-recipe-system";
+import { groupBy } from "@norish/shared/lib/group-by";
 import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 
 import { saveImageBytes } from "../media/storage";
@@ -223,19 +224,6 @@ export type MealieLookups = {
  */
 export function idKey(id: string): string {
   return id.replaceAll("-", "").toLowerCase();
-}
-
-function groupBy<T, V>(rows: T[], key: (row: T) => string, value: (row: T) => V) {
-  const groups = new Map<string, V[]>();
-
-  for (const row of rows) {
-    const group = groups.get(key(row));
-
-    if (group) group.push(value(row));
-    else groups.set(key(row), [value(row)]);
-  }
-
-  return groups;
 }
 
 /**

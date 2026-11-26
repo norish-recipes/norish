@@ -13,6 +13,7 @@ import { resolveAgain } from "@norish/shared-server/ingredients/resolve-again";
 import { resolveIngredient, resolveIngredients } from "@norish/shared-server/ingredients/resolver";
 import { readIngredientSeedState } from "@norish/shared-server/ingredients/seed/catalogue-seed";
 import { createLogger } from "@norish/shared-server/logger";
+import { groupBy } from "@norish/shared/lib/group-by";
 import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
 const BATCH_SIZE = 500;
@@ -67,8 +68,7 @@ async function resolveAll<R extends { id: string }>(
 async function upgradePantry(): Promise<number> {
   const pantry = await listPantryIngredientsWithoutSpelling();
 
-  for (const householdId of new Set(pantry.map((row) => row.householdId))) {
-    const owned = pantry.filter((row) => row.householdId === householdId);
+  for (const [householdId, owned] of groupBy(pantry, (row) => row.householdId)) {
     const foods = await resolveIngredients(
       owned.map((row) => row.name),
       { householdId, userId: null },

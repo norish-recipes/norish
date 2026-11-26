@@ -7,6 +7,7 @@ import { AsyncLocalStorage } from "node:async_hooks";
 
 import { createLogger } from "@norish/shared-server/logger";
 import { ingredients as ingredientsRealtime } from "@norish/shared-server/realtime/ingredients";
+import { groupBy } from "@norish/shared/lib/group-by";
 
 const log = createLogger("ingredients");
 
@@ -38,8 +39,8 @@ export const realtimeIngredientChanges: IngredientChangePublisher = {
 
 let publisher: IngredientChangePublisher = realtimeIngredientChanges;
 
-/** The changes held back per audience (null: everyone), per async call tree. */
-type HeldChanges = Map<string | null, Set<string>>;
+/** The changes held back, each with its audience (null: everyone), per async call tree. */
+type HeldChanges = Array<{ ingredientIds: readonly string[]; householdId: string | null }>;
 
 /**
  * The changes held back per async call tree, on `globalThis` under a `Symbol.for` key so two
@@ -58,10 +59,7 @@ export function ingredientChanges(): IngredientChangePublisher {
 
   return {
     async changed(ingredientIds, householdId) {
-      const ids = batch.get(householdId) ?? new Set<string>();
-
-      for (const id of ingredientIds) ids.add(id);
-      batch.set(householdId, ids);
+      batch.push({ ingredientIds, householdId });
     },
   };
 }
@@ -71,12 +69,14 @@ export function ingredientChanges(): IngredientChangePublisher {
  * so an AI round over a thousand foods is one refetch. Other requests announce as ever.
  */
 export async function announcingTogether<T>(run: () => Promise<T>): Promise<T> {
-  const batch: HeldChanges = new Map();
+  const batch: HeldChanges = [];
 
   try {
     return await held.run(batch, run);
   } finally {
-    for (const [householdId, ids] of batch) {
+    for (const [householdId, held] of groupBy(batch, (change) => change.householdId)) {
+      const ids = new Set(held.flatMap((change) => change.ingredientIds));
+
       if (ids.size > 0) await publisher.changed([...ids], householdId);
     }
   }

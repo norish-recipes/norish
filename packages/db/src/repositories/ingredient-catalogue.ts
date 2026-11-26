@@ -587,20 +587,26 @@ export async function listSpellingHouseholds(ingredientId: string): Promise<stri
 
 /** The seed's foods, then each household's listed own foods: what a run over every catalogue covers. */
 export async function listListedFoodsOfEveryCatalogue(): Promise<string[]> {
-  const listed = await listListedIngredientIds(null);
+  return [
+    ...(await listListedIngredientIds(null)),
+    ...(await forEachCatalogue(listListedIngredientIds)).flat(),
+  ];
+}
 
-  for (const householdId of await listCatalogueHouseholds()) {
-    listed.push(...(await listListedIngredientIds(householdId)));
-  }
+/** Run `each` in every household that has a catalogue, one after another; their answers in order. */
+export async function forEachCatalogue<T>(each: (householdId: string) => Promise<T>): Promise<T[]> {
+  const answers: T[] = [];
 
-  return listed;
+  for (const householdId of await listCatalogueHouseholds()) answers.push(await each(householdId));
+
+  return answers;
 }
 
 /**
  * Every household with a food or spelling of its own (on a seeded food too): what a run over the
  * catalogue loops over, each in its own.
  */
-export async function listCatalogueHouseholds(): Promise<string[]> {
+async function listCatalogueHouseholds(): Promise<string[]> {
   const rows = await db
     .select({ householdId: ingredients.householdId })
     .from(ingredients)

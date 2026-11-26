@@ -27,10 +27,10 @@ import {
   findCatalogueAliasOwner,
   findCatalogueIngredientOwner,
   findIngredientIdByFold,
+  forEachCatalogue,
   insertCatalogueAlias,
   keepIngredientDistinct,
   listCatalogueAliasesOf,
-  listCatalogueHouseholds,
   listCatalogueIngredients,
   renameCatalogueIngredient,
   sweepUnusedCatalogueIngredients,
@@ -546,9 +546,7 @@ export async function deleteIngredient(
  * that no person added by hand; seeded ones stay.
  */
 export async function sweepUnusedIngredients(): Promise<{ deleted: number }> {
-  let count = 0;
-
-  for (const householdId of await listCatalogueHouseholds()) {
+  const counts = await forEachCatalogue(async (householdId) => {
     const deleted = await withTransaction(async (tx) => {
       await lockTree(tx);
 
@@ -556,10 +554,11 @@ export async function sweepUnusedIngredients(): Promise<{ deleted: number }> {
     });
 
     if (deleted.length > 0) await ingredientChanges().changed(deleted, householdId);
-    count += deleted.length;
-  }
 
-  return { deleted: count };
+    return deleted.length;
+  });
+
+  return { deleted: counts.reduce((sum, count) => sum + count, 0) };
 }
 
 /**

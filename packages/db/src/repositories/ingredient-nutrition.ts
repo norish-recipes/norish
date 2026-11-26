@@ -14,6 +14,7 @@ import {
   recipeIngredients,
   recipes,
 } from "@norish/db/schema";
+import { groupBy } from "@norish/shared/lib/group-by";
 
 import type { RecipeListContext } from "./recipes";
 import { isAnyOf } from "./array-params";
@@ -151,10 +152,11 @@ export async function findNutritionFoods(
 
   if (pairs.length === 0 && wantedNdbs.length === 0) return [];
 
-  const codesOf = new Map<string, string[]>();
-
-  for (const [dataset, code] of pairs)
-    codesOf.set(dataset, [...(codesOf.get(dataset) ?? []), code]);
+  const codesOf = groupBy(
+    pairs,
+    ([dataset]) => dataset,
+    ([, code]) => code
+  );
 
   return await db
     .select()

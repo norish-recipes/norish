@@ -24,7 +24,10 @@ const catalogue = vi.hoisted(() => ({
       new Map(ids.filter((id) => id !== "gone").map((id) => [id, `${id}!`]))
   ),
   // Two households: a seeded food two households spelled is asked about once.
-  listCatalogueHouseholds: vi.fn(async () => ["household-a", "household-b"]),
+  forEachCatalogue: vi.fn(async (each: (householdId: string) => Promise<unknown>) => [
+    await each("household-a"),
+    await each("household-b"),
+  ]),
   listAskableIngredientIds: vi.fn(async (householdId: string) =>
     householdId === "household-a" ? ["uien"] : []
   ),
