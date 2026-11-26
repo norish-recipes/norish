@@ -24,7 +24,7 @@ import {
 } from "@norish/shared/contracts/zod";
 
 import { listAislesByStoreIds, saveStoreAisles } from "./aisles";
-import { assertOwnReferences, householdRow } from "./household-rows";
+import { assertOwnReferences, householdRow, ownRowIds } from "./household-rows";
 
 // Fuse.js configuration for ingredient name fuzzy matching
 // threshold: 0 = exact match, 1 = match anything
@@ -319,6 +319,11 @@ export async function getStoreHouseholdId(storeId: string): Promise<string | nul
     .limit(1);
 
   return row?.householdId ?? null;
+}
+
+/** Whether the household's Store exists; another household's is refused. */
+export async function ownStoreExists(householdId: string, storeId: string): Promise<boolean> {
+  return (await ownRowIds(stores, householdId, [storeId])).size > 0;
 }
 
 export async function countGroceriesInStore(storeId: string, householdId: string): Promise<number> {

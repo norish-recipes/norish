@@ -4,7 +4,6 @@
  * who may add and remove, when nothing is written, and what the household
  * hears about it.
  */
-import { TRPCError } from "@trpc/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { pantryProcedures } from "../../src/routers/pantry/pantry";
@@ -14,7 +13,6 @@ import {
   createMockHousehold,
   createMockUser,
 } from "../calendar/test-utils";
-import { assertHouseholdAccess } from "../mocks/permissions";
 import { pantry } from "../mocks/realtime/pantry";
 
 const { addToPantry, addPickedToPantry } = vi.hoisted(() => ({
@@ -23,7 +21,7 @@ const { addToPantry, addPickedToPantry } = vi.hoisted(() => ({
 }));
 const pantryRepository = vi.hoisted(() => ({
   deletePantryIngredient: vi.fn(),
-  getPantryIngredientHouseholdId: vi.fn(),
+  ownPantryIngredientExists: vi.fn(),
   listPantryIngredientsByHousehold: vi.fn(),
   listPantrySuggestions: vi.fn(),
 }));
@@ -47,7 +45,6 @@ describe("the Pantry", () => {
   const caller = pantryProcedures.createCaller(createMockCallerContext(ctx));
 
   beforeEach(() => {
-    assertHouseholdAccess.mockReturnValue(undefined);
     addToPantry.mockImplementation(async (id: string, input: { userId: string; name: string }) => [
       {
         item: {
@@ -59,7 +56,7 @@ describe("the Pantry", () => {
         created: true,
       },
     ]);
-    pantryRepository.getPantryIngredientHouseholdId.mockResolvedValue(ctx.householdId);
+    pantryRepository.ownPantryIngredientExists.mockResolvedValue(true);
     pantryRepository.deletePantryIngredient.mockResolvedValue(true);
   });
 
@@ -174,7 +171,6 @@ describe("the Pantry", () => {
   it("removes an item and tells the household which", async () => {
     await expect(caller.remove({ id: OLIVE })).resolves.toBe(OLIVE);
 
-    expect(assertHouseholdAccess).toHaveBeenCalledWith(ctx.householdId, ctx.householdId);
     expect(pantryRepository.deletePantryIngredient).toHaveBeenCalledWith(OLIVE, ctx.householdId);
     expect(pantry.publish).toHaveBeenCalledWith(
       "removed",
@@ -190,13 +186,8 @@ describe("the Pantry", () => {
     expect(pantry.publish).not.toHaveBeenCalled();
   });
 
-  it("refuses to remove another household's item, or one that does not exist", async () => {
-    assertHouseholdAccess.mockImplementation(() => {
-      throw new TRPCError({ code: "FORBIDDEN" });
-    });
-    await expect(caller.remove({ id: OLIVE })).rejects.toMatchObject({ code: "FORBIDDEN" });
-
-    pantryRepository.getPantryIngredientHouseholdId.mockResolvedValue(null);
+  it("refuses to remove an item that does not exist", async () => {
+    pantryRepository.ownPantryIngredientExists.mockResolvedValue(false);
     await expect(caller.remove({ id: OLIVE })).rejects.toMatchObject({ code: "NOT_FOUND" });
     expect(pantryRepository.deletePantryIngredient).not.toHaveBeenCalled();
     expect(pantry.publish).not.toHaveBeenCalled();

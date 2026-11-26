@@ -9,7 +9,6 @@ import { DEFAULT_RECIPE_PERMISSION_POLICY, policyAllows } from "@norish/config/z
 
 export const policy: RecipePermissionPolicy = { ...DEFAULT_RECIPE_PERMISSION_POLICY };
 
-export const assertHouseholdAccess = vi.fn();
 export const canAccessResource = vi.fn(
   async (action: keyof RecipePermissionPolicy, reader: string, row: string) =>
     policyAllows(policy, action, reader, row)
@@ -30,7 +29,6 @@ export const assertAIEnabled = vi.fn(async () => {
 
 export function resetPermissionsMocks() {
   Object.assign(policy, DEFAULT_RECIPE_PERMISSION_POLICY);
-  assertHouseholdAccess.mockReset();
   canAccessResource.mockClear();
   isAIEnabled.mockReset().mockResolvedValue(true);
 }

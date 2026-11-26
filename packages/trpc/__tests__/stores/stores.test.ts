@@ -16,7 +16,6 @@ import {
   createMockUser,
 } from "../calendar/test-utils";
 import { createMockGrocery } from "../groceries/test-utils";
-import { assertHouseholdAccess } from "../mocks/permissions";
 import { groceries } from "../mocks/realtime/groceries";
 import { stores } from "../mocks/realtime/stores";
 
@@ -26,7 +25,7 @@ const storesRepository = vi.hoisted(() => ({
   createStore: vi.fn(),
   deleteStore: vi.fn(),
   getStoreById: vi.fn(),
-  getStoreHouseholdId: vi.fn(),
+  ownStoreExists: vi.fn(),
   listStoresByHousehold: vi.fn(),
   reorderStores: vi.fn(),
   updateStore: vi.fn(),
@@ -60,8 +59,7 @@ describe("stores procedures", () => {
   const ctx = createMockAuthedContext(user, household);
 
   beforeEach(() => {
-    storesRepository.getStoreHouseholdId.mockResolvedValue(ctx.householdId);
-    assertHouseholdAccess.mockReturnValue(undefined);
+    storesRepository.ownStoreExists.mockResolvedValue(true);
   });
 
   it("checks the link the client just saved, not the one it replaced", async () => {
@@ -131,7 +129,7 @@ describe("stores procedures", () => {
   });
 
   it("answers an update to a Store that no longer exists as stale", async () => {
-    storesRepository.getStoreHouseholdId.mockResolvedValue(null);
+    storesRepository.ownStoreExists.mockResolvedValue(false);
 
     const caller = storesProcedures.createCaller(createMockCallerContext(ctx));
 
@@ -252,7 +250,7 @@ describe("stores procedures", () => {
   });
 
   it("takes a delete of a Store already gone as done", async () => {
-    storesRepository.getStoreHouseholdId.mockResolvedValue(null);
+    storesRepository.ownStoreExists.mockResolvedValue(false);
 
     const caller = storesProcedures.createCaller(createMockCallerContext(ctx));
 

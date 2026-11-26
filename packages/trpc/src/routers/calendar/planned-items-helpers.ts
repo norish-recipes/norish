@@ -8,17 +8,16 @@ import type {
   PlannedItemMoveInputSchema,
   PlannedItemWithRecipePayload,
 } from "@norish/shared/contracts/zod";
-import { assertHouseholdAccess } from "@norish/auth/permissions";
 import {
   createPlannedItem,
   deletePlannedItem,
   editPlannedItem,
   getPlannedItemById,
-  getPlannedItemHouseholdId,
   getPlannedItemWithRecipeById,
   listPlannedItemsByHouseholdAndDateRange,
   listPlannedItemsWithRecipeBySlot,
   moveItem,
+  ownPlannedItemExists,
 } from "@norish/db/repositories/planned-items";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { publishCalendarItemEvent } from "@norish/shared-server/realtime/calendar-items";
@@ -184,10 +183,7 @@ export async function createCalendarItem(ctx: CalendarProcedureContext, input: C
 
 /** The household's plan entry, null when gone; another household's is refused. */
 async function plannedItemOfHousehold(ctx: CalendarProcedureContext, itemId: string) {
-  const householdId = await getPlannedItemHouseholdId(itemId);
-
-  if (!householdId) return null;
-  assertHouseholdAccess(ctx.householdId, householdId);
+  if (!(await ownPlannedItemExists(ctx.householdId, itemId))) return null;
 
   return getPlannedItemById(itemId, ctx.householdId);
 }

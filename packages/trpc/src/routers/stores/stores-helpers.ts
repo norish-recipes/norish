@@ -1,12 +1,11 @@
 import type z from "zod";
 import { TRPCError } from "@trpc/server";
 
-import { assertHouseholdAccess } from "@norish/auth/permissions";
 import {
   checkStoreNameExistsInHousehold,
   createStore,
-  getStoreHouseholdId,
   listStoresByHousehold,
+  ownStoreExists,
 } from "@norish/db/repositories/stores";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { stores } from "@norish/shared-server/realtime/stores";
@@ -26,12 +25,7 @@ export async function storeExistsForHousehold(
   ctx: Pick<StoreProcedureContext, "householdId">,
   storeId: string
 ): Promise<boolean> {
-  const householdId = await getStoreHouseholdId(storeId);
-
-  if (!householdId) return false;
-  assertHouseholdAccess(ctx.householdId, householdId);
-
-  return true;
+  return ownStoreExists(ctx.householdId, storeId);
 }
 
 /** Every procedure handed a store id (to price under, link to, or file a grocery in) holds it to this. */

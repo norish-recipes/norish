@@ -4,15 +4,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { trpcLogger } from "@norish/shared-server/logger";
 import { plannedItemsProcedures } from "@norish/trpc/routers/calendar/planned-items";
 
-import { assertHouseholdAccess } from "../mocks/permissions";
 import {
   deletePlannedItem,
   editPlannedItem,
   getPlannedItemById,
-  getPlannedItemHouseholdId,
   getPlannedItemWithRecipeById,
   listPlannedItemsWithRecipeBySlot,
   moveItem,
+  ownPlannedItemExists,
 } from "../mocks/planned-items";
 import { calendar } from "../mocks/realtime/calendar";
 import {
@@ -52,9 +51,8 @@ describe("calendar planned items stale handling", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    getPlannedItemHouseholdId.mockResolvedValue(ctx.householdId);
+    ownPlannedItemExists.mockResolvedValue(true);
     getPlannedItemById.mockResolvedValue(createPlannedItem());
-    assertHouseholdAccess.mockReturnValue(undefined);
   });
 
   it("logs stale moveItem mutations as no-ops", async () => {

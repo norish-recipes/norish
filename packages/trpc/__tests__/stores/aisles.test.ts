@@ -5,7 +5,6 @@
  * resolver are mocked; what is pinned here is who may file where, and what
  * the household hears about it.
  */
-import { TRPCError } from "@trpc/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { aisleProcedures } from "../../src/routers/stores/aisles";
@@ -16,7 +15,6 @@ import {
   createMockUser,
 } from "../calendar/test-utils";
 import { resolveIngredient } from "../mocks/ingredient-resolver";
-import { assertHouseholdAccess } from "../mocks/permissions";
 import { stores } from "../mocks/realtime/stores";
 
 const aislesRepository = vi.hoisted(() => ({
@@ -27,7 +25,7 @@ const aislesRepository = vi.hoisted(() => ({
 }));
 
 const storesRepository = vi.hoisted(() => ({
-  getStoreHouseholdId: vi.fn(),
+  ownStoreExists: vi.fn(),
   listStoresByHousehold: vi.fn(),
 }));
 
@@ -50,8 +48,7 @@ describe("filing a name at a Store", () => {
   const caller = aisleProcedures.createCaller(createMockCallerContext(ctx));
 
   beforeEach(() => {
-    storesRepository.getStoreHouseholdId.mockResolvedValue(ctx.householdId);
-    assertHouseholdAccess.mockReturnValue(undefined);
+    storesRepository.ownStoreExists.mockResolvedValue(true);
     aislesRepository.getAisleById.mockResolvedValue({ id: ZUIVEL, storeId: STORE, name: "Zuivel" });
     aislesRepository.fileIngredient.mockImplementation(
       async (storeId: string, ingredientId: string, aisleId: string | null) => ({
@@ -101,18 +98,6 @@ describe("filing a name at a Store", () => {
     const [first, second] = stores.publish.mock.calls.map((call) => call[1]);
 
     expect(second).toEqual(first);
-  });
-
-  it("refuses to file at a Store of another household", async () => {
-    assertHouseholdAccess.mockImplementation(() => {
-      throw new TRPCError({ code: "FORBIDDEN" });
-    });
-
-    await expect(
-      caller.fileGroceryName({ storeId: OTHER_STORE, name: "melk", aisleId: ZUIVEL })
-    ).rejects.toMatchObject({ code: "FORBIDDEN" });
-    expect(aislesRepository.fileIngredient).not.toHaveBeenCalled();
-    expect(stores.publish).not.toHaveBeenCalled();
   });
 
   it("refuses an aisle that is not the Store's", async () => {

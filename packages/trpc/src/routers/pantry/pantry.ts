@@ -1,12 +1,11 @@
 import { TRPCError } from "@trpc/server";
 
 import type { PantryIngredientDto, PantrySuggestionDto } from "@norish/shared/contracts";
-import { assertHouseholdAccess } from "@norish/auth/permissions";
 import {
   deletePantryIngredient,
-  getPantryIngredientHouseholdId,
   listPantryIngredientsByHousehold,
   listPantrySuggestions,
+  ownPantryIngredientExists,
 } from "@norish/db/repositories/pantry";
 import { addPickedToPantry, addToPantry } from "@norish/shared-server/ingredients/pantry";
 import { trpcLogger as log } from "@norish/shared-server/logger";
@@ -63,12 +62,9 @@ const add = authedProcedure.input(PantryIngredientAddSchema).mutation(async ({ c
 
 /** A Pantry Ingredient a procedure names is the household's own. */
 async function assertPantryIngredientAccess(householdId: string, id: string): Promise<void> {
-  const rowHouseholdId = await getPantryIngredientHouseholdId(id);
-
-  if (!rowHouseholdId) {
+  if (!(await ownPantryIngredientExists(householdId, id))) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Pantry ingredient not found" });
   }
-  assertHouseholdAccess(householdId, rowHouseholdId);
 }
 
 /** Take a name out of the Pantry: any member of the household may. */

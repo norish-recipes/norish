@@ -41,11 +41,6 @@ export async function resourceAccess(
   return action === "view" || (await canAccessResource(action, readerHouseholdId, rowHouseholdId));
 }
 
-/** Refuses a household row that belongs to another household than the caller's. */
-export function assertHouseholdAccess(householdId: string, rowHouseholdId: string): void {
-  if (householdId !== rowHouseholdId) throw new Error("FORBIDDEN");
-}
-
 export async function assertAIEnabled(): Promise<void> {
   const enabled = await isAIEnabled();
 

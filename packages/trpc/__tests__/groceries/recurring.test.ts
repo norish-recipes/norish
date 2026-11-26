@@ -9,7 +9,6 @@ import { createGroceries, listGroceriesByHousehold, lockGroceryList } from "../m
 import { TX } from "../mocks/drizzle";
 import { parseIngredientWithDefaults } from "../mocks/helpers";
 import { resolveGroceryNames } from "../mocks/ingredient-groceries";
-import { assertHouseholdAccess } from "../mocks/permissions";
 import { groceries } from "../mocks/realtime/groceries";
 import { stores } from "../mocks/realtime/stores";
 import { calculateNextOccurrence } from "../mocks/recurrence";
@@ -20,7 +19,7 @@ import {
   deleteRecurringGroceryById,
   detachRecurringGrocery,
   getRecurringGroceryById,
-  getRecurringGroceryHouseholdId,
+  ownRecurringGroceryExists,
   updateRecurringGrocery,
   updateRecurringGroceryWithGrocery,
 } from "../mocks/recurring-groceries";
@@ -35,7 +34,7 @@ import {
 
 const storesRepository = vi.hoisted(() => ({
   findBestIngredientStorePreference: vi.fn(),
-  getStoreHouseholdId: vi.fn(),
+  ownStoreExists: vi.fn(),
   upsertIngredientStorePreference: vi.fn(),
   // A household with no Store that points at a shop: pricing notices the
   // groceries, finds nothing to ask, and visits nothing.
@@ -104,9 +103,8 @@ describe("recurring groceries procedures", () => {
 
   beforeEach(() => {
     ctx = createMockAuthedContext(mockUser, mockHousehold);
-    getRecurringGroceryHouseholdId.mockResolvedValue(ctx.householdId);
-    storesRepository.getStoreHouseholdId.mockResolvedValue(ctx.householdId);
-    assertHouseholdAccess.mockReturnValue(undefined);
+    ownRecurringGroceryExists.mockResolvedValue(true);
+    storesRepository.ownStoreExists.mockResolvedValue(true);
     createRecurringGroceries.mockImplementation(madeAsAsked);
     listGroceriesByHousehold.mockResolvedValue([]);
     createGroceries.mockImplementation(groceriesAsAsked);
@@ -979,7 +977,7 @@ describe("a failed repeat edit rejects, so Replay parks it", () => {
     ["deleteRecurring", () => caller().deleteRecurring({ recurringGroceryId: "r1", version: 2 })],
     ["checkRecurring", () => caller().checkRecurring({ ...versions, isDone: true })],
   ])("%s", async (_, write) => {
-    getRecurringGroceryHouseholdId.mockResolvedValue(null);
+    ownRecurringGroceryExists.mockResolvedValue(false);
 
     await expect(write()).rejects.toThrow("Recurring grocery not found");
     // The app's own client toasts the rejection; a `failed` event would toast it twice.
@@ -1003,9 +1001,8 @@ describe("a repeating grocery asks its Store what it knows", () => {
 
   beforeEach(() => {
     ctx = createMockAuthedContext(mockUser, mockHousehold);
-    getRecurringGroceryHouseholdId.mockResolvedValue(ctx.householdId);
-    storesRepository.getStoreHouseholdId.mockResolvedValue(ctx.householdId);
-    assertHouseholdAccess.mockReturnValue(undefined);
+    ownRecurringGroceryExists.mockResolvedValue(true);
+    storesRepository.ownStoreExists.mockResolvedValue(true);
     storeProductsRepository.resolveProductLinks.mockResolvedValue([link]);
     // Pricing answers only for the household's own Stores.
     storesRepository.listStoresByHousehold.mockResolvedValue([

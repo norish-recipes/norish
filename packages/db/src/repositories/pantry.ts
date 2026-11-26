@@ -16,7 +16,7 @@ import {
 } from "@norish/db/schema";
 import { PantryIngredientSelectSchema, PantrySuggestionSchema } from "@norish/shared/contracts/zod";
 
-import { assertOwnReferences, householdRow } from "./household-rows";
+import { assertOwnReferences, householdRow, ownRowIds } from "./household-rows";
 import { inCatalogue } from "./household-scope";
 import { findLocaleNames } from "./ingredient-aliases";
 import { coveredCte } from "./pantry-coverage";
@@ -193,14 +193,9 @@ async function findPantryIngredient(
 }
 
 /** The household a Pantry Ingredient belongs to, for the household guard. */
-export async function getPantryIngredientHouseholdId(id: string): Promise<string | null> {
-  const [row] = await db
-    .select({ householdId: pantryIngredients.householdId })
-    .from(pantryIngredients)
-    .where(eq(pantryIngredients.id, id))
-    .limit(1);
-
-  return row?.householdId ?? null;
+/** Whether the household's Pantry Ingredient exists; another household's is refused. */
+export async function ownPantryIngredientExists(householdId: string, id: string): Promise<boolean> {
+  return (await ownRowIds(pantryIngredients, householdId, [id])).size > 0;
 }
 
 /**

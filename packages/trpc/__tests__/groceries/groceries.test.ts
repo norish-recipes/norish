@@ -25,19 +25,18 @@ import {
   deleteDoneInStore,
   deleteGroceryByIds,
   getGroceriesByIds,
-  getGroceryHouseholdIds,
   getGroceryRecipeLine,
   getRecipeInfoForGroceries,
   listGroceriesByHousehold,
   lockGroceryList,
   markAllDoneInStore,
+  ownGroceryIds,
   reorderGroceriesInStore,
   updateGroceries,
 } from "../mocks/db";
 import { TX } from "../mocks/drizzle";
 import { parseIngredientWithDefaults } from "../mocks/helpers";
 import { resolveGroceryNames } from "../mocks/ingredient-groceries";
-import { assertHouseholdAccess } from "../mocks/permissions";
 import { groceries } from "../mocks/realtime/groceries";
 import { stores } from "../mocks/realtime/stores";
 import {
@@ -55,7 +54,7 @@ import {
 
 const storesRepository = vi.hoisted(() => ({
   findBestIngredientStorePreference: vi.fn(),
-  getStoreHouseholdId: vi.fn(),
+  ownStoreExists: vi.fn(),
   upsertIngredientStorePreference: vi.fn(),
   // A household with no Store that points at a shop: pricing notices the
   // groceries, finds nothing to ask, and visits nothing.
@@ -127,7 +126,7 @@ describe("groceries procedures", () => {
 
   beforeEach(() => {
     // Every Store a test files a grocery under is the household's own.
-    storesRepository.getStoreHouseholdId.mockResolvedValue("user-1");
+    storesRepository.ownStoreExists.mockResolvedValue(true);
     ctx = createMockAuthedContext(mockUser, mockHousehold);
   });
 
@@ -173,7 +172,7 @@ describe("groceries openapi procedures", () => {
 
   beforeEach(() => {
     // Every Store a test files a grocery under is the household's own.
-    storesRepository.getStoreHouseholdId.mockResolvedValue("user-1");
+    storesRepository.ownStoreExists.mockResolvedValue(true);
     ctx = createMockAuthedContext(mockUser, mockHousehold);
     getRecipeInfoForGroceries.mockResolvedValue(new Map());
     storesRepository.findBestIngredientStorePreference.mockResolvedValue(null);
@@ -381,14 +380,13 @@ describe("groceries openapi procedures", () => {
 
   it("marks a grocery done and returns the updated grocery", async () => {
     const groceryId = crypto.randomUUID();
-    const ownerIds = new Map([[groceryId, ctx.user.id]]);
+    const ownerIds = new Set([groceryId]);
     const grocery = createMockGrocery({ id: groceryId, isDone: false, version: 2 });
     const updated = { ...grocery, isDone: true };
 
-    getGroceryHouseholdIds.mockResolvedValue(ownerIds);
+    ownGroceryIds.mockResolvedValue(ownerIds);
     getGroceriesByIds.mockResolvedValue([grocery]);
     updateGroceries.mockResolvedValue([updated]);
-    assertHouseholdAccess.mockReturnValue(undefined);
 
     const caller = openApiGroceriesRouter.createCaller(createMockCallerContext(ctx));
     const result = await caller.markGroceryDone({ id: groceryId, version: 2 });
@@ -399,8 +397,7 @@ describe("groceries openapi procedures", () => {
   it("deletes a grocery and reports stale state", async () => {
     const groceryId = crypto.randomUUID();
 
-    getGroceryHouseholdIds.mockResolvedValue(new Map([[groceryId, ctx.user.id]]));
-    assertHouseholdAccess.mockReturnValue(undefined);
+    ownGroceryIds.mockResolvedValue(new Set([groceryId]));
     deleteGroceryByIds.mockResolvedValue({ deletedIds: [], staleIds: [groceryId] });
 
     const caller = openApiGroceriesRouter.createCaller(createMockCallerContext(ctx));
@@ -428,7 +425,7 @@ describe("groceries openapi procedures", () => {
         c.assignGroceryToStore({ id, version: 1, storeId: null, savePreference: false }),
     ],
   ])("%s answers NOT_FOUND for a grocery that does not exist", async (_, call) => {
-    getGroceryHouseholdIds.mockResolvedValue(new Map());
+    ownGroceryIds.mockResolvedValue(new Set());
     getGroceriesByIds.mockResolvedValue([]);
 
     await expect(call(caller(), crypto.randomUUID())).rejects.toMatchObject({
@@ -442,14 +439,13 @@ describe("groceries openapi procedures", () => {
 
   it("marks a grocery as undone and returns the updated grocery", async () => {
     const groceryId = crypto.randomUUID();
-    const ownerIds = new Map([[groceryId, ctx.user.id]]);
+    const ownerIds = new Set([groceryId]);
     const grocery = createMockGrocery({ id: groceryId, isDone: true, version: 4 });
     const updated = { ...grocery, isDone: false };
 
-    getGroceryHouseholdIds.mockResolvedValue(ownerIds);
+    ownGroceryIds.mockResolvedValue(ownerIds);
     getGroceriesByIds.mockResolvedValue([grocery]);
     updateGroceries.mockResolvedValue([updated]);
-    assertHouseholdAccess.mockReturnValue(undefined);
 
     const caller = openApiGroceriesRouter.createCaller(createMockCallerContext(ctx));
     const result = await caller.markGroceryUndone({ id: groceryId, version: 4 });
@@ -463,10 +459,9 @@ describe("groceries openapi procedures", () => {
     const grocery = createMockGrocery({ id: groceryId, name: "Milk", storeId: null });
     const updated = { ...grocery, storeId };
 
-    getGroceryHouseholdIds.mockResolvedValue(new Map([[groceryId, ctx.user.id]]));
+    ownGroceryIds.mockResolvedValue(new Set([groceryId]));
     getGroceriesByIds.mockResolvedValue([grocery]);
-    storesRepository.getStoreHouseholdId.mockResolvedValue(ctx.householdId);
-    assertHouseholdAccess.mockReturnValue(undefined);
+    storesRepository.ownStoreExists.mockResolvedValue(true);
     assignGroceryToStore.mockResolvedValue(updated);
 
     const caller = openApiGroceriesRouter.createCaller(createMockCallerContext(ctx));
@@ -477,166 +472,6 @@ describe("groceries openapi procedures", () => {
   });
 });
 
-describe("grocery permission checks", () => {
-  const _mockUser = createMockUser({ id: "user-1" });
-  const _mockHousehold = createMockHousehold({
-    users: [
-      { id: "user-1", name: "User 1", version: 1 },
-      { id: "user-2", name: "User 2", version: 1 },
-    ],
-  });
-
-  beforeEach(() => {
-    // Every Store a test files a grocery under is the household's own.
-    storesRepository.getStoreHouseholdId.mockResolvedValue("user-1");
-  });
-
-  describe("update permission", () => {
-    it("allows owner to update their grocery", async () => {
-      const groceryId = "grocery-1";
-      const ownerIds = new Map([[groceryId, "user-1"]]);
-
-      getGroceryHouseholdIds.mockResolvedValue(ownerIds);
-      assertHouseholdAccess.mockReturnValue(undefined);
-
-      await assertHouseholdAccess("household-1", "user-1");
-
-      expect(assertHouseholdAccess).toHaveBeenCalledWith("household-1", "user-1");
-    });
-
-    it("allows household member to update grocery", async () => {
-      const groceryId = "grocery-1";
-      const ownerIds = new Map([[groceryId, "user-2"]]);
-
-      getGroceryHouseholdIds.mockResolvedValue(ownerIds);
-      assertHouseholdAccess.mockReturnValue(undefined);
-
-      await assertHouseholdAccess("household-1", "user-2");
-
-      expect(assertHouseholdAccess).toHaveBeenCalledWith("household-1", "user-2");
-    });
-
-    it("throws when grocery not found", async () => {
-      getGroceryHouseholdIds.mockResolvedValue(new Map());
-
-      const ownerIds = await getGroceryHouseholdIds(["non-existent"]);
-
-      expect(ownerIds.size).toBe(0);
-    });
-  });
-
-  describe("delete permission", () => {
-    it("allows deleting multiple groceries when all are accessible", async () => {
-      const _groceryIds = ["g1", "g2"];
-      const ownerIds = new Map([
-        ["g1", "user-1"],
-        ["g2", "user-2"],
-      ]);
-
-      getGroceryHouseholdIds.mockResolvedValue(ownerIds);
-      assertHouseholdAccess.mockReturnValue(undefined);
-      deleteGroceryByIds.mockResolvedValue(undefined);
-
-      for (const ownerId of ownerIds.values()) {
-        await assertHouseholdAccess("household-1", ownerId);
-      }
-
-      expect(assertHouseholdAccess).toHaveBeenCalledTimes(2);
-    });
-  });
-});
-
-describe("grocery emitter", () => {
-  beforeEach(() => {
-    // Every Store a test files a grocery under is the household's own.
-    storesRepository.getStoreHouseholdId.mockResolvedValue("user-1");
-  });
-
-  it("emits created event after successful creation", async () => {
-    const mockGroceries = [createMockGrocery({ id: "new-1", name: "New Item" })];
-
-    createGroceries.mockResolvedValue({ created: mockGroceries, shifted: [] });
-
-    void groceries.publish("created", { groceries: mockGroceries }, { householdId: "household-1" });
-
-    expect(groceries.publish).toHaveBeenCalledWith(
-      "created",
-      {
-        groceries: mockGroceries,
-      },
-      { householdId: "household-1" }
-    );
-  });
-
-  it("emits updated event after successful update", async () => {
-    const mockUpdated = [createMockGrocery({ id: "g1", name: "Updated" })];
-
-    updateGroceries.mockResolvedValue(mockUpdated);
-
-    void groceries.publish(
-      "updated",
-      { changedGroceries: mockUpdated },
-      { householdId: "household-1" }
-    );
-
-    expect(groceries.publish).toHaveBeenCalledWith(
-      "updated",
-      {
-        changedGroceries: mockUpdated,
-      },
-      { householdId: "household-1" }
-    );
-  });
-
-  it("emits deleted event after successful deletion", async () => {
-    const groceryIds = ["g1", "g2"];
-
-    deleteGroceryByIds.mockResolvedValue(undefined);
-
-    void groceries.publish("deleted", { groceryIds }, { householdId: "household-1" });
-
-    expect(groceries.publish).toHaveBeenCalledWith(
-      "deleted",
-      {
-        groceryIds,
-      },
-      { householdId: "household-1" }
-    );
-  });
-});
-
-describe("toggle procedure logic", () => {
-  beforeEach(() => {
-    // Every Store a test files a grocery under is the household's own.
-    storesRepository.getStoreHouseholdId.mockResolvedValue("user-1");
-  });
-
-  it("toggles isDone for multiple groceries", async () => {
-    const groceryIds = ["g1", "g2"];
-    const ownerIds = new Map([
-      ["g1", "user-1"],
-      ["g2", "user-1"],
-    ]);
-    const groceries = [
-      createMockGrocery({ id: "g1", isDone: false }),
-      createMockGrocery({ id: "g2", isDone: false }),
-    ];
-
-    getGroceryHouseholdIds.mockResolvedValue(ownerIds);
-    getGroceriesByIds.mockResolvedValue(groceries);
-    assertHouseholdAccess.mockReturnValue(undefined);
-    updateGroceries.mockResolvedValue(groceries.map((g) => ({ ...g, isDone: true })));
-
-    const fetchedGroceries = await getGroceriesByIds(groceryIds);
-    const updatedGroceries = fetchedGroceries.map((g: ReturnType<typeof createMockGrocery>) => ({
-      ...g,
-      isDone: true,
-    }));
-
-    expect(updatedGroceries.every((g: { isDone: boolean }) => g.isDone)).toBe(true);
-  });
-});
-
 describe("stale grocery updates", () => {
   const mockUser = createMockUser();
   const mockHousehold = createMockHousehold();
@@ -644,7 +479,7 @@ describe("stale grocery updates", () => {
 
   beforeEach(() => {
     // Every Store a test files a grocery under is the household's own.
-    storesRepository.getStoreHouseholdId.mockResolvedValue("user-1");
+    storesRepository.ownStoreExists.mockResolvedValue(true);
     listGroceriesByHousehold.mockResolvedValue([]);
     ctx = createMockAuthedContext(mockUser, mockHousehold);
   });
@@ -652,8 +487,7 @@ describe("stale grocery updates", () => {
   it("drops stale grocery row updates and asks clients to refresh", async () => {
     const groceryId = crypto.randomUUID();
 
-    getGroceryHouseholdIds.mockResolvedValue(new Map([[groceryId, ctx.user.id]]));
-    assertHouseholdAccess.mockReturnValue(undefined);
+    ownGroceryIds.mockResolvedValue(new Set([groceryId]));
     updateGroceries.mockResolvedValue([]);
 
     const caller = groceriesProcedures.createCaller(createMockCallerContext(ctx));
@@ -682,9 +516,8 @@ describe("stale grocery updates", () => {
     const groceryId = crypto.randomUUID();
     const recipeIngredientId = crypto.randomUUID();
 
-    getGroceryHouseholdIds.mockResolvedValue(new Map([[groceryId, ctx.user.id]]));
+    ownGroceryIds.mockResolvedValue(new Set([groceryId]));
     getGroceryRecipeLine.mockResolvedValue(recipeIngredientId);
-    assertHouseholdAccess.mockReturnValue(undefined);
     updateGroceries.mockResolvedValue([]);
 
     const caller = groceriesProcedures.createCaller(createMockCallerContext(ctx));
@@ -702,8 +535,7 @@ describe("stale grocery updates", () => {
     const groceryId = crypto.randomUUID();
     const storeId = crypto.randomUUID();
 
-    getGroceryHouseholdIds.mockResolvedValue(new Map([[groceryId, ctx.user.id]]));
-    assertHouseholdAccess.mockReturnValue(undefined);
+    ownGroceryIds.mockResolvedValue(new Set([groceryId]));
     updateGroceries.mockResolvedValue([
       createMockGrocery({ id: groceryId, name: "Oat Milk", storeId }),
     ]);
@@ -726,8 +558,7 @@ describe("stale grocery updates", () => {
     const groceryId = crypto.randomUUID();
     const storeId = crypto.randomUUID();
 
-    getGroceryHouseholdIds.mockResolvedValue(new Map([[groceryId, ctx.user.id]]));
-    assertHouseholdAccess.mockReturnValue(undefined);
+    ownGroceryIds.mockResolvedValue(new Set([groceryId]));
     updateGroceries.mockResolvedValue([
       createMockGrocery({ id: groceryId, name: "Oat Milk", storeId }),
     ]);
@@ -757,9 +588,8 @@ describe("stale grocery updates", () => {
       product: { id: crypto.randomUUID(), storeId, name: "Cola 1 L", price: 1.49 },
     };
 
-    getGroceryHouseholdIds.mockResolvedValue(new Map([[groceryId, ctx.user.id]]));
-    assertHouseholdAccess.mockReturnValue(undefined);
-    storesRepository.getStoreHouseholdId.mockResolvedValue(ctx.householdId);
+    ownGroceryIds.mockResolvedValue(new Set([groceryId]));
+    storesRepository.ownStoreExists.mockResolvedValue(true);
     getGroceriesByIds.mockResolvedValue([createMockGrocery({ id: groceryId, name: "cola" })]);
     reorderGroceriesInStore.mockResolvedValue([
       createMockGrocery({ id: groceryId, name: "cola", storeId }),
@@ -794,8 +624,7 @@ describe("stale grocery updates", () => {
     const groceryId = crypto.randomUUID();
     const storeId = crypto.randomUUID();
 
-    getGroceryHouseholdIds.mockResolvedValue(new Map([[groceryId, ctx.user.id]]));
-    assertHouseholdAccess.mockReturnValue(undefined);
+    ownGroceryIds.mockResolvedValue(new Set([groceryId]));
     updateGroceries.mockResolvedValue([createMockGrocery({ id: groceryId, storeId })]);
 
     const caller = groceriesProcedures.createCaller(createMockCallerContext(ctx));
@@ -822,8 +651,7 @@ describe("stale grocery updates", () => {
     const groceryId = crypto.randomUUID();
     const currentStoreId = crypto.randomUUID();
 
-    getGroceryHouseholdIds.mockResolvedValue(new Map([[groceryId, ctx.user.id]]));
-    assertHouseholdAccess.mockReturnValue(undefined);
+    ownGroceryIds.mockResolvedValue(new Set([groceryId]));
     updateGroceries.mockResolvedValue([createMockGrocery({ id: groceryId, storeId: null })]);
 
     const caller = groceriesProcedures.createCaller(createMockCallerContext(ctx));
@@ -847,8 +675,7 @@ describe("stale grocery updates", () => {
   it("omits storeId from updateData when not provided", async () => {
     const groceryId = crypto.randomUUID();
 
-    getGroceryHouseholdIds.mockResolvedValue(new Map([[groceryId, ctx.user.id]]));
-    assertHouseholdAccess.mockReturnValue(undefined);
+    ownGroceryIds.mockResolvedValue(new Set([groceryId]));
     updateGroceries.mockResolvedValue([createMockGrocery({ id: groceryId })]);
 
     const caller = groceriesProcedures.createCaller(createMockCallerContext(ctx));
@@ -875,7 +702,7 @@ describe("grocery names through Ingredient Aliases", () => {
   const ctx = createMockAuthedContext(createMockUser(), createMockHousehold());
 
   beforeEach(() => {
-    storesRepository.getStoreHouseholdId.mockResolvedValue("user-1");
+    storesRepository.ownStoreExists.mockResolvedValue(true);
     listGroceriesByHousehold.mockResolvedValue([]);
     createGroceries.mockImplementation(
       async (items: Array<{ id: string; groceries: { name: string | null } }>) => ({
@@ -1034,8 +861,7 @@ describe("grocery names through Ingredient Aliases", () => {
     const groceryId = crypto.randomUUID();
     const storeId = crypto.randomUUID();
 
-    getGroceryHouseholdIds.mockResolvedValue(new Map([[groceryId, ctx.user.id]]));
-    assertHouseholdAccess.mockReturnValue(undefined);
+    ownGroceryIds.mockResolvedValue(new Set([groceryId]));
     getGroceriesByIds.mockResolvedValue([createMockGrocery({ id: groceryId, name: "zout" })]);
     parseIngredientWithDefaults.mockReturnValueOnce([
       { description: "zout en peper", quantity: 2, unitOfMeasure: "el" },
@@ -1094,8 +920,7 @@ describe("grocery names through Ingredient Aliases", () => {
     const groceryId = crypto.randomUUID();
     const recipeLine = crypto.randomUUID();
 
-    getGroceryHouseholdIds.mockResolvedValue(new Map([[groceryId, ctx.user.id]]));
-    assertHouseholdAccess.mockReturnValue(undefined);
+    ownGroceryIds.mockResolvedValue(new Set([groceryId]));
     getGroceryRecipeLine.mockResolvedValue(recipeLine);
     // The recipe the line came from is out of view now.
     getRecipeInfoForGroceries.mockResolvedValue(new Map());
@@ -1122,8 +947,7 @@ describe("grocery names through Ingredient Aliases", () => {
   it("writes none of a renamed grocery's other foods when the rename was stale", async () => {
     const groceryId = crypto.randomUUID();
 
-    getGroceryHouseholdIds.mockResolvedValue(new Map([[groceryId, ctx.user.id]]));
-    assertHouseholdAccess.mockReturnValue(undefined);
+    ownGroceryIds.mockResolvedValue(new Set([groceryId]));
     getGroceriesByIds.mockResolvedValue([createMockGrocery({ id: groceryId, name: "zout" })]);
     parseIngredientWithDefaults.mockReturnValueOnce([
       { description: "zout en peper", quantity: 1, unitOfMeasure: null },
@@ -1148,8 +972,7 @@ describe("grocery names through Ingredient Aliases", () => {
   it("resolves a renamed grocery's new name", async () => {
     const groceryId = crypto.randomUUID();
 
-    getGroceryHouseholdIds.mockResolvedValue(new Map([[groceryId, ctx.user.id]]));
-    assertHouseholdAccess.mockReturnValue(undefined);
+    ownGroceryIds.mockResolvedValue(new Set([groceryId]));
     updateGroceries.mockResolvedValue([createMockGrocery({ id: groceryId })]);
 
     await groceriesProcedures
@@ -1176,12 +999,11 @@ describe("a grocery write answers whether it was refused as stale", () => {
   const row = createMockGrocery({ id });
 
   beforeEach(() => {
-    storesRepository.getStoreHouseholdId.mockResolvedValue("user-1");
+    storesRepository.ownStoreExists.mockResolvedValue(true);
     listGroceriesByHousehold.mockResolvedValue([]);
     ctx = createMockAuthedContext(mockUser, mockHousehold);
-    getGroceryHouseholdIds.mockResolvedValue(new Map([[id, ctx.user.id]]));
+    ownGroceryIds.mockResolvedValue(new Set([id]));
     getGroceriesByIds.mockResolvedValue([row]);
-    assertHouseholdAccess.mockReturnValue(undefined);
   });
 
   const caller = () => groceriesProcedures.createCaller(createMockCallerContext(ctx));
@@ -1244,7 +1066,7 @@ describe("a grocery write answers whether it was refused as stale", () => {
     "%s rejects a write that failed, so Replay parks it",
     async (_, answer, write) => {
       answer(true);
-      getGroceryHouseholdIds.mockRejectedValue(new Error("database down"));
+      ownGroceryIds.mockRejectedValue(new Error("database down"));
       markAllDoneInStore.mockRejectedValue(new Error("database down"));
       deleteDoneInStore.mockRejectedValue(new Error("database down"));
 
@@ -1281,7 +1103,7 @@ describe("a grocery write answers whether it was refused as stale", () => {
     "%s answers stale: true for a line another member deleted",
     async (_, answer, write) => {
       answer(false);
-      getGroceryHouseholdIds.mockResolvedValue(new Map());
+      ownGroceryIds.mockResolvedValue(new Set());
       getGroceriesByIds.mockResolvedValue([]);
 
       await expect(write()).resolves.toEqual({ success: true, stale: true });
@@ -1292,23 +1114,10 @@ describe("a grocery write answers whether it was refused as stale", () => {
     "%s of a line already gone succeeds as a no-op",
     async (_, answer, write) => {
       answer(false);
-      getGroceryHouseholdIds.mockResolvedValue(new Map());
+      ownGroceryIds.mockResolvedValue(new Set());
       getGroceriesByIds.mockResolvedValue([]);
 
       await expect(write()).resolves.toEqual({ success: true, stale: false });
-    }
-  );
-
-  it.each(writes.filter(([name]) => !["markAllDone", "deleteDone"].includes(name)))(
-    "%s refuses a line of another household",
-    async (_, answer, write) => {
-      answer(true);
-      getGroceryHouseholdIds.mockResolvedValue(new Map([[id, "stranger"]]));
-      assertHouseholdAccess.mockImplementation(() => {
-        throw new Error("FORBIDDEN");
-      });
-
-      await expect(write()).rejects.toThrow("FORBIDDEN");
     }
   );
 });

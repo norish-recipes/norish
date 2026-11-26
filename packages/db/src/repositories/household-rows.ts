@@ -1,5 +1,5 @@
 import type { SQL } from "drizzle-orm";
-import type { AnyPgColumn } from "drizzle-orm/pg-core";
+import type { AnyPgColumn, PgTable } from "drizzle-orm/pg-core";
 import { and, count, eq } from "drizzle-orm";
 
 import type { Db, DbTransaction } from "@norish/db/drizzle";
@@ -56,6 +56,31 @@ type Ids = ReadonlyArray<string | null | undefined>;
 const named = (ids: Ids = []) => [...new Set(ids.filter((id): id is string => !!id))];
 
 /**
+ * The ids among these that exist, refusing any another household holds: a reference to another
+ * household's row answers like a missing one (ADR-0041).
+ */
+export async function ownRowIds(
+  table: PgTable & Pick<HouseholdTable, "id" | "householdId">,
+  householdId: string,
+  ids: Ids = [],
+  tx: Db = db
+): Promise<Set<string>> {
+  const wanted = named(ids);
+
+  if (wanted.length === 0) return new Set();
+  const rows = await tx
+    .select({ id: table.id, householdId: table.householdId })
+    .from(table)
+    .where(isAnyOf(table.id, wanted, "uuid"));
+
+  if (rows.some((row) => row.householdId !== householdId)) {
+    throw new ForeignHouseholdReferenceError();
+  }
+
+  return new Set(rows.map((row) => String(row.id)));
+}
+
+/**
  * Throws unless every Store and recurring grocery named here is the household's own, and no food or
  * spelling is outside its catalogue (ADR-0042); one gone is the foreign key's to refuse.
  */
@@ -69,32 +94,23 @@ export async function assertOwnReferences(
   },
   tx: Db = db
 ): Promise<void> {
-  const counted = async (
-    table:
-      typeof stores | typeof recurringGroceries | typeof ingredients | typeof ingredientAliases,
-    ids: string[],
-    where: SQL
-  ) => {
-    if (ids.length === 0) return 0;
+  const outside = async (table: typeof ingredients | typeof ingredientAliases, ids: string[]) => {
+    if (ids.length === 0) return false;
     const [row] = await tx
       .select({ count: count() })
       .from(table)
-      .where(and(isAnyOf(table.id, ids, "uuid"), where));
+      .where(and(isAnyOf(table.id, ids, "uuid"), outsideCatalogue(table.householdId, householdId)));
 
-    return row?.count ?? 0;
+    return (row?.count ?? 0) > 0;
   };
-  const own = async (table: typeof stores | typeof recurringGroceries, ids: string[]) =>
-    (await counted(table, ids, eq(table.householdId, householdId))) === ids.length;
-  const inside = async (table: typeof ingredients | typeof ingredientAliases, ids: string[]) =>
-    (await counted(table, ids, outsideCatalogue(table.householdId, householdId))) === 0;
   const checks = await Promise.all([
-    own(stores, named(refs.storeIds)),
-    own(recurringGroceries, named(refs.recurringGroceryIds)),
-    inside(ingredients, named(refs.ingredientIds)),
-    inside(ingredientAliases, named(refs.ingredientAliasIds)),
+    ownRowIds(stores, householdId, refs.storeIds, tx),
+    ownRowIds(recurringGroceries, householdId, refs.recurringGroceryIds, tx),
+    outside(ingredients, named(refs.ingredientIds)),
+    outside(ingredientAliases, named(refs.ingredientAliasIds)),
   ]);
 
-  if (checks.includes(false)) throw new ForeignHouseholdReferenceError();
+  if (checks.includes(true)) throw new ForeignHouseholdReferenceError();
 }
 
 /**

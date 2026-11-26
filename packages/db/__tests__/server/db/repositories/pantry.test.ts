@@ -12,9 +12,9 @@ import {
   addPantryIngredients,
   deletePantryIngredient,
   findPantryIngredientInHousehold,
-  getPantryIngredientHouseholdId,
   listPantryIngredientsByHousehold,
   listPantrySuggestions,
+  ownPantryIngredientExists,
 } from "@norish/db/repositories/pantry";
 import { ingredients, pantryIngredients, recipes } from "@norish/db/schema";
 
@@ -78,7 +78,7 @@ describe("pantry ingredients", () => {
       userId,
       name: "Olive Oil",
     });
-    await expect(getPantryIngredientHouseholdId(OLIVE)).resolves.toBe(testHouseholdOf(userId));
+    await expect(ownPantryIngredientExists(testHouseholdOf(userId), OLIVE)).resolves.toBe(true);
 
     // The name is the Ingredient's, not the row's own.
     const [row] = await getTestDb()
@@ -226,7 +226,7 @@ describe("pantry ingredients", () => {
 
     await expect(deletePantryIngredient(OLIVE, testHouseholdOf(userId))).resolves.toBe(true);
     await expect(deletePantryIngredient(OLIVE, testHouseholdOf(userId))).resolves.toBe(false);
-    await expect(getPantryIngredientHouseholdId(OLIVE)).resolves.toBeNull();
+    await expect(ownPantryIngredientExists(testHouseholdOf(userId), OLIVE)).resolves.toBe(false);
     await expect(listPantryIngredientsByHousehold(testHouseholdOf(userId))).resolves.toEqual([]);
   });
 

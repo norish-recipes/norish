@@ -6,7 +6,7 @@ export const createPlannedItem = vi.fn();
 export const deletePlannedItem = vi.fn();
 export const moveItem = vi.fn();
 export const editPlannedItem = vi.fn();
-export const getPlannedItemHouseholdId = vi.fn();
+export const ownPlannedItemExists = vi.fn();
 export const getPlannedItemById = vi.fn();
 export const getPlannedItemWithRecipeById = vi.fn();
 export const listPlannedItemsWithRecipeBySlot = vi.fn();
@@ -18,7 +18,7 @@ export function resetPlannedItemsMocks() {
   deletePlannedItem.mockReset();
   moveItem.mockReset();
   editPlannedItem.mockReset();
-  getPlannedItemHouseholdId.mockReset();
+  ownPlannedItemExists.mockReset();
   getPlannedItemById.mockReset();
   getPlannedItemWithRecipeById.mockReset();
   listPlannedItemsWithRecipeBySlot.mockReset();

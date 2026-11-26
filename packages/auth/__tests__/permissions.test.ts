@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { assertHouseholdAccess, canAccessResource } from "@norish/auth/permissions";
+import { canAccessResource } from "@norish/auth/permissions";
 
 const stored = vi.hoisted(() => ({ policy: null as Record<string, string> | null }));
 
@@ -36,15 +36,5 @@ describe("canAccessResource", () => {
     stored.policy = null;
     expect(await canAccessResource("view", "household3", "household1")).toBe(true);
     expect(await canAccessResource("edit", "household3", "household1")).toBe(false);
-  });
-});
-
-describe("assertHouseholdAccess", () => {
-  it("lets the household reach a row that is its own", () => {
-    expect(() => assertHouseholdAccess("household1", "household1")).not.toThrow();
-  });
-
-  it("refuses a row of another household", () => {
-    expect(() => assertHouseholdAccess("household3", "household1")).toThrow("FORBIDDEN");
   });
 });

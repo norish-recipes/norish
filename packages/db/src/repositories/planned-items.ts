@@ -8,7 +8,7 @@ import { plannedItemEditTarget } from "@norish/shared/contracts/zod";
 
 import type { MutationOutcome } from "./mutation-outcomes";
 import { currentHouseholdIdSql } from "./household-members";
-import { householdRow } from "./household-rows";
+import { householdRow, ownRowIds } from "./household-rows";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 import { PRIMARY_IMAGE_SQL } from "./recipe-primary-image";
 import { buildPolicyCondition } from "./recipes";
@@ -419,14 +419,9 @@ export async function editPlannedItem(
 }
 
 /** The household a plan entry belongs to, for the household guard. */
-export async function getPlannedItemHouseholdId(itemId: string): Promise<string | null> {
-  const [row] = await db
-    .select({ householdId: plannedItems.householdId })
-    .from(plannedItems)
-    .where(eq(plannedItems.id, itemId))
-    .limit(1);
-
-  return row?.householdId ?? null;
+/** Whether the household's plan entry exists; another household's is refused. */
+export async function ownPlannedItemExists(householdId: string, itemId: string): Promise<boolean> {
+  return (await ownRowIds(plannedItems, householdId, [itemId])).size > 0;
 }
 
 /**

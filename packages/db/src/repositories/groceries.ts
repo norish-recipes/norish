@@ -16,7 +16,7 @@ import {
 } from "@norish/shared/contracts/zod";
 
 import type { IngredientRef } from "./ingredient-aliases";
-import { assertOwnReferences, householdRow, householdRows } from "./household-rows";
+import { assertOwnReferences, householdRow, householdRows, ownRowIds } from "./household-rows";
 import { buildPolicyCondition } from "./recipes";
 
 /** A grocery as its household reads it: its recipe line only while the household may view that
@@ -364,15 +364,12 @@ export async function deleteDoneGroceriesBefore(beforeDate: string): Promise<num
 }
 
 /** The household each grocery belongs to, by id, for the household guard. */
-export async function getGroceryHouseholdIds(groceryIds: string[]): Promise<Map<string, string>> {
-  if (groceryIds.length === 0) return new Map();
-
-  const rows = await db
-    .select({ id: groceries.id, householdId: groceries.householdId })
-    .from(groceries)
-    .where(inArray(groceries.id, groceryIds));
-
-  return new Map(rows.map((r) => [r.id, r.householdId]));
+/** The household's groceries among these that still exist; another household's is refused. */
+export async function ownGroceryIds(
+  householdId: string,
+  groceryIds: string[]
+): Promise<Set<string>> {
+  return ownRowIds(groceries, householdId, groceryIds);
 }
 
 /**

@@ -9,13 +9,11 @@ import type {
   GroceryName,
 } from "@norish/shared-server/ingredients/groceries";
 import type { GroceryDto, GroceryUpdateDto } from "@norish/shared/contracts";
-import { assertHouseholdAccess } from "@norish/auth/permissions";
 import {
   assignGroceryToStore,
   createGroceries,
   deleteGroceryByIds,
   getGroceriesByIds,
-  getGroceryHouseholdIds,
   getRecipeInfoForGroceries,
   GroceryCreateSchema,
   GroceryDeleteSchema,
@@ -23,12 +21,13 @@ import {
   GroceryUpdateBaseSchema,
   listGroceriesByHousehold,
   lockGroceryList,
+  ownGroceryIds,
   updateGroceries,
 } from "@norish/db";
 import { withTransaction } from "@norish/db/drizzle";
 import {
-  getRecurringGroceryHouseholdId,
   listRecurringGroceriesByHousehold,
+  ownRecurringGroceryExists,
 } from "@norish/db/repositories/recurring-groceries";
 import {
   findBestIngredientStorePreference,
@@ -74,13 +73,7 @@ export async function groceriesOfHousehold(
   ctx: Pick<GroceryProcedureContext, "householdId">,
   groceryIds: string[]
 ): Promise<Set<string>> {
-  const householdIds = await getGroceryHouseholdIds(groceryIds);
-
-  for (const householdId of householdIds.values()) {
-    assertHouseholdAccess(ctx.householdId, householdId);
-  }
-
-  return new Set(householdIds.keys());
+  return ownGroceryIds(ctx.householdId, groceryIds);
 }
 
 /** A recurring grocery a procedure names is the household's own. */
@@ -88,12 +81,9 @@ export async function assertRecurringAccess(
   ctx: Pick<GroceryProcedureContext, "householdId">,
   recurringGroceryId: string
 ): Promise<void> {
-  const householdId = await getRecurringGroceryHouseholdId(recurringGroceryId);
-
-  if (!householdId) {
+  if (!(await ownRecurringGroceryExists(ctx.householdId, recurringGroceryId))) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Recurring grocery not found" });
   }
-  assertHouseholdAccess(ctx.householdId, householdId);
 }
 
 type GroceryMergeCandidate = {

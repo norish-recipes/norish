@@ -19,7 +19,7 @@ import { getTodayString, shouldBeActive } from "@norish/shared/lib/recurrence/ca
 import type { CreatedGroceries } from "./groceries";
 import type { MutationOutcome } from "./mutation-outcomes";
 import { createGroceries } from "./groceries";
-import { assertOwnReferences, householdRow } from "./household-rows";
+import { assertOwnReferences, householdRow, ownRowIds } from "./household-rows";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 
 export type RecurringGroceryDto = z.output<typeof RecurringGrocerySelectBaseSchema>;
@@ -517,14 +517,10 @@ export async function uncheckGrocery(groceryId: string, householdId: string): Pr
 }
 
 /** The household a recurring grocery belongs to, for the household guard. */
-export async function getRecurringGroceryHouseholdId(
+/** Whether the household's recurring grocery exists; another household's is refused. */
+export async function ownRecurringGroceryExists(
+  householdId: string,
   recurringGroceryId: string
-): Promise<string | null> {
-  const [row] = await db
-    .select({ householdId: recurringGroceries.householdId })
-    .from(recurringGroceries)
-    .where(eq(recurringGroceries.id, recurringGroceryId))
-    .limit(1);
-
-  return row?.householdId ?? null;
+): Promise<boolean> {
+  return (await ownRowIds(recurringGroceries, householdId, [recurringGroceryId])).size > 0;
 }

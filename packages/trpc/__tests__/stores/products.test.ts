@@ -17,7 +17,6 @@ import {
   createMockUser,
 } from "../calendar/test-utils";
 import { findIngredientFor, resolveIngredient } from "../mocks/ingredient-resolver";
-import { assertHouseholdAccess } from "../mocks/permissions";
 import { stores } from "../mocks/realtime/stores";
 
 const storeProductsRepository = vi.hoisted(() => ({
@@ -33,7 +32,7 @@ const storeProductsRepository = vi.hoisted(() => ({
 
 const storesRepository = vi.hoisted(() => ({
   getStoreById: vi.fn(),
-  getStoreHouseholdId: vi.fn(),
+  ownStoreExists: vi.fn(),
 }));
 
 vi.mock("@norish/db/repositories/store-products", () => storeProductsRepository);
@@ -67,8 +66,7 @@ describe("chooseProduct", () => {
   };
 
   beforeEach(() => {
-    storesRepository.getStoreHouseholdId.mockResolvedValue(ctx.householdId);
-    assertHouseholdAccess.mockReturnValue(undefined);
+    storesRepository.ownStoreExists.mockResolvedValue(true);
     storeProductsRepository.resolveProductLink.mockResolvedValue(null);
   });
 
@@ -425,12 +423,11 @@ describe("searchShop", () => {
   ];
 
   beforeEach(() => {
-    storesRepository.getStoreHouseholdId.mockResolvedValue(ctx.householdId);
+    storesRepository.ownStoreExists.mockResolvedValue(true);
     storesRepository.getStoreById.mockResolvedValue({
       id: STORE,
       searchAddress: "https://www.dirk.nl/zoeken/producten/{query}",
     });
-    assertHouseholdAccess.mockReturnValue(undefined);
     lookup.searchStore.mockResolvedValue({ candidates: offered, answered: true });
     storeProductsRepository.resolveProductLink.mockResolvedValue(null);
   });
