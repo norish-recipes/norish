@@ -57,7 +57,7 @@ describe("ContentUsesScreen", () => {
     held.uses = { loaded: false, recipes: [] };
     const first = render(<ContentUsesScreen />);
 
-    expect(screen.getByTestId("skeleton")).toBeTruthy();
+    expect(screen.getAllByTestId("skeleton")).toHaveLength(3);
     first.unmount();
     held.uses = { recipes: [] };
     const second = render(<ContentUsesScreen />);

@@ -29,6 +29,7 @@ vi.mock("@/components/card-slice", async () => ({
 vi.mock("@/components/sheet", async () => (await import("./content-ui")).sheet());
 vi.mock("@/components/sheet-input", async () => ({
   SheetInput: (await import("./content-ui")).kit.sheetInput,
+  SheetFieldSkeleton: () => createElement("i", { "data-testid": "skeleton" }),
 }));
 vi.mock("@/components/empty-card", async () => ({
   EmptyCard: (await import("./content-ui")).kit.emptyCard,

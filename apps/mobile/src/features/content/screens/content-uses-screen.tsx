@@ -1,6 +1,6 @@
 import React from "react";
 import { CardSlice } from "@/components/card-slice";
-import { CountRow } from "@/components/count-row";
+import { CountCardSkeleton, CountRow } from "@/components/count-row";
 import { EmptyCard } from "@/components/empty-card";
 import { PillButton } from "@/components/pill-button";
 import { Sheet, SheetBody, SheetList } from "@/components/sheet";
@@ -8,7 +8,6 @@ import { edgeAt } from "@/lib/card-edges";
 import { useText } from "@/lib/i18n/use-text";
 import { recipeRoute } from "@/lib/tab-routes";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Skeleton } from "heroui-native";
 
 import type { PickerKind } from "@norish/shared-react/lists";
 import { useEntryRecipes } from "@norish/shared-react/lists";
@@ -46,7 +45,7 @@ export function ContentUsesScreen() {
               title={text("settings.content.loadFailed")}
             />
           ) : !loaded ? (
-            <Skeleton className="h-14 rounded-[22px]" />
+            <CountCardSkeleton rows={3} />
           ) : (
             <EmptyCard
               icon="book-outline"

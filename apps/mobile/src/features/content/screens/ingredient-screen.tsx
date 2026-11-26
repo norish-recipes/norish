@@ -4,13 +4,12 @@ import { Card, CardRow } from "@/components/card";
 import { destructiveAction } from "@/components/modal-header";
 import { PillButton } from "@/components/pill-button";
 import { Sheet, SheetBody } from "@/components/sheet";
-import { SheetInput } from "@/components/sheet-input";
+import { SheetFieldSkeleton, SheetInput } from "@/components/sheet-input";
 import { SheetNote } from "@/components/sheet-note";
 import { Switch } from "@/components/switch";
 import { useCancelButton } from "@/hooks/use-cancel-button";
 import { useText } from "@/lib/i18n/use-text";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Skeleton } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { IngredientItem } from "@norish/shared-react/ingredients";
@@ -47,7 +46,7 @@ export function IngredientScreen() {
     return (
       <Sheet name="food" title={text("settings.ingredients.title")}>
         <SheetBody>
-          <Skeleton className="h-12 rounded-full" />
+          <SheetFieldSkeleton />
         </SheetBody>
       </Sheet>
     );

@@ -3,12 +3,11 @@ import { Alert } from "react-native";
 import { Card, CardRow } from "@/components/card";
 import { destructiveAction } from "@/components/modal-header";
 import { Sheet, SheetBody } from "@/components/sheet";
-import { SheetInput } from "@/components/sheet-input";
+import { SheetFieldSkeleton, SheetInput } from "@/components/sheet-input";
 import { SheetNote } from "@/components/sheet-note";
 import { useCancelButton } from "@/hooks/use-cancel-button";
 import { useText } from "@/lib/i18n/use-text";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Skeleton } from "heroui-native";
 
 import type { PickerKind } from "@norish/shared-react/lists";
 import { deleteProblemCopy, problemCopy, useContentEntry } from "@norish/shared-react/lists";
@@ -36,7 +35,7 @@ export function ContentEntryScreen() {
     return (
       <Sheet name="content-entry" title={text(`settings.content.panel.editTitle.${kind}`)}>
         <SheetBody>
-          <Skeleton className="h-12 rounded-full" />
+          <SheetFieldSkeleton />
         </SheetBody>
       </Sheet>
     );
