@@ -1,4 +1,4 @@
-import { desc, eq, isNotNull, isNull, or } from "drizzle-orm";
+import { desc, eq, isNotNull } from "drizzle-orm";
 
 import { db } from "@norish/db/drizzle";
 
@@ -8,6 +8,11 @@ import { ServerConfigKeys } from "../zodSchemas/server-config";
 import { getConfig } from "./server-config";
 
 const secretSetting = isNotNull(serverConfig.valueEnc);
+const fingerprintRow = eq(serverConfig.key, ServerConfigKeys.MASTER_KEY_FINGERPRINT);
+
+/** What counts as a stored fingerprint: a non-empty string. JSON null, "" and the rest are none. */
+const storedFingerprint = (value: unknown) =>
+  typeof value === "string" && value !== "" ? value : null;
 
 /** Rows that hold encrypted data: every account and every secret setting; the rest belong to an account. */
 export async function countEncryptedRows(): Promise<number> {
@@ -39,21 +44,32 @@ export async function findNewestCiphertext(): Promise<string | null> {
   return setting?.valueEnc ?? null;
 }
 
-/** The stored fingerprint of the current Master Key; a row holding none or an empty one is none. */
+/** The stored fingerprint of the current Master Key, or null when the database holds none. */
 export async function getMasterKeyFingerprint(): Promise<string | null> {
-  return (await getConfig<string>(ServerConfigKeys.MASTER_KEY_FINGERPRINT)) || null;
+  return storedFingerprint(await getConfig(ServerConfigKeys.MASTER_KEY_FINGERPRINT));
 }
 
 /** Store `fingerprint` unless a fingerprint is there already; the one the database holds after. */
-export async function claimMasterKeyFingerprint(fingerprint: string): Promise<string | null> {
-  await db
-    .insert(serverConfig)
-    .values({ key: ServerConfigKeys.MASTER_KEY_FINGERPRINT, value: fingerprint })
-    .onConflictDoUpdate({
-      target: serverConfig.key,
-      set: { value: fingerprint, updatedAt: new Date() },
-      setWhere: or(isNull(serverConfig.value), eq(serverConfig.value, "")),
-    });
+export async function claimMasterKeyFingerprint(fingerprint: string): Promise<string> {
+  return await db.transaction(async (tx) => {
+    await tx
+      .insert(serverConfig)
+      .values({ key: ServerConfigKeys.MASTER_KEY_FINGERPRINT, value: fingerprint })
+      .onConflictDoNothing({ target: serverConfig.key });
+    // The row lock makes a second claimer wait, then read what the first one stored.
+    const [row] = await tx
+      .select({ value: serverConfig.value })
+      .from(serverConfig)
+      .where(fingerprintRow)
+      .for("update");
+    const stored = storedFingerprint(row?.value);
 
-  return getMasterKeyFingerprint();
+    if (stored) return stored;
+    await tx
+      .update(serverConfig)
+      .set({ value: fingerprint, updatedAt: new Date() })
+      .where(fingerprintRow);
+
+    return fingerprint;
+  });
 }
