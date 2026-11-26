@@ -771,7 +771,7 @@ describe("which key boot opens", () => {
 
     describe("and a key file that cannot be rewritten to drop the retired key", () => {
       const RETAINED =
-        "The retired Master Key is still in the key file; every boot retries removing it";
+        "The retired Master Key may still be in the key file; the next boot checks again";
 
       /** The key folder read-only, and its mode as another user's folder's is: not ours to change. */
       async function lockKeyFolder() {

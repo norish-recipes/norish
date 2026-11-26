@@ -354,10 +354,10 @@ async function retirePrevious(source: KeySource, current: Buffer): Promise<void>
   try {
     await writeKeyFile({ current }, { replace: true });
   } catch (error) {
-    // The database is on the current key already, so boot starts; the next boot tries again.
+    // The database is on the current key, so boot starts: the old file and the new both hold it.
     log.error(
       { path: keyFilePath(), code: errorCode(error) },
-      "The retired Master Key is still in the key file; every boot retries removing it"
+      "The retired Master Key may still be in the key file; the next boot checks again"
     );
 
     return;
