@@ -62,6 +62,13 @@ export function ContentScreen() {
   const { isOffline } = useConnectivity();
   const { list: asked } = useLocalSearchParams<{ list?: string }>();
   const [list, setList] = useState(() => (isContentList(asked) ? asked : "tags"));
+  const [seen, setSeen] = useState(asked);
+
+  // A new `?list=` moves the tab; the tab the reader picks in between stays theirs.
+  if (asked !== seen) {
+    setSeen(asked);
+    if (isContentList(asked)) setList(asked);
+  }
   const resetFilters = useIngredientFiltersStore((state) => state.reset);
 
   // The Ingredients filters start fresh on each visit.

@@ -85,6 +85,21 @@ describe("ContentScreen", () => {
     expect(screen.getByTestId("entries-cuisines")).toBeTruthy();
   });
 
+  it("follows the list the route names when it changes", () => {
+    held.params = { list: "cuisines" };
+
+    const { rerender } = render(<ContentScreen />);
+
+    fireEvent.click(screen.getByTestId("content-tab-tags"));
+    expect(screen.getByTestId("entries-tags")).toBeTruthy();
+    held.params = { list: "ingredients" };
+    rerender(<ContentScreen />);
+    expect(screen.getByTestId("ingredients")).toBeTruthy();
+    expect(screen.getByTestId("content-tab-ingredients").getAttribute("aria-selected")).toBe(
+      "true"
+    );
+  });
+
   it("adds to the list shown: an entry sheet for a Tag, the food sheet for Ingredients", () => {
     render(<ContentScreen />);
     expect(screen.getByTestId("header-add").getAttribute("aria-label")).toBe(
