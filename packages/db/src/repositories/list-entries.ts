@@ -1,7 +1,6 @@
 /** Tags, Cuisines and Categories as household lists (ADR-0043): a row is its household's (null for
  * the instance), unique on its fold there; a recipe carries its household's and the instance's. */
 import type { SQL } from "drizzle-orm";
-import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import {
   and,
   countDistinct,
@@ -34,10 +33,12 @@ import { entryFold } from "@norish/shared/lib/fold-name";
 import { stripHtmlTags } from "@norish/shared/lib/helpers";
 
 import type { MutationOutcome } from "./mutation-outcomes";
+import { isAnyOf } from "./array-params";
 import { isConstraintViolation } from "./constraint-violation";
 import { ForeignHouseholdReferenceError } from "./household-rows";
 import { inScope, isInstanceRow } from "./household-scope";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
+import { defaultOf } from "./raw-sql";
 
 export type ListKind = "tag" | "cuisine" | "category";
 
@@ -103,9 +104,6 @@ const rowColumns = (table: ListTable) => ({
 
 /** One row to select constants from: the builder has no select without `from`. */
 const ONE_ROW = sql`(values (1)) as ${sql.identifier("one_row")}`;
-
-/** `column`'s own default: an insert-from-select names every column. */
-const defaultOf = (column: AnyPgColumn) => sql`${column.default}`.as(column.name);
 
 /** A list's order: by name, then id. */
 const byName = (table: ListTable) => [sql`lower(${table.name})`, table.id];
@@ -534,6 +532,142 @@ export async function mergeEntryTx(
     .returning(rowColumns(table));
 
   return target;
+}
+
+/** Gives `householdId` an entry of each fold of `ids` (other households' entries), its own where
+ * it has one, else a copy keeping the name; its recipes carrying one of `ids` carry that instead. */
+async function homeEntriesTx(
+  tx: DbTransaction,
+  kind: ListKind,
+  householdId: string,
+  ids: readonly string[]
+): Promise<void> {
+  const { table, link, entity, linkRow } = KINDS[kind];
+  const foreign = alias(table, "foreign_entry");
+  const home = alias(table, "home_entry");
+
+  if (ids.length === 0) return;
+  // The household's own of those folds are held against a delete until the move commits.
+  await tx
+    .select({ id: table.id })
+    .from(table)
+    .where(
+      and(
+        eq(table.householdId, householdId),
+        inArray(
+          table.nameFold,
+          qb
+            .select({ fold: foreign.nameFold })
+            .from(foreign)
+            .where(isAnyOf(foreign.id, ids, "uuid"))
+        )
+      )
+    )
+    .for("key share");
+  await tx
+    .insert(table)
+    .select(
+      qb
+        .selectDistinctOn([foreign.nameFold], {
+          id: defaultOf(table.id),
+          householdId: sql<string>`${householdId}::uuid`.as(table.householdId.name),
+          name: foreign.name,
+          nameFold: foreign.nameFold,
+          createdAt: defaultOf(table.createdAt),
+          version: defaultOf(table.version),
+        })
+        .from(foreign)
+        .where(isAnyOf(foreign.id, ids, "uuid"))
+        .orderBy(foreign.nameFold, foreign.id)
+    )
+    .onConflictDoNothing();
+
+  const homeRecipes = qb
+    .select({ id: recipes.id })
+    .from(recipes)
+    .where(eq(recipes.householdId, householdId));
+
+  await tx
+    .insert(link)
+    .select(
+      qb
+        .select({
+          ...linkRow(link.recipeId, home.id, link.order),
+          createdAt: defaultOf(link.createdAt),
+          version: defaultOf(link.version),
+        })
+        .from(link)
+        .innerJoin(foreign, eq(foreign.id, entity))
+        .innerJoin(
+          home,
+          and(eq(home.householdId, householdId), eq(home.nameFold, foreign.nameFold))
+        )
+        .where(and(isAnyOf(entity, ids, "uuid"), inArray(link.recipeId, homeRecipes)))
+    )
+    .onConflictDoNothing();
+  await tx
+    .delete(link)
+    .where(and(isAnyOf(entity, ids, "uuid"), inArray(link.recipeId, homeRecipes)));
+}
+
+/** After a leave (ADR-0043): no recipe of the household carries another household's entry; each
+ * becomes the household's own of its fold. The carried entries are held against a change meanwhile. */
+export async function homeRecipeEntriesTx(tx: DbTransaction, householdId: string): Promise<void> {
+  for (const kind of LIST_KINDS) {
+    const { table, link, entity } = KINDS[kind];
+    const carried = await tx
+      .select({ id: table.id })
+      .from(table)
+      .where(
+        and(
+          isNotNull(table.householdId),
+          ne(table.householdId, householdId),
+          inArray(
+            table.id,
+            qb
+              .select({ id: entity })
+              .from(link)
+              .innerJoin(recipes, eq(recipes.id, link.recipeId))
+              .where(eq(recipes.householdId, householdId))
+          )
+        )
+      )
+      .orderBy(table.id)
+      .for("share");
+
+    await homeEntriesTx(
+      tx,
+      kind,
+      householdId,
+      carried.map((row) => row.id)
+    );
+  }
+}
+
+/** A household of one's lists join `into` (ADR-0043), after its recipes moved: each entry becomes
+ * `into`'s of its fold, its own where it has one, and the joiner's go. */
+export async function moveHouseholdEntriesTx(
+  tx: DbTransaction,
+  from: string,
+  into: string
+): Promise<void> {
+  for (const kind of LIST_KINDS) {
+    const { table } = KINDS[kind];
+    const own = await tx
+      .select({ id: table.id })
+      .from(table)
+      .where(eq(table.householdId, from))
+      .orderBy(table.id)
+      .for("update");
+
+    await homeEntriesTx(
+      tx,
+      kind,
+      into,
+      own.map((row) => row.id)
+    );
+    await tx.delete(table).where(eq(table.householdId, from));
+  }
 }
 
 /** An entry as a change names it: the version the caller last read. */
