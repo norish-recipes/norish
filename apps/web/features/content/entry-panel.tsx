@@ -7,7 +7,7 @@ import Panel from "@/components/Panel/Panel";
 import { SkeletonRows } from "@/components/settings/settings-skeleton";
 import { ActionButton, ActionButtonGroup, ArrowEnd } from "@/components/shared/action-button";
 import ConfirmModal from "@/components/shared/confirm-modal";
-import { ListFrame, ListRow } from "@/components/shared/list-row";
+import { FieldLink } from "@/components/shared/field-link";
 import { Note } from "@/components/shared/note";
 import { Section } from "@/components/shared/section";
 import { Button, Chip } from "@heroui/react";
@@ -125,14 +125,11 @@ export function EntryPanel({
             ) : null}
           </Section>
           <Section placement="panel" title={t("panel.usedBy")}>
-            <ListFrame>
-              <ListRow
-                chevron
-                data-testid="content-entry-used"
-                name={t(detail?.usedKey ?? "recipes", { count: entry.entry?.recipeCount ?? 0 })}
-                onPress={() => setShowingUses(true)}
-              />
-            </ListFrame>
+            <FieldLink
+              data-testid="content-entry-used"
+              value={t(detail?.usedKey ?? "recipes", { count: entry.entry?.recipeCount ?? 0 })}
+              onPress={() => setShowingUses(true)}
+            />
           </Section>
           {editable && entry.offline ? <Note>{t("offline")}</Note> : null}
         </Panel.Body>
