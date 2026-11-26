@@ -4,7 +4,7 @@
  */
 import type { SQL } from "drizzle-orm";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
-import { and, eq, inArray, isNotNull, isNull, ne, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNotNull, isNull, ne, sql } from "drizzle-orm";
 import { alias, QueryBuilder } from "drizzle-orm/pg-core";
 
 import type { DbTransaction } from "@norish/db/drizzle";
@@ -13,6 +13,7 @@ import {
   ingredientAIChanges,
   ingredientAliases,
   ingredientJunkPile,
+  ingredientNutritionCorrections,
   ingredientNutritionEstimates,
   ingredients,
   recipeIngredientFoods,
@@ -363,7 +364,7 @@ export async function mergeHouseholdCatalogueTx(
       ),
     (row) => `${row.source} ${row.target}`
   );
-  const targets: FoodTargets = new Map(pairs.map((row) => [row.source, row.target]));
+  const targets = await oldestFirst(tx, new Map(pairs.map((row) => [row.source, row.target])));
   const joinerSpelling = alias(ingredientAliases, "joiner_spelling");
   const householdSpelling = alias(ingredientAliases, "household_spelling");
   // `into`'s spellings of those folds are held against a delete until the join commits.
@@ -382,6 +383,7 @@ export async function mergeHouseholdCatalogueTx(
     new Set([...targets.keys(), ...sharedSpellings.map((row) => row.id)])
   );
   await keepWhatTargetsLackTx(tx, targets);
+  await fillCorrectionsTx(tx, from, into, targets);
   for (const [source, target] of targets) {
     await mergeLockedFoods(tx, source, target, { keepFlag: true });
   }
@@ -402,6 +404,81 @@ export async function mergeHouseholdCatalogueTx(
     );
   for (const table of [ingredients, ingredientAliases, ingredientJunkPile, ingredientAIChanges]) {
     await tx.update(table).set({ householdId: into }).where(eq(table.householdId, from));
+  }
+}
+
+/** The joiner foods oldest first: where several merge into one target, the order they fill its gaps. */
+async function oldestFirst(tx: DbTransaction, targets: FoodTargets): Promise<FoodTargets> {
+  if (targets.size === 0) return targets;
+  const rows = await tx
+    .select({ id: ingredients.id })
+    .from(ingredients)
+    .where(isAnyOf(ingredients.id, [...targets.keys()], "uuid"))
+    .orderBy(asc(ingredients.createdAt), asc(ingredients.id));
+
+  return new Map(rows.map((row) => [row.id, targets.get(row.id)!]));
+}
+
+/** The fields of a correction that stand together: the numbers, the piece weight, the density. */
+const CORRECTION_GROUPS = [
+  ["numbersFood", "kcal", "fat", "carbs", "protein", "extras"],
+  ["pieceWeightFood", "pieceWeight"],
+  ["densityFood", "density"],
+] as const;
+
+/**
+ * Where corrections meet on the food a joiner's lands on, one stays: each group takes the first that
+ * has it of the household's row, the joiner's on that food, then its merging foods' (`targets` order).
+ */
+async function fillCorrectionsTx(
+  tx: DbTransaction,
+  from: string,
+  into: string,
+  targets: FoodTargets
+): Promise<void> {
+  const corrections = ingredientNutritionCorrections;
+  const landsOn = (id: string) => targets.get(id) ?? id;
+  const rank = new Map([...targets.keys()].map((id, index) => [id, index]));
+  const joiners = await tx.select().from(corrections).where(eq(corrections.householdId, from));
+  const foods = [...new Set(joiners.map((row) => landsOn(row.ingredientId)))];
+
+  if (foods.length === 0) return;
+  const household = await tx
+    .select()
+    .from(corrections)
+    .where(
+      and(eq(corrections.householdId, into), isAnyOf(corrections.ingredientId, foods, "uuid"))
+    );
+
+  for (const food of foods) {
+    const chain = [
+      ...household.filter((row) => row.ingredientId === food),
+      ...joiners
+        .filter((row) => landsOn(row.ingredientId) === food)
+        .sort((a, b) => (rank.get(a.ingredientId) ?? -1) - (rank.get(b.ingredientId) ?? -1)),
+    ];
+    const [kept, ...rest] = chain;
+
+    if (!kept || rest.length === 0) continue;
+    const filled = Object.fromEntries(
+      CORRECTION_GROUPS.flatMap((group) => {
+        const source = chain.find((row) => group.some((field) => row[field] !== null)) ?? kept;
+
+        return group.map((field) => [field, source[field]]);
+      })
+    );
+
+    await tx.delete(corrections).where(
+      isAnyOf(
+        corrections.id,
+        rest.map((row) => row.id),
+        "uuid"
+      )
+    );
+    await tx
+      .update(corrections)
+      .set({ ...filled, householdId: into, ingredientId: food })
+      .where(eq(corrections.id, kept.id));
   }
 }
 
@@ -455,11 +532,23 @@ async function keepWhatTargetsLackTx(tx: DbTransaction, targets: FoodTargets): P
     .select()
     .from(ingredientNutritionEstimates)
     .where(isAnyOf(ingredientNutritionEstimates.ingredientId, sources, "uuid"));
-  const moved = estimates.flatMap(({ ingredientId, createdAt: _c, version: _v, ...numbers }) => {
-    const target = targets.get(ingredientId)!;
+  // Where several sources share a target, the first in `targets` order gives its estimate and flag.
+  const bySource = new Map(estimates.map((row) => [row.ingredientId, row]));
+  const firstPerTarget = new Map<string, (typeof estimates)[number]>();
 
-    return own.has(target) ? [{ ...numbers, ingredientId: target }] : [];
-  });
+  for (const [source, target] of targets) {
+    const estimate = bySource.get(source);
+
+    if (estimate && own.has(target) && !firstPerTarget.has(target)) {
+      firstPerTarget.set(target, estimate);
+    }
+  }
+  const moved = [...firstPerTarget].map(
+    ([target, { ingredientId: _i, createdAt: _c, version: _v, ...numbers }]) => ({
+      ...numbers,
+      ingredientId: target,
+    })
+  );
 
   if (moved.length > 0) {
     await tx.insert(ingredientNutritionEstimates).values(moved).onConflictDoNothing();
@@ -468,13 +557,14 @@ async function keepWhatTargetsLackTx(tx: DbTransaction, targets: FoodTargets): P
     .select({ id: ingredients.id, flagReason: ingredients.flagReason })
     .from(ingredients)
     .where(and(isAnyOf(ingredients.id, sources, "uuid"), eq(ingredients.flagged, true)));
-  const flags = new Map(
-    flagged.flatMap((row) => {
-      const target = targets.get(row.id)!;
+  const reasons = new Map(flagged.map((row) => [row.id, row.flagReason]));
+  const flags = new Map<string, string | null>();
 
-      return own.has(target) ? [[target, row.flagReason] as const] : [];
-    })
-  );
+  for (const [source, target] of targets) {
+    if (reasons.has(source) && own.has(target) && !flags.has(target)) {
+      flags.set(target, reasons.get(source)!);
+    }
+  }
 
   if (flags.size === 0) return;
   await tx

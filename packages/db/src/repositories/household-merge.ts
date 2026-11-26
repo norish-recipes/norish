@@ -1,7 +1,7 @@
 /** Joining from a household of one merges it into the joined household (ADR-0041): everything it
  * holds moves, in the join's transaction, before the emptied household is deleted. */
-import { and, eq, inArray, isNull, max, sql } from "drizzle-orm";
-import { alias, QueryBuilder } from "drizzle-orm/pg-core";
+import { and, eq, inArray, max, sql } from "drizzle-orm";
+import { QueryBuilder } from "drizzle-orm/pg-core";
 
 import type { DbTransaction } from "@norish/db/drizzle";
 import {
@@ -36,7 +36,6 @@ export async function mergeHouseholdRowsTx(
   from: string,
   into: string
 ): Promise<void> {
-  await fillCorrectionsTx(tx, from, into);
   for (const table of ONE_PER_FOOD) {
     // The inner `table` is the joined household's rows.
     await tx
@@ -65,41 +64,6 @@ export async function mergeHouseholdRowsTx(
   for (const table of MOVED_WHOLE) {
     await tx.update(table).set({ householdId: into }).where(eq(table.householdId, from));
   }
-}
-
-/** The fields of a correction that stand together: the numbers, the piece weight, the density. */
-const CORRECTION_GROUPS = [
-  ["numbersFood", "kcal", "fat", "carbs", "protein", "extras"],
-  ["pieceWeightFood", "pieceWeight"],
-  ["densityFood", "density"],
-] as const;
-
-/** Where both households correct one food, a group the joined household's row leaves empty takes
- * the joiner's; the household's own values win. */
-async function fillCorrectionsTx(tx: DbTransaction, from: string, into: string): Promise<void> {
-  const joiner = alias(ingredientNutritionCorrections, "joiner_correction");
-  const set = Object.fromEntries(
-    CORRECTION_GROUPS.flatMap((group) => {
-      const empty = and(...group.map((field) => isNull(ingredientNutritionCorrections[field])));
-
-      return group.map((field) => [
-        field,
-        sql`case when ${empty} then ${joiner[field]} else ${ingredientNutritionCorrections[field]} end`,
-      ]);
-    })
-  );
-
-  await tx
-    .update(ingredientNutritionCorrections)
-    .set(set)
-    .from(joiner)
-    .where(
-      and(
-        eq(ingredientNutritionCorrections.householdId, into),
-        eq(joiner.householdId, from),
-        eq(joiner.ingredientId, ingredientNutritionCorrections.ingredientId)
-      )
-    );
 }
 
 /** Merges a household of one into `into`, after its member's membership moved (the triggers took

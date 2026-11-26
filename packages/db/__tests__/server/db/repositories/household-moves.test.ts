@@ -906,6 +906,72 @@ describe("household moves", () => {
       await expectNothingForeign();
     });
 
+    it("merges several joiner foods into one target: the household's first, then oldest food first", async () => {
+      const host = (await createTestUser())!;
+      const joiner = (await createTestUser())!;
+      const into = await householdOf(host.id);
+      const own = await householdOf(joiner.id);
+      const db = getTestDb();
+      const target = await mintTestFood(into, "tomaat");
+
+      await addTestSpelling(target.ingredientId, "tomato");
+      // The newer food is minted first, so neither id nor insert order makes the older one win.
+      const newer = await mintTestFood(own, "pomodoro");
+      const older = await mintTestFood(own, "tomaat");
+
+      await addTestSpelling(newer.ingredientId, "tomato");
+      await setTestIngredients(older.ingredientId, { createdAt: new Date("2020-01-01") });
+      await setTestIngredients(newer.ingredientId, { createdAt: new Date("2021-01-01") });
+      await db.insert(ingredientNutritionCorrections).values([
+        {
+          householdId: into,
+          ingredientId: target.ingredientId,
+          kcal: 18,
+          fat: 0,
+          carbs: 4,
+          protein: 1,
+        },
+        { householdId: own, ingredientId: older.ingredientId, kcal: 99, density: 0.5 },
+        { householdId: own, ingredientId: newer.ingredientId, density: 0.9, pieceWeight: 120 },
+      ]);
+      await db.insert(ingredientNutritionEstimates).values([
+        { ingredientId: newer.ingredientId, kcal: 20 },
+        { ingredientId: older.ingredientId, kcal: 10 },
+      ]);
+      await setTestIngredients(newer.ingredientId, { flagged: true, flagReason: "person" });
+      await setTestIngredients(older.ingredientId, { flagged: true, flagReason: "ai-unsure" });
+
+      await mergeInto(joiner.id, into);
+
+      expect(await readTestIngredient(older.ingredientId)).toBeNull();
+      expect(await readTestIngredient(newer.ingredientId)).toBeNull();
+      const corrections = await db
+        .select()
+        .from(ingredientNutritionCorrections)
+        .where(eq(ingredientNutritionCorrections.ingredientId, target.ingredientId));
+
+      // The numbers are the household's; the density the older food's; the piece weight the newer's.
+      expect(corrections).toHaveLength(1);
+      expect(corrections[0]).toMatchObject({
+        householdId: into,
+        kcal: 18,
+        carbs: 4,
+        density: 0.5,
+        pieceWeight: 120,
+      });
+      expect(
+        await db
+          .select({ kcal: ingredientNutritionEstimates.kcal })
+          .from(ingredientNutritionEstimates)
+          .where(eq(ingredientNutritionEstimates.ingredientId, target.ingredientId))
+      ).toEqual([{ kcal: 10 }]);
+      expect(await readTestIngredient(target.ingredientId)).toMatchObject({
+        flagged: true,
+        flagReason: "ai-unsure",
+      });
+      await expectNothingForeign();
+    });
+
     it("keeps the household's junk mark of a fold both hold and takes the joiner's others", async () => {
       const host = (await createTestUser())!;
       const joiner = (await createTestUser())!;
