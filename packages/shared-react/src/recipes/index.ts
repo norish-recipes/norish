@@ -11,7 +11,7 @@ export { useRecipeImages } from "./use-recipe-images";
 export { useRecipeIngredients } from "./use-recipe-ingredients";
 export { useHeldReads, useHeldRecipeName } from "./use-held-reads";
 export { usePrefetchRecipe } from "./use-prefetch-recipe";
-export { useRecipeQuery } from "./use-recipe-query";
+export { recipeReadState, useRecipeQuery, type RecipeReadState } from "./use-recipe-query";
 export { useRecipeSubscription } from "./use-recipe-subscription";
 export { useRecipeVideos } from "./use-recipe-videos";
 export { useFavoritesMutation } from "./use-favorites-mutation";
