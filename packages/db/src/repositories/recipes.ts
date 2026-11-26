@@ -75,6 +75,7 @@ import { attachCategoriesToRecipeByInputTx, RECIPE_CATEGORY_NAMES_SQL } from "./
 import { TakenIdError } from "./constraint-violation";
 import { currentHouseholdIdSql, householdMemberIdsSql } from "./household-members";
 import {
+  assertLinesFitRecipeTx,
   attachIngredientsToRecipeByInputTx,
   getUnitsForNormalization,
   insertRecipeLinesTx,
@@ -1451,6 +1452,11 @@ async function syncRecipeIngredientsTx(
 
     added.push({ row: { recipeId, ...values }, aliasIds: line.aliasIds });
   }
+  await assertLinesFitRecipeTx(
+    tx,
+    recipeId,
+    [...kept, ...added].flatMap((line) => line.aliasIds)
+  );
   await writeRecipeLineFoodsTx(tx, kept);
   await insertRecipeLinesTx(tx, added);
 

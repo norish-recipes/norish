@@ -13,11 +13,12 @@ export function isConstraintViolation(error: unknown, code: "23505" | "23503"): 
 }
 
 /**
- * Whether a write was refused because the Ingredient or alias it was handed
- * is gone: a foreign key onto `ingredients` or `ingredient_aliases` failed.
+ * Whether a write was refused because the Ingredient or alias it was handed is gone: a foreign
+ * key onto `ingredients` or `ingredient_aliases` failed, or the recipe left that catalogue.
  */
 export function isStaleIngredientReference(error: unknown): boolean {
   for (let current = error; current && typeof current === "object";) {
+    if (current instanceof StaleLineHouseholdError) return true;
     const { code, constraint } = current as { code?: unknown; constraint?: unknown };
 
     if (code === "23503" && typeof constraint === "string") {
@@ -27,6 +28,13 @@ export function isStaleIngredientReference(error: unknown): boolean {
   }
 
   return false;
+}
+
+/** Thrown where a recipe's lines were resolved in a household its Owner left before the write. */
+export class StaleLineHouseholdError extends Error {
+  constructor() {
+    super("The recipe's lines were resolved in a household its Owner has left");
+  }
 }
 
 /** Whether a write was refused because the Store it points at is gone. */

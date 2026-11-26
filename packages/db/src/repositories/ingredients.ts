@@ -27,6 +27,10 @@ import {
 import { lineNamesNoFood } from "@norish/shared/lib/ingredient-text";
 import { normalizeUnit } from "@norish/shared/lib/unit-localization";
 
+import { StaleLineHouseholdError } from "./constraint-violation";
+import { assertOwnReferences, ForeignHouseholdReferenceError } from "./household-rows";
+import { recipeHouseholdId } from "./list-entries";
+
 export async function getUnitsForNormalization(): Promise<UnitsMap> {
   const value = await getConfig<unknown>(ServerConfigKeys.UNITS);
 
@@ -133,6 +137,25 @@ export interface NewRecipeLine {
 }
 
 /**
+ * A save resolves its lines before its transaction; where the recipe moved household meanwhile (a
+ * leave or join committed first), they name the old catalogue and are resolved again.
+ */
+export async function assertLinesFitRecipeTx(
+  tx: DbTransaction,
+  recipeId: string,
+  aliasIds: readonly string[]
+): Promise<void> {
+  const householdId = await recipeHouseholdId(recipeId, tx);
+
+  if (!householdId || aliasIds.length === 0) return;
+  try {
+    await assertOwnReferences(householdId, { ingredientAliasIds: aliasIds }, tx);
+  } catch (error) {
+    throw error instanceof ForeignHouseholdReferenceError ? new StaleLineHouseholdError() : error;
+  }
+}
+
+/**
  * Insert recipe lines with their foods, answering the rows inserted. Ids are made here, so each
  * line's foods are written against its own row.
  */
@@ -214,6 +237,13 @@ export async function attachIngredientsToRecipeByInputTx(
     throw new Error("Invalid recipeIngredients insert payload");
   }
 
+  for (const recipeId of new Set(validatedRows.data.map((row) => row.recipeId))) {
+    await assertLinesFitRecipeTx(
+      tx,
+      recipeId,
+      lines.filter((line) => line.row.recipeId === recipeId).flatMap((line) => line.aliasIds)
+    );
+  }
   const inserted = await insertRecipeLinesTx(
     tx,
     validatedRows.data.map((row, index) => ({ row, aliasIds: lines[index]!.aliasIds }))
