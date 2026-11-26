@@ -395,3 +395,34 @@ describe("validation and detection", () => {
     expect(detectFormSystem(cups, {})).toBe("us");
   });
 });
+
+describe("what an edit's save sends of its lists", () => {
+  const opened = seededForm();
+  const sent = (form: RecipeFormState) =>
+    recipeFormPayload({ ...form, servings: form.servings! }, opened);
+
+  it("leaves out the Tags, Cuisines and Categories the reader did not change", () => {
+    const payload = sent({ ...opened, name: "Renamed" });
+
+    expect(payload).toMatchObject({ name: "Renamed" });
+    expect(payload).not.toHaveProperty("tags");
+    expect(payload).not.toHaveProperty("cuisines");
+    expect(payload).not.toHaveProperty("categories");
+  });
+
+  it("sends a list the reader changed, whole", () => {
+    const payload = sent({
+      ...opened,
+      tags: [...opened.tags, "spicy"],
+      provenance: { ...opened.provenance, cuisineIds: ["c1"] },
+    });
+
+    expect(payload.tags).toEqual([{ name: "quick" }, { name: "spicy" }]);
+    expect(payload.cuisines).toEqual(["c1"]);
+    expect(payload).not.toHaveProperty("categories");
+  });
+
+  it("sends every list for a new recipe", () => {
+    expect(valid(opened)).toMatchObject({ tags: [{ name: "quick" }], categories: ["Dinner"] });
+  });
+});

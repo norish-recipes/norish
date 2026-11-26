@@ -231,8 +231,16 @@ export function validateRecipeForm(form: RecipeFormState): RecipeFormErrors {
   return errors;
 }
 
-/** What a save sends for the form, shared by create and update; servings must be valid. */
-export function recipeFormPayload(form: RecipeFormState & { servings: number }) {
+const changed = (now: readonly string[], was: readonly string[] | undefined) =>
+  !was || now.length !== was.length || now.some((value, index) => value !== was[index]);
+
+/** What a save sends for the form, shared by create and update; servings must be valid. An edit
+ * passes the form it `opened` with: a list left as it was is not sent, so a change made to it
+ * elsewhere meanwhile stays. */
+export function recipeFormPayload(
+  form: RecipeFormState & { servings: number },
+  opened?: RecipeFormState
+) {
   // Lines are renumbered below; each reference follows its line, one to a line not saved goes.
   const renumbered = new Map(form.ingredients.map((ing, idx) => [ing.order, idx]));
   const refsOf = (refs: StepIngredientRef[]) =>
@@ -259,10 +267,12 @@ export function recipeFormPayload(form: RecipeFormState & { servings: number }) 
     originCountryName: form.provenance.originCountryName,
     originRegion: form.provenance.originRegion.trim() || null,
     provenanceNote: form.provenance.provenanceNote.trim() || null,
-    cuisines: form.provenance.cuisineIds,
+    ...(changed(form.provenance.cuisineIds, opened?.provenance.cuisineIds) && {
+      cuisines: form.provenance.cuisineIds,
+    }),
     systemUsed: form.systemUsed,
-    tags: form.tags.map((name) => ({ name })),
-    categories: form.categories,
+    ...(changed(form.tags, opened?.tags) && { tags: form.tags.map((name) => ({ name })) }),
+    ...(changed(form.categories, opened?.categories) && { categories: form.categories }),
     recipeIngredients: form.ingredients.map((ing, idx) => ({
       id: ing.id,
       version: ing.version,

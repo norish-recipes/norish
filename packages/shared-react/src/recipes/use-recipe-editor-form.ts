@@ -47,6 +47,8 @@ export function useRecipeEditorForm({ mode, initialData, locale }: UseRecipeEdit
   // False on the server and while hydrating, so the browser's first render matches the server's.
   const isHydrated = useHydrated();
   const [form, setForm] = useState<RecipeFormState>(() => initialRecipeForm(initialData));
+  // The form as it opened, which an edit's save compares its lists with.
+  const [opened] = useState(form);
   const [errors, setErrors] = useState<RecipeFormErrors & { submit?: string }>({});
   const [initializedRecipeId, setInitializedRecipeId] = useState<string | null>(null);
   const [detectedSystem, setDetectedSystem] = useState<MeasurementSystem | null>(null);
@@ -171,7 +173,10 @@ export function useRecipeEditorForm({ mode, initialData, locale }: UseRecipeEdit
     setErrors(found);
     if (Object.keys(found).length > 0 || form.servings === null) return null;
 
-    return recipeFormPayload({ ...form, servings: form.servings });
+    return recipeFormPayload(
+      { ...form, servings: form.servings },
+      mode === "edit" ? opened : undefined
+    );
   };
   const failSubmit = (message: string) => setErrors({ submit: message });
 
