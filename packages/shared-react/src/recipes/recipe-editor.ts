@@ -235,6 +235,15 @@ export function validateRecipeForm(form: RecipeFormState): RecipeFormErrors {
 const changed = (now: readonly string[], was: readonly string[] | undefined) =>
   !was || now.length !== was.length || now.some((value) => !was.includes(value));
 
+/** Whether the reader changed a field from the recipe as opened; nothing opened is all changed. */
+const mine = <T>(value: T, was: T | undefined) =>
+  was === undefined ||
+  (Array.isArray(value) && value.every((item) => typeof item === "string")
+    ? changed(value, was as string[])
+    : isDirtyState(value, was));
+
+const placeOf = ({ cuisineIds: _, ...place }: ProvenanceFormValue) => place;
+
 /** A draft kept after a stale answer, on the fresh recipe: each field the reader changed from
  * `opened` keeps their value, every other takes the fresh one. `opened` rebases to the fresh form. */
 export function rebaseRecipeForm(
@@ -248,24 +257,26 @@ export function rebaseRecipeForm(
     ingredients: editorIngredientsOf(fresh, labeller),
     steps: editorStepsOf(fresh),
   };
-  const mine = <T>(value: T, was: T) =>
-    Array.isArray(value) && value.every((item) => typeof item === "string")
-      ? changed(value, was as string[])
-      : isDirtyState(value, was);
+  // Steps point at lines by position, so lines and steps move as one: all the reader's or all fresh.
+  const lines = mine(form.ingredients, opened.ingredients) || mine(form.steps, opened.steps);
   const rebased = { ...now };
 
   for (const key of Object.keys(now) as (keyof RecipeFormState)[]) {
-    if (mine(form[key], opened[key])) Object.assign(rebased, { [key]: form[key] });
+    const kept = key === "ingredients" || key === "steps" ? lines : mine(form[key], opened[key]);
+
+    if (kept) Object.assign(rebased, { [key]: form[key] });
   }
-  const { cuisineIds, ...place } = form.provenance;
-  const { cuisineIds: wasCuisines, ...wasPlace } = opened.provenance;
-  const { cuisineIds: nowCuisines, ...nowPlace } = now.provenance;
+  const { cuisineIds } = form.provenance;
 
   return {
     ...rebased,
     provenance: {
-      ...(isDirtyState(place, wasPlace) ? place : nowPlace),
-      cuisineIds: changed(cuisineIds, wasCuisines) ? cuisineIds : nowCuisines,
+      ...(mine(placeOf(form.provenance), placeOf(opened.provenance))
+        ? placeOf(form.provenance)
+        : placeOf(now.provenance)),
+      cuisineIds: mine(cuisineIds, opened.provenance.cuisineIds)
+        ? cuisineIds
+        : now.provenance.cuisineIds,
     },
   };
 }

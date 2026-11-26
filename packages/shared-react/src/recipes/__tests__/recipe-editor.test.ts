@@ -468,4 +468,22 @@ describe("a draft kept after a stale answer", () => {
       categories: ["Lunch"],
     });
   });
+
+  it("keeps the reader's lines with the steps they edited, so no reference moves", () => {
+    const draft = {
+      ...opened,
+      steps: opened.steps.map((step, idx) => (idx === 1 ? { ...step, step: "Typed." } : step)),
+    };
+    const swapped = { 0: 2, 2: 0 } as Record<number, number>;
+    const reordered: FullRecipeDTO = {
+      ...fresh,
+      recipeIngredients: stored.recipeIngredients.map((ing) =>
+        ing.systemUsed === "metric" ? { ...ing, order: swapped[ing.order] ?? ing.order } : ing
+      ),
+    };
+    const rebased = rebaseRecipeForm(draft, opened, reordered, labeller);
+
+    expect(rebased.ingredients).toEqual(opened.ingredients);
+    expect(rebased.steps).toEqual(draft.steps);
+  });
 });
