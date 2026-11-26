@@ -21,15 +21,10 @@ Open [http://localhost:3000](http://localhost:3000) and [create your account](#f
 
 <QuickStartCompose />
 
-:::info Generating the secrets
-The example generates a `MASTER_KEY` and `OBSCURA_CDP_TOKEN` in your browser. To generate your own, run
+:::info Secrets
+The example generates an `OBSCURA_CDP_TOKEN` in your browser. Keep it secret, or generate your own with `openssl rand -hex 32` and use the same value on both services.
 
-```bash
-openssl rand -base64 32 # MASTER_KEY
-openssl rand -hex 32    # OBSCURA_CDP_TOKEN, the same value on both services
-```
-
-Keep both values secret. If you change `MASTER_KEY`, Norish can no longer read the secrets it encrypted with the old key.
+Norish generates a Master Key on first start and refuses to start with a wrong key. See [Master key](/configuration/server-runtime#master-key) to back up or rotate it.
 :::
 
 :::tip Production template
