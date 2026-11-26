@@ -105,14 +105,16 @@ function lookupBy(key: Buffer): string {
 
 const failure = (code: string) => Object.assign(new Error(`${code}: refused`), { code });
 
-/** Files open as usual, but a handle on `target` fails to flush to disk with `code`. */
-function failSyncOf(target: string, code: string) {
+/** Files open as usual, but a handle on one of `targets` fails to flush to disk with `code`. */
+function failSyncOf(code: string, ...targets: string[]) {
   const open = fs.open;
 
   vi.spyOn(fs, "open").mockImplementation(async (...args) => {
     const handle = await open(...args);
 
-    if (args[0] === target) vi.spyOn(handle, "sync").mockRejectedValue(failure(code));
+    if (targets.includes(String(args[0]))) {
+      vi.spyOn(handle, "sync").mockRejectedValue(failure(code));
+    }
 
     return handle;
   });
@@ -271,20 +273,29 @@ describe("the key file", () => {
 
   it("fails, leaving no half-written file, when the file created in place cannot be flushed", async () => {
     vi.spyOn(fs, "link").mockRejectedValue(failure("EPERM"));
-    failSyncOf(keyFilePath(), "EIO");
+    failSyncOf("EIO", keyFilePath());
 
     await expect(writeKeyFile({ current: randomBytes(32) })).rejects.toThrow("EIO");
     expect(await fs.readdir(keyDir())).toEqual([]);
   });
 
-  it("places the key file when its folder cannot be flushed, and says so", async () => {
-    const keys = { current: randomBytes(32) };
+  it.each(["EINVAL", "ENOTSUP", "EOPNOTSUPP", "EISDIR", "ENOSYS"])(
+    "places the key file when its folder cannot be flushed (%s), and says so",
+    async (code) => {
+      const keys = { current: randomBytes(32) };
 
-    failSyncOf(keyDir(), "EINVAL");
-    await writeKeyFile(keys);
+      failSyncOf(code, keyDir());
+      await writeKeyFile(keys);
 
-    expect(await readKeyFile()).toEqual(keys);
-    expect(warnings()).toHaveLength(1);
+      expect(await readKeyFile()).toEqual(keys);
+      expect(warnings()).toHaveLength(1);
+    }
+  );
+
+  it("fails when flushing its folder fails for real", async () => {
+    failSyncOf("EIO", keyDir());
+
+    await expect(writeKeyFile({ current: randomBytes(32) })).rejects.toThrow("EIO");
   });
 
   it("replaces a key file when told to", async () => {

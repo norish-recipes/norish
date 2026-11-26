@@ -96,6 +96,9 @@ async function createFlushed(target: string, text: string): Promise<void> {
   }
 }
 
+/** What a filesystem answers when it cannot flush a folder at all, as opposed to failing to. */
+const FLUSH_UNSUPPORTED = new Set(["EINVAL", "ENOTSUP", "EOPNOTSUPP", "EISDIR", "ENOSYS"]);
+
 /** Flush a new name in `dir` to disk; a filesystem that cannot flush a folder only warns. */
 async function flushFolder(dir: string): Promise<void> {
   try {
@@ -107,6 +110,7 @@ async function flushFolder(dir: string): Promise<void> {
       await handle.close();
     }
   } catch (error) {
+    if (!FLUSH_UNSUPPORTED.has(errorCode(error))) throw error;
     log.warn({ path: dir, err: error }, "Could not flush the key file's folder to disk");
   }
 }
