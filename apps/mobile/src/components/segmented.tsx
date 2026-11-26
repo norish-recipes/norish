@@ -93,7 +93,7 @@ export function Segmented<Value extends string>({
             accessibilityLabel={segment.label}
             accessibilityRole={roles.tab}
             accessibilityState={tabsLabel ? { selected } : { checked: selected }}
-            className={`h-full flex-row items-center justify-center gap-1.5 rounded-full ${iconOnly ? (compact ? "w-[34px]" : "w-11") : compact ? "flex-none px-[13px]" : "flex-1"} ${selected && !thumbShown ? "bg-thumb shadow-sm" : ""}`}
+            className={`h-full flex-row items-center justify-center gap-1.5 rounded-full ${iconOnly ? (compact ? "w-[34px]" : "w-11") : compact ? "flex-none px-[13px]" : "flex-1 px-2"} ${selected && !thumbShown ? "bg-thumb shadow-sm" : ""}`}
             testID={segment.testID}
             onLayout={({ nativeEvent: { layout } }) =>
               setBoxes((all) => ({ ...all, [segment.value]: layout }))
@@ -102,8 +102,11 @@ export function Segmented<Value extends string>({
           >
             {segment.icon?.(color)}
             {iconOnly ? null : (
+              // Even segments: a label too long for its share shrinks to fit inside the thumb.
               <Text
-                className={`${compact ? "text-[13px]" : "text-[15px]"} ${selected ? "font-semibold" : "font-medium"}`}
+                adjustsFontSizeToFit
+                className={`shrink ${compact ? "text-[13px]" : "text-[15px]"} ${selected ? "font-semibold" : "font-medium"}`}
+                minimumFontScale={0.8}
                 numberOfLines={1}
                 style={{ color }}
               >
