@@ -95,7 +95,8 @@ export function CountRow({
   );
   // Spoken as one: iOS would otherwise join every child's label, empty ones too.
   const spoken = spokenLabel(name, tag, countLabel ?? count, lockLabel);
-  const row = `${ROW_HEIGHT} flex-row items-center gap-3 px-4`;
+  // A fold's slot is the row's leading inset, so a name sits as far in with or without a fold.
+  const row = `${ROW_HEIGHT} flex-row items-center gap-3 ${fold ? "pr-4" : "px-4"}`;
   const className = `${row} min-w-0 flex-1`;
 
   return (

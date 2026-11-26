@@ -57,7 +57,7 @@ export function IngredientList() {
   useIngredientIcons(rows.map((row) => row.foodId));
 
   return (
-    <IngredientIconSlots rows={rows}>
+    <IngredientIconSlots always rows={rows}>
       <ListFrame
         above={<AiChangesRow onPress={() => router.push("/settings/ingredient-changes")} />}
         data={data}
@@ -97,22 +97,19 @@ export function IngredientList() {
             <CardSlice edge={edgeAt(index, rows.length)}>
               <CountRow
                 depth={row.depth}
-                fold={
-                  treeMode
-                    ? {
-                        foldable,
-                        expanded: row.expanded,
-                        label: text(
-                          row.expanded
-                            ? "settings.ingredients.collapseKinds"
-                            : "settings.ingredients.expandKinds",
-                          { name }
-                        ),
-                        testID: `content-kinds-${row.item.id}`,
-                        onPress: () => tree.toggle(row.item.id),
-                      }
-                    : undefined
-                }
+                // Every row keeps the fold's slot, so a name sits as far in under a search.
+                fold={{
+                  foldable,
+                  expanded: row.expanded,
+                  label: text(
+                    row.expanded
+                      ? "settings.ingredients.collapseKinds"
+                      : "settings.ingredients.expandKinds",
+                    { name }
+                  ),
+                  testID: `content-kinds-${row.item.id}`,
+                  onPress: () => tree.toggle(row.item.id),
+                }}
                 leading={<IngredientIcon ingredientId={row.item.id} />}
                 name={name}
                 tag={row.item.flagged ? text("settings.ingredients.flagged") : undefined}
