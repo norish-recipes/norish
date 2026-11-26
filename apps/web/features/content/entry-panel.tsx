@@ -115,7 +115,7 @@ export function EntryPanel({
               }}
             />
             {view?.target ? (
-              <Note status="accent">
+              <Note icon={ArrowEnd} status="accent">
                 {t("panel.merge", {
                   target: view.target.name,
                   name: entry.entry?.name ?? "",
