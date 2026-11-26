@@ -423,6 +423,7 @@ export async function homeRecipeFoodsTx(tx: DbTransaction, householdId: string):
       )
     )
     .where(and(sameName, isAnyOf(copy.id, madeIds, "uuid"), isAnyOf(parent.id, copied, "uuid")));
+  await fileUnderSeededAncestorTx(tx, copied, homeOf, new Set(madeIds));
   await tx
     .insert(ingredientNutritionEstimates)
     .select(
@@ -505,6 +506,61 @@ export async function homeRecipeFoodsTx(tx: DbTransaction, householdId: string):
     qb.select({ id: recipes.id }).from(recipes).where(eq(recipes.householdId, householdId)),
     homeOf
   );
+}
+
+/**
+ * A copy whose own parent stays behind goes under that parent's nearest seeded ancestor, if any,
+ * which nutrition and icons borrow along the tree (ADR-0039).
+ */
+async function fileUnderSeededAncestorTx(
+  tx: DbTransaction,
+  copied: readonly string[],
+  copyOf: ReadonlyMap<string, string>,
+  made: ReadonlySet<string>
+): Promise<void> {
+  const old = alias(ingredients, "old_food");
+  const parent = alias(ingredients, "old_parent");
+  const behind = (
+    await tx
+      .select({ id: old.id, parentId: parent.id })
+      .from(old)
+      .innerJoin(parent, eq(parent.id, old.parentId))
+      .where(and(isAnyOf(old.id, copied, "uuid"), isNotNull(parent.householdId)))
+  ).filter((row) => !copyOf.has(row.parentId) && made.has(copyOf.get(row.id) ?? ""));
+
+  if (behind.length === 0) return;
+  const ancestry = await ancestorsOf(
+    tx,
+    behind.map((row) => row.parentId)
+  );
+  const seeded = new Set(
+    (
+      await tx
+        .select({ id: ingredients.id })
+        .from(ingredients)
+        .where(
+          and(
+            isAnyOf(ingredients.id, [...new Set([...ancestry.values()].flat())], "uuid"),
+            isNull(ingredients.householdId)
+          )
+        )
+    ).map((row) => row.id)
+  );
+  const nearest = new Map(
+    behind.flatMap((row) => {
+      const ancestor = ancestry.get(row.parentId)?.find((id) => seeded.has(id));
+
+      return ancestor ? [[copyOf.get(row.id)!, ancestor] as const] : [];
+    })
+  );
+
+  if (nearest.size === 0) return;
+  await tx
+    .update(ingredients)
+    .set({
+      parentId: sql`${pickedByKey(ingredients.id, [...nearest.keys()], "uuid", [...nearest.values()])}::uuid`,
+    })
+    .where(isAnyOf(ingredients.id, [...nearest.keys()], "uuid"));
 }
 
 /**

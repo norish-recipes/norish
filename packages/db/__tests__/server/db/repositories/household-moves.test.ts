@@ -355,6 +355,29 @@ describe("household moves", () => {
       await expectNothingForeign();
     });
 
+    it("files a copy under the nearest seeded ancestor where its own parent stays behind", async () => {
+      const { member, householdId } = await sharedHousehold();
+      const pepper = (await createTestIngredient({ name: "pepper" }))!;
+      const chili = await mintTestFood(householdId, "chili");
+      const gochugaru = await mintTestFood(householdId, "gochugaru");
+
+      await setTestIngredients(chili.ingredientId, { parentId: pepper.id });
+      await setTestIngredients(gochugaru.ingredientId, { parentId: chili.ingredientId });
+      const recipe = await createTestRecipe(member.id);
+      const line = await insertTestRecipeLine({ recipeId: recipe.id, name: "gochugaru" }, [
+        gochugaru.aliasId,
+      ]);
+
+      await moveToHouseholdOfOne(householdId, member.id);
+
+      expect((await lineFood(line.id)).food).toMatchObject({
+        householdId: await householdOf(member.id),
+        name: "gochugaru",
+        parentId: pepper.id,
+      });
+      await expectNothingForeign();
+    });
+
     it("deleting the old household's last member leaves the leaver's lines whole", async () => {
       const { admin, member, householdId, recipe, lines } = await leaverWithFoods();
 
