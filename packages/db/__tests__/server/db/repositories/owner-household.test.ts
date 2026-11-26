@@ -18,7 +18,12 @@ import {
 } from "@norish/db/repositories/households";
 import { cookbooks, households, householdUsers, recipes } from "@norish/db/schema";
 
-import { createTestRecipe, createTestUser, getTestDb } from "../../../helpers/db-test-helpers";
+import {
+  createTestRecipe,
+  createTestUser,
+  getTestDb,
+  rowsOutsideTheirOwnersHousehold,
+} from "../../../helpers/db-test-helpers";
 import { raceBehind } from "../../../helpers/lock-race";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
@@ -41,18 +46,7 @@ describe("a recipe's household follows its Owner", () => {
 
   /** Every recipe and cookbook on the server is in its Owner's household now. */
   async function expectInvariant() {
-    for (const table of [recipes, cookbooks]) {
-      const strays = await getTestDb()
-        .select({ id: table.id })
-        .from(table)
-        .leftJoin(
-          householdUsers,
-          sql`${householdUsers.userId} = ${table.userId} AND ${householdUsers.householdId} = ${table.householdId}`
-        )
-        .where(sql`${householdUsers.userId} IS NULL`);
-
-      expect(strays).toEqual([]);
-    }
+    expect(await rowsOutsideTheirOwnersHousehold()).toEqual([]);
   }
 
   async function householdsOf(recipeId: string, cookbookId: string) {

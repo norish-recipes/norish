@@ -16,7 +16,6 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import type { CatalogueActor } from "@norish/shared-server/ingredients/catalogue";
 import type { IconSet } from "@norish/shared-server/ingredients/icons";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
-import { withTransaction } from "@norish/db/drizzle";
 import { deleteCatalogueIngredient } from "@norish/db/repositories/ingredient-catalogue";
 import { listIconCatalogue, setIngredientIcon } from "@norish/db/repositories/ingredient-icons";
 import { lockTree } from "@norish/db/repositories/ingredient-relocation";
@@ -40,7 +39,10 @@ import { ingredientIcons } from "@norish/shared-server/ingredients/icons";
 import { resolveIngredients } from "@norish/shared-server/ingredients/resolver";
 import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
-import { testHouseholdOf } from "../../../db/__tests__/helpers/db-test-helpers";
+import {
+  inRepositoryTransaction,
+  testHouseholdOf,
+} from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 
 // The image provider, drawing a plain square: the cut-out and the store are real.
@@ -102,7 +104,7 @@ describe("Ingredient Icons", () => {
       : (await resolveIngredients([name], actor))[0]!.ingredientId;
     const { icon } = values;
 
-    if (icon !== undefined) await withTransaction((tx) => setIngredientIcon(tx, id, icon));
+    if (icon !== undefined) await inRepositoryTransaction((tx) => setIngredientIcon(tx, id, icon));
 
     return id;
   }
@@ -167,7 +169,7 @@ describe("Ingredient Icons", () => {
     expect(await shown(pearl)).toBe(address(SHIPPED_ONION));
     expect((await ingredientIcons([red], SET)).get(red)?.own).toBe(false);
 
-    await withTransaction((tx) => setIngredientIcon(tx, red, OWN));
+    await inRepositoryTransaction((tx) => setIngredientIcon(tx, red, OWN));
     expect(await shown(pearl)).toBe(address(OWN));
   });
 
@@ -279,7 +281,7 @@ describe("Ingredient Icons", () => {
     // A red onion keeps showing the onion, and a food merged away is gone: neither is listed.
     const merged = await food("romanesco");
 
-    await withTransaction(async (tx) => {
+    await inRepositoryTransaction(async (tx) => {
       await lockTree(tx);
       await deleteCatalogueIngredient(tx, merged);
     });

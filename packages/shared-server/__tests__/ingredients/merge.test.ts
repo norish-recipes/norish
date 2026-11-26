@@ -8,7 +8,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import type { CatalogueActor } from "@norish/shared-server/ingredients/catalogue";
-import { withTransaction } from "@norish/db/drizzle";
 import {
   fileIngredient,
   listAisleLinksByStoreIds,
@@ -40,6 +39,7 @@ import {
   createTestRecipe,
   createTestUser,
   getRecipeIngredients,
+  inRepositoryTransaction,
   insertTestRecipeLine,
   joinTestHousehold,
   setTestIngredients,
@@ -434,7 +434,9 @@ describe("merging Ingredients and moving aliases", () => {
       const prei = await mint("prei");
 
       // The name alone, as the upgrade can leave one: a spelling no alias holds.
-      await withTransaction((tx) => renameCatalogueIngredient(tx, prei.ingredientId, "Leek"));
+      await inRepositoryTransaction((tx) =>
+        renameCatalogueIngredient(tx, prei.ingredientId, "Leek")
+      );
       await addAlias(actor, onion.ingredientId, "leek");
       const [leek] = await resolveIngredients(["leek"], actor);
 

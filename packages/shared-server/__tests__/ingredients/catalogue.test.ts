@@ -10,7 +10,6 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { CatalogueActor } from "@norish/shared-server/ingredients/catalogue";
-import { withTransaction } from "@norish/db/drizzle";
 import { updateGroceries } from "@norish/db/repositories/groceries";
 import { findIngredientByAliasId } from "@norish/db/repositories/ingredient-aliases";
 import {
@@ -50,6 +49,7 @@ import {
   deleteTestRecipeLine,
   getRecipeIngredients,
   getSpellingTexts,
+  inRepositoryTransaction,
   insertTestRecipeLine,
   joinTestHousehold,
   listTestIngredientIds,
@@ -405,7 +405,7 @@ describe("the ingredient catalogue", () => {
     const parts = [{ name: "zout", aliasId: zout.aliasId, ingredientId: zout.ingredientId }];
 
     await updateGroceries([{ id: grocery.id, name: "suiker" }], testHouseholdOf(actor.userId));
-    await withTransaction((tx) =>
+    await inRepositoryTransaction((tx) =>
       writeGroceryParts(tx, "groceries", [{ id: grocery.id, name: "zout en peper", parts }])
     );
 

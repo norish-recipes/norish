@@ -6,7 +6,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { CatalogueActor } from "@norish/shared-server/ingredients/catalogue";
-import { withTransaction } from "@norish/db/drizzle";
 import { updateGroceries } from "@norish/db/repositories/groceries";
 import { addIngredientAliases } from "@norish/db/repositories/ingredient-aliases";
 import { addToJunkPile, listJunkFolds } from "@norish/db/repositories/ingredient-junk-pile";
@@ -36,6 +35,7 @@ import {
   createTestRecipe,
   firstSpellingId,
   getSpellingTexts,
+  inRepositoryTransaction,
   insertTestRecipeLine,
   listTestIngredientsNamed,
   mintTestFood,
@@ -245,7 +245,9 @@ describe("AI checks the spellings added to a seeded food", () => {
     const chicken = seeded.get("en:chicken-breast")!;
     const spelled = await added("en:chicken-breast", "boneless");
 
-    await withTransaction((tx) => addToJunkPile(tx, null, ["boneless"], { reason: "seed" }));
+    await inRepositoryTransaction((tx) =>
+      addToJunkPile(tx, null, ["boneless"], { reason: "seed" })
+    );
     answers({ boneless: "not-a-food" });
     await checkSpellingsOf(actor.householdId, chicken);
     const [change] = await listAIChangesFor(actor);
@@ -351,7 +353,7 @@ describe("AI checks the spellings added to a seeded food", () => {
     answers({ boneless: "not-a-food" });
     await checkSpellingsOf(actor.householdId, chicken);
     // Edits made after the removal: a person's choice, which Undo leaves alone.
-    await withTransaction((tx) =>
+    await inRepositoryTransaction((tx) =>
       writeRecipeLineFoodsTx(tx, [{ id: edited.id, aliasIds: [thighSpelling.id] }])
     );
     await updateGroceries(

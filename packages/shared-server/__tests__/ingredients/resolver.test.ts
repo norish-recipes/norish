@@ -9,7 +9,6 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import defaultUnits from "@norish/config/units.default.json";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { createRecipeWithRefs, getRecipeFull, updateRecipeWithRefs } from "@norish/db";
-import { withTransaction } from "@norish/db/drizzle";
 import {
   addIngredientAliases,
   findIngredientByAliasId,
@@ -39,6 +38,7 @@ import { DEFAULT_INGREDIENT_WORDS, ingredientAliasFold } from "@norish/shared/li
 import {
   createTestUser,
   getSpellingTexts,
+  inRepositoryTransaction,
   listTestIngredientIds,
   mintTestFood,
   readTestIngredient,
@@ -310,7 +310,7 @@ describe("ingredient resolver", () => {
 
         // A housemate merges "ui" into onion after this resolve and before its write.
         if (resolves === 1) {
-          await withTransaction((tx) =>
+          await inRepositoryTransaction((tx) =>
             mergeCatalogueIngredients(tx, ui.ingredientId, onion.ingredientId)
           );
         }
@@ -1159,7 +1159,7 @@ describe("ingredient resolver", () => {
 
   describe("the junk pile", () => {
     async function pile(...texts: string[]) {
-      await withTransaction((tx) =>
+      await inRepositoryTransaction((tx) =>
         addToJunkPile(tx, null, texts.map(ingredientAliasFold), { reason: "seed" })
       );
       forgetSpellingRules();

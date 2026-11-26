@@ -7,7 +7,6 @@
  */
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { withTransaction } from "@norish/db/drizzle";
 import {
   addIngredientAliases,
   mintIngredientWithAliases,
@@ -35,6 +34,7 @@ import {
   createTestRecipe,
   getRecipeIngredients,
   getSpellingTexts,
+  inRepositoryTransaction,
   insertTestRecipeLine,
   listTestIngredients,
   mintTestFood,
@@ -358,7 +358,7 @@ describe("the first-start cleanup", () => {
       { userId, householdId: testHouseholdOf(userId), isServerAdmin: false },
       melted.ingredientId
     );
-    await withTransaction((tx) =>
+    await inRepositoryTransaction((tx) =>
       addToJunkPile(tx, null, ["melted", "bakvorm", "chopped", "toppings"], { reason: "seed" })
     );
     forgetSpellingRules();
@@ -442,7 +442,9 @@ describe("the first-start cleanup", () => {
       [boneless!.aliasId]
     );
 
-    await withTransaction((tx) => addToJunkPile(tx, null, ["boneless"], { reason: "seed" }));
+    await inRepositoryTransaction((tx) =>
+      addToJunkPile(tx, null, ["boneless"], { reason: "seed" })
+    );
     forgetSpellingRules();
 
     await expect(cleanUpCatalogueOnFirstStart()).resolves.toMatchObject({ removed: 0 });

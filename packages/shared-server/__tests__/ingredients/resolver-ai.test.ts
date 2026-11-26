@@ -8,7 +8,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createRecipeWithRefs, getRecipeFull } from "@norish/db";
-import { withTransaction } from "@norish/db/drizzle";
 import { listAIChanges } from "@norish/db/repositories/ingredient-ai-changes";
 import { findIngredientByAliasId } from "@norish/db/repositories/ingredient-aliases";
 import { deleteCatalogueIngredient } from "@norish/db/repositories/ingredient-catalogue";
@@ -30,6 +29,7 @@ import { resolveIngredients } from "@norish/shared-server/ingredients/resolver";
 import { askAIAbout } from "@norish/shared-server/ingredients/review";
 
 import {
+  inRepositoryTransaction,
   readTestIngredient,
   readTestIngredientNamed,
   testHouseholdOf,
@@ -314,7 +314,7 @@ describe("ingredient resolver with AI on", () => {
     const { recipeId, lines } = await saved(["deegroller", "flour"]);
     const [tool, flour] = lines;
 
-    await withTransaction((tx) => deleteCatalogueIngredient(tx, tool!.ingredientId!));
+    await inRepositoryTransaction((tx) => deleteCatalogueIngredient(tx, tool!.ingredientId!));
     await updateResolvedRecipe(
       recipeId,
       userId,

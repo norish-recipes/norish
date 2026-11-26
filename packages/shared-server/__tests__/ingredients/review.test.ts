@@ -13,7 +13,6 @@ import { z } from "zod";
 
 import type { DecisionQuestions } from "@norish/shared-server/ai/runtime/runtime";
 import type { CatalogueActor } from "@norish/shared-server/ingredients/catalogue";
-import { withTransaction } from "@norish/db/drizzle";
 import { listAIChanges } from "@norish/db/repositories/ingredient-ai-changes";
 import { findIngredientByAliasId } from "@norish/db/repositories/ingredient-aliases";
 import {
@@ -64,6 +63,7 @@ import {
   createTestRecipe,
   createTestUser,
   getSpellingTexts,
+  inRepositoryTransaction,
   insertTestRecipeLine,
   listTestRecipeLinesNamed,
   mintTestFood,
@@ -534,7 +534,7 @@ describe("asking AI about an Ingredient", () => {
 
       reads({ englishName: "peanut butter", sure: true });
       await askAIAbout(food.ingredientId);
-      await withTransaction((tx) => mergeCatalogueIngredients(tx, butter!, spread));
+      await inRepositoryTransaction((tx) => mergeCatalogueIngredients(tx, butter!, spread));
 
       expect(await listAIChangesFor(actor)).toMatchObject([
         { kind: "parent", dropped: { id: spread } },
@@ -602,7 +602,7 @@ describe("asking AI about an Ingredient", () => {
 
       await setTestIngredients(puntjes.ingredientId, { parentId: biefstuk.ingredientId });
       vi.mocked(generateStructured).mockImplementationOnce((async () => {
-        await withTransaction((tx) =>
+        await inRepositoryTransaction((tx) =>
           mergeCatalogueIngredients(tx, biefstuk.ingredientId, steak.ingredientId)
         );
 
@@ -1603,7 +1603,7 @@ describe("asking AI about an Ingredient", () => {
   it("passes over a food that is gone", async () => {
     const onion = await flagged("onion");
 
-    await withTransaction((tx) => deleteCatalogueIngredient(tx, onion.ingredientId));
+    await inRepositoryTransaction((tx) => deleteCatalogueIngredient(tx, onion.ingredientId));
 
     await expect(askAIAbout(onion.ingredientId)).resolves.toMatchObject({
       outcome: "skipped",
@@ -1914,7 +1914,7 @@ describe("asking AI about an Ingredient", () => {
         const cream = await flagged("light cooking cream");
         const joined = await flagged("light cooking cream or non-fat Greek yogurt");
 
-        await withTransaction((tx) =>
+        await inRepositoryTransaction((tx) =>
           mergeCatalogueIngredients(tx, cream.ingredientId, joined.ingredientId, {
             keepFlag: true,
           })

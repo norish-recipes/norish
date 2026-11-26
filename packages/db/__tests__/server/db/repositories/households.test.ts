@@ -4,7 +4,7 @@
  * household of one, leaving or removal ends in a new one, and joining from a
  * household of one merges it into the joined household.
  */
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import {
@@ -30,7 +30,7 @@ import { getRecipeFull } from "@norish/db/repositories/recipes";
 import { households, householdUsers, users } from "@norish/db/schema";
 
 import { createTestRecipe, createTestUser, getTestDb } from "../../../helpers/db-test-helpers";
-import { lockWaits, raceBehind, waitFor } from "../../../helpers/lock-race";
+import { backendPid, lockWaits, raceBehind, waitFor } from "../../../helpers/lock-race";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 const getHouseholdMemberIdsByHouseholdId = async (householdId: string) =>
@@ -420,16 +420,14 @@ describe("households", () => {
             .for("no key update");
           held();
 
-          const [holder] = (await tx.execute<{ pid: number }>(sql`SELECT pg_backend_pid() AS pid`))
-            .rows;
+          const holder = await backendPid(tx);
 
           if (hop === 0) {
             deletion = deleteAccount(moving.id);
             deletion.catch(() => undefined);
           }
           await waitFor(
-            async () =>
-              [...(await lockWaits())].find(([, blockers]) => blockers.includes(holder!.pid)),
+            async () => [...(await lockWaits())].find(([, blockers]) => blockers.includes(holder)),
             `attempt ${hop + 1} to wait on the lock`
           );
           await tx

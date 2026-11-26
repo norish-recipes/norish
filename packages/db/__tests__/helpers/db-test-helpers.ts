@@ -12,12 +12,14 @@ import { and, asc, eq, inArray, isNull, notInArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 
+import type { DbTransaction } from "@norish/db/drizzle";
 import type { MintIngredientInput } from "@norish/db/repositories/ingredient-aliases";
 import type { FullRecipeDTO, MeasurementSystem } from "@norish/shared/contracts";
 import type { GroceryInsertDto } from "@norish/shared/contracts/dto/groceries";
 import { encrypt, hashToken } from "@norish/config/crypto";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { getRecipeFull } from "@norish/db";
+import { withTransaction } from "@norish/db/drizzle";
 import { createGroceries, deleteGroceryByIds } from "@norish/db/repositories/groceries";
 import { mintIngredientWithAliases } from "@norish/db/repositories/ingredient-aliases";
 import { isFirstLineFood, writeRecipeLineFoodsTx } from "@norish/db/repositories/ingredients";
@@ -900,4 +902,34 @@ export async function testPantrySpellings(userId: string) {
     .from(pantry)
     .where(eq(pantry.householdId, await householdIdOf(userId)))
     .orderBy(asc(pantry.createdAt), asc(pantry.id));
+}
+
+/** Recipes and cookbooks whose household is not their Owner's; there are never any. */
+export async function rowsOutsideTheirOwnersHousehold(): Promise<string[]> {
+  const strays: string[] = [];
+
+  for (const table of [schema.recipes, schema.cookbooks]) {
+    const rows = await getTestDb()
+      .select({ id: table.id })
+      .from(table)
+      .leftJoin(
+        schema.householdUsers,
+        and(
+          eq(schema.householdUsers.userId, table.userId),
+          eq(schema.householdUsers.householdId, table.householdId)
+        )
+      )
+      .where(isNull(schema.householdUsers.userId));
+
+    strays.push(...rows.map((row) => row.id));
+  }
+
+  return strays;
+}
+
+/** A repository write that takes a transaction (`…Tx`, `tx` first), run in one as its callers do. */
+export async function inRepositoryTransaction<T>(
+  work: (tx: DbTransaction) => Promise<T>
+): Promise<T> {
+  return await withTransaction(work);
 }

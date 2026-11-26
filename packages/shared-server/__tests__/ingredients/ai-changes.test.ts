@@ -10,7 +10,6 @@ import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { CatalogueActor } from "@norish/shared-server/ingredients/catalogue";
-import { withTransaction } from "@norish/db/drizzle";
 import {
   listAIChanges,
   recordAIChange,
@@ -47,6 +46,7 @@ import {
   createTestRecipe,
   createTestUser,
   getRecipeIngredients,
+  inRepositoryTransaction,
   insertTestRecipeLine,
   joinTestHousehold,
   listTestAIChanges,
@@ -282,8 +282,10 @@ describe("keeping and undoing AI Changes", () => {
     const prei = await mint("prei");
     const stokprei = await mint("stokprei");
 
-    await withTransaction((tx) => setIngredientIcon(tx, prei.ingredientId, "prei.webp"));
-    await withTransaction((tx) => setIngredientIcon(tx, stokprei.ingredientId, "stokprei.webp"));
+    await inRepositoryTransaction((tx) => setIngredientIcon(tx, prei.ingredientId, "prei.webp"));
+    await inRepositoryTransaction((tx) =>
+      setIngredientIcon(tx, stokprei.ingredientId, "stokprei.webp")
+    );
     await expect(mergeByAI(prei.ingredientId, seeded, false)).resolves.toBe("applied");
     await keepAIChange(actor, (await onlyChange()).id);
     await mergeIngredients({ ...actor, isServerAdmin: true }, stokprei.ingredientId, seeded);
@@ -326,7 +328,7 @@ describe("keeping and undoing AI Changes", () => {
     const theirs = await createTestRecipe(stranger.id, { name: "fudge" });
     const theirLine = await insertTestRecipeLine({ recipeId: theirs.id, name: "melted" });
     const food = { ingredientId: randomUUID(), aliasId: randomUUID() };
-    const changeId = await withTransaction((tx) =>
+    const changeId = await inRepositoryTransaction((tx) =>
       recordAIChange(tx, {
         householdId: actor.householdId,
         sure: true,
@@ -395,7 +397,7 @@ describe("keeping and undoing AI Changes", () => {
     ]);
     const prei = await mint("prei");
     const poireau = (await readTestSeedSpelling("poireau"))!;
-    const changeId = await withTransaction((tx) =>
+    const changeId = await inRepositoryTransaction((tx) =>
       recordAIChange(tx, {
         householdId: actor.householdId,
         ingredientId: prei.ingredientId,
@@ -426,7 +428,7 @@ describe("keeping and undoing AI Changes", () => {
       { text: "leek", fold: "leek", locale: "en" },
     ]);
     const before = await readTestIngredient(leek);
-    const changeId = await withTransaction((tx) =>
+    const changeId = await inRepositoryTransaction((tx) =>
       recordAIChange(tx, {
         householdId: actor.householdId,
         ingredientId: leek,
@@ -449,7 +451,7 @@ describe("keeping and undoing AI Changes", () => {
 
   it("never offers or acts on a stranded change", async () => {
     const red = await mint("red onion");
-    const changeId = await withTransaction((tx) =>
+    const changeId = await inRepositoryTransaction((tx) =>
       recordAIChange(tx, {
         householdId: actor.householdId,
         ingredientId: red.ingredientId,
@@ -573,13 +575,13 @@ describe("keeping and undoing AI Changes", () => {
     await parentByAI(red.ingredientId, onion.ingredientId, false);
     const change = await onlyChange();
     // Two idle connections, so the two transactions below really run at once.
-    const warm = () => withTransaction((tx) => listJunkFolds(actor.householdId, tx));
+    const warm = () => inRepositoryTransaction((tx) => listJunkFolds(actor.householdId, tx));
 
     await Promise.all([warm(), warm()]);
 
     let undoing: Promise<unknown> = Promise.resolve();
     // A newer answer about the food holds the tree, then replaces its open parent change.
-    const answer = withTransaction(async (tx) => {
+    const answer = inRepositoryTransaction(async (tx) => {
       await lockTree(tx);
       undoing = undoAIChange(actor, change.id).catch((error: unknown) => error);
       await new Promise((resolve) => setTimeout(resolve, 300));

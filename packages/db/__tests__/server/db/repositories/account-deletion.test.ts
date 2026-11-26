@@ -64,8 +64,9 @@ import {
   householdIdOf,
   insertTestRecipeLine,
   joinTestHousehold,
+  rowsOutsideTheirOwnersHousehold,
 } from "../../../helpers/db-test-helpers";
-import { lockWaits, raceBehind, waitFor } from "../../../helpers/lock-race";
+import { backendPid, lockWaits, raceBehind, waitFor } from "../../../helpers/lock-race";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 const DAY = "2031-05-06";
@@ -707,18 +708,7 @@ describe("deleting an account", () => {
           expect.objectContaining({ householdId: household.id, userId: household.adminUserId })
         );
       }
-      for (const table of [recipes, cookbooks]) {
-        const strays = await db
-          .select({ id: table.id })
-          .from(table)
-          .leftJoin(
-            householdUsers,
-            sql`${householdUsers.userId} = ${table.userId} AND ${householdUsers.householdId} = ${table.householdId}`
-          )
-          .where(sql`${householdUsers.userId} IS NULL`);
-
-        expect(strays).toEqual([]);
-      }
+      expect(await rowsOutsideTheirOwnersHousehold()).toEqual([]);
     }
 
     it("a join queued behind the last member's deletion is refused, the household gone", async () => {
@@ -877,7 +867,7 @@ describe("deleting an account", () => {
       const pid = new Promise<number>((resolve) => (held = resolve));
       const done = getTestDb().transaction(async (tx) => {
         await lock(tx);
-        held((await tx.execute<{ pid: number }>(sql`SELECT pg_backend_pid() AS pid`)).rows[0]!.pid);
+        held(await backendPid(tx));
         await gate;
       });
 
@@ -956,8 +946,7 @@ describe("deleting an account", () => {
         await getTestDb().transaction(async (tx) => {
           await tx.execute(sql`SET LOCAL deadlock_timeout = '10s'`);
           await tx.select().from(groceries).where(eq(groceries.id, m.grocery.id)).for("update");
-          const holder = (await tx.execute<{ pid: number }>(sql`SELECT pg_backend_pid() AS pid`))
-            .rows[0]!.pid;
+          const holder = await backendPid(tx);
 
           deletion = deleteAccount(m.deleted);
           deletion.catch(() => undefined);

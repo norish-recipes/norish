@@ -7,7 +7,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { createGroceries, createRecipeWithRefs, getRecipeFull } from "@norish/db";
-import { withTransaction } from "@norish/db/drizzle";
 import { joinHousehold, moveToHouseholdOfOne } from "@norish/db/repositories/households";
 import { deleteCatalogueIngredient } from "@norish/db/repositories/ingredient-catalogue";
 import { groceryParts, resolveGroceryNames } from "@norish/shared-server/ingredients/groceries";
@@ -18,6 +17,7 @@ import {
   createTestIngredient,
   createTestUser,
   householdIdOf,
+  inRepositoryTransaction,
   listTestIngredientIds,
   mintTestFood,
   readTestIngredient,
@@ -91,7 +91,7 @@ describe("grocery names through aliases", () => {
   it("adds a recipe line whose food was deleted with no food, rather than minting it again", async () => {
     const line = await recipeLine("deegroller");
 
-    await withTransaction((tx) => deleteCatalogueIngredient(tx, line.ingredientId!));
+    await inRepositoryTransaction((tx) => deleteCatalogueIngredient(tx, line.ingredientId!));
 
     await expect(
       resolveGroceryNames([{ name: "deegroller", recipeIngredientId: line.id }], {
@@ -113,7 +113,7 @@ describe("grocery names through aliases", () => {
       ingredientId: food!.ingredientId,
     });
 
-    await withTransaction((tx) => deleteCatalogueIngredient(tx, food!.ingredientId));
+    await inRepositoryTransaction((tx) => deleteCatalogueIngredient(tx, food!.ingredientId));
 
     await expect(
       resolveGroceryNames(
