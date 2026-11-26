@@ -2,6 +2,7 @@ import React from "react";
 import { AiChange } from "@/components/ai-change";
 import { CardSlice } from "@/components/card-slice";
 import { EmptyCard } from "@/components/empty-card";
+import { PillButton } from "@/components/pill-button";
 import { Section } from "@/components/section";
 import { HeadingRow, sectionRows } from "@/components/section-rows";
 import { FitSheet, Sheet, SheetList } from "@/components/sheet";
@@ -39,17 +40,9 @@ export function IngredientChangesScreen() {
     ],
     (change) => change.id
   );
-  const secondary = [
-    ...(answerAll
-      ? [
-          {
-            label: text("settings.ingredients.changedByAI.undoAll"),
-            symbol: "arrow.uturn.backward" as const,
-            onPress: () => void undoAll(actionable),
-          },
-        ]
-      : []),
-    ...(rest.length > 0
+  // The sheet kit allows one secondary action in the header: Clear.
+  const secondary =
+    rest.length > 0
       ? [
           {
             label: text("settings.ingredients.changedByAI.clear"),
@@ -61,8 +54,7 @@ export function IngredientChangesScreen() {
             },
           },
         ]
-      : []),
-  ];
+      : [];
   const title = text("settings.ingredients.changedByAI.title");
 
   if (changes.length === 0) {
@@ -93,6 +85,17 @@ export function IngredientChangesScreen() {
       title={title}
     >
       <SheetList
+        ListFooterComponent={
+          answerAll ? (
+            <PillButton
+              centred
+              icon="arrow-undo-outline"
+              label={text("settings.ingredients.changedByAI.undoAll")}
+              testID="ingredient-changes-undo-all"
+              onPress={() => void undoAll(actionable)}
+            />
+          ) : undefined
+        }
         data={rows}
         keyExtractor={(row) => row.key}
         renderItem={({ item }) => {

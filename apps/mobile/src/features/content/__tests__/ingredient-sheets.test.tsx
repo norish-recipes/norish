@@ -112,11 +112,30 @@ describe("IngredientChangesScreen", () => {
     render(<IngredientChangesScreen />);
     fireEvent.click(screen.getByTestId("sheet-confirm"));
     expect(held.mutations.keepAll).toHaveBeenCalledWith([held.changes[0], held.changes[1]]);
-    fireEvent.click(screen.getByTestId("sheet-secondary-settings.ingredients.changedByAI.undoAll"));
+    fireEvent.click(screen.getByTestId("ingredient-changes-undo-all"));
     expect(held.mutations.undoAll).toHaveBeenCalled();
     fireEvent.click(screen.getByTestId("sheet-secondary-settings.ingredients.changedByAI.clear"));
     expect(held.mutations.clear).toHaveBeenCalled();
     expect(held.router.back).not.toHaveBeenCalled();
+  });
+
+  it("keeps one secondary action in the header, Clear; Undo all is a pill in the body", () => {
+    render(<IngredientChangesScreen />);
+    expect(
+      screen.queryByTestId("sheet-secondary-settings.ingredients.changedByAI.undoAll")
+    ).toBeNull();
+    expect(screen.getAllByTestId(/^sheet-secondary-/)).toHaveLength(1);
+    expect(
+      screen
+        .getByTestId("ingredient-changes-list")
+        .contains(screen.getByTestId("ingredient-changes-undo-all"))
+    ).toBe(true);
+  });
+
+  it("has no Undo all with fewer than two open changes to answer", () => {
+    held.changes = [change("a"), change("c", { kept: true })];
+    render(<IngredientChangesScreen />);
+    expect(screen.queryByTestId("ingredient-changes-undo-all")).toBeNull();
   });
 
   it("closes on Clear when nothing is left to check", () => {
