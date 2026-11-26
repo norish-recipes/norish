@@ -9,7 +9,10 @@ import { createOffer, matchEntries } from "./entry-matching";
 import { useContentWrites } from "./use-content-writes";
 import { useListEntries } from "./use-list-entries";
 
-export type ContentAddProblem = "loadFailed" | "tooLong" | "failed" | "stale";
+export type ContentAddProblem = "loadFailed" | "tooLong" | "failed";
+
+/** At most this many of the entries a name already matches are listed. */
+const MATCH_LIMIT = 5;
 
 /**
  * The Add flow of one list: the entries the typed name already matches, and a create only where
@@ -43,7 +46,7 @@ export function useContentAdd(kind: PickerKind) {
     forServer: toServer,
     setForServer,
     canAddForServer,
-    matches: matchEntries(kind, pool, typed),
+    matches: matchEntries(kind, pool, typed).slice(0, MATCH_LIMIT),
     offer,
     problem,
     max: offer.kind === "tooLong" ? offer.max : undefined,

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 
-import type { ContentEntry } from "./content-view";
 import type { PickerKind } from "./entry-matching";
 import { useConnectivity } from "../offline/react";
 import { contentListView } from "./content-view";
@@ -17,10 +16,9 @@ export function useContentList(kind: PickerKind) {
   const { isOffline } = useConnectivity();
   const [search, setSearch] = useState("");
   const [unusedOnly, setUnusedOnly] = useState(false);
-  const all: ContentEntry[] = entries;
 
   return {
-    entries: all,
+    entries,
     loaded,
     failed,
     retry,
@@ -29,7 +27,7 @@ export function useContentList(kind: PickerKind) {
     setSearch,
     unusedOnly,
     setUnusedOnly,
-    view: contentListView(kind, all, search, unusedOnly),
+    view: contentListView(kind, entries, search, unusedOnly),
   };
 }
 

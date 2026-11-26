@@ -99,7 +99,7 @@ describe("useContentList", () => {
       result.current.setSearch("");
       result.current.setUnusedOnly(true);
     });
-    expect(result.current.view.shown).toBe(1);
+    expect(result.current.view.sections.map((section) => section.entries.length)).toEqual([1]);
   });
 });
 
@@ -214,7 +214,7 @@ describe("useContentEntry", () => {
     await waitFor(() =>
       expect(result.current.deleteImpact).toEqual({ recipes: 181, scope: "server" })
     );
-    expect(result.current.access).toBe("edit");
+    expect(result.current.detail?.access).toBe("edit");
   });
 
   it("gives a member a server entry read-only, with no server count asked", async () => {
@@ -225,8 +225,97 @@ describe("useContentEntry", () => {
     });
 
     await waitFor(() => expect(result.current.entry).not.toBeNull());
-    expect(result.current.access).toBe("readOnly");
+    expect(result.current.detail?.access).toBe("readOnly");
     expect(result.current.deleteImpact).toBeNull();
+  });
+
+  it("opens an entry the server answered for an Add with its name, once the list has it", async () => {
+    let known = false;
+
+    serveTRPC(async (path) => {
+      if (path === "lists.list") return known ? [row("5", "Soup")] : [];
+      if (path === "lists.add") {
+        known = true;
+
+        return { entry: row("5", "Soup"), created: false };
+      }
+
+      return {};
+    });
+
+    const { result } = renderHook(
+      () => ({ add: useContentAdd("tag"), list: useContentList("tag") }),
+      { wrapper: wrapperFor() }
+    );
+
+    await waitFor(() => expect(result.current.list.loaded).toBe(true));
+    act(() => result.current.add.setTyped("Soup"));
+
+    let added: Awaited<ReturnType<typeof result.current.add.add>> = null;
+
+    await act(async () => {
+      added = await result.current.add.add();
+    });
+    // The entry is on the list by the time Add resolves, so a panel opened on it reads its name.
+    expect(result.current.list.entries.map((e) => e.id)).toEqual(["5"]);
+
+    const panel = renderHook(() => useContentEntry("tag", added!.entry.id), {
+      wrapper: wrapperFor(),
+    });
+
+    await waitFor(() => expect(panel.result.current.name).toBe("Soup"));
+    expect(panel.result.current.gone).toBe(false);
+  });
+
+  it("names the entry when it arrives after the panel opened, not an empty field", async () => {
+    serve({ entries: [row("1", "Diner")] });
+
+    const { result } = renderHook(() => useContentEntry("tag", "1"), { wrapper: wrapperFor() });
+
+    expect(result.current.name).toBe("");
+    await waitFor(() => expect(result.current.name).toBe("Diner"));
+    act(() => result.current.setName("Supper"));
+    expect(result.current.name).toBe("Supper");
+  });
+
+  it("says a delete came to stale or failed, and that a server count failed", async () => {
+    serve({
+      entries: [row("1", "Diner")],
+      answers: { "lists.delete": { stale: true } },
+    });
+
+    const { result } = renderHook(() => useContentEntry("tag", "1"), { wrapper: wrapperFor() });
+
+    await waitFor(() => expect(result.current.deleteState).toBe("ready"));
+    await act(async () => {
+      expect(await result.current.remove()).toBe(false);
+    });
+    expect(result.current.deleteState).toBe("stale");
+    expect(result.current.problem).toBeNull();
+  });
+
+  it("says the server's count failed, and reads it again", async () => {
+    let counts = 0;
+
+    serveTRPC(async (path) => {
+      if (path === "lists.list") return [row("9", "Italian", { instance: true })];
+      if (path === "lists.usage") {
+        counts += 1;
+        if (counts === 1) throw new Error("down");
+
+        return { recipeCount: 181 };
+      }
+
+      return {};
+    });
+
+    const { result } = renderHook(() => useContentEntry("cuisine", "9"), {
+      wrapper: wrapperFor(),
+    });
+
+    await waitFor(() => expect(result.current.deleteState).toBe("countFailed"));
+    act(() => result.current.retryCount());
+    await waitFor(() => expect(result.current.deleteState).toBe("ready"));
   });
 
   it("is gone once the entry is no longer on the list", async () => {

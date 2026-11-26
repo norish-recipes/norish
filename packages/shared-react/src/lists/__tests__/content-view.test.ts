@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import type { ContentEntry } from "../content-view";
-import { contentListView, entryAccess, renameView } from "../content-view";
+import {
+  contentListView,
+  entryAccess,
+  entryDetail,
+  problemCopy,
+  renameView,
+} from "../content-view";
 
 let next = 0;
 const entry = (name: string, extra: Partial<ContentEntry> = {}): ContentEntry => ({
@@ -52,9 +58,58 @@ describe("contentListView", () => {
     ]);
   });
 
-  it("titles the sections of Cuisines and Categories, not the one section of Tags", () => {
-    expect(contentListView("tag", mine, "", false).titled).toBe(false);
-    expect(contentListView("cuisine", mine, "", false).titled).toBe(true);
+  it("titles and explains the sections of Cuisines and Categories, not the one section of Tags", () => {
+    const sections = (kind: "tag" | "cuisine" | "category", entries = [...server, ...mine]) =>
+      contentListView(kind, entries, "", false).sections.map((s) => [s.title, s.help]);
+
+    expect(sections("tag", mine)).toEqual([[null, null]]);
+    expect(sections("cuisine")).toEqual([
+      ["ownCuisines", null],
+      ["server", "server"],
+    ]);
+    expect(sections("category")).toEqual([
+      ["builtIn", "builtIn"],
+      ["ownCategories", null],
+    ]);
+  });
+
+  it("says the reader is a server admin where some server entry is theirs to change", () => {
+    const admin = [entry("Italian", { instance: true, editable: true })];
+
+    expect(contentListView("cuisine", admin, "", false).admin).toBe(true);
+    expect(contentListView("cuisine", server, "", false).admin).toBe(false);
+    expect(contentListView("cuisine", admin, "", false).sections[0]!.help).toBe("serverAdmin");
+  });
+});
+
+describe("entryDetail", () => {
+  it("badges the server's entries but not the built-in Categories, and says why each is fixed", () => {
+    const italian = entry("Italian", { instance: true, editable: false });
+    const lunch = entry("Lunch", { instance: true, editable: false });
+
+    expect(entryDetail("cuisine", italian)).toMatchObject({
+      badge: true,
+      note: { key: "panel.serverReadOnly", locked: true },
+    });
+    expect(entryDetail("category", lunch)).toMatchObject({
+      badge: false,
+      note: { key: "help.builtIn", locked: true },
+    });
+    expect(entryDetail("tag", entry("BBQ"))).toMatchObject({ badge: false, note: null });
+    expect(entryDetail("cuisine", { ...italian, editable: true })).toMatchObject({
+      badge: true,
+      note: { key: "panel.serverEditable", locked: false },
+      usedKey: "panel.usedByOwn",
+    });
+  });
+});
+
+describe("problemCopy", () => {
+  it("names the copy for a problem, and none where the field says it", () => {
+    expect(problemCopy("stale")).toEqual({ key: "panel.stale", max: 0 });
+    expect(problemCopy("tooLong", 40)).toEqual({ key: "panel.tooLong", max: 40 });
+    expect(problemCopy("empty")).toBeNull();
+    expect(problemCopy(null)).toBeNull();
   });
 });
 

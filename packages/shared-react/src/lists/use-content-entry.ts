@@ -5,11 +5,14 @@ import { useQuery } from "@tanstack/react-query";
 
 import type { PickerKind } from "./entry-matching";
 import { useTRPC } from "../trpc";
-import { entryAccess, renameView } from "./content-view";
+import { entryDetail, renameView } from "./content-view";
 import { useContentWrites } from "./use-content-writes";
 import { useListEntries } from "./use-list-entries";
 
 export type ContentEntryProblem = "stale" | "failed" | "tooLong" | "empty";
+
+/** Where a delete stands: its count is being read or failed, it can go ahead, or it came to `stale` or `failed`. */
+export type DeleteState = "counting" | "countFailed" | "ready" | "stale" | "failed";
 
 /** What deleting comes off: `household` recipes of the reader's, or `server` every household's. */
 export interface DeleteImpact {
@@ -19,17 +22,19 @@ export interface DeleteImpact {
 
 /**
  * One entry's panel: its name as edited, saved as a rename or, onto another entry's name, a merge;
- * and its delete with how many recipes it comes off (an admin deleting a server entry sees every
- * household's, read from the server; `null` until it is). An entry changed by someone else
- * meanwhile is read again and `problem` is `stale`, nothing overwritten. `gone` when it is deleted.
+ * and its delete with how many recipes it comes off (an admin's server entry counts every
+ * household's, read from the server). `gone` when it is deleted.
  */
 export function useContentEntry(kind: PickerKind, id: string) {
   const trpc = useTRPC();
   const { entries, loaded } = useListEntries(kind);
   const writes = useContentWrites(kind);
   const entry = entries.find((known) => known.id === id) ?? null;
-  const [name, setName] = useState(entry?.name ?? "");
+  // The name as edited; until it is, the entry's own, so an entry that arrives later has it too.
+  const [draft, setDraft] = useState<string | null>(null);
+  const name = draft ?? entry?.name ?? "";
   const [outcome, setOutcome] = useState<"stale" | "failed" | null>(null);
+  const [deleteOutcome, setDeleteOutcome] = useState<"stale" | "failed" | null>(null);
   const forServer = entry !== null && entry.instance && entry.editable;
   const server = useQuery({
     ...trpc.lists.usage.queryOptions({ kind, id }),
@@ -42,26 +47,36 @@ export function useContentEntry(kind: PickerKind, id: string) {
     deleteImpact = { recipes: entry.recipeCount, scope: "household" };
   else if (server.data) deleteImpact = { recipes: server.data.recipeCount, scope: "server" };
 
+  const countFailed = forServer && server.isError && !server.data;
+  let deleteState: DeleteState = "ready";
+
+  if (deleteOutcome) deleteState = deleteOutcome;
+  else if (countFailed) deleteState = "countFailed";
+  else if (deleteImpact === null) deleteState = "counting";
+
   /** Runs a write: resolves whether it went through, and keeps why not. */
-  const settle = async (write: () => Promise<{ status: string }>) => {
-    setOutcome(null);
+  const settle = async (
+    write: () => Promise<{ status: string }>,
+    keep: (why: "stale" | "failed" | null) => void
+  ) => {
+    keep(null);
 
     const result = await write();
 
-    if (result.status === "stale") setOutcome("stale");
-    else if (result.status !== "saved") setOutcome("failed");
+    if (result.status === "stale") keep("stale");
+    else if (result.status !== "saved") keep("failed");
 
     return result.status === "saved";
   };
 
   return {
     entry,
-    access: entry ? entryAccess(kind, entry) : null,
+    detail: entry ? entryDetail(kind, entry) : null,
     gone: loaded && entry === null,
     name,
     setName: (next: string) => {
       setOutcome(null);
-      setName(next);
+      setDraft(next);
     },
     view,
     problem: (view?.problem ?? outcome) satisfies ContentEntryProblem | null,
@@ -69,11 +84,15 @@ export function useContentEntry(kind: PickerKind, id: string) {
     pending: writes.pending,
     canSave: view?.canSave === true && !writes.offline && !writes.pending,
     deleteImpact,
+    deleteState,
+    /** Reads the server's count again after it failed. */
+    retryCount: () => void server.refetch(),
     /** Renames, or merges onto the entry the name folds onto; resolves whether it was saved. */
     save: () =>
       entry && view?.canSave
-        ? settle(() => writes.rename(entry, name.trim()))
+        ? settle(() => writes.rename(entry, name.trim()), setOutcome)
         : Promise.resolve(false),
-    remove: () => (entry ? settle(() => writes.remove(entry)) : Promise.resolve(false)),
+    remove: () =>
+      entry ? settle(() => writes.remove(entry), setDeleteOutcome) : Promise.resolve(false),
   };
 }

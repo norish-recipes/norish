@@ -26,8 +26,8 @@ export interface EntryRef {
 }
 
 /**
- * The Content page's writes to one list. Each needs the server, so offline none is sent. A stale
- * one (the entry changed since it was read) reads the lists again and says so, never overwriting.
+ * The Content page's writes to one list. Each needs the server, so offline none is sent. Each
+ * reads the lists again before it resolves; a stale one (the entry changed meanwhile) says so.
  */
 export function useContentWrites(kind: PickerKind) {
   const trpc = useTRPC();
@@ -48,7 +48,8 @@ export function useContentWrites(kind: PickerKind) {
 
     if (answer === null) return { status: "failed" };
 
-    void reread();
+    // The list is read again before this resolves, so what it answers is on it.
+    await reread();
 
     return isFresh(answer) ? { status: "saved", value: answer } : { status: "stale" };
   };

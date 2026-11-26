@@ -24,9 +24,38 @@ export function entryAccess(kind: PickerKind, entry: ContentEntry): EntryAccess 
   return entry.instance && kind === "category" ? "fixed" : "readOnly";
 }
 
+/** What an entry's panel says about it, and whether it is the server's (a badge) or built in (none). */
+export function entryDetail(kind: PickerKind, entry: ContentEntry) {
+  const access = entryAccess(kind, entry);
+  let note: {
+    key: "help.builtIn" | "panel.serverReadOnly" | "panel.serverEditable";
+    locked: boolean;
+  } | null = null;
+
+  if (access === "fixed") note = { key: "help.builtIn", locked: true };
+  else if (access === "readOnly") note = { key: "panel.serverReadOnly", locked: true };
+  else if (entry.instance) note = { key: "panel.serverEditable", locked: false };
+
+  return {
+    access,
+    note,
+    badge: entry.instance && access !== "fixed",
+    /** An admin's server entry counts the admin's own household's recipes, as its row does. */
+    usedKey:
+      entry.instance && access === "edit" ? ("panel.usedByOwn" as const) : ("recipes" as const),
+  };
+}
+
+export type SectionTitle = "ownCuisines" | "ownCategories" | "builtIn" | "server";
+export type SectionHelp = "builtIn" | "server" | "serverAdmin";
+
 export interface ContentSection {
   /** `household` is the reader's own; `instance` the server's. */
   scope: "household" | "instance";
+  /** Copy under `sections`; Tags have only the household's own, so their one section has none. */
+  title: SectionTitle | null;
+  /** Copy under `help`: what the server's sections say about who keeps them. */
+  help: SectionHelp | null;
   entries: ContentEntry[];
 }
 
@@ -45,8 +74,20 @@ export function contentListView(
   const unused = entries.filter((entry) => entry.recipeCount === 0);
   const pool = unusedOnly ? unused : entries;
   const matched = matchEntries(kind, pool, search);
+  // The reader acts as a server admin on a list where some server entry is theirs to change.
+  const admin = entries.some((entry) => entry.instance && entry.editable);
+  const titles = {
+    household: kind === "cuisine" ? "ownCuisines" : kind === "category" ? "ownCategories" : null,
+    instance: kind === "category" ? "builtIn" : "server",
+  } as const;
+  const helps = {
+    household: null,
+    instance: kind === "category" ? "builtIn" : admin ? "serverAdmin" : "server",
+  } as const;
   const ofScope = (scope: ContentSection["scope"]): ContentSection => ({
     scope,
+    title: kind === "tag" ? null : titles[scope],
+    help: helps[scope],
     entries: matched.filter((entry) => entry.instance === (scope === "instance")),
   });
   const ordered =
@@ -60,13 +101,23 @@ export function contentListView(
   else if (unusedOnly && unused.length === 0) state = "nothingUnused";
   else if (matched.length === 0) state = "noMatch";
 
-  return {
-    sections,
-    state,
-    /** Tags have only the household's own, so their one section needs no title. */
-    titled: kind !== "tag",
-    shown: matched.length,
-  };
+  return { sections, state, admin };
+}
+
+export type ContentProblem = "loadFailed" | "tooLong" | "failed" | "stale" | "empty";
+
+/** The copy under `settings.content` that says a problem, or none where the field says it. */
+export function problemCopy(problem: ContentProblem | null, max = 0) {
+  if (problem === null || problem === "empty") return null;
+
+  const key = {
+    loadFailed: "loadFailed",
+    tooLong: "panel.tooLong",
+    failed: "panel.failed",
+    stale: "panel.stale",
+  } as const;
+
+  return { key: key[problem], max };
 }
 
 export type RenameProblem = "empty" | "tooLong";
