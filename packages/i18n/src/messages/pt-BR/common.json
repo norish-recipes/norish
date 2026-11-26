@@ -317,7 +317,8 @@
       "invalidCode": "Esse código de convite não é válido.",
       "expired": "Esse código de convite expirou. Peça um novo.",
       "alreadyMember": "Você já está nesta casa.",
-      "shared": "Saia primeiro da sua casa para entrar em outra."
+      "shared": "Saia primeiro da sua casa para entrar em outra.",
+      "busy": "Essa casa estava sendo alterada naquele momento. Tente novamente."
     }
   },
   "photos": {

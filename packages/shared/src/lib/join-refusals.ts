@@ -4,6 +4,7 @@ export const JOIN_REFUSALS = {
   shared: "You are already in a household. Leave it first to join another one.",
   gone: "Invalid join code",
   expired: "This join code has expired",
+  busy: "The household changed while joining it",
 } as const;
 
 export type JoinRefusal = keyof typeof JOIN_REFUSALS;

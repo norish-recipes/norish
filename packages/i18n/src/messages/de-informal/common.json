@@ -317,7 +317,8 @@
       "invalidCode": "Dieser Beitrittscode ist ungültig.",
       "expired": "Dieser Beitrittscode ist abgelaufen. Bitte um einen neuen.",
       "alreadyMember": "Du bist bereits in diesem Haushalt.",
-      "shared": "Verlass zuerst deinen Haushalt, um einem anderen beizutreten."
+      "shared": "Verlass zuerst deinen Haushalt, um einem anderen beizutreten.",
+      "busy": "Dieser Haushalt wurde gerade geändert. Versuch es noch mal."
     }
   },
   "photos": {

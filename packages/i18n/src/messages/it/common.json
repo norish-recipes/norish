@@ -317,7 +317,8 @@
       "invalidCode": "Questo codice di invito non è valido.",
       "expired": "Questo codice di invito è scaduto. Chiedine uno nuovo.",
       "alreadyMember": "Fai già parte di questa famiglia.",
-      "shared": "Lascia prima la tua famiglia per unirti a un'altra."
+      "shared": "Lascia prima la tua famiglia per unirti a un'altra.",
+      "busy": "Quella famiglia era in fase di modifica. Riprova."
     }
   },
   "photos": {

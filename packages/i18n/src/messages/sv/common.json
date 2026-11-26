@@ -317,7 +317,8 @@
       "invalidCode": "Den koden är inte giltig.",
       "expired": "Den koden har gått ut. Be om en ny.",
       "alreadyMember": "Du är redan med i det här hushållet.",
-      "shared": "Lämna ditt hushåll först för att gå med i ett annat."
+      "shared": "Lämna ditt hushåll först för att gå med i ett annat.",
+      "busy": "Det hushållet ändrades just då. Försök igen."
     }
   },
   "photos": {

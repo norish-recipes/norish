@@ -317,7 +317,8 @@
       "invalidCode": "That join code is not valid.",
       "expired": "That join code has expired. Ask for a new one.",
       "alreadyMember": "You are already in this household.",
-      "shared": "Leave your household first to join another one."
+      "shared": "Leave your household first to join another one.",
+      "busy": "That household was changing just then. Try again."
     }
   },
   "photos": {

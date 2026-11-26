@@ -317,7 +317,8 @@
       "invalidCode": "Liittymiskoodi ei ole kelvollinen.",
       "expired": "Liittymiskoodi on vanhentunut. Pyydä uusi.",
       "alreadyMember": "Olet jo tässä kotitaloudessa.",
-      "shared": "Poistu ensin kotitaloudestasi liittyäksesi toiseen."
+      "shared": "Poistu ensin kotitaloudestasi liittyäksesi toiseen.",
+      "busy": "Kotitaloutta muutettiin juuri silloin. Yritä uudelleen."
     }
   },
   "photos": {

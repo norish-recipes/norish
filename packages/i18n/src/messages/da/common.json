@@ -317,7 +317,8 @@
       "invalidCode": "Den kode er ikke gyldig.",
       "expired": "Den kode er udløbet. Bed om en ny.",
       "alreadyMember": "Du er allerede i denne husstand.",
-      "shared": "Forlad først din husstand for at blive medlem af en anden."
+      "shared": "Forlad først din husstand for at blive medlem af en anden.",
+      "busy": "Den husstand blev ændret lige i det øjeblik. Prøv igen."
     }
   },
   "photos": {

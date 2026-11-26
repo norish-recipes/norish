@@ -317,7 +317,8 @@
       "invalidCode": "Die join code is niet geldig.",
       "expired": "Die join code is verlopen. Vraag om een nieuwe.",
       "alreadyMember": "Je zit al in dit huishouden.",
-      "shared": "Verlaat eerst je huishouden om bij een ander te komen."
+      "shared": "Verlaat eerst je huishouden om bij een ander te komen.",
+      "busy": "Dat huishouden was net iets aan het wijzigen. Probeer het opnieuw."
     }
   },
   "photos": {
