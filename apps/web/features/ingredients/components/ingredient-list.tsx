@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { ListFrame } from "@/components/shared/list-row";
 import { Spinner } from "@heroui/react";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import { useWindowSize } from "usehooks-ts";
@@ -90,12 +91,12 @@ export function IngredientList({
 
   return (
     <div ref={containerRef} className="flex flex-col">
-      <div
+      <ListFrame
         aria-busy={settling}
-        className={`border-border relative overflow-hidden rounded-xl border transition-opacity ${settling ? "opacity-60" : ""}`}
+        className={`transition-opacity ${settling ? "opacity-60" : ""}`}
         data-testid="ingredients-list"
-        role="list"
         style={{ height: `${virtualizer.getTotalSize()}px` }}
+        virtual
       >
         {virtualRows.map((virtualRow) => {
           const row = rows[virtualRow.index];
@@ -103,31 +104,21 @@ export function IngredientList({
           if (!row) return null;
 
           return (
-            <div
+            <IngredientRow
               key={row.item.id}
               ref={virtualizer.measureElement}
-              className={virtualRow.index > 0 ? "border-border border-t" : undefined}
-              data-index={virtualRow.index}
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                transform: `translateY(${virtualRow.start - scrollMargin}px)`,
-              }}
-            >
-              <IngredientRow
-                depth={row.depth}
-                expanded={row.expanded}
-                item={row.item}
-                loadingKinds={row.loading}
-                onOpen={onOpen}
-                onToggleKinds={foldable ? onToggleKinds : undefined}
-              />
-            </div>
+              depth={row.depth}
+              expanded={row.expanded}
+              index={virtualRow.index}
+              item={row.item}
+              loadingKinds={row.loading}
+              offset={virtualRow.start - scrollMargin}
+              onOpen={onOpen}
+              onToggleKinds={foldable ? onToggleKinds : undefined}
+            />
           );
         })}
-      </div>
+      </ListFrame>
       <div ref={endRef} aria-hidden data-testid="ingredients-list-end" />
       {isFetchingMore ? (
         <div className="flex justify-center py-4" data-testid="ingredients-load-more">

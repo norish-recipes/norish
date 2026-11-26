@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode, Ref } from "react";
 import { ChevronRightIcon, LockClosedIcon } from "@heroicons/react/24/outline";
 import { Skeleton } from "@heroui/react";
 
@@ -10,10 +10,21 @@ const LINE_CLASS = "flex min-h-12 w-full items-center gap-3 px-4";
 /** The two-line row: a name over a detail, taller and padded to hold both. */
 const TWO_LINE_CLASS = "flex min-h-15 w-full items-center gap-3 px-4 py-2";
 
-/** The bordered frame every list of rows sits in. */
-export function ListFrame({ children }: { children: ReactNode }) {
+/**
+ * The bordered frame every list of rows sits in. A `virtual` frame holds rows
+ * placed by a virtualizer, which draw their own divider by `data-index`.
+ */
+export function ListFrame({
+  virtual,
+  className = "",
+  children,
+  ...rest
+}: { virtual?: boolean } & ComponentProps<"ul">) {
   return (
-    <ul className="divide-border border-border divide-y overflow-hidden rounded-xl border">
+    <ul
+      className={`border-border overflow-hidden rounded-xl border ${className} ${virtual ? "[&>li:not([data-index='0'])]:border-border relative [&>li:not([data-index='0'])]:border-t" : "divide-border divide-y"}`}
+      {...rest}
+    >
       {children}
     </ul>
   );
@@ -42,6 +53,10 @@ type ListRowProps = {
   rowData?: Record<`data-${string}`, string | boolean | number | undefined>;
   "data-testid"?: string;
   "data-entry"?: string;
+  /** For a virtualizer that places and measures the row itself. */
+  ref?: Ref<HTMLLIElement>;
+  /** Where a virtualizer puts the row, in px from the top of its `virtual` frame. */
+  offset?: number;
   onPress: () => void;
 };
 
@@ -60,15 +75,29 @@ export function ListRow({
   rowData,
   "data-testid": testId,
   "data-entry": entry,
+  ref,
+  offset,
   onPress,
 }: ListRowProps) {
   const twoLine = detail !== undefined;
 
   return (
     <li
+      ref={ref}
       className="hover:bg-default/40 flex items-stretch transition-colors"
       id={id}
-      style={depth > 0 ? { paddingInlineStart: `${depth * INDENT_PX}px` } : undefined}
+      style={{
+        ...(offset === undefined
+          ? {}
+          : {
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              transform: `translateY(${offset}px)`,
+            }),
+        ...(depth > 0 ? { paddingInlineStart: `${depth * INDENT_PX}px` } : {}),
+      }}
       {...rowData}
     >
       {expander}
@@ -81,7 +110,7 @@ export function ListRow({
       >
         {leading}
         <span className="flex min-w-0 flex-1 flex-col">
-          <span className="flex min-w-0 items-center gap-2">
+          <span className="flex min-w-0 flex-wrap items-center gap-2">
             <span className={`min-w-0 truncate ${twoLine ? "font-medium" : ""}`}>{name}</span>
             {badge}
           </span>
@@ -105,8 +134,15 @@ export function ListRow({
 }
 
 /** A row of a `ListFrame` while its entry loads: the row's own height, a name and a count. */
-export function ListRowSkeleton({ leading }: { leading?: ReactNode } = {}) {
-  if (leading) {
+export function ListRowSkeleton({
+  leading,
+  detail,
+}: {
+  leading?: ReactNode;
+  /** The row has a detail line, as `ListRow` with a `detail` does. */
+  detail?: boolean;
+} = {}) {
+  if (detail) {
     return (
       <li className={TWO_LINE_CLASS}>
         {leading}

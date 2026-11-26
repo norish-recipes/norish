@@ -1,5 +1,6 @@
 "use client";
 
+import type { Ref } from "react";
 import { memo } from "react";
 import { IngredientIcon } from "@/components/ingredients/ingredient-icon";
 import { IngredientStatusChip } from "@/components/ingredients/ingredient-status-chip";
@@ -13,6 +14,9 @@ import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 
 /** One Ingredient on a line, indented by `depth`; memoised to re-render only on its item. */
 export const IngredientRow = memo(function IngredientRow({
+  ref,
+  index,
+  offset,
   item,
   depth = 0,
   expanded = false,
@@ -20,6 +24,10 @@ export const IngredientRow = memo(function IngredientRow({
   onOpen,
   onToggleKinds,
 }: {
+  /** From the list's virtualizer, which measures and places the row. */
+  ref?: Ref<HTMLLIElement>;
+  index?: number;
+  offset?: number;
   item: IngredientItem;
   depth?: number;
   expanded?: boolean;
@@ -92,8 +100,11 @@ export const IngredientRow = memo(function IngredientRow({
       id={item.id}
       leading={<IngredientIcon placeholder src={item.icon ?? null} />}
       name={displayName}
+      offset={offset}
+      ref={ref}
       rowData={{
         "data-depth": depth,
+        "data-index": index,
         "data-expanded": foldable ? expanded : undefined,
         "data-flagged": item.flagged,
         "data-ingredient": item.name,
@@ -106,5 +117,5 @@ export const IngredientRow = memo(function IngredientRow({
 
 /** A row while its Ingredient loads: the row's icon and two lines, at the row's own height. */
 export function IngredientRowSkeleton() {
-  return <ListRowSkeleton leading={<IngredientIcon placeholder src={null} />} />;
+  return <ListRowSkeleton detail leading={<IngredientIcon placeholder src={null} />} />;
 }
