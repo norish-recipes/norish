@@ -247,11 +247,20 @@ describe("the Orphans' heir without a server owner", () => {
     { name: "nobody, on a server without accounts", users: [], heir: null },
   ];
 
-  it.each(cases)("is $name", async ({ users, heir }) => {
-    const db = await databaseBefore("test_orphan_heir");
+  // Each case migrates its own database, so that work runs in hooks, on their budget.
+  describe.each(cases)("is $name", ({ users, heir }) => {
+    let db: Awaited<ReturnType<typeof databaseBefore>>;
 
-    try {
+    beforeAll(async () => {
+      db = await databaseBefore("test_orphan_heir");
       await db.addUsers(users);
+    });
+
+    afterAll(async () => {
+      await db.teardown();
+    });
+
+    it("takes the Orphans", async () => {
       const [orphanRecipe, orphanCookbook] = [randomUUID(), randomUUID()];
 
       await db.q("INSERT INTO recipes (id, user_id, name) VALUES ($1, NULL, 'x')", [orphanRecipe]);
@@ -271,8 +280,6 @@ describe("the Orphans' heir without a server owner", () => {
         expect(recipes).toEqual([{ id: orphanRecipe, user_id: heir, household_id: household }]);
         expect(cookbooks).toEqual([{ id: orphanCookbook, user_id: heir, household_id: household }]);
       }
-    } finally {
-      await db.teardown();
-    }
+    });
   });
 });
