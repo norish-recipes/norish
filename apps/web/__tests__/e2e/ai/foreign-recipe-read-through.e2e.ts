@@ -1,10 +1,5 @@
-/**
- * Another household's recipe reads through your own catalogue (ADR-0042), in a browser, under view
- * Everyone. Household A writes "sjalot" and "prei"; household B keeps its own "sjalot" in its Pantry.
- * B's add-to-groceries panel holds A's "sjalot" line as in the Pantry, the Library's pantry filter
- * counts it, adding the lines gives B foods of its own catalogue and none of A's, and A's recipe and
- * foods are left as they are. B sees A's food icons only through A's recipe, never by id.
- */
+/** Another household's recipe reads through your own catalogue (ADR-0042), under view Everyone:
+ * B's add-to-groceries panel, pantry filter and foods never take or show A's rows. */
 import type { GroceryDto } from "@norish/shared/contracts";
 
 import { signedInContext, signIn } from "../harness/auth";

@@ -1,9 +1,5 @@
-/**
- * Tags are household lists (ADR-0043): household A's Tags are never offered to household B, in
- * the lists, the Filters dialog, Search's suggestions or Discover, even when B may view every
- * recipe; B sees them on A's recipe, and filtering by B's own Tag of the same folded name (not
- * merely the same lowercase) finds A's recipe too. Under view Household, B finds only its own.
- */
+/** Tags are household lists (ADR-0043): A's Tags are never offered to B, but B sees them on A's
+ * recipe and finds it by its own Tag of the same fold, except under view Household. */
 import type { Page } from "@playwright/test";
 
 import { userIdOf } from "../harness/accounts";

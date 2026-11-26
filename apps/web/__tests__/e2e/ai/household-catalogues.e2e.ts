@@ -1,10 +1,5 @@
-/**
- * Each household has its own catalogue on the shared seed (ADR-0042), in a browser. Two households
- * write "kipfilet XL" in a recipe and each gets a food of its own; each Ingredients page lists the
- * seed and its own foods, never the other's; a spelling one household gives a seeded food and a food
- * it adds by hand stay its own; and the other household reaches neither by id. Under view Everyone
- * too, where each may open the other's recipe.
- */
+/** Each household has its own catalogue on the shared seed (ADR-0042): foods, spellings and the
+ * Ingredients page stay its own, and the other household reaches none of them by id. */
 import type { Browser, Page } from "@playwright/test";
 
 import type { SessionCookies } from "../harness/auth";

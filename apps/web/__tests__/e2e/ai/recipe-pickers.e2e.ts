@@ -1,9 +1,5 @@
-/**
- * The recipe form's Tag, Cuisine and Category pickers search the household's list as you type
- * and make an entry only through their "Create" row (ADR-0043): a new Tag and Cuisine are made
- * from the picker and saved on the recipe, an existing one typed in another case is picked
- * instead of made twice, and a name that is typed but never created is not saved.
- */
+/** The recipe form's Tag, Cuisine and Category pickers make an entry only through their "Create"
+ * row (ADR-0043); one typed in another case is picked, not made twice. */
 import type { Page } from "@playwright/test";
 
 import { userIdOf } from "../harness/accounts";

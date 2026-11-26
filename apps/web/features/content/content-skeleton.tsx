@@ -20,9 +20,8 @@ import { ContentToolbar } from "./content-toolbar";
 const SKELETON_ROWS = 6;
 
 /**
- * A list of Tags, Cuisines or Categories while it loads: the loaded card with its toolbar and one
- * frame of rows, the controls off. Only what the loaded list always has is drawn, so nothing moves
- * when it arrives: Tags have no heading, the others always open on one.
+ * A Tag, Cuisine or Category list while it loads: only what the loaded list always has is drawn
+ * (Tags have no heading, the others always open on one), so nothing moves when it arrives.
  */
 export function EntryListSkeleton({ list }: { list: EntryContentList }) {
   const t = useTranslations("settings.content");
