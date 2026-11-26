@@ -55,7 +55,10 @@ vi.mock("@norish/config/crypto", async (importOriginal) => {
   };
 });
 
-vi.mock("@norish/config/env-config-server", () => ({ SERVER_CONFIG: config }));
+vi.mock("@norish/config/env-config-server", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/config/env-config-server")>()),
+  SERVER_CONFIG: config,
+}));
 vi.mock("@norish/db/repositories/master-key", () => ({
   // A claim fills a missing fingerprint and keeps one already there.
   claimMasterKeyFingerprint: async (fingerprint: string) => {
@@ -416,6 +419,35 @@ describe("which key boot opens", () => {
         { from: masterKeyFingerprint(keyA), to: masterKeyFingerprint(keyB) },
       ]);
       expect(opened()).toBe(lookupBy(keyB));
+    });
+
+    it("re-keys from a MASTER_KEY of 24 bytes moved into a key file as its previous key", async () => {
+      // 32 characters of base64, as an instance may run on; a generated key is 32 bytes.
+      const short = randomBytes(24).toString("base64");
+      const generated = randomBytes(32);
+
+      config.MASTER_KEY = short;
+      await resolveMasterKey();
+      // Written under the key MASTER_KEY opened, however boot turned its text into one.
+      database.encrypted = [encrypt("ada@example.com")];
+      config.MASTER_KEY = undefined;
+      await fs.mkdir(keyDir(), { recursive: true });
+      await fs.writeFile(
+        keyFilePath(),
+        JSON.stringify({ current: generated.toString("base64"), previous: short })
+      );
+
+      await resolveMasterKey();
+
+      expect(rekeys.calls.map(({ fingerprints }) => fingerprints)).toEqual([
+        { from: fingerprintWritten(), to: masterKeyFingerprint(generated) },
+      ]);
+      const moved = rekeys.calls[0]?.rotation.reseal(database.encrypted[0] ?? "");
+
+      expect(moved?.was).toBe("previous");
+      expect(moved?.sealed && decrypt(moved.sealed)).toBe("ada@example.com");
+      expect(opened()).toBe(lookupBy(generated));
+      expect(await readKeyFile()).toEqual({ current: generated });
     });
 
     it("generates a key file on a first boot and opens that key", async () => {

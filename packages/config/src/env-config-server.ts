@@ -110,10 +110,13 @@ const commaSeparatedList = z
   )
   .pipe(z.array(z.string()));
 
+/** A Master Key as MASTER_KEY, MASTER_KEY_PREVIOUS and the key file give it; read as base64. */
+export const MasterKeySchema = z.string().min(32);
+
 /** A Master Key, unset when blank: Compose passes an unset `${MASTER_KEY}` as an empty string. */
 const optionalMasterKey = z.preprocess(
   (value) => (typeof value === "string" && !value.trim() ? undefined : value),
-  z.string().min(32).optional()
+  MasterKeySchema.optional()
 );
 
 const ServerConfigFields = z.object({

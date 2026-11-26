@@ -9,7 +9,7 @@ import {
   masterKeyOpens,
   masterKeyRotation,
 } from "@norish/config/crypto";
-import { SERVER_CONFIG } from "@norish/config/env-config-server";
+import { MasterKeySchema, SERVER_CONFIG } from "@norish/config/env-config-server";
 import {
   claimMasterKeyFingerprint,
   countEncryptedRows,
@@ -28,8 +28,10 @@ export type KeyFile = { current: Buffer; previous?: Buffer };
 const fromBase64 = (key: string) => Buffer.from(key, "base64");
 const toBase64 = (key: Buffer) => key.toString("base64");
 
-const StoredKey = z.base64().refine((value) => fromBase64(value).length === 32);
-const KeyFileSchema = z.object({ current: StoredKey, previous: StoredKey.optional() });
+const KeyFileSchema = z.object({
+  current: MasterKeySchema,
+  previous: MasterKeySchema.optional(),
+});
 
 /** `keys` with each key converted, and `previous` only when there is one. */
 function mapKeys<From, To>(keys: { current: From; previous?: From }, convert: (key: From) => To) {
