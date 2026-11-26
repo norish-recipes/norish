@@ -1722,8 +1722,8 @@ export async function updateRecipeWithRefs(
       attached(await replaceRecipeEntryIdsTx(tx, "cuisine", recipeId, payload.cuisines));
     }
 
-    // An empty list leaves the Categories alone, as it always has.
-    if (payload.categories?.length) {
+    // Replace Categories if provided: an empty list clears them, as it does Tags and Cuisines.
+    if (payload.categories !== undefined) {
       attached(
         await attachCategoriesToRecipeByInputTx(tx, recipeId, payload.categories, entryOptions)
       );

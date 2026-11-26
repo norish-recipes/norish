@@ -213,6 +213,29 @@ describe("household lists", () => {
       expect((await getRecipeFull(ann.recipe))?.categories).toEqual([]);
     });
 
+    it("clears a list it sends empty and leaves alone one it omits", async () => {
+      const [cuisine] = (await listEntries("cuisine", ann.household)).filter((e) => e.instance);
+      const save = (data: Parameters<typeof updateRecipeWithRefs>[2]) =>
+        updateRecipeWithRefs(ann.recipe, ann.id, data, undefined, { createEntries: false });
+
+      await addEntry("tag", ann.household, "Quick");
+      await addEntry("category", ann.household, "Dinners");
+      await save({ tags: [{ name: "Quick" }], categories: ["Dinners"], cuisines: [cuisine!.id] });
+      await save({ name: "Renamed" });
+      expect(await getRecipeFull(ann.recipe)).toMatchObject({
+        tags: [{ name: "Quick" }],
+        categories: ["Dinners"],
+        cuisines: [{ id: cuisine!.id }],
+      });
+
+      await save({ tags: [], categories: [], cuisines: [] });
+      expect(await getRecipeFull(ann.recipe)).toMatchObject({
+        tags: [],
+        categories: [],
+        cuisines: [],
+      });
+    });
+
     it("maps an alias to its built-in for the callers that create: imports, AI and the REST routes", async () => {
       await updateRecipeWithRefs(ann.recipe, ann.id, { categories: ["Dinners"] });
 
