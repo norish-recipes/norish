@@ -389,6 +389,9 @@
   },
   "ingredients": {
     "title": "Ingredientes",
+    "sheetTitle": "Ingrediente",
+    "loadFailed": "Não foi possível carregar este ingrediente",
+    "loadOffline": "Este ingrediente precisa de conexão",
     "search": "Buscar ingredientes",
     "searchMatch": "Correspondência",
     "searchIn": "Buscar em",
@@ -1357,6 +1360,7 @@
     "nothingUnused": "Nada está sem uso",
     "noMatch": "Nada corresponde",
     "loadFailed": "Não foi possível carregar esta lista",
+    "listOffline": "Esta lista precisa de conexão",
     "offline": "Você pode alterar esta lista quando estiver online.",
     "panel": {
       "addTitle": {

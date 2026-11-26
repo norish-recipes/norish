@@ -389,6 +389,9 @@
   },
   "ingredients": {
     "title": "Ingredients",
+    "sheetTitle": "Ingredient",
+    "loadFailed": "Could not load this ingredient",
+    "loadOffline": "This ingredient needs a connection",
     "search": "Search ingredients",
     "searchMatch": "Match",
     "searchIn": "Search in",
@@ -1357,6 +1360,7 @@
     "nothingUnused": "Nothing is unused",
     "noMatch": "Nothing matches",
     "loadFailed": "Could not load this list",
+    "listOffline": "This list needs a connection",
     "offline": "You can change this list when you are online.",
     "panel": {
       "addTitle": {

@@ -389,6 +389,9 @@
   },
   "ingredients": {
     "title": "Ingrediënten",
+    "sheetTitle": "Ingrediënt",
+    "loadFailed": "Dit ingrediënt laden is niet gelukt",
+    "loadOffline": "Dit ingrediënt heeft een verbinding nodig",
     "search": "Ingrediënten zoeken",
     "searchMatch": "Overeenkomst",
     "searchIn": "Zoek in",
@@ -1357,6 +1360,7 @@
     "nothingUnused": "Niets is ongebruikt",
     "noMatch": "Niets komt overeen",
     "loadFailed": "Deze lijst laden is niet gelukt",
+    "listOffline": "Deze lijst heeft een verbinding nodig",
     "offline": "Je kunt deze lijst wijzigen als je online bent.",
     "panel": {
       "addTitle": {

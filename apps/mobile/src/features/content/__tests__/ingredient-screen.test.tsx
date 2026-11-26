@@ -131,6 +131,24 @@ describe("IngredientScreen", () => {
     expect(held.retry).toHaveBeenCalled();
   });
 
+  it("titles a sheet it could not read for the food, and says so offline", () => {
+    held.item = null;
+    held.read = { failed: true, gone: false };
+    const first = render(<IngredientScreen />);
+
+    expect(screen.getByRole("heading").textContent).toBe("settings.ingredients.sheetTitle");
+    expect(screen.getByTestId("food-failed").textContent).toContain(
+      "settings.ingredients.loadFailed"
+    );
+    first.unmount();
+    held.offline = true;
+    render(<IngredientScreen />);
+    expect(screen.getByTestId("food-offline").textContent).toContain(
+      "settings.ingredients.loadOffline"
+    );
+    expect(screen.queryByTestId("food-retry")).toBeNull();
+  });
+
   it("closes when the food no longer exists", () => {
     held.item = null;
     held.read = { failed: false, gone: true };

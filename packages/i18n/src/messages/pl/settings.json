@@ -389,6 +389,9 @@
   },
   "ingredients": {
     "title": "Składniki",
+    "sheetTitle": "Składnik",
+    "loadFailed": "Nie udało się wczytać tego składnika",
+    "loadOffline": "Ten składnik wymaga połączenia",
     "search": "Szukaj składników",
     "searchMatch": "Dopasowanie",
     "searchIn": "Szukaj w",
@@ -1357,6 +1360,7 @@
     "nothingUnused": "Nic nie jest nieużywane",
     "noMatch": "Nic nie pasuje",
     "loadFailed": "Nie udało się wczytać tej listy",
+    "listOffline": "Ta lista wymaga połączenia",
     "offline": "Tę listę możesz zmienić, gdy jesteś online.",
     "panel": {
       "addTitle": {

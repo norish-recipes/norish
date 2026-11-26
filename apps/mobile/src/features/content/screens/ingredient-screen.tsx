@@ -45,6 +45,7 @@ export function IngredientScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { item, failed, gone, retry } = useIngredientQuery(id, locale);
+  const { isOffline } = useConnectivity();
 
   // A housemate deleted the food while it was open.
   useEffect(() => {
@@ -53,8 +54,15 @@ export function IngredientScreen() {
 
   if (!item || item.id !== id) {
     return (
-      <FitSheet name="food" title={text("settings.ingredients.title")}>
-        {failed ? (
+      <FitSheet name="food" title={text("settings.ingredients.sheetTitle")}>
+        {failed && isOffline ? (
+          <EmptyCard
+            icon="cloud-offline-outline"
+            placement="sheet"
+            testID="food-offline"
+            title={text("settings.ingredients.loadOffline")}
+          />
+        ) : failed ? (
           <EmptyCard
             action={{
               label: text("common.actions.retry"),
@@ -65,7 +73,7 @@ export function IngredientScreen() {
             icon="alert-circle-outline"
             placement="sheet"
             testID="food-failed"
-            title={text("settings.content.loadFailed")}
+            title={text("settings.ingredients.loadFailed")}
           />
         ) : (
           <SheetFieldSkeleton />

@@ -389,6 +389,9 @@
   },
   "ingredients": {
     "title": "Zutaten",
+    "sheetTitle": "Zutat",
+    "loadFailed": "Diese Zutat konnte nicht geladen werden",
+    "loadOffline": "Diese Zutat braucht eine Verbindung",
     "search": "Zutaten suchen",
     "searchMatch": "Treffer",
     "searchIn": "Suchen in",
@@ -1357,6 +1360,7 @@
     "nothingUnused": "Nichts ist unbenutzt",
     "noMatch": "Nichts passt",
     "loadFailed": "Diese Liste konnte nicht geladen werden",
+    "listOffline": "Diese Liste braucht eine Verbindung",
     "offline": "Du kannst diese Liste ändern, wenn du online bist.",
     "panel": {
       "addTitle": {

@@ -389,6 +389,9 @@
   },
   "ingredients": {
     "title": "Ingredienser",
+    "sheetTitle": "Ingrediens",
+    "loadFailed": "Ingrediensen kunne ikke indlæses",
+    "loadOffline": "Denne ingrediens kræver en forbindelse",
     "search": "Søg i ingredienser",
     "searchMatch": "Match",
     "searchIn": "Søg i",
@@ -1357,6 +1360,7 @@
     "nothingUnused": "Intet er ubrugt",
     "noMatch": "Intet passer",
     "loadFailed": "Listen kunne ikke indlæses",
+    "listOffline": "Denne liste kræver en forbindelse",
     "offline": "Du kan ændre denne liste, når du er online.",
     "panel": {
       "addTitle": {

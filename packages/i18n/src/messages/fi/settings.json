@@ -389,6 +389,9 @@
   },
   "ingredients": {
     "title": "Ainesosat",
+    "sheetTitle": "Ainesosa",
+    "loadFailed": "Ainesosaa ei voitu ladata",
+    "loadOffline": "Tämä ainesosa tarvitsee yhteyden",
     "search": "Hae ainesosia",
     "searchMatch": "Vastaavuus",
     "searchIn": "Hae kohteesta",
@@ -1357,6 +1360,7 @@
     "nothingUnused": "Mikään ei ole käyttämättä",
     "noMatch": "Ei osumia",
     "loadFailed": "Luetteloa ei voitu ladata",
+    "listOffline": "Tämä luettelo tarvitsee yhteyden",
     "offline": "Voit muuttaa tätä luetteloa, kun olet verkossa.",
     "panel": {
       "addTitle": {

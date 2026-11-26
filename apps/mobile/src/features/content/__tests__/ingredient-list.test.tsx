@@ -14,6 +14,7 @@ const held = vi.hoisted(() => ({
   retry: vi.fn(),
   filters: {} as object,
   total: undefined as number | undefined,
+  offline: false,
 }));
 
 vi.mock("expo-router", () => ({ useRouter: () => held.router }));
@@ -58,6 +59,9 @@ vi.mock("../components/ai-changes-row", () => ({
 vi.mock("@norish/shared-react/lists", async (importActual) => ({
   ...(await importActual<object>()),
   useIngredientCount: () => held.total,
+}));
+vi.mock("@norish/shared-react/offline/react", () => ({
+  useConnectivity: () => ({ isOffline: held.offline }),
 }));
 vi.mock("@norish/shared-react/config", () => ({ useIngredientsSubscription: () => undefined }));
 vi.mock("@norish/shared-react/ingredients", async (importActual) => ({
@@ -104,6 +108,7 @@ describe("IngredientList", () => {
     vi.clearAllMocks();
     held.query = {};
     held.total = undefined;
+    held.offline = false;
     held.filters = DEFAULT_INGREDIENT_FILTERS;
     held.rows = [row("Rice", { kinds: 3 }), row("Soy sauce", { flagged: true })];
   });
@@ -195,5 +200,27 @@ describe("IngredientList", () => {
     expect(screen.queryByTestId("content-empty")).toBeNull();
     fireEvent.click(screen.getByTestId("content-retry"));
     expect(held.retry).toHaveBeenCalled();
+  });
+
+  it("keeps the search and filter in every state, so a search can be cleared", () => {
+    for (const query of [{ isLoading: true }, { failed: true }]) {
+      held.query = query;
+      const shown = render(<IngredientList />);
+
+      expect(screen.getByTestId("search")).toBeTruthy();
+      expect(screen.getByTestId("filter")).toBeTruthy();
+      shown.unmount();
+    }
+  });
+
+  it("says offline that the list needs a connection, not that it failed", () => {
+    held.rows = [];
+    held.query = { failed: true };
+    held.offline = true;
+    render(<IngredientList />);
+    expect(screen.getByTestId("content-offline").textContent).toContain(
+      "settings.content.listOffline"
+    );
+    expect(screen.queryByTestId("content-failed")).toBeNull();
   });
 });

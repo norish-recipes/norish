@@ -6,13 +6,14 @@ import { EmptyCard } from "@/components/empty-card";
 import { ListHeading } from "@/components/list-heading";
 import { PageControls } from "@/components/page-controls";
 import { SearchFilterRow } from "@/components/search-filter-row";
-import { SheetFieldSkeleton } from "@/components/sheet-input";
 import { useText } from "@/lib/i18n/use-text";
+
+import { useConnectivity } from "@norish/shared-react/offline/react";
 
 type Empty = Omit<ComponentProps<typeof EmptyCard>, "placement">;
 
-/** A list under page controls: skeleton while loading, Retry when failed, `blank` when empty, else
- * search, rows or `nothing`. `testID` prefixes `-skeleton`, `-failed`, `-retry`, `-list`, `-heading`. */
+/** A list under page controls: a skeleton while loading, Retry when failed (offline, its note),
+ * `blank` when empty, else rows or `nothing`. `testID` prefixes each state's card, `-list`, `-heading`. */
 export function ListFrame<T>({
   testID,
   loading,
@@ -42,59 +43,54 @@ export function ListFrame<T>({
   onEndReached?: () => void;
 }) {
   const text = useText();
+  const { isOffline } = useConnectivity();
+  // One card in the list's place: the read's state, or why it holds nothing.
+  const card = failed ? (
+    isOffline ? (
+      <EmptyCard
+        icon="cloud-offline-outline"
+        placement="screen"
+        testID={`${testID}-offline`}
+        title={text("settings.content.listOffline")}
+      />
+    ) : (
+      <EmptyCard
+        action={{
+          label: text("common.actions.retry"),
+          icon: "refresh-outline",
+          testID: `${testID}-retry`,
+          onPress: failed.onRetry,
+        }}
+        icon="alert-circle-outline"
+        placement="screen"
+        testID={`${testID}-failed`}
+        title={failed.title}
+      />
+    )
+  ) : loading ? (
+    <View testID={`${testID}-skeleton`}>
+      <CountCardSkeleton />
+    </View>
+  ) : blank ? (
+    <EmptyCard placement="screen" {...blank} />
+  ) : nothing ? (
+    <EmptyCard placement="screen" {...nothing} />
+  ) : null;
+  const listed = !failed && !loading && !blank;
 
-  if (failed) {
-    return (
-      <Gap>
-        <EmptyCard
-          action={{
-            label: text("common.actions.retry"),
-            icon: "refresh-outline",
-            testID: `${testID}-retry`,
-            onPress: failed.onRetry,
-          }}
-          icon="alert-circle-outline"
-          placement="screen"
-          testID={`${testID}-failed`}
-          title={failed.title}
-        />
-      </Gap>
-    );
-  }
-
-  if (loading) {
-    return (
-      <View testID={`${testID}-skeleton`}>
-        <PageControls>
-          <SheetFieldSkeleton />
-        </PageControls>
-        <Gap>
-          <CountCardSkeleton />
-        </Gap>
-      </View>
-    );
-  }
-
-  if (blank) {
-    return (
-      <Gap>
-        <EmptyCard placement="screen" {...blank} />
-      </Gap>
-    );
-  }
-
+  // The controls stay in every state; a card takes the heading's room too, so it sits where the
+  // first card of rows does.
   const header = (
     <>
       <PageControls>
         <SearchFilterRow {...search} />
         {above}
       </PageControls>
-      {/* A card takes the heading's room too, so it sits where the first card of rows does. */}
       <Gap>
-        {heading === undefined && !nothing ? null : (
+        {heading === undefined && !card ? null : (
           <ListHeading testID={heading ? `${testID}-heading` : undefined} title={heading ?? ""} />
         )}
-        {nothing ? <EmptyCard placement="screen" {...nothing} /> : null}
+        {card}
       </Gap>
     </>
   );
@@ -103,7 +99,7 @@ export function ListFrame<T>({
     <FlatList
       {...list}
       ListFooterComponent={
-        footer ? (
+        footer && listed ? (
           <Gap>
             <View className="px-5">{footer}</View>
           </Gap>
@@ -112,6 +108,7 @@ export function ListFrame<T>({
       ListHeaderComponent={header}
       contentContainerClassName="pb-16"
       contentInsetAdjustmentBehavior="never"
+      data={listed ? list.data : []}
       keyboardDismissMode="on-drag"
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}

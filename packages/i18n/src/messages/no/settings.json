@@ -389,6 +389,9 @@
   },
   "ingredients": {
     "title": "Ingredienser",
+    "sheetTitle": "Ingrediens",
+    "loadFailed": "Kunne ikke laste denne ingrediensen",
+    "loadOffline": "Denne ingrediensen krever en tilkobling",
     "search": "Søk i ingredienser",
     "searchMatch": "Treff",
     "searchIn": "Søk i",
@@ -1357,6 +1360,7 @@
     "nothingUnused": "Ingenting er ubrukt",
     "noMatch": "Ingenting passer",
     "loadFailed": "Kunne ikke laste denne listen",
+    "listOffline": "Denne listen krever en tilkobling",
     "offline": "Du kan endre denne listen når du er pålogget.",
     "panel": {
       "addTitle": {

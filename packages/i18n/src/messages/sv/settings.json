@@ -389,6 +389,9 @@
   },
   "ingredients": {
     "title": "Ingredienser",
+    "sheetTitle": "Ingrediens",
+    "loadFailed": "Det gick inte att läsa in ingrediensen",
+    "loadOffline": "Den här ingrediensen kräver en anslutning",
     "search": "Sök efter ingredienser",
     "searchMatch": "Matchning",
     "searchIn": "Sök i",
@@ -1357,6 +1360,7 @@
     "nothingUnused": "Inget är oanvänt",
     "noMatch": "Inget matchar",
     "loadFailed": "Det gick inte att läsa in listan",
+    "listOffline": "Den här listan kräver en anslutning",
     "offline": "Du kan ändra den här listan när du är online.",
     "panel": {
       "addTitle": {
