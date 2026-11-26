@@ -30,6 +30,18 @@ vi.mock("@norish/shared-react/lists", async (importActual) => ({
   }),
 }));
 
+vi.mock("@norish/shared-react/ingredients", () => ({
+  useFoodRecipes: () => ({
+    recipes: [{ id: "f1", name: "Fried rice" }],
+    loaded: true,
+    failed: false,
+    retry: held.retry,
+    hasMore: false,
+    loadingMore: false,
+    loadMore: held.loadMore,
+  }),
+}));
+
 const { ContentUsesScreen } = await import("../screens/content-uses-screen");
 
 describe("ContentUsesScreen", () => {
@@ -78,5 +90,13 @@ describe("ContentUsesScreen", () => {
     render(<ContentUsesScreen />);
     expect(held.router.back).toHaveBeenCalled();
     expect(screen.queryByTestId("content-uses-sheet")).toBeNull();
+  });
+
+  it("lists the recipes that use a food for the kind ingredient, and opens one", () => {
+    held.params = { kind: "ingredient", id: "soy" };
+    render(<ContentUsesScreen />);
+    fireEvent.click(screen.getByTestId("content-uses-f1"));
+    expect(held.router.dismissAll).toHaveBeenCalled();
+    expect(held.router.back).not.toHaveBeenCalled();
   });
 });

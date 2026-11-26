@@ -7,27 +7,43 @@ import { FitSheet, Sheet, SheetList } from "@/components/sheet";
 import { edgeAt } from "@/lib/card-edges";
 import { useText } from "@/lib/i18n/use-text";
 import { recipeRoute } from "@/lib/tab-routes";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 
 import type { PickerKind } from "@norish/shared-react/lists";
+import { useFoodRecipes } from "@norish/shared-react/ingredients";
 import { useEntryRecipes } from "@norish/shared-react/lists";
 
 import { useEntryRoute } from "../hooks/use-entry-route";
 
-/** The household's recipes carrying one entry, a page at a time; a tap opens the recipe. */
+/** The household's recipes carrying one entry of a list, or using one food (`kind` ingredient);
+ * a tap opens the recipe. */
 export function ContentUsesScreen() {
-  const { kind, id } = useEntryRoute();
+  const { kind, id } = useLocalSearchParams<{ kind?: string; id?: string }>();
 
-  return kind ? <UsesScreen id={id} kind={kind} /> : null;
+  return kind === "ingredient" ? <FoodUses id={id ?? ""} /> : <EntryUses />;
 }
 
-function UsesScreen({ kind, id }: { kind: PickerKind; id: string }) {
+function EntryUses() {
+  const { kind, id } = useEntryRoute();
+
+  return kind ? <EntryRecipesSheet id={id} kind={kind} /> : null;
+}
+
+function EntryRecipesSheet({ kind, id }: { kind: PickerKind; id: string }) {
+  return <UsesSheet recipes={useEntryRecipes(kind, id)} />;
+}
+
+function FoodUses({ id }: { id: string }) {
+  return <UsesSheet recipes={useFoodRecipes(id)} />;
+}
+
+function UsesSheet({
+  recipes: { recipes, loaded, failed, retry, hasMore, loadingMore, loadMore },
+}: {
+  recipes: ReturnType<typeof useEntryRecipes>;
+}) {
   const text = useText();
   const router = useRouter();
-  const { recipes, loaded, failed, retry, hasMore, loadingMore, loadMore } = useEntryRecipes(
-    kind,
-    id
-  );
   const open = (recipeId: string) => {
     router.dismissAll();
     router.push(recipeRoute(recipeId));

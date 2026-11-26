@@ -223,6 +223,19 @@ function FoodSheet({ item }: { item: IngredientItem }) {
           }
           onPress={() => setStep("nutrition")}
         />
+        <CardRow
+          label={text("settings.content.panel.usedBy")}
+          testID="food-used-by"
+          value={
+            uses ? text("settings.content.recipes", { count: uses.recipes.length }) : undefined
+          }
+          onPress={() =>
+            router.push({
+              pathname: "/settings/content-uses",
+              params: { kind: "ingredient", id: item.id },
+            })
+          }
+        />
         {item.flagged && item.canEdit ? (
           <CardRow label={t("keepDistinct")}>
             <Switch

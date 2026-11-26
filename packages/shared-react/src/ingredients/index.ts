@@ -52,6 +52,7 @@ export {
   useNutritionFoodsQuery,
 } from "./use-ingredient-nutrition";
 export {
+  useFoodRecipes,
   useHeldIngredient,
   useIngredientKinds,
   useIngredientListQuery,

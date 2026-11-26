@@ -96,7 +96,29 @@ export function useIngredientSpellingsQuery(ingredientId: string) {
 /** What still uses a food, as far as the reader may see. */
 export function useIngredientUsesQuery(ingredientId: string) {
   const trpc = useTRPC();
-  const { data, isPending } = useQuery(trpc.ingredients.uses.queryOptions({ ingredientId }));
+  const { data, isPending, isError, refetch } = useQuery(
+    trpc.ingredients.uses.queryOptions({ ingredientId })
+  );
 
-  return { uses: data, isPending };
+  return {
+    uses: data,
+    isPending,
+    failed: isError && data === undefined,
+    retry: () => void refetch(),
+  };
+}
+
+/** The household's recipes that use a food, as `useEntryRecipes` lists an entry's: all at once, never paged. */
+export function useFoodRecipes(ingredientId: string) {
+  const { uses, failed, retry } = useIngredientUsesQuery(ingredientId);
+
+  return {
+    recipes: uses?.recipes ?? [],
+    loaded: uses !== undefined,
+    failed,
+    retry,
+    hasMore: false,
+    loadingMore: false,
+    loadMore: () => undefined,
+  };
 }

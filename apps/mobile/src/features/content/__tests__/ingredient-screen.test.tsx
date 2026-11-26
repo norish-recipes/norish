@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { alert } from "../../../../__tests__/mocks/content-setup";
 
 const held = vi.hoisted(() => ({
-  router: { back: vi.fn() },
+  router: { back: vi.fn(), push: vi.fn() },
   item: {} as Record<string, unknown> | null,
   draft: {} as Record<string, unknown>,
   save: vi.fn(),
@@ -109,7 +109,10 @@ describe("IngredientScreen", () => {
     held.draft = {};
     held.offline = false;
     held.unsure = [];
-    held.uses = { counts: { recipeLines: 4, groceries: 0, pantry: 1 } };
+    held.uses = {
+      recipes: [{ id: "r1", name: "Soup" }],
+      counts: { recipeLines: 4, groceries: 0, pantry: 1 },
+    };
     held.save.mockResolvedValue(true);
   });
 
@@ -228,5 +231,17 @@ describe("IngredientScreen", () => {
       false
     );
     expect(screen.queryByText("settings.content.offline")).toBeNull();
+  });
+
+  it("opens the recipes that use the food on the Used by screen", () => {
+    render(<IngredientScreen />);
+    expect(screen.getByTestId("food-used-by").textContent).toContain(
+      'settings.content.recipes{"count":1}'
+    );
+    fireEvent.click(screen.getByTestId("food-used-by"));
+    expect(held.router.push).toHaveBeenCalledWith({
+      pathname: "/settings/content-uses",
+      params: { kind: "ingredient", id: "soy" },
+    });
   });
 });
