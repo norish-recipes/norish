@@ -6,6 +6,7 @@ import Animated, {
   useReducedMotion,
   useSharedValue,
 } from "react-native-reanimated";
+import { sharedLabelScale, STANDARD_INSET } from "@/components/segmented-scale";
 import { useTokenColor } from "@/hooks/use-token-color";
 import { springTo } from "@/lib/motion/spring";
 
@@ -57,6 +58,12 @@ export function Segmented<Value extends string>({
   // Until the thumb is placed, after the segments' first layout, the pick is filled in place.
   const [thumbShown, setThumbShown] = useState(false);
   const thumbStyle = useAnimatedStyle(() => ({ left: left.get(), width: width.get() }));
+  // Even segments share one label size: the largest at which every label fits in semibold.
+  const evenLabels = !compact && !iconOnly;
+  const [natural, setNatural] = useState<Partial<Record<Value, number>>>({});
+  const [labels, setLabels] = useState<Partial<Record<Value, { x: number; width: number }>>>({});
+  const fit = evenLabels ? sharedLabelScale(segments, natural, labels, boxes) : 1;
+  const fontSize = Math.floor(Math.max(fit, 0.8) * (compact ? 13 : 15) * 2) / 2;
 
   useEffect(() => {
     if (!box) return;
@@ -83,6 +90,23 @@ export function Segmented<Value extends string>({
           style={[{ top: box.y, height: box.height }, thumbStyle]}
         />
       ) : null}
+      {evenLabels ? (
+        <View aria-hidden className="absolute w-[999px] items-start opacity-0" pointerEvents="none">
+          {segments.map((segment) => (
+            <Text
+              key={segment.value}
+              className="font-semibold"
+              numberOfLines={1}
+              style={{ fontSize: 15 }}
+              onLayout={({ nativeEvent: { layout } }) =>
+                setNatural((all) => ({ ...all, [segment.value]: layout.width }))
+              }
+            >
+              {segment.label}
+            </Text>
+          ))}
+        </View>
+      ) : null}
       {segments.map((segment) => {
         const selected = segment.value === value;
         const color = selected ? foreground : muted;
@@ -93,22 +117,23 @@ export function Segmented<Value extends string>({
             accessibilityLabel={segment.label}
             accessibilityRole={roles.tab}
             accessibilityState={tabsLabel ? { selected } : { checked: selected }}
-            className={`h-full flex-row items-center justify-center gap-1.5 rounded-full ${iconOnly ? (compact ? "w-[34px]" : "w-11") : compact ? "flex-none px-[13px]" : "flex-1 px-2"} ${selected && !thumbShown ? "bg-thumb shadow-sm" : ""}`}
+            className={`h-full flex-row items-center justify-center gap-1.5 rounded-full ${iconOnly ? (compact ? "w-[34px]" : "w-11") : compact ? "flex-none px-[13px]" : "flex-1"} ${selected && !thumbShown ? "bg-thumb shadow-sm" : ""}`}
             testID={segment.testID}
             onLayout={({ nativeEvent: { layout } }) =>
               setBoxes((all) => ({ ...all, [segment.value]: layout }))
             }
+            style={evenLabels ? { paddingHorizontal: STANDARD_INSET } : undefined}
             onPress={() => onChange(segment.value)}
           >
             {segment.icon?.(color)}
             {iconOnly ? null : (
-              // Even segments: a label too long for its share shrinks to fit inside the thumb.
               <Text
-                adjustsFontSizeToFit
-                className={`shrink ${compact ? "text-[13px]" : "text-[15px]"} ${selected ? "font-semibold" : "font-medium"}`}
-                minimumFontScale={0.8}
+                className={`shrink ${selected ? "font-semibold" : "font-medium"}`}
                 numberOfLines={1}
-                style={{ color }}
+                style={{ color, fontSize }}
+                onLayout={({ nativeEvent: { layout } }) =>
+                  setLabels((all) => ({ ...all, [segment.value]: layout }))
+                }
               >
                 {segment.label}
               </Text>
