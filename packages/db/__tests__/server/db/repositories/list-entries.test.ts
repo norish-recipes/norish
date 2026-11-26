@@ -11,7 +11,6 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { db } from "@norish/db/drizzle";
 import { attachCategoriesToRecipeByInputTx } from "@norish/db/repositories/categories";
 import { getRecipeCuisines } from "@norish/db/repositories/cuisines";
-import { ForeignHouseholdReferenceError } from "@norish/db/repositories/household-rows";
 import {
   addEntry,
   deleteEntry,

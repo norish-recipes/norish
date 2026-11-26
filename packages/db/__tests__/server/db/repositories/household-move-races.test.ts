@@ -13,6 +13,7 @@ import {
   joinHousehold,
   moveToHouseholdOfOne,
 } from "@norish/db/repositories/households";
+import { renameCatalogueIngredient } from "@norish/db/repositories/ingredient-catalogue";
 import { findRowsNamingFood } from "@norish/db/repositories/ingredient-cleanup";
 import { mergeCatalogueIngredients } from "@norish/db/repositories/ingredient-relocation";
 import {
@@ -44,12 +45,11 @@ import {
   mintTestFood,
   readTestIngredient,
   readTestSpelling,
-  setTestIngredients,
   testLineAliasIds,
   testLineFoodNames,
 } from "../../../helpers/db-test-helpers";
 import { expectNothingForeign } from "../../../helpers/household-invariants";
-import { lockWaits, raceBehind, waitFor } from "../../../helpers/lock-race";
+import { raceBehind } from "../../../helpers/lock-race";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 const fulfilled = (value: unknown) => ({ status: "fulfilled", value });
@@ -405,22 +405,19 @@ describe("household move races", () => {
     const mine = await mintTestFood(await householdOf(joiner.id), "ui");
     const recipe = await createTestRecipe(joiner.id);
     const line = await insertTestRecipeLine({ recipeId: recipe.id, name: "ui" }, [mine.aliasId]);
-    let joined: Promise<unknown> | undefined;
 
-    await getTestDb().transaction(async (tx) => {
-      await holdRow(ingredients, mine.ingredientId)(tx);
-      joined = joinHousehold(joiner.id, { householdId: into });
-      joined.catch(() => undefined);
-      await waitFor(
-        async () => ((await lockWaits()).size > 0 ? true : undefined),
-        "the join to wait on the joiner's food"
-      );
-      // Committed while the join waits: its first read named no food of that name.
-      await setTestIngredients(shallot.ingredientId, { name: "ui" });
-    });
+    // The rename is the held write: the join, which read no "ui", waits on the name it takes.
+    const settled = await raceBehind(
+      (tx) => renameCatalogueIngredient(tx, shallot.ingredientId, "ui"),
+      [() => joinHousehold(joiner.id, { householdId: into })]
+    );
 
-    expect(await joined).toEqual(expect.objectContaining({ leftHouseholdId: expect.any(String) }));
+    // Refused on the name, the join tries again and merges into the renamed food.
+    expect(settled).toEqual([
+      fulfilled(expect.objectContaining({ leftHouseholdId: expect.any(String) })),
+    ]);
     expect(await readTestIngredient(mine.ingredientId)).toBeNull();
+    expect((await readTestIngredient(shallot.ingredientId))?.name).toBe("ui");
     expect((await testLineFoodNames(line.id)).map((one) => one.food)).toEqual(["ui"]);
     expect((await readTestSpelling(mine.aliasId))?.ingredientId).toBe(shallot.ingredientId);
     await expectNothingForeign();

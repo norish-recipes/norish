@@ -1065,6 +1065,90 @@ describe("household moves", () => {
       await expectNothingForeign();
     });
 
+    it("merges a joiner food into a seeded target without writing the seeded row", async () => {
+      const host = (await createTestUser())!;
+      const joiner = (await createTestUser())!;
+      const into = await householdOf(host.id);
+      const own = await householdOf(joiner.id);
+      const db = getTestDb();
+      const seeded = (await createTestIngredient({ name: "lente-ui" }))!;
+      const theirSpelling = await addTestSpelling(seeded.id, "bosui", { householdId: into });
+      const mine = await mintTestFood(own, "bosui");
+      const recipe = await createTestRecipe(joiner.id);
+      const line = await insertTestRecipeLine({ recipeId: recipe.id, name: "bosui" }, [
+        mine.aliasId,
+      ]);
+      const [doubted] = await db
+        .insert(ingredientAIChanges)
+        .values({
+          kind: "plain-name",
+          householdId: own,
+          ingredientId: mine.ingredientId,
+          sure: false,
+          undo: { kind: "plain-name", formerName: "Bosui", name: "bosui" },
+        })
+        .returning({ id: ingredientAIChanges.id });
+
+      await db
+        .insert(ingredientNutritionEstimates)
+        .values({ ingredientId: mine.ingredientId, kcal: 32 });
+      await setTestIngredients(mine.ingredientId, { flagged: true, flagReason: "ai-unsure" });
+      const before = await readTestIngredient(seeded.id);
+
+      await mergeInto(joiner.id, into);
+
+      expect(await readTestIngredient(seeded.id)).toEqual(before);
+      expect(await readTestIngredient(mine.ingredientId)).toBeNull();
+      expect(await testLineAliasIds(line.id)).toEqual([theirSpelling]);
+      // The estimate and the flag were the joiner food's alone: a seeded food takes neither.
+      expect(
+        await db
+          .select()
+          .from(ingredientNutritionEstimates)
+          .where(eq(ingredientNutritionEstimates.ingredientId, seeded.id))
+      ).toEqual([]);
+      // Its AI Change follows onto the seeded food as the household's settled history.
+      expect((await listTestAIChanges()).find((one) => one.id === doubted!.id)).toMatchObject({
+        ingredientId: seeded.id,
+        householdId: into,
+        sure: true,
+        undo: { stranded: true },
+      });
+      await expectNothingForeign();
+    });
+
+    it("merges a joiner food and its joiner child that both collide", async () => {
+      const host = (await createTestUser())!;
+      const joiner = (await createTestUser())!;
+      const into = await householdOf(host.id);
+      const own = await householdOf(joiner.id);
+      const theirVeg = await mintTestFood(into, "groente");
+      const theirLeek = await mintTestFood(into, "prei");
+      const myVeg = await mintTestFood(own, "groente");
+      const myLeek = await mintTestFood(own, "prei", { parentId: myVeg.ingredientId });
+
+      // The child first, while its parent is still the joiner's.
+      await setTestIngredients(myLeek.ingredientId, { createdAt: new Date("2020-01-01") });
+      await setTestIngredients(myVeg.ingredientId, { createdAt: new Date("2021-01-01") });
+      const recipe = await createTestRecipe(joiner.id);
+      const veg = await insertTestRecipeLine({ recipeId: recipe.id, name: "groente" }, [
+        myVeg.aliasId,
+      ]);
+      const leek = await insertTestRecipeLine({ recipeId: recipe.id, name: "prei" }, [
+        myLeek.aliasId,
+      ]);
+
+      await mergeInto(joiner.id, into);
+
+      expect(await readTestIngredient(myVeg.ingredientId)).toBeNull();
+      expect(await readTestIngredient(myLeek.ingredientId)).toBeNull();
+      expect(await testLineAliasIds(veg.id)).toEqual([theirVeg.aliasId]);
+      expect(await testLineAliasIds(leek.id)).toEqual([theirLeek.aliasId]);
+      // The household's own leek keeps the parent it had.
+      expect((await readTestIngredient(theirLeek.ingredientId))?.parentId).toBeNull();
+      await expectNothingForeign();
+    });
+
     it("merges several joiner foods into one target: the household's first, then oldest food first", async () => {
       const host = (await createTestUser())!;
       const joiner = (await createTestUser())!;
