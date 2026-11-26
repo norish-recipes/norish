@@ -166,8 +166,8 @@ export function ManageStoresScreen() {
       ) : stores.length === 0 ? (
         <SheetBody>
           <EmptyCard
-            className="mx-0"
             icon="storefront-outline"
+            placement="sheet"
             testID="stores-empty"
             title={text("groceries.storeManager.noStoresYet")}
           />

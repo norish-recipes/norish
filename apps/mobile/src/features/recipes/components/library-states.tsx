@@ -1,5 +1,4 @@
 import React from "react";
-import { View } from "react-native";
 import { EmptyCard } from "@/components/empty-card";
 import { TAB_ROUTES } from "@/lib/tab-routes";
 import { useRouter } from "expo-router";
@@ -12,6 +11,7 @@ export function LibraryEmpty() {
   return (
     <EmptyCard
       icon="book-outline"
+      placement="screen"
       testID="library-empty"
       title={intl.formatMessage({ id: "recipes.empty.title" })}
     />
@@ -23,13 +23,12 @@ export function CookbookNoRecipes() {
   const intl = useIntl();
 
   return (
-    <View className="pt-[22px]">
-      <EmptyCard
-        icon="book-outline"
-        testID="cookbook-empty"
-        title={intl.formatMessage({ id: "recipes.cookbooks.empty" })}
-      />
-    </View>
+    <EmptyCard
+      icon="book-outline"
+      placement="screen"
+      testID="cookbook-empty"
+      title={intl.formatMessage({ id: "recipes.cookbooks.empty" })}
+    />
   );
 }
 
@@ -47,6 +46,7 @@ export function CookbooksEmpty() {
         onPress: () => router.push(TAB_ROUTES.recipes.newCookbook),
       }}
       icon="book-outline"
+      placement="screen"
       testID="library-cookbooks-empty"
       title={intl.formatMessage({ id: "recipes.empty.noCookbooks" })}
     />
@@ -66,6 +66,7 @@ export function LibraryNoResults({ onClear }: { onClear: () => void }) {
         onPress: onClear,
       }}
       icon="funnel-outline"
+      placement="screen"
       testID="library-no-results"
       title={intl.formatMessage({ id: "recipes.empty.noResults" })}
     />

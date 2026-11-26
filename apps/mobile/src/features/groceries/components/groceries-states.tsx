@@ -12,6 +12,7 @@ export function GroceriesEmpty() {
   return (
     <EmptyCard
       icon="cart-outline"
+      placement="screen"
       testID="groceries-empty"
       title={intl.formatMessage({ id: "groceries.empty.title" })}
     />

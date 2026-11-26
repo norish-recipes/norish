@@ -37,7 +37,12 @@ export function ConnectionList({
   return (
     <ReadBody
       empty={
-        <EmptyCard className="mt-4" icon={emptyIcon} testID={`${name}-empty`} title={emptyTitle} />
+        <EmptyCard
+          icon={emptyIcon}
+          placement="section"
+          testID={`${name}-empty`}
+          title={emptyTitle}
+        />
       }
       name={name}
       state={readState({ held: count > 0, answered, isLoading, error })}

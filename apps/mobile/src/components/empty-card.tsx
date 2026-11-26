@@ -8,19 +8,29 @@ import { Button } from "heroui-native";
 
 type Icon = ComponentProps<typeof Ionicons>["name"];
 
+/** Where the card sits, each placement carrying its one margin: `screen` is a screen list's (side
+ * inset 20, 16 above), `section` sits under a Settings group on a page that has the side inset, and
+ * `sheet` has none because the sheet body owns the inset. */
+export const EMPTY_CARD_PLACEMENT = {
+  screen: "mx-5 mt-4",
+  section: "mt-4",
+  sheet: "",
+} as const;
+
+export type EmptyCardPlacement = keyof typeof EMPTY_CARD_PLACEMENT;
+
 /** A list with nothing in it: the area's icon in muted ink on the left, the title on the right and
  * at most one action under them. The card's ground is sand on a sheet, the surface off one. */
 export function EmptyCard({
   icon,
   title,
-  className = "mx-5",
+  placement,
   testID,
   action,
 }: {
   icon: Icon;
   title: string;
-  /** Where the card sits in its list, never its ground. */
-  className?: string;
+  placement: EmptyCardPlacement;
   testID: string;
   action?: { label: string; icon: Icon; testID: string; onPress: () => void };
 }) {
@@ -29,7 +39,10 @@ export function EmptyCard({
   const ground = useOnSheet() ? "bg-sand" : "bg-surface";
 
   return (
-    <View className={`${ground} ${className} gap-3.5 rounded-3xl p-4.5`} testID={testID}>
+    <View
+      className={`${ground} ${EMPTY_CARD_PLACEMENT[placement]} gap-3.5 rounded-3xl p-4.5`}
+      testID={testID}
+    >
       <View className="flex-row items-center gap-2.5">
         <View className="size-6 items-center justify-center">
           <Ionicons color={iconColor} name={icon} size={22} />

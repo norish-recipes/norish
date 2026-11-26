@@ -35,7 +35,14 @@ const { OnSheet } = await import("@/components/on-sheet");
 
 describe("the empty-state template", () => {
   it("is a muted icon and the title, with no description line", () => {
-    render(<EmptyCard icon="funnel-outline" testID="library-no-results" title="Nothing here" />);
+    render(
+      <EmptyCard
+        icon="funnel-outline"
+        placement="screen"
+        testID="library-no-results"
+        title="Nothing here"
+      />
+    );
 
     const card = screen.getByTestId("library-no-results");
 
@@ -48,6 +55,7 @@ describe("the empty-state template", () => {
       <EmptyCard
         action={{ label: "Clear", icon: "refresh", testID: "clear", onPress: () => {} }}
         icon="funnel-outline"
+        placement="screen"
         testID="library-no-results"
         title="Nothing here"
       />
@@ -60,16 +68,35 @@ describe("the empty-state template", () => {
   });
 
   it("is sand on a sheet and the surface off one", () => {
-    const { rerender } = render(<EmptyCard icon="funnel-outline" testID="card" title="Nothing" />);
+    const { rerender } = render(
+      <EmptyCard icon="funnel-outline" placement="screen" testID="card" title="Nothing" />
+    );
 
     expect(screen.getByTestId("card").getAttribute("data-class")).toContain("bg-surface");
 
     rerender(
       <OnSheet value>
-        <EmptyCard icon="funnel-outline" testID="card" title="Nothing" />
+        <EmptyCard icon="funnel-outline" placement="screen" testID="card" title="Nothing" />
       </OnSheet>
     );
 
     expect(screen.getByTestId("card").getAttribute("data-class")).toContain("bg-sand");
+  });
+
+  it("carries one margin per placement: screen 20 and 16 above, section 16 above, sheet none", () => {
+    const margin = (placement: "screen" | "section" | "sheet") => {
+      const { unmount } = render(
+        <EmptyCard icon="funnel-outline" placement={placement} testID="card" title="Nothing" />
+      );
+      const classes = screen.getByTestId("card").getAttribute("data-class")!;
+
+      unmount();
+
+      return classes.split(" ").filter((name) => /^m[xt]-/.test(name));
+    };
+
+    expect(margin("screen")).toEqual(["mx-5", "mt-4"]);
+    expect(margin("section")).toEqual(["mt-4"]);
+    expect(margin("sheet")).toEqual([]);
   });
 });

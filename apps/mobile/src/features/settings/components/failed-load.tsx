@@ -14,8 +14,8 @@ export function FailedLoad({ name, onRetry }: { name: string; onRetry: () => voi
         testID: `${name}-retry`,
         onPress: onRetry,
       }}
-      className="mt-4"
       icon="alert-circle-outline"
+      placement="section"
       testID={`${name}-failed`}
       title={text("common.errorPage.title")}
     />

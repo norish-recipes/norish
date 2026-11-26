@@ -18,13 +18,12 @@ export function SearchNoResults({
   onSearchAllFields: () => void;
 }) {
   const intl = useIntl();
-  const className = "mx-5 mt-4";
 
   if (variant === "plain") {
     return (
       <EmptyCard
-        className={className}
         icon="search-outline"
+        placement="screen"
         testID="search-no-results"
         title={intl.formatMessage({ id: "recipes.search.noMatch" }, { text })}
       />
@@ -50,7 +49,7 @@ export function SearchNoResults({
               onPress: onSearchAllFields,
             }
       }
-      className={className}
+      placement="screen"
       icon={clearing ? "funnel-outline" : "search-outline"}
       testID="search-no-results"
       title={intl.formatMessage({ id: "recipes.empty.noResults" })}
@@ -64,7 +63,7 @@ export function SearchOffline() {
 
   return (
     <EmptyCard
-      className="mx-5 mt-4"
+      placement="screen"
       icon="cloud-offline-outline"
       testID="search-offline"
       title={intl.formatMessage({ id: "recipes.search.offline" })}
@@ -78,7 +77,7 @@ export function SearchFailed() {
 
   return (
     <EmptyCard
-      className="mx-5 mt-4"
+      placement="screen"
       icon="alert-circle-outline"
       testID="search-failed"
       title={intl.formatMessage({ id: "common.errorPage.title" })}

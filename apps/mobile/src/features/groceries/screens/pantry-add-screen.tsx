@@ -75,6 +75,7 @@ export function PantryAddScreen() {
             ) : typed === "" ? undefined : (
               <EmptyCard
                 icon="search-outline"
+                placement="sheet"
                 testID="pantry-add-none"
                 title={intl.formatMessage({ id: "common.status.noResults" })}
               />
@@ -82,7 +83,7 @@ export function PantryAddScreen() {
           }
           ListFooterComponent={more ? <ShowMore onPress={() => setShowAll(true)} /> : undefined}
           ListHeaderComponent={
-            <View className="px-5 pb-3">
+            <View className="pb-3">
               <SheetSearchField
                 fieldRef={fieldRef}
                 label={label}
@@ -101,7 +102,6 @@ export function PantryAddScreen() {
             </View>
           }
           data={rows}
-          inset={false}
           keyExtractor={(row) => row.key}
           renderItem={({ item }) => (
             <Animated.View entering={typed === "" ? undefined : SPRING_FADE_IN}>

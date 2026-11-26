@@ -25,9 +25,11 @@ export function CardSlice({
   const onCardLayout = useDragCard();
   const ground = useSliceFill();
   const fill = className ?? ground;
+  // A sheet's body owns the side inset.
+  const inset = useOnSheet() ? "" : "px-5";
 
   return (
-    <View className={`px-5 ${gap ? "pt-3.5" : ""}`}>
+    <View className={`${inset} ${gap ? "pt-3.5" : ""}`}>
       <View className={sliceClass(edge, fill, separated)} onLayout={onCardLayout}>
         {children}
       </View>

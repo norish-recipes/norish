@@ -79,6 +79,7 @@ export function AddToCookbookScreen() {
               empty: (
                 <EmptyCard
                   icon="book-outline"
+                  placement="sheet"
                   testID="add-to-cookbook-none"
                   title={intl.formatMessage({ id: "recipes.cookbooks.noneEditable" })}
                 />
