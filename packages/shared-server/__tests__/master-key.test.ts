@@ -684,9 +684,9 @@ describe("which key boot opens", () => {
           config.MASTER_KEY_PREVIOUS = keyA.toString("base64");
         });
 
-        it("refuses with Valkey's message, never the command's arguments", async () => {
+        it("refuses naming the step, never Valkey's message or the command's arguments", async () => {
           // How ioredis rejects a command: the command's name and arguments on the error.
-          const rejected = Object.assign(new Error("ERR max number of clients reached"), {
+          const rejected = Object.assign(new Error(`ERR no such key ${SECRET}`), {
             command: { name: "del", args: [SECRET] },
           });
           const error = await masterKey
@@ -694,24 +694,36 @@ describe("which key boot opens", () => {
             .catch((caught: unknown) => caught);
 
           expect(error).toBeInstanceOf(Error);
-          expect(bootLogFor(error)).toContain(
-            "Ending the stored sessions failed: ERR max number of clients reached"
-          );
+          expect(error).toMatchObject({ message: "Ending the stored sessions failed" });
           expect(bootLogFor(error)).not.toContain(SECRET);
           expect(JSON.stringify(logged)).not.toContain(SECRET);
         });
 
-        it("refuses with Postgres's code and message, never the statement's parameters", async () => {
-          const deadlock = Object.assign(new Error("deadlock detected"), { code: "40P01" });
+        it("refuses with Postgres's code and names, never its message nor the statement's parameters", async () => {
+          // Postgres can quote a value in its message and its detail.
+          const violation = Object.assign(
+            new Error(`duplicate key value violates unique constraint: "${SECRET}"`),
+            {
+              code: "23505",
+              detail: `Key ("emailHmac")=(${SECRET}) already exists.`,
+              table: "user",
+              column: "emailHmac",
+              constraint: "user_email_hmac_idx",
+            }
+          );
 
           rekeys.failure = new DrizzleQueryError(
             'update "user" set "email" = $1 where "id" = $2',
             [SECRET, "a-row-id"],
-            deadlock
+            violation
           );
           const error = await resolveMasterKey().catch((caught: unknown) => caught);
 
-          expect(bootLogFor(error)).toContain("The re-key failed (40P01): deadlock detected");
+          expect(error).toMatchObject({
+            message:
+              "The re-key failed (code 23505, table user, column emailHmac, constraint user_email_hmac_idx)",
+          });
+          expect(error).not.toHaveProperty("cause");
           for (const parameter of [SECRET, "a-row-id"]) {
             expect(bootLogFor(error)).not.toContain(parameter);
           }
@@ -723,7 +735,7 @@ describe("which key boot opens", () => {
         await writeKeyFile({ current: keyB, previous: keyA });
         rekeys.failure = new Error("disk gone");
 
-        await expect(resolveMasterKey()).rejects.toThrow("disk gone");
+        await expect(resolveMasterKey()).rejects.toThrow("The re-key failed");
         expect(openedKeys).toEqual([]);
         expect(database.fingerprint).toBe(masterKeyFingerprint(keyA));
         expect(await readKeyFile()).toEqual({ current: keyB, previous: keyA });

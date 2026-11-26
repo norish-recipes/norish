@@ -278,17 +278,23 @@ async function adoptKey(source: KeySource): Promise<[KeySource, string | null]> 
 const keyWithFingerprint = (source: KeySource, fingerprint: string | null) =>
   pickKey(source, (key) => masterKeyFingerprint(key) === fingerprint);
 
+/** What a driver's error may show in a log: its code and the names Postgres failed on. */
+const SAFE_FIELDS = ["code", "table", "column", "constraint"] as const;
+
 /**
- * `error` as boot may log it: what failed, with the driver's code and message. Never a command's
- * arguments or a statement's parameters, which hold session tokens, new ciphertext and row ids.
+ * `error` as boot may log it: what failed, with the driver's safe fields only. A message can quote
+ * a value, and parameters and arguments hold session tokens, new ciphertext and row ids.
  */
 function failed(what: string, error: unknown): Error {
   // Drizzle wraps the driver's error in one whose message carries the statement's parameters.
   const driver = error instanceof Error && error.cause !== undefined ? error.cause : error;
-  const code = errorCode(driver);
-  const message = driver instanceof Error ? driver.message : String(driver);
+  const known = SAFE_FIELDS.flatMap((field) => {
+    const value: unknown = driver instanceof Error ? Reflect.get(driver, field) : undefined;
 
-  return new Error(`${what} failed${code === "unknown" ? "" : ` (${code})`}: ${message}`);
+    return typeof value === "string" && value !== "" ? [`${field} ${value}`] : [];
+  });
+
+  return new Error(`${what} failed${known.length > 0 ? ` (${known.join(", ")})` : ""}`);
 }
 
 /** Move everything from the previous key to the current one; until it commits nothing serves. */
