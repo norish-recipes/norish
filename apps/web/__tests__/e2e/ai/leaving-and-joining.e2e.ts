@@ -98,6 +98,9 @@ test("a member who leaves keeps their recipe with its Tag and food; joining back
 
     expect(before.tags).toEqual([names.tag]);
     expect(await readRecipe(aiStack.baseURL, admin.cookies, recipeId)).not.toBeNull();
+    // The admin's page holds the recipe before the member leaves.
+    await admin.page.goto(`/recipes/${recipeId}`);
+    await expect(admin.page.getByText(names.recipe).first()).toBeVisible();
 
     // The leave dialog says what goes with the member and what stays.
     await member.page.goto(HOUSEHOLD_SETTINGS);
@@ -125,6 +128,8 @@ test("a member who leaves keeps their recipe with its Tag and food; joining back
     ).resolves.toMatchObject({ name: names.food });
     // Under view Household the old household no longer sees it; it keeps its own Tag.
     await expect.poll(() => readRecipe(aiStack.baseURL, admin.cookies, recipeId)).toBeNull();
+    // Nor in the page: the recipe the admin has open reads as not found.
+    await expect(admin.page.getByText("Recipe Not Found")).toBeVisible({ timeout: 30_000 });
     expect(await ownTags(aiStack.baseURL, admin.cookies)).toEqual([names.tag]);
 
     // Joining back: the join card says the household of one is merged into the one joined.
