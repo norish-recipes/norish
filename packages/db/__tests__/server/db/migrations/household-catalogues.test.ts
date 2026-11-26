@@ -358,9 +358,10 @@ describe("each household gets its own catalogue", () => {
         food.annOnly,
         spellingMove(spelling.kipfilets),
         food.zout,
+        // Ann added the spelling: Bob's copy of the change names no adder.
         JSON.stringify({
           kind: "spelling",
-          spelling: removedSpelling(spelling.removed),
+          spelling: { ...removedSpelling(spelling.removed), ownerId: ann },
           lines: [{ id: line.bob, aliasIds: [spelling.kipfilets], joined: null }],
           groceries: [grocery.bobZout],
           recurring: [],
@@ -775,7 +776,7 @@ describe("each household gets its own catalogue", () => {
           ingredient_id: food.zout,
           undo: {
             kind: "spelling",
-            spelling: removedSpelling(spelling.removed),
+            spelling: { ...removedSpelling(spelling.removed), ownerId: ann },
             lines: [],
             groceries: [],
             recurring: [],

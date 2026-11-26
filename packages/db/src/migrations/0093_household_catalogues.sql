@@ -136,10 +136,18 @@ UPDATE "ingredient_ai_changes" SET "household_id" = coalesce(pg_temp.member_hous
   "undo" ->> 'ownerId', "undo" -> 'food' ->> 'ownerId', "undo" -> 'spelling' ->> 'ownerId')), pg_temp.catalogue_heir())
 WHERE "household_id" IS NULL;--> statement-breakpoint
 DELETE FROM "ingredient_ai_changes" WHERE "household_id" IS NULL;--> statement-breakpoint
--- A copy carries every change on its food; below, its ids become its household's.
+-- A copy carries every change on its food, naming no adder (another household's member); below, its
+-- ids become its household's.
 INSERT INTO "ingredient_ai_changes" ("kind", "household_id", "ingredient_id", "target_id", "sure", "undo", "created_at", "kept_at", "undone_at")
 SELECT ch."kind", c."household_id", c."copy_id", ch."target_id", ch."sure",
-  CASE WHEN ch."kind" = 'merge' THEN jsonb_set(ch."undo", '{ownerId}', 'null'::jsonb) ELSE ch."undo" END,
+  CASE
+    WHEN ch."undo" ? 'ownerId' THEN jsonb_set(ch."undo", '{ownerId}', 'null'::jsonb)
+    WHEN ch."undo" -> 'spelling' ? 'ownerId' THEN jsonb_set(ch."undo", '{spelling,ownerId}', 'null'::jsonb)
+    WHEN ch."undo" -> 'food' ? 'ownerId' THEN jsonb_set(jsonb_set(ch."undo", '{food,ownerId}', 'null'::jsonb),
+      '{food,aliases}', coalesce((SELECT jsonb_agg(a || '{"ownerId": null}'::jsonb ORDER BY n)
+        FROM jsonb_array_elements(ch."undo" -> 'food' -> 'aliases') WITH ORDINALITY AS t(a, n)), '[]'::jsonb))
+    ELSE ch."undo"
+  END,
   ch."created_at", ch."kept_at", ch."undone_at"
 FROM "ingredient_ai_changes" ch JOIN "_catalogue_food_copies" c ON c."ingredient_id" = ch."ingredient_id";--> statement-breakpoint
 -- A food, spelling or row a change names, in the change's household: the id where it is that household's,
