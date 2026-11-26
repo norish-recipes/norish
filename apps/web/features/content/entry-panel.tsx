@@ -7,6 +7,7 @@ import Panel from "@/components/Panel/Panel";
 import { SkeletonRows } from "@/components/settings/settings-skeleton";
 import { ActionButton, ActionButtonGroup, ArrowEnd } from "@/components/shared/action-button";
 import ConfirmModal from "@/components/shared/confirm-modal";
+import { ListFrame, ListRow } from "@/components/shared/list-row";
 import { Note } from "@/components/shared/note";
 import { Section } from "@/components/shared/section";
 import { Button, Chip } from "@heroui/react";
@@ -14,6 +15,8 @@ import { useTranslations } from "next-intl";
 
 import type { PickerKind } from "@norish/shared-react/lists";
 import { problemCopy, useContentEntry } from "@norish/shared-react/lists";
+
+import { EntryUsesPanel } from "./entry-uses-panel";
 
 /** One entry of a list: rename it, merge it onto the entry its new name folds onto, delete it, or read it. */
 export function EntryPanel({
@@ -31,6 +34,7 @@ export function EntryPanel({
   const tActions = useTranslations("common.actions");
   const entry = useContentEntry(kind, id);
   const [confirming, setConfirming] = useState(false);
+  const [showingUses, setShowingUses] = useState(false);
   const { view, detail } = entry;
   const editable = detail?.access === "edit";
   const close = () => onOpenChange(false);
@@ -121,9 +125,14 @@ export function EntryPanel({
             ) : null}
           </Section>
           <Section placement="panel" title={t("panel.usedBy")}>
-            <p data-testid="content-entry-used">
-              {t(detail?.usedKey ?? "recipes", { count: entry.entry?.recipeCount ?? 0 })}
-            </p>
+            <ListFrame>
+              <ListRow
+                chevron
+                data-testid="content-entry-used"
+                name={t(detail?.usedKey ?? "recipes", { count: entry.entry?.recipeCount ?? 0 })}
+                onPress={() => setShowingUses(true)}
+              />
+            </ListFrame>
           </Section>
           {editable && entry.offline ? <Note>{t("offline")}</Note> : null}
         </Panel.Body>
@@ -160,6 +169,12 @@ export function EntryPanel({
           )}
         </Panel.Footer>
       </Panel>
+      <EntryUsesPanel
+        id={id}
+        kind={kind}
+        open={showingUses}
+        onClose={() => setShowingUses(false)}
+      />
       <ConfirmModal
         confirm={confirmAction}
         danger

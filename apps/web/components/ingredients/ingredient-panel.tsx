@@ -2,7 +2,6 @@
 
 import type { ReactNode } from "react";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
-import Link from "next/link";
 import { OnTheListMark } from "@/components/ingredients/on-the-list-mark";
 import Panel from "@/components/Panel/Panel";
 import {
@@ -10,6 +9,7 @@ import {
   ActionButtonGroup,
   IconActionButton,
 } from "@/components/shared/action-button";
+import { RecipeLinks } from "@/components/shared/recipe-links";
 import { Section } from "@/components/shared/section";
 import UiSwitch from "@/components/shared/ui-switch";
 import { ArrowsRightLeftIcon, PencilSquareIcon } from "@heroicons/react/16/solid";
@@ -717,19 +717,7 @@ function IngredientUsesContent({
         {!data ? <Skeleton className="h-16 w-full rounded-xl" /> : null}
         {data && data.recipes.length > 0 ? (
           <Section placement="panel" title={t("recipes")}>
-            <ul className="flex flex-col gap-1 text-sm">
-              {data.recipes.map((recipe) => (
-                <li key={recipe.id}>
-                  <Link
-                    className="text-accent hover:underline"
-                    href={`/recipes/${recipe.id}`}
-                    onClick={onClose}
-                  >
-                    {recipe.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <RecipeLinks recipes={data.recipes} onOpen={onClose} />
           </Section>
         ) : null}
         {data && data.groceries.length > 0 ? (
