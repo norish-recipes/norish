@@ -11,6 +11,7 @@ const held = vi.hoisted(() => ({
   rows: [] as unknown[],
   toggle: vi.fn(),
   fetchNextPage: vi.fn(),
+  retry: vi.fn(),
   filters: {} as object,
 }));
 
@@ -59,6 +60,8 @@ vi.mock("@norish/shared-react/ingredients", async (importActual) => ({
   useIngredientList: () => ({
     items: held.rows,
     isLoading: false,
+    failed: false,
+    retry: held.retry,
     isPaused: false,
     isPlaceholderData: false,
     hasNextPage: false,
@@ -119,9 +122,7 @@ describe("IngredientList", () => {
     render(<IngredientList />);
     fireEvent.click(screen.getByTestId("content-kinds-Rice"));
     expect(held.toggle).toHaveBeenCalledWith("Rice");
-    expect((screen.getByTestId("content-kinds-Soy sauce") as HTMLButtonElement).disabled).toBe(
-      true
-    );
+    expect(screen.queryByTestId("content-kinds-Soy sauce")).toBeNull();
   });
 
   it("says nothing is flagged under the flagged filter, and nothing found otherwise", () => {
@@ -144,5 +145,14 @@ describe("IngredientList", () => {
     expect(held.router.push).toHaveBeenCalledWith("/settings/ingredient-filters");
     fireEvent.click(screen.getByTestId("ai-row"));
     expect(held.router.push).toHaveBeenCalledWith("/settings/ingredient-changes");
+  });
+
+  it("says a failed read, not that there are no ingredients, and Retry reads it again", () => {
+    held.rows = [];
+    held.query = { failed: true };
+    render(<IngredientList />);
+    expect(screen.queryByTestId("content-empty")).toBeNull();
+    fireEvent.click(screen.getByTestId("content-retry"));
+    expect(held.retry).toHaveBeenCalled();
   });
 });

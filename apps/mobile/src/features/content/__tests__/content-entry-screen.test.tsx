@@ -11,6 +11,7 @@ const held = vi.hoisted(() => ({
   save: vi.fn(),
   remove: vi.fn(),
   setName: vi.fn(),
+  retry: vi.fn(),
 }));
 
 vi.mock("expo-router", () => ({
@@ -23,6 +24,8 @@ vi.mock("@norish/shared-react/lists", async (importActual) => ({
     entry: { id: "e1", name: "Diner", recipeCount: 97 },
     detail: { access: "edit", note: null, usedKey: "recipes" },
     gone: false,
+    failed: false,
+    retry: held.retry,
     name: "Diner",
     setName: held.setName,
     view: { action: "save", max: 50, target: null, moved: 97 },
@@ -155,5 +158,13 @@ describe("ContentEntryScreen", () => {
     render(<ContentEntryScreen />);
     expect(held.router.back).toHaveBeenCalled();
     expect(screen.queryByTestId("content-entry-sheet")).toBeNull();
+  });
+
+  it("says the list could not be read, not a skeleton forever, and Retry reads it again", () => {
+    held.entry = { entry: null, detail: null, view: null, failed: true };
+    render(<ContentEntryScreen />);
+    expect(screen.queryByTestId("skeleton")).toBeNull();
+    fireEvent.click(screen.getByTestId("content-entry-retry"));
+    expect(held.retry).toHaveBeenCalled();
   });
 });

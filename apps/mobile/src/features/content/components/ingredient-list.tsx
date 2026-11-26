@@ -33,6 +33,8 @@ export function IngredientList() {
   const {
     items,
     isLoading,
+    failed,
+    retry,
     isPaused,
     isPlaceholderData,
     hasNextPage,
@@ -49,6 +51,7 @@ export function IngredientList() {
       <ListFrame
         above={<AiChangesRow onPress={() => router.push("/settings/ingredient-changes")} />}
         data={rows}
+        failed={failed ? { title: text("settings.content.loadFailed"), onRetry: retry } : undefined}
         keyExtractor={(row) => row.item.id}
         loading={isLoading || (isPlaceholderData && items.length === 0 && !isPaused)}
         nothing={

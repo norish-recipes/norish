@@ -26,6 +26,9 @@ export function useIngredientListQuery(input: IngredientListInput) {
   return {
     items: query.data?.pages.flatMap((page) => page.items) ?? [],
     isLoading: query.isLoading,
+    /** The first read failed: no rows to show for it. */
+    failed: query.isError && query.data === undefined,
+    retry: () => void query.refetch(),
     isPlaceholderData: query.isPlaceholderData,
     isPaused: query.fetchStatus === "paused",
     hasNextPage: query.hasNextPage,

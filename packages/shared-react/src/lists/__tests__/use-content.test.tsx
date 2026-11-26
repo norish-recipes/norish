@@ -105,6 +105,25 @@ describe("useContentList", () => {
 });
 
 describe("useContentEntry", () => {
+  it("says its list could not be read, and reads it again on retry", async () => {
+    let reads = 0;
+
+    serveTRPC(async () => {
+      reads += 1;
+      if (reads === 1) throw new Error("down");
+
+      return [row("1", "Diner")];
+    });
+
+    const { result } = renderHook(() => useContentEntry("tag", "1"), { wrapper: wrapperFor() });
+
+    await waitFor(() => expect(result.current.failed).toBe(true));
+    expect(result.current.entry).toBeNull();
+    act(() => result.current.retry());
+    await waitFor(() => expect(result.current.entry).not.toBeNull());
+    expect(result.current.failed).toBe(false);
+  });
+
   it("renames through lists.rename with the entry's version", async () => {
     const sent: unknown[] = [];
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Alert } from "react-native";
 import { Card, CardRow } from "@/components/card";
+import { EmptyCard } from "@/components/empty-card";
 import { destructiveAction } from "@/components/modal-header";
 import { FitSheet } from "@/components/sheet";
 import { SheetFieldSkeleton } from "@/components/sheet-input";
@@ -42,7 +43,22 @@ function EntryScreen({ kind, id }: { kind: PickerKind; id: string }) {
   if (!entry.entry) {
     return (
       <FitSheet name="content-entry" title={text(`settings.content.panel.editTitle.${kind}`)}>
-        <SheetFieldSkeleton />
+        {entry.failed ? (
+          <EmptyCard
+            action={{
+              label: text("common.actions.retry"),
+              icon: "refresh-outline",
+              testID: "content-entry-retry",
+              onPress: entry.retry,
+            }}
+            icon="alert-circle-outline"
+            placement="sheet"
+            testID="content-entry-failed"
+            title={text("settings.content.loadFailed")}
+          />
+        ) : (
+          <SheetFieldSkeleton />
+        )}
       </FitSheet>
     );
   }

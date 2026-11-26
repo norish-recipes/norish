@@ -26,7 +26,7 @@ export interface DeleteImpact {
  */
 export function useContentEntry(kind: PickerKind, id: string) {
   const trpc = useTRPC();
-  const { entries, loaded } = useListEntries(kind);
+  const { entries, loaded, failed, retry } = useListEntries(kind);
   const writes = useContentWrites(kind);
   const entry = entries.find((known) => known.id === id) ?? null;
   // The name as edited; until it is, the entry's own, so an entry that arrives later has it too.
@@ -72,6 +72,9 @@ export function useContentEntry(kind: PickerKind, id: string) {
     entry,
     detail: entry ? entryDetail(kind, entry) : null,
     gone: loaded && entry === null,
+    /** The list the entry is in could not be read; `retry` reads it again. */
+    failed,
+    retry,
     name,
     setName: (next: string) => {
       setOutcome(null);
