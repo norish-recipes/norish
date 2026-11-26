@@ -31,6 +31,8 @@ afterEach(() => {
 const SHOWING_NAMES = [
   keyOf("config.tags"),
   keyOf("lists.list", { kind: "tag" }),
+  // The count a delete's confirmation shows.
+  keyOf("lists.usage", { kind: "cuisine", id: "e1" }),
   keyOf("recipes.get", { id: "r1" }),
   keyOf("recipes.list", {}),
   keyOf("library.discover"),

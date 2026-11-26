@@ -20,6 +20,7 @@ export function useConfigSubscription() {
     trpc.config.categories.queryKey(),
     trpc.lists.list.pathKey(),
     trpc.lists.uses.pathKey(),
+    trpc.lists.usage.pathKey(),
   ];
   // An entry renamed, merged, deleted or newly carried shows on recipes and in Search too.
   const showingNames = [
