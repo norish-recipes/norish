@@ -94,3 +94,4 @@ Final re-review 1. Fixed (aa5071742): one rule (`isAccountScoped`) says which ro
 Final re-review 8. Fixed (f0d4962fb): the household the widgets' plan is for is kept in MMKV; a start whose household differs clears them, read or not.
 Release check 5. Fixed (4874cb835): no recorded household counts as another, so the first start after an upgrade clears the widgets and records it.
 - E2E `leaving-and-joining` first run: passed. Now under view Everyone (the old household still reads the moved recipe) and Household (it reads as not found) (e728754d7); run tags start with a letter (de40400ef).
+- Full E2E fix (fc84a514e): only screens showing the household read `households.get`, so a write queued on Groceries named none and Replay parked it `other-household` (offline link import, both session-expiry replays). The shell now reads it in `useHouseholdSubscription`, both apps; a unit test covers it.

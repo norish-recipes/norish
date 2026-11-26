@@ -68,3 +68,4 @@
   3. fixed: the web join button stays disabled until `isJoinCode` passes; the router answers a malformed code with the `gone` refusal ("Invalid join code") through the shared mapping; a card test and a router test.
   4. fixed: the race helper's lock wait fails after 3 s with what it waited for; a failed wait rolls the test's transaction back and a `finally` settles the started operations.
   - rejected: no join code after leave or removal (decided, same as sign-up).
+- Full E2E fix (75630f1f3): the admin users list shows a new account's "My household", as every account has one; the "No household" copy was already gone from every locale.
