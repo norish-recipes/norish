@@ -4,6 +4,7 @@
 import { eq, inArray, sql } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+import { resetDbConnection } from "@norish/db/drizzle";
 import { isRetryableConflict } from "@norish/db/repositories/constraint-violation";
 import { addRecipeToCookbook, createCookbook } from "@norish/db/repositories/cookbooks";
 import { addFavorite } from "@norish/db/repositories/favorites";
@@ -889,51 +890,72 @@ describe("deleting an account", () => {
     const lockRecipe = (recipeId: string) => (tx: TestTransaction) =>
       tx.select().from(recipes).where(eq(recipes.id, recipeId)).for("update");
 
-    it("a grocery added while the deletion holds the household is refused for a retry", async () => {
-      const m = await memberWithGrocery();
-      const adminsLine = await addTestGrocery(m.admin, { name: "kaas" });
-      const recipeHold = await holdUntilReleased(lockRecipe(m.recipe.id));
-      const lineHold = await holdUntilReleased((tx) =>
-        tx.select().from(groceries).where(eq(groceries.id, adminsLine.id)).for("update")
+    /** Runs `test` with the repository pool's deadlock check far later than any test takes. */
+    async function withRepositoryDeadlockTimeout(test: () => Promise<void>) {
+      const { rows } = await getTestDb().execute<{ name: string }>(
+        sql`SELECT current_database() AS name`
       );
-      const runs: Promise<unknown>[] = [];
+      const database = sql.identifier(rows[0]!.name);
 
+      await getTestDb().execute(sql`ALTER DATABASE ${database} SET deadlock_timeout = '1min'`);
+      await resetDbConnection();
       try {
-        // The deletion holds the household and waits on the recipe; the grocery's shift holds the
-        // deleted member's line and waits on the admin's.
-        runs.push(deleteAccount(m.deleted));
-        runs[0]!.catch(() => undefined);
-        const deleter = await waitFor(() => waiterOn(recipeHold.pid), "the deletion to wait");
-
-        // The grocery checks its waits for a deadlock almost at once, long before the deletion's
-        // deadlock_timeout: closing the cycle on the household, it is the victim.
-        runs.push(
-          getTestDb().transaction(async (tx) => {
-            await tx.execute(sql`SET LOCAL deadlock_timeout = '1ms'`);
-
-            return await addTestGrocery(m.admin, { name: "brood" }, tx);
-          })
-        );
-        runs[1]!.catch(() => undefined);
-        const adder = await waitFor(() => waiterOn(lineHold.pid, [deleter]), "the grocery");
-
-        await recipeHold.release();
-        await waitFor(() => blockedBy(deleter, adder), "the deletion to wait on the line");
-        await lineHold.release();
+        await test();
       } finally {
-        await recipeHold.release();
-        await lineHold.release();
+        await getTestDb().execute(sql`ALTER DATABASE ${database} RESET deadlock_timeout`);
+        await resetDbConnection();
       }
-      const settled = await Promise.allSettled(runs);
+    }
 
-      expect(settled[0]).toEqual({
-        status: "fulfilled",
-        value: expect.objectContaining({ recipeIds: [m.recipe.id] }),
-      });
-      expect(settled[1]?.status).toBe("rejected");
-      expect(isRetryableConflict((settled[1] as PromiseRejectedResult).reason)).toBe(true);
-      expect(await getTestDb().select().from(users).where(eq(users.id, m.deleted))).toEqual([]);
-    }, 15_000);
+    it(
+      "a grocery added while the deletion holds the household is refused for a retry",
+      () =>
+        withRepositoryDeadlockTimeout(async () => {
+          const m = await memberWithGrocery();
+          const adminsLine = await addTestGrocery(m.admin, { name: "kaas" });
+          const recipeHold = await holdUntilReleased(lockRecipe(m.recipe.id));
+          const lineHold = await holdUntilReleased((tx) =>
+            tx.select().from(groceries).where(eq(groceries.id, adminsLine.id)).for("update")
+          );
+          const runs: Promise<unknown>[] = [];
+
+          try {
+            // The deletion holds the household and waits on the recipe; the grocery's shift holds the
+            // deleted member's line and waits on the admin's.
+            runs.push(deleteAccount(m.deleted));
+            runs[0]!.catch(() => undefined);
+            const deleter = await waitFor(() => waiterOn(recipeHold.pid), "the deletion to wait");
+
+            // Only the grocery checks for a deadlock within the test: closing the cycle, it is the victim.
+            runs.push(
+              getTestDb().transaction(async (tx) => {
+                await tx.execute(sql`SET LOCAL deadlock_timeout = '1ms'`);
+
+                return await addTestGrocery(m.admin, { name: "brood" }, tx);
+              })
+            );
+            runs[1]!.catch(() => undefined);
+            const adder = await waitFor(() => waiterOn(lineHold.pid, [deleter]), "the grocery");
+
+            await recipeHold.release();
+            await waitFor(() => blockedBy(deleter, adder), "the deletion to wait on the line");
+            await lineHold.release();
+          } finally {
+            await recipeHold.release();
+            await lineHold.release();
+          }
+          const settled = await Promise.allSettled(runs);
+
+          expect(settled[0]).toEqual({
+            status: "fulfilled",
+            value: expect.objectContaining({ recipeIds: [m.recipe.id] }),
+          });
+          expect(settled[1]?.status).toBe("rejected");
+          expect(isRetryableConflict((settled[1] as PromiseRejectedResult).reason)).toBe(true);
+          expect(await getTestDb().select().from(users).where(eq(users.id, m.deleted))).toEqual([]);
+        }),
+      15_000
+    );
 
     it("a deletion that is the deadlock's victim tries again and erases the account", async () => {
       const m = await memberWithGrocery();
