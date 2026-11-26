@@ -12,15 +12,22 @@ const HEADINGS: Record<Placement, string> = {
     "text-muted flex min-h-5.5 items-center gap-1 text-xs font-semibold tracking-wide uppercase",
 };
 
+/** The gap a heading owns when it is one row of a flat list: under it, and above it unless first. */
+const IN_LIST = { first: "pb-2", later: "pt-5 pb-2" } as const;
+
 /** A section's heading: the one look every card and panel gives its parts. */
 export function SectionHeading({
   placement,
+  inList,
   children,
 }: {
   placement: Placement;
+  inList?: keyof typeof IN_LIST;
   children: ReactNode;
 }) {
-  return <h3 className={HEADINGS[placement]}>{children}</h3>;
+  const gap = inList ? ` ${IN_LIST[inList]}` : "";
+
+  return <h3 className={`${HEADINGS[placement]}${gap}`}>{children}</h3>;
 }
 
 /** An info button whose label is the help it gives, 22 px so a heading with help is no taller. */

@@ -177,9 +177,9 @@ export function ChangedByAIPanel({ open, onClose }: { open: boolean; onClose: ()
         return <EmptyState icon={SparklesIcon} title={t("changedByAI.empty")} variant="row" />;
       case "heading":
         return (
-          <div className={twMerge("pb-2", index > 0 && "pt-5")}>
-            <SectionHeading placement="panel">{t(`changedByAI.${row.of}`)}</SectionHeading>
-          </div>
+          <SectionHeading inList={index > 0 ? "later" : "first"} placement="panel">
+            {t(`changedByAI.${row.of}`)}
+          </SectionHeading>
         );
       case "change": {
         const { change } = row;
