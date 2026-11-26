@@ -89,6 +89,7 @@ vi.mock("@norish/db/repositories/master-key", () => ({
         "site_auth_tokens.value_enc": { previous: 0, current: 0, plaintext: 0, unreadable: 5 },
       },
       revokedShares: 4,
+      ended: { sessions: 2, verifications: 1 },
     };
   },
 }));

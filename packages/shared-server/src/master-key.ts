@@ -305,18 +305,21 @@ async function rekey(
 ): Promise<void> {
   log.info({ from: previous.label, to: current.label }, "Re-keying to a new Master Key");
   // Before the transaction: a crash after this only repeats it on the next boot.
-  const ended = await endStoredSessions().catch((error: unknown) => {
+  const valkey = await endStoredSessions().catch((error: unknown) => {
     throw failed("Ending the stored sessions", error);
   });
   const rotation = masterKeyRotation(previous.bytes, current.bytes);
-  const { columns, revokedShares } = await rekeyMasterKey(rotation, {
+  const { columns, revokedShares, ended } = await rekeyMasterKey(rotation, {
     from: masterKeyFingerprint(previous.bytes),
     to: masterKeyFingerprint(current.bytes),
   }).catch((error: unknown) => {
     throw failed("The re-key", error);
   });
 
-  log.info({ columns, ...ended }, "Master Key re-keyed and every session ended");
+  log.info(
+    { columns, ended: { postgres: ended, valkey } },
+    "Master Key re-keyed and every session ended"
+  );
   for (const [column, { plaintext }] of Object.entries(columns)) {
     if (plaintext > 0) {
       log.warn({ column, count: plaintext }, "Values stored in plain text were encrypted");

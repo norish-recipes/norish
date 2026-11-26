@@ -263,7 +263,11 @@ async function revokeSharesWithoutToken(tx: DbTransaction): Promise<number> {
 export async function rekeyMasterKey(
   rotation: MasterKeyRotation,
   fingerprints: { from: string; to: string }
-): Promise<{ columns: ResealCounts; revokedShares: number }> {
+): Promise<{
+  columns: ResealCounts;
+  revokedShares: number;
+  ended: { sessions: number; verifications: number };
+}> {
   return await db.transaction(async (tx) => {
     // The row lock keeps a second re-key out until this one commits or rolls back.
     const [row] = await tx
@@ -280,13 +284,16 @@ export async function rekeyMasterKey(
     const columns: ResealCounts = {};
 
     for (const sealing of MASTER_KEY_COLUMNS) await resealTable(tx, rotation, sealing, columns);
-    await tx.delete(sessions);
-    await tx.delete(verification);
+    const ended = {
+      sessions: (await tx.delete(sessions)).rowCount ?? 0,
+      verifications: (await tx.delete(verification)).rowCount ?? 0,
+    };
+
     await tx
       .update(serverConfig)
       .set({ value: fingerprints.to, updatedAt: new Date() })
       .where(fingerprintRow);
 
-    return { columns, revokedShares };
+    return { columns, revokedShares, ended };
   });
 }

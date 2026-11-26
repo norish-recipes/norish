@@ -16,10 +16,12 @@ import {
   createRecipeShare,
   getActiveRecipeShareByToken,
 } from "@norish/db/repositories/recipe-shares";
+import * as schema from "@norish/db/schema";
+import { serverLogger } from "@norish/shared-server/logger";
 import { readKeyFile, resolveMasterKey, writeKeyFile } from "@norish/shared-server/master-key";
 import { getPublisherClient } from "@norish/shared-server/valkey/client";
 
-import { createTestRecipe } from "../../../db/__tests__/helpers/db-test-helpers";
+import { createTestRecipe, getTestDb } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 import { startValkey, valkeyUrl } from "../../../shared-server/__tests__/helpers/valkey";
 import { endStoredSessions } from "../../src/secondary-storage";
@@ -71,6 +73,9 @@ describe("a Master Key rotation at boot, over real Postgres and Valkey", () => {
   let after: AuthModule;
   // The keys Valkey held just before the second boot, and after it.
   let stored: { before: string[]; after: string[] };
+  // The session and verification rows Postgres held just before the second boot, and after it.
+  let rows: { before: object; after: object };
+  let rekeyLog: unknown;
 
   beforeAll(async () => {
     await testBase.setup();
@@ -105,13 +110,33 @@ describe("a Master Key rotation at boot, over real Postgres and Valkey", () => {
     });
     await valkey.hset(FOREIGN.job, { data: "{}" });
     await valkey.set(FOREIGN.cache, "[]");
+    // Sessions and a verification an instance kept in Postgres before it had Valkey.
+    const expiresAt = new Date(Date.now() + 60_000);
+
+    await getTestDb()
+      .insert(schema.sessions)
+      .values(["old-1", "old-2"].map((token) => ({ userId, token, expiresAt })));
+    await getTestDb()
+      .insert(schema.verification)
+      .values({ identifier: "old-state", value: "{}", expiresAt });
     before = { userId, cookie, apiKey, shareToken: share.url.replace("/share/", "") };
+    const countRows = async () => ({
+      sessions: await getTestDb().$count(schema.sessions),
+      verifications: await getTestDb().$count(schema.verification),
+    });
+    const info = vi.spyOn(serverLogger, "info");
 
     // The rotation: a new key in the file, the old one beside it, and a boot.
     await writeKeyFile({ current: keyB, previous: keyA }, { replace: true });
     stored = { before: await valkey.keys("*"), after: [] };
+    rows = { before: await countRows(), after: {} };
     await resolveMasterKey(endStoredSessions);
     stored.after = await valkey.keys("*");
+    rows.after = await countRows();
+    rekeyLog = info.mock.calls.find(
+      ([, message]) => message === "Master Key re-keyed and every session ended"
+    )?.[0];
+    info.mockRestore();
     // A new process: every module evaluated again, on key B.
     vi.resetModules();
     after = await bootAuth();
@@ -151,6 +176,20 @@ describe("a Master Key rotation at boot, over real Postgres and Valkey", () => {
       });
     }
     expect(await sessionOf(after, { cookie: before.cookie })).toBeNull();
+  });
+
+  it("logs how many sessions and verifications it ended, in Postgres and in Valkey apart", () => {
+    expect(rows).toEqual({
+      before: { sessions: 2, verifications: 1 },
+      after: { sessions: 0, verifications: 0 },
+    });
+    // The sign-up's session and the sign-in state, in Valkey.
+    expect(rekeyLog).toMatchObject({
+      ended: {
+        postgres: { sessions: 2, verifications: 1 },
+        valkey: { sessions: 1, verifications: 1 },
+      },
+    });
   });
 
   it("signs in with the password, the account found by its email under the new key", async () => {
