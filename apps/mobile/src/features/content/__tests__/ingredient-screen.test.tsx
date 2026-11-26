@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import type { ReactNode } from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -19,7 +20,14 @@ vi.mock("expo-router", () => ({
   useRouter: () => held.router,
   useLocalSearchParams: () => ({ id: "soy" }),
 }));
-vi.mock("../components/food-icon-field", () => ({ FoodIconField: () => <i data-testid="icon" /> }));
+vi.mock("../components/food-icon-field", () => ({
+  FoodIconField: ({ children }: { children: ReactNode }) => (
+    <div>
+      <i data-testid="icon" />
+      {children}
+    </div>
+  ),
+}));
 vi.mock("../components/food-spellings-step", () => ({
   FoodSpellingsStep: ({ onBack }: { onBack: () => void }) => (
     <button data-testid="step-spellings" onClick={onBack} />

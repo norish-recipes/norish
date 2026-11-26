@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Alert, Text, View } from "react-native";
+import { Alert, Text } from "react-native";
 import { AiChange } from "@/components/ai-change";
 import { Card, CardRow } from "@/components/card";
 import { destructiveAction } from "@/components/modal-header";
@@ -151,23 +151,20 @@ function FoodSheet({ item }: { item: IngredientItem }) {
       title={displayName}
     >
       <SheetBody>
-        <View className="flex-row items-start gap-3">
-          <FoodIconField icons={draft.icons} item={item} onDraftChange={draft.setIcon} />
-          <View className="min-w-0 flex-1">
-            {item.canEdit ? (
-              <SheetInput
-                accessibilityLabel={t("rename")}
-                returnKeyType="done"
-                testID="food-name"
-                value={draft.name}
-                onChangeText={draft.setName}
-                onSubmitEditing={() => void draft.save()}
-              />
-            ) : (
-              <Text className="text-foreground text-lg font-medium">{item.name}</Text>
-            )}
-          </View>
-        </View>
+        <FoodIconField icons={draft.icons} item={item} onDraftChange={draft.setIcon}>
+          {item.canEdit ? (
+            <SheetInput
+              accessibilityLabel={t("rename")}
+              returnKeyType="done"
+              testID="food-name"
+              value={draft.name}
+              onChangeText={draft.setName}
+              onSubmitEditing={() => void draft.save()}
+            />
+          ) : (
+            <Text className="text-foreground text-lg font-medium">{item.name}</Text>
+          )}
+        </FoodIconField>
         {displayName !== item.name ? (
           <SheetNote>{t("shownAs", { name: displayName })}</SheetNote>
         ) : null}

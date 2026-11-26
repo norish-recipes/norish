@@ -1,4 +1,5 @@
 import type * as ImagePicker from "expo-image-picker";
+import type { ReactNode } from "react";
 import React from "react";
 import { View } from "react-native";
 import { Card } from "@/components/card";
@@ -19,16 +20,23 @@ const PICKER: ImagePicker.ImagePickerOptions = {
   quality: 0.9,
 };
 
-/** The food's icon beside its name field: Upload a picture, Generate one where the instance can
- * draw, or Remove the food's own; each is part of the draft. Nothing for a reader who hid icons. */
+/** The icon's tile and the picture in it, in points. */
+const TILE = 76;
+const PICTURE = 56;
+
+/** The food's icon beside its name field (`children`), with Upload a picture, Generate one where
+ * the instance can draw and Remove the food's own under the name; each is part of the draft.
+ * A reader who hid icons gets the name alone. */
 export function FoodIconField({
   item,
   icons,
   onDraftChange,
+  children,
 }: {
   item: IngredientItem;
   icons: { shown: string | null; hasOwn: boolean; remove: () => void };
   onDraftChange: (draft: IconDraft) => void;
+  children: ReactNode;
 }) {
   const text = useText();
   const mutations = useIngredientIconMutations(item.id);
@@ -36,24 +44,26 @@ export function FoodIconField({
   const { showIngredientIcons } = useHiddenItemVisibility();
   const pick = usePhotoSourceSheet(text("settings.ingredients.icon.change"));
 
-  if (!showIngredientIcons) return null;
+  if (!showIngredientIcons) return children;
 
   const picture = (
     <Card>
-      <View className="size-[76px] items-center justify-center" testID="food-icon">
+      <View
+        className="items-center justify-center"
+        style={{ width: TILE, height: TILE }}
+        testID="food-icon"
+      >
         {icons.shown ? (
           <ServerImage
             accessibilityElementsHidden
             contentFit="contain"
             path={icons.shown}
-            style={{ width: 56, height: 56 }}
+            style={{ width: PICTURE, height: PICTURE }}
           />
         ) : null}
       </View>
     </Card>
   );
-
-  if (!item.canEdit) return picture;
 
   const upload = () =>
     pick(PICKER, async ([asset]) => {
@@ -68,34 +78,37 @@ export function FoodIconField({
   };
 
   return (
-    <View className="gap-2" testID="food-icon-field">
+    <View className="flex-row items-start gap-3" testID="food-icon-field">
       {picture}
-      {mutations.isPending ? null : (
-        <View className="flex-row flex-wrap gap-2">
-          <PillButton
-            icon="cloud-upload-outline"
-            label={text("settings.ingredients.icon.upload")}
-            testID="food-icon-upload"
-            onPress={upload}
-          />
-          {canDrawImages ? (
+      <View className="min-w-0 flex-1 gap-2">
+        {children}
+        {item.canEdit && !mutations.isPending ? (
+          <View className="flex-row flex-wrap gap-2">
             <PillButton
-              icon="sparkles-outline"
-              label={text("settings.ingredients.icon.generate")}
-              testID="food-icon-generate"
-              onPress={() => void generate()}
+              icon="cloud-upload-outline"
+              label={text("settings.ingredients.icon.upload")}
+              testID="food-icon-upload"
+              onPress={upload}
             />
-          ) : null}
-          {icons.hasOwn ? (
-            <PillButton
-              label={text("settings.ingredients.icon.remove")}
-              testID="food-icon-remove"
-              tone="danger"
-              onPress={icons.remove}
-            />
-          ) : null}
-        </View>
-      )}
+            {canDrawImages ? (
+              <PillButton
+                icon="sparkles-outline"
+                label={text("settings.ingredients.icon.generate")}
+                testID="food-icon-generate"
+                onPress={() => void generate()}
+              />
+            ) : null}
+            {icons.hasOwn ? (
+              <PillButton
+                label={text("settings.ingredients.icon.remove")}
+                testID="food-icon-remove"
+                tone="danger"
+                onPress={icons.remove}
+              />
+            ) : null}
+          </View>
+        ) : null}
+      </View>
     </View>
   );
 }

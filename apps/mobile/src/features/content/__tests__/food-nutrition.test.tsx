@@ -168,7 +168,16 @@ describe("FoodIconField", () => {
 
     held.icons.upload.mockResolvedValue({ file: "f1", address: "/a1.png" });
     held.icons.generate.mockResolvedValue({ file: "f2", address: "/a2.png" });
-    render(<FoodIconField icons={icons} item={item} onDraftChange={onDraftChange} />);
+    render(
+      <FoodIconField icons={icons} item={item} onDraftChange={onDraftChange}>
+        <i data-testid="name" />
+      </FoodIconField>
+    );
+    const column = screen.getByTestId("name").parentElement;
+
+    // The pills sit under the name, in its column, not under the picture.
+    expect(column?.contains(screen.getByTestId("food-icon-upload"))).toBe(true);
+    expect(column?.contains(screen.getByTestId("food-icon"))).toBe(false);
     fireEvent.click(screen.getByTestId("food-icon-upload"));
     await vi.waitFor(() =>
       expect(onDraftChange).toHaveBeenCalledWith({ file: "f1", address: "/a1.png" })
@@ -184,21 +193,26 @@ describe("FoodIconField", () => {
   it("offers Generate only where the instance can draw, and Remove only for the food's own", () => {
     held.canDrawImages = false;
     render(
-      <FoodIconField icons={{ ...icons, hasOwn: false }} item={item} onDraftChange={vi.fn()} />
+      <FoodIconField icons={{ ...icons, hasOwn: false }} item={item} onDraftChange={vi.fn()}>
+        <i data-testid="name" />
+      </FoodIconField>
     );
     expect(screen.queryByTestId("food-icon-generate")).toBeNull();
     expect(screen.queryByTestId("food-icon-remove")).toBeNull();
   });
 
-  it("shows the icon alone for a food the reader may not edit", () => {
+  it("shows the icon and name, with no pills, for a food the reader may not edit", () => {
     render(
       <FoodIconField
         icons={icons}
         item={{ id: "soy", canEdit: false } as never}
         onDraftChange={vi.fn()}
-      />
+      >
+        <i data-testid="name" />
+      </FoodIconField>
     );
     expect(screen.queryByTestId("food-icon-upload")).toBeNull();
+    expect(screen.getByTestId("name")).toBeTruthy();
     expect(screen.getByTestId("food-icon")).toBeTruthy();
   });
 });
