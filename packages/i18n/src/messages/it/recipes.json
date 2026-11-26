@@ -63,6 +63,7 @@
     "addToGroceries": "Aggiungi alla spesa",
     "ratingPrompt": "Cosa ne pensi di questa ricetta?",
     "notFound": "Ricetta non trovata",
+    "offline": "Questa ricetta richiede una connessione",
     "notFoundMessage": "Questa ricetta non esiste o non hai il permesso di visualizzarla.",
     "prep": "preparazione",
     "total": "totale",

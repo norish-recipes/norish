@@ -63,6 +63,7 @@
     "addToGroceries": "Lisää ostoslistalle",
     "ratingPrompt": "Mitä pidit tästä reseptistä?",
     "notFound": "Reseptiä ei löytynyt",
+    "offline": "Tämä resepti tarvitsee yhteyden",
     "notFoundMessage": "Tätä reseptiä ei ole olemassa tai sinulla ei ole oikeutta nähdä sitä.",
     "prep": "valmistelu",
     "total": "yhteensä",

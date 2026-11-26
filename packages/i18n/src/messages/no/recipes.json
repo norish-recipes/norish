@@ -63,6 +63,7 @@
     "addToGroceries": "Legg til i handleliste",
     "ratingPrompt": "Hva synes du om denne oppskriften?",
     "notFound": "Oppskrift ikke funnet",
+    "offline": "Denne oppskriften krever en tilkobling",
     "notFoundMessage": "Denne oppskriften eksisterer ikke, eller du har ikke tilgang til å se den.",
     "prep": "forberedelse",
     "total": "totalt",

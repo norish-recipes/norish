@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { OfflineUnavailable } from "@/app/~offline/offline-unavailable";
 import { ErrorView } from "@/components/shared/error-view";
 import { NotFoundView } from "@/components/shared/not-found-view";
 import { ScreenWakeLock } from "@/features/recipes/components/page/page-wake-lock";
@@ -50,6 +51,8 @@ function RecipePageContent({ recipeId, libraryType }: RecipeScreenProps) {
   if (state === "not-found") {
     return <NotFoundView message={t("notFoundMessage")} title={t("notFound")} />;
   }
+
+  if (state === "offline") return <OfflineUnavailable />;
 
   if (state === "failed") return <ErrorView onRetry={retry} />;
 

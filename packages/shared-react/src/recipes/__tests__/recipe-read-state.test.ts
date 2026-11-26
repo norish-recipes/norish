@@ -12,12 +12,25 @@ const notFound = new TRPCClientError("Not found", {
 
 describe("recipeReadState", () => {
   it.each([
-    ["ready", { recipe, error: null, isFetching: false }],
-    ["ready, a refetch failing", { recipe, error: new Error("Busy"), isFetching: false }],
-    ["loading", { recipe: null, error: null, isFetching: true }],
-    ["not-found", { recipe: null, error: notFound, isFetching: false }],
-    ["failed", { recipe: null, error: new Error("Busy"), isFetching: false }],
-    ["loading, read again", { recipe: null, error: new Error("Busy"), isFetching: true }],
+    ["ready", { recipe, error: null, isFetching: false, isOffline: false }],
+    [
+      "ready, a refetch failing",
+      { recipe, error: new Error("Busy"), isFetching: false, isOffline: false },
+    ],
+    ["ready, held offline", { recipe, error: null, isFetching: false, isOffline: true }],
+    ["loading", { recipe: null, error: null, isFetching: true, isOffline: false }],
+    ["not-found", { recipe: null, error: notFound, isFetching: false, isOffline: false }],
+    ["not-found, offline", { recipe: null, error: notFound, isFetching: false, isOffline: true }],
+    ["offline, nothing held", { recipe: null, error: null, isFetching: true, isOffline: true }],
+    [
+      "offline, the read failed",
+      { recipe: null, error: new Error("Busy"), isFetching: false, isOffline: true },
+    ],
+    ["failed", { recipe: null, error: new Error("Busy"), isFetching: false, isOffline: false }],
+    [
+      "loading, read again",
+      { recipe: null, error: new Error("Busy"), isFetching: true, isOffline: false },
+    ],
   ] as const)("is %s", (state, read) => {
     expect(recipeReadState(read)).toBe(state.split(",")[0]);
   });

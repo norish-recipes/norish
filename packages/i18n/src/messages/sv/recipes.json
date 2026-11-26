@@ -63,6 +63,7 @@
     "addToGroceries": "Lägg till i inköpslistan",
     "ratingPrompt": "Vad tyckte du om det här receptet?",
     "notFound": "Receptet hittades inte",
+    "offline": "Det här receptet kräver en anslutning",
     "notFoundMessage": "Det här receptet finns inte, eller så har du inte behörighet att visa det.",
     "prep": "förberedelse",
     "total": "totalt",

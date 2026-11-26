@@ -63,6 +63,7 @@
     "addToGroceries": "장보기에 추가",
     "ratingPrompt": "이 레시피에 대해 어떻게 생각하시나요?",
     "notFound": "레시피를 찾을 수 없음",
+    "offline": "이 레시피를 보려면 연결이 필요합니다",
     "notFoundMessage": "이 레시피는 존재하지 않거나 볼 수 있는 권한이 없습니다.",
     "prep": "준비",
     "total": "총",

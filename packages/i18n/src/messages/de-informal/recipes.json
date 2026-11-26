@@ -63,6 +63,7 @@
     "addToGroceries": "Zur Einkaufsliste hinzufügen",
     "ratingPrompt": "Was hältst du von diesem Rezept?",
     "notFound": "Rezept nicht gefunden",
+    "offline": "Dieses Rezept braucht eine Verbindung",
     "notFoundMessage": "Dieses Rezept existiert nicht oder du hast keine Berechtigung, es anzuzeigen.",
     "prep": "Vorbereitung",
     "total": "gesamt",

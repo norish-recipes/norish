@@ -63,6 +63,7 @@
     "addToGroceries": "Tilføj til indkøbsliste",
     "ratingPrompt": "Hvad syntes du om denne opskrift?",
     "notFound": "Opskrift ikke fundet",
+    "offline": "Denne opskrift kræver en forbindelse",
     "notFoundMessage": "Denne opskrift eksisterer ikke, eller du har ikke adgang til at se den.",
     "prep": "forberedelse",
     "total": "i alt",

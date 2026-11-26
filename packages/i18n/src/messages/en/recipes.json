@@ -63,6 +63,7 @@
     "addToGroceries": "Add to groceries",
     "ratingPrompt": "What did you think of this recipe?",
     "notFound": "Recipe Not Found",
+    "offline": "This recipe needs a connection",
     "notFoundMessage": "This recipe doesn't exist or you don't have permission to view it.",
     "prep": "prep",
     "total": "total",

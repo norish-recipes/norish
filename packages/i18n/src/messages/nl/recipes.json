@@ -63,6 +63,7 @@
     "addToGroceries": "Toevoegen aan boodschappen",
     "ratingPrompt": "Wat vond je van dit recept?",
     "notFound": "Recept niet gevonden",
+    "offline": "Dit recept heeft een verbinding nodig",
     "notFoundMessage": "Dit recept bestaat niet of je hebt geen toestemming om het te bekijken.",
     "prep": "voorb.",
     "total": "totaal",

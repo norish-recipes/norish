@@ -63,6 +63,7 @@
     "addToGroceries": "Dodaj do zakupów",
     "ratingPrompt": "Co sądzisz o tym przepisie?",
     "notFound": "Nie znaleziono przepisu",
+    "offline": "Ten przepis wymaga połączenia",
     "notFoundMessage": "Ten przepis nie istnieje lub nie masz uprawnień do jego wyświetlenia.",
     "prep": "przygot.",
     "total": "łącznie",

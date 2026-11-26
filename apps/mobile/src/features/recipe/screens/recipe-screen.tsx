@@ -110,6 +110,15 @@ export function RecipeScreen() {
   const page =
     state === "not-found" ? (
       <RecipeNotFound />
+    ) : state === "offline" ? (
+      <View className="bg-background flex-1 justify-center">
+        <EmptyCard
+          icon="cloud-offline-outline"
+          placement="screen"
+          testID="recipe-offline"
+          title={text("recipes.detail.offline")}
+        />
+      </View>
     ) : state === "failed" ? (
       <View className="bg-background flex-1 justify-center">
         <EmptyCard
