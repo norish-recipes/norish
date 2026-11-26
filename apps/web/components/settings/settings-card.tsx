@@ -15,7 +15,7 @@ interface SettingsCardProps extends Omit<
   description?: ReactNode;
   /** Chips beside the title: requires restart, a status, ... */
   badges?: ReactNode;
-  /** Buttons at the end of the header; they wrap under the title on a phone. */
+  /** Buttons at the end of the header; they wrap under the title when they do not fit. */
   actions?: ReactNode;
   /** A card whose whole subject is destructive, like deleting the account. */
   danger?: boolean;
@@ -64,7 +64,7 @@ export function SettingsCard({
         </h2>
         {badges}
         {actions ? (
-          <div className="flex flex-wrap items-center gap-2 sm:ms-auto">{actions}</div>
+          <div className="ms-auto flex flex-wrap items-center gap-2">{actions}</div>
         ) : null}
       </Card.Header>
       <Card.Content className={twMerge("gap-4", contentClassName)}>
