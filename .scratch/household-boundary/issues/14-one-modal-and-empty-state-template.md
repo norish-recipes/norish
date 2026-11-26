@@ -33,3 +33,23 @@
 - Tests: `delete-recipe-modal.test.tsx` now renders the real modal (was a HeroUI mock, asserted only z-index); `no-results-card.test.tsx` (mobile) rewritten for the template (it asserted warning tones); `store-manager-panel.test.tsx` mock renders `start`. New: `confirm-modal.test.tsx` (footer order), `empty-state.test.tsx`, mobile template test. Maestro and E2E ids unchanged.
 - Canvas read: `CtPage.dc.html` and `WcPage.dc.html` (row layout, 24px muted icon, Add at the end). Unused `use-warning-ink-color.ts` deleted. Not done: the mobile `Panel.dc.html` kit was not needed; mobile sheets use `bg-sand` cards.
 
+
+### Review round 1
+
+- 1 fixed (6e741e094): one `variant` prop on `EmptyState`; `EmptyStateCard` and the `className` escape hatch are gone, no caller passes spacing.
+- 2 fixed: `LibraryEmpty` (recipes and cookbooks lens) and `GroceryListEmpty` replace the two pairs.
+- 3 fixed: store manager, cookbook add-recipes and mini-cookbooks use the row; `createStoreHint` removed from every locale.
+- 4 fixed: data table, CalDAV sync and users use the cell variant; the title is foreground ink everywhere.
+- 5 fixed: the page variant's title is an `h2`; row and cell keep a paragraph; the icon stays `aria-hidden`.
+- 6 not changed: `SettingsCard.empty` has a caller, `share-links-table-card.tsx`.
+- 7 fixed (b5d7e63db): `EmptyCard` takes `action` and draws it as a HeroUI Native `Button` (accent-soft fill, accent text, 44 high, pill); `NoResultsCard` removed. `p-4.5` replaces `p-[18px]`; `bg-sand` is the theme token for sheet cards, kept, chosen through `useOnSheet` so callers pass no ground. Callers still pass `mx-5`/`mt-4` positions on mobile, not changed (the parent layout owns them and no simulator ran).
+- 8 fixed (a2ef02abe): job detail has no close X; Close and Remove or Cancel job left, Retry right; confirm state has Cancel left, Remove right and the warning in the body.
+- 9 fixed (a2ef02abe): Cancel and Remove left, `junkMark` right, through `ConfirmModal`'s `start`.
+- 10 fixed (25bc28be3): Reset in `start`, Apply right.
+- 11 not changed: the generated-key modal shows the key once, is not dismissible and has only Done.
+- 12 fixed (a2ef02abe): `ModalFooter` has only `start`; `CancelButton` fills it. `ConfirmModal` lost `size` (the import modals take the default width), `headerClassName` and `bodyClassName`, and gained `danger` and `start`.
+- 13 fixed (a2ef02abe): the test asserts Cancel and Remove in the start slot, the primary alone in the end slot, and no description; the templates use no physical-side classes.
+
+Empty-state variants: `page` is a card under `px-4 py-20`, `max-w-xl`, with an `h2` title; `row` is flat with no padding inside a card, panel or sheet body; `cell` is flat under `px-4 py-6` inside a table or list body.
+
+Kept as built: Cancel without a close X on the import, CalDAV and junk-spelling modals; no Add or hint in the grocery, pantry, ingredients and library empties; the API keys and site tokens cards' header and form; the start slot shrinking to an icon when narrow.
