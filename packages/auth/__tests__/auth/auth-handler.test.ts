@@ -616,6 +616,46 @@ describe("ending every stored session, as a re-key does", () => {
     }
     expect((await valkey.keys("*")).sort()).toEqual(before.filter((key) => !ended.has(key)).sort());
   });
+
+  it("deletes on every scan page, and keeps the other keys on each", async () => {
+    const indexes = Array.from({ length: 1_500 }, (_, index) => index);
+    const sessions = indexes.map((index) => `session-token-${index}`);
+    const verifications = indexes.map((index) => `verification:state-${index}`);
+    const others = indexes.flatMap((index) => [`norish:cache:${index}`, `look-alike-${index}`]);
+
+    await valkey.mset({
+      ...Object.fromEntries(
+        sessions.map((token) => [token, JSON.stringify({ session: { token, userId: "u" } })])
+      ),
+      ...Object.fromEntries(
+        verifications.map((key) => [
+          key,
+          JSON.stringify({ identifier: key.slice("verification:".length), value: "{}" }),
+        ])
+      ),
+      ...Object.fromEntries(
+        others.map((key) => [key, JSON.stringify({ session: { token: "x", userId: "u" } })])
+      ),
+    });
+
+    // The pages the sweep reads: pages after the first hold sessions and other keys alike.
+    const pages: string[][] = [];
+    let cursor = "0";
+
+    do {
+      const [next, keys] = await valkey.scan(cursor, "COUNT", 500, "TYPE", "string");
+
+      pages.push(keys);
+      cursor = next;
+    } while (cursor !== "0");
+    const later = pages.slice(1).flat();
+
+    expect(later.filter((key) => sessions.includes(key)).length).toBeGreaterThan(0);
+    expect(later.filter((key) => others.includes(key)).length).toBeGreaterThan(0);
+
+    expect(await endStoredSessions()).toEqual({ sessions: 1_500, verifications: 1_500 });
+    expect((await valkey.keys("*")).sort()).toEqual(others.sort());
+  });
 });
 
 describe("the secret that signs sessions", () => {
