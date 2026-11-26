@@ -118,6 +118,8 @@ function failSyncOf(target: string, code: string) {
   });
 }
 
+const warnings = () => logged.filter(([level]) => level === "warn");
+
 beforeEach(() => {
   config.UPLOADS_DIR = path.join(
     mkdtempSync(path.join(os.tmpdir(), "master-key-test-")),
@@ -273,6 +275,16 @@ describe("the key file", () => {
 
     await expect(writeKeyFile({ current: randomBytes(32) })).rejects.toThrow("EIO");
     expect(await fs.readdir(keyDir())).toEqual([]);
+  });
+
+  it("places the key file when its folder cannot be flushed, and says so", async () => {
+    const keys = { current: randomBytes(32) };
+
+    failSyncOf(keyDir(), "EINVAL");
+    await writeKeyFile(keys);
+
+    expect(await readKeyFile()).toEqual(keys);
+    expect(warnings()).toHaveLength(1);
   });
 
   it("replaces a key file when told to", async () => {

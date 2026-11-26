@@ -96,6 +96,21 @@ async function createFlushed(target: string, text: string): Promise<void> {
   }
 }
 
+/** Flush a new name in `dir` to disk; a filesystem that cannot flush a folder only warns. */
+async function flushFolder(dir: string): Promise<void> {
+  try {
+    const handle = await fs.open(dir, "r");
+
+    try {
+      await handle.sync();
+    } finally {
+      await handle.close();
+    }
+  } catch (error) {
+    log.warn({ path: dir, err: error }, "Could not flush the key file's folder to disk");
+  }
+}
+
 /**
  * Write the key file readable by this user only, whole or not at all where hard links work. It
  * never replaces a key file (EEXIST) unless told to.
@@ -125,15 +140,7 @@ export async function writeKeyFile(keys: KeyFile, { replace = false } = {}): Pro
   } finally {
     await fs.rm(temp, { force: true });
   }
-
-  // The new name reaches the disk only with its directory.
-  const dirHandle = await fs.open(dir, "r");
-
-  try {
-    await dirHandle.sync();
-  } finally {
-    await dirHandle.close();
-  }
+  await flushFolder(dir);
 }
 
 /** Where boot's keys come from: MASTER_KEY pins them, else the key file holds them. */
