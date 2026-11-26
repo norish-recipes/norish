@@ -208,8 +208,8 @@ async function generateKeyFile(): Promise<Buffer> {
   return key;
 }
 
-/** For an instance without a fingerprint: take a key, store its fingerprint, and say which is stored. */
-async function adoptKey(source: KeySource): Promise<string | null> {
+/** Claim a fingerprint for a key: the source holding that key, and the fingerprint stored. */
+async function adoptKey(source: KeySource): Promise<[KeySource, string | null]> {
   const encrypted = (await countEncryptedRows()) > 0;
 
   if (encrypted && !source.pinned) {
@@ -226,13 +226,11 @@ async function adoptKey(source: KeySource): Promise<string | null> {
 
   log.info({ source: source.current }, "Master Key adopted");
 
-  return stored;
+  return [{ ...source, keys: source.keys ?? { current: key } }, stored];
 }
 
 /** Open the key the database's fingerprint names, or refuse naming the key that is missing. */
-async function openByFingerprint(fingerprint: string | null): Promise<void> {
-  const source = await keySource();
-
+function openByFingerprint(source: KeySource, fingerprint: string | null): void {
   initMasterKey(keyThatFits(source, (key) => masterKeyFingerprint(key) === fingerprint));
   log.info({ source: source.current }, "Master Key opened");
 }
@@ -243,9 +241,14 @@ async function openByFingerprint(fingerprint: string | null): Promise<void> {
  */
 export async function resolveMasterKey(): Promise<void> {
   const fingerprint = await getMasterKeyFingerprint();
+  const source = await keySource();
 
   // No fingerprint: an instance from before fingerprints, or one that has never started.
-  await openByFingerprint(fingerprint ?? (await adoptKey(await keySource())));
+  const [opening, stored]: [KeySource, string | null] = fingerprint
+    ? [source, fingerprint]
+    : await adoptKey(source);
+
+  openByFingerprint(opening, stored);
 }
 
 /** Open the key a server's boot resolved, for a tool or script: never generates nor writes one. */
@@ -257,5 +260,5 @@ export async function openMasterKey(): Promise<void> {
       "This database has no Master Key fingerprint yet. Start the Norish server on it once first."
     );
   }
-  await openByFingerprint(fingerprint);
+  openByFingerprint(await keySource(), fingerprint);
 }
