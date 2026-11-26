@@ -49,3 +49,22 @@
 - Ticket 08: `icons`, `names`, `nutrition(For)` and library suggestions answer only the reader's catalogue, so another household's recipe shows no icons or nutrition for its own foods until its lines are read through the reader's catalogue. Ticket 09 must re-home a leaver's lines, which still point at the old household's foods and spellings (no constraint blocks it; deleting that household's last member then drops those line foods), and merge catalogues on join; `HELD_BY_HOUSEHOLD` now counts foods, spellings and junk.
 - Not moved: first-start-cleanup, review, spelling-check, resolver, plain-names, resolver-ai, parent-from-words, ingredient-nutrition and the api upgrade tests still read the test db directly (only the listed files moved). The E2E spec typechecks and lints but was not run.
 
+
+- Review round 1:
+  1. fixed: 0093 copies every change on a split food and remaps `target_id` and every undo id to the change's household (its row, its copy, the seed's, or one gone); a change naming another household's row with no copy there drops those ids, is marked `stranded` and keeps no Undo; Undo refuses anything outside the actor's catalogue (`undoStaysIn`); the list names only foods of the change's catalogue.
+  2. fixed: the first load takes every own food not added by hand whose spelling (or stripped spelling) the seed gives one entry, and flags one it gives several; a food added by hand is also left alone by the mints recheck, seed corrections and earlier-variant filing.
+  3. fixed (verified): an entry found by name adds its spellings to that food, and its parent and codes unless another entry is that food by id; that food is no longer removed as dropped.
+  4. fixed: the second run compares recurring groceries and whole AI Change rows; heir cases for an owner, an admin, ordinary accounts only, and no account.
+  5. fixed: a merge into a seeded food writes nothing on its row; AI's flag writes touch household foods only. Checked: Keep's distinct mark never reaches a seeded food; icons and estimates on seeded foods come only from an admin's Fill gaps; seed junk and seeded parents only from an admin's edit.
+  6. fixed (verified): the lookup reads the food the Store's grocery of that name names when it runs.
+  7. fixed (verified): the mint holds the joined food (and its parent) `for key share`; it takes no tree lock, so no cycle.
+  8. fixed: households with foods or spellings.
+  9. fixed: `exists`/`notExists`/`inArray` subqueries, one array parameter per list (`array-params.ts`), `VALUES` batches as arrays, the nutrition tuple per dataset. Left: recursive CTEs, the search's lateral name and the kinds count (no builder method), expressions and operators.
+  10. fixed: the nine files read through helpers; no other test in those packages queries the database. `db-test-helpers`: two column comparisons in `sql` (now `eq`) and an unused raw `SELECT 1` (deleted).
+  11. fixed: `household-scope.ts` (`inScope`, `inCatalogue`, `isInstanceRow`) for lists and catalogue.
+  12. fixed: `forEachCatalogue`; `groupBy` in `shared/lib`, mealie's copy too.
+  13. fixed: `editableHouseholds` is the one rule; `seeded ||` gone.
+  14. fixed: comments reworded; `withTableName`, `containsText`, `searchedName.lateral`; `Scope` unexported.
+  - For ticket 08: add-to-groceries must not keep a line's food from another household (`keptFoods`); display of a foreign recipe's own foods and icons; REST nutrition.
+  - For ticket 09: re-point a leaver's recipe lines when they leave, so deleting the old household's last member drops no line food, and Pantry suggestions name no old household's food.
+  - rejected: the names-a-food mark, uses without elsewhere, a household's spelling change listed to that household, an admin's own-to-seed merge, the membership read before a recipe write, the junk rules cache, qualified(), the diacritics constant.
