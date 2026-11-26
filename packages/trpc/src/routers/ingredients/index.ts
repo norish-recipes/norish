@@ -12,7 +12,7 @@ import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { findIngredientDisplayNames } from "@norish/db/repositories/ingredient-aliases";
 import { listIngredientUses } from "@norish/db/repositories/ingredient-catalogue";
 import { findIdsInCatalogue } from "@norish/db/repositories/ingredient-nutrition";
-import { findFoodsRecipeNames } from "@norish/db/repositories/line-readings";
+import { findRecipeFoodsOutsideCatalogue } from "@norish/db/repositories/line-readings";
 import { markAIChangesCleared } from "@norish/db/repositories/users";
 import { canDrawImages } from "@norish/shared-server/config/server-config-loader";
 import {
@@ -300,14 +300,15 @@ const settleAIChanges = authedProcedure
 const icons = authedProcedure
   .input(z.object({ ids: z.array(z.uuid()).max(500), recipeId: z.uuid().optional() }))
   .query(async ({ ctx, input }): Promise<Record<string, string | null>> => {
-    const shown = await findIdsInCatalogue(ctx.householdId, input.ids);
-    const others = input.ids.filter((id) => !shown.has(id));
+    const { recipeId } = input;
+    const [shown, theirs] = await Promise.all([
+      findIdsInCatalogue(ctx.householdId, input.ids),
+      recipeId && (await canViewRecipe(ctx, recipeId))
+        ? findRecipeFoodsOutsideCatalogue(ctx.householdId, recipeId, input.ids)
+        : [],
+    ]);
 
-    if (input.recipeId && others.length > 0 && (await canViewRecipe(ctx, input.recipeId))) {
-      for (const id of await findFoodsRecipeNames(input.recipeId, others)) shown.add(id);
-    }
-
-    return Object.fromEntries(await ingredientIconAddresses([...shown]));
+    return Object.fromEntries(await ingredientIconAddresses([...new Set([...shown, ...theirs])]));
   });
 
 /** Each of these foods' names by id, with its spellings per language, for the chips that name them;

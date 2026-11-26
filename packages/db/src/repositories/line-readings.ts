@@ -1,16 +1,10 @@
-import { and, eq, or } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 import { db } from "@norish/db/drizzle";
-import {
-  ingredientAliases,
-  ingredients,
-  recipeIngredientFoods,
-  recipeIngredients,
-  recipes,
-} from "@norish/db/schema";
+import { ingredients, recipeIngredients, recipes } from "@norish/db/schema";
 
 import { isAnyOf } from "./array-params";
-import { outsideCatalogue } from "./household-scope";
+import { lineFoodOutsideCatalogue, withLineFoods } from "./line-foods";
 import { buildPolicyCondition } from "./recipes";
 
 /** Which lines to look at: these, these recipes', or every recipe's the household may view. */
@@ -28,7 +22,7 @@ export interface StoredLineText {
 
 /**
  * The lines that name a spelling or food outside the household's catalogue (ADR-0042): another
- * household's recipe, or a leaver's still pointing at their old household's. The one test of it.
+ * household's recipe, or a leaver's still pointing at their old household's.
  */
 export async function findLinesOutsideCatalogue(
   householdId: string,
@@ -43,53 +37,38 @@ export async function findLinesOutsideCatalogue(
         ? isAnyOf(recipeIngredients.id, scope.lineIds, "uuid")
         : isAnyOf(recipeIngredients.recipeId, scope.recipeIds, "uuid");
 
-  return await db
-    .selectDistinct({
-      id: recipeIngredients.id,
-      recipeId: recipeIngredients.recipeId,
-      name: recipeIngredients.name,
-      amount: recipeIngredients.amount,
-      unit: recipeIngredients.unit,
-    })
-    .from(recipeIngredients)
+  return await withLineFoods(
+    db
+      .selectDistinct({
+        id: recipeIngredients.id,
+        recipeId: recipeIngredients.recipeId,
+        name: recipeIngredients.name,
+        amount: recipeIngredients.amount,
+        unit: recipeIngredients.unit,
+      })
+      .from(recipeIngredients)
+      .$dynamic()
+  )
     .innerJoin(recipes, eq(recipes.id, recipeIngredients.recipeId))
-    .innerJoin(
-      recipeIngredientFoods,
-      eq(recipeIngredientFoods.recipeIngredientId, recipeIngredients.id)
-    )
-    .innerJoin(ingredientAliases, eq(ingredientAliases.id, recipeIngredientFoods.ingredientAliasId))
-    .innerJoin(ingredients, eq(ingredients.id, ingredientAliases.ingredientId))
-    .where(
-      and(
-        or(
-          outsideCatalogue(ingredientAliases.householdId, householdId),
-          outsideCatalogue(ingredients.householdId, householdId)
-        ),
-        within
-      )
-    );
+    .where(and(lineFoodOutsideCatalogue(householdId), within));
 }
 
-/** Which of these foods the recipe's own lines name: what showing that recipe may show of them. */
-export async function findFoodsRecipeNames(
+/** Which of these foods the recipe's own lines name outside the household's catalogue. */
+export async function findRecipeFoodsOutsideCatalogue(
+  householdId: string,
   recipeId: string,
   ingredientIds: readonly string[]
 ): Promise<string[]> {
   if (ingredientIds.length === 0) return [];
-  const rows = await db
-    .selectDistinct({ id: ingredientAliases.ingredientId })
-    .from(recipeIngredients)
-    .innerJoin(
-      recipeIngredientFoods,
-      eq(recipeIngredientFoods.recipeIngredientId, recipeIngredients.id)
+  const rows = await withLineFoods(
+    db.selectDistinct({ id: ingredients.id }).from(recipeIngredients).$dynamic()
+  ).where(
+    and(
+      eq(recipeIngredients.recipeId, recipeId),
+      isAnyOf(ingredients.id, ingredientIds, "uuid"),
+      lineFoodOutsideCatalogue(householdId)
     )
-    .innerJoin(ingredientAliases, eq(ingredientAliases.id, recipeIngredientFoods.ingredientAliasId))
-    .where(
-      and(
-        eq(recipeIngredients.recipeId, recipeId),
-        isAnyOf(ingredientAliases.ingredientId, ingredientIds, "uuid")
-      )
-    );
+  );
 
   return rows.map((row) => row.id);
 }
