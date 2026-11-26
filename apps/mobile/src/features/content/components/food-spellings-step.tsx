@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Alert } from "react-native";
+import { Alert, View } from "react-native";
 import { CardSlice } from "@/components/card-slice";
 import { CountRow } from "@/components/count-row";
 import { IconButton } from "@/components/icon-button";
@@ -61,7 +61,8 @@ export function FoodSpellingsStep({
         {
           label: text("settings.ingredients.addAlias"),
           symbol: "plus",
-          onPress: () => setAdding(true),
+          // A typed spelling is added, as Return adds it; else the field opens.
+          onPress: () => (adding && draft.alias.trim() ? draft.stageAlias() : setAdding(true)),
         },
       ]}
       title={text("settings.ingredients.spellingsSection")}
@@ -72,57 +73,62 @@ export function FoodSpellingsStep({
           autoCapitalize="none"
           placeholder={text("settings.ingredients.addAlias")}
           returnKeyType="done"
+          // The keyboard stays up for the next spelling.
+          submitBehavior="submit"
           testID="food-spelling-input"
           value={draft.alias}
           onChangeText={draft.setAlias}
-          onSubmitEditing={draft.stageAlias}
+          onSubmitEditing={() => draft.stageAlias()}
         />
       ) : null}
-      {rows.map(({ key, name, spelling }, index) => {
-        const pending = spelling ? draft.removed.has(spelling.id) : false;
-        const movable = spelling?.canRemove === true && !pending;
+      {/* One card: the sheet's body would gap its slices apart. */}
+      <View>
+        {rows.map(({ key, name, spelling }, index) => {
+          const pending = spelling ? draft.removed.has(spelling.id) : false;
+          const movable = spelling?.canRemove === true && !pending;
 
-        return (
-          <CardSlice key={key} edge={edgeAt(index, rows.length)}>
-            <CountRow
-              name={name}
-              struck={pending}
-              testID={`food-spelling-${name}`}
-              trailing={
-                !spelling || spelling.canRemove ? (
-                  <IconButton
-                    icon={pending ? "arrow-undo-outline" : "remove-circle-outline"}
-                    label={text(
-                      pending
-                        ? "settings.ingredients.keepAlias"
-                        : "settings.ingredients.removeAlias",
-                      { alias: name }
-                    )}
-                    small
-                    testID={`food-spelling-remove-${name}`}
-                    tone={pending ? "default" : "danger"}
-                    onPress={() => {
-                      if (!spelling) draft.unstage(name);
-                      else if (pending) draft.toggleRemoval(spelling);
-                      else askJunk(spelling);
-                    }}
-                  />
-                ) : undefined
-              }
-              onPress={
-                movable && spelling
-                  ? () =>
-                      draft.setRelocation({
-                        kind: "move",
-                        aliasId: spelling.id,
-                        text: spelling.text,
-                      })
-                  : undefined
-              }
-            />
-          </CardSlice>
-        );
-      })}
+          return (
+            <CardSlice key={key} edge={edgeAt(index, rows.length)}>
+              <CountRow
+                name={name}
+                struck={pending}
+                testID={`food-spelling-${name}`}
+                trailing={
+                  !spelling || spelling.canRemove ? (
+                    <IconButton
+                      icon={pending ? "arrow-undo-outline" : "remove-circle-outline"}
+                      label={text(
+                        pending
+                          ? "settings.ingredients.keepAlias"
+                          : "settings.ingredients.removeAlias",
+                        { alias: name }
+                      )}
+                      small
+                      testID={`food-spelling-remove-${name}`}
+                      tone={pending ? "default" : "danger"}
+                      onPress={() => {
+                        if (!spelling) draft.unstage(name);
+                        else if (pending) draft.toggleRemoval(spelling);
+                        else askJunk(spelling);
+                      }}
+                    />
+                  ) : undefined
+                }
+                onPress={
+                  movable && spelling
+                    ? () =>
+                        draft.setRelocation({
+                          kind: "move",
+                          aliasId: spelling.id,
+                          text: spelling.text,
+                        })
+                    : undefined
+                }
+              />
+            </CardSlice>
+          );
+        })}
+      </View>
     </FitSheet>
   );
 }

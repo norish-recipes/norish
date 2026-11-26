@@ -131,6 +131,18 @@ describe("FoodSpellingsStep", () => {
     fireEvent.change(screen.getByTestId("food-spelling-input"), { target: { value: "x" } });
     expect((draft as { setAlias: ReturnType<typeof vi.fn> }).setAlias).toHaveBeenCalledWith("x");
   });
+
+  it("adds the typed spelling on Return, and on the header's plus", () => {
+    const draft = draftOf({ alias: "shoyu" });
+    const { stageAlias } = draft as { stageAlias: ReturnType<typeof vi.fn> };
+
+    render(<FoodSpellingsStep draft={draft} item={item as never} onBack={vi.fn()} />);
+    fireEvent.click(screen.getByTestId("sheet-secondary-settings.ingredients.addAlias"));
+    fireEvent.keyDown(screen.getByTestId("food-spelling-input"), { key: "Enter" });
+    expect(stageAlias).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByTestId("sheet-secondary-settings.ingredients.addAlias"));
+    expect(stageAlias).toHaveBeenCalledTimes(2);
+  });
 });
 
 describe("FoodPickerStep", () => {

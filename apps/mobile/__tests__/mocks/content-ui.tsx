@@ -207,12 +207,14 @@ export const kit = {
     editable,
     onChangeText,
     onClear,
+    onSubmitEditing,
   }: {
     testID?: string;
     value?: string;
     editable?: boolean;
     onChangeText?: (value: string) => void;
     onClear?: () => void;
+    onSubmitEditing?: () => void;
   }) =>
     createElement(
       "span",
@@ -222,6 +224,9 @@ export const kit = {
         value: value ?? "",
         readOnly: editable === false,
         onChange: (event: { target: { value: string } }) => onChangeText?.(event.target.value),
+        onKeyDown: (event: { key: string }) => {
+          if (event.key === "Enter") onSubmitEditing?.();
+        },
       }),
       onClear
         ? createElement("button", { "data-testid": `${testID}-clear`, onClick: onClear })

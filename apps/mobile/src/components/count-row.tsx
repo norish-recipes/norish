@@ -16,8 +16,8 @@ const ROW_HEIGHT = "min-h-[52px]";
 /** How far each level of a tree sets its rows in, in points. */
 const INDENT = 24;
 
-/** A card slice's row for a named entry: picture, name, tag, count, then a lock (read-only) or a
- * chevron (opens), then `trailing`. One entry of a tree sets in by `depth` and may `fold`. */
+/** A card slice's row for a named entry: picture, name, tag, count, a lock (read-only) or a chevron
+ * (opens), then a `trailing` control beside its press. A tree's entry sets in by `depth`, may `fold`. */
 export function CountRow({
   name,
   count,
@@ -84,7 +84,6 @@ export function CountRow({
       ) : onPress ? (
         <Ionicons color={muted} name="chevron-forward" size={16} />
       ) : null}
-      {trailing}
     </>
   );
   const row = `${ROW_HEIGHT} flex-row items-center gap-3 px-4`;
@@ -141,6 +140,8 @@ export function CountRow({
           {content}
         </View>
       )}
+      {/* Beside the row's button: inside it, the control would share its press and its label. */}
+      {trailing ? <View className="pr-4">{trailing}</View> : null}
     </View>
   );
 }

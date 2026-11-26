@@ -44,6 +44,13 @@ describe("CountRow's end", () => {
     ).toBeTruthy();
   });
 
+  it("keeps a trailing control out of the row's own button, so each takes its own press", () => {
+    render(
+      <CountRow name="soy" testID="row" trailing={<i data-testid="end" />} onPress={vi.fn()} />
+    );
+    expect(screen.getByTestId("row").contains(screen.getByTestId("end"))).toBe(false);
+  });
+
   it("gives a row that does not open no chevron", () => {
     render(<CountRow name="soy" testID="row" trailing={<i data-testid="end" />} />);
     expect(screen.queryByTestId("icon-chevron-forward")).toBeNull();
