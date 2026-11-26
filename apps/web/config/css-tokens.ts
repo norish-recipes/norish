@@ -25,11 +25,6 @@ export const cssMediaControlBare = [
   "[&_svg]:size-7",
 ].join(" ");
 
-// The soft accent halo behind an empty-state icon, drawn as a radial
-// gradient rather than blur compositing (ADR-0020 removed blur outright).
-export const cssEmptyStateGlow =
-  "from-accent/20 dark:from-accent/15 absolute -inset-12 bg-radial-[closest-side] from-40% to-transparent";
-
 export const cssButtonPill =
   "rounded-full data-[hovered=true]:bg-surface-tertiary data-[pressed=true]:bg-surface-tertiary";
 

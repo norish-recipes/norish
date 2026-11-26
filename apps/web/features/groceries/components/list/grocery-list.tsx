@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { EmptyStateCard } from "@/components/shared/empty-state";
 import { useStructuralSharing } from "@/features/groceries/hooks/use-structural-sharing";
 import { listFoodIds } from "@/features/groceries/lib/list-food-ids";
 import { ShoppingCartIcon } from "@heroicons/react/24/outline";
@@ -17,7 +18,6 @@ import {
 } from "@norish/shared-react/groceries";
 import { useIngredientIcons } from "@norish/shared-react/ingredients";
 import { groupGroceriesByIngredient } from "@norish/shared/lib/grocery-grouping";
-import { cssEmptyStateGlow } from "@norish/web/config/css-tokens";
 
 import { DndGroceryProvider } from "./dnd/dnd-grocery-provider";
 import { DndGroupedGroceryProvider } from "./dnd/dnd-grouped-grocery-provider";
@@ -108,22 +108,12 @@ function GroceryListContent({
 
   if (!hasGroceries && !hasStores) {
     return (
-      <div className="flex flex-col items-center justify-center px-4 py-20">
-        <div className="border-border bg-surface shadow-surface relative w-full max-w-xl rounded-xl border">
-          <div className="flex flex-col items-center gap-6 p-10 text-center">
-            <div className="relative">
-              <div className={cssEmptyStateGlow} />
-              <div className="bg-accent/15 text-accent relative mx-auto flex h-16 w-16 items-center justify-center rounded-2xl">
-                <ShoppingCartIcon className="h-7 w-7" />
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <h2 className="text-lg font-semibold">{t("title")}</h2>
-              <p className="text-muted text-base">{t("description")}</p>
-            </div>
-          </div>
-        </div>
+      <div className="px-4 py-20">
+        <EmptyStateCard
+          className="mx-auto w-full max-w-xl"
+          icon={ShoppingCartIcon}
+          title={t("title")}
+        />
       </div>
     );
   }
