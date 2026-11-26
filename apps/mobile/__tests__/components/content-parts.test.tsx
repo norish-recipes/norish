@@ -73,7 +73,7 @@ describe("CountRow in a tree", () => {
     expect(onPress).not.toHaveBeenCalled();
   });
 
-  it("leaves the fold button off a kind that has none, and ends in a trailing node", () => {
+  it("renders no fold button for a kind that has none, and ends in a trailing node", () => {
     const fold = {
       foldable: false,
       expanded: false,
@@ -83,7 +83,8 @@ describe("CountRow in a tree", () => {
     };
 
     render(<CountRow fold={fold} name="Basmati" trailing={<i data-testid="end" />} />);
-    expect(screen.getByTestId("fold")).toHaveProperty("disabled", true);
+    expect(screen.queryByTestId("fold")).toBeNull();
+    expect(screen.queryByLabelText("Expand")).toBeNull();
     expect(screen.getByTestId("end")).toBeTruthy();
   });
 });

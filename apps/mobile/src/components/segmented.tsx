@@ -60,6 +60,7 @@ export function Segmented<Value extends string>({
 
   return (
     <View
+      accessibilityRole="tablist"
       className={`bg-sand border-stroke flex-row items-center gap-0.5 ${compact ? "h-[34px] rounded-[17px] p-[3px]" : "h-11 rounded-[22px] p-1"} border-[0.5px] ${iconOnly ? "self-start" : ""}`}
       testID={testID}
     >
@@ -78,7 +79,7 @@ export function Segmented<Value extends string>({
           <Pressable
             key={segment.value}
             accessibilityLabel={segment.label}
-            accessibilityRole="button"
+            accessibilityRole="tab"
             accessibilityState={{ selected }}
             className={`h-full flex-row items-center justify-center gap-1.5 rounded-full ${iconOnly ? (compact ? "w-[34px]" : "w-11") : compact ? "flex-none px-[13px]" : "flex-1"} ${selected && !thumbShown ? "bg-thumb shadow-sm" : ""}`}
             testID={segment.testID}

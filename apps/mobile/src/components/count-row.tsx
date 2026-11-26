@@ -32,7 +32,7 @@ export function CountRow({
   tag?: ReactNode;
   leading?: ReactNode;
   depth?: number;
-  /** Folds the kinds under this entry out or in; `foldable` false leaves the cell empty. */
+  /** Folds the kinds under this entry out or in; `foldable` false leaves an empty cell, no button. */
   fold?: {
     foldable: boolean;
     expanded: boolean;
@@ -80,23 +80,24 @@ export function CountRow({
       style={depth ? { paddingLeft: depth * INDENT } : undefined}
     >
       {fold ? (
-        <Pressable
-          accessibilityLabel={fold.label}
-          accessibilityRole="button"
-          accessibilityState={{ expanded: fold.foldable ? fold.expanded : undefined }}
-          className="w-9 items-center justify-center self-stretch pl-2"
-          disabled={!fold.foldable}
-          testID={fold.testID}
-          onPress={fold.onPress}
-        >
-          {fold.foldable ? (
+        fold.foldable ? (
+          <Pressable
+            accessibilityLabel={fold.label}
+            accessibilityRole="button"
+            accessibilityState={{ expanded: fold.expanded }}
+            className="w-9 items-center justify-center self-stretch pl-2"
+            testID={fold.testID}
+            onPress={fold.onPress}
+          >
             <Ionicons
               color={muted}
               name={fold.expanded ? "chevron-down" : "chevron-forward"}
               size={16}
             />
-          ) : null}
-        </Pressable>
+          </Pressable>
+        ) : (
+          <View className="w-9 self-stretch" />
+        )
       ) : null}
       {onPress ? (
         <Pressable

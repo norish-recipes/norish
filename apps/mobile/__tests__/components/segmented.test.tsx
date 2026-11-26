@@ -7,12 +7,17 @@ import { describe, expect, it, vi } from "vitest";
 type Props = {
   children?: ReactNode;
   accessibilityLabel?: string;
+  accessibilityRole?: string;
   accessibilityState?: { selected?: boolean };
   className?: string;
   testID?: string;
   onPress?: () => void;
 };
-const host = ({ children, testID }: Props) => <div data-testid={testID}>{children}</div>;
+const host = ({ children, testID, accessibilityRole }: Props) => (
+  <div data-testid={testID} role={accessibilityRole}>
+    {children}
+  </div>
+);
 
 vi.mock("react-native", () => ({
   View: host,
@@ -20,6 +25,7 @@ vi.mock("react-native", () => ({
   Pressable: ({
     children,
     accessibilityLabel,
+    accessibilityRole,
     accessibilityState,
     className,
     testID,
@@ -29,6 +35,7 @@ vi.mock("react-native", () => ({
       aria-label={accessibilityLabel}
       className={className}
       aria-selected={accessibilityState?.selected}
+      role={accessibilityRole}
       data-testid={testID}
       onClick={onPress}
     >
@@ -64,6 +71,13 @@ function segmented(value: "a" | "b" | null, iconOnly = false) {
 }
 
 describe("Segmented", () => {
+  it("is a tab list of tabs", () => {
+    segmented("a");
+
+    expect(screen.getByRole("tablist")).toBe(screen.getByTestId("seg"));
+    expect(screen.getAllByRole("tab")).toHaveLength(2);
+  });
+
   it("marks the picked segment selected", () => {
     segmented("b");
 
