@@ -353,7 +353,7 @@ describe("which key boot opens", () => {
       database.encrypted = [sealedBy(keyA, "ada@example.com")];
 
       await expect(resolveMasterKey()).rejects.toThrow(
-        "This database is encrypted with MASTER_KEY_PREVIOUS"
+        "MASTER_KEY_PREVIOUS is the key this database is encrypted with"
       );
       expect(fingerprintWrites).toEqual([]);
     });
@@ -540,7 +540,7 @@ describe("which key boot opens", () => {
       config.MASTER_KEY_PREVIOUS = keyA.toString("base64");
 
       await expect(resolveMasterKey()).rejects.toThrow(
-        "This database is encrypted with MASTER_KEY_PREVIOUS"
+        "MASTER_KEY_PREVIOUS is the key this database is encrypted with"
       );
       expect(opened).toThrow("used before boot resolved it");
     });
@@ -549,7 +549,7 @@ describe("which key boot opens", () => {
       await writeKeyFile({ current: keyB, previous: keyA });
 
       await expect(resolveMasterKey()).rejects.toThrow(
-        `This database is encrypted with the previous key in ${keyFilePath()}`
+        `The previous key in ${keyFilePath()} is the key this database is encrypted with`
       );
     });
   });

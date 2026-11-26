@@ -147,9 +147,8 @@ export async function writeKeyFile(keys: KeyFile, { replace = false } = {}): Pro
 type KeySource = {
   pinned: boolean;
   keys: KeyFile | null;
-  /** How a log or a refusal names the current key, and the previous one. */
-  current: string;
-  previous: string;
+  /** How a log or a refusal names each key, at the start of a sentence. */
+  labels: { current: string; previous: string };
 };
 
 async function keySource(): Promise<KeySource> {
@@ -159,33 +158,34 @@ async function keySource(): Promise<KeySource> {
     return {
       pinned: true,
       keys: mapKeys({ current: MASTER_KEY, previous: MASTER_KEY_PREVIOUS }, fromBase64),
-      current: "MASTER_KEY",
-      previous: "MASTER_KEY_PREVIOUS",
+      labels: { current: "MASTER_KEY", previous: "MASTER_KEY_PREVIOUS" },
     };
   }
 
   return {
     pinned: false,
     keys: await readKeyFile(),
-    current: `The key in ${keyFilePath()}`,
-    previous: `the previous key in ${keyFilePath()}`,
+    labels: {
+      current: `The key in ${keyFilePath()}`,
+      previous: `The previous key in ${keyFilePath()}`,
+    },
   };
 }
 
 /** The current key when it `fits` the database, else the refusal naming the key that is wrong. */
 function keyThatFits(source: KeySource, fits: (key: Buffer) => boolean): Buffer {
-  const { keys } = source;
+  const { keys, labels } = source;
 
   if (keys && fits(keys.current)) return keys.current;
   // ponytail: refuses until boot can re-key; ticket 03 re-encrypts here instead.
   if (keys?.previous && fits(keys.previous)) {
     throw new Error(
-      `This database is encrypted with ${source.previous}, and re-encrypting it under a new key is not available yet. Put the previous key back as the current one.`
+      `${labels.previous} is the key this database is encrypted with, and re-encrypting it under a new key is not available yet. Put the previous key back as the current one.`
     );
   }
   throw refusal(
     keys
-      ? `${source.current} is not the key this database is encrypted with.`
+      ? `${labels.current} is not the key this database is encrypted with.`
       : `MASTER_KEY is not set, and there is no key file at ${keyFilePath()}. This database is encrypted with a key that one of them held.`
   );
 }
@@ -224,7 +224,7 @@ async function adoptKey(source: KeySource): Promise<[KeySource, string | null]> 
   // Another first boot may have stored its fingerprint since this one looked; that one stands.
   const stored = await claimMasterKeyFingerprint(masterKeyFingerprint(key));
 
-  log.info({ source: source.current }, "Master Key adopted");
+  log.info({ source: source.labels.current }, "Master Key adopted");
 
   return [{ ...source, keys: source.keys ?? { current: key } }, stored];
 }
@@ -232,7 +232,7 @@ async function adoptKey(source: KeySource): Promise<[KeySource, string | null]> 
 /** Open the key the database's fingerprint names, or refuse naming the key that is missing. */
 function openByFingerprint(source: KeySource, fingerprint: string | null): void {
   initMasterKey(keyThatFits(source, (key) => masterKeyFingerprint(key) === fingerprint));
-  log.info({ source: source.current }, "Master Key opened");
+  log.info({ source: source.labels.current }, "Master Key opened");
 }
 
 /**
