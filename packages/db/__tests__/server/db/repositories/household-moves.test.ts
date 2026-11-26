@@ -7,7 +7,7 @@ import { and, eq, isNotNull, ne, or } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { moveHouseholdRowsTx } from "@norish/db/repositories/household-merge";
+import { mergeHouseholdTx, moveHouseholdRowsTx } from "@norish/db/repositories/household-merge";
 import {
   deleteAccount,
   getHouseholdIdForUser,
@@ -15,6 +15,7 @@ import {
   kickUserFromHousehold,
   moveToHouseholdOfOne,
 } from "@norish/db/repositories/households";
+import { addToJunkPile, listJunkFolds } from "@norish/db/repositories/ingredient-junk-pile";
 import { mergeCatalogueIngredients } from "@norish/db/repositories/ingredient-relocation";
 import {
   addEntry,
@@ -32,6 +33,8 @@ import {
   categories,
   cuisines,
   groceries,
+  householdUsers,
+  households,
   ingredientAliases,
   ingredientNutritionCorrections,
   ingredients,
@@ -560,6 +563,155 @@ describe("household moves", () => {
           .from(aisleLinks)
           .where(eq(aisleLinks.storeId, mine.shop.id))
       ).toHaveLength(1);
+    });
+  });
+  /** What a join does in its transaction: the membership moves (the triggers take the recipes),
+   * the household merges, the emptied one goes. */
+  async function mergeInto(joinerId: string, into: string) {
+    const from = await householdOf(joinerId);
+
+    await getTestDb().transaction(async (tx) => {
+      await tx
+        .update(householdUsers)
+        .set({ householdId: into })
+        .where(eq(householdUsers.userId, joinerId));
+      await mergeHouseholdTx(tx, from, into);
+      await tx.delete(households).where(eq(households.id, from));
+    });
+
+    return from;
+  }
+
+  describe("joining merges the household of one", () => {
+    it("merges 'soja' and 'ui' into the household's foods", async () => {
+      const host = (await createTestUser())!;
+      const joiner = (await createTestUser())!;
+      const into = await householdOf(host.id);
+      const own = await householdOf(joiner.id);
+      const sojasaus = await mintTestFood(into, "sojasaus");
+      const theirSoja = await addTestSpelling(sojasaus.ingredientId, "soja");
+      const theirUi = await mintTestFood(into, "ui");
+      const mySoja = await mintTestFood(own, "soja");
+      const myUi = await mintTestFood(own, "ui");
+      const myLeek = await mintTestFood(own, "prei");
+
+      await addTestSpelling(myUi.ingredientId, "uien");
+      const recipe = await createTestRecipe(joiner.id);
+      const soja = await insertTestRecipeLine({ recipeId: recipe.id, name: "soja", amount: "1" }, [
+        mySoja.aliasId,
+      ]);
+      const ui = await insertTestRecipeLine({ recipeId: recipe.id, name: "ui" }, [myUi.aliasId]);
+      const leek = await insertTestRecipeLine({ recipeId: recipe.id, name: "prei" }, [
+        myLeek.aliasId,
+      ]);
+      const pantry = (
+        food: { ingredientId: string; aliasId: string },
+        householdId: string,
+        userId: string
+      ) =>
+        getTestDb()
+          .insert(pantryIngredients)
+          .values({
+            householdId,
+            userId,
+            ingredientId: food.ingredientId,
+            ingredientAliasId: food.aliasId,
+          })
+          .returning();
+      const [theirPantryUi] = await pantry(theirUi, into, host.id);
+
+      await pantry(myUi, own, joiner.id);
+      await pantry(mySoja, own, joiner.id);
+      await saveRecipeNutritionEstimate(recipe.id, {
+        lines: [
+          {
+            key: lineKey({
+              name: "soja",
+              amount: 1,
+              unit: null,
+              ingredientId: mySoja.ingredientId,
+            }),
+            calories: 3,
+            fat: 0,
+            carbs: 0,
+            protein: 0,
+          },
+        ],
+      });
+
+      await mergeInto(joiner.id, into);
+
+      expect(await testLineAliasIds(soja.id)).toEqual([theirSoja]);
+      expect(await testLineAliasIds(ui.id)).toEqual([theirUi.aliasId]);
+      // Own foods the household has no name or spelling of move as they are.
+      expect(await testLineAliasIds(leek.id)).toEqual([myLeek.aliasId]);
+      expect((await readTestIngredient(myLeek.ingredientId))?.householdId).toBe(into);
+      expect(await readTestIngredient(mySoja.ingredientId)).toBeNull();
+      expect(await readTestIngredient(myUi.ingredientId)).toBeNull();
+      // The joiner's other spelling of "ui" is the household's food's now.
+      const [uien] = await getTestDb()
+        .select()
+        .from(ingredientAliases)
+        .where(and(eq(ingredientAliases.fold, "uien"), eq(ingredientAliases.householdId, into)));
+
+      expect(uien?.ingredientId).toBe(theirUi.ingredientId);
+      // Pantry duplicates of one food go, the household's stays.
+      const pantryRows = await getTestDb()
+        .select()
+        .from(pantryIngredients)
+        .where(eq(pantryIngredients.householdId, into));
+
+      expect(pantryRows.map((row) => row.ingredientId).sort()).toEqual(
+        [sojasaus.ingredientId, theirUi.ingredientId].sort()
+      );
+      expect(pantryRows.map((row) => row.id)).toContain(theirPantryUi!.id);
+      expect(await sharesOf(recipe.id)).toEqual([
+        lineKey({ name: "soja", amount: 1, unit: null, ingredientId: sojasaus.ingredientId }),
+      ]);
+      await expectNothingForeign();
+    });
+
+    it("joins Tags, Cuisines and Categories of a fold to the household's entry", async () => {
+      const host = (await createTestUser())!;
+      const joiner = (await createTestUser())!;
+      const into = await householdOf(host.id);
+      const theirs = await createTestRecipe(host.id);
+      const mine = await createTestRecipe(joiner.id);
+
+      await carry("tag", theirs.id, ["Spicy"]);
+      await carry("tag", mine.id, ["spicy", "Vegan"]);
+      await carry("cuisine", mine.id, ["Fusion"]);
+      await carry("category", mine.id, ["Weeknight"]);
+      const spicy = await entryOf("tag", into, "Spicy");
+      const from = await mergeInto(joiner.id, into);
+
+      expect(await recipeEntryNames("tag", mine.id)).toEqual(["Spicy", "Vegan"]);
+      expect(await recipeEntryNames("cuisine", mine.id)).toEqual(["Fusion"]);
+      expect(await recipeEntryNames("category", mine.id)).toEqual(["Weeknight"]);
+      expect((await findOwnEntry("tag", into, spicy.id))?.name).toBe("Spicy");
+      const intoTags = await getTestDb()
+        .select({ name: tags.name })
+        .from(tags)
+        .where(eq(tags.householdId, into));
+
+      expect(intoTags.map((row) => row.name).sort()).toEqual(["Spicy", "Vegan"]);
+      expect(await getTestDb().select().from(tags).where(eq(tags.householdId, from))).toEqual([]);
+      await expectNothingForeign();
+    });
+
+    it("keeps the household's junk mark of a fold both hold and takes the joiner's others", async () => {
+      const host = (await createTestUser())!;
+      const joiner = (await createTestUser())!;
+      const into = await householdOf(host.id);
+      const own = await householdOf(joiner.id);
+
+      await addToJunkPile(getTestDb(), into, ["fresh"], { reason: "person" });
+      await addToJunkPile(getTestDb(), own, ["fresh", "chopped"], { reason: "person" });
+      await mergeInto(joiner.id, into);
+
+      expect(
+        (await listJunkFolds(into)).filter((fold) => ["fresh", "chopped"].includes(fold)).sort()
+      ).toEqual(["chopped", "fresh"]);
     });
   });
 });

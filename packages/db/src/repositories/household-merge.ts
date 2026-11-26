@@ -14,6 +14,9 @@ import {
   stores,
 } from "@norish/db/schema";
 
+import { mergeCatalogueIntoTx } from "./ingredient-relocation";
+import { moveHouseholdEntriesTx } from "./list-entries";
+
 const qb = new QueryBuilder();
 
 /** Moved as they are: groceries and plans; Stores too, with their aisles, products and links. */
@@ -61,4 +64,16 @@ export async function moveHouseholdRowsTx(
   for (const table of MOVED_WHOLE) {
     await tx.update(table).set({ householdId: into }).where(eq(table.householdId, from));
   }
+}
+
+/** Merges a household of one into `into`, after its member's membership moved (the triggers took
+ * the recipes and cookbooks): its rows, then its lists, then its catalogue. */
+export async function mergeHouseholdTx(
+  tx: DbTransaction,
+  from: string,
+  into: string
+): Promise<void> {
+  await moveHouseholdRowsTx(tx, from, into);
+  await moveHouseholdEntriesTx(tx, from, into);
+  await mergeCatalogueIntoTx(tx, from, into);
 }
