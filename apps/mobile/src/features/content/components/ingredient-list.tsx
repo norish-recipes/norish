@@ -51,7 +51,7 @@ export function IngredientList() {
   const headed =
     total !== undefined && !search && !hasIngredientFilters({ ...filters, tree: true });
   const data = [
-    ...(headed ? [{ type: "heading" as const, key: "heading-count" }] : []),
+    ...(headed ? [{ type: "heading" as const, key: "heading-count", count: total ?? 0 }] : []),
     ...rows.map((row, index) => ({ type: "row" as const, key: row.item.id, row, index })),
   ];
 
@@ -84,7 +84,7 @@ export function IngredientList() {
               <HeadingRow first>
                 <ListHeading
                   testID={item.key}
-                  title={text("settings.content.count.ingredient", { count: total })}
+                  title={text("settings.content.count.ingredient", { count: item.count })}
                 />
               </HeadingRow>
             );
