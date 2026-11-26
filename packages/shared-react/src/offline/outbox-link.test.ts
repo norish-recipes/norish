@@ -403,6 +403,15 @@ describe("createOutboxLink: a whole edit waits behind its pending save", () => {
     ]);
   });
 
+  it("keeps a time the later save clears", async () => {
+    await save({ id, version: 3, data: { name: "First", prepMinutes: 10 } }, unreachable);
+    await save({ id, version: 4, data: { name: "Second", prepMinutes: null } }, unreachable);
+
+    expect((await store.loadAll()).map((entry) => entry.input)).toEqual([
+      { id, version: 3, data: { name: "Second", prepMinutes: null } },
+    ]);
+  });
+
   it("replays the one save, and it lands", async () => {
     await save(edit("First"), unreachable);
     await save(edit("Second"), unreachable);

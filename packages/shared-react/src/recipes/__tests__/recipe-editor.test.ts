@@ -201,7 +201,7 @@ describe("the editor's rows round-trip a stored recipe", () => {
     });
     expect(payload.notes).toBe("Thighs stay juicier.");
     expect(payload.fat).toBe("9");
-    expect(payload.prepMinutes).toBeUndefined();
+    expect(payload.prepMinutes).toBeNull();
   });
 
   it("keeps each reference on its line when a cleared row is still in the form", () => {
@@ -434,6 +434,18 @@ describe("what an edit's save sends of its lists", () => {
 
   it("sends every list for a new recipe", () => {
     expect(valid(opened)).toMatchObject({ tags: [{ name: "quick" }], categories: ["Dinner"] });
+  });
+});
+
+describe("a time cleared in the editor", () => {
+  it("is sent as null, so the stored one is cleared", () => {
+    const cleared = { ...seededForm(), prepMinutes: null, cookMinutes: null, totalMinutes: null };
+
+    expect(valid(cleared)).toMatchObject({
+      prepMinutes: null,
+      cookMinutes: null,
+      totalMinutes: null,
+    });
   });
 });
 

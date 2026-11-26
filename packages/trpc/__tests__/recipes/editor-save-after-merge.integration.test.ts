@@ -137,6 +137,26 @@ describe("an editor save after a Content merge", () => {
     expect((await getRecipeFull(id))!.name).toBe("Ribs");
   });
 
+  it("clears the times a save sends as null", async () => {
+    const { id, version } = await mergedRecipe();
+    const timed = await recipes().update({
+      id,
+      version,
+      data: { prepMinutes: 10, cookMinutes: 20, totalMinutes: 30 },
+    });
+
+    await recipes().update({
+      id,
+      version: timed.version!,
+      data: { prepMinutes: null, cookMinutes: null, totalMinutes: null },
+    });
+    expect(await getRecipeFull(id)).toMatchObject({
+      prepMinutes: null,
+      cookMinutes: null,
+      totalMinutes: null,
+    });
+  });
+
   describe("after an instance Cuisine took the recipe's over", () => {
     /** A recipe of the household's "Lao", which a new instance "Lao" then takes over. */
     async function takenOver(name: string) {
