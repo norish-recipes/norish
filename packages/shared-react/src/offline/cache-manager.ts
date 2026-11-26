@@ -19,6 +19,7 @@ import { isSearchListInput } from "@norish/shared/contracts/list-queries";
 import type { OfflineStorage } from "./storage";
 import { isNotFoundError } from "../trpc/not-found";
 import { ownerDataKey, ownerDataPrefix, purgeForeignReadArtifacts } from "./cache-identity";
+import { householdIdOf, householdQueryKey } from "./household";
 import { clearLastWarmedAt } from "./last-warmed";
 import { createQueryStore } from "./persister";
 import { shareEqual } from "./share-equal";
@@ -64,6 +65,20 @@ const NEVER_PERSISTED = [
   // Keyed by what is typed in Search, which is never kept (CONTEXT.md: Recent Search).
   keys.library.suggest.pathKey(),
 ];
+
+/** The account's own reads, which a change of household leaves in place. */
+const ACCOUNT_OWN = [
+  keys.user.pathKey(),
+  keys.households.get.pathKey(),
+  keys.siteAuthTokens.pathKey(),
+  keys.caldav.pathKey(),
+];
+
+const isAccountOwn = (query: Pick<Query, "queryKey">) =>
+  ACCOUNT_OWN.some((key) => partialMatchKey(query.queryKey, key));
+
+const isHouseholdRead = (queryKey: readonly unknown[]) =>
+  partialMatchKey(queryKey, householdQueryKey());
 
 /** Search's own Library reads, keyed by its text like the suggestions. */
 const isSearchListRead = (queryKey: readonly unknown[]) =>
@@ -194,6 +209,8 @@ export interface CacheManager {
     /** Told when the open owner changes, as a switch, sign-out or wipe starts and ends. */
     subscribe(listener: () => void): () => void;
   };
+  /** The household the held reads were made for: the last one the server named, or the restored one. */
+  household(): string | null;
   /** Observe the one applied-owner value. */
   subscribe(listener: () => void): () => void;
   /** Save a throttled pending change now, as the app leaves the foreground. */
@@ -235,6 +252,20 @@ export function createCacheManager({
   const pendingWrites = new Map<string, { value: unknown; generation: number }>();
   // Counts the identity requests that closed owner data; only the newest one reopens it.
   let identityRequest = 0;
+  let household: string | null = null;
+
+  // Every answer naming another household than the held reads were made for empties them.
+  queryClient.getQueryCache().subscribe((event) => {
+    if (event.type !== "updated" || event.action.type !== "success") return;
+    if (!isHouseholdRead(event.query.queryKey)) return;
+
+    const named = householdIdOf(event.query.state.data);
+    const left = household;
+
+    if (!named || named === left) return;
+    household = named;
+    if (left !== null) void enqueue(() => resetHouseholdCopy(), false, appliedOwner);
+  });
 
   function openOwnerData(owner: string | null, next = owner): void {
     dataNext = next;
@@ -334,7 +365,36 @@ export function createCacheManager({
     unsubscribe = null;
     openOwnerData(null);
     queryClient.clear();
+    household = null;
     onClear?.();
+  }
+
+  /** What an account switch does to the reads, sparing the account's own; the shown ones read again. */
+  async function resetHouseholdCopy(): Promise<void> {
+    const owner = appliedOwner;
+
+    if (!owner) return;
+    unsubscribe?.();
+    unsubscribe = null;
+    const cache = queryClient.getQueryCache();
+    const former = (query: Query) => !isAccountOwn(query);
+
+    // A read sent before the change would answer for the former household.
+    await queryClient.cancelQueries({ predicate: former });
+    for (const query of cache.findAll({ predicate: former })) {
+      if (query.getObserversCount() > 0) query.reset();
+      else cache.remove(query);
+    }
+    await Promise.allSettled([
+      queryStore.clear(owner),
+      clearLastWarmedAt(owner, keyval),
+      clearPersonalCaches(),
+    ]);
+    subscribeToPersistence(
+      owner,
+      cache.getAll().map((query) => query.queryHash)
+    );
+    void queryClient.refetchQueries({ type: "active", predicate: former });
   }
 
   function notifyOwnerApplied(): void {
@@ -397,6 +457,9 @@ export function createCacheManager({
       .getAll()
       .map((query) => query.queryHash);
     const queries = await queryStore.restore(owner, { buster, maxAge: CACHE_MAX_AGE_MS });
+    const stored = householdIdOf(
+      queries.find((query) => isHouseholdRead(query.queryKey))?.state.data
+    );
 
     // Dehydration drops per-query gcTime, so without a hydrate-time floor every restored read,
     // warmed ones included, reverts to the 10-minute default, is GC'd shortly after boot and is
@@ -412,6 +475,9 @@ export function createCacheManager({
     appliedOwner = owner;
     bootOwner = owner;
     writeLastOwner(owner);
+    // The copy was read for the household stored with it; one named since makes it foreign.
+    if (household && stored && stored !== household) await resetHouseholdCopy();
+    household ??= stored;
     notifyOwnerApplied();
   }
 
@@ -548,6 +614,8 @@ export function createCacheManager({
     },
 
     flush: () => flushPending(),
+
+    household: () => household,
 
     subscribe(listener) {
       appliedListeners.add(listener);
