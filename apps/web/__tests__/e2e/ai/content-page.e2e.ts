@@ -314,7 +314,7 @@ test("a loading list moves nothing when its entries arrive", async ({ browser, a
       release = resolve;
     });
 
-    await page.route(/\/lists\.list(?!\w)/, async (route) => {
+    await page.route(/(?<![\w.])lists\.list(?!\w)/, async (route) => {
       await held;
       await route.continue();
     });
