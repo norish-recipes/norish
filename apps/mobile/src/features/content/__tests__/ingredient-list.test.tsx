@@ -127,7 +127,7 @@ describe("IngredientList", () => {
   it("heads the list with how many ingredients there are", () => {
     held.total = 1204;
     render(<IngredientList />);
-    expect(screen.getByTestId("heading-count").textContent).toBe(
+    expect(screen.getByTestId("content-heading").textContent).toBe(
       'settings.content.count.ingredient{"count":1204}'
     );
   });
@@ -136,19 +136,19 @@ describe("IngredientList", () => {
     held.total = 1204;
     held.filters = { ...DEFAULT_INGREDIENT_FILTERS, flaggedOnly: true };
     render(<IngredientList />);
-    expect(screen.queryByTestId("heading-count")).toBeNull();
+    expect(screen.queryByTestId("content-heading")).toBeNull();
   });
 
   it("drops the heading while a search is typed", () => {
     held.total = 1204;
     render(<IngredientList />);
     fireEvent.change(screen.getByTestId("search"), { target: { value: "rice" } });
-    expect(screen.queryByTestId("heading-count")).toBeNull();
+    expect(screen.queryByTestId("content-heading")).toBeNull();
   });
 
   it("draws no heading before the count is read", () => {
     render(<IngredientList />);
-    expect(screen.queryByTestId("heading-count")).toBeNull();
+    expect(screen.queryByTestId("content-heading")).toBeNull();
   });
 
   it("folds a food's kinds out, only for a food that has some", () => {

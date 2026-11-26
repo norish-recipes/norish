@@ -3,6 +3,7 @@ import React from "react";
 import { FlatList, View } from "react-native";
 import { CountCardSkeleton } from "@/components/count-row";
 import { EmptyCard } from "@/components/empty-card";
+import { ListHeading } from "@/components/list-heading";
 import { PageControls } from "@/components/page-controls";
 import { SearchFilterRow } from "@/components/search-filter-row";
 import { SheetFieldSkeleton } from "@/components/sheet-input";
@@ -11,7 +12,8 @@ import { useText } from "@/lib/i18n/use-text";
 type Empty = Omit<ComponentProps<typeof EmptyCard>, "placement">;
 
 /** A list under page controls: skeleton while loading, Retry when failed, `blank` when empty, else
- * search, rows or `nothing`. `testID` prefixes `-skeleton`, `-failed`, `-retry`, `-list`. */
+ * search, rows or `nothing`, 16 pt under the controls. `testID` prefixes `-skeleton`, `-failed`,
+ * `-retry`, `-list`, `-heading`. */
 export function ListFrame<T>({
   testID,
   loading,
@@ -19,6 +21,7 @@ export function ListFrame<T>({
   blank,
   search,
   above,
+  heading,
   nothing,
   ...list
 }: {
@@ -28,6 +31,8 @@ export function ListFrame<T>({
   blank?: Empty;
   search: ComponentProps<typeof SearchFilterRow>;
   above?: ReactNode;
+  /** The list's heading over its first card; null keeps its room, so the cards stay put as it goes. */
+  heading?: string | null;
   nothing?: Empty;
   data: readonly T[];
   keyExtractor: (row: T) => string;
@@ -38,18 +43,20 @@ export function ListFrame<T>({
 
   if (failed) {
     return (
-      <EmptyCard
-        action={{
-          label: text("common.actions.retry"),
-          icon: "refresh-outline",
-          testID: `${testID}-retry`,
-          onPress: failed.onRetry,
-        }}
-        icon="alert-circle-outline"
-        placement="screen"
-        testID={`${testID}-failed`}
-        title={failed.title}
-      />
+      <Gap>
+        <EmptyCard
+          action={{
+            label: text("common.actions.retry"),
+            icon: "refresh-outline",
+            testID: `${testID}-retry`,
+            onPress: failed.onRetry,
+          }}
+          icon="alert-circle-outline"
+          placement="screen"
+          testID={`${testID}-failed`}
+          title={failed.title}
+        />
+      </Gap>
     );
   }
 
@@ -59,13 +66,20 @@ export function ListFrame<T>({
         <PageControls>
           <SheetFieldSkeleton />
         </PageControls>
-        <View className="h-4" />
-        <CountCardSkeleton />
+        <Gap>
+          <CountCardSkeleton />
+        </Gap>
       </View>
     );
   }
 
-  if (blank) return <EmptyCard placement="screen" {...blank} />;
+  if (blank) {
+    return (
+      <Gap>
+        <EmptyCard placement="screen" {...blank} />
+      </Gap>
+    );
+  }
 
   const header = (
     <>
@@ -73,7 +87,12 @@ export function ListFrame<T>({
         <SearchFilterRow {...search} />
         {above}
       </PageControls>
-      {nothing ? <EmptyCard placement="screen" {...nothing} /> : <View className="h-4" />}
+      <Gap>
+        {heading === undefined ? null : (
+          <ListHeading testID={heading ? `${testID}-heading` : undefined} title={heading ?? ""} />
+        )}
+        {nothing ? <EmptyCard placement="screen" {...nothing} /> : null}
+      </Gap>
     </>
   );
 
@@ -90,4 +109,9 @@ export function ListFrame<T>({
       onEndReachedThreshold={list.onEndReached ? 0.6 : undefined}
     />
   );
+}
+
+/** What sits under the page controls, 16 pt below them. */
+function Gap({ children }: { children: ReactNode }) {
+  return <View className="pt-4">{children}</View>;
 }

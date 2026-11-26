@@ -3,8 +3,6 @@ import { CardSlice } from "@/components/card-slice";
 import { CountRow } from "@/components/count-row";
 import { IngredientIcon, IngredientIconSlots } from "@/components/ingredient-icon";
 import { ListFrame } from "@/components/list-frame";
-import { ListHeading } from "@/components/list-heading";
-import { HeadingRow } from "@/components/section-rows";
 import { edgeAt } from "@/lib/card-edges";
 import { useText } from "@/lib/i18n/use-text";
 import { useRouter } from "expo-router";
@@ -49,10 +47,7 @@ export function IngredientList() {
   // The total is of the whole list, so a search or filter leaves the heading off.
   const headed =
     total !== undefined && !search && !hasIngredientFilters({ ...filters, tree: true });
-  const data = [
-    ...(headed ? [{ type: "heading" as const, key: "heading-count", count: total ?? 0 }] : []),
-    ...rows.map((row, index) => ({ type: "row" as const, key: row.item.id, row, index })),
-  ];
+  const data = rows.map((row, index) => ({ key: row.item.id, row, index }));
 
   useIngredientIcons(rows.map((row) => row.foodId));
 
@@ -62,6 +57,7 @@ export function IngredientList() {
         above={<AiChangesRow onPress={() => router.push("/settings/ingredient-changes")} />}
         data={data}
         failed={failed ? { title: text("settings.content.loadFailed"), onRetry: retry } : undefined}
+        heading={headed ? text("settings.content.count.ingredient", { count: total ?? 0 }) : null}
         keyExtractor={(each) => each.key}
         loading={isLoading || (isPlaceholderData && items.length === 0 && !isPaused)}
         nothing={
@@ -78,17 +74,6 @@ export function IngredientList() {
             : undefined
         }
         renderItem={({ item }) => {
-          if (item.type === "heading") {
-            return (
-              <HeadingRow first>
-                <ListHeading
-                  testID={item.key}
-                  title={text("settings.content.count.ingredient", { count: item.count })}
-                />
-              </HeadingRow>
-            );
-          }
-
           const { row, index } = item;
           const name = ingredientDisplayName(row.item, locale);
           const foldable = treeMode && row.item.kinds > 0;

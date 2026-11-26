@@ -83,7 +83,7 @@ describe("the empty-state template", () => {
     expect(screen.getByTestId("card").getAttribute("data-class")).toContain("bg-sand");
   });
 
-  it("carries one margin per placement: screen 20 and 16 above, section 16 above, sheet none", () => {
+  it("carries one margin per placement: screen its side inset only, section 16 above, sheet none", () => {
     const margin = (placement: "screen" | "section" | "sheet") => {
       const { unmount } = render(
         <EmptyCard icon="funnel-outline" placement={placement} testID="card" title="Nothing" />
@@ -95,7 +95,8 @@ describe("the empty-state template", () => {
       return classes.split(" ").filter((name) => /^m[xt]-/.test(name));
     };
 
-    expect(margin("screen")).toEqual(["mx-5", "mt-4"]);
+    // On a screen it sits where the first card would, what is above it owning the gap.
+    expect(margin("screen")).toEqual(["mx-5"]);
     expect(margin("section")).toEqual(["mt-4"]);
     expect(margin("sheet")).toEqual([]);
   });
