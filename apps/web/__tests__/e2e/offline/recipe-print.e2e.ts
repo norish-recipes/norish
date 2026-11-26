@@ -1,13 +1,16 @@
+import { randomUUID } from "node:crypto";
+
 import { userIdOf } from "../harness/accounts";
 import { signIn } from "../harness/auth";
 import { seedRecipe } from "../harness/recipes";
-import { expect, SEEDED_RECIPE_IMAGE, test, USER_A } from "./fixture";
+import { expect, placeRecipePhoto, test, USER_A } from "./fixture";
 
 const PRINT_RECIPE_NAME = "Print Focaccia";
 const PRINT_FLOUR = "print flour";
 
 /** A recipe of its own, so the shared seeded one stays as the other offline specs read it. */
-function seedPrintRecipe(): Promise<string> {
+function seedPrintRecipe(uploadsDir: string): Promise<string> {
+  const id = randomUUID();
   const lines = [
     { name: PRINT_FLOUR, amount: 400, unit: "g" },
     { name: "print water", amount: 300, unit: "ml" },
@@ -27,13 +30,14 @@ function seedPrintRecipe(): Promise<string> {
       PRINT_RECIPE_NAME,
       lines.map((line) => line.name),
       {
+        id,
         servings: 4,
         calories: 200,
         fat: "3",
         carbs: "35",
         protein: "6",
-        // Borrows the seeded recipe's photo, which the fixture already wrote to the uploads.
-        images: [{ image: SEEDED_RECIPE_IMAGE, order: 0 }],
+        // A recipe names only its own files, so it gets a photo of its own.
+        images: [{ image: placeRecipePhoto(uploadsDir, id), order: 0 }],
         recipeIngredients: lines.map((line, order) => ({
           ingredientName: line.name,
           ingredientId: null,
@@ -69,7 +73,8 @@ test("prints an A4 recipe card with scaled step ingredients and optional photo",
   const { page } = offlineHarness;
 
   await offlineHarness.transition("live");
-  const recipeId = await seedPrintRecipe();
+  const recipeId = await seedPrintRecipe(offlineHarness.uploadsDir);
+
   await offlineHarness.context.clearCookies();
   await offlineHarness.context.addCookies(await signIn(offlineHarness.baseURL, USER_A));
   await page.setViewportSize({ width: 1280, height: 900 });

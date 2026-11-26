@@ -42,6 +42,7 @@ type BackendState = "live" | "stopped" | "unresponsive";
 
 export interface OfflineHarness {
   readonly baseURL: string;
+  readonly uploadsDir: string;
   readonly context: BrowserContext;
   readonly page: Page;
   selectIdentity(identity: "a" | "b"): Promise<void>;
@@ -56,6 +57,16 @@ const PNG_1X1 = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg==",
   "base64"
 );
+
+/** A photo in the recipe's own uploads folder, where an upload puts it; answers its media path. */
+export function placeRecipePhoto(uploadsDir: string, recipeId: string): string {
+  const imageDir = path.join(uploadsDir, "recipes", recipeId);
+
+  mkdirSync(imageDir, { recursive: true });
+  writeFileSync(path.join(imageDir, "primary.png"), PNG_1X1);
+
+  return `/recipes/${recipeId}/primary.png`;
+}
 
 /** What the offline suite reads, written as user A through the app; only the recipe is not. */
 async function seed(stack: ProductionStack, cookiesA: SessionCookies): Promise<void> {
@@ -85,11 +96,7 @@ async function seed(stack: ProductionStack, cookiesA: SessionCookies): Promise<v
     itemType: "note",
     title: SEEDED_NOTE_TITLE,
   });
-
-  const imageDir = path.join(stack.uploadsDir, "recipes", SEEDED_RECIPE_ID);
-
-  mkdirSync(imageDir, { recursive: true });
-  writeFileSync(path.join(imageDir, "primary.png"), PNG_1X1);
+  placeRecipePhoto(stack.uploadsDir, SEEDED_RECIPE_ID);
 }
 
 async function startBlackhole(port: number): Promise<() => Promise<void>> {
@@ -190,6 +197,7 @@ export const test = base.extend<Record<never, never>, OfflineWorkerFixtures>({
 
         await use({
           baseURL: stack.baseURL,
+          uploadsDir: stack.uploadsDir,
           context,
           page,
           selectIdentity,
