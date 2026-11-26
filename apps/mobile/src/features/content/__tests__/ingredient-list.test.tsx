@@ -47,6 +47,9 @@ vi.mock("@/components/search-filter-row", async () => {
       ),
   };
 });
+vi.mock("../components/data-sources", () => ({
+  DataSources: () => <div data-testid="data-sources" />,
+}));
 vi.mock("../components/ai-changes-row", () => ({
   AiChangesRow: ({ onPress }: { onPress: () => void }) => (
     <button data-testid="ai-row" onClick={onPress} />
@@ -122,6 +125,11 @@ describe("IngredientList", () => {
       pathname: "/settings/ingredient",
       params: { id: "Rice" },
     });
+  });
+
+  it("closes the list with the data sources", () => {
+    render(<IngredientList />);
+    expect(screen.getByTestId("data-sources")).toBeTruthy();
   });
 
   it("heads the list with how many ingredients there are", () => {

@@ -19,6 +19,7 @@ import { useIngredientCount } from "@norish/shared-react/lists";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 
 import { AiChangesRow } from "./ai-changes-row";
+import { DataSources } from "./data-sources";
 
 /** The catalogue of Ingredients: a tree of kinds unless searched or filtered, a page at a time. */
 export function IngredientList() {
@@ -57,6 +58,7 @@ export function IngredientList() {
         above={<AiChangesRow onPress={() => router.push("/settings/ingredient-changes")} />}
         data={data}
         failed={failed ? { title: text("settings.content.loadFailed"), onRetry: retry } : undefined}
+        footer={<DataSources />}
         heading={headed ? text("settings.content.count.ingredient", { count: total ?? 0 }) : null}
         keyExtractor={(each) => each.key}
         loading={isLoading || (isPlaceholderData && items.length === 0 && !isPaused)}

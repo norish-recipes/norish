@@ -22,6 +22,7 @@ export function ListFrame<T>({
   above,
   heading,
   nothing,
+  footer,
   ...list
 }: {
   testID: string;
@@ -33,6 +34,8 @@ export function ListFrame<T>({
   /** The list's heading over its first card; null keeps its room, so the cards stay put as it goes. */
   heading?: string | null;
   nothing?: Empty;
+  /** What closes the list, 16 pt under its last row. */
+  footer?: ReactNode;
   data: readonly T[];
   keyExtractor: (row: T) => string;
   renderItem: ComponentProps<typeof FlatList<T>>["renderItem"];
@@ -98,6 +101,7 @@ export function ListFrame<T>({
   return (
     <FlatList
       {...list}
+      ListFooterComponent={footer ? <Gap>{footer}</Gap> : undefined}
       ListHeaderComponent={header}
       contentContainerClassName="pb-16"
       contentInsetAdjustmentBehavior="never"

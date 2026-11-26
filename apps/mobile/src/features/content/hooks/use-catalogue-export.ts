@@ -1,0 +1,43 @@
+import { useState } from "react";
+import { Alert, Share } from "react-native";
+import { authHeaders } from "@/lib/auth/auth-headers";
+import { useText } from "@/lib/i18n/use-text";
+import { getServerAddress } from "@/lib/network/server-address";
+import { File, Paths } from "expo-file-system";
+
+import { CATALOGUE_EXPORT_PATH } from "@norish/shared-react/ingredients";
+import { createClientLogger } from "@norish/shared/lib/logger";
+
+const log = createClientLogger("CatalogueExport");
+
+/** Downloads the ingredient catalogue with the session's cookie, keeps it in the cache and offers it
+ * to the share sheet; `busy` is true meanwhile. */
+export function useCatalogueExport() {
+  const text = useText();
+  const [busy, setBusy] = useState(false);
+
+  const download = async () => {
+    setBusy(true);
+    try {
+      const response = await fetch(`${getServerAddress()}${CATALOGUE_EXPORT_PATH}`, {
+        headers: authHeaders(),
+        credentials: "omit",
+      });
+
+      if (!response.ok) throw new Error(`The catalogue answered ${response.status}`);
+      const name = /filename="([^"]+)"/.exec(response.headers.get("Content-Disposition") ?? "");
+      const file = new File(Paths.cache, name?.[1] ?? "norish-ingredients.json");
+
+      file.create({ overwrite: true });
+      await file.write(await response.text());
+      await Share.share({ url: file.uri });
+    } catch (error) {
+      log.error({ error }, "Catalogue download failed");
+      Alert.alert(text("settings.ingredients.dataSources.downloadFailed"));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return { busy, download };
+}
