@@ -58,8 +58,8 @@ vi.mock("@norish/shared-react/trpc", () => ({
     },
   }),
 }));
-vi.mock("@/components/no-results-card", () => ({
-  NoResultsCard: ({ testID }: { testID: string }) => <div data-testid={testID} />,
+vi.mock("@/components/empty-card", () => ({
+  EmptyCard: ({ testID }: { testID: string }) => <div data-testid={testID} />,
 }));
 vi.mock("../components/discover", () => ({ Discover: () => null }));
 vi.mock("../components/typing-suggestions", () => ({ TypingSuggestions: () => null }));

@@ -5,13 +5,23 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-type Props = { children?: ReactNode; testID?: string; color?: string };
+type Props = { children?: ReactNode; testID?: string; color?: string; className?: string };
 
 vi.mock("react-native", () => ({
   Text: ({ children }: Props) => <span>{children}</span>,
-  View: ({ children, testID }: Props) => <div data-testid={testID}>{children}</div>,
-  Pressable: ({ children, testID }: Props) => <button data-testid={testID}>{children}</button>,
+  View: ({ children, testID, className }: Props) => (
+    <div data-class={className} data-testid={testID}>
+      {children}
+    </div>
+  ),
 }));
+vi.mock("heroui-native", () => {
+  const Button = ({ children, testID }: Props) => <button data-testid={testID}>{children}</button>;
+
+  Button.Label = ({ children }: Props) => <span>{children}</span>;
+
+  return { Button };
+});
 vi.mock("@/hooks/use-token-color", () => ({ useTokenColor: (name: string) => name }));
 vi.mock("@expo/vector-icons/Ionicons", () => ({
   default: ({ color }: Props) => <i data-testid="icon" data-color={color} />,
@@ -20,13 +30,12 @@ vi.mock("react-intl", () => ({
   useIntl: () => ({ formatMessage: ({ id }: { id: string }) => id }),
 }));
 
-const { NoResultsCard } = await import("@/components/no-results-card");
+const { EmptyCard } = await import("@/components/empty-card");
+const { OnSheet } = await import("@/components/on-sheet");
 
 describe("the empty-state template", () => {
   it("is a muted icon and the title, with no description line", () => {
-    render(
-      <NoResultsCard icon="funnel-outline" testID="library-no-results" title="Nothing here" />
-    );
+    render(<EmptyCard icon="funnel-outline" testID="library-no-results" title="Nothing here" />);
 
     const card = screen.getByTestId("library-no-results");
 
@@ -36,7 +45,7 @@ describe("the empty-state template", () => {
 
   it("puts its one action under the icon and title row", () => {
     render(
-      <NoResultsCard
+      <EmptyCard
         action={{ label: "Clear", icon: "refresh", testID: "clear", onPress: () => {} }}
         icon="funnel-outline"
         testID="library-no-results"
@@ -48,5 +57,19 @@ describe("the empty-state template", () => {
 
     expect(card.lastElementChild).toBe(screen.getByTestId("clear"));
     expect(card.textContent).toBe("Nothing hereClear");
+  });
+
+  it("is sand on a sheet and the surface off one", () => {
+    const { rerender } = render(<EmptyCard icon="funnel-outline" testID="card" title="Nothing" />);
+
+    expect(screen.getByTestId("card").getAttribute("data-class")).toContain("bg-surface");
+
+    rerender(
+      <OnSheet value>
+        <EmptyCard icon="funnel-outline" testID="card" title="Nothing" />
+      </OnSheet>
+    );
+
+    expect(screen.getByTestId("card").getAttribute("data-class")).toContain("bg-sand");
   });
 });

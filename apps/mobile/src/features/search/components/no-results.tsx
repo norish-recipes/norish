@@ -1,5 +1,5 @@
 import React from "react";
-import { NoResultsCard } from "@/components/no-results-card";
+import { EmptyCard } from "@/components/empty-card";
 import { useIntl } from "react-intl";
 
 import type { NoResults } from "../utils/search-state";
@@ -18,11 +18,11 @@ export function SearchNoResults({
   onSearchAllFields: () => void;
 }) {
   const intl = useIntl();
-  const className = "bg-surface mx-5 mt-4";
+  const className = "mx-5 mt-4";
 
   if (variant === "plain") {
     return (
-      <NoResultsCard
+      <EmptyCard
         className={className}
         icon="search-outline"
         testID="search-no-results"
@@ -34,7 +34,7 @@ export function SearchNoResults({
   const clearing = variant === "clear-filters";
 
   return (
-    <NoResultsCard
+    <EmptyCard
       action={
         clearing
           ? {
@@ -53,6 +53,7 @@ export function SearchNoResults({
       className={className}
       icon={clearing ? "funnel-outline" : "search-outline"}
       testID="search-no-results"
+      title={intl.formatMessage({ id: "recipes.empty.noResults" })}
     />
   );
 }
@@ -62,8 +63,8 @@ export function SearchOffline() {
   const intl = useIntl();
 
   return (
-    <NoResultsCard
-      className="bg-surface mx-5 mt-4"
+    <EmptyCard
+      className="mx-5 mt-4"
       icon="cloud-offline-outline"
       testID="search-offline"
       title={intl.formatMessage({ id: "recipes.search.offline" })}
@@ -76,8 +77,8 @@ export function SearchFailed() {
   const intl = useIntl();
 
   return (
-    <NoResultsCard
-      className="bg-surface mx-5 mt-4"
+    <EmptyCard
+      className="mx-5 mt-4"
       icon="alert-circle-outline"
       testID="search-failed"
       title={intl.formatMessage({ id: "common.errorPage.title" })}

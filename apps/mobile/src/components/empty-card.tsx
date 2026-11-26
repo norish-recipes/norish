@@ -1,35 +1,54 @@
-import type { ComponentProps, ReactNode } from "react";
+import type { ComponentProps } from "react";
 import React from "react";
 import { Text, View } from "react-native";
+import { useOnSheet } from "@/components/on-sheet";
 import { useTokenColor } from "@/hooks/use-token-color";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { Button } from "heroui-native";
+
+type Icon = ComponentProps<typeof Ionicons>["name"];
 
 /** A list with nothing in it: the area's icon in muted ink on the left, the title on the right and
- * at most one action under them. A sheet passes its own `className`. */
+ * at most one action under them. The card's ground is sand on a sheet, the surface off one. */
 export function EmptyCard({
   icon,
   title,
-  className = "bg-surface mx-5",
+  className = "mx-5",
   testID,
-  children,
+  action,
 }: {
-  icon: ComponentProps<typeof Ionicons>["name"];
+  icon: Icon;
   title: string;
+  /** Where the card sits in its list, never its ground. */
   className?: string;
   testID: string;
-  children?: ReactNode;
+  action?: { label: string; icon: Icon; testID: string; onPress: () => void };
 }) {
   const iconColor = useTokenColor("muted");
+  const actionColor = useTokenColor("accent-text");
+  const ground = useOnSheet() ? "bg-sand" : "bg-surface";
 
   return (
-    <View className={`${className} gap-3.5 rounded-3xl p-[18px]`} testID={testID}>
+    <View className={`${ground} ${className} gap-3.5 rounded-3xl p-4.5`} testID={testID}>
       <View className="flex-row items-center gap-2.5">
         <View className="size-6 items-center justify-center">
           <Ionicons color={iconColor} name={icon} size={22} />
         </View>
         <Text className="text-foreground min-w-0 flex-1 text-lg font-semibold">{title}</Text>
       </View>
-      {children}
+      {action ? (
+        <Button
+          className="bg-accent-soft h-11 rounded-full"
+          testID={action.testID}
+          variant="secondary"
+          onPress={action.onPress}
+        >
+          <Ionicons color={actionColor} name={action.icon} size={18} />
+          <Button.Label className="text-accent-text text-[15px] font-medium">
+            {action.label}
+          </Button.Label>
+        </Button>
+      ) : null}
     </View>
   );
 }

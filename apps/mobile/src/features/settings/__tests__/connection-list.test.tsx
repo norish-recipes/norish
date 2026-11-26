@@ -2,7 +2,7 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("@/components/no-results-card", () => ({ NoResultsCard: () => null }));
+vi.mock("@/components/empty-card", () => ({ EmptyCard: () => null }));
 vi.mock("../components/read-body", () => ({ ReadBody: () => null }));
 
 const offline = vi.hoisted(() => ({ now: false }));

@@ -78,7 +78,6 @@ export function AddToCookbookScreen() {
               items,
               empty: (
                 <EmptyCard
-                  className="bg-sand mx-5"
                   icon="book-outline"
                   testID="add-to-cookbook-none"
                   title={intl.formatMessage({ id: "recipes.cookbooks.noneEditable" })}

@@ -74,7 +74,6 @@ export function PantryAddScreen() {
               </Animated.View>
             ) : typed === "" ? undefined : (
               <EmptyCard
-                className="bg-sand mx-5"
                 icon="search-outline"
                 testID="pantry-add-none"
                 title={intl.formatMessage({ id: "common.status.noResults" })}
