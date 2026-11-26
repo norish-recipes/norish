@@ -3,10 +3,12 @@
  * household foods their lines use; a household of one joining merges its catalogue in.
  */
 import type { SQL } from "drizzle-orm";
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import { and, eq, inArray, isNotNull, isNull, ne, sql } from "drizzle-orm";
 import { alias, QueryBuilder } from "drizzle-orm/pg-core";
 
 import type { DbTransaction } from "@norish/db/drizzle";
+import type { FoodTargets } from "@norish/shared/lib/recipe-nutrition";
 import {
   ingredientAIChanges,
   ingredientAliases,
@@ -26,6 +28,7 @@ import {
   lockIngredients,
   lockTree,
   mergeLockedFoods,
+  sameFoodName,
 } from "./ingredient-relocation";
 import { lockUntilSettled } from "./lock-until-settled";
 import { defaultOf } from "./raw-sql";
@@ -33,14 +36,48 @@ import { rekeyNutritionSharesTx } from "./recipe-enrichment";
 
 const qb = new QueryBuilder();
 
+/** A food or spelling row as these conditions read it, from any alias of its table. */
+type Owned = { id: AnyPgColumn; householdId: AnyPgColumn };
+
+/** `food` is `householdId`'s food of `other`'s name: where a moved food lands. */
+const namedIn = (
+  food: { householdId: AnyPgColumn; name: AnyPgColumn },
+  householdId: string,
+  other: { name: AnyPgColumn }
+) => and(eq(food.householdId, householdId), sameFoodName(food.name, other.name));
+
+/** `spelling` is `householdId`'s spelling of `other`'s fold. */
+const foldedIn = (
+  spelling: { householdId: AnyPgColumn; fold: AnyPgColumn },
+  householdId: string,
+  other: { fold: AnyPgColumn }
+) => and(eq(spelling.householdId, householdId), eq(spelling.fold, other.fold));
+
+/** The foods of `householdId` named as each of these foods: where each would land there. */
+async function foodsNamedIn(
+  tx: DbTransaction,
+  householdId: string,
+  which: (food: Owned) => SQL | undefined
+): Promise<Map<string, string>> {
+  const food = alias(ingredients, "moved_food");
+  const named = alias(ingredients, "named_food");
+  const rows = await tx
+    .select({ from: food.id, to: named.id })
+    .from(food)
+    .innerJoin(named, namedIn(named, householdId, food))
+    .where(which(food));
+
+  return new Map(rows.map((row) => [row.from, row.to]));
+}
+
 /**
  * After a leave (ADR-0042): no line of the household's recipes names another household's food or
  * spelling. Each such food is copied (name, flags, icon file, AI estimate; its parent where seeded or
  * copied too) with the spellings the lines use, a spelling on a seeded food becomes the household's,
  * and the lines and their AI shares follow. The old rows are held against a change until the commit.
  */
-export async function homeRecipeFoodsTx(tx: DbTransaction, householdId: string): Promise<void> {
-  const homeLines = qb
+export async function carryRecipeFoodsTx(tx: DbTransaction, householdId: string): Promise<void> {
+  const leaverLines = qb
     .select({ id: recipeIngredients.id })
     .from(recipeIngredients)
     .innerJoin(recipes, eq(recipes.id, recipeIngredients.recipeId))
@@ -48,7 +85,7 @@ export async function homeRecipeFoodsTx(tx: DbTransaction, householdId: string):
   const foreign = (column: typeof ingredients.householdId | typeof ingredientAliases.householdId) =>
     and(isNotNull(column), ne(column, householdId));
   // Foods before spellings, as a deletion takes them: a rename, merge or delete waits for the move.
-  const used = await lockUntilSettled(
+  const lineSpellings = await lockUntilSettled(
     () =>
       tx
         .selectDistinct({ id: ingredientAliases.id, foodId: ingredientAliases.ingredientId })
@@ -59,7 +96,7 @@ export async function homeRecipeFoodsTx(tx: DbTransaction, householdId: string):
         )
         .where(
           and(
-            inArray(recipeIngredientFoods.recipeIngredientId, homeLines),
+            inArray(recipeIngredientFoods.recipeIngredientId, leaverLines),
             foreign(ingredientAliases.householdId)
           )
         ),
@@ -95,9 +132,9 @@ export async function homeRecipeFoodsTx(tx: DbTransaction, householdId: string):
     (row) => `${row.id} ${row.foodId}`
   );
 
-  if (used.length === 0) return;
-  const spellingIds = used.map((row) => row.id);
-  const copied = (
+  if (lineSpellings.length === 0) return;
+  const spellingIds = lineSpellings.map((row) => row.id);
+  const foreignFoods = (
     await tx
       .select({ id: ingredients.id })
       .from(ingredients)
@@ -105,7 +142,7 @@ export async function homeRecipeFoodsTx(tx: DbTransaction, householdId: string):
         and(
           isAnyOf(
             ingredients.id,
-            used.map((row) => row.foodId),
+            lineSpellings.map((row) => row.foodId),
             "uuid"
           ),
           foreign(ingredients.householdId)
@@ -113,11 +150,8 @@ export async function homeRecipeFoodsTx(tx: DbTransaction, householdId: string):
       )
   ).map((row) => row.id);
   const old = alias(ingredients, "old_food");
-  const copy = alias(ingredients, "home_food");
-  const sameName = and(
-    eq(copy.householdId, householdId),
-    eq(sql`lower(${copy.name})`, sql`lower(${old.name})`)
-  );
+  const copy = alias(ingredients, "copy_food");
+  const sameName = namedIn(copy, householdId, old);
   const made = await tx
     .insert(ingredients)
     .select(
@@ -143,22 +177,16 @@ export async function homeRecipeFoodsTx(tx: DbTransaction, householdId: string):
           version: defaultOf(ingredients.version),
         })
         .from(old)
-        .where(isAnyOf(old.id, copied, "uuid"))
+        .where(isAnyOf(old.id, foreignFoods, "uuid"))
     )
     .onConflictDoNothing()
     .returning({ id: ingredients.id });
   const madeIds = made.map((row) => row.id);
-  const homeOf = new Map(
-    (
-      await tx
-        .select({ from: old.id, to: copy.id })
-        .from(old)
-        .innerJoin(copy, sameName)
-        .where(isAnyOf(old.id, copied, "uuid"))
-    ).map((row) => [row.from, row.to])
+  const copies: FoodTargets = await foodsNamedIn(tx, householdId, (food) =>
+    isAnyOf(food.id, foreignFoods, "uuid")
   );
   const parent = alias(ingredients, "old_parent");
-  const parentCopy = alias(ingredients, "home_parent");
+  const parentCopy = alias(ingredients, "copy_parent");
 
   // A seeded parent stays; an own one only as its copy, where the lines use it too.
   await tx
@@ -172,15 +200,11 @@ export async function homeRecipeFoodsTx(tx: DbTransaction, householdId: string):
     .set({ parentId: sql`${parentCopy.id}` })
     .from(old)
     .innerJoin(parent, eq(parent.id, old.parentId))
-    .innerJoin(
-      parentCopy,
-      and(
-        eq(parentCopy.householdId, householdId),
-        eq(sql`lower(${parentCopy.name})`, sql`lower(${parent.name})`)
-      )
-    )
-    .where(and(sameName, isAnyOf(copy.id, madeIds, "uuid"), isAnyOf(parent.id, copied, "uuid")));
-  await fileUnderSeededAncestorTx(tx, copied, homeOf, new Set(madeIds));
+    .innerJoin(parentCopy, namedIn(parentCopy, householdId, parent))
+    .where(
+      and(sameName, isAnyOf(copy.id, madeIds, "uuid"), isAnyOf(parent.id, foreignFoods, "uuid"))
+    );
+  await fileUnderSeededAncestorTx(tx, foreignFoods, copies, new Set(madeIds));
   await tx
     .insert(ingredientNutritionEstimates)
     .select(
@@ -206,7 +230,7 @@ export async function homeRecipeFoodsTx(tx: DbTransaction, householdId: string):
     .onConflictDoNothing();
 
   const spelling = alias(ingredientAliases, "old_spelling");
-  const homeSpelling = alias(ingredientAliases, "home_spelling");
+  const copySpelling = alias(ingredientAliases, "copy_spelling");
   const spellingRow = (ingredientId: SQL) => ({
     id: defaultOf(ingredientAliases.id),
     householdId: sql<string>`${householdId}::uuid`.as(ingredientAliases.householdId.name),
@@ -245,23 +269,20 @@ export async function homeRecipeFoodsTx(tx: DbTransaction, householdId: string):
     .onConflictDoNothing();
   await tx
     .update(recipeIngredientFoods)
-    .set({ ingredientAliasId: sql`${homeSpelling.id}` })
+    .set({ ingredientAliasId: sql`${copySpelling.id}` })
     .from(spelling)
-    .innerJoin(
-      homeSpelling,
-      and(eq(homeSpelling.householdId, householdId), eq(homeSpelling.fold, spelling.fold))
-    )
+    .innerJoin(copySpelling, foldedIn(copySpelling, householdId, spelling))
     .where(
       and(
         eq(recipeIngredientFoods.ingredientAliasId, spelling.id),
         isAnyOf(spelling.id, spellingIds, "uuid"),
-        inArray(recipeIngredientFoods.recipeIngredientId, homeLines)
+        inArray(recipeIngredientFoods.recipeIngredientId, leaverLines)
       )
     );
   await rekeyNutritionSharesTx(
     tx,
     qb.select({ id: recipes.id }).from(recipes).where(eq(recipes.householdId, householdId)),
-    homeOf
+    copies
   );
 }
 
@@ -271,8 +292,8 @@ export async function homeRecipeFoodsTx(tx: DbTransaction, householdId: string):
  */
 async function fileUnderSeededAncestorTx(
   tx: DbTransaction,
-  copied: readonly string[],
-  copyOf: ReadonlyMap<string, string>,
+  foreignFoods: readonly string[],
+  copyOf: FoodTargets,
   made: ReadonlySet<string>
 ): Promise<void> {
   const old = alias(ingredients, "old_food");
@@ -282,7 +303,7 @@ async function fileUnderSeededAncestorTx(
       .select({ id: old.id, parentId: parent.id })
       .from(old)
       .innerJoin(parent, eq(parent.id, old.parentId))
-      .where(and(isAnyOf(old.id, copied, "uuid"), isNotNull(parent.householdId)))
+      .where(and(isAnyOf(old.id, foreignFoods, "uuid"), isNotNull(parent.householdId)))
   ).filter((row) => !copyOf.has(row.parentId) && made.has(copyOf.get(row.id) ?? ""));
 
   if (behind.length === 0) return;
@@ -326,7 +347,7 @@ async function fileUnderSeededAncestorTx(
  * into it; a spelling both hold gives its rows to a spelling of that target and goes; a junk mark both
  * hold stays `into`'s; the rest moves as it is. The tree and the foods are locked before anything.
  */
-export async function mergeCatalogueIntoTx(
+export async function mergeHouseholdCatalogueTx(
   tx: DbTransaction,
   from: string,
   into: string
@@ -342,17 +363,14 @@ export async function mergeCatalogueIntoTx(
       ),
     (row) => `${row.source} ${row.target}`
   );
-  const targets = new Map(pairs.map((row) => [row.source, row.target]));
+  const targets: FoodTargets = new Map(pairs.map((row) => [row.source, row.target]));
   const joinerSpelling = alias(ingredientAliases, "joiner_spelling");
   const householdSpelling = alias(ingredientAliases, "household_spelling");
   // `into`'s spellings of those folds are held against a delete until the join commits.
-  const shared = await tx
+  const sharedSpellings = await tx
     .select({ id: joinerSpelling.id })
     .from(joinerSpelling)
-    .innerJoin(
-      householdSpelling,
-      and(eq(householdSpelling.householdId, into), eq(householdSpelling.fold, joinerSpelling.fold))
-    )
+    .innerJoin(householdSpelling, foldedIn(householdSpelling, into, joinerSpelling))
     .where(eq(joinerSpelling.householdId, from))
     .orderBy(householdSpelling.id)
     .for("key share", { of: householdSpelling });
@@ -361,14 +379,16 @@ export async function mergeCatalogueIntoTx(
     tx,
     from,
     targets,
-    new Set([...targets.keys(), ...shared.map((row) => row.id)])
+    new Set([...targets.keys(), ...sharedSpellings.map((row) => row.id)])
   );
   await keepWhatTargetsLackTx(tx, targets);
   for (const [source, target] of targets) {
     await mergeLockedFoods(tx, source, target, { keepFlag: true });
   }
   // Each shared spelling is a target's now: its rows take that food's spelling `into` sees.
-  for (const { id } of shared) await deleteCatalogueAlias(tx, id, { heirsSeenBy: into });
+  for (const { id } of sharedSpellings) {
+    await deleteCatalogueAlias(tx, id, { heirsSeenBy: into });
+  }
 
   const theirJunk = qb
     .select({ fold: ingredientJunkPile.fold })
@@ -392,33 +412,19 @@ async function joinTargetsOf(
   into: string
 ): Promise<Array<{ source: string; target: string }>> {
   const joinerFood = alias(ingredients, "joiner_food");
-  const householdFood = alias(ingredients, "household_food");
   const joinerSpelling = alias(ingredientAliases, "joiner_spelling");
   const householdSpelling = alias(ingredientAliases, "household_spelling");
-  const byName = await tx
-    .select({ source: joinerFood.id, target: householdFood.id })
-    .from(joinerFood)
-    .innerJoin(
-      householdFood,
-      and(
-        eq(householdFood.householdId, into),
-        eq(sql`lower(${householdFood.name})`, sql`lower(${joinerFood.name})`)
-      )
-    )
-    .where(eq(joinerFood.householdId, from));
+  const byName = await foodsNamedIn(tx, into, (food) => eq(food.householdId, from));
   const bySpelling = await tx
     .select({ source: joinerFood.id, target: householdSpelling.ingredientId })
     .from(joinerSpelling)
-    .innerJoin(
-      householdSpelling,
-      and(eq(householdSpelling.householdId, into), eq(householdSpelling.fold, joinerSpelling.fold))
-    )
+    .innerJoin(householdSpelling, foldedIn(householdSpelling, into, joinerSpelling))
     .innerJoin(joinerFood, eq(joinerFood.id, joinerSpelling.ingredientId))
     .where(and(eq(joinerSpelling.householdId, from), eq(joinerFood.householdId, from)))
     .orderBy(joinerSpelling.fold);
-  const targets = new Map<string, string>();
+  const targets = new Map(byName);
 
-  for (const row of [...byName, ...bySpelling]) {
+  for (const row of bySpelling) {
     if (!targets.has(row.source)) targets.set(row.source, row.target);
   }
 
@@ -429,10 +435,7 @@ async function joinTargetsOf(
  * What a joiner food knows that its target lacks moves before the merge: the AI estimate and the
  * flag. A seeded target is never written.
  */
-async function keepWhatTargetsLackTx(
-  tx: DbTransaction,
-  targets: ReadonlyMap<string, string>
-): Promise<void> {
+async function keepWhatTargetsLackTx(tx: DbTransaction, targets: FoodTargets): Promise<void> {
   if (targets.size === 0) return;
   const sources = [...targets.keys()];
   const own = new Set(

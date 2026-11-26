@@ -26,10 +26,10 @@ import {
 
 import type { MutationOutcome } from "./mutation-outcomes";
 import { isConstraintViolation, isRetryableConflict } from "./constraint-violation";
-import { homeRecipeFoodsTx } from "./household-catalogue";
+import { carryRecipeFoodsTx } from "./household-catalogue";
 import { mergeHouseholdTx } from "./household-merge";
 import { listHouseholdIconFiles } from "./ingredient-icons";
-import { homeRecipeEntriesTx } from "./list-entries";
+import { carryRecipeEntriesTx } from "./list-entries";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 import { turnPlannedRecipesIntoNotes } from "./planned-items";
 import { getUsersByIds } from "./users";
@@ -284,8 +284,8 @@ export async function moveToHouseholdOfOne(
     const ofOne = await insertHouseholdOfOne(tx, userId);
 
     // The triggers moved the recipes and cookbooks; what they carry of the old household follows.
-    await homeRecipeEntriesTx(tx, ofOne.id);
-    await homeRecipeFoodsTx(tx, ofOne.id);
+    await carryRecipeEntriesTx(tx, ofOne.id);
+    await carryRecipeFoodsTx(tx, ofOne.id);
 
     return appliedOutcome({ household: ofOne, memberIds });
   });

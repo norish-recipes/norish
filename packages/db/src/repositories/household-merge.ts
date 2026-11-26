@@ -14,8 +14,8 @@ import {
   stores,
 } from "@norish/db/schema";
 
-import { mergeCatalogueIntoTx } from "./household-catalogue";
-import { moveHouseholdEntriesTx } from "./list-entries";
+import { mergeHouseholdCatalogueTx } from "./household-catalogue";
+import { mergeHouseholdEntriesTx } from "./list-entries";
 
 const qb = new QueryBuilder();
 
@@ -31,7 +31,7 @@ const ONE_PER_FOOD = [
 ] as const;
 
 /** Moves the household-owned rows of `from` into `into`; set-based, so any number moves at once. */
-export async function moveHouseholdRowsTx(
+export async function mergeHouseholdRowsTx(
   tx: DbTransaction,
   from: string,
   into: string
@@ -110,7 +110,7 @@ export async function mergeHouseholdTx(
   from: string,
   into: string
 ): Promise<void> {
-  await moveHouseholdEntriesTx(tx, from, into);
-  await mergeCatalogueIntoTx(tx, from, into);
-  await moveHouseholdRowsTx(tx, from, into);
+  await mergeHouseholdEntriesTx(tx, from, into);
+  await mergeHouseholdCatalogueTx(tx, from, into);
+  await mergeHouseholdRowsTx(tx, from, into);
 }

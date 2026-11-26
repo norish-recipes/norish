@@ -567,8 +567,9 @@ export async function mergeEntryTx(
 }
 
 /** Gives `householdId` an entry of each fold of `ids` (other households' entries), its own where
- * it has one, else a copy keeping the name; its recipes carrying one of `ids` carry that instead. */
-async function homeEntriesTx(
+ * it has one, else a copy keeping the name; its recipes carrying one of `ids` carry that instead.
+ * A leave hands it the entries the leaver's recipes carry; a join, the joiner's whole lists. */
+async function takeEntriesOfFoldsTx(
   tx: DbTransaction,
   kind: ListKind,
   householdId: string,
@@ -614,7 +615,7 @@ async function homeEntriesTx(
     )
     .onConflictDoNothing();
 
-  const homeRecipes = qb
+  const householdRecipes = qb
     .select({ id: recipes.id })
     .from(recipes)
     .where(eq(recipes.householdId, householdId));
@@ -634,20 +635,20 @@ async function homeEntriesTx(
           home,
           and(eq(home.householdId, householdId), eq(home.nameFold, foreign.nameFold))
         )
-        .where(and(isAnyOf(entity, ids, "uuid"), inArray(link.recipeId, homeRecipes)))
+        .where(and(isAnyOf(entity, ids, "uuid"), inArray(link.recipeId, householdRecipes)))
     )
     .onConflictDoNothing();
   await tx
     .delete(link)
-    .where(and(isAnyOf(entity, ids, "uuid"), inArray(link.recipeId, homeRecipes)));
+    .where(and(isAnyOf(entity, ids, "uuid"), inArray(link.recipeId, householdRecipes)));
 }
 
 /** After a leave (ADR-0043): no recipe of the household carries another household's entry; each
  * becomes the household's own of its fold. The carried entries are held against a change meanwhile. */
-export async function homeRecipeEntriesTx(tx: DbTransaction, householdId: string): Promise<void> {
+export async function carryRecipeEntriesTx(tx: DbTransaction, householdId: string): Promise<void> {
   for (const kind of LIST_KINDS) {
     const { table, link, entity } = KINDS[kind];
-    const carried = await lockUntilSettled(
+    const foreignEntries = await lockUntilSettled(
       () =>
         tx
           .select({ id: table.id })
@@ -682,36 +683,36 @@ export async function homeRecipeEntriesTx(tx: DbTransaction, householdId: string
       (row) => row.id
     );
 
-    await homeEntriesTx(
+    await takeEntriesOfFoldsTx(
       tx,
       kind,
       householdId,
-      carried.map((row) => row.id)
+      foreignEntries.map((row) => row.id)
     );
   }
 }
 
 /** A household of one's lists join `into` (ADR-0043), after its recipes moved: each entry becomes
  * `into`'s of its fold, its own where it has one, and the joiner's go. */
-export async function moveHouseholdEntriesTx(
+export async function mergeHouseholdEntriesTx(
   tx: DbTransaction,
   from: string,
   into: string
 ): Promise<void> {
   for (const kind of LIST_KINDS) {
     const { table } = KINDS[kind];
-    const own = await tx
+    const joinerEntries = await tx
       .select({ id: table.id })
       .from(table)
       .where(eq(table.householdId, from))
       .orderBy(table.id)
       .for("update");
 
-    await homeEntriesTx(
+    await takeEntriesOfFoldsTx(
       tx,
       kind,
       into,
-      own.map((row) => row.id)
+      joinerEntries.map((row) => row.id)
     );
     await tx.delete(table).where(eq(table.householdId, from));
   }

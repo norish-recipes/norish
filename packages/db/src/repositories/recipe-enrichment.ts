@@ -20,6 +20,7 @@ import type {
   ProvenanceGroupInput,
   RecipeEnrichmentWriteMode,
 } from "@norish/shared/lib/recipe-enrichment";
+import type { FoodTargets } from "@norish/shared/lib/recipe-nutrition";
 import { db } from "@norish/db/drizzle";
 import {
   ingredientAliases,
@@ -202,13 +203,13 @@ export async function saveRecipeNutritionEstimate(
 }
 
 /**
- * Key the stored shares of `recipeIds`' recipes again after their lines' foods were re-pointed
- * (`foods`: old id to new), so each share is still found (ADR-0039); one write for all of them.
+ * Key the stored shares of `recipeIds`' recipes again after their lines' foods were re-pointed, so
+ * each share is still found (ADR-0039); one write for all of them.
  */
 export async function rekeyNutritionSharesTx(
   tx: DbTransaction,
   recipeIds: SQLWrapper,
-  foods: ReadonlyMap<string, string>
+  foods: FoodTargets
 ): Promise<void> {
   if (foods.size === 0) return;
   const stored = await tx

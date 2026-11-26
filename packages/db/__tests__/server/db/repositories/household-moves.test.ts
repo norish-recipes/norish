@@ -9,7 +9,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { listGroceriesByHousehold } from "@norish/db/repositories/groceries";
-import { mergeHouseholdTx, moveHouseholdRowsTx } from "@norish/db/repositories/household-merge";
+import { mergeHouseholdRowsTx, mergeHouseholdTx } from "@norish/db/repositories/household-merge";
 import {
   deleteAccount,
   getHouseholdIdForUser,
@@ -542,7 +542,7 @@ describe("household moves", () => {
         .returning();
 
       await getTestDb().transaction((tx) =>
-        moveHouseholdRowsTx(tx, mine.householdId, theirs.householdId)
+        mergeHouseholdRowsTx(tx, mine.householdId, theirs.householdId)
       );
 
       const into = theirs.householdId;

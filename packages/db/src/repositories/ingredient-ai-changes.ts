@@ -19,6 +19,7 @@ import { alias, QueryBuilder } from "drizzle-orm/pg-core";
 import type { Db, DbTransaction } from "@norish/db/drizzle";
 import type { AIChangeUndo, ChangedSpelling, DeletedFood } from "@norish/db/schema";
 import type { FlagReason } from "@norish/shared/contracts/ingredient-catalogue";
+import type { FoodTargets } from "@norish/shared/lib/recipe-nutrition";
 import { db } from "@norish/db/drizzle";
 import {
   groceries,
@@ -457,14 +458,14 @@ function undoIds(undo: AIChangeUndo): string[] {
 }
 
 /**
- * A join's AI Changes on the joiner's foods merging away (`targets`, source to target): every kind
+ * A join's AI Changes on the joiner's foods merging away into `targets`: every kind
  * follows its target, and one whose Undo can no longer apply (all but a merge, or one naming a food
  * or spelling in `gone`) is stranded. Before the merges, which take a source's merges along.
  */
 export async function followJoinTargetsTx(
   tx: DbTransaction,
   householdId: string,
-  targets: ReadonlyMap<string, string>,
+  targets: FoodTargets,
   gone: ReadonlySet<string>
 ): Promise<void> {
   const changes = await tx

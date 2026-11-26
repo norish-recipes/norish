@@ -371,13 +371,16 @@ export function lineKey(
   return JSON.stringify([line.ingredientId ?? foldName(line.name), line.amount, line.unit ?? null]);
 }
 
+/** Where a move or merge re-pointed each food: old id to new. */
+export type FoodTargets = ReadonlyMap<string, string>;
+
 /**
- * Stored shares keyed again after their lines' foods were re-pointed (`foods`: old id to new), so a
- * share is still found; two whose keys become one add up. Null when no key names those foods.
+ * Stored shares keyed again after their lines' foods were re-pointed, so a share is still found;
+ * two whose keys become one add up. Null when no key names those foods.
  */
 export function rekeyedShares<S extends EstimatedLine>(
   shares: readonly S[],
-  foods: ReadonlyMap<string, string>
+  foods: FoodTargets
 ): S[] | null {
   let changed = false;
   const byKey = new Map<string, S>();

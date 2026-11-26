@@ -1,4 +1,5 @@
 import type { SQL } from "drizzle-orm";
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import { and, asc, count, eq, inArray, isNotNull, ne, sql } from "drizzle-orm";
 import { QueryBuilder } from "drizzle-orm/pg-core";
 
@@ -301,6 +302,11 @@ export async function insertCatalogueIngredient(
   return row!.id;
 }
 
+/** Two food names that are one name, case aside, as the unique name index reads them. */
+export function sameFoodName(name: AnyPgColumn, other: AnyPgColumn | string): SQL {
+  return eq(sql`lower(${name})`, sql`lower(${other})`);
+}
+
 /**
  * The household's (else the seed's; null: the seed's alone) food that goes by `name` in any case,
  * other than `exceptId`, locked.
@@ -316,7 +322,7 @@ export async function lockIngredientNamed(
     .from(ingredients)
     .where(
       and(
-        eq(sql`lower(${ingredients.name})`, sql`lower(${name})`),
+        sameFoodName(ingredients.name, name),
         inCatalogue(ingredients.householdId, householdId),
         exceptId ? ne(ingredients.id, exceptId) : undefined
       )
