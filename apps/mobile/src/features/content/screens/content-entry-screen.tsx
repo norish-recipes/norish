@@ -105,7 +105,8 @@ function EntryScreen({ kind, id }: { kind: PickerKind; id: string }) {
       }
       field={{
         accessibilityLabel: text("settings.content.panel.name"),
-        canSubmit: entry.canSave,
+        // Return only lowers the keyboard on a merge: that is the header's button to press.
+        canSubmit: entry.canSave && view?.action !== "merge",
         editable,
         maxLength: view?.max,
         testID: "content-entry-name",

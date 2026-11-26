@@ -93,6 +93,24 @@ describe("ContentEntryScreen", () => {
     ).toBeUndefined();
   });
 
+  it("saves a rename on Return, but leaves a merge to the header's button", async () => {
+    const { unmount } = render(<ContentEntryScreen />);
+
+    await act(async () =>
+      fireEvent.keyDown(screen.getByTestId("content-entry-name"), { key: "Enter" })
+    );
+    expect(held.save).toHaveBeenCalledTimes(1);
+    unmount();
+    held.entry = {
+      view: { action: "merge", max: 50, target: { id: "e2", name: "dinner" }, moved: 97 },
+    };
+    render(<ContentEntryScreen />);
+    await act(async () =>
+      fireEvent.keyDown(screen.getByTestId("content-entry-name"), { key: "Enter" })
+    );
+    expect(held.save).toHaveBeenCalledTimes(1);
+  });
+
   it("asks before deleting, with the count, in the native alert, and closes once deleted", async () => {
     render(<ContentEntryScreen />);
     await act(async () =>
