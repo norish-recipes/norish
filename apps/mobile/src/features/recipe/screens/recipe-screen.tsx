@@ -144,10 +144,12 @@ export function RecipeScreen() {
     );
 
   // Back in every state, a missing recipe too; the stack's anchor puts the list under a link.
+  // Without a recipe the page's actions go, also those a recipe shown before it left.
   return (
     <>
       <Stack.Screen
         options={{
+          ...(state === "ready" ? {} : { unstable_headerRightItems: () => [] }),
           unstable_headerLeftItems: () => [
             {
               type: "button",
