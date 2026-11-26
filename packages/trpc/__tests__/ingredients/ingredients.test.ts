@@ -50,6 +50,7 @@ const relocation = vi.hoisted(() => ({
 // What a deleted food named, resolved again: nothing, here.
 const cleanup = vi.hoisted(() => ({
   findRowsNamingFood: vi.fn(async () => ({ lines: [], groceries: [], recurring: [] })),
+  findLineHouseholds: vi.fn(async () => new Map()),
   repointLines: vi.fn(),
 }));
 const aliases = vi.hoisted(() => ({
