@@ -1,3 +1,4 @@
+import type { SQL } from "drizzle-orm";
 import type { PgColumn, PgTable } from "drizzle-orm/pg-core";
 import {
   and,
@@ -129,7 +130,28 @@ export const MASTER_KEY_COLUMNS: Sealing[] = [
 ];
 
 /** Rows read at a time, so no table is held in memory whole. */
-const PAGE = 500;
+const PAGE_SIZE = 500;
+
+/**
+ * Visit every row `readPage` reads, `limit` rows at a time in key order: each page holds the rows
+ * `after` the last one of the page before, which `pastRow` names; the first page has no `after`.
+ */
+async function forEachRow<Row>(
+  readPage: (after: SQL | undefined, limit: number) => Promise<Row[]>,
+  pastRow: (row: Row) => SQL,
+  visit: (row: Row) => Promise<void>
+): Promise<void> {
+  let after: SQL | undefined;
+
+  for (;;) {
+    const rows = await readPage(after, PAGE_SIZE);
+    const lastRow = rows.at(-1);
+
+    for (const row of rows) await visit(row);
+    if (!lastRow || rows.length < PAGE_SIZE) return;
+    after = pastRow(lastRow);
+  }
+}
 
 /** Per `table.column`, how many values each key had sealed. */
 export type ResealCounts = Record<string, Record<SealedBy, number>>;
@@ -151,11 +173,11 @@ async function resealTable(
   { table, key, sealed, lookup }: Sealing,
   counts: ResealCounts
 ): Promise<void> {
-  const keyAt = propertyOf(table, key);
-  const hashAt = lookup && propertyOf(table, lookup.hash);
-  const seals = sealed.map((column) => ({
+  const keyProperty = propertyOf(table, key);
+  const hashProperty = lookup && propertyOf(table, lookup.hash);
+  const columns = sealed.map((column) => ({
     column,
-    at: propertyOf(table, column),
+    property: propertyOf(table, column),
     tally: (counts[`${getTableName(table)}.${column.name}`] = {
       previous: 0,
       current: 0,
@@ -164,26 +186,20 @@ async function resealTable(
     }),
   }));
   const fields = Object.fromEntries([
-    [keyAt, key],
-    ...seals.map(({ column, at }) => [at, column]),
-    ...(lookup && hashAt ? [[hashAt, lookup.hash]] : []),
+    [keyProperty, key],
+    ...columns.map(({ column, property }) => [property, column]),
+    ...(lookup && hashProperty ? [[hashProperty, lookup.hash]] : []),
   ]);
-  let after: unknown;
 
-  for (;;) {
-    const rows = await tx
-      .select(fields)
-      .from(table)
-      .where(after === undefined ? undefined : gt(key, after))
-      .orderBy(asc(key))
-      .limit(PAGE);
-
-    for (const row of rows) {
+  await forEachRow(
+    (after, limit) => tx.select(fields).from(table).where(after).orderBy(asc(key)).limit(limit),
+    (lastRow) => gt(key, lastRow[keyProperty]),
+    async (row) => {
       const update: Record<string, string> = {};
-      let source: string | null = null;
+      let lookupSource: string | null = null;
 
-      for (const { column, at, tally } of seals) {
-        const value = row[at];
+      for (const { column, property, tally } of columns) {
+        const value = row[property];
 
         // Nothing is stored empty encrypted, so an empty value has nothing to move.
         if (typeof value !== "string" || value === "") continue;
@@ -191,19 +207,18 @@ async function resealTable(
         const { sealed: moved, plain, was } = rotation.reseal(value);
 
         tally[was] += 1;
-        if (moved !== value) update[at] = moved;
-        if (column === lookup?.of) source = plain;
+        if (moved !== value) update[property] = moved;
+        if (column === lookup?.of) lookupSource = plain;
       }
       // A lookup hash is recomputed from a value that opened; a missing one stays missing.
-      if (hashAt && source !== null && row[hashAt]) update[hashAt] = rotation.lookup(source);
+      if (hashProperty && lookupSource !== null && row[hashProperty]) {
+        update[hashProperty] = rotation.lookup(lookupSource);
+      }
       if (Object.keys(update).length > 0) {
-        await tx.update(table).set(update).where(eq(key, row[keyAt]));
+        await tx.update(table).set(update).where(eq(key, row[keyProperty]));
       }
     }
-
-    if (rows.length < PAGE) return;
-    after = rows.at(-1)?.[keyAt];
-  }
+  );
 }
 
 /** End the share links that kept no token, as no hash under a new key can be made for them. */
@@ -211,27 +226,31 @@ async function revokeSharesWithoutToken(tx: DbTransaction): Promise<number> {
   const now = new Date();
   let revoked = 0;
 
-  for (;;) {
-    const rows = await tx
-      .select({ id: recipeShares.id, version: recipeShares.version })
-      .from(recipeShares)
-      .where(
-        and(
-          or(isNull(recipeShares.tokenEnc), eq(recipeShares.tokenEnc, "")),
-          isNull(recipeShares.revokedAt)
+  await forEachRow(
+    (after, limit) =>
+      tx
+        .select({ id: recipeShares.id, version: recipeShares.version })
+        .from(recipeShares)
+        .where(
+          and(
+            or(isNull(recipeShares.tokenEnc), eq(recipeShares.tokenEnc, "")),
+            isNull(recipeShares.revokedAt),
+            after
+          )
         )
-      )
-      .limit(PAGE);
-
-    for (const { id, version } of rows) {
+        .orderBy(asc(recipeShares.id))
+        .limit(limit),
+    (lastRow) => gt(recipeShares.id, lastRow.id),
+    async ({ id, version }) => {
       await tx
         .update(recipeShares)
         .set({ revokedAt: now, updatedAt: now, version: version + 1 })
         .where(eq(recipeShares.id, id));
+      revoked += 1;
     }
-    revoked += rows.length;
-    if (rows.length < PAGE) return revoked;
-  }
+  );
+
+  return revoked;
 }
 
 /**

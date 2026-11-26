@@ -2,7 +2,7 @@
 
 import { randomBytes } from "node:crypto";
 import type { PgColumn } from "drizzle-orm/pg-core";
-import { getTableColumns, getTableName, is } from "drizzle-orm";
+import { getTableColumns, getTableName, is, isNull } from "drizzle-orm";
 import { getTableConfig, PgTable } from "drizzle-orm/pg-core";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
@@ -354,6 +354,32 @@ describe("re-keying to a new Master Key", () => {
     });
     initMasterKey(current);
     expect(await getDecryptedTokensByUserId(userId)).toHaveLength(1_201);
+  });
+
+  it("revokes more token-less share links than fit on one page", async () => {
+    const [share] = await getTestDb().select().from(schema.recipeShares).limit(1);
+
+    await getTestDb()
+      .insert(schema.recipeShares)
+      .values(
+        Array.from({ length: 1_100 }, (_, index) => ({
+          userId,
+          recipeId: share?.recipeId ?? "",
+          tokenHash: `old-hash-${index}`,
+        }))
+      );
+
+    const { revokedShares } = await rekeyMasterKey(
+      masterKeyRotation(previous, current),
+      fingerprints
+    );
+    const tokenless = await getTestDb()
+      .select({ revokedAt: schema.recipeShares.revokedAt })
+      .from(schema.recipeShares)
+      .where(isNull(schema.recipeShares.tokenEnc));
+
+    expect(revokedShares).toBe(1_101);
+    expect(tokenless.filter(({ revokedAt }) => revokedAt === null)).toEqual([]);
   });
 
   it("changes nothing when it fails midway, and a retry with the same keys finishes", async () => {
