@@ -249,4 +249,182 @@ describe("household moves", () => {
       await expectNothingForeign();
     });
   });
+  /** What a line's first food is: its spelling's household and text, the food's row. */
+  async function lineFood(lineId: string) {
+    const [aliasId] = await testLineAliasIds(lineId);
+    const [spelling] = await getTestDb()
+      .select()
+      .from(ingredientAliases)
+      .where(eq(ingredientAliases.id, aliasId!));
+
+    return { spelling: spelling!, food: (await readTestIngredient(spelling!.ingredientId))! };
+  }
+
+  async function sharesOf(recipeId: string) {
+    const [row] = await getTestDb()
+      .select({ lines: recipeNutritionEstimates.lines })
+      .from(recipeNutritionEstimates)
+      .where(eq(recipeNutritionEstimates.recipeId, recipeId));
+
+    return row?.lines.map((line) => line.key) ?? [];
+  }
+
+  describe("leaving keeps the recipes' foods", () => {
+    async function leaverWithFoods() {
+      const { admin, member, householdId } = await sharedHousehold();
+      const soy = (await createTestIngredient({ name: "soy sauce" }))!;
+      const cabbage = (await createTestIngredient({ name: "cabbage" }))!;
+      const paste = await mintTestFood(householdId, "paste");
+      const gochujang = await mintTestFood(householdId, "gochujang");
+      const kimchi = await mintTestFood(householdId, "kimchi");
+      const soja = await addTestSpelling(soy.id, "soja", { householdId });
+      const seedSoy = (
+        await testLineAliasIds(
+          (
+            await insertTestRecipeLine(
+              { recipeId: (await createTestRecipe(admin.id)).id, name: "soy" },
+              [
+                (
+                  await getTestDb()
+                    .select({ id: ingredientAliases.id })
+                    .from(ingredientAliases)
+                    .where(eq(ingredientAliases.ingredientId, soy.id))
+                )[0]!.id,
+              ]
+            )
+          ).id
+        )
+      )[0]!;
+
+      await setTestIngredients(gochujang.ingredientId, {
+        parentId: paste.ingredientId,
+        icon: "abc.webp",
+        flagged: true,
+      });
+      await setTestIngredients(kimchi.ingredientId, { parentId: cabbage.id });
+
+      const recipe = await createTestRecipe(member.id, { name: "Bibimbap" });
+      const line = (name: string, aliasId: string) =>
+        insertTestRecipeLine({ recipeId: recipe.id, name, amount: "2", unit: "tbsp" }, [aliasId]);
+      const lines = {
+        gochujang: await line("gochujang", gochujang.aliasId),
+        soja: await line("soja", soja),
+        soy: await line("soy sauce", seedSoy),
+        kimchi: await line("kimchi", kimchi.aliasId),
+        paste: await line("paste", paste.aliasId),
+      };
+      const housemates = await createTestRecipe(admin.id);
+      const theirs = await insertTestRecipeLine({ recipeId: housemates.id, name: "gochujang" }, [
+        gochujang.aliasId,
+      ]);
+      const share = lineKey({
+        name: "gochujang",
+        amount: 2,
+        unit: "tbsp",
+        ingredientId: gochujang.ingredientId,
+      });
+
+      await saveRecipeNutritionEstimate(recipe.id, {
+        lines: [{ key: share, calories: 10, fat: 1, carbs: 1, protein: 1 }],
+      });
+
+      return {
+        admin,
+        member,
+        householdId,
+        recipe,
+        lines,
+        theirs,
+        soy,
+        cabbage,
+        gochujang,
+        seedSoy,
+      };
+    }
+
+    it("copies each household food with its spellings, icon and parent, and re-points the lines", async () => {
+      const { member, householdId, recipe, lines, theirs, soy, cabbage, gochujang, seedSoy } =
+        await leaverWithFoods();
+      const moved = await moveToHouseholdOfOne(householdId, member.id);
+      const home = moved.applied ? moved.value.household.id : "";
+
+      const copied = await lineFood(lines.gochujang.id);
+
+      expect(copied.spelling).toMatchObject({ householdId: home, text: "gochujang" });
+      expect(copied.food).toMatchObject({
+        householdId: home,
+        name: "gochujang",
+        icon: "abc.webp",
+        flagged: true,
+        ownerId: null,
+      });
+      expect(copied.food.id).not.toBe(gochujang.ingredientId);
+      // An own parent goes as its copy where the lines use it; a seeded one stays.
+      expect(copied.food.parentId).toBe((await lineFood(lines.paste.id)).food.id);
+      expect((await lineFood(lines.paste.id)).food.householdId).toBe(home);
+      expect((await lineFood(lines.kimchi.id)).food).toMatchObject({
+        householdId: home,
+        parentId: cabbage.id,
+      });
+      // The household's spelling on a seeded food becomes the new household's, on that food.
+      expect((await lineFood(lines.soja.id)).spelling).toMatchObject({
+        householdId: home,
+        ingredientId: soy.id,
+      });
+      expect(await testLineAliasIds(lines.soy.id)).toEqual([seedSoy]);
+      // The old household keeps its own; a housemate's line still names it.
+      expect(await testLineAliasIds(theirs.id)).toEqual([gochujang.aliasId]);
+      expect((await readTestIngredient(gochujang.ingredientId))?.householdId).toBe(householdId);
+      expect(await sharesOf(recipe.id)).toEqual([
+        lineKey({ name: "gochujang", amount: 2, unit: "tbsp", ingredientId: copied.food.id }),
+      ]);
+      await expectNothingForeign();
+    });
+
+    it("deleting the old household's last member leaves the leaver's lines whole", async () => {
+      const { admin, member, householdId, recipe, lines } = await leaverWithFoods();
+
+      await kickUserFromHousehold(householdId, member.id, admin.id);
+      const before = await Promise.all(Object.values(lines).map((one) => testLineAliasIds(one.id)));
+      const shares = await sharesOf(recipe.id);
+
+      await deleteAccount(admin.id);
+
+      expect(
+        await Promise.all(Object.values(lines).map((one) => testLineAliasIds(one.id)))
+      ).toEqual(before);
+      expect(await sharesOf(recipe.id)).toEqual(shares);
+      await expectNothingForeign();
+    });
+
+    it("a merge keys the AI's share again for the merged line", async () => {
+      const user = await createTestUser();
+      const householdId = await householdOf(user.id);
+      const soja = await mintTestFood(householdId, "soja");
+      const soy = await mintTestFood(householdId, "soy");
+      const recipe = await createTestRecipe(user.id);
+
+      await insertTestRecipeLine({ recipeId: recipe.id, name: "soja", amount: "1", unit: null }, [
+        soja.aliasId,
+      ]);
+      await saveRecipeNutritionEstimate(recipe.id, {
+        lines: [
+          {
+            key: lineKey({ name: "soja", amount: 1, unit: null, ingredientId: soja.ingredientId }),
+            calories: 5,
+            fat: 0,
+            carbs: 0,
+            protein: 0,
+          },
+        ],
+      });
+      await getTestDb().transaction((tx) =>
+        mergeCatalogueIngredients(tx, soja.ingredientId, soy.ingredientId)
+      );
+
+      expect(await sharesOf(recipe.id)).toEqual([
+        lineKey({ name: "soja", amount: 1, unit: null, ingredientId: soy.ingredientId }),
+      ]);
+    });
+  });
 });

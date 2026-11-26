@@ -1,6 +1,6 @@
 import type { SQL } from "drizzle-orm";
-import { and, asc, count, eq, inArray, isNotNull, ne, sql } from "drizzle-orm";
-import { QueryBuilder } from "drizzle-orm/pg-core";
+import { and, asc, count, eq, inArray, isNotNull, isNull, ne, sql } from "drizzle-orm";
+import { alias, QueryBuilder } from "drizzle-orm/pg-core";
 
 import type { Db, DbTransaction } from "@norish/db/drizzle";
 import type { LineJoin } from "@norish/shared/lib/line-foods";
@@ -10,16 +10,19 @@ import {
   groceries,
   ingredientAliases,
   ingredientNutritionCorrections,
+  ingredientNutritionEstimates,
   ingredients,
   ingredientStorePreferences,
   pantryIngredients,
   recipeIngredientFoods,
   recipeIngredients,
+  recipes,
   recurringGroceries,
   storeProductLinks,
 } from "@norish/db/schema";
 import { distinctFoods, joinOf } from "@norish/shared/lib/line-foods";
 
+import { isAnyOf } from "./array-params";
 import { assertOwnReferences } from "./household-rows";
 import { inCatalogue, ownBeforeSeed } from "./household-scope";
 import { moveMergedAIChanges } from "./ingredient-ai-changes";
@@ -27,6 +30,8 @@ import { rowsNaming, spellingsSeenBy } from "./ingredient-catalogue";
 import { ancestryCte } from "./ingredient-kinds";
 import { writeRecipeLineFoodsTx } from "./ingredients";
 import { lockPantryFood } from "./pantry";
+import { defaultOf } from "./raw-sql";
+import { rekeyNutritionSharesTx } from "./recipe-enrichment";
 
 const qb = new QueryBuilder();
 
@@ -223,6 +228,7 @@ export async function mergeCatalogueIngredients(
   for (const table of [groceries, recurringGroceries]) {
     await tx.update(table).set({ ingredientId: targetId }).where(eq(table.ingredientId, sourceId));
   }
+  await rekeyNutritionSharesTx(tx, recipesNaming(sourceId), new Map([[sourceId, targetId]]));
   await tx
     .update(ingredientAliases)
     .set({ ingredientId: targetId, updatedAt: new Date() })
@@ -244,6 +250,231 @@ export async function mergeCatalogueIngredients(
     .where(and(eq(ingredients.id, targetId), isNotNull(ingredients.householdId)));
 
   return true;
+}
+
+/** The recipes with a line naming one of the food's spellings. */
+function recipesNaming(food: string) {
+  return qb
+    .selectDistinct({ id: recipeIngredients.recipeId })
+    .from(recipeIngredients)
+    .innerJoin(
+      recipeIngredientFoods,
+      eq(recipeIngredientFoods.recipeIngredientId, recipeIngredients.id)
+    )
+    .where(rowsNaming(food).lineFoods);
+}
+
+/**
+ * After a leave (ADR-0042): no line of the household's recipes names another household's food or
+ * spelling. Each such food is copied (name, flags, icon file, AI estimate; its parent where seeded or
+ * copied too) with the spellings the lines use, a spelling on a seeded food becomes the household's,
+ * and the lines and their AI shares follow. The old rows are held against a change until the commit.
+ */
+export async function homeRecipeFoodsTx(tx: DbTransaction, householdId: string): Promise<void> {
+  const homeLines = qb
+    .select({ id: recipeIngredients.id })
+    .from(recipeIngredients)
+    .innerJoin(recipes, eq(recipes.id, recipeIngredients.recipeId))
+    .where(eq(recipes.householdId, householdId));
+  const foreign = (column: typeof ingredients.householdId | typeof ingredientAliases.householdId) =>
+    and(isNotNull(column), ne(column, householdId));
+  const used = await tx
+    .selectDistinct({ id: ingredientAliases.id, foodId: ingredientAliases.ingredientId })
+    .from(ingredientAliases)
+    .innerJoin(
+      recipeIngredientFoods,
+      eq(recipeIngredientFoods.ingredientAliasId, ingredientAliases.id)
+    )
+    .where(
+      and(
+        inArray(recipeIngredientFoods.recipeIngredientId, homeLines),
+        foreign(ingredientAliases.householdId)
+      )
+    );
+
+  if (used.length === 0) return;
+  // Foods before spellings, as a deletion takes them: a rename, merge or delete waits for the move.
+  const copied = (
+    await tx
+      .select({ id: ingredients.id })
+      .from(ingredients)
+      .where(
+        and(
+          isAnyOf(
+            ingredients.id,
+            used.map((row) => row.foodId),
+            "uuid"
+          ),
+          foreign(ingredients.householdId)
+        )
+      )
+      .orderBy(ingredients.id)
+      .for("share")
+  ).map((row) => row.id);
+  const spellingIds = (
+    await tx
+      .select({ id: ingredientAliases.id })
+      .from(ingredientAliases)
+      .where(
+        isAnyOf(
+          ingredientAliases.id,
+          used.map((row) => row.id),
+          "uuid"
+        )
+      )
+      .orderBy(ingredientAliases.id)
+      .for("share")
+  ).map((row) => row.id);
+  const old = alias(ingredients, "old_food");
+  const copy = alias(ingredients, "home_food");
+  const sameName = and(
+    eq(copy.householdId, householdId),
+    eq(sql`lower(${copy.name})`, sql`lower(${old.name})`)
+  );
+  const made = await tx
+    .insert(ingredients)
+    .select(
+      qb
+        .select({
+          id: defaultOf(ingredients.id),
+          householdId: sql<string>`${householdId}::uuid`.as(ingredients.householdId.name),
+          name: old.name,
+          ownerId: sql<string | null>`null`.as(ingredients.ownerId.name),
+          addedByHand: old.addedByHand,
+          flagged: old.flagged,
+          flagReason: old.flagReason,
+          keptDistinct: old.keptDistinct,
+          parentId: sql<string | null>`null::uuid`.as(ingredients.parentId.name),
+          parentChosen: old.parentChosen,
+          offId: old.offId,
+          nutritionCodes: old.nutritionCodes,
+          icon: old.icon,
+          nameSettled: old.nameSettled,
+          nameChosen: old.nameChosen,
+          unusedSince: sql<Date | null>`null::timestamptz`.as(ingredients.unusedSince.name),
+          createdAt: defaultOf(ingredients.createdAt),
+          version: defaultOf(ingredients.version),
+        })
+        .from(old)
+        .where(isAnyOf(old.id, copied, "uuid"))
+    )
+    .onConflictDoNothing()
+    .returning({ id: ingredients.id });
+  const madeIds = made.map((row) => row.id);
+  const homeOf = new Map(
+    (
+      await tx
+        .select({ from: old.id, to: copy.id })
+        .from(old)
+        .innerJoin(copy, sameName)
+        .where(isAnyOf(old.id, copied, "uuid"))
+    ).map((row) => [row.from, row.to])
+  );
+  const parent = alias(ingredients, "old_parent");
+  const parentCopy = alias(ingredients, "home_parent");
+
+  // A seeded parent stays; an own one only as its copy, where the lines use it too.
+  await tx
+    .update(copy)
+    .set({ parentId: sql`${old.parentId}` })
+    .from(old)
+    .innerJoin(parent, eq(parent.id, old.parentId))
+    .where(and(sameName, isAnyOf(copy.id, madeIds, "uuid"), isNull(parent.householdId)));
+  await tx
+    .update(copy)
+    .set({ parentId: sql`${parentCopy.id}` })
+    .from(old)
+    .innerJoin(parent, eq(parent.id, old.parentId))
+    .innerJoin(
+      parentCopy,
+      and(
+        eq(parentCopy.householdId, householdId),
+        eq(sql`lower(${parentCopy.name})`, sql`lower(${parent.name})`)
+      )
+    )
+    .where(and(sameName, isAnyOf(copy.id, madeIds, "uuid"), isAnyOf(parent.id, copied, "uuid")));
+  await tx
+    .insert(ingredientNutritionEstimates)
+    .select(
+      qb
+        .select({
+          ingredientId: sql<string>`${copy.id}`.as(ingredientNutritionEstimates.ingredientId.name),
+          kcal: ingredientNutritionEstimates.kcal,
+          fat: ingredientNutritionEstimates.fat,
+          carbs: ingredientNutritionEstimates.carbs,
+          protein: ingredientNutritionEstimates.protein,
+          pieceWeight: ingredientNutritionEstimates.pieceWeight,
+          pieceless: ingredientNutritionEstimates.pieceless,
+          density: ingredientNutritionEstimates.density,
+          createdAt: ingredientNutritionEstimates.createdAt,
+          updatedAt: ingredientNutritionEstimates.updatedAt,
+          version: ingredientNutritionEstimates.version,
+        })
+        .from(ingredientNutritionEstimates)
+        .innerJoin(old, eq(old.id, ingredientNutritionEstimates.ingredientId))
+        .innerJoin(copy, sameName)
+        .where(isAnyOf(copy.id, madeIds, "uuid"))
+    )
+    .onConflictDoNothing();
+
+  const spelling = alias(ingredientAliases, "old_spelling");
+  const homeSpelling = alias(ingredientAliases, "home_spelling");
+  const spellingRow = (ingredientId: SQL) => ({
+    id: defaultOf(ingredientAliases.id),
+    householdId: sql<string>`${householdId}::uuid`.as(ingredientAliases.householdId.name),
+    text: spelling.text,
+    fold: spelling.fold,
+    locale: spelling.locale,
+    ingredientId: sql<string>`${ingredientId}`.as(ingredientAliases.ingredientId.name),
+    ownerId: sql<string | null>`null`.as(ingredientAliases.ownerId.name),
+    seeded: defaultOf(ingredientAliases.seeded),
+    createdAt: defaultOf(ingredientAliases.createdAt),
+    updatedAt: defaultOf(ingredientAliases.updatedAt),
+    version: defaultOf(ingredientAliases.version),
+  });
+
+  // A spelling on a seeded food stays on it, as the household's; one on an own food goes to the copy.
+  await tx
+    .insert(ingredientAliases)
+    .select(
+      qb
+        .select(spellingRow(sql`${spelling.ingredientId}`))
+        .from(spelling)
+        .innerJoin(old, eq(old.id, spelling.ingredientId))
+        .where(and(isAnyOf(spelling.id, spellingIds, "uuid"), isNull(old.householdId)))
+    )
+    .onConflictDoNothing();
+  await tx
+    .insert(ingredientAliases)
+    .select(
+      qb
+        .select(spellingRow(sql`${copy.id}`))
+        .from(spelling)
+        .innerJoin(old, eq(old.id, spelling.ingredientId))
+        .innerJoin(copy, sameName)
+        .where(isAnyOf(spelling.id, spellingIds, "uuid"))
+    )
+    .onConflictDoNothing();
+  await tx
+    .update(recipeIngredientFoods)
+    .set({ ingredientAliasId: sql`${homeSpelling.id}` })
+    .from(spelling)
+    .innerJoin(
+      homeSpelling,
+      and(eq(homeSpelling.householdId, householdId), eq(homeSpelling.fold, spelling.fold))
+    )
+    .where(
+      and(
+        eq(recipeIngredientFoods.ingredientAliasId, spelling.id),
+        isAnyOf(spelling.id, spellingIds, "uuid"),
+        inArray(recipeIngredientFoods.recipeIngredientId, homeLines)
+      )
+    );
+  await rekeyNutritionSharesTx(
+    tx,
+    qb.select({ id: recipes.id }).from(recipes).where(eq(recipes.householdId, householdId)),
+    homeOf
+  );
 }
 
 /** How many spellings of an Ingredient the rows of a spelling of `householdId` (null: the seed's) may move to. */

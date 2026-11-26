@@ -151,22 +151,15 @@ describe("lines read through the reader's catalogue", () => {
     await expect(countTestCatalogueRows()).resolves.toEqual(before);
   });
 
-  it("reads a leaver's own recipe again while its lines name the old household's food", async () => {
+  it("reads a leaver's own recipe as stored: its lines moved with it", async () => {
     await joinHousehold(reader, { householdId: testHouseholdOf(author) });
-    const { recipeId, lines } = await recipe(reader, ["kapucijners"]);
+    const { recipeId } = await recipe(reader, ["kapucijners"]);
 
     await moveToHouseholdOfOne(testHouseholdOf(author), reader);
-    const own = await mintTestFood(await householdIdOf(reader), "kapucijners");
 
     await expect(
       lineReadingsOf(await householdIdOf(reader), { of: "recipes", ids: [recipeId] })
-    ).resolves.toEqual({
-      [lines[0]!.id!]: {
-        ingredientId: own.ingredientId,
-        joined: null,
-        foods: [{ ingredientId: own.ingredientId, name: "kapucijners" }],
-      },
-    });
+    ).resolves.toEqual({});
   });
 
   it("covers another household's line by the reader's Pantry, a line it cannot read by none", async () => {

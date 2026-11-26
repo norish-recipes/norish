@@ -40,6 +40,7 @@ import {
 import type { MutationOutcome } from "./mutation-outcomes";
 import { isRetryableConflict } from "./constraint-violation";
 import { listHouseholdIconFiles } from "./ingredient-icons";
+import { homeRecipeFoodsTx } from "./ingredient-relocation";
 import { homeRecipeEntriesTx } from "./list-entries";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 import { turnPlannedRecipesIntoNotes } from "./planned-items";
@@ -287,6 +288,7 @@ export async function moveToHouseholdOfOne(
 
     // The triggers moved the recipes and cookbooks; what they carry of the old household follows.
     await homeRecipeEntriesTx(tx, ofOne.id);
+    await homeRecipeFoodsTx(tx, ofOne.id);
 
     return appliedOutcome({ household: ofOne, memberIds });
   });

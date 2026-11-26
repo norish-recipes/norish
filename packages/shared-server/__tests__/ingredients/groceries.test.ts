@@ -319,7 +319,7 @@ describe("grocery names through aliases", () => {
       ).resolves.toEqual([[{ name: "ui", recipeIngredientId: ui.id }]]);
     });
 
-    it("is read again for a member who left, whose recipe still names the old household's food", async () => {
+    it("names a leaver's own food: their lines moved with them", async () => {
       const leaver = (await createTestUser())!.id;
 
       await joinHousehold(leaver, { householdId: testHouseholdOf(userId) });
@@ -331,15 +331,13 @@ describe("grocery names through aliases", () => {
         [{ name: line.ingredientName, recipeIngredientId: line.id }],
         { userId: leaver, householdId: newHousehold }
       );
+      const moved = (await getRecipeFull(line.recipeId))!.recipeIngredients[0]!;
 
-      expect(resolved?.ingredientId).not.toBe(line.ingredientId);
+      expect(moved.ingredientId).not.toBe(line.ingredientId);
+      expect(resolved?.ingredientId).toBe(moved.ingredientId);
       await expect(homes([resolved!])).resolves.toEqual([
         { food: newHousehold, spelling: newHousehold },
       ]);
-      // The recipe keeps its own food.
-      expect((await getRecipeFull(line.recipeId))!.recipeIngredients[0]!.ingredientId).toBe(
-        line.ingredientId
-      );
     });
   });
 });

@@ -20,6 +20,7 @@ import {
   bracketedGrams,
   lineKey,
   nutritionLinesOf,
+  rekeyedShares,
   seasoningPhrases,
   suppliesNutrition,
   withStatedExtras,
@@ -729,5 +730,21 @@ describe("withStatedExtras", () => {
       nutritionExtras: { fiber: 9 },
       extrasCoverage: { fiber: 1 },
     });
+  });
+});
+
+describe("rekeyedShares", () => {
+  it("keys a share again for its line's new food, and leaves a line keyed by text", () => {
+    const moved = lineKey({ name: "soja", amount: 2, unit: "tbsp", ingredientId: "old" });
+    const kept = lineKey({ name: "salt", amount: null, unit: null, ingredientId: "other" });
+    const byText = lineKey({ name: "mystery", amount: 1, unit: null, ingredientId: null });
+    const shares = [moved, kept, byText].map((key) => ({ key, calories: 1 }));
+
+    expect(rekeyedShares(shares, new Map([["old", "new"]]))).toEqual([
+      { key: lineKey({ name: "soja", amount: 2, unit: "tbsp", ingredientId: "new" }), calories: 1 },
+      { key: kept, calories: 1 },
+      { key: byText, calories: 1 },
+    ]);
+    expect(rekeyedShares(shares, new Map([["absent", "new"]]))).toBeNull();
   });
 });

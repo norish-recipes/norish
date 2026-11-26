@@ -9,8 +9,10 @@
  * they share; this module owns the two replacement groups.
  */
 
+import type { SQLWrapper } from "drizzle-orm";
 import { and, eq, inArray, sql } from "drizzle-orm";
 
+import type { DbTransaction } from "@norish/db/drizzle";
 import type { EstimatedLineRow } from "@norish/db/schema";
 import type { RecipeCategory } from "@norish/shared/contracts";
 import type {
@@ -36,7 +38,9 @@ import {
   normalizeNutritionGroup,
   normalizeProvenanceGroup,
 } from "@norish/shared/lib/recipe-enrichment";
+import { rekeyedShares } from "@norish/shared/lib/recipe-nutrition";
 
+import { isAnyOf, pickedByKey } from "./array-params";
 import { attachCategoriesToRecipeByInputTx, recipeHasCategoriesTx } from "./categories";
 import { replaceRecipeEntryIdsTx } from "./list-entries";
 
@@ -167,6 +171,43 @@ export async function saveRecipeNutritionEstimate(
     });
 
   return true;
+}
+
+/**
+ * Key the stored shares of `recipeIds`' recipes again after their lines' foods were re-pointed
+ * (`foods`: old id to new), so each share is still found (ADR-0039); one write for all of them.
+ */
+export async function rekeyNutritionSharesTx(
+  tx: DbTransaction,
+  recipeIds: SQLWrapper,
+  foods: ReadonlyMap<string, string>
+): Promise<void> {
+  if (foods.size === 0) return;
+  const stored = await tx
+    .select({ recipeId: recipeNutritionEstimates.recipeId, lines: recipeNutritionEstimates.lines })
+    .from(recipeNutritionEstimates)
+    .where(inArray(recipeNutritionEstimates.recipeId, recipeIds))
+    .for("update");
+  const changed = stored.flatMap(({ recipeId, lines }) => {
+    const rekeyed = rekeyedShares(lines, foods);
+
+    return rekeyed ? [{ recipeId, lines: JSON.stringify(rekeyed) }] : [];
+  });
+
+  if (changed.length === 0) return;
+  const ids = changed.map((row) => row.recipeId);
+
+  await tx
+    .update(recipeNutritionEstimates)
+    .set({
+      lines: sql`${pickedByKey(
+        recipeNutritionEstimates.recipeId,
+        ids,
+        "uuid",
+        changed.map((row) => row.lines)
+      )}::jsonb`,
+    })
+    .where(isAnyOf(recipeNutritionEstimates.recipeId, ids, "uuid"));
 }
 
 /** Drop a recipe's stored estimate: every line counts now. Whether there was one. */

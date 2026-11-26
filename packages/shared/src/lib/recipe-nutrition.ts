@@ -371,6 +371,30 @@ export function lineKey(
   return JSON.stringify([line.ingredientId ?? foldName(line.name), line.amount, line.unit ?? null]);
 }
 
+/**
+ * Stored shares keyed again after their lines' foods were re-pointed (`foods`: old id to new), so a
+ * share is still found; null when no key names one of those foods.
+ */
+export function rekeyedShares<S extends { key: string }>(
+  shares: readonly S[],
+  foods: ReadonlyMap<string, string>
+): S[] | null {
+  let changed = false;
+  const rekeyed = shares.map((share) => {
+    const parsed: unknown = JSON.parse(share.key);
+
+    if (!Array.isArray(parsed) || typeof parsed[0] !== "string") return share;
+    const food = foods.get(parsed[0]);
+
+    if (food === undefined) return share;
+    changed = true;
+
+    return { ...share, key: JSON.stringify([food, ...parsed.slice(1)]) };
+  });
+
+  return changed ? rekeyed : null;
+}
+
 function isSeasoning(line: NutritionLine, seasoning: readonly string[]): boolean {
   if (line.unit && (SEASONING_UNITS as readonly string[]).includes(line.unit)) return true;
   if (line.amount !== null && line.unit) return false;
