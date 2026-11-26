@@ -36,7 +36,7 @@ import {
 import { escapeLike } from "@norish/shared/lib/ingredient-search";
 import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
-import { inCatalogue, ownBeforeSeed, seenBy } from "./catalogue-scope";
+import { inCatalogue, ownBeforeSeed } from "./household-scope";
 
 const qb = new QueryBuilder();
 const kind = alias(ingredients, "k");
@@ -780,7 +780,7 @@ export async function addSpellingUnlessKnown(
     .where(
       and(
         eq(ingredientAliases.fold, input.fold),
-        seenBy(ingredientAliases.householdId, input.householdId)
+        inCatalogue(ingredientAliases.householdId, input.householdId)
       )
     )
     .limit(1);
@@ -813,7 +813,7 @@ export async function insertCatalogueAlias(
 
 /** The spellings of a food the rows of a spelling of `householdId` (null: the seed's) may move to. */
 export function spellingsSeenBy(householdId: string | null): SQL {
-  return seenBy(ingredientAliases.householdId, householdId);
+  return inCatalogue(ingredientAliases.householdId, householdId);
 }
 
 /**
@@ -1036,10 +1036,7 @@ export async function deleteUnnamedOwnFoods(
             .where(
               and(
                 eq(ingredientJunkPile.fold, ingredientAliases.fold),
-                or(
-                  eq(ingredientJunkPile.householdId, ingredients.householdId),
-                  isNull(ingredientJunkPile.householdId)
-                ),
+                inCatalogue(ingredientJunkPile.householdId, ingredients.householdId),
                 ne(ingredientJunkPile.reason, "names-a-food")
               )
             )
@@ -1119,7 +1116,7 @@ export function nameIsFree(ingredientId: string, name: string): SQL {
         and(
           ne(otherFood.id, ingredientId),
           eq(sql`lower(${otherFood.name})`, sql`lower(${name})`),
-          or(eq(otherFood.householdId, ingredients.householdId), isNull(otherFood.householdId))
+          inCatalogue(otherFood.householdId, ingredients.householdId)
         )
       )
   );

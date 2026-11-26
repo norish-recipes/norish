@@ -17,7 +17,7 @@ import {
 
 import type { RecipeListContext } from "./recipes";
 import { isAnyOf } from "./array-params";
-import { inCatalogue } from "./catalogue-scope";
+import { inCatalogue } from "./household-scope";
 import { lineageCte } from "./ingredient-kinds";
 import { isFirstLineFood } from "./ingredients";
 import { buildPolicyCondition } from "./recipes";

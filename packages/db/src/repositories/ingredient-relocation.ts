@@ -20,7 +20,7 @@ import {
 } from "@norish/db/schema";
 import { distinctFoods, joinOf } from "@norish/shared/lib/line-foods";
 
-import { ownBeforeSeed, seenBy } from "./catalogue-scope";
+import { inCatalogue, ownBeforeSeed } from "./household-scope";
 import { moveMergedAIChanges } from "./ingredient-ai-changes";
 import { rowsNaming, spellingsSeenBy } from "./ingredient-catalogue";
 import { ancestryCte } from "./ingredient-kinds";
@@ -293,7 +293,7 @@ export async function lockIngredientNamed(
     .where(
       and(
         eq(sql`lower(${ingredients.name})`, sql`lower(${name})`),
-        seenBy(ingredients.householdId, householdId),
+        inCatalogue(ingredients.householdId, householdId),
         exceptId ? ne(ingredients.id, exceptId) : undefined
       )
     )

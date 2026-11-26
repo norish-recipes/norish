@@ -10,7 +10,6 @@ import {
   eq,
   exists,
   gt,
-  isNull,
   notInArray,
   or,
   sql,
@@ -51,12 +50,12 @@ import {
   recipeTags,
   tags as tagsTable,
 } from "../schema";
-import { inCatalogue } from "./catalogue-scope";
 import { cookbookTitleMatch, listCookbooksByIds } from "./cookbooks";
+import { inCatalogue, inScope } from "./household-scope";
 import { findLocaleNames } from "./ingredient-aliases";
 import { matchingSearch, nameStartsWith } from "./ingredient-catalogue";
 import { kindWalkSql, lineNamesKindSql } from "./ingredient-kinds";
-import { inScope, recipeCarriesFoldsSql } from "./list-entries";
+import { recipeCarriesFoldsSql } from "./list-entries";
 import { pantryCoverageSql } from "./pantry-coverage";
 import { recipeIngredientMatches, recipeSearchMatches } from "./recipe-matches";
 import { PRIMARY_IMAGE_SQL } from "./recipe-primary-image";
@@ -591,7 +590,7 @@ async function namesOnVisible(
     .innerJoin(carried.table, eq(carried.nameFold, entity.nameFold))
     .innerJoin(link.table, eq(link.entityId, carried.id))
     .innerJoin(recipes, eq(recipes.id, link.recipeId))
-    .where(and(or(eq(entity.householdId, householdId), isNull(entity.householdId)), where))
+    .where(and(inScope(entity.householdId, householdId, { offered: true }), where))
     .groupBy(entity.nameFold)
     .orderBy(desc(sql`count(distinct ${recipes.id})`), asc(entity.nameFold))
     .$dynamic();

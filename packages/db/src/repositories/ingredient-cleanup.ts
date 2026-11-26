@@ -1,5 +1,5 @@
 import type { SQL } from "drizzle-orm";
-import { and, asc, eq, inArray, isNull, ne, notExists, or, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, ne, notExists, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
 import type { Db, DbTransaction } from "@norish/db/drizzle";
@@ -15,6 +15,7 @@ import {
   recurringGroceries,
 } from "@norish/db/schema";
 
+import { inCatalogue } from "./household-scope";
 import {
   findGroceryRows,
   ingredientIsListed,
@@ -76,10 +77,7 @@ export async function rewriteSpelling(
       and(
         eq(ingredientAliases.fold, fold),
         ne(ingredientAliases.id, id),
-        or(
-          eq(ingredientAliases.householdId, self.householdId),
-          isNull(ingredientAliases.householdId)
-        )
+        inCatalogue(ingredientAliases.householdId, self.householdId)
       )
     );
   const rewritten = await db

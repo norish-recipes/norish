@@ -34,6 +34,7 @@ import {
 } from "@norish/db/schema";
 
 import { isAnyOf } from "./array-params";
+import { inCatalogue } from "./household-scope";
 import { findGroceryRows, nameIsFree, rowsNaming } from "./ingredient-catalogue";
 import { repointLines } from "./ingredient-cleanup";
 
@@ -137,11 +138,6 @@ export const parentIsOpenAnswer = exists(
     )
 ).mapWith(Boolean);
 
-/** A food a change names is listed by name only where it is the change's household's or the seed's. */
-function inChangesCatalogue(householdId: AnyPgColumn) {
-  return or(eq(householdId, ingredientAIChanges.householdId), isNull(householdId));
-}
-
 function selectChanges(tx: Db = db) {
   return tx
     .select({
@@ -163,7 +159,10 @@ function selectChanges(tx: Db = db) {
     .leftJoin(ingredients, eq(ingredients.id, ingredientAIChanges.ingredientId))
     .leftJoin(
       targets,
-      and(eq(targets.id, ingredientAIChanges.targetId), inChangesCatalogue(targets.householdId))
+      and(
+        eq(targets.id, ingredientAIChanges.targetId),
+        inCatalogue(targets.householdId, ingredientAIChanges.householdId)
+      )
     )
     .leftJoin(
       dropped,
@@ -171,7 +170,7 @@ function selectChanges(tx: Db = db) {
         eq(ingredientAIChanges.kind, "parent"),
         isNull(ingredientAIChanges.targetId),
         eq(dropped.id, sql`(${ingredientAIChanges.undo} ->> 'formerParentId')::uuid`),
-        inChangesCatalogue(dropped.householdId)
+        inCatalogue(dropped.householdId, ingredientAIChanges.householdId)
       )
     );
 }
@@ -308,13 +307,13 @@ export async function undoStaysIn(
     reader.isServerAdmin ? isNull(ingredientAliases.householdId) : undefined
   );
   const own = (householdId: AnyPgColumn) => eq(householdId, reader.householdId);
-  const seen = (householdId: AnyPgColumn) => or(own(householdId), isNull(householdId));
+  const seen = (householdId: AnyPgColumn) => inCatalogue(householdId, reader.householdId);
   const outside: Array<() => Promise<unknown[]>> = [
     () =>
       tx
         .select({ id: ingredients.id })
         .from(ingredients)
-        .where(and(isAnyOf(ingredients.id, foods, "uuid"), not(seen(ingredients.householdId)!)))
+        .where(and(isAnyOf(ingredients.id, foods, "uuid"), not(seen(ingredients.householdId))))
         .limit(1),
     () =>
       tx
@@ -324,7 +323,7 @@ export async function undoStaysIn(
           or(
             and(
               isAnyOf(ingredientAliases.id, spellings, "uuid"),
-              not(seen(ingredientAliases.householdId)!)
+              not(seen(ingredientAliases.householdId))
             ),
             and(isAnyOf(ingredientAliases.id, moved, "uuid"), not(editable!))
           )

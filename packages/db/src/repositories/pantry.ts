@@ -16,8 +16,8 @@ import {
 } from "@norish/db/schema";
 import { PantryIngredientSelectSchema, PantrySuggestionSchema } from "@norish/shared/contracts/zod";
 
-import { inCatalogue } from "./catalogue-scope";
 import { householdRow } from "./household-rows";
+import { inCatalogue } from "./household-scope";
 import { findLocaleNames } from "./ingredient-aliases";
 import { coveredCte } from "./pantry-coverage";
 

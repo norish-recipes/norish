@@ -36,6 +36,7 @@ import { stripHtmlTags } from "@norish/shared/lib/helpers";
 import type { MutationOutcome } from "./mutation-outcomes";
 import { isConstraintViolation } from "./constraint-violation";
 import { ForeignHouseholdReferenceError } from "./household-rows";
+import { inScope, isInstanceRow } from "./household-scope";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 
 export type ListKind = "tag" | "cuisine" | "category";
@@ -92,27 +93,11 @@ export function entryName(name: string): { name: string; fold: string } | null {
   return cleaned ? { name: cleaned, fold: entryFold(cleaned) } : null;
 }
 
-/**
- * The rows of a scope, by their `household_id`: a household's own, or the instance's for null; with
- * `offered`, the instance's too, as a household's list offers them. The household may be a subquery.
- */
-export function inScope(
-  householdId: AnyPgColumn,
-  scope: ListScope | SQL,
-  { offered = false }: { offered?: boolean } = {}
-): SQL {
-  if (scope === null) return isNull(householdId);
-
-  const own = eq(householdId, scope);
-
-  return offered ? or(own, isNull(householdId))! : own;
-}
-
 /** The columns of an entry as its list shows it. */
 const rowColumns = (table: ListTable) => ({
   id: table.id,
   name: table.name,
-  instance: isNull(table.householdId).mapWith(Boolean),
+  instance: isInstanceRow(table.householdId),
   version: table.version,
 });
 

@@ -15,8 +15,8 @@ import { CATALOGUE_LANGUAGES, chooseLocaleNames } from "@norish/shared/lib/ingre
 import { slipLengths } from "@norish/shared/lib/name-slips";
 
 import type { LineResolution } from "./ingredients";
-import { inCatalogue, ownBeforeSeed, seenBy } from "./catalogue-scope";
 import { isConstraintViolation } from "./constraint-violation";
+import { inCatalogue, isInstanceRow, ownBeforeSeed } from "./household-scope";
 import { ingredientIsListed } from "./ingredient-catalogue";
 
 /**
@@ -109,7 +109,7 @@ export async function findIngredientsNamed(
       name: ingredients.name,
       ingredientId: ingredients.id,
       aliasId: ingredientAliases.id,
-      seed: isNull(ingredients.householdId).mapWith(Boolean),
+      seed: isInstanceRow(ingredients.householdId),
     })
     .from(ingredients)
     .innerJoin(ingredientAliases, eq(ingredientAliases.ingredientId, ingredients.id))
@@ -226,7 +226,7 @@ export async function findLocaleNames(
     .where(
       and(
         inArray(ingredientAliases.ingredientId, unique),
-        seenBy(ingredientAliases.householdId, householdId),
+        inCatalogue(ingredientAliases.householdId, householdId),
         inArray(ingredientAliases.locale, [...CATALOGUE_LANGUAGES])
       )
     );
@@ -303,7 +303,7 @@ export async function mintIngredientWithAliases(
         await tx
           .select({
             id: ingredients.id,
-            seed: isNull(ingredients.householdId).mapWith(Boolean),
+            seed: isInstanceRow(ingredients.householdId),
             spelled: exists(
               qb
                 .select({ id: ingredientAliases.id })

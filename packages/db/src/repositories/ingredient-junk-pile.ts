@@ -5,7 +5,7 @@ import type { Db } from "@norish/db/drizzle";
 import { db } from "@norish/db/drizzle";
 import { ingredientJunkPile } from "@norish/db/schema";
 
-import { inCatalogue } from "./catalogue-scope";
+import { inCatalogue } from "./household-scope";
 
 /**
  * The junk pile (CONTEXT.md): folds of texts that name no food, the seed's and each household's

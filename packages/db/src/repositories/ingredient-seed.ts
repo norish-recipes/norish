@@ -28,7 +28,7 @@ import {
 
 import type { NamingRows } from "./ingredient-cleanup";
 import { isAnyOf, pickedByKey } from "./array-params";
-import { inCatalogue } from "./catalogue-scope";
+import { inCatalogue } from "./household-scope";
 import {
   clearAIFlagUnlessOpen,
   parentIsOpenAnswer,
