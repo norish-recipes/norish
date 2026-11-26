@@ -62,4 +62,15 @@ Review round 1:
 14. Fixed: `readerScopedKeys` plus lists, ingredients, stores and Pantry.
 
 - Rejected: a joiner's store preference dropped where the household has one; same-named stores both kept.
-- Not changed: a recipe created while its Owner leaves can still land in the old household (the owner-household trigger reads the membership unlocked).
+
+Review round 2:
+
+1. Fixed: `writeConvertedCopy` holds the household before the recipe row. Checked: every write of a recipe's lines or list links takes the household first (update, categories, steps and lines, enrichment, Cuisines, tags); create has its new row only; catalogue and list merges keep their own order.
+2. Fixed: where several joiner foods merge into one target, the household's values win, then the joiner's on that food, then its foods oldest first: each correction group, the estimate and the flag.
+3. Fixed: a share added up after a move is `combined` and counted once; a save keys each share by its own line's foods.
+4. Fixed: a stranded change is sure (never open, never pending) and AI's doubt it held lifts unless another change is open.
+5. Fixed: a Cuisine id outside the household and instance takes the household's entry of its fold, else the instance's, else is dropped; so is an id gone.
+6. Fixed: `pickedByKey` is `jsonb_object` over two arrays (20,000 keys: 26 ms); `lockIngredients` binds one array.
+7. Fixed: the rename race holds the real rename uncommitted, so the join retries and merges; added a seeded target, a joiner parent and child both colliding, and several foods into one target; the Library test names seeded foods again. Races 20/20, moves 20/20.
+
+- Rejected: stranding a moved change whose Undo might still apply; parent chains longer than the walk's limit.
