@@ -39,3 +39,11 @@ The recipe itself is never changed. See the spec, "Ingredient catalogue".
   9. fixed: `linesAsRead` is the one application; undefined readings (not loaded) give undefined lines, used by the sheet, client and server nutrition; `readByReader` gone.
   10. fixed: `knownLineFoods`, `readLines`/`lineReadingsOf`, `linesAsRead`; `LineScope` is `{ of: … }`; `mintsIn(mode)`; `holds()` and `withLineFoods` once.
   - rejected: icon files served by content address; icons with a recipe also answering the reader's own foods; reads not joining near spellings; coverage accepting any alternative.
+
+- Review round 2:
+  1. fixed: `findLinesOutsideCatalogue` (every `LineScope`), `findRecipeLineAliases` (a required reader household, null only for a recipe's own write or a job) and `findRecipeFoodsOutsideCatalogue` carry the view condition, so a line of a recipe out of view answers as a missing one on the Pantry add, grocery add and edit, `recipes.lineReadings`, nutrition and icons.
+  2. fixed (verified): an untouched chip sends `lineFoodId`; the server takes it as the line's food (`chipFood`: the read food it names, else the one at its stored food's place, else the line's meaning resolved); the Pantry add asks the line before the picked food's own spelling. Only an edited chip resolves as typed.
+  3. fixed: a nutrition line keeps `keys`, the stored lines it stands for; the last read food of a line takes the keys of the stored foods read into it, and each share counts.
+  4. fixed: `useWorkedOutNutrition` answers `{ nutrition, isLoading }`; the web card says "Loading..." and mobile shows a skeleton.
+  5. fixed: the E2E asserts each grocery row's line, name and food.
+  - rejected: the page and its count each filtering by coverage; catalogue merges and moves outside assertOwnReferences; names local to a values relation.
