@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
+import { ActionButton } from "@/components/shared/action-button";
+import { ModalFooter } from "@/components/shared/confirm-modal";
 import UiSwitch from "@/components/shared/ui-switch";
 import { KeyIcon } from "@heroicons/react/16/solid";
 import { Description, FieldError, Input, Label, Modal, TextField, toast } from "@heroui/react";
@@ -32,7 +33,6 @@ export function ChangePasswordModal({ isOpen, onOpenChange }: ChangePasswordModa
 function ChangePasswordForm({ close }: { close: () => void }) {
   const t = useTranslations("settings.user.signInMethods");
   const tSignup = useTranslations("auth.signup");
-  const tActions = useTranslations("common.actions");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
@@ -125,22 +125,17 @@ function ChangePasswordForm({ close }: { close: () => void }) {
           <Label>{t("signOutOthers")}</Label>
         </UiSwitch>
       </Modal.Body>
-      <Modal.Footer>
-        <ActionButtonGroup>
-          <ActionButton action="cancel" onPress={close}>
-            {tActions("cancel")}
-          </ActionButton>
-          <ActionButton
-            action="save"
-            icon={KeyIcon}
-            isDisabled={!isValid}
-            isPending={change.isPending}
-            type="submit"
-          >
-            {t("changePassword")}
-          </ActionButton>
-        </ActionButtonGroup>
-      </Modal.Footer>
+      <ModalFooter onCancel={close}>
+        <ActionButton
+          action="save"
+          icon={KeyIcon}
+          isDisabled={!isValid}
+          isPending={change.isPending}
+          type="submit"
+        >
+          {t("changePassword")}
+        </ActionButton>
+      </ModalFooter>
     </form>
   );
 }

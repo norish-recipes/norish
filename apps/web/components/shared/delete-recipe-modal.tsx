@@ -1,6 +1,7 @@
 "use client";
 
-import { Button, Modal } from "@heroui/react";
+import { ActionButton } from "@/components/shared/action-button";
+import ConfirmModal from "@/components/shared/confirm-modal";
 import { useTranslations } from "next-intl";
 
 interface DeleteRecipeModalProps {
@@ -25,33 +26,20 @@ export function DeleteRecipeModal({
   const tActions = useTranslations("common.actions");
 
   return (
-    <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={onClose}>
-      <Modal.Container className="z-[1100]">
-        <Modal.Dialog>
-          {({ close: onCloseCallback }) => (
-            <>
-              <Modal.Header className="text-danger">{t("title")}</Modal.Header>
-              <Modal.Body>
-                <p className="text-danger mb-2 font-semibold">{t("warning")}</p>
-                <p>
-                  {recipeName ? t("confirmMessage", { recipeName }) : t("confirmCount", { count })}
-                </p>
-                {keptCount > 0 ? (
-                  <p className="mt-2">{t("keptCount", { count: keptCount })}</p>
-                ) : null}
-              </Modal.Body>
-              <Modal.Footer>
-                <Button onPress={onCloseCallback} variant="tertiary">
-                  {tActions("cancel")}
-                </Button>
-                <Button onPress={onConfirm} variant="danger">
-                  {tActions("delete")}
-                </Button>
-              </Modal.Footer>
-            </>
-          )}
-        </Modal.Dialog>
-      </Modal.Container>
-    </Modal.Backdrop>
+    <ConfirmModal
+      confirm={
+        <ActionButton action="delete" variant="danger" onPress={onConfirm}>
+          {tActions("delete")}
+        </ActionButton>
+      }
+      headerClassName="text-danger"
+      isOpen={isOpen}
+      title={t("title")}
+      onOpenChange={onClose}
+    >
+      <p className="text-danger mb-2 font-semibold">{t("warning")}</p>
+      <p>{recipeName ? t("confirmMessage", { recipeName }) : t("confirmCount", { count })}</p>
+      {keptCount > 0 ? <p className="mt-2">{t("keptCount", { count: keptCount })}</p> : null}
+    </ConfirmModal>
   );
 }

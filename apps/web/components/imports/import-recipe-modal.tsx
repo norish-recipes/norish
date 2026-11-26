@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ActionButton } from "@/components/shared/action-button";
+import ConfirmModal from "@/components/shared/confirm-modal";
 import { readClipboardUrl } from "@/lib/clipboard-url";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { ArrowDownTrayIcon, SparklesIcon } from "@heroicons/react/16/solid";
-import { Button, Input, Label, Modal, TextField } from "@heroui/react";
+import { Input, Label, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { usePermissions } from "@norish/shared-react/reader";
@@ -81,35 +83,33 @@ export default function ImportRecipeModal({ isOpen, onOpenChange }: ImportRecipe
   }
 
   return (
-    <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={handleOpenChange}>
-      <Modal.Container className="z-[1100]" size="md">
-        <Modal.Dialog>
-          {() => (
-            <>
-              <Modal.CloseTrigger />
-              <Modal.Header className="flex flex-col gap-1">{t("title")}</Modal.Header>
-              <Modal.Body>
-                <TextField fullWidth inputMode="url" value={importUrl} onChange={setImportUrl}>
-                  <Label>{t("label")}</Label>
-                  <Input fullWidth placeholder={t("placeholder")} variant="secondary" />
-                </TextField>
-              </Modal.Body>
-              <Modal.Footer>
-                {isAIEnabled && (
-                  <Button variant="secondary" onPress={handleAIImport}>
-                    {<SparklesIcon className="h-4 w-4" />}
-                    {tActions("aiImport")}
-                  </Button>
-                )}
-                <Button variant="primary" onPress={handleImportFromUrl}>
-                  {<ArrowDownTrayIcon className="h-4 w-4" />}
-                  {tActions("import")}
-                </Button>
-              </Modal.Footer>
-            </>
+    <ConfirmModal
+      confirm={
+        <>
+          {isAIEnabled && (
+            <ActionButton
+              action="apply"
+              icon={SparklesIcon}
+              variant="secondary"
+              onPress={handleAIImport}
+            >
+              {tActions("aiImport")}
+            </ActionButton>
           )}
-        </Modal.Dialog>
-      </Modal.Container>
-    </Modal.Backdrop>
+          <ActionButton action="apply" icon={ArrowDownTrayIcon} onPress={handleImportFromUrl}>
+            {tActions("import")}
+          </ActionButton>
+        </>
+      }
+      isOpen={isOpen}
+      size="md"
+      title={t("title")}
+      onOpenChange={handleOpenChange}
+    >
+      <TextField fullWidth inputMode="url" value={importUrl} onChange={setImportUrl}>
+        <Label>{t("label")}</Label>
+        <Input fullWidth placeholder={t("placeholder")} variant="secondary" />
+      </TextField>
+    </ConfirmModal>
   );
 }

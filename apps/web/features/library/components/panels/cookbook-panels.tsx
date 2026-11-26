@@ -5,8 +5,9 @@ import CookbookCover from "@/components/cookbooks/cookbook-cover";
 import { SelectableRow } from "@/components/cookbooks/selectable-row";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
+import ConfirmModal from "@/components/shared/confirm-modal";
 import { PhotoIcon, TrashIcon } from "@heroicons/react/24/outline";
-import { Button, Input, Label, Modal, Separator, Spinner } from "@heroui/react";
+import { Button, Input, Label, Separator, Spinner } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
@@ -339,28 +340,24 @@ export function DeleteCookbookModal({
   const tActions = useTranslations("common.actions");
 
   return (
-    <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={onClose}>
-      <Modal.Container className="z-[1100]">
-        <Modal.Dialog>
-          {({ close }) => (
-            <>
-              <Modal.Header className="text-danger">{t("deleteTitle")}</Modal.Header>
-              <Modal.Body>
-                <p>{t("deleteConfirm", { title })}</p>
-                <p className="text-muted mt-2">{t("deleteKeepsRecipes")}</p>
-              </Modal.Body>
-              <Modal.Footer>
-                <Button variant="tertiary" onPress={close}>
-                  {tActions("cancel")}
-                </Button>
-                <Button data-testid="confirm-delete-cookbook" variant="danger" onPress={onConfirm}>
-                  {tActions("delete")}
-                </Button>
-              </Modal.Footer>
-            </>
-          )}
-        </Modal.Dialog>
-      </Modal.Container>
-    </Modal.Backdrop>
+    <ConfirmModal
+      confirm={
+        <ActionButton
+          action="delete"
+          data-testid="confirm-delete-cookbook"
+          variant="danger"
+          onPress={onConfirm}
+        >
+          {tActions("delete")}
+        </ActionButton>
+      }
+      headerClassName="text-danger"
+      isOpen={isOpen}
+      title={t("deleteTitle")}
+      onOpenChange={onClose}
+    >
+      <p>{t("deleteConfirm", { title })}</p>
+      <p className="text-muted mt-2">{t("deleteKeepsRecipes")}</p>
+    </ConfirmModal>
   );
 }

@@ -8,7 +8,7 @@ import {
   ActionButtonGroup,
   IconActionButton,
 } from "@/components/shared/action-button";
-import ConfirmModal from "@/components/shared/confirm-modal";
+import ConfirmModal, { ModalFooter } from "@/components/shared/confirm-modal";
 import { usePending } from "@/hooks/use-pending";
 import { ClipboardDocumentIcon, PauseIcon, PlayIcon } from "@heroicons/react/16/solid";
 import { ArrowTopRightOnSquareIcon, KeyIcon } from "@heroicons/react/24/outline";
@@ -195,13 +195,11 @@ export default function ApiKeyCard() {
                   })}
                 </p>
               </Modal.Body>
-              <Modal.Footer>
-                <ActionButtonGroup>
-                  <ActionButton action="done" onPress={dismissKey}>
-                    {t("generatedModal.confirmButton")}
-                  </ActionButton>
-                </ActionButtonGroup>
-              </Modal.Footer>
+              <ModalFooter>
+                <ActionButton action="done" onPress={dismissKey}>
+                  {t("generatedModal.confirmButton")}
+                </ActionButton>
+              </ModalFooter>
             </>
           </Modal.Dialog>
         </Modal.Container>

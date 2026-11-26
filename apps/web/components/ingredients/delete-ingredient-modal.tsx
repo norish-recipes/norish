@@ -1,6 +1,7 @@
 "use client";
 
-import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
+import { ActionButton } from "@/components/shared/action-button";
+import { ModalFooter } from "@/components/shared/confirm-modal";
 import { ExclamationTriangleIcon, EyeIcon } from "@heroicons/react/16/solid";
 import { Button, Modal } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -77,23 +78,18 @@ function DeleteIngredientContent({
           </div>
         ) : null}
       </Modal.Body>
-      <Modal.Footer>
-        <ActionButtonGroup>
-          <ActionButton action="cancel" onPress={onClose}>
-            {tActions("cancel")}
-          </ActionButton>
-          <ActionButton
-            action="delete"
-            data-testid="ingredient-delete-confirm"
-            // Not before the counts are read; a failed read leaves it open.
-            isDisabled={isPending}
-            variant="danger"
-            onPress={onConfirm}
-          >
-            {tActions("delete")}
-          </ActionButton>
-        </ActionButtonGroup>
-      </Modal.Footer>
+      <ModalFooter onCancel={onClose}>
+        <ActionButton
+          action="delete"
+          data-testid="ingredient-delete-confirm"
+          // Not before the counts are read; a failed read leaves it open.
+          isDisabled={isPending}
+          variant="danger"
+          onPress={onConfirm}
+        >
+          {tActions("delete")}
+        </ActionButton>
+      </ModalFooter>
     </>
   );
 }

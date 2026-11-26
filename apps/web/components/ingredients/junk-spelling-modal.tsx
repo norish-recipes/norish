@@ -1,7 +1,7 @@
 "use client";
 
-import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
-import { Modal } from "@heroui/react";
+import { ActionButton } from "@/components/shared/action-button";
+import ConfirmModal from "@/components/shared/confirm-modal";
 import { useTranslations } from "next-intl";
 
 /**
@@ -21,34 +21,31 @@ export function JunkSpellingModal({
   const t = useTranslations("settings.ingredients");
 
   return (
-    <Modal.Backdrop className="z-[1099]" isOpen={alias !== null} onOpenChange={onClose}>
-      <Modal.Container className="z-[1100]">
-        <Modal.Dialog data-testid="ingredient-junk-dialog">
-          <Modal.CloseTrigger />
-          <Modal.Header>{t("junkTitle", { alias: alias ?? "" })}</Modal.Header>
-          <Modal.Body>
-            <p>{t("junkBody")}</p>
-          </Modal.Body>
-          <Modal.Footer>
-            <ActionButtonGroup>
-              <ActionButton
-                action="remove"
-                data-testid="ingredient-junk-remove"
-                onPress={() => onRemove(false)}
-              >
-                {t("junkRemove")}
-              </ActionButton>
-              <ActionButton
-                action="delete"
-                data-testid="ingredient-junk-mark"
-                onPress={() => onRemove(true)}
-              >
-                {t("junkMark")}
-              </ActionButton>
-            </ActionButtonGroup>
-          </Modal.Footer>
-        </Modal.Dialog>
-      </Modal.Container>
-    </Modal.Backdrop>
+    <ConfirmModal
+      confirm={
+        <>
+          <ActionButton
+            action="remove"
+            data-testid="ingredient-junk-remove"
+            onPress={() => onRemove(false)}
+          >
+            {t("junkRemove")}
+          </ActionButton>
+          <ActionButton
+            action="delete"
+            data-testid="ingredient-junk-mark"
+            onPress={() => onRemove(true)}
+          >
+            {t("junkMark")}
+          </ActionButton>
+        </>
+      }
+      data-testid="ingredient-junk-dialog"
+      isOpen={alias !== null}
+      title={t("junkTitle", { alias: alias ?? "" })}
+      onOpenChange={onClose}
+    >
+      <p>{t("junkBody")}</p>
+    </ConfirmModal>
   );
 }

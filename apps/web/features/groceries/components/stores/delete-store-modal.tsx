@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Modal, Radio, RadioGroup } from "@heroui/react";
+import { ActionButton } from "@/components/shared/action-button";
+import { ModalFooter } from "@/components/shared/confirm-modal";
+import { Modal, Radio, RadioGroup } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useStoreGroceryCount } from "@norish/shared-react/groceries";
@@ -47,7 +49,6 @@ function DeleteStoreDialog({
 }: Omit<DeleteStoreModalProps, "isOpen">) {
   const [deleteOption, setDeleteOption] = useState<"keep" | "delete">("keep");
   const t = useTranslations("groceries.storeManager");
-  const tActions = useTranslations("common.actions");
   const itemCount = useStoreGroceryCount(storeId) ?? 0;
 
   const handleConfirm = () => {
@@ -106,14 +107,11 @@ function DeleteStoreDialog({
 
         {itemCount === 0 && <p className="text-muted text-sm">{t("noItems")}</p>}
       </Modal.Body>
-      <Modal.Footer>
-        <Button variant="tertiary" onPress={onClose}>
-          {tActions("cancel")}
-        </Button>
-        <Button variant="danger" onPress={handleConfirm}>
+      <ModalFooter onCancel={onClose}>
+        <ActionButton action="delete" variant="danger" onPress={handleConfirm}>
           {t("deleteStore")}
-        </Button>
-      </Modal.Footer>
+        </ActionButton>
+      </ModalFooter>
     </>
   );
 }

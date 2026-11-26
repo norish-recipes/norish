@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef } from "react";
-import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
+import { ActionButton } from "@/components/shared/action-button";
+import { ModalFooter } from "@/components/shared/confirm-modal";
 import { ServerIcon } from "@heroicons/react/24/outline";
 import { Modal } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -106,21 +107,19 @@ function CaldavConfigEditFields({
           onTrust={async () => connection.trustAndRetest(form.target(await passwordToUse()))}
         />
       </Modal.Body>
-      <Modal.Footer>
-        <ActionButtonGroup>
-          <ActionButton
-            action="test"
-            isDisabled={!serverUrl || !username || (!password && !config)}
-            isPending={connection.testing}
-            onPress={async () => connection.runTest(form.target(await passwordToUse()))}
-          >
-            {tActions("test")}
-          </ActionButton>
-          <ActionButton action="save" isDisabled={!canSave} isPending={saving} onPress={handleSave}>
-            {tActions("save")}
-          </ActionButton>
-        </ActionButtonGroup>
-      </Modal.Footer>
+      <ModalFooter isCancelDisabled={saving} onCancel={onClose}>
+        <ActionButton
+          action="test"
+          isDisabled={!serverUrl || !username || (!password && !config)}
+          isPending={connection.testing}
+          onPress={async () => connection.runTest(form.target(await passwordToUse()))}
+        >
+          {tActions("test")}
+        </ActionButton>
+        <ActionButton action="save" isDisabled={!canSave} isPending={saving} onPress={handleSave}>
+          {tActions("save")}
+        </ActionButton>
+      </ModalFooter>
     </>
   );
 }
