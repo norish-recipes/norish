@@ -7,6 +7,7 @@ import { and, eq, isNotNull, ne, or } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+import { moveHouseholdRowsTx } from "@norish/db/repositories/household-merge";
 import {
   deleteAccount,
   getHouseholdIdForUser,
@@ -26,10 +27,17 @@ import {
 } from "@norish/db/repositories/list-entries";
 import { saveRecipeNutritionEstimate } from "@norish/db/repositories/recipe-enrichment";
 import {
+  aisleLinks,
+  aisles,
   categories,
   cuisines,
+  groceries,
   ingredientAliases,
+  ingredientNutritionCorrections,
   ingredients,
+  ingredientStorePreferences,
+  pantryIngredients,
+  plannedItems,
   recipeCategories,
   recipeCuisines,
   recipeIngredientFoods,
@@ -37,6 +45,8 @@ import {
   recipeNutritionEstimates,
   recipes,
   recipeTags,
+  recurringGroceries,
+  stores,
   tags,
 } from "@norish/db/schema";
 import { lineKey } from "@norish/shared/lib/recipe-nutrition";
@@ -425,6 +435,131 @@ describe("household moves", () => {
       expect(await sharesOf(recipe.id)).toEqual([
         lineKey({ name: "soja", amount: 1, unit: null, ingredientId: soy.ingredientId }),
       ]);
+    });
+  });
+  /** One of each household-owned row, for `userId`'s household; the Pantry, correction and store
+   * preference are for `food`. */
+  async function householdRows(userId: string, food: string, store: string) {
+    const db = getTestDb();
+    const householdId = await householdOf(userId);
+    const [shop] = await db.insert(stores).values({ householdId, userId, name: store }).returning();
+    const [aisle] = await db
+      .insert(aisles)
+      .values({ storeId: shop!.id, name: "Dairy" })
+      .returning();
+
+    await db
+      .insert(aisleLinks)
+      .values({ storeId: shop!.id, aisleId: aisle!.id, ingredientId: food });
+    const [grocery] = await db
+      .insert(groceries)
+      .values({ householdId, userId, name: `${store} grocery`, storeId: shop!.id })
+      .returning();
+    const [recurring] = await db
+      .insert(recurringGroceries)
+      .values({
+        householdId,
+        userId,
+        name: `${store} bread`,
+        recurrenceRule: "week",
+        nextPlannedFor: "2027-01-01",
+      })
+      .returning();
+    const [pantry] = await db
+      .insert(pantryIngredients)
+      .values({ householdId, userId, ingredientId: food })
+      .returning();
+    const [correction] = await db
+      .insert(ingredientNutritionCorrections)
+      .values({ householdId, userId, ingredientId: food, kcal: 1, fat: 1, carbs: 1, protein: 1 })
+      .returning();
+    const [preference] = await db
+      .insert(ingredientStorePreferences)
+      .values({ householdId, userId, ingredientId: food, storeId: shop!.id })
+      .returning();
+    const [plan] = await db
+      .insert(plannedItems)
+      .values({
+        householdId,
+        userId,
+        date: "2027-01-02",
+        slot: "Dinner",
+        itemType: "note",
+        title: store,
+      })
+      .returning();
+
+    return {
+      householdId,
+      shop: shop!,
+      grocery: grocery!,
+      recurring: recurring!,
+      pantry: pantry!,
+      correction: correction!,
+      preference: preference!,
+      plan: plan!,
+    };
+  }
+
+  async function idsIn(
+    table:
+      | typeof pantryIngredients
+      | typeof ingredientNutritionCorrections
+      | typeof ingredientStorePreferences
+      | typeof groceries
+      | typeof recurringGroceries
+      | typeof plannedItems
+      | typeof stores,
+    householdId: string
+  ) {
+    const rows = await getTestDb()
+      .select({ id: table.id })
+      .from(table)
+      .where(eq(table.householdId, householdId));
+
+    return rows.map((row) => row.id).sort();
+  }
+
+  describe("joining moves the household's rows", () => {
+    it("moves Stores, groceries and plans; for one food, the joined household's row stays", async () => {
+      const host = (await createTestUser())!;
+      const joiner = (await createTestUser())!;
+      const milk = (await createTestIngredient({ name: "milk" }))!;
+      const butter = (await createTestIngredient({ name: "butter" }))!;
+      const theirs = await householdRows(host.id, milk.id, "Market");
+      const mine = await householdRows(joiner.id, milk.id, "Corner shop");
+      const [butterPantry] = await getTestDb()
+        .insert(pantryIngredients)
+        .values({ householdId: mine.householdId, userId: joiner.id, ingredientId: butter.id })
+        .returning();
+
+      await getTestDb().transaction((tx) =>
+        moveHouseholdRowsTx(tx, mine.householdId, theirs.householdId)
+      );
+
+      const into = theirs.householdId;
+
+      expect(await idsIn(stores, into)).toEqual([theirs.shop.id, mine.shop.id].sort());
+      expect(await idsIn(groceries, into)).toEqual([theirs.grocery.id, mine.grocery.id].sort());
+      expect(await idsIn(recurringGroceries, into)).toEqual(
+        [theirs.recurring.id, mine.recurring.id].sort()
+      );
+      expect(await idsIn(plannedItems, into)).toEqual([theirs.plan.id, mine.plan.id].sort());
+      expect(await idsIn(pantryIngredients, into)).toEqual(
+        [theirs.pantry.id, butterPantry!.id].sort()
+      );
+      expect(await idsIn(ingredientNutritionCorrections, into)).toEqual([theirs.correction.id]);
+      expect(await idsIn(ingredientStorePreferences, into)).toEqual([theirs.preference.id]);
+      // The joiner's Stores keep their aisles and links, and come after the household's.
+      const [moved] = await getTestDb().select().from(stores).where(eq(stores.id, mine.shop.id));
+
+      expect(moved!.sortOrder).toBeGreaterThan(theirs.shop.sortOrder);
+      expect(
+        await getTestDb()
+          .select({ id: aisleLinks.id })
+          .from(aisleLinks)
+          .where(eq(aisleLinks.storeId, mine.shop.id))
+      ).toHaveLength(1);
     });
   });
 });
