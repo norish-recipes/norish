@@ -12,8 +12,8 @@ import { spokenLabel } from "@/lib/spoken-label";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Skeleton } from "heroui-native";
 
-/** A row's height. */
-const ROW_HEIGHT = "min-h-[52px]";
+/** A row's height: the Settings row's, so a Content list and Settings rows line up. */
+const ROW_HEIGHT = "min-h-[50px]";
 
 /** How far each level of a tree sets its rows in, in points. */
 const INDENT = 24;
