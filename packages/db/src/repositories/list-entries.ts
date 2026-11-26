@@ -308,22 +308,25 @@ export interface EntryWriteOptions {
   createEntries?: boolean;
 }
 
-/** Replaces a recipe's entries with `names`, in order, from the recipe's household's list. */
+/** Replaces a recipe's entries with `names`, in order, from the recipe's household's list;
+ * answers how many names it found no entry for. */
 export async function replaceRecipeEntriesByNameTx(
   tx: DbTransaction,
   kind: ListKind,
   recipeId: string,
   names: readonly string[],
   { createEntries = true }: EntryWriteOptions = {}
-): Promise<void> {
+): Promise<number> {
   const householdId = await lockedRecipeHouseholdTx(tx, recipeId);
 
-  if (!householdId) return;
+  if (!householdId) return 0;
 
   const entries = await entriesByFoldTx(tx, kind, householdId, names, { create: createEntries });
   const ids = names.flatMap((name) => entries.get(entryName(name)?.fold ?? "")?.id ?? []);
 
   await writeRecipeLinksTx(tx, kind, householdId, recipeId, ids);
+
+  return names.length - ids.length;
 }
 
 /** The recipe's household, held so no move takes the recipe elsewhere before the commit. */
@@ -333,18 +336,18 @@ async function lockedRecipeHouseholdTx(tx: DbTransaction, recipeId: string) {
 
 /** Replaces a recipe's entries with `ids`, in order: the recipe's household's and the instance's
  * stay; any other is stale (read before a move) and becomes the instance's entry of its fold, else
- * the household's own, else ForeignHouseholdReferenceError. An id gone is dropped. */
+ * the household's own, else ForeignHouseholdReferenceError. An id gone is dropped and counted. */
 export async function replaceRecipeEntryIdsTx(
   tx: DbTransaction,
   kind: ListKind,
   recipeId: string,
   ids: readonly string[]
-): Promise<void> {
+): Promise<number> {
   const { table } = KINDS[kind];
   const householdId = await lockedRecipeHouseholdTx(tx, recipeId);
   const unique = [...new Set(ids)];
 
-  if (!householdId) return;
+  if (!householdId) return 0;
   const named = await tx
     .select({ id: table.id, householdId: table.householdId, nameFold: table.nameFold })
     .from(table)
@@ -390,6 +393,8 @@ export async function replaceRecipeEntryIdsTx(
       return [home];
     })
   );
+
+  return unique.filter((id) => !byId.has(id)).length;
 }
 
 /** Inserts `links`, keeping a link already there; each entry must be `householdId`'s (the recipes'

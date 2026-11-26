@@ -52,11 +52,11 @@ export async function attachCategoriesToRecipeByInputTx(
   recipeId: string,
   names: readonly string[],
   options: EntryWriteOptions = {}
-): Promise<void> {
+): Promise<number> {
   const resolved =
     options.createEntries === false
       ? names
       : names.map((name) => resolveCategoryName(name, BUILT_IN_ALIASES, []));
 
-  await replaceRecipeEntriesByNameTx(tx, "category", recipeId, resolved, options);
+  return replaceRecipeEntriesByNameTx(tx, "category", recipeId, resolved, options);
 }
