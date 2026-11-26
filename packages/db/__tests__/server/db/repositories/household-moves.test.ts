@@ -40,8 +40,10 @@ import {
   groceries,
   households,
   householdUsers,
+  ingredientAIChanges,
   ingredientAliases,
   ingredientNutritionCorrections,
+  ingredientNutritionEstimates,
   ingredients,
   ingredientStorePreferences,
   pantryIngredients,
@@ -54,6 +56,7 @@ import {
   recipes,
   recipeTags,
   recurringGroceries,
+  storeProductLinks,
   stores,
   tags,
 } from "@norish/db/schema";
@@ -66,8 +69,10 @@ import {
   createTestUser,
   getTestDb,
   insertTestRecipeLine,
+  listTestAIChanges,
   mintTestFood,
   readTestIngredient,
+  readTestSpelling,
   setTestIngredients,
   testLineAliasIds,
   testLineFoodNames,
@@ -652,6 +657,208 @@ describe("household moves", () => {
 
       expect(intoTags.map((row) => row.name).sort()).toEqual(["Spicy", "Vegan"]);
       expect(await getTestDb().select().from(tags).where(eq(tags.householdId, from))).toEqual([]);
+      await expectNothingForeign();
+    });
+
+    it("gives a joiner food one target: every row of every spelling lands on the food of its name", async () => {
+      const host = (await createTestUser())!;
+      const joiner = (await createTestUser())!;
+      const into = await householdOf(host.id);
+      const own = await householdOf(joiner.id);
+      const db = getTestDb();
+      const named = await mintTestFood(into, "tomaat");
+      const spelled = await mintTestFood(into, "paradijsappel");
+      const theirTomato = await addTestSpelling(spelled.ingredientId, "tomato");
+      const mine = await mintTestFood(own, "tomaat");
+      const myTomato = await addTestSpelling(mine.ingredientId, "tomato");
+      const food = mine.ingredientId;
+      const recipe = await createTestRecipe(joiner.id);
+      const byName = await insertTestRecipeLine({ recipeId: recipe.id, name: "tomaat" }, [
+        mine.aliasId,
+      ]);
+      const bySpelling = await insertTestRecipeLine({ recipeId: recipe.id, name: "tomato" }, [
+        myTomato,
+      ]);
+      const rows = await householdRows(joiner.id, food, "Corner shop");
+
+      await db
+        .update(groceries)
+        .set({ ingredientId: food, ingredientAliasId: myTomato })
+        .where(eq(groceries.id, rows.grocery.id));
+      await db
+        .update(recurringGroceries)
+        .set({ ingredientId: food, ingredientAliasId: myTomato })
+        .where(eq(recurringGroceries.id, rows.recurring.id));
+      await db
+        .update(pantryIngredients)
+        .set({ ingredientAliasId: myTomato })
+        .where(eq(pantryIngredients.id, rows.pantry.id));
+      // The household keeps the other food in its Pantry, which must not swallow the joiner's.
+      await db
+        .insert(pantryIngredients)
+        .values({ householdId: into, userId: host.id, ingredientId: spelled.ingredientId });
+      const [link] = await db
+        .insert(storeProductLinks)
+        .values({ storeId: rows.shop.id, ingredientId: food })
+        .returning();
+      await db.insert(ingredientNutritionEstimates).values({ ingredientId: food, kcal: 18 });
+      await setTestIngredients(food, { flagged: true, flagReason: "ai-unsure" });
+
+      await mergeInto(joiner.id, into);
+
+      const target = named.ingredientId;
+      const onTarget = async (
+        table:
+          | typeof groceries
+          | typeof recurringGroceries
+          | typeof pantryIngredients
+          | typeof ingredientNutritionCorrections
+          | typeof ingredientStorePreferences
+          | typeof aisleLinks
+          | typeof storeProductLinks,
+        id: string
+      ) => (await db.select().from(table).where(eq(table.id, id)))[0]?.ingredientId;
+
+      expect(await readTestIngredient(food)).toBeNull();
+      expect(await testLineAliasIds(byName.id)).toEqual([named.aliasId]);
+      // The household's "tomato" stays on its own food; the joiner's line takes the target's spelling.
+      expect(await testLineAliasIds(bySpelling.id)).toEqual([named.aliasId]);
+      expect((await readTestSpelling(theirTomato))?.ingredientId).toBe(spelled.ingredientId);
+      for (const [table, id] of [
+        [groceries, rows.grocery.id],
+        [recurringGroceries, rows.recurring.id],
+        [pantryIngredients, rows.pantry.id],
+        [ingredientNutritionCorrections, rows.correction.id],
+        [ingredientStorePreferences, rows.preference.id],
+        [storeProductLinks, link!.id],
+      ] as const) {
+        expect(await onTarget(table, id)).toBe(target);
+      }
+      const [grocery] = await db.select().from(groceries).where(eq(groceries.id, rows.grocery.id));
+
+      expect(grocery?.ingredientAliasId).toBe(named.aliasId);
+      expect(
+        (
+          await db
+            .select({ ingredientId: aisleLinks.ingredientId })
+            .from(aisleLinks)
+            .where(eq(aisleLinks.storeId, rows.shop.id))
+        ).map((row) => row.ingredientId)
+      ).toEqual([target]);
+      expect(
+        await db
+          .select({ kcal: ingredientNutritionEstimates.kcal })
+          .from(ingredientNutritionEstimates)
+          .where(eq(ingredientNutritionEstimates.ingredientId, target))
+      ).toEqual([{ kcal: 18 }]);
+      expect(await readTestIngredient(target)).toMatchObject({
+        flagged: true,
+        flagReason: "ai-unsure",
+      });
+      await expectNothingForeign();
+    });
+
+    it("keeps what a colliding food knows that the household's lacks", async () => {
+      const host = (await createTestUser())!;
+      const joiner = (await createTestUser())!;
+      const into = await householdOf(host.id);
+      const own = await householdOf(joiner.id);
+      const db = getTestDb();
+      const theirs = await mintTestFood(into, "prei");
+      const mine = await mintTestFood(own, "prei");
+      const parent = await mintTestFood(own, "groente");
+      const food = mine.ingredientId;
+      const rows = await householdRows(joiner.id, food, "Corner shop");
+
+      await db
+        .update(ingredientNutritionCorrections)
+        .set({ kcal: 30, density: 0.4, pieceWeight: 150 })
+        .where(eq(ingredientNutritionCorrections.id, rows.correction.id));
+      const [theirCorrection] = await db
+        .insert(ingredientNutritionCorrections)
+        .values({
+          householdId: into,
+          userId: host.id,
+          ingredientId: theirs.ingredientId,
+          kcal: 31,
+          fat: 0,
+          carbs: 7,
+          protein: 1,
+        })
+        .returning();
+      await db.insert(ingredientNutritionEstimates).values({ ingredientId: food, kcal: 25 });
+      const change = (kind: string, undo: Record<string, unknown>) =>
+        db
+          .insert(ingredientAIChanges)
+          .values({
+            kind,
+            householdId: own,
+            ingredientId: food,
+            sure: true,
+            undo: undo as typeof ingredientAIChanges.$inferInsert.undo,
+          })
+          .returning({ id: ingredientAIChanges.id });
+      const [parentChange] = await change("parent", {
+        kind: "parent",
+        formerParentId: parent.ingredientId,
+      });
+      const [renamed] = await change("plain-name", {
+        kind: "plain-name",
+        formerName: "PREI",
+        name: "prei",
+      });
+      const [merged] = await change("merge", {
+        kind: "merge",
+        name: "porree",
+        ownerId: null,
+        aliasIds: [mine.aliasId],
+        parentId: null,
+      });
+
+      await setTestIngredients(food, { flagged: true, flagReason: "ai-unsure" });
+      await mergeInto(joiner.id, into);
+
+      const changes = new Map((await listTestAIChanges()).map((row) => [row.id, row]));
+
+      // Every change is the household's food's now; those whose Undo no longer applies are stranded.
+      for (const id of [parentChange!.id, renamed!.id, merged!.id]) {
+        expect(changes.get(id)).toMatchObject({
+          ingredientId: theirs.ingredientId,
+          householdId: into,
+        });
+      }
+      expect(changes.get(parentChange!.id)?.undo.stranded).toBe(true);
+      expect(changes.get(renamed!.id)?.undo.stranded).toBe(true);
+      // The merge's spelling joined the household's own "prei" and is gone.
+      expect(changes.get(merged!.id)?.undo.stranded).toBe(true);
+      expect(
+        await db
+          .select({ kcal: ingredientNutritionEstimates.kcal })
+          .from(ingredientNutritionEstimates)
+          .where(eq(ingredientNutritionEstimates.ingredientId, theirs.ingredientId))
+      ).toEqual([{ kcal: 25 }]);
+      expect(await readTestIngredient(theirs.ingredientId)).toMatchObject({ flagged: true });
+      // The household's correction wins field by field; what it leaves empty comes from the joiner's.
+      const corrections = await db
+        .select()
+        .from(ingredientNutritionCorrections)
+        .where(eq(ingredientNutritionCorrections.householdId, into));
+
+      expect(corrections).toHaveLength(1);
+      expect(corrections[0]).toMatchObject({
+        id: theirCorrection!.id,
+        kcal: 31,
+        carbs: 7,
+        density: 0.4,
+        pieceWeight: 150,
+      });
+      // With no preference of its own for the food, the household takes the joiner's.
+      expect(
+        await db
+          .select({ id: ingredientStorePreferences.id })
+          .from(ingredientStorePreferences)
+          .where(eq(ingredientStorePreferences.ingredientId, theirs.ingredientId))
+      ).toEqual([{ id: rows.preference.id }]);
       await expectNothingForeign();
     });
 

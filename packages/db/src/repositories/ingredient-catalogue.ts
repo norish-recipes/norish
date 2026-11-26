@@ -826,15 +826,20 @@ export function spellingsSeenBy(householdId: string | null): SQL {
 }
 
 /**
- * Remove a spelling; its rows move to the food's spelling folded as its name, else its oldest, among
- * those its household sees. The caller holds the Ingredient and has kept it such a spelling.
+ * Remove a spelling; its rows move to the food's spelling of the same fold, else folded as its name,
+ * else its oldest, among those its household (or `heirsSeenBy`) sees. The caller holds the food.
  */
-export async function deleteCatalogueAlias(tx: DbTransaction, aliasId: string): Promise<void> {
+export async function deleteCatalogueAlias(
+  tx: DbTransaction,
+  aliasId: string,
+  { heirsSeenBy }: { heirsSeenBy?: string } = {}
+): Promise<void> {
   const [food] = await tx
     .select({
       id: ingredients.id,
       name: ingredients.name,
       householdId: ingredientAliases.householdId,
+      fold: ingredientAliases.fold,
     })
     .from(ingredientAliases)
     .innerJoin(ingredients, eq(ingredients.id, ingredientAliases.ingredientId))
@@ -849,10 +854,11 @@ export async function deleteCatalogueAlias(tx: DbTransaction, aliasId: string): 
       and(
         eq(ingredientAliases.ingredientId, food.id),
         ne(ingredientAliases.id, aliasId),
-        spellingsSeenBy(food.householdId)
+        spellingsSeenBy(heirsSeenBy ?? food.householdId)
       )
     )
     .orderBy(
+      desc(eq(ingredientAliases.fold, food.fold)),
       desc(eq(ingredientAliases.fold, ingredientAliasFold(food.name))),
       asc(ingredientAliases.createdAt),
       asc(ingredientAliases.id)

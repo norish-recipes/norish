@@ -34,7 +34,7 @@ import {
 } from "@norish/db/schema";
 
 import type { CatalogueReader } from "./household-scope";
-import { isAnyOf } from "./array-params";
+import { isAnyOf, pickedByKey } from "./array-params";
 import { editableBy, inCatalogue } from "./household-scope";
 import { findGroceryRows, nameIsFree, rowsNaming } from "./ingredient-catalogue";
 import { repointLines } from "./ingredient-cleanup";
@@ -421,6 +421,96 @@ export async function moveMergedAIChanges(
       and(
         eq(ingredientAIChanges.kind, "parent"),
         eq(sql`${ingredientAIChanges.undo} ->> 'formerParentId'`, sourceId)
+      )
+    );
+}
+
+/** Every food, spelling and row id an Undo names, as migration 0093 reads them. */
+function undoIds(undo: AIChangeUndo): string[] {
+  switch (undo.kind) {
+    case "merge":
+      return [undo.parentId ?? "", ...undo.aliasIds];
+    case "parent":
+      return [undo.formerParentId ?? ""];
+    case "plain-name":
+      return [];
+    case "not-a-food": {
+      const { food } = undo;
+
+      return [
+        food.ingredientId,
+        food.parentId ?? "",
+        ...food.aliases.map((one) => one.id),
+        ...food.lineFoods.flatMap((one) => [one.lineId, one.aliasId]),
+        ...[...food.groceries, ...food.recurring].flatMap((one) => [one.id, one.aliasId ?? ""]),
+      ];
+    }
+    case "spelling":
+      return [
+        undo.spelling.id,
+        ...undo.lines.flatMap((line) => [line.id, ...line.aliasIds]),
+        ...undo.groceries,
+        ...undo.recurring,
+        ...Object.entries(undo.left ?? {}).flat(2),
+      ];
+  }
+}
+
+/**
+ * A join's AI Changes on the joiner's foods merging away (`targets`, source to target): every kind
+ * follows its target, and one whose Undo can no longer apply (all but a merge, or one naming a food
+ * or spelling in `gone`) is stranded. Before the merges, which take a source's merges along.
+ */
+export async function followJoinTargetsTx(
+  tx: DbTransaction,
+  householdId: string,
+  targets: ReadonlyMap<string, string>,
+  gone: ReadonlySet<string>
+): Promise<void> {
+  const changes = await tx
+    .select({
+      id: ingredientAIChanges.id,
+      kind: ingredientAIChanges.kind,
+      ingredientId: ingredientAIChanges.ingredientId,
+      undo: ingredientAIChanges.undo,
+    })
+    .from(ingredientAIChanges)
+    .where(eq(ingredientAIChanges.householdId, householdId));
+  const moved = changes.filter(
+    (change) => change.kind !== "merge" && targets.has(change.ingredientId ?? "")
+  );
+  const stranded = changes.filter(
+    (change) => moved.includes(change) || undoIds(change.undo).some((id) => gone.has(id))
+  );
+
+  if (moved.length > 0) {
+    await tx
+      .update(ingredientAIChanges)
+      .set({
+        ingredientId: sql`${pickedByKey(
+          ingredientAIChanges.ingredientId,
+          [...targets.keys()],
+          "uuid",
+          [...targets.values()]
+        )}::uuid`,
+      })
+      .where(
+        isAnyOf(
+          ingredientAIChanges.id,
+          moved.map((one) => one.id),
+          "uuid"
+        )
+      );
+  }
+  if (stranded.length === 0) return;
+  await tx
+    .update(ingredientAIChanges)
+    .set({ undo: sql`${ingredientAIChanges.undo} || ${JSON.stringify({ stranded: true })}::jsonb` })
+    .where(
+      isAnyOf(
+        ingredientAIChanges.id,
+        stranded.map((one) => one.id),
+        "uuid"
       )
     );
 }
