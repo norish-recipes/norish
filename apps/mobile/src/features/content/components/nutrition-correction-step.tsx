@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { View } from "react-native";
+import { ChipRow } from "@/components/chip-row";
 import { ChoiceCard } from "@/components/choice-card";
 import { Section } from "@/components/section";
 import { FitSheet } from "@/components/sheet";
 import { SheetInput } from "@/components/sheet-input";
 import { SheetNote } from "@/components/sheet-note";
+import { Stack } from "@/components/stack";
 import { ToggleChip } from "@/components/toggle-chip";
 import { useText } from "@/lib/i18n/use-text";
 import { useIntl } from "react-intl";
@@ -124,9 +126,9 @@ function FactEditor({
   return (
     <View testID={`nutrition-correction-${fact}`}>
       <Section title={fact === "density" ? t(`spoon.${spoonKey(spoon)}`) : t(`facts.${fact}`)}>
-        <View className="gap-3">
+        <Stack>
           <SheetNote>{now}</SheetNote>
-          <View className="flex-row flex-wrap gap-2">
+          <ChipRow>
             {MODES.map((mode) => (
               <ToggleChip
                 key={mode}
@@ -136,7 +138,7 @@ function FactEditor({
                 onPress={() => onChange({ mode })}
               />
             ))}
-          </View>
+          </ChipRow>
           {draft.mode === "food" ? (
             <DatasetFoodPicker
               fact={fact}
@@ -171,7 +173,7 @@ function FactEditor({
                 />
               ))
             : null}
-        </View>
+        </Stack>
       </Section>
     </View>
   );
@@ -212,7 +214,7 @@ function DatasetFoodPicker({
     ].join(" · ");
 
   return (
-    <View className="gap-3">
+    <Stack>
       <SheetInput
         accessibilityLabel={t("searchFood")}
         autoCapitalize="none"
@@ -253,6 +255,6 @@ function DatasetFoodPicker({
           }}
         />
       ) : null}
-    </View>
+    </Stack>
   );
 }

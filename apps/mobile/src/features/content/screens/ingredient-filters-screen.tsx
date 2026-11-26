@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { View } from "react-native";
 import { Card, CardRow } from "@/components/card";
+import { ChipRow } from "@/components/chip-row";
 import { Section } from "@/components/section";
 import { FitSheet } from "@/components/sheet";
 import { Switch } from "@/components/switch";
@@ -59,7 +59,7 @@ export function IngredientFiltersScreen() {
       title={text("common.filters.title")}
     >
       <Section title={text("settings.ingredients.searchMatch")}>
-        <View className="flex-row flex-wrap gap-2">
+        <ChipRow>
           {INGREDIENT_SEARCH_MATCHES.map((match) => (
             <ToggleChip
               key={match}
@@ -69,10 +69,10 @@ export function IngredientFiltersScreen() {
               onPress={() => setWorking({ ...working, match })}
             />
           ))}
-        </View>
+        </ChipRow>
       </Section>
       <Section title={text("settings.ingredients.searchIn")}>
-        <View className="flex-row flex-wrap gap-2">
+        <ChipRow>
           {INGREDIENT_SEARCH_FIELDS.map((field) => (
             <ToggleChip
               key={field}
@@ -87,7 +87,7 @@ export function IngredientFiltersScreen() {
               }
             />
           ))}
-        </View>
+        </ChipRow>
       </Section>
       <Section title={text("settings.ingredients.layoutSection")}>
         <Card>{toggle("tree", text("settings.ingredients.asTree"), true)}</Card>

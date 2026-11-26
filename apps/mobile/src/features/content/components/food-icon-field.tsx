@@ -3,8 +3,10 @@ import type { ReactNode } from "react";
 import React from "react";
 import { View } from "react-native";
 import { Card } from "@/components/card";
+import { ChipRow } from "@/components/chip-row";
 import { PillButton } from "@/components/pill-button";
 import { ServerImage } from "@/components/server-image";
+import { SideBySide, Stack } from "@/components/stack";
 import { usePhotoSourceSheet } from "@/hooks/use-photo-source-sheet";
 import { useText } from "@/lib/i18n/use-text";
 import { File } from "expo-file-system";
@@ -80,12 +82,12 @@ export function FoodIconField({
   };
 
   return (
-    <View className="flex-row items-start gap-3" testID="food-icon-field">
+    <SideBySide testID="food-icon-field">
       {picture}
-      <View className="min-w-0 flex-1 gap-2">
+      <Stack fill>
         {children}
         {item.canEdit && !mutations.isPending ? (
-          <View className="flex-row flex-wrap gap-2">
+          <ChipRow>
             <PillButton
               disabled={isOffline}
               icon="cloud-upload-outline"
@@ -111,9 +113,9 @@ export function FoodIconField({
                 onPress={icons.remove}
               />
             ) : null}
-          </View>
+          </ChipRow>
         ) : null}
-      </View>
-    </View>
+      </Stack>
+    </SideBySide>
   );
 }
