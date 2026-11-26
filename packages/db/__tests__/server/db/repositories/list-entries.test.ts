@@ -11,6 +11,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { db } from "@norish/db/drizzle";
 import { attachCategoriesToRecipeByInputTx } from "@norish/db/repositories/categories";
 import { getRecipeCuisines } from "@norish/db/repositories/cuisines";
+import { listRecipesCarryingEntry } from "@norish/db/repositories/entry-recipes";
 import {
   addEntry,
   deleteEntry,
@@ -472,5 +473,29 @@ describe("household lists", () => {
       expect(run?.status).toBe("fulfilled");
       expect((await listEntries("tag", ann.household)).map((e) => e.name)).toEqual(["soja", "soy"]);
     });
+  });
+
+  it("lists the household's own recipes carrying an entry, by name, never another household's", async () => {
+    const apple = await createTestRecipe(ann.id, { name: "Apple pie" });
+    const [italian] = (await listEntries("cuisine", ann.household)).filter((e) => e.instance);
+
+    for (const recipe of [ann.recipe, apple.id, bob.recipe]) {
+      await db.transaction((tx) => replaceRecipeEntryIdsTx(tx, "cuisine", recipe, [italian!.id]));
+    }
+    await attachTags(ann.recipe, ["soja"]);
+
+    const [soja] = (await listEntries("tag", ann.household)).filter((e) => e.name === "soja");
+
+    expect(await listRecipesCarryingEntry("cuisine", italian!.id, ann.household)).toEqual([
+      { id: apple.id, name: "Apple pie" },
+      { id: ann.recipe, name: "Ann's soup" },
+    ]);
+    expect(await listRecipesCarryingEntry("cuisine", italian!.id, bob.household)).toEqual([
+      { id: bob.recipe, name: "Bob's stew" },
+    ]);
+    expect(await listRecipesCarryingEntry("tag", soja!.id, ann.household)).toEqual([
+      { id: ann.recipe, name: "Ann's soup" },
+    ]);
+    expect(await listRecipesCarryingEntry("tag", soja!.id, bob.household)).toEqual([]);
   });
 });

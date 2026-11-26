@@ -223,6 +223,30 @@ describe("the lists router", () => {
     );
   });
 
+  it("lists the household's recipes carrying an entry, and answers not found for another household's", async () => {
+    const mine = await as(member);
+    const theirs = await as(admin);
+    const recipe = await helpers.createTestRecipe(member.id, { name: "Soup" });
+    const { entry: soja } = await mine.add({ kind: "tag", name: "soja" });
+    const italian = (await mine.list({ kind: "cuisine" })).find((e) => e.name === "Italian")!;
+    const { replaceRecipeEntryIdsTx } = await import("@norish/db/repositories/list-entries");
+    const db = helpers.getTestDb();
+
+    await db.transaction(async (tx) => {
+      await replaceRecipeEntryIdsTx(tx, "tag", recipe.id, [soja.id]);
+      await replaceRecipeEntryIdsTx(tx, "cuisine", recipe.id, [italian.id]);
+    });
+
+    expect(await mine.uses({ kind: "tag", id: soja.id })).toEqual([
+      { id: recipe.id, name: "Soup" },
+    ]);
+    expect(await mine.uses({ kind: "cuisine", id: italian.id })).toEqual([
+      { id: recipe.id, name: "Soup" },
+    ]);
+    expect(await theirs.uses({ kind: "cuisine", id: italian.id })).toEqual([]);
+    await expect(theirs.uses({ kind: "tag", id: soja.id })).rejects.toThrow("Not found");
+  });
+
   it("reads and adds to an editable recipe's household list, and only then", async () => {
     const recipe = await helpers.createTestRecipe(member.id, { name: "Soup" });
     const stranger = await as(admin);

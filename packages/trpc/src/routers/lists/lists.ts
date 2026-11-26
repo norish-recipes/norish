@@ -4,6 +4,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import type { ListEntryRow, ListKind, ListScope } from "@norish/db/repositories/list-entries";
+import { listRecipesCarryingEntry } from "@norish/db/repositories/entry-recipes";
 import {
   addEntry,
   countEntryRecipes,
@@ -204,4 +205,17 @@ const usage = adminProcedure
     return { recipeCount: await countEntryRecipes(input.kind, input.id) };
   });
 
-export const listsProcedures = router({ list, add, rename, merge, delete: remove, usage });
+/** The household's recipes carrying an entry of its list or the instance's, for "Used by" to open. */
+const uses = authedProcedure
+  .input(z.object({ kind: KindSchema, id: z.uuid() }))
+  .query(async ({ ctx, input }) => {
+    const known =
+      (await findOwnEntry(input.kind, ctx.householdId, input.id)) ??
+      (await findOwnEntry(input.kind, null, input.id));
+
+    if (!known) throw new TRPCError({ code: "NOT_FOUND", message: "Not found" });
+
+    return listRecipesCarryingEntry(input.kind, input.id, ctx.householdId);
+  });
+
+export const listsProcedures = router({ list, add, rename, merge, delete: remove, usage, uses });

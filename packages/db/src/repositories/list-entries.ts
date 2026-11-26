@@ -863,6 +863,13 @@ export async function deleteEntry(
   });
 }
 
+/** The table that links recipes to the entries of a kind, with its recipe and entry columns. */
+export function entryLinkOf(kind: ListKind) {
+  const { link, entity } = KINDS[kind];
+
+  return { link, recipeId: link.recipeId, entityId: entity };
+}
+
 /** How many recipes, in every household, carry the entry: what deleting an instance entry detaches. */
 export async function countEntryRecipes(kind: ListKind, id: string): Promise<number> {
   const { link, entity } = KINDS[kind];
