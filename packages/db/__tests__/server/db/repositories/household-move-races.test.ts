@@ -408,7 +408,7 @@ describe("household move races", () => {
 
     // The rename is the held write: the join, which read no "ui", waits on the name it takes.
     const settled = await raceBehind(
-      (tx) => renameCatalogueIngredient(tx, shallot.ingredientId, "ui"),
+      (tx) => renameCatalogueIngredient(tx, shallot.ingredientId, "ui", into),
       [() => joinHousehold(joiner.id, { householdId: into })]
     );
 

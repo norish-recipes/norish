@@ -9,10 +9,13 @@ import {
   countListedIngredients,
   deleteCatalogueAlias,
   forEachCatalogue,
+  keepIngredientDistinct,
   listCatalogueIngredients,
   listIngredientRecipes,
   listIngredientUses,
+  renameCatalogueIngredient,
 } from "@norish/db/repositories/ingredient-catalogue";
+import { setIngredientIcon } from "@norish/db/repositories/ingredient-icons";
 import { insertSeededIngredient } from "@norish/db/repositories/ingredient-seed";
 import * as schema from "@norish/db/schema";
 import { parseIngredientSearch } from "@norish/shared/lib/ingredient-search";
@@ -25,6 +28,8 @@ import {
   firstSpellingId,
   getTestDb,
   insertTestRecipeLine,
+  mintTestFood,
+  readTestIngredient,
   testHouseholdOf,
 } from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
@@ -587,5 +592,36 @@ describe("forEachCatalogue", () => {
 
     expect(listed.sort()).toEqual([withFood, withSpelling].sort());
     expect(listed).not.toContain(without);
+  });
+});
+
+describe("a food's writes carry the household that was checked", () => {
+  const testBase = new RepositoryTestBase("test_catalogue_household_writes");
+
+  beforeAll(async () => {
+    await testBase.setup();
+  });
+
+  afterAll(async () => {
+    await testBase.teardown();
+  });
+
+  it("changes nothing once the food is another household's", async () => {
+    const [user] = await testBase.beforeEachTest();
+    const food = await mintTestFood(testHouseholdOf(user.id), "prei");
+    const checked = testHouseholdOf((await createTestUser()).id);
+
+    await withTransaction(async (tx) => {
+      expect(await renameCatalogueIngredient(tx, food.ingredientId, "Leek", checked)).toBeNull();
+      expect(await keepIngredientDistinct(tx, food.ingredientId, checked)).toBeNull();
+      expect(
+        await setIngredientIcon(tx, food.ingredientId, "x.webp", { householdId: checked })
+      ).toBe(false);
+    });
+    expect(await readTestIngredient(food.ingredientId)).toMatchObject({
+      name: "prei",
+      keptDistinct: false,
+      icon: null,
+    });
   });
 });

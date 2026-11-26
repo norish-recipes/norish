@@ -435,7 +435,7 @@ describe("merging Ingredients and moving aliases", () => {
 
       // The name alone, as the upgrade can leave one: a spelling no alias holds.
       await inRepositoryTransaction((tx) =>
-        renameCatalogueIngredient(tx, prei.ingredientId, "Leek")
+        renameCatalogueIngredient(tx, prei.ingredientId, "Leek", actor.householdId)
       );
       await addAlias(actor, onion.ingredientId, "leek");
       const [leek] = await resolveIngredients(["leek"], actor);

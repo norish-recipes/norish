@@ -39,7 +39,7 @@ import { escapeLike } from "@norish/shared/lib/ingredient-search";
 import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
 import { ENTRY_RECIPES_PAGE } from "./entry-recipes";
-import { inCatalogue, ownBeforeSeed } from "./household-scope";
+import { inCatalogue, inScope, ownBeforeSeed } from "./household-scope";
 import { ONE_ROW } from "./raw-sql";
 
 const qb = new QueryBuilder();
@@ -719,13 +719,14 @@ export async function findCatalogueAliasOwner(
 }
 
 /**
- * Rename an Ingredient and clear its flag; null where it is gone. A name another Ingredient holds,
- * even by a racing rename, throws a unique violation.
+ * Rename `householdId`'s Ingredient (null: seeded), clearing its flag; null where gone or moved.
+ * A name another Ingredient holds, even by a racing rename, throws a unique violation.
  */
 export async function renameCatalogueIngredient(
   tx: DbTransaction,
   id: string,
-  name: string
+  name: string,
+  householdId: string | null
 ): Promise<{ id: string } | null> {
   const [row] = await tx
     .update(ingredients)
@@ -737,19 +738,20 @@ export async function renameCatalogueIngredient(
       nameChosen: true,
       version: sql`${ingredients.version} + 1`,
     })
-    .where(eq(ingredients.id, id))
+    .where(and(eq(ingredients.id, id), inScope(ingredients.householdId, householdId)))
     .returning({ id: ingredients.id });
 
   return row ?? null;
 }
 
 /**
- * Mark an Ingredient a food of its own: its flag goes and the decision is kept, so Norish never
- * merges it later. Null where it is gone.
+ * Mark `householdId`'s Ingredient a food of its own: its flag goes and the decision is kept, so
+ * Norish never merges it later. Null where it is gone or elsewhere now.
  */
 export async function keepIngredientDistinct(
   tx: DbTransaction,
-  id: string
+  id: string,
+  householdId: string | null
 ): Promise<{ id: string } | null> {
   const [row] = await tx
     .update(ingredients)
@@ -759,7 +761,7 @@ export async function keepIngredientDistinct(
       keptDistinct: true,
       version: sql`${ingredients.version} + 1`,
     })
-    .where(eq(ingredients.id, id))
+    .where(and(eq(ingredients.id, id), inScope(ingredients.householdId, householdId)))
     .returning({ id: ingredients.id });
 
   return row ?? null;

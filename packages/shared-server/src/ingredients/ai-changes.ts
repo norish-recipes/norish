@@ -570,7 +570,9 @@ export async function keepAIChange(
       await clearAIFlagUnlessOpen(tx, foodId);
     } else {
       // Keeping a spelling change on a seeded food leaves the seed's mark to an admin's edit.
-      if (change.ingredient?.householdId !== null) await keepIngredientDistinct(tx, foodId);
+      const household = change.ingredient?.householdId;
+
+      if (household) await keepIngredientDistinct(tx, foodId, household);
       await refreshAIFlag(tx, foodId, { unsure: false });
     }
 

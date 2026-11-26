@@ -4,6 +4,7 @@ import type { Db } from "@norish/db/drizzle";
 import { db } from "@norish/db/drizzle";
 import { ingredientAliases, ingredients, recipeIngredientFoods } from "@norish/db/schema";
 
+import { inScope } from "./household-scope";
 import { lineageCte } from "./ingredient-kinds";
 
 /**
@@ -73,12 +74,25 @@ export async function setIngredientIcon(
   tx: Db,
   id: string,
   icon: string | null,
-  { unlessSet = false }: { unlessSet?: boolean } = {}
+  {
+    unlessSet = false,
+    householdId,
+  }: {
+    unlessSet?: boolean;
+    /** The food's household (null: seeded) as the caller checked it. */
+    householdId?: string | null;
+  } = {}
 ): Promise<boolean> {
   const updated = await tx
     .update(ingredients)
     .set({ icon, version: sql`${ingredients.version} + 1` })
-    .where(and(eq(ingredients.id, id), unlessSet ? isNull(ingredients.icon) : undefined))
+    .where(
+      and(
+        eq(ingredients.id, id),
+        unlessSet ? isNull(ingredients.icon) : undefined,
+        householdId === undefined ? undefined : inScope(ingredients.householdId, householdId)
+      )
+    )
     .returning({ id: ingredients.id });
 
   return updated.length > 0;

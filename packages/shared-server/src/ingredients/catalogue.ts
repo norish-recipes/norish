@@ -446,7 +446,7 @@ async function renameIngredientIn(
     throw new CatalogueEditError("name-taken");
   }
   const renamed = await refusedOn("name-taken", () =>
-    renameCatalogueIngredient(tx, ingredientId, cleaned)
+    renameCatalogueIngredient(tx, ingredientId, cleaned, householdId)
   );
 
   if (!renamed) throw new CatalogueEditError("not-found");
@@ -485,6 +485,8 @@ async function setParentIn(
   ingredientId: string,
   parentId: string | null
 ): Promise<CatalogueEdit> {
+  // The tree lock before the checks, so no join or leave moves the foods after them.
+  await lockTree(tx);
   const householdId = await assertMayEditIngredient(tx, actor, ingredientId);
   const ids = parentId ? [ingredientId, parentId] : [ingredientId];
 
@@ -521,10 +523,10 @@ export async function deleteIngredient(
   ingredientId: string
 ): Promise<CatalogueEdit> {
   const { naming, audience } = await withTransaction(async (tx) => {
+    // The tree lock before the check: no merge into this food lands while it goes, nor a move.
+    await lockTree(tx);
     const householdId = await assertMayEditIngredient(tx, actor, ingredientId);
 
-    // The tree lock, as for every edit that changes what a row points at:
-    // a merge into this Ingredient must not land while it goes.
     if (!(await lockFoods(tx, [ingredientId]))) throw new CatalogueEditError("not-found");
     const rows = await findRowsNamingFood(tx, ingredientId);
 
@@ -574,7 +576,7 @@ export async function markDistinct(
   return await inEdit(async (tx) => {
     const householdId = await assertMayEditIngredient(tx, actor, ingredientId);
 
-    if (!(await keepIngredientDistinct(tx, ingredientId))) {
+    if (!(await keepIngredientDistinct(tx, ingredientId, householdId))) {
       throw new CatalogueEditError("not-found");
     }
     await keepOpenAIChangesOf(tx, ingredientId);
@@ -596,6 +598,8 @@ export async function mergeIngredients(
   if (sourceId === targetId) throw new CatalogueEditError("same-ingredient");
 
   return await inEdit(async (tx) => {
+    // The tree lock before the checks, as `moveAlias` takes it.
+    await lockTree(tx);
     const householdId = await assertMayEditIngredient(tx, actor, sourceId);
 
     await assertMayEditIngredient(tx, actor, targetId);
@@ -722,6 +726,12 @@ async function removeAliasIn(
   if ((await lockIngredients(tx, [alias.ingredientId])) < 1) {
     throw new CatalogueEditError("not-found");
   }
+  // Read again under the food's lock: a join or leave may have moved the spelling since.
+  const locked = await findCatalogueAliasOwner(tx, actor.householdId, aliasId);
+
+  if (locked?.householdId !== alias.householdId || locked.ingredientId !== alias.ingredientId) {
+    throw new CatalogueEditError("not-found");
+  }
   if ((await countAliasesOf(tx, alias.ingredientId, alias.householdId)) <= 1) {
     throw new CatalogueEditError("last-alias");
   }
@@ -814,7 +824,10 @@ async function setIconIn(
   ingredientId: string,
   icon: string | null
 ): Promise<void> {
-  await assertMayEditIngredient(tx, actor, ingredientId);
+  const householdId = await assertMayEditIngredient(tx, actor, ingredientId);
+
   if (icon !== null && !(await claimOwnIcon(icon))) throw new CatalogueEditError("not-found");
-  if (!(await setIngredientIcon(tx, ingredientId, icon))) throw new CatalogueEditError("not-found");
+  if (!(await setIngredientIcon(tx, ingredientId, icon, { householdId }))) {
+    throw new CatalogueEditError("not-found");
+  }
 }
