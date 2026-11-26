@@ -1366,7 +1366,7 @@
       "server": "Server",
       "name": "Namn",
       "usedBy": "Används av",
-      "usedByOwn": "{count} av dina recept",
+      "usedByOwn": "{count, plural, =0 {Används inte i dina recept} one {# av dina recept} other {# av dina recept}}",
       "already": {
         "tag": "Redan en tagg",
         "cuisine": "Redan en matkultur",
@@ -1381,12 +1381,14 @@
       "merge": "”{target}” finns redan. När du slår ihop {count, plural, =0 {tas {name} bort} one {flyttas # recept från {name} över till den} other {flyttas # recept från {name} över till den}}.",
       "mergeAction": "Slå ihop",
       "tooLong": "Namn får vara högst {max} tecken.",
-      "failed": "Det gick inte att spara. Försök igen."
+      "failed": "Det gick inte att spara. Försök igen.",
+      "stale": "Inte sparat: det ändrades någon annanstans först"
     },
     "delete": {
       "title": "Ta bort ”{name}”?",
       "body": "{count, plural, =0 {Inget recept använder den.} one {Den tas bort från # recept. Receptet finns kvar.} other {Den tas bort från # recept. Recepten finns kvar.}}",
-      "bodyServer": "{count, plural, =0 {Inget recept använder den.} one {Den tas bort från # recept i alla hushåll på den här servern. Receptet finns kvar.} other {Den tas bort från # recept i alla hushåll på den här servern. Recepten finns kvar.}}"
+      "bodyServer": "{count, plural, =0 {Inget recept använder den.} one {Den tas bort från # recept i alla hushåll på den här servern. Receptet finns kvar.} other {Den tas bort från # recept i alla hushåll på den här servern. Recepten finns kvar.}}",
+      "countFailed": "Det gick inte att räkna recepten som använder den. Försök igen."
     }
   }
 }

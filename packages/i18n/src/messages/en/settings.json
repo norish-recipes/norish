@@ -1339,7 +1339,7 @@
     "help": {
       "server": "Your server admin keeps these for every household",
       "serverAdmin": "Every household on this server is offered these. As an admin you keep them.",
-      "builtIn": "Built-in categories are the same on every server and can’t be changed"
+      "builtIn": "Built-in categories are the same on every server and can't be changed"
     },
     "readOnly": "Read only",
     "empty": {
@@ -1366,7 +1366,7 @@
       "server": "Server",
       "name": "Name",
       "usedBy": "Used by",
-      "usedByOwn": "{count} of your recipes",
+      "usedByOwn": "{count, plural, =0 {Not used by your recipes} one {# of your recipes} other {# of your recipes}}",
       "already": {
         "tag": "Already a tag",
         "cuisine": "Already a cuisine",
@@ -1378,15 +1378,17 @@
       "toServer": "Every household on this server",
       "serverReadOnly": "Your server admin keeps this cuisine for every household.",
       "serverEditable": "Every household on this server is offered this cuisine.",
-      "merge": "“{target}” already exists. Merging {count, plural, =0 {removes {name}} one {moves {name}’s # recipe onto it} other {moves {name}’s # recipes onto it}}.",
+      "merge": "“{target}” already exists. Merging {count, plural, =0 {removes {name}} one {moves {name}'s # recipe onto it} other {moves {name}'s # recipes onto it}}.",
       "mergeAction": "Merge",
       "tooLong": "Names can have at most {max} characters.",
-      "failed": "Could not save that. Try again."
+      "failed": "Could not save that. Try again.",
+      "stale": "Not saved: it changed elsewhere first"
     },
     "delete": {
       "title": "Delete “{name}”?",
       "body": "{count, plural, =0 {No recipe uses it.} one {It comes off # recipe. The recipe stays.} other {It comes off # recipes. The recipes stay.}}",
-      "bodyServer": "{count, plural, =0 {No recipe uses it.} one {It comes off # recipe in every household on this server. The recipe stays.} other {It comes off # recipes in every household on this server. The recipes stay.}}"
+      "bodyServer": "{count, plural, =0 {No recipe uses it.} one {It comes off # recipe in every household on this server. The recipe stays.} other {It comes off # recipes in every household on this server. The recipes stay.}}",
+      "countFailed": "Could not count the recipes that use it. Try again."
     }
   }
 }

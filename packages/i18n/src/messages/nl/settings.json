@@ -8,7 +8,7 @@
     "household": "Huishouden",
     "caldav": "CalDAV",
     "admin": "Admin",
-    "content": "Content"
+    "content": "Inhoud"
   },
   "user": {
     "signInMethods": {
@@ -1313,7 +1313,7 @@
     "phonesGroup": "Op telefoons"
   },
   "content": {
-    "ariaLabel": "Content",
+    "ariaLabel": "Inhoud",
     "listPicker": "Lijst",
     "lists": {
       "tags": "Tags",
@@ -1366,7 +1366,7 @@
       "server": "Server",
       "name": "Naam",
       "usedBy": "Gebruikt door",
-      "usedByOwn": "{count} van je recepten",
+      "usedByOwn": "{count, plural, =0 {Niet gebruikt in je recepten} one {# van je recepten} other {# van je recepten}}",
       "already": {
         "tag": "Al een tag",
         "cuisine": "Al een keuken",
@@ -1381,12 +1381,14 @@
       "merge": "“{target}” bestaat al. Samenvoegen {count, plural, =0 {verwijdert {name}} one {verplaatst # recept van {name} ernaartoe} other {verplaatst # recepten van {name} ernaartoe}}.",
       "mergeAction": "Samenvoegen",
       "tooLong": "Namen mogen maximaal {max} tekens hebben.",
-      "failed": "Opslaan is niet gelukt. Probeer het opnieuw."
+      "failed": "Opslaan is niet gelukt. Probeer het opnieuw.",
+      "stale": "Niet opgeslagen: het is eerst ergens anders gewijzigd"
     },
     "delete": {
       "title": "“{name}” verwijderen?",
       "body": "{count, plural, =0 {Geen enkel recept gebruikt het.} one {Het gaat van # recept af. Het recept blijft.} other {Het gaat van # recepten af. De recepten blijven.}}",
-      "bodyServer": "{count, plural, =0 {Geen enkel recept gebruikt het.} one {Het gaat van # recept af in elk huishouden op deze server. Het recept blijft.} other {Het gaat van # recepten af in elk huishouden op deze server. De recepten blijven.}}"
+      "bodyServer": "{count, plural, =0 {Geen enkel recept gebruikt het.} one {Het gaat van # recept af in elk huishouden op deze server. Het recept blijft.} other {Het gaat van # recepten af in elk huishouden op deze server. De recepten blijven.}}",
+      "countFailed": "De recepten die het gebruiken konden niet worden geteld. Probeer het opnieuw."
     }
   }
 }

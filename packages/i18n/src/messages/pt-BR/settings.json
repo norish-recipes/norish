@@ -1366,7 +1366,7 @@
       "server": "Servidor",
       "name": "Nome",
       "usedBy": "Usado por",
-      "usedByOwn": "{count} das suas receitas",
+      "usedByOwn": "{count, plural, =0 {Não usado nas suas receitas} one {# das suas receitas} other {# das suas receitas}}",
       "already": {
         "tag": "Já é uma tag",
         "cuisine": "Já é uma culinária",
@@ -1381,12 +1381,14 @@
       "merge": "“{target}” já existe. Ao mesclar {count, plural, =0 {{name} é removido} one {# receita de {name} passa para ela} other {# receitas de {name} passam para ela}}.",
       "mergeAction": "Mesclar",
       "tooLong": "Os nomes podem ter no máximo {max} caracteres.",
-      "failed": "Não foi possível salvar. Tente novamente."
+      "failed": "Não foi possível salvar. Tente novamente.",
+      "stale": "Não salvo: foi alterado antes em outro lugar"
     },
     "delete": {
       "title": "Excluir “{name}”?",
       "body": "{count, plural, =0 {Nenhuma receita usa.} one {Sai de # receita. A receita fica.} other {Sai de # receitas. As receitas ficam.}}",
-      "bodyServer": "{count, plural, =0 {Nenhuma receita usa.} one {Sai de # receita de todas as casas deste servidor. A receita fica.} other {Sai de # receitas de todas as casas deste servidor. As receitas ficam.}}"
+      "bodyServer": "{count, plural, =0 {Nenhuma receita usa.} one {Sai de # receita de todas as casas deste servidor. A receita fica.} other {Sai de # receitas de todas as casas deste servidor. As receitas ficam.}}",
+      "countFailed": "Não foi possível contar as receitas que o usam. Tente novamente."
     }
   }
 }

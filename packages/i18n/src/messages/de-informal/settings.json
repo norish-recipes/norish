@@ -1366,7 +1366,7 @@
       "server": "Server",
       "name": "Name",
       "usedBy": "Verwendet von",
-      "usedByOwn": "{count} deiner Rezepte",
+      "usedByOwn": "{count, plural, =0 {In deinen Rezepten nicht verwendet} one {# deiner Rezepte} other {# deiner Rezepte}}",
       "already": {
         "tag": "Schon ein Tag",
         "cuisine": "Schon eine Küche",
@@ -1381,12 +1381,14 @@
       "merge": "„{target}“ gibt es schon. Beim Zusammenführen {count, plural, =0 {entfällt {name}} one {wandert # Rezept von {name} dorthin} other {wandern # Rezepte von {name} dorthin}}.",
       "mergeAction": "Zusammenführen",
       "tooLong": "Namen dürfen höchstens {max} Zeichen haben.",
-      "failed": "Das konnte nicht gespeichert werden. Versuche es erneut."
+      "failed": "Das konnte nicht gespeichert werden. Versuche es erneut.",
+      "stale": "Nicht gespeichert: Es wurde zuerst anderswo geändert"
     },
     "delete": {
       "title": "„{name}“ löschen?",
       "body": "{count, plural, =0 {Kein Rezept verwendet es.} one {Es wird von # Rezept entfernt. Das Rezept bleibt.} other {Es wird von # Rezepten entfernt. Die Rezepte bleiben.}}",
-      "bodyServer": "{count, plural, =0 {Kein Rezept verwendet es.} one {Es wird von # Rezept in jedem Haushalt auf diesem Server entfernt. Das Rezept bleibt.} other {Es wird von # Rezepten in jedem Haushalt auf diesem Server entfernt. Die Rezepte bleiben.}}"
+      "bodyServer": "{count, plural, =0 {Kein Rezept verwendet es.} one {Es wird von # Rezept in jedem Haushalt auf diesem Server entfernt. Das Rezept bleibt.} other {Es wird von # Rezepten in jedem Haushalt auf diesem Server entfernt. Die Rezepte bleiben.}}",
+      "countFailed": "Die Rezepte, die es verwenden, konnten nicht gezählt werden. Versuche es erneut."
     }
   }
 }

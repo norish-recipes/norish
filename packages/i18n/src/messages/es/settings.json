@@ -1366,7 +1366,7 @@
       "server": "Servidor",
       "name": "Nombre",
       "usedBy": "Usada en",
-      "usedByOwn": "{count} de tus recetas",
+      "usedByOwn": "{count, plural, =0 {No se usa en tus recetas} one {# de tus recetas} other {# de tus recetas}}",
       "already": {
         "tag": "Ya es una etiqueta",
         "cuisine": "Ya es una cocina",
@@ -1381,12 +1381,14 @@
       "merge": "«{target}» ya existe. Al fusionar {count, plural, =0 {se elimina {name}} one {se mueve # receta de {name} a ella} other {se mueven # recetas de {name} a ella}}.",
       "mergeAction": "Fusionar",
       "tooLong": "Los nombres pueden tener como máximo {max} caracteres.",
-      "failed": "No se pudo guardar. Inténtalo de nuevo."
+      "failed": "No se pudo guardar. Inténtalo de nuevo.",
+      "stale": "No guardado: se cambió antes en otro lugar"
     },
     "delete": {
       "title": "¿Eliminar «{name}»?",
       "body": "{count, plural, =0 {Ninguna receta la usa.} one {Se quita de # receta. La receta se queda.} other {Se quita de # recetas. Las recetas se quedan.}}",
-      "bodyServer": "{count, plural, =0 {Ninguna receta la usa.} one {Se quita de # receta de todos los hogares de este servidor. La receta se queda.} other {Se quita de # recetas de todos los hogares de este servidor. Las recetas se quedan.}}"
+      "bodyServer": "{count, plural, =0 {Ninguna receta la usa.} one {Se quita de # receta de todos los hogares de este servidor. La receta se queda.} other {Se quita de # recetas de todos los hogares de este servidor. Las recetas se quedan.}}",
+      "countFailed": "No se pudieron contar las recetas que lo usan. Inténtalo de nuevo."
     }
   }
 }

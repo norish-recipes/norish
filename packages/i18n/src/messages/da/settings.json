@@ -1366,7 +1366,7 @@
       "server": "Server",
       "name": "Navn",
       "usedBy": "Bruges af",
-      "usedByOwn": "{count} af dine opskrifter",
+      "usedByOwn": "{count, plural, =0 {Ikke brugt i dine opskrifter} one {# af dine opskrifter} other {# af dine opskrifter}}",
       "already": {
         "tag": "Allerede et tag",
         "cuisine": "Allerede et køkken",
@@ -1381,12 +1381,14 @@
       "merge": "“{target}” findes allerede. Når du fletter, {count, plural, =0 {fjernes {name}} one {flyttes # opskrift fra {name} over på det} other {flyttes # opskrifter fra {name} over på det}}.",
       "mergeAction": "Flet",
       "tooLong": "Navne kan højst have {max} tegn.",
-      "failed": "Det kunne ikke gemmes. Prøv igen."
+      "failed": "Det kunne ikke gemmes. Prøv igen.",
+      "stale": "Ikke gemt: det blev ændret et andet sted først"
     },
     "delete": {
       "title": "Slet “{name}”?",
       "body": "{count, plural, =0 {Ingen opskrift bruger det.} one {Det fjernes fra # opskrift. Opskriften bliver.} other {Det fjernes fra # opskrifter. Opskrifterne bliver.}}",
-      "bodyServer": "{count, plural, =0 {Ingen opskrift bruger det.} one {Det fjernes fra # opskrift i alle husstande på denne server. Opskriften bliver.} other {Det fjernes fra # opskrifter i alle husstande på denne server. Opskrifterne bliver.}}"
+      "bodyServer": "{count, plural, =0 {Ingen opskrift bruger det.} one {Det fjernes fra # opskrift i alle husstande på denne server. Opskriften bliver.} other {Det fjernes fra # opskrifter i alle husstande på denne server. Opskrifterne bliver.}}",
+      "countFailed": "Kunne ikke tælle de opskrifter, der bruger den. Prøv igen."
     }
   }
 }
