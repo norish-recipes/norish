@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import { Button, ComboBox, Input, Label, ListBox } from "@heroui/react";
 import { useTranslations } from "next-intl";
+import { ComboBoxStateContext } from "react-aria-components";
 
 import type { PickerEntry, PickerKind } from "@norish/shared-react/lists";
 import { useEntryPicker } from "@norish/shared-react/lists";
@@ -31,6 +32,21 @@ interface EntryComboBoxProps {
 }
 
 /**
+ * Opens the list once it has rows for the text in the focused field. React Aria opens only when
+ * the text changes and its rows catch up a render later, so a paste into an empty list stayed shut.
+ */
+function OpenOnRows({ rows, typed }: { rows: number; typed: string }) {
+  const state = use(ComboBoxStateContext);
+
+  useEffect(() => {
+    if (state?.isFocused && !state.isOpen && rows > 0 && typed.trim() !== "")
+      state.open(null, "input");
+  }, [state, rows, typed]);
+
+  return null;
+}
+
+/**
  * Search a list as you type: the entries that match first, then a "Create 'x'" row when the
  * list has no entry of that name. Picking a row selects the entry; the Create row makes it first.
  */
@@ -51,6 +67,7 @@ export function EntryComboBox({
   const t = useTranslations("recipes.picker");
   const tActions = useTranslations("common.actions");
   const [typed, setTyped] = useState("");
+  const fieldRef = useRef<HTMLDivElement>(null);
   // A combo box closes when its selection changes, so a pick sets it for one render and then
   // takes it back, clearing the text the pick filled in.
   const [picked, setPicked] = useState<string | null>(null);
@@ -84,7 +101,7 @@ export function EntryComboBox({
   const problemId = `${label}-problem`;
 
   return (
-    <div className={className}>
+    <div ref={fieldRef} className={className}>
       <ComboBox
         allowsEmptyCollection={offer.kind === "tooLong"}
         className="w-full"
@@ -95,9 +112,10 @@ export function EntryComboBox({
         value={picked}
         variant={inputVariant}
         onChange={(key) => {
-          // Escape and leaving the field commit "nothing": the typed text goes, nothing is made.
+          // Leaving the field commits "nothing": the typed text goes. A list the page scrolled shut
+          // commits it too, in a field still typed in, so the text stays and the list comes back.
           if (key === null) {
-            setTyped("");
+            if (!fieldRef.current?.contains(document.activeElement)) setTyped("");
 
             return;
           }
@@ -114,6 +132,7 @@ export function EntryComboBox({
         }}
         onInputChange={setTyped}
       >
+        <OpenOnRows rows={items.length} typed={typed} />
         <Label className="sr-only">{label}</Label>
         <Input
           aria-describedby={problem ? problemId : undefined}
@@ -123,6 +142,7 @@ export function EntryComboBox({
           variant={inputVariant}
           onKeyDown={(event) => {
             if (event.key === "Backspace" && typed === "") onBackspaceEmpty?.();
+            if (event.key === "Escape") setTyped("");
           }}
         />
         <ComboBox.Popover>

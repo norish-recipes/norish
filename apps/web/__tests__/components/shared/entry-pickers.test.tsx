@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -220,6 +220,33 @@ describe("TagPicker", () => {
 
     expect(mocks.created).not.toHaveBeenCalled();
     expect(screen.getByTestId("tags")).toHaveTextContent("");
+  });
+
+  it("keeps the typed text when the page scrolls the open list shut, and lists it again", async () => {
+    const user = userEvent.setup();
+    const field = () => screen.getByRole("combobox", { name: "addTag" });
+
+    render(<Tags />);
+    await user.type(field(), "bbq");
+    expect(screen.getByRole("option", { name: "BBQ" })).toBeInTheDocument();
+    // A field at the viewport's edge scrolls the page to show its caret as it is typed in.
+    fireEvent.scroll(document.body);
+
+    expect(field()).toHaveValue("bbq");
+    expect(await screen.findByRole("option", { name: "BBQ" })).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(field()).toHaveValue(""));
+  });
+
+  it("opens on a name pasted into a household with no Tags yet", async () => {
+    mocks.entries = [];
+    render(<Tags />);
+    const field = screen.getByRole("combobox", { name: "addTag" });
+
+    act(() => field.focus());
+    fireEvent.change(field, { target: { value: "Grill" } });
+
+    expect(await screen.findByRole("option", { name: "create Grill" })).toBeInTheDocument();
   });
 
   it("offers no Create row for empty or whitespace-only text", async () => {
