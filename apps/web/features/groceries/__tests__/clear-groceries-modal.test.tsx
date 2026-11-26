@@ -43,6 +43,7 @@ vi.mock("@heroui/react", () => {
         <div>{typeof children === "function" ? children({ close: () => close() }) : children}</div>
       ),
       Header: Passthrough,
+      Heading: Passthrough,
       Body: Passthrough,
       Footer: Passthrough,
     },

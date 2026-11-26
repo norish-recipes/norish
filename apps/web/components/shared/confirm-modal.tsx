@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { Modal } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -39,6 +39,36 @@ export function CancelButton({
   );
 }
 
+const WIDE_DIALOG = "max-h-[85vh] max-w-3xl";
+
+type ModalFrameProps = {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  /** The wide placement, for content such as a log or a payload; the height rule goes with it. */
+  wide?: boolean;
+  "data-testid"?: string;
+  children: ComponentProps<typeof Modal.Dialog>["children"];
+};
+
+/** The dialog every modal sits in: the default width, or `wide` with its own height limit. */
+export function ModalFrame({
+  isOpen,
+  onOpenChange,
+  wide,
+  "data-testid": testId,
+  children,
+}: ModalFrameProps) {
+  return (
+    <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={onOpenChange}>
+      <Modal.Container className="z-[1100]">
+        <Modal.Dialog className={wide ? WIDE_DIALOG : undefined} data-testid={testId}>
+          {children}
+        </Modal.Dialog>
+      </Modal.Container>
+    </Modal.Backdrop>
+  );
+}
+
 type ConfirmModalProps = {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
@@ -67,31 +97,25 @@ export default function ConfirmModal({
   "data-testid": testId,
 }: ConfirmModalProps) {
   return (
-    <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={onOpenChange}>
-      <Modal.Container className="z-[1100]">
-        <Modal.Dialog data-testid={testId}>
-          {({ close }) => (
-            <>
-              <Modal.Header
-                className={twMerge("flex-row items-center gap-2", danger && "text-danger")}
-              >
-                {title}
-              </Modal.Header>
-              <Modal.Body className="flex flex-col">{children}</Modal.Body>
-              <ModalFooter
-                start={
-                  <>
-                    <CancelButton isDisabled={isCancelDisabled} onPress={close} />
-                    {start}
-                  </>
-                }
-              >
-                {confirm}
-              </ModalFooter>
-            </>
-          )}
-        </Modal.Dialog>
-      </Modal.Container>
-    </Modal.Backdrop>
+    <ModalFrame data-testid={testId} isOpen={isOpen} onOpenChange={onOpenChange}>
+      {({ close }) => (
+        <>
+          <Modal.Header className={twMerge("flex-row items-center gap-2", danger && "text-danger")}>
+            <Modal.Heading>{title}</Modal.Heading>
+          </Modal.Header>
+          <Modal.Body className="flex flex-col">{children}</Modal.Body>
+          <ModalFooter
+            start={
+              <>
+                <CancelButton isDisabled={isCancelDisabled} onPress={close} />
+                {start}
+              </>
+            }
+          >
+            {confirm}
+          </ModalFooter>
+        </>
+      )}
+    </ModalFrame>
   );
 }

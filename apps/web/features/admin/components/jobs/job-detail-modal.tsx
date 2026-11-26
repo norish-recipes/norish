@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ActionButton } from "@/components/shared/action-button";
-import { CancelButton, ModalFooter } from "@/components/shared/confirm-modal";
+import { CancelButton, ModalFooter, ModalFrame } from "@/components/shared/confirm-modal";
 import { ArrowPathIcon, StopCircleIcon } from "@heroicons/react/16/solid";
 import {
   CheckCircleIcon,
@@ -209,17 +209,9 @@ export default function JobDetailModal({
   if (picked && picked !== shown) setShown(picked);
 
   return (
-    <Modal.Backdrop
-      className="z-[1099]"
-      isOpen={picked !== null}
-      onOpenChange={(open) => !open && onClose()}
-    >
-      <Modal.Container className="z-[1100] max-w-2xl">
-        <Modal.Dialog className="max-h-[85vh]">
-          {() => shown && <JobDetail picked={shown} onClose={onClose} />}
-        </Modal.Dialog>
-      </Modal.Container>
-    </Modal.Backdrop>
+    <ModalFrame wide isOpen={picked !== null} onOpenChange={(open) => !open && onClose()}>
+      {() => shown && <JobDetail picked={shown} onClose={onClose} />}
+    </ModalFrame>
   );
 }
 
@@ -274,7 +266,7 @@ function JobDetail({ picked, onClose }: { picked: JobRef; onClose: () => void })
     <>
       <Modal.Header>
         <div className="flex items-center gap-3">
-          {t("detail.title")}
+          <Modal.Heading>{t("detail.title")}</Modal.Heading>
           {job ? <JobStatusChip isHanging={job.isHanging} state={job.state} /> : null}
         </div>
       </Modal.Header>
@@ -324,7 +316,7 @@ function JobDetail({ picked, onClose }: { picked: JobRef; onClose: () => void })
               <h3 className="border-divider border-t pt-4 font-semibold">
                 {t("detail.sections.input")}
               </h3>
-              <pre className="bg-surface-secondary max-h-56 overflow-auto rounded-lg p-3 text-xs">
+              <pre className="bg-surface-secondary max-h-56 max-w-full overflow-auto rounded-lg p-3 text-xs">
                 {job.dataJson}
               </pre>
             </div>

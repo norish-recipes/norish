@@ -1,5 +1,5 @@
 import { ActionButton } from "@/components/shared/action-button";
-import ConfirmModal from "@/components/shared/confirm-modal";
+import ConfirmModal, { ModalFrame } from "@/components/shared/confirm-modal";
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -38,9 +38,30 @@ describe("ConfirmModal", () => {
     ).toEqual(["cancel", "Remove"]);
     expect(within(end).getAllByRole("button")).toHaveLength(1);
 
-    const dialog = screen.getByTestId("modal");
+    const dialog = screen.getByRole("dialog", { name: "Delete it" });
+
+    expect(dialog).toBe(screen.getByTestId("modal"));
 
     expect(screen.getByText("Delete it").textContent).toBe("Delete it");
     expect(Array.from(dialog.querySelectorAll("p")).map((p) => p.textContent)).toEqual(["Sure?"]);
+  });
+
+  it("keeps the default width and sets the wide one with its height limit only when asked", () => {
+    const { rerender } = render(
+      <ModalFrame isOpen data-testid="frame" onOpenChange={vi.fn()}>
+        {() => <p>Body</p>}
+      </ModalFrame>
+    );
+
+    expect(screen.getByTestId("frame").className).not.toContain("max-w-3xl");
+
+    rerender(
+      <ModalFrame wide isOpen data-testid="frame" onOpenChange={vi.fn()}>
+        {() => <p>Body</p>}
+      </ModalFrame>
+    );
+
+    expect(screen.getByTestId("frame").className).toContain("max-w-3xl");
+    expect(screen.getByTestId("frame").className).toContain("max-h-[85vh]");
   });
 });
