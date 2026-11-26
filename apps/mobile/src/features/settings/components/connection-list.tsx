@@ -42,7 +42,6 @@ export function ConnectionList({
           icon={emptyIcon}
           testID={`${name}-empty`}
           title={emptyTitle}
-          tone="neutral"
         />
       }
       name={name}

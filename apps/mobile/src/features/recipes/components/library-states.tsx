@@ -14,7 +14,6 @@ export function LibraryEmpty() {
 
   return (
     <EmptyCard
-      description={intl.formatMessage({ id: "recipes.empty.descriptionMobile" })}
       icon="book-outline"
       testID="library-empty"
       title={intl.formatMessage({ id: "recipes.empty.title" })}
@@ -76,7 +75,6 @@ export function LibraryNoResults({ onClear }: { onClear: () => void }) {
         testID: "library-clear-filters",
         onPress: onClear,
       }}
-      description={intl.formatMessage({ id: "recipes.empty.noResultsHint" })}
       icon="funnel-outline"
       testID="library-no-results"
     />

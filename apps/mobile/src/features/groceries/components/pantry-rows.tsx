@@ -124,7 +124,6 @@ export function PantryRowView({ row, actions }: { row: PantryRow; actions: Pantr
           icon={note.icon}
           testID={note.testID}
           title={intl.formatMessage({ id: note.messageId })}
-          tone="shop"
         />
       );
     }

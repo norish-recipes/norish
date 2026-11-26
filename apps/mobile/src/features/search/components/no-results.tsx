@@ -25,7 +25,6 @@ export function SearchNoResults({
       <NoResultsCard
         className={className}
         icon="search-outline"
-        ink="warning-ink"
         testID="search-no-results"
         title={intl.formatMessage({ id: "recipes.search.noMatch" }, { text })}
       />
@@ -52,15 +51,13 @@ export function SearchNoResults({
             }
       }
       className={className}
-      description={clearing ? intl.formatMessage({ id: "recipes.empty.noResultsHint" }) : undefined}
       icon={clearing ? "funnel-outline" : "search-outline"}
-      ink="warning-ink"
       testID="search-no-results"
     />
   );
 }
 
-/** The card in Results' place when Offline holds nothing for the search: neutral, as Offline is no error. */
+/** The card in Results' place when Offline holds nothing for the search. */
 export function SearchOffline() {
   const intl = useIntl();
 
@@ -69,7 +66,6 @@ export function SearchOffline() {
       className="bg-surface mx-5 mt-4"
       icon="cloud-offline-outline"
       testID="search-offline"
-      tone="neutral"
       title={intl.formatMessage({ id: "recipes.search.offline" })}
     />
   );
@@ -84,7 +80,6 @@ export function SearchFailed() {
       className="bg-surface mx-5 mt-4"
       icon="alert-circle-outline"
       testID="search-failed"
-      tone="neutral"
       title={intl.formatMessage({ id: "common.errorPage.title" })}
     />
   );

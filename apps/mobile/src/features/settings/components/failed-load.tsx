@@ -18,7 +18,6 @@ export function FailedLoad({ name, onRetry }: { name: string; onRetry: () => voi
       icon="alert-circle-outline"
       testID={`${name}-failed`}
       title={text("common.errorPage.title")}
-      tone="neutral"
     />
   );
 }

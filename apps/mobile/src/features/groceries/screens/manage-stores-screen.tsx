@@ -170,7 +170,6 @@ export function ManageStoresScreen() {
             icon="storefront-outline"
             testID="stores-empty"
             title={text("groceries.storeManager.noStoresYet")}
-            tone="shop"
           />
         </SheetBody>
       ) : (
