@@ -11,6 +11,7 @@ import { usePlatform } from "../platform";
 import { useRealtimeSubscription } from "../realtime";
 import { useTRPC } from "../trpc";
 import { useHouseholdCacheHelpers } from "./use-household";
+import { readerScopedKeys } from "./use-permissions";
 import { useReader } from "./use-reader";
 
 type Payload<E extends EventName<HouseholdsRealtime>> = PayloadOf<HouseholdsRealtime, E>;
@@ -103,9 +104,17 @@ export function useHouseholdSubscription() {
   });
 
   // A member's recipes and cookbooks come and go with them; a joiner's household of one brings its
-  // lists, catalogue, Stores, Pantry and plan. Nearly every read answers for the household.
+  // lists, catalogue, Stores and Pantry too.
   const rereadReaderScope = () => {
-    void queryClient.invalidateQueries();
+    for (const key of [
+      ...readerScopedKeys(trpc),
+      trpc.lists.pathKey(),
+      trpc.ingredients.pathKey(),
+      trpc.stores.pathKey(),
+      trpc.pantry.pathKey(),
+    ]) {
+      void queryClient.invalidateQueries({ queryKey: key });
+    }
   };
 
   const removeMember = (payload: { userId: string }) => {

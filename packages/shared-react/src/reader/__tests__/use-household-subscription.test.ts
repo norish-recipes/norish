@@ -121,6 +121,10 @@ vi.mock("../../trpc", () => ({
     favorites: { pathKey: () => [["favorites"]] },
     ratings: { pathKey: () => [["ratings"]] },
     groceries: { pathKey: () => [["groceries"]] },
+    lists: { pathKey: () => [["lists"]] },
+    ingredients: { pathKey: () => [["ingredients"]] },
+    stores: { pathKey: () => [["stores"]] },
+    pantry: { pathKey: () => [["pantry"]] },
     config: { tags: { queryKey: () => [["config", "tags"], { type: "query" }] } },
     user: {
       get: {
@@ -320,7 +324,7 @@ describe("useHouseholdSubscription", () => {
   });
 
   describe("a membership change", () => {
-    it("rereads everything a member joining or leaving brings or takes", () => {
+    it("rereads what a member joining or leaving brings or takes", () => {
       queryClient.setQueryData(householdQueryKey, createMockHouseholdData(null, "user-1"));
       const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
 
@@ -333,7 +337,10 @@ describe("useHouseholdSubscription", () => {
           );
         });
 
-        expect(invalidateSpy).toHaveBeenCalledWith();
+        for (const key of ["recipes", "calendar", "groceries", "lists", "ingredients", "pantry"]) {
+          expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: [[key]] });
+        }
+        expect(invalidateSpy).not.toHaveBeenCalledWith();
       }
     });
 
