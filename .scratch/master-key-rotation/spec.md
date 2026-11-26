@@ -56,7 +56,10 @@ A refusal names which key is missing and says the only way out is restoring `MAS
 ### Re-key
 
 - One transaction: decrypt each encrypted value with the previous key and encrypt it with the current one; recompute `emailHmac` from the decrypted email and `tokenHash` from the decrypted share token; delete every session and verification row; write the new fingerprint.
-- A value that fails to decrypt with the previous key is treated as legacy plaintext and encrypted. This is the only place that fallback exists; `safeDecrypt` becomes a throwing `decrypt`.
+- Sessions and verification values in Valkey are deleted before the transaction. Nothing serves until it commits, so a crash only repeats the delete.
+- A share link made before 0.28 kept no token, so its `tokenHash` cannot be recomputed. The re-key revokes it and logs how many; a share without a kept link can only be deleted.
+- A value neither key opens that is not ciphertext is treated as legacy plaintext and encrypted. This is the only place that fallback exists; `safeDecrypt` becomes a throwing `decrypt`.
+- Ciphertext neither key opens (damaged, or written under some other key) is left exactly as it is and counted as unreadable, so a later rotation from the right key can still open it.
 - After commit, file mode drops `previous` from the key file. Env mode logs that `MASTER_KEY_PREVIOUS` can be removed.
 - A crash before the commit leaves the previous key matching, so the next boot retries.
 
