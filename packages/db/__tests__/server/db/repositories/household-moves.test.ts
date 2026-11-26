@@ -17,6 +17,7 @@ import {
   kickUserFromHousehold,
   moveToHouseholdOfOne,
 } from "@norish/db/repositories/households";
+import { listAIChanges } from "@norish/db/repositories/ingredient-ai-changes";
 import { repointLines } from "@norish/db/repositories/ingredient-cleanup";
 import { addToJunkPile, listJunkFolds } from "@norish/db/repositories/ingredient-junk-pile";
 import { mergeCatalogueIngredients } from "@norish/db/repositories/ingredient-relocation";
@@ -980,7 +981,8 @@ describe("household moves", () => {
         parentId: null,
       });
 
-      await setTestIngredients(food, { flagged: true, flagReason: "ai-unsure" });
+      // Not AI's doubt, which a stranded change would no longer hold up.
+      await setTestIngredients(food, { flagged: true, flagReason: "seed-ambiguous" });
       await mergeInto(joiner.id, into);
 
       const changes = new Map((await listTestAIChanges()).map((row) => [row.id, row]));
@@ -1027,6 +1029,42 @@ describe("household moves", () => {
       await expectNothingForeign();
     });
 
+    it("settles a stranded unsure change: history only, flagging nothing", async () => {
+      const host = (await createTestUser())!;
+      const joiner = (await createTestUser())!;
+      const into = await householdOf(host.id);
+      const own = await householdOf(joiner.id);
+      const db = getTestDb();
+      const theirs = await mintTestFood(into, "prei");
+      const mine = await mintTestFood(own, "prei");
+      const parent = await mintTestFood(own, "groente");
+      const [doubted] = await db
+        .insert(ingredientAIChanges)
+        .values({
+          kind: "parent",
+          householdId: own,
+          ingredientId: mine.ingredientId,
+          sure: false,
+          undo: { kind: "parent", formerParentId: parent.ingredientId },
+        })
+        .returning({ id: ingredientAIChanges.id });
+
+      await setTestIngredients(mine.ingredientId, { flagged: true, flagReason: "ai-unsure" });
+      await mergeInto(joiner.id, into);
+
+      const listed = await listAIChanges({ householdId: into, isServerAdmin: false });
+      const change = listed.find((one) => one.id === doubted!.id);
+
+      // Listed as history: neither waiting on a person nor keeping the food flagged.
+      expect(change).toMatchObject({ sure: true, kept: false, undo: { stranded: true } });
+      expect(change?.ingredient?.id).toBe(theirs.ingredientId);
+      expect(await readTestIngredient(theirs.ingredientId)).toMatchObject({
+        flagged: false,
+        flagReason: null,
+      });
+      await expectNothingForeign();
+    });
+
     it("merges several joiner foods into one target: the household's first, then oldest food first", async () => {
       const host = (await createTestUser())!;
       const joiner = (await createTestUser())!;
@@ -1059,7 +1097,7 @@ describe("household moves", () => {
         { ingredientId: newer.ingredientId, kcal: 20 },
         { ingredientId: older.ingredientId, kcal: 10 },
       ]);
-      await setTestIngredients(newer.ingredientId, { flagged: true, flagReason: "person" });
+      await setTestIngredients(newer.ingredientId, { flagged: true, flagReason: "food-gone" });
       await setTestIngredients(older.ingredientId, { flagged: true, flagReason: "ai-unsure" });
 
       await mergeInto(joiner.id, into);

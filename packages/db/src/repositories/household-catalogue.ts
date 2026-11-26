@@ -22,7 +22,7 @@ import {
 } from "@norish/db/schema";
 
 import { isAnyOf, pickedByKey } from "./array-params";
-import { followJoinTargetsTx } from "./ingredient-ai-changes";
+import { clearAIFlagUnlessOpen, followJoinTargetsTx } from "./ingredient-ai-changes";
 import { deleteCatalogueAlias } from "./ingredient-catalogue";
 import {
   findIngredientAncestors,
@@ -376,7 +376,7 @@ export async function mergeHouseholdCatalogueTx(
     .orderBy(householdSpelling.id)
     .for("key share", { of: householdSpelling });
 
-  await followJoinTargetsTx(
+  const strandedOn = await followJoinTargetsTx(
     tx,
     from,
     targets,
@@ -387,6 +387,8 @@ export async function mergeHouseholdCatalogueTx(
   for (const [source, target] of targets) {
     await mergeLockedFoods(tx, source, target, { keepFlag: true });
   }
+  // AI's doubt a stranded change carried stays only under a change still open.
+  await clearAIFlagUnlessOpen(tx, [...new Set(strandedOn)]);
   // Each shared spelling is a target's now: its rows take that food's spelling `into` sees.
   for (const { id } of sharedSpellings) {
     await deleteCatalogueAlias(tx, id, { heirsSeenBy: into });

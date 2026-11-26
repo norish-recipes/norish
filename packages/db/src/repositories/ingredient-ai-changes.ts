@@ -460,14 +460,15 @@ function undoIds(undo: AIChangeUndo): string[] {
 /**
  * A join's AI Changes on the joiner's foods merging away into `targets`: every kind
  * follows its target, and one whose Undo can no longer apply (all but a merge, or one naming a food
- * or spelling in `gone`) is stranded. Before the merges, which take a source's merges along.
+ * or spelling in `gone`) is stranded: settled history, sure so never open. Before the merges, which
+ * take a source's merges along. Answers the foods of the stranded changes, for their flags.
  */
 export async function followJoinTargetsTx(
   tx: DbTransaction,
   householdId: string,
   targets: FoodTargets,
   gone: ReadonlySet<string>
-): Promise<void> {
+): Promise<string[]> {
   const changes = await tx
     .select({
       id: ingredientAIChanges.id,
@@ -503,10 +504,13 @@ export async function followJoinTargetsTx(
         )
       );
   }
-  if (stranded.length === 0) return;
+  if (stranded.length === 0) return [];
   await tx
     .update(ingredientAIChanges)
-    .set({ undo: sql`${ingredientAIChanges.undo} || ${JSON.stringify({ stranded: true })}::jsonb` })
+    .set({
+      sure: true,
+      undo: sql`${ingredientAIChanges.undo} || ${JSON.stringify({ stranded: true })}::jsonb`,
+    })
     .where(
       isAnyOf(
         ingredientAIChanges.id,
@@ -514,6 +518,10 @@ export async function followJoinTargetsTx(
         "uuid"
       )
     );
+
+  return stranded.flatMap((one) =>
+    one.ingredientId ? [targets.get(one.ingredientId) ?? one.ingredientId] : []
+  );
 }
 
 /** Whether a person undid a merge of any of these spellings into `intoId`. */
@@ -651,16 +659,22 @@ export async function clearRetiredFlags(tx: Db): Promise<number> {
  * Clear AI's doubt on a household's food once no open change is left; a flag for another reason,
  * or on a seeded food, is not AI's to clear.
  */
-export async function clearAIFlagUnlessOpen(tx: Db, ingredientId: string): Promise<void> {
+export async function clearAIFlagUnlessOpen(
+  tx: Db,
+  ingredientIds: string | readonly string[]
+): Promise<void> {
+  const ids = typeof ingredientIds === "string" ? [ingredientIds] : ingredientIds;
+
+  if (ids.length === 0) return;
   await tx
     .update(ingredients)
     .set({ flagged: false, flagReason: null, version: sql`${ingredients.version} + 1` })
     .where(
       and(
-        eq(ingredients.id, ingredientId),
+        isAnyOf(ingredients.id, ids, "uuid"),
         isNotNull(ingredients.householdId),
         eq(ingredients.flagReason, "ai-unsure"),
-        notExists(openChangesOf(ingredientId))
+        notExists(openChangesOf(ingredients.id))
       )
     );
 }
