@@ -139,14 +139,22 @@ describe("household lists", () => {
     it("attaches the entries the list has and creates none, neither on update nor on create", async () => {
       await addEntry("tag", ann.household, "Quick");
 
-      await updateRecipeWithRefs(
-        ann.recipe,
-        ann.id,
-        { tags: [{ name: "quick" }, { name: "Typed" }], categories: ["Typed category"] },
-        undefined,
-        { createEntries: false }
-      );
+      await updateRecipeWithRefs(ann.recipe, ann.id, { tags: [{ name: "quick" }] }, undefined, {
+        createEntries: false,
+      });
 
+      expect(await tagsOf(ann.recipe)).toEqual(["Quick"]);
+
+      // A name the list lacks means the editor saved from an old list: nothing is written.
+      expect(
+        await updateRecipeWithRefs(
+          ann.recipe,
+          ann.id,
+          { tags: [{ name: "quick" }, { name: "Typed" }], categories: ["Typed category"] },
+          undefined,
+          { createEntries: false }
+        )
+      ).toMatchObject({ stale: true });
       expect(await tagsOf(ann.recipe)).toEqual(["Quick"]);
       expect(await names("tag")).toEqual(["Quick"]);
       expect(await names("category")).toEqual([]);
@@ -173,9 +181,11 @@ describe("household lists", () => {
       const { entry } = (await addEntry("tag", ann.household, "Gone"))!;
 
       await deleteEntry("tag", ann.household, { id: entry.id, version: entry.version });
-      await updateRecipeWithRefs(ann.recipe, ann.id, { tags: [{ name: "Gone" }] }, undefined, {
-        createEntries: false,
-      });
+      expect(
+        await updateRecipeWithRefs(ann.recipe, ann.id, { tags: [{ name: "Gone" }] }, undefined, {
+          createEntries: false,
+        })
+      ).toMatchObject({ stale: true });
 
       expect(await tagsOf(ann.recipe)).toEqual([]);
       expect(await names("tag")).toEqual([]);
