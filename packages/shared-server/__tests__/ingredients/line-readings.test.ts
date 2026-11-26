@@ -12,12 +12,16 @@ import { joinHousehold, moveToHouseholdOfOne } from "@norish/db/repositories/hou
 import { listLibrary } from "@norish/db/repositories/library";
 import { listRecipes } from "@norish/db/repositories/recipes";
 import { setConfig } from "@norish/db/repositories/server-config";
+import { groceryParts, resolveGroceryNames } from "@norish/shared-server/ingredients/groceries";
 import { lineReadingsOf } from "@norish/shared-server/ingredients/line-readings";
 import { onIngredientsMinted } from "@norish/shared-server/ingredients/minted";
 import { withResolvedIngredients } from "@norish/shared-server/ingredients/recipe-lines";
+import { foodsToBuy, linesAsRead } from "@norish/shared/lib/line-foods";
+import { nutritionLinesOf } from "@norish/shared/lib/recipe-nutrition";
 
 import {
   addTestPantryIngredient,
+  addTestSpelling,
   countTestCatalogueRows,
   createTestIngredient,
   createTestUser,
@@ -195,5 +199,81 @@ describe("lines read through the reader's catalogue", () => {
       total: 0,
     });
     await expect(countTestCatalogueRows()).resolves.toEqual(before);
+  });
+
+  it("means one thing for the list, the Pantry and nutrition", async () => {
+    const household = testHouseholdOf(reader);
+    const ui = await createTestIngredient({ name: "Ui" });
+    const knoflook = await createTestIngredient({ name: "Knoflook" });
+    const prei = await createTestIngredient({ name: "Prei" });
+    const tomaten = await createTestIngredient({ name: "Cherrytomaten" });
+
+    await addTestSpelling(ui!.id, "uien");
+    // The reader's household spells "ui" for its own food: the seed's name means that one here.
+    await addTestSpelling((await mintTestFood(household, "sjalot")).ingredientId, "ui");
+    for (const own of ["knoflook", "prei", "cherrytomaten"])
+      await mintTestFood(testHouseholdOf(author), own);
+    const { recipeId, lines } = await recipe(author, [
+      "uien en knoflook",
+      "prei, knoflook",
+      "GR CHERRYTOMATEN",
+    ]);
+    const readings = await lineReadingsOf(household, { of: "recipes", ids: [recipeId] });
+    const expected = [[ui!.id, knoflook!.id], [prei!.id, knoflook!.id], [tomaten!.id]];
+
+    expect(lines.map((line) => readings[line.id!]?.foods.map((food) => food.ingredientId))).toEqual(
+      expected
+    );
+
+    // The add sheet sends each food it shows, read through or as stored, or the line as written.
+    const actor = { userId: reader, householdId: household };
+    const added = async (sent: Array<{ ingredientName: string; lineId?: string }>) => {
+      const parts = (
+        await groceryParts(
+          household,
+          sent.map((one) => ({ name: one.ingredientName, recipeIngredientId: one.lineId }))
+        )
+      ).flat();
+      const foods = await resolveGroceryNames(parts, actor);
+
+      return lines.map((line) =>
+        parts.flatMap((part, index) =>
+          part.recipeIngredientId === line.id ? [foods[index]?.ingredientId] : []
+        )
+      );
+    };
+
+    await expect(added(foodsToBuy(linesAsRead(lines, readings)))).resolves.toEqual(expected);
+    await expect(
+      added(lines.map((line) => ({ ingredientName: line.ingredientName, lineId: line.id })))
+    ).resolves.toEqual(expected);
+
+    const nutrition = nutritionLinesOf(
+      {
+        servings: 1,
+        systemUsed: "metric",
+        calories: null,
+        fat: null,
+        carbs: null,
+        protein: null,
+        recipeIngredients: lines,
+      },
+      readings
+    );
+
+    expect(nutrition.map((line) => line.ingredientId)).toEqual(expected.flatMap((ids) => ids));
+    for (const id of [ui!.id, knoflook!.id, prei!.id, tomaten!.id]) {
+      await addTestPantryIngredient(reader, { ingredientId: id });
+    }
+    const viewer = { userId: reader, householdId: household };
+    const library = await listLibrary(viewer, {
+      limit: 10,
+      pantryOnly: true,
+      lineReadings: readings,
+    });
+
+    expect(
+      library.items.map((item) => (item.kind === "recipe" ? item.recipe.pantryCoverage : null))
+    ).toEqual([1]);
   });
 });

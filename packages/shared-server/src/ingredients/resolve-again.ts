@@ -7,7 +7,7 @@ import { repointLines } from "@norish/db/repositories/ingredient-cleanup";
 import { writeGroceryParts } from "@norish/db/repositories/ingredient-relocation";
 import { getUnits } from "@norish/shared-server/config/server-config-loader";
 import { groupBy } from "@norish/shared/lib/group-by";
-import { lineFoodText, lineNamesNoFood } from "@norish/shared/lib/ingredient-text";
+import { lineMeaning } from "@norish/shared/lib/ingredient-text";
 
 import type { ResolveMode } from "./resolver";
 import { resolveIngredients, resolveLineFoods, typedParts, writeResolved } from "./resolver";
@@ -31,9 +31,7 @@ export async function resolveAgain(
       const units = await getUnits();
       const lines = await resolveByHousehold(rows.lines, async (owned, householdId) => {
         const texts = owned.map(({ name, amount, unit }) =>
-          lineNamesNoFood({ text: name ?? "", amount })
-            ? ""
-            : lineFoodText({ text: name ?? "", amount, unit }, units)
+          lineMeaning({ text: name ?? "", amount, unit }, units)
         );
         const foods = await resolveLineFoods(texts, { householdId, userId: null }, mode);
 

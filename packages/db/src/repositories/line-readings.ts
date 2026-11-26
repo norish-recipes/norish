@@ -8,7 +8,10 @@ import { isAnyOf } from "./array-params";
 import { lineFoodOutsideCatalogue, withLineFoods } from "./line-foods";
 import { buildPolicyCondition } from "./recipes";
 
-/** Which lines to look at, of the recipes the household may view: these, these recipes', a cookbook's, or all. */
+/**
+ * Which lines to look at: these, these recipes', or, of the recipes the household may view, a
+ * cookbook's or all. A caller naming lines or recipes has checked what may be read of them.
+ */
 export type LineScope =
   | { of: "lines"; ids: readonly string[] }
   | { of: "recipes"; ids: readonly string[] }
@@ -24,22 +27,27 @@ export interface StoredLineText {
   unit: string | null;
 }
 
-function linesWithin(scope: LineScope): SQL | undefined {
+async function linesWithin(householdId: string, scope: LineScope): Promise<SQL | undefined> {
+  const viewed = () => buildPolicyCondition({ householdId }, recipes.householdId, "view");
+
   switch (scope.of) {
     case "lines":
       return isAnyOf(recipeIngredients.id, scope.ids, "uuid");
     case "recipes":
       return isAnyOf(recipeIngredients.recipeId, scope.ids, "uuid");
     case "cookbook":
-      return inArray(
-        recipeIngredients.recipeId,
-        db
-          .select({ id: cookbookRecipes.recipeId })
-          .from(cookbookRecipes)
-          .where(eq(cookbookRecipes.cookbookId, scope.id))
+      return and(
+        await viewed(),
+        inArray(
+          recipeIngredients.recipeId,
+          db
+            .select({ id: cookbookRecipes.recipeId })
+            .from(cookbookRecipes)
+            .where(eq(cookbookRecipes.cookbookId, scope.id))
+        )
       );
     case "visible":
-      return undefined;
+      return await viewed();
   }
 }
 
@@ -53,8 +61,7 @@ export async function findLinesOutsideCatalogue(
 ): Promise<StoredLineText[]> {
   if ((scope.of === "lines" || scope.of === "recipes") && scope.ids.length === 0) return [];
 
-  const within = linesWithin(scope);
-  const viewed = await buildPolicyCondition({ householdId }, recipes.householdId, "view");
+  const within = await linesWithin(householdId, scope);
 
   return await withLineFoods(
     db
@@ -69,7 +76,7 @@ export async function findLinesOutsideCatalogue(
       .$dynamic()
   )
     .innerJoin(recipes, eq(recipes.id, recipeIngredients.recipeId))
-    .where(and(lineFoodOutsideCatalogue(householdId), viewed, within));
+    .where(and(lineFoodOutsideCatalogue(householdId), within));
 }
 
 /** Which of these foods the recipe's own lines name outside the household's catalogue. */
