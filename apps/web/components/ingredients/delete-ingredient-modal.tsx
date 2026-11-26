@@ -11,7 +11,7 @@ import { ExclamationTriangleIcon, EyeIcon } from "@heroicons/react/16/solid";
 import { Button, Modal } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { DELETE_TOUCHES, useIngredientUsesQuery } from "@norish/shared-react/ingredients";
+import { DELETE_TOUCHES, useIngredientUseCounts } from "@norish/shared-react/ingredients";
 
 /** Asks before an Ingredient goes, saying how many lines, groceries and pantry items it touches. */
 export function DeleteIngredientModal({
@@ -49,8 +49,8 @@ function DeleteIngredientContent({
 }) {
   const t = useTranslations("settings.ingredients");
   const tActions = useTranslations("common.actions");
-  const { uses: data, isPending } = useIngredientUsesQuery(ingredientId);
-  const touched = DELETE_TOUCHES.filter((key) => (data?.counts[key] ?? 0) > 0);
+  const { counts, isPending } = useIngredientUseCounts(ingredientId);
+  const touched = DELETE_TOUCHES.filter((key) => (counts?.[key] ?? 0) > 0);
 
   return (
     <>
@@ -60,14 +60,14 @@ function DeleteIngredientContent({
       </ModalTitle>
       <Modal.Body className="flex flex-col gap-3">
         <p>{t("deleteConfirm")}</p>
-        {data && touched.length > 0 ? (
+        {counts && touched.length > 0 ? (
           <div className="flex flex-col items-start gap-2">
             <ul
               className="text-muted list-disc pl-5 text-sm"
               data-testid="ingredient-delete-touches"
             >
               {touched.map((key) => (
-                <li key={key}>{t(`deleteTouches.${key}`, { count: data.counts[key] })}</li>
+                <li key={key}>{t(`deleteTouches.${key}`, { count: counts[key] })}</li>
               ))}
             </ul>
             <Button size="sm" variant="tertiary" onPress={onShowUses}>

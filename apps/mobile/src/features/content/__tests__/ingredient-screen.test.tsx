@@ -15,7 +15,7 @@ const held = vi.hoisted(() => ({
   remove: vi.fn(),
   setRelocation: vi.fn(),
   markDistinct: vi.fn(),
-  uses: undefined as unknown,
+  counts: undefined as unknown,
   offline: false,
   unsure: [] as unknown[],
 }));
@@ -68,7 +68,7 @@ vi.mock("../components/food-picker-step", () => ({
 vi.mock("@norish/shared-react/ingredients", async (importActual) => ({
   ...(await importActual<object>()),
   useIngredientQuery: () => ({ item: held.item, retry: held.retry, ...held.read }),
-  useIngredientUsesQuery: () => ({ uses: held.uses }),
+  useIngredientUseCounts: () => ({ counts: held.counts }),
   useIngredientNutritionQuery: () => ({ nutrition: null, measure: null }),
   useAIChangeMutations: () => ({ keep: vi.fn(), undo: vi.fn() }),
   useAIChangesQuery: () => held.unsure,
@@ -112,10 +112,7 @@ describe("IngredientScreen", () => {
     held.draft = {};
     held.offline = false;
     held.unsure = [];
-    held.uses = {
-      recipes: [{ id: "r1", name: "Soup" }],
-      counts: { recipeLines: 4, groceries: 0, pantry: 1 },
-    };
+    held.counts = { recipes: 1, recipeLines: 4, groceries: 0, pantry: 1 };
     held.save.mockResolvedValue(true);
   });
 

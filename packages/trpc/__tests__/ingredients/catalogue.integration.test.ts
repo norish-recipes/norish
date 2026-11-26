@@ -97,6 +97,18 @@ describe("the Ingredients procedures in two households", () => {
     await expect(theirs.get({ ingredientId: id })).resolves.toBeNull();
     await expect(theirs.spellings({ ingredientId: id })).resolves.toEqual([]);
     await expect(theirs.uses({ ingredientId: id })).rejects.toThrow("not-found");
+    await expect(theirs.countUses({ ingredientId: id })).rejects.toThrow("not-found");
+    await expect(theirs.recipes({ ingredientId: id })).rejects.toThrow("not-found");
+    await expect(mine.countUses({ ingredientId: id })).resolves.toEqual({
+      recipes: 0,
+      recipeLines: 0,
+      groceries: 0,
+      pantry: 0,
+    });
+    await expect(mine.recipes({ ingredientId: id })).resolves.toEqual({
+      recipes: [],
+      nextCursor: null,
+    });
     await expect(theirs.names({ ids: [id] })).resolves.toEqual({});
     await expect(theirs.icons({ ids: [id] })).resolves.toEqual({});
     await expect(theirs.nutritionFor({ ingredientIds: [id] })).resolves.toEqual({});

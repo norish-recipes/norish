@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-query";
 
 import type { AppRouter } from "@norish/trpc/client";
+import { byNextCursor } from "@norish/shared/contracts/list-queries";
 
 import { useTRPC } from "../trpc";
 import { isNotFoundError } from "../trpc/not-found";
@@ -106,7 +107,7 @@ export function useIngredientSpellingsQuery(ingredientId: string) {
   return data;
 }
 
-/** What still uses a food, as far as the reader may see. */
+/** Which of the household's groceries and Pantry still use a food. */
 export function useIngredientUsesQuery(ingredientId: string) {
   const trpc = useTRPC();
   const { data, isPending, isError, refetch } = useQuery(
@@ -121,17 +122,27 @@ export function useIngredientUsesQuery(ingredientId: string) {
   };
 }
 
-/** The household's recipes that use a food, as `useEntryRecipes` lists an entry's: all at once, never paged. */
+/** How many of the household's recipes, lines, groceries and Pantry rows use a food. */
+export function useIngredientUseCounts(ingredientId: string) {
+  const trpc = useTRPC();
+  const { data, isPending } = useQuery(trpc.ingredients.countUses.queryOptions({ ingredientId }));
+
+  return { counts: data, isPending };
+}
+
+/** The household's recipes that use a food, by name, a page at a time, as `useEntryRecipes`. */
 export function useFoodRecipes(ingredientId: string) {
-  const { uses, failed, retry } = useIngredientUsesQuery(ingredientId);
+  const trpc = useTRPC();
+  const { data, isError, refetch, hasNextPage, isFetchingNextPage, fetchNextPage } =
+    useInfiniteQuery(trpc.ingredients.recipes.infiniteQueryOptions({ ingredientId }, byNextCursor));
 
   return {
-    recipes: uses?.recipes ?? [],
-    loaded: uses !== undefined,
-    failed,
-    retry,
-    hasMore: false,
-    loadingMore: false,
-    loadMore: () => undefined,
+    recipes: data?.pages.flatMap((page) => page.recipes) ?? [],
+    loaded: data !== undefined,
+    failed: isError && data === undefined,
+    retry: () => void refetch(),
+    hasMore: hasNextPage,
+    loadingMore: isFetchingNextPage,
+    loadMore: () => void fetchNextPage(),
   };
 }

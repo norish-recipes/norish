@@ -121,11 +121,27 @@ function serve() {
     "ingredients.kinds",
     async (input) => kinds[(input as { parentId: string }).parentId] ?? []
   );
-  readAnswers.set("ingredients.uses", async () => {
+  // `uses` as the three reads answer it: groceries and Pantry, the counts, a page of recipes.
+  const held = async () => {
     await usesHeld;
 
-    return uses;
+    return uses as { recipes: unknown[]; groceries: unknown[]; pantry: boolean; counts: object };
+  };
+
+  readAnswers.set("ingredients.uses", async () => {
+    const { groceries, pantry } = await held();
+
+    return { groceries, pantry };
   });
+  readAnswers.set("ingredients.countUses", async () => {
+    const { recipes, counts } = await held();
+
+    return { recipes: recipes.length, ...counts };
+  });
+  readAnswers.set("ingredients.recipes", async () => ({
+    recipes: (await held()).recipes,
+    nextCursor: null,
+  }));
   for (const [name, write] of Object.entries(mutations)) {
     writeAnswers.set(`ingredients.${name}`, (input) =>
       (write as (input: unknown) => Promise<unknown>)(input)
@@ -825,7 +841,7 @@ describe("IngredientsScreen", () => {
     const opened = await open("onion");
 
     expect([reads("ingredients.get"), reads("ingredients.spellings")]).toEqual([0, 0]);
-    expect(reads("ingredients.uses")).toBe(0);
+    expect([reads("ingredients.uses"), reads("ingredients.countUses")]).toEqual([0, 0]);
 
     await showSpellings(opened);
     expect(reads("ingredients.spellings")).toBe(1);
@@ -834,7 +850,7 @@ describe("IngredientsScreen", () => {
       fireEvent.click(within(opened).getByTestId("ingredient-delete"));
     });
     await settle();
-    expect(reads("ingredients.uses")).toBe(1);
+    expect(reads("ingredients.countUses")).toBe(1);
 
     // The list drops the open food: only now is it read on its own.
     items = [salt];

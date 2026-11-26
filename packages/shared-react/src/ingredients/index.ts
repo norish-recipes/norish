@@ -60,6 +60,7 @@ export {
   useIngredientQuery,
   useIngredientSearchQuery,
   useIngredientSpellingsQuery,
+  useIngredientUseCounts,
   useIngredientUsesQuery,
 } from "./use-ingredient-query";
 export { INGREDIENT_NAME_MAX, useIngredientAdd } from "./use-ingredient-add";

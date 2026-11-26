@@ -29,6 +29,7 @@ import {
   isOpenChange,
   useAIChangeMutations,
   useAIChangesQuery,
+  useFoodRecipes,
   useHeldIngredient,
   useIngredientDraft,
   useIngredientQuery,
@@ -601,16 +602,31 @@ function IngredientUsesContent({
 }) {
   const t = useTranslations("settings.ingredients.uses");
   const tActions = useTranslations("common.actions");
+  const tMore = useTranslations("recipes.cookbooks");
   const { uses: data } = useIngredientUsesQuery(ingredientId);
-  const unused = data && data.recipes.length === 0 && data.groceries.length === 0 && !data.pantry;
+  const { recipes, loaded, hasMore, loadingMore, loadMore } = useFoodRecipes(ingredientId);
+  const unused =
+    data && loaded && recipes.length === 0 && data.groceries.length === 0 && !data.pantry;
 
   return (
     <>
       <Panel.Body data-testid="ingredient-uses" sections>
-        {!data ? <Skeleton className="h-16 w-full rounded-xl" /> : null}
-        {data && data.recipes.length > 0 ? (
+        {!data || !loaded ? <Skeleton className="h-16 w-full rounded-xl" /> : null}
+        {recipes.length > 0 ? (
           <Section placement="panel" title={t("recipes")}>
-            <RecipeLinks recipes={data.recipes} onOpen={onClose} />
+            <RecipeLinks recipes={recipes} onOpen={onClose} />
+            {hasMore ? (
+              <Button
+                className="self-center"
+                data-testid="ingredient-uses-more"
+                isPending={loadingMore}
+                size="sm"
+                variant="tertiary"
+                onPress={loadMore}
+              >
+                {tMore("showMore")}
+              </Button>
+            ) : null}
           </Section>
         ) : null}
         {data && data.groceries.length > 0 ? (

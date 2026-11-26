@@ -4,6 +4,7 @@ import {
   and,
   asc,
   count,
+  countDistinct,
   desc,
   eq,
   exists,
@@ -37,6 +38,7 @@ import {
 import { escapeLike } from "@norish/shared/lib/ingredient-search";
 import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
+import { ENTRY_RECIPES_PAGE } from "./entry-recipes";
 import { inCatalogue, ownBeforeSeed } from "./household-scope";
 import { ONE_ROW } from "./raw-sql";
 
@@ -890,14 +892,18 @@ export async function deleteCatalogueAlias(
 
 /** Where an Ingredient is used in the viewer's household (ADR-0042). */
 export interface IngredientUses {
-  /** The household's recipes with a line naming it. */
-  recipes: Array<{ id: string; name: string }>;
   /** The household's groceries and recurring groceries naming it. */
   groceries: Array<{ id: string; name: string | null; done: boolean; recurring: boolean }>;
   /** Whether the household keeps it in the Pantry. */
   pantry: boolean;
-  /** How many of the household's rows name it; groceries include recurring ones. */
-  counts: { recipeLines: number; groceries: number; pantry: number };
+}
+
+/** How many of the household's rows name a food; groceries include recurring ones. */
+export interface IngredientUseCounts {
+  recipes: number;
+  recipeLines: number;
+  groceries: number;
+  pantry: number;
 }
 
 /**
@@ -943,72 +949,132 @@ export async function findGroceryRows(
   };
 }
 
+/** The household's lines naming the food, as recipe line ids. */
+const linesNaming = (ingredientId: string) =>
+  db
+    .select({ id: recipeIngredientFoods.recipeIngredientId })
+    .from(recipeIngredientFoods)
+    .where(rowsNaming(ingredientId).lineFoods);
+
+/** A repeating grocery's copy on the list is listed and counted once, as the repeat. */
+const groceriesNaming = (householdId: string, ingredientId: string) =>
+  and(
+    eq(groceries.householdId, householdId),
+    rowsNaming(ingredientId).groceries,
+    isNull(groceries.recurringGroceryId)
+  );
+
+const recurringNaming = (householdId: string, ingredientId: string) =>
+  and(eq(recurringGroceries.householdId, householdId), rowsNaming(ingredientId).recurringGroceries);
+
+const pantryNaming = (householdId: string, ingredientId: string) =>
+  and(eq(pantryIngredients.householdId, householdId), rowsNaming(ingredientId).pantry);
+
 /**
- * What of the viewer's household names an Ingredient of its catalogue: its recipes, groceries and
- * Pantry, nothing of another household's. Null where the food is not in the catalogue.
+ * Which of the viewer's household's groceries and Pantry name an Ingredient of its catalogue,
+ * nothing of another household's. Null where the food is not in the catalogue.
  */
 export async function listIngredientUses(
   householdId: string,
   ingredientId: string
 ): Promise<IngredientUses | null> {
   if (!(await findCatalogueIngredientOwner(db, householdId, ingredientId))) return null;
-  const naming = rowsNaming(ingredientId);
 
-  const [lines, groceryRows, recurringRows, pantryRows] = await Promise.all([
+  const [groceryRows, recurringRows, [pantry]] = await Promise.all([
     db
-      .select({ id: recipes.id, name: recipes.name })
+      .select({ id: groceries.id, name: groceries.name, done: groceries.isDone })
+      .from(groceries)
+      .where(groceriesNaming(householdId, ingredientId))
+      .orderBy(asc(groceries.isDone), asc(sql`lower(${groceries.name})`)),
+    db
+      .select({ id: recurringGroceries.id, name: recurringGroceries.name })
+      .from(recurringGroceries)
+      .where(recurringNaming(householdId, ingredientId)),
+    db
+      .select({ id: pantryIngredients.id })
+      .from(pantryIngredients)
+      .where(pantryNaming(householdId, ingredientId))
+      .limit(1),
+  ]);
+
+  return {
+    groceries: [
+      ...groceryRows.map(({ id, name, done }) => ({ id, name, done, recurring: false })),
+      ...recurringRows.map(({ id, name }) => ({ id, name, done: false, recurring: true })),
+    ],
+    pantry: pantry !== undefined,
+  };
+}
+
+/** How many of the household's recipes, lines, groceries and Pantry rows name a food of its
+ * catalogue, as `listIngredientUses` and `listIngredientRecipes` scope them; null outside it. */
+export async function countIngredientUses(
+  householdId: string,
+  ingredientId: string
+): Promise<IngredientUseCounts | null> {
+  if (!(await findCatalogueIngredientOwner(db, householdId, ingredientId))) return null;
+
+  const [[lines], [groceryCount], [recurringCount], [pantryCount]] = await Promise.all([
+    db
+      .select({ recipes: countDistinct(recipeIngredients.recipeId), lines: count() })
       .from(recipeIngredients)
       .innerJoin(recipes, eq(recipes.id, recipeIngredients.recipeId))
       .where(
         and(
           eq(recipes.householdId, householdId),
-          inArray(
-            recipeIngredients.id,
-            db
-              .select({ id: recipeIngredientFoods.recipeIngredientId })
-              .from(recipeIngredientFoods)
-              .where(naming.lineFoods)
-          )
+          inArray(recipeIngredients.id, linesNaming(ingredientId))
         )
-      )
-      .orderBy(asc(sql`lower(${recipes.name})`)),
+      ),
+    db.select({ n: count() }).from(groceries).where(groceriesNaming(householdId, ingredientId)),
     db
-      .select({ id: groceries.id, name: groceries.name, done: groceries.isDone })
-      .from(groceries)
-      // A repeating grocery's copy on the list is listed and counted once, as the repeat.
-      .where(
-        and(
-          eq(groceries.householdId, householdId),
-          naming.groceries,
-          isNull(groceries.recurringGroceryId)
-        )
-      )
-      .orderBy(asc(groceries.isDone), asc(sql`lower(${groceries.name})`)),
-    db
-      .select({ id: recurringGroceries.id, name: recurringGroceries.name })
+      .select({ n: count() })
       .from(recurringGroceries)
-      .where(and(eq(recurringGroceries.householdId, householdId), naming.recurringGroceries)),
+      .where(recurringNaming(householdId, ingredientId)),
     db
-      .select({ id: pantryIngredients.id })
+      .select({ n: count() })
       .from(pantryIngredients)
-      .where(and(eq(pantryIngredients.householdId, householdId), naming.pantry)),
+      .where(pantryNaming(householdId, ingredientId)),
   ]);
-  // A recipe naming the food on several lines is listed once.
-  const listed = new Map(lines.map((line) => [line.id, line]));
 
   return {
-    recipes: [...listed.values()],
-    groceries: [
-      ...groceryRows.map(({ id, name, done }) => ({ id, name, done, recurring: false })),
-      ...recurringRows.map(({ id, name }) => ({ id, name, done: false, recurring: true })),
-    ],
-    pantry: pantryRows.length > 0,
-    counts: {
-      recipeLines: lines.length,
-      groceries: groceryRows.length + recurringRows.length,
-      pantry: pantryRows.length,
-    },
+    recipes: lines?.recipes ?? 0,
+    recipeLines: lines?.lines ?? 0,
+    groceries: (groceryCount?.n ?? 0) + (recurringCount?.n ?? 0),
+    pantry: pantryCount?.n ?? 0,
   };
+}
+
+/**
+ * One page of the household's recipes with a line naming a food of its catalogue, by name (the id
+ * breaks ties), as an entry's recipes are paged; null outside the catalogue.
+ */
+export async function listIngredientRecipes(
+  householdId: string,
+  ingredientId: string,
+  { limit = ENTRY_RECIPES_PAGE, offset = 0 }: { limit?: number; offset?: number } = {}
+): Promise<{ recipes: Array<{ id: string; name: string }>; hasMore: boolean } | null> {
+  if (!(await findCatalogueIngredientOwner(db, householdId, ingredientId))) return null;
+
+  const rows = await db
+    .select({ id: recipes.id, name: recipes.name })
+    .from(recipes)
+    .where(
+      and(
+        eq(recipes.householdId, householdId),
+        inArray(
+          recipes.id,
+          db
+            .select({ id: recipeIngredients.recipeId })
+            .from(recipeIngredients)
+            .where(inArray(recipeIngredients.id, linesNaming(ingredientId)))
+        )
+      )
+    )
+    .orderBy(asc(recipes.name), asc(recipes.id))
+    .limit(limit + 1)
+    .offset(offset);
+
+  return { recipes: rows.slice(0, limit), hasMore: rows.length > limit };
 }
 
 /**

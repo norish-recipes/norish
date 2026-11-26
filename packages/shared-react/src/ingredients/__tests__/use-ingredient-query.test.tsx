@@ -44,19 +44,21 @@ describe("useIngredientListQuery", () => {
 describe("useFoodRecipes", () => {
   const wrapper = () => createTestWrapper(createTestQueryClient(), fakePlatformAdapter());
 
-  it("lists the recipes that use a food, all at once, once its uses are read", async () => {
-    serveTRPC(async () => ({
-      recipes: [{ id: "r1", name: "Soup" }],
-      groceries: [],
-      pantry: false,
-      counts: { recipeLines: 1, groceries: 0, pantry: 0 },
-    }));
+  it("lists the recipes that use a food a page at a time", async () => {
+    serveTRPC(async (_path, input) =>
+      (input as { cursor?: number }).cursor
+        ? { recipes: [{ id: "r2", name: "Stew" }], nextCursor: null }
+        : { recipes: [{ id: "r1", name: "Soup" }], nextCursor: 1 }
+    );
 
     const { result } = renderHook(() => useFoodRecipes("soy"), { wrapper: wrapper() });
 
     expect(result.current.loaded).toBe(false);
     await waitFor(() => expect(result.current.loaded).toBe(true));
     expect(result.current.recipes).toEqual([{ id: "r1", name: "Soup" }]);
+    expect(result.current.hasMore).toBe(true);
+    act(() => result.current.loadMore());
+    await waitFor(() => expect(result.current.recipes).toHaveLength(2));
     expect(result.current.hasMore).toBe(false);
   });
 
@@ -67,7 +69,7 @@ describe("useFoodRecipes", () => {
       reads += 1;
       if (reads === 1) throw new Error("down");
 
-      return { recipes: [], groceries: [], pantry: false, counts: {} };
+      return { recipes: [], nextCursor: null };
     });
 
     const { result } = renderHook(() => useFoodRecipes("soy"), { wrapper: wrapper() });

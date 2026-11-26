@@ -11,7 +11,9 @@ import type { SpoonMeasure } from "@norish/shared/lib/spoon-measure";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { findIngredientDisplayNames } from "@norish/db/repositories/ingredient-aliases";
 import {
+  countIngredientUses,
   countListedIngredients,
+  listIngredientRecipes,
   listIngredientUses,
 } from "@norish/db/repositories/ingredient-catalogue";
 import { findIdsInCatalogue } from "@norish/db/repositories/ingredient-nutrition";
@@ -195,7 +197,7 @@ const spellings = authedProcedure
   .input(z.object({ ingredientId: z.uuid() }))
   .query(({ ctx, input }) => listSpellings(actorOf(ctx), input.ingredientId));
 
-/** Where the household still uses an Ingredient of its catalogue, for the panel a refused delete opens. */
+/** Which of the household's groceries and Pantry still use an Ingredient of its catalogue. */
 const uses = authedProcedure
   .input(z.object({ ingredientId: z.uuid() }))
   .query(async ({ ctx, input }) => {
@@ -204,6 +206,33 @@ const uses = authedProcedure
     if (!found) throw new TRPCError({ code: "NOT_FOUND", message: "not-found" });
 
     return found;
+  });
+
+/** How much of the household uses a food: its "Used by" row and what a delete would touch. */
+const countUses = authedProcedure
+  .input(z.object({ ingredientId: z.uuid() }))
+  .query(async ({ ctx, input }) => {
+    const found = await countIngredientUses(ctx.householdId, input.ingredientId);
+
+    if (!found) throw new TRPCError({ code: "NOT_FOUND", message: "not-found" });
+
+    return found;
+  });
+
+/** A page of the household's recipes using a food, for "Used by". */
+const recipes = authedProcedure
+  .input(z.object({ ingredientId: z.uuid(), cursor: z.number().int().min(0).default(0) }))
+  .query(async ({ ctx, input }) => {
+    const page = await listIngredientRecipes(ctx.householdId, input.ingredientId, {
+      offset: input.cursor,
+    });
+
+    if (!page) throw new TRPCError({ code: "NOT_FOUND", message: "not-found" });
+
+    return {
+      recipes: page.recipes,
+      nextCursor: page.hasMore ? input.cursor + page.recipes.length : null,
+    };
   });
 
 /**
@@ -559,6 +588,8 @@ export const ingredientsRouter = router({
   get,
   spellings,
   uses,
+  countUses,
+  recipes,
   addAlias,
   rename,
   markDistinct,

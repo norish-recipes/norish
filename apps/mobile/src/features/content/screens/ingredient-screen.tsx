@@ -24,7 +24,7 @@ import {
   useIngredientDraft,
   useIngredientNutritionQuery,
   useIngredientQuery,
-  useIngredientUsesQuery,
+  useIngredientUseCounts,
 } from "@norish/shared-react/ingredients";
 import { useConnectivity } from "@norish/shared-react/offline/react";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
@@ -86,7 +86,7 @@ function FoodSheet({ item }: { item: IngredientItem }) {
   const { isOffline } = useConnectivity();
   const draft = useIngredientDraft(item, displayName, () => router.back());
   const [step, setStep] = useState<Step>("food");
-  const { uses } = useIngredientUsesQuery(item.id);
+  const { counts } = useIngredientUseCounts(item.id);
   const { nutrition, measure } = useIngredientNutritionQuery(item.id);
   const aiChanges = useAIChangeMutations();
   const unsure = useAIChangesQuery((changes) =>
@@ -130,13 +130,13 @@ function FoodSheet({ item }: { item: IngredientItem }) {
   }
 
   const confirmDelete = () => {
-    const touched = DELETE_TOUCHES.filter((key) => (uses?.counts[key] ?? 0) > 0);
+    const touched = DELETE_TOUCHES.filter((key) => (counts?.[key] ?? 0) > 0);
 
     Alert.alert(
       t("deleteTitle", { name: displayName }),
       [
         t("deleteConfirm"),
-        ...touched.map((key) => t(`deleteTouches.${key}`, { count: uses?.counts[key] ?? 0 })),
+        ...touched.map((key) => t(`deleteTouches.${key}`, { count: counts?.[key] ?? 0 })),
       ].join("\n"),
       [
         cancel,
@@ -165,7 +165,7 @@ function FoodSheet({ item }: { item: IngredientItem }) {
           ? [
               {
                 ...destructiveAction(text("common.actions.delete"), confirmDelete),
-                disabled: !uses || isOffline,
+                disabled: !counts || isOffline,
               },
             ]
           : undefined
@@ -248,9 +248,7 @@ function FoodSheet({ item }: { item: IngredientItem }) {
         <CardRow
           label={text("settings.content.panel.usedBy")}
           testID="food-used-by"
-          value={
-            uses ? text("settings.content.recipes", { count: uses.recipes.length }) : undefined
-          }
+          value={counts ? text("settings.content.recipes", { count: counts.recipes }) : undefined}
           onPress={() =>
             router.push({
               pathname: "/settings/content-uses",

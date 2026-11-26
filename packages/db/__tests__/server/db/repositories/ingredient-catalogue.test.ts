@@ -5,10 +5,12 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { withTransaction } from "@norish/db/drizzle";
 import {
+  countIngredientUses,
   countListedIngredients,
   deleteCatalogueAlias,
   forEachCatalogue,
   listCatalogueIngredients,
+  listIngredientRecipes,
   listIngredientUses,
 } from "@norish/db/repositories/ingredient-catalogue";
 import { insertSeededIngredient } from "@norish/db/repositories/ingredient-seed";
@@ -365,21 +367,53 @@ describe("ingredient uses", () => {
   });
 
   it("lists and counts the household's own uses alone, a recipe once", async () => {
-    expect(await listIngredientUses(testHouseholdOf(me.id), chickenId)).toEqual({
-      recipes: [{ id: recipeId, name: "Saté" }],
+    const mine = testHouseholdOf(me.id);
+    const theirs = testHouseholdOf(neighbourId);
+
+    expect(await listIngredientUses(mine, chickenId)).toEqual({
       groceries: [
         { id: expect.any(String), name: "kipfilet met de hand", done: true, recurring: false },
       ],
       pantry: true,
-      counts: { recipeLines: 2, groceries: 1, pantry: 1 },
+    });
+    expect(await listIngredientRecipes(mine, chickenId)).toEqual({
+      recipes: [{ id: recipeId, name: "Saté" }],
+      hasMore: false,
+    });
+    expect(await countIngredientUses(mine, chickenId)).toEqual({
+      recipes: 1,
+      recipeLines: 2,
+      groceries: 1,
+      pantry: 1,
     });
     // The neighbour's household sees its grocery, and none of the other's recipe or Pantry.
-    expect(await listIngredientUses(testHouseholdOf(neighbourId), chickenId)).toEqual({
-      recipes: [],
+    expect(await listIngredientUses(theirs, chickenId)).toEqual({
       groceries: [{ id: expect.any(String), name: "kipfilet", done: false, recurring: false }],
       pantry: false,
-      counts: { recipeLines: 0, groceries: 1, pantry: 0 },
     });
+    expect(await listIngredientRecipes(theirs, chickenId)).toEqual({ recipes: [], hasMore: false });
+    expect(await countIngredientUses(theirs, chickenId)).toEqual({
+      recipes: 0,
+      recipeLines: 0,
+      groceries: 1,
+      pantry: 0,
+    });
+  });
+
+  it("pages the household's recipes using a food by name, the last page saying no more", async () => {
+    const mine = testHouseholdOf(me.id);
+    const other = (await createTestRecipe(me.id, { name: "Kip curry" })).id;
+    const neighbours = (await createTestRecipe(neighbourId, { name: "Kip pie" })).id;
+
+    await createTestRecipeIngredients(other, chickenId, "metric");
+    await createTestRecipeIngredients(neighbours, chickenId, "metric");
+
+    const first = await listIngredientRecipes(mine, chickenId, { limit: 1 });
+    const second = await listIngredientRecipes(mine, chickenId, { limit: 1, offset: 1 });
+
+    expect(first).toEqual({ recipes: [{ id: other, name: "Kip curry" }], hasMore: true });
+    expect(second).toEqual({ recipes: [{ id: recipeId, name: "Saté" }], hasMore: false });
+    expect((await countIngredientUses(mine, chickenId))?.recipes).toBe(2);
   });
 
   it("finds nothing of another household's own food by its id", async () => {
@@ -389,9 +423,14 @@ describe("ingredient uses", () => {
     });
 
     await expect(listIngredientUses(testHouseholdOf(me.id), theirs!.id)).resolves.toBeNull();
-    await expect(listIngredientUses(testHouseholdOf(neighbourId), theirs!.id)).resolves.toEqual(
-      expect.objectContaining({ counts: { recipeLines: 0, groceries: 0, pantry: 0 } })
-    );
+    await expect(countIngredientUses(testHouseholdOf(me.id), theirs!.id)).resolves.toBeNull();
+    await expect(listIngredientRecipes(testHouseholdOf(me.id), theirs!.id)).resolves.toBeNull();
+    await expect(countIngredientUses(testHouseholdOf(neighbourId), theirs!.id)).resolves.toEqual({
+      recipes: 0,
+      recipeLines: 0,
+      groceries: 0,
+      pantry: 0,
+    });
   });
 
   it("lists a line naming several foods under each of them", async () => {
@@ -405,10 +444,10 @@ describe("ingredient uses", () => {
 
     const household = testHouseholdOf(me.id);
 
-    expect((await listIngredientUses(household, satay!.id))?.recipes).toEqual([
+    expect((await listIngredientRecipes(household, satay!.id))?.recipes).toEqual([
       { id: ricePan, name: "Rijstpan" },
     ]);
-    expect((await listIngredientUses(household, chickenId))?.counts.recipeLines).toBe(3);
+    expect((await countIngredientUses(household, chickenId))?.recipeLines).toBe(3);
   });
 
   it("lists and counts a repeating grocery once, not again for the copy it keeps on the list", async () => {
@@ -439,7 +478,7 @@ describe("ingredient uses", () => {
       { id: expect.any(String), name: "kipfilet met de hand", done: true, recurring: false },
       { id: recurring!.id, name: "kipfilet", done: false, recurring: true },
     ]);
-    expect(uses?.counts.groceries).toBe(2);
+    expect((await countIngredientUses(testHouseholdOf(me.id), chickenId))?.groceries).toBe(2);
   });
 });
 
