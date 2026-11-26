@@ -14,13 +14,19 @@ import { useSpellingRules, useUnitsQuery } from "../config";
 import { useTRPC } from "../trpc";
 import { useLineReadings } from "./use-line-readings";
 
+/** Nutrition worked out from the lines, null where none is; `isLoading` while its inputs read. */
+export interface WorkedOutNutritionState {
+  nutrition: WorkedOutNutrition | null;
+  isLoading: boolean;
+}
+
 /**
- * Nutrition summed from a recipe's lines (ADR-0039) as the reader's household reads them; null if
- * it has its own or while reading.
+ * Nutrition summed from a recipe's lines (ADR-0039) as the reader's household reads them; none if
+ * it has its own, and loading while the readings or the foods' numbers read.
  */
 export function useWorkedOutNutrition(
   recipe: (RecipeForNutrition & { id: string }) | null
-): WorkedOutNutrition | null {
+): WorkedOutNutritionState {
   const trpc = useTRPC();
   const { units } = useUnitsQuery();
   const rules = useSpellingRules();
@@ -30,19 +36,25 @@ export function useWorkedOutNutrition(
   const ingredientIds = [
     ...new Set((lines ?? []).flatMap((line) => (line.ingredientId ? [line.ingredientId] : []))),
   ].sort((a, b) => a.localeCompare(b));
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     ...trpc.ingredients.nutritionFor.queryOptions({ ingredientIds }),
     enabled: !supplied && ingredientIds.length > 0,
   });
 
-  if (supplied || !recipe || !lines || (ingredientIds.length > 0 && !data)) return null;
+  if (supplied || !recipe) return { nutrition: null, isLoading: false };
+  if (!lines || (ingredientIds.length > 0 && !data)) {
+    return { nutrition: null, isLoading: !lines || isLoading };
+  }
 
-  return workOutNutrition({
-    lines,
-    servings: recipe.servings,
-    nutrition: new Map(Object.entries(data ?? {})),
-    seasoning: seasoningPhrases(units),
-    rules,
-    estimate: recipe.nutritionEstimate ?? null,
-  });
+  return {
+    nutrition: workOutNutrition({
+      lines,
+      servings: recipe.servings,
+      nutrition: new Map(Object.entries(data ?? {})),
+      seasoning: seasoningPhrases(units),
+      rules,
+      estimate: recipe.nutritionEstimate ?? null,
+    }),
+    isLoading: false,
+  };
 }

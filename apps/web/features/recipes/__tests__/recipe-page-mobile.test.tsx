@@ -89,7 +89,7 @@ const mocks = vi.hoisted(() => ({
 // The worked-out total reads the server; these pages are about their layout.
 vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
   ...(await importOriginal<object>()),
-  useWorkedOutNutrition: () => null,
+  useWorkedOutNutrition: () => ({ nutrition: null, isLoading: false }),
 }));
 
 vi.mock("@norish/shared-react/trpc", async () =>

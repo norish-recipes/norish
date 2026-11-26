@@ -114,7 +114,7 @@ export function RecipeHeader({ recipe }: { recipe: FullRecipeDTO }) {
   const servings = usePageServings();
   const { allergies } = useActiveAllergies();
   const { showNutrition } = useHiddenItemVisibility();
-  const workedOut = useWorkedOutNutrition(recipe);
+  const { nutrition: workedOut } = useWorkedOutNutrition(recipe);
   const tint = useTint();
   const calories = useTokenColor("nutrition-calories");
   const facts = recipeCardFacts(recipe, allergies);
