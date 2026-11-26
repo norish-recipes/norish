@@ -1,5 +1,5 @@
 /** The Content page (ADR-0043) in a browser: Tags added, merged and deleted; server Cuisines; household isolation. */
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
 import { userIdOf } from "../harness/accounts";
 import { signedInContext, signIn } from "../harness/auth";
@@ -26,15 +26,19 @@ async function openList(
   browser: Parameters<typeof signedInContext>[0],
   baseURL: string,
   user: typeof OWNER,
-  list: "tags" | "cuisines"
+  list: "tags" | "cuisines",
+  width = 1280
 ) {
   const context = await signedInContext(browser, baseURL, user, {
-    viewport: { width: 1280, height: 1200 },
+    viewport: { width, height: 1200 },
   });
   const page = await context.newPage();
 
   await page.goto(`/settings/content/${list}`);
-  await expect(page.getByTestId("content-search")).toBeVisible();
+  // A list with no entries draws its empty state and no search.
+  await expect(
+    page.getByTestId("content-search").or(page.getByTestId("content-empty"))
+  ).toBeVisible();
 
   return { context, page };
 }
@@ -198,7 +202,6 @@ test("household B never sees household A's entries", async ({ browser, aiStack }
   const { context, page } = await openList(browser, aiStack.baseURL, OWNER, "tags");
 
   try {
-    await page.getByTestId("content-search").fill(word);
     await expect(entry(page, secret)).toHaveCount(0);
 
     // B's own Tag of the same name is a new entry, not A's.
@@ -214,6 +217,119 @@ test("household B never sees household A's entries", async ({ browser, aiStack }
     expect(ours.find((tag) => tag.name === secret)!.id).not.toBe(
       theirs.find((tag) => tag.name === secret)!.id
     );
+  } finally {
+    await context.close();
+  }
+});
+
+async function box(locator: Locator) {
+  const found = await locator.boundingBox({ timeout: 5000 });
+
+  if (!found) throw new Error("the element has no box");
+
+  return found;
+}
+
+test("on a phone Add sits at the right edge of the list header", async ({ browser, aiStack }) => {
+  const member = await signIn(aiStack.baseURL, MEMBER);
+
+  await callTrpc(aiStack.baseURL, member, "lists.add", { kind: "tag", name: `Edge${Date.now()}` });
+
+  const { context, page } = await openList(browser, aiStack.baseURL, MEMBER, "tags", 390);
+
+  try {
+    const frame = await box(
+      page.getByTestId("content-entry").first().locator("xpath=ancestor::ul")
+    );
+    const add = await box(page.getByTestId("content-add"));
+
+    expect(Math.abs(add.x + add.width - (frame.x + frame.width))).toBeLessThanOrEqual(1);
+  } finally {
+    await context.close();
+  }
+});
+
+test("on a desktop each picker row spans the picker with its count at the right edge", async ({
+  browser,
+  aiStack,
+}) => {
+  const { context, page } = await openList(browser, aiStack.baseURL, MEMBER, "tags");
+
+  try {
+    const list = await box(page.getByRole("tablist", { name: "Content", exact: true }));
+    const tabs = page.getByRole("tab", { name: /^(Tags|Cuisines|Categories|Ingredients)/ });
+
+    await expect(tabs).toHaveCount(4);
+
+    for (const tab of await tabs.all()) {
+      const row = await box(tab);
+
+      // The list pads its rows by 4 px a side.
+      expect(row.width).toBeGreaterThanOrEqual(list.width - 9);
+    }
+
+    const tags = page.getByRole("tab", { name: /^Tags/ });
+    const tagsBox = await box(tags);
+    const count = await box(tags.locator(".tabular-nums"));
+
+    // The row's padding is 16 px.
+    expect(tagsBox.x + tagsBox.width - (count.x + count.width)).toBeLessThanOrEqual(17);
+  } finally {
+    await context.close();
+  }
+});
+
+test("a loading list moves nothing when its entries arrive", async ({ browser, aiStack }) => {
+  const word = `Con${Date.now().toString(36)}`;
+  const member = await signIn(aiStack.baseURL, MEMBER);
+
+  await callTrpc(aiStack.baseURL, member, "lists.add", { kind: "cuisine", name: `${word} Own` });
+  await callTrpc(aiStack.baseURL, aiStack.ownerCookies, "lists.add", {
+    kind: "cuisine",
+    name: `${word} Server`,
+    instance: true,
+  });
+
+  const context = await signedInContext(browser, aiStack.baseURL, MEMBER, {
+    viewport: { width: 1280, height: 1200 },
+  });
+  const page = await context.newPage();
+
+  try {
+    await page.goto("/settings/account");
+
+    let release = () => {};
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+
+    await page.route(/lists\.list/, async (route) => {
+      await held;
+      await route.continue();
+    });
+    await page.getByRole("tab", { name: "Content" }).click();
+    await page.getByRole("tab", { name: /^Cuisines/ }).click();
+
+    const loading = page.getByTestId("content-loading");
+
+    await expect(loading).toBeVisible();
+    // One frame of rows and one heading: nothing it draws is a guess about the second section.
+    await expect(loading.locator("ul")).toHaveCount(1);
+    await expect(loading.locator("h3")).toHaveCount(1);
+
+    const heading = await box(loading.locator("h3"));
+    const frame = await box(loading.locator("ul"));
+
+    release();
+    await expect(loading).toHaveCount(0);
+
+    const loaded = page.getByRole("heading", { level: 3 });
+
+    await expect(loaded).toHaveCount(2);
+    expect(await box(loaded.first())).toMatchObject({ y: heading.y, height: heading.height });
+    expect(
+      (await box(page.getByTestId("content-entry").first().locator("xpath=ancestor::ul"))).y
+    ).toBe(frame.y);
   } finally {
     await context.close();
   }
