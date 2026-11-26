@@ -192,6 +192,35 @@ describe("the lists router", () => {
     ).toMatchObject({ entry: { name: "Basque Country", editable: true } });
   });
 
+  it("tells an admin how many recipes in every household carry an instance Cuisine, and nobody else", async () => {
+    const mine = await as(member);
+    const theirs = await as(admin);
+    const italian = (await mine.list({ kind: "cuisine" })).find((e) => e.name === "Italian")!;
+    const own = await helpers.createTestRecipe(member.id, { name: "Soup" });
+    const other = await helpers.createTestRecipe(admin.id, { name: "Pasta" });
+
+    const { replaceRecipeEntryIdsTx } = await import("@norish/db/repositories/list-entries");
+    const db = helpers.getTestDb();
+
+    for (const recipe of [own, other]) {
+      await db.transaction((tx) => replaceRecipeEntryIdsTx(tx, "cuisine", recipe.id, [italian.id]));
+    }
+
+    expect(await theirs.usage({ kind: "cuisine", id: italian.id })).toEqual({ recipeCount: 2 });
+    expect((await mine.list({ kind: "cuisine" })).find((e) => e.id === italian.id)).toMatchObject({
+      recipeCount: 1,
+    });
+    await expect(mine.usage({ kind: "cuisine", id: italian.id })).rejects.toThrow(
+      "This entry cannot be changed"
+    );
+
+    const { entry: soup } = await mine.add({ kind: "tag", name: "soup" });
+
+    await expect(theirs.usage({ kind: "tag", id: soup.id })).rejects.toThrow(
+      "This entry cannot be changed"
+    );
+  });
+
   it("reads and adds to an editable recipe's household list, and only then", async () => {
     const recipe = await helpers.createTestRecipe(member.id, { name: "Soup" });
     const stranger = await as(admin);

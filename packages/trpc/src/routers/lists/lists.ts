@@ -6,6 +6,7 @@ import { z } from "zod";
 import type { ListEntryRow, ListKind, ListScope } from "@norish/db/repositories/list-entries";
 import {
   addEntry,
+  countEntryRecipes,
   deleteEntry,
   findOwnEntry,
   LIST_KINDS,
@@ -184,4 +185,18 @@ const remove = authedProcedure
     return { stale: false, ...deleted.value };
   });
 
-export const listsProcedures = router({ list, add, rename, merge, delete: remove });
+/** How many recipes in every household carry an instance entry, for an admin's delete to say. */
+const usage = authedProcedure
+  .input(z.object({ kind: KindSchema, id: z.uuid() }))
+  .query(async ({ ctx, input }) => {
+    if (!mayChangeInstance(ctx, input.kind)) {
+      throw new TRPCError({ code: "FORBIDDEN", message: "This entry cannot be changed" });
+    }
+    if (!(await findOwnEntry(input.kind, null, input.id))) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Not found" });
+    }
+
+    return { recipeCount: await countEntryRecipes(input.kind, input.id) };
+  });
+
+export const listsProcedures = router({ list, add, rename, merge, delete: remove, usage });

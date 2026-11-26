@@ -863,6 +863,14 @@ export async function deleteEntry(
   });
 }
 
+/** How many recipes, in every household, carry the entry: what deleting an instance entry detaches. */
+export async function countEntryRecipes(kind: ListKind, id: string): Promise<number> {
+  const { link, entity } = KINDS[kind];
+  const [row] = await db.select({ n: count() }).from(link).where(eq(entity, id));
+
+  return row?.n ?? 0;
+}
+
 /** The scope's entry `id`, or null when it is no entry of the scope. */
 export async function findOwnEntry(
   kind: ListKind,
