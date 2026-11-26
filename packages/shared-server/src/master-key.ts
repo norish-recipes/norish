@@ -30,6 +30,9 @@ export type KeyFile = { current: string; previous?: string };
 
 const fromBase64 = (key: string) => Buffer.from(key, "base64");
 
+/** A key as Norish generates one: base64 of 32 random bytes. */
+const generatedKey = () => randomBytes(32).toString("base64");
+
 const KeyFileSchema = z.object({
   current: MasterKeySchema,
   previous: MasterKeySchema.optional(),
@@ -208,15 +211,23 @@ function named(keys: KeyFile, labels: { current: string; previous: string }) {
   };
 }
 
-async function keySource(): Promise<KeySource> {
+/** The keys MASTER_KEY and MASTER_KEY_PREVIOUS give, or null when MASTER_KEY is unset. */
+function pinnedKeys(): KeyFile | null {
   const { MASTER_KEY, MASTER_KEY_PREVIOUS } = SERVER_CONFIG;
 
-  if (MASTER_KEY) {
-    const keys = { current: MASTER_KEY, previous: MASTER_KEY_PREVIOUS };
+  return MASTER_KEY ? { current: MASTER_KEY, previous: MASTER_KEY_PREVIOUS } : null;
+}
 
+/** Env mode: MASTER_KEY pins the key and boot ignores the key file. */
+export const masterKeyPinned = (): boolean => pinnedKeys() !== null;
+
+async function keySource(): Promise<KeySource> {
+  const pinned = pinnedKeys();
+
+  if (pinned) {
     return {
       pinned: true,
-      keys: named(keys, { current: "MASTER_KEY", previous: "MASTER_KEY_PREVIOUS" }),
+      keys: named(pinned, { current: "MASTER_KEY", previous: "MASTER_KEY_PREVIOUS" }),
     };
   }
   const keys = await readKeyFile();
@@ -239,7 +250,7 @@ function pickKey(source: KeySource, fits: (key: Buffer) => boolean) {
 
 /** A new key file, or the one another first boot wrote at the same time. */
 async function generateKeyFile(): Promise<string> {
-  const key = randomBytes(32).toString("base64");
+  const key = generatedKey();
 
   try {
     await writeKeyFile({ current: key });
@@ -389,6 +400,20 @@ export async function resolveMasterKey(endStoredSessions: EndStoredSessions): Pr
   log.info({ source: keys.current.label }, "Master Key opened");
   if (keys.previous) await retirePrevious(opening, keys.current.text);
   await removeLeftoverCopies();
+}
+
+/**
+ * File mode's rotation: a new `current` beside the key the fingerprint names, so a rotation still
+ * waiting for its boot never drops the one key that opens the data. The next boot re-keys.
+ */
+export async function rotateKeyFile(): Promise<void> {
+  const source = await keySource();
+
+  if (source.pinned) throw new Error("MASTER_KEY pins the key, so the key file is not used.");
+  const { key } = keyWithFingerprint(source, await getMasterKeyFingerprint());
+
+  await writeKeyFile({ current: generatedKey(), previous: key.text }, { replace: true });
+  log.info({ source: keyFilePath() }, "New Master Key written; the next boot re-keys to it");
 }
 
 /** Open the key the database's fingerprint names, for a tool or script: never generates nor writes one. */

@@ -978,6 +978,124 @@ describe("which key boot opens", () => {
     });
   });
 
+  describe("rotating the key file from the Admin action", () => {
+    const rotate = () => masterKey.rotateKeyFile();
+    /** The key file as it stands, its new `current` read as bytes. */
+    const rotated = async () => {
+      const keys = await readKeyFile();
+
+      if (!keys) throw new Error("There is no key file");
+
+      return { ...keys, bytes: Buffer.from(keys.current, "base64") };
+    };
+
+    beforeEach(() => {
+      database.fingerprint = masterKeyFingerprint(keyA);
+    });
+
+    it("writes a new key of 32 random bytes and keeps the old one as previous, re-keying nothing", async () => {
+      await writeKeyFile({ current: textA });
+
+      await rotate();
+
+      const { current, previous, bytes } = await rotated();
+
+      expect(previous).toBe(textA);
+      expect(bytes).toHaveLength(32);
+      expect(current).not.toBe(textA);
+      expect(rekeys.calls).toEqual([]);
+      expect(openedKeys).toEqual([]);
+      expect(JSON.stringify(logged)).not.toContain(current);
+    });
+
+    it("hands the next boot a re-key to the new key, which then retires the old one", async () => {
+      await writeKeyFile({ current: textA });
+      await rotate();
+      const { current, bytes } = await rotated();
+
+      await resolveMasterKey();
+
+      expect(rekeys.calls.map(({ fingerprints }) => fingerprints)).toEqual([
+        { from: masterKeyFingerprint(keyA), to: masterKeyFingerprint(bytes) },
+      ]);
+      expect(await readKeyFile()).toEqual({ current });
+    });
+
+    it("keeps the key the data is on when a rotation is still waiting for its boot", async () => {
+      await writeKeyFile({ current: textB, previous: textA });
+
+      await rotate();
+
+      const { current, previous } = await rotated();
+
+      expect(previous).toBe(textA);
+      expect(current).not.toBe(textB);
+    });
+
+    it("keeps the data's key through two rotations before a boot, and the boot re-keys from it", async () => {
+      await writeKeyFile({ current: textA });
+
+      await rotate();
+      await rotate();
+      const { previous, bytes } = await rotated();
+
+      expect(previous).toBe(textA);
+      await resolveMasterKey();
+      expect(rekeys.calls.map(({ fingerprints }) => fingerprints.from)).toEqual([
+        masterKeyFingerprint(keyA),
+      ]);
+      expect(opened()).toBe(lookupBy(bytes));
+    });
+
+    it("moves a current key the data is on to previous, dropping a retired one", async () => {
+      database.fingerprint = masterKeyFingerprint(keyB);
+      await writeKeyFile({ current: textB, previous: textA });
+
+      await rotate();
+
+      expect((await rotated()).previous).toBe(textB);
+    });
+
+    it("keeps a key's text as it was given when it moves to previous", async () => {
+      const given = "my own key, typed by hand. 2026: ok!";
+
+      database.fingerprint = masterKeyFingerprint(Buffer.from(given, "base64"));
+      await fs.mkdir(keyDir(), { recursive: true });
+      await fs.writeFile(keyFilePath(), JSON.stringify({ current: given }));
+
+      await rotate();
+
+      expect((await rotated()).previous).toBe(given);
+    });
+
+    it("refuses in env mode, writing no key file", async () => {
+      config.MASTER_KEY = textA;
+
+      await expect(rotate()).rejects.toThrow("MASTER_KEY pins the key");
+      expect(await readKeyFile()).toBeNull();
+    });
+
+    it.each([
+      ["no key in the file opens the data", masterKeyFingerprint(randomBytes(32))],
+      ["the database has no fingerprint", null],
+    ])("leaves the key file as it was when %s", async (_, fingerprint) => {
+      database.fingerprint = fingerprint;
+      await writeKeyFile({ current: textA });
+
+      await expect(rotate()).rejects.toThrow("is not the key this database is encrypted with.");
+      expect(await readKeyFile()).toEqual({ current: textA });
+    });
+
+    it("leaves the old key file whole when the new one cannot be put in place", async () => {
+      await writeKeyFile({ current: textA });
+      vi.spyOn(fs, "rename").mockRejectedValueOnce(failure("ENOSPC"));
+
+      await expect(rotate()).rejects.toThrow("ENOSPC");
+      expect(await readKeyFile()).toEqual({ current: textA });
+      expect(await fs.readdir(keyDir())).toEqual(["master-key.json"]);
+    });
+  });
+
   describe("for a tool or script", () => {
     it("refuses a database no server has booted on, generating and writing nothing", async () => {
       await expect(openMasterKey()).rejects.toThrow(

@@ -10,6 +10,7 @@ import { setConfig } from "@norish/db/repositories/server-config";
 import { getDefaultConfigValue } from "@norish/shared-server/config/defaults";
 import { forgetSpellingRules } from "@norish/shared-server/ingredients/resolver";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import { masterKeyPinned, rotateKeyFile } from "@norish/shared-server/master-key";
 import { config } from "@norish/shared-server/realtime/config";
 
 import { adminProcedure } from "../../middleware";
@@ -63,18 +64,48 @@ const restoreDefault = adminProcedure
     return { success: true };
   });
 
+/** Exit once the response is sent; a `restart: always` deployment starts the server again. */
+function exitAfterResponse(): void {
+  setTimeout(() => {
+    log.info("Exiting process for restart...");
+    process.exit(0);
+  }, 500);
+}
+
 /**
  * Restart the server.
  * Schedules an exit for after the response is sent.
  */
 const restartServer = adminProcedure.mutation(async ({ ctx }) => {
   log.info({ userId: ctx.user.id }, "Server restart requested by admin");
+  exitAfterResponse();
 
-  // Schedule the exit for after the response is sent
-  setTimeout(() => {
-    log.info("Exiting process for restart...");
-    process.exit(0);
-  }, 500);
+  return { success: true };
+});
+
+/** Whether MASTER_KEY pins the Master Key (env mode), decided as boot decides it. */
+const getMasterKeySource = adminProcedure.query(() => ({ pinned: masterKeyPinned() }));
+
+/**
+ * Rotate a generated Master Key: the new key file is on disk before the restart, whose boot
+ * re-encrypts everything and ends every session. Never answers or logs a key.
+ */
+const rotateMasterKey = adminProcedure.mutation(async ({ ctx }) => {
+  if (masterKeyPinned()) {
+    return {
+      success: false,
+      error: "MASTER_KEY is set, so rotate it there with MASTER_KEY_PREVIOUS.",
+    };
+  }
+  log.info({ userId: ctx.user.id }, "Master Key rotation requested by admin");
+  try {
+    await rotateKeyFile();
+  } catch (error) {
+    log.error({ userId: ctx.user.id, err: error }, "Master Key rotation failed, nothing changed");
+
+    return { success: false, error: "The new key could not be written, so nothing changed." };
+  }
+  exitAfterResponse();
 
   return { success: true };
 });
@@ -83,4 +114,6 @@ export const systemProcedures = router({
   updateSchedulerMonths,
   restoreDefault,
   restartServer,
+  getMasterKeySource,
+  rotateMasterKey,
 });
