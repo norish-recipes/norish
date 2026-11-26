@@ -1405,6 +1405,10 @@
     },
     "countUnused": {
       "tag": "{count, plural, other {사용하지 않는 태그 #개}}"
+    },
+    "menu": {
+      "rename": "이름 바꾸기",
+      "showRecipes": "레시피 보기"
     }
   }
 }

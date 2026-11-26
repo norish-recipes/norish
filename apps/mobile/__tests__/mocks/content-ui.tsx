@@ -128,6 +128,35 @@ function FlatListOf({
   );
 }
 
+/** The native menu as DOM: the row's own press on the wrapper, each item a button of its own. */
+export const nativeMenu = ({
+  items,
+  testID,
+  onPress,
+  children,
+}: {
+  items: { key: string; destructive?: boolean; onPress: () => void }[];
+  testID: string;
+  onPress?: () => void;
+  children?: ReactNode;
+}) =>
+  createElement(
+    "div",
+    { "data-testid": testID, onClick: onPress },
+    items.map((item) =>
+      createElement("button", {
+        key: item.key,
+        "data-destructive": item.destructive,
+        "data-testid": `${testID}-menu-${item.key}`,
+        onClick: (event: { stopPropagation: () => void }) => {
+          event.stopPropagation();
+          item.onPress();
+        },
+      })
+    ),
+    children
+  );
+
 /** The small kit pieces as DOM buttons and inputs. */
 export const kit = {
   modalHeader: ({

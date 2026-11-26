@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Alert } from "react-native";
 import { Card, CardRow } from "@/components/card";
 import { EmptyCard } from "@/components/empty-card";
@@ -18,12 +18,12 @@ import { useEntryRoute } from "../hooks/use-entry-route";
 
 /** One entry of a list: rename it, merge it onto the entry its new name folds onto, delete it, or read it. */
 export function ContentEntryScreen() {
-  const { kind, id } = useEntryRoute();
+  const { kind, id, intent } = useEntryRoute();
 
-  return kind ? <EntryScreen id={id} kind={kind} /> : null;
+  return kind ? <EntryScreen id={id} intent={intent} kind={kind} /> : null;
 }
 
-function EntryScreen({ kind, id }: { kind: PickerKind; id: string }) {
+function EntryScreen({ kind, id, intent }: { kind: PickerKind; id: string; intent?: "delete" }) {
   const text = useText();
   const router = useRouter();
   const cancel = useCancelButton();
@@ -160,6 +160,10 @@ function EntryScreen({ kind, id }: { kind: PickerKind; id: string }) {
       }
       title={editable ? text(`settings.content.panel.editTitle.${kind}`) : name}
     >
+      <AskOnce
+        ask={confirmDelete}
+        ready={intent === "delete" && editable && !entry.offline && entry.deleteState === "ready"}
+      />
       {deleteProblem ? (
         <SheetNote tone="problem">{text(`settings.content.${deleteProblem.key}`)}</SheetNote>
       ) : null}
@@ -179,4 +183,17 @@ function EntryScreen({ kind, id }: { kind: PickerKind; id: string }) {
       </Card>
     </EntrySheet>
   );
+}
+
+/** Runs `ask` once, when `ready`: the long-press menu's Delete opens the sheet already asking. */
+function AskOnce({ ready, ask }: { ready: boolean; ask: () => void }) {
+  const askedRef = useRef(false);
+
+  useEffect(() => {
+    if (!ready || askedRef.current) return;
+    askedRef.current = true;
+    ask();
+  }, [ready, ask]);
+
+  return null;
 }

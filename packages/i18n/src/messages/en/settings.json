@@ -1405,6 +1405,10 @@
     },
     "countUnused": {
       "tag": "{count, plural, one {# unused tag} other {# unused tags}}"
+    },
+    "menu": {
+      "rename": "Rename",
+      "showRecipes": "Show recipes"
     }
   }
 }

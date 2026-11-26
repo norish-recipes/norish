@@ -23,6 +23,9 @@ vi.mock("@/components/modal-header", async () => ({
   ModalHeader: (await import("./content-ui")).kit.modalHeader,
   destructiveAction: (label: string, onPress: () => void) => ({ label, onPress }),
 }));
+vi.mock("@/components/native-menu", async () => ({
+  NativeMenu: (await import("./content-ui")).nativeMenu,
+}));
 vi.mock("@/components/card-slice", async () => ({
   CardSlice: (await import("./content-ui")).passThrough,
 }));

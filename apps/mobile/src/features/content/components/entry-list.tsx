@@ -17,15 +17,18 @@ import { LIST_ICONS } from "../utils/content-lists";
 export function EntryList({
   list,
   onOpen,
+  onUses,
   onAdd,
 }: {
   list: EntryContentList;
-  onOpen: (id: string) => void;
+  /** Opens the entry; `delete` has its sheet ask to delete it at once. */
+  onOpen: (id: string, intent?: "delete") => void;
+  onUses: (id: string) => void;
   onAdd: () => void;
 }) {
   const text = useText();
   const kind = ENTRY_KINDS[list];
-  const { loaded, failed, retry, search, setSearch, unusedOnly, setUnusedOnly, view } =
+  const { loaded, failed, retry, offline, search, setSearch, unusedOnly, setUnusedOnly, view } =
     useContentList(kind);
   const icon = LIST_ICONS[list];
   const rows = sectionRows(
@@ -91,6 +94,35 @@ export function EntryList({
               count={text("settings.content.countCell", { count: item.item.recipeCount })}
               countLabel={text("settings.content.recipes", { count: item.item.recipeCount })}
               lockLabel={item.item.editable ? undefined : text("settings.content.readOnly")}
+              menu={
+                item.item.editable
+                  ? [
+                      {
+                        key: "uses",
+                        label: text("settings.content.menu.showRecipes"),
+                        systemImage: "book",
+                        onPress: () => onUses(item.item.id),
+                      },
+                      ...(offline
+                        ? []
+                        : [
+                            {
+                              key: "rename",
+                              label: text("settings.content.menu.rename"),
+                              systemImage: "pencil",
+                              onPress: () => onOpen(item.item.id),
+                            },
+                            {
+                              key: "delete",
+                              label: text("common.actions.delete"),
+                              systemImage: "trash",
+                              destructive: true,
+                              onPress: () => onOpen(item.item.id, "delete"),
+                            },
+                          ]),
+                    ]
+                  : undefined
+              }
               name={item.item.name}
               testID={`content-entry-${item.item.id}`}
               onPress={() => onOpen(item.item.id)}

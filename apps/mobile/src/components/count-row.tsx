@@ -1,7 +1,10 @@
+import type { MenuItem } from "@/components/native-menu";
 import type { ReactNode } from "react";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { CardSlice } from "@/components/card-slice";
+import { NativeMenu } from "@/components/native-menu";
+import { useOnSheet } from "@/components/on-sheet";
 import { useTokenColor } from "@/hooks/use-token-color";
 import { edgeAt } from "@/lib/card-edges";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -25,6 +28,7 @@ export function CountRow({
   trailing,
   struck = false,
   lockLabel,
+  menu = [],
   testID,
   onPress,
 }: {
@@ -48,10 +52,13 @@ export function CountRow({
   struck?: boolean;
   /** Set where the entry is read-only: the lock mark's accessibility label. */
   lockLabel?: string;
+  /** A long-press menu over the row, which then takes the tap as `onPress`; none, no menu. */
+  menu?: MenuItem[];
   testID?: string;
   onPress?: () => void;
 }) {
   const muted = useTokenColor("muted");
+  const ground = useOnSheet() ? "bg-sand" : "bg-surface";
   const content = (
     <>
       {leading}
@@ -106,7 +113,18 @@ export function CountRow({
           <View className="w-9 self-stretch" />
         )
       ) : null}
-      {onPress ? (
+      {onPress && menu.length > 0 ? (
+        <NativeMenu
+          items={menu}
+          label={name}
+          testID={testID ?? name}
+          value={countLabel ?? count}
+          onPress={onPress}
+        >
+          {/* Opaque, as the long press lifts a snapshot of the whole row. */}
+          <View className={`${ground} ${className}`}>{content}</View>
+        </NativeMenu>
+      ) : onPress ? (
         <Pressable
           accessibilityRole="button"
           className={className}

@@ -1405,6 +1405,10 @@
     },
     "countUnused": {
       "tag": "{count, plural, one {# etiqueta sin usar} other {# etiquetas sin usar}}"
+    },
+    "menu": {
+      "rename": "Renombrar",
+      "showRecipes": "Mostrar recetas"
     }
   }
 }

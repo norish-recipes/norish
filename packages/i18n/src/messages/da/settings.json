@@ -1405,6 +1405,10 @@
     },
     "countUnused": {
       "tag": "{count, plural, one {# ubrugt tag} other {# ubrugte tags}}"
+    },
+    "menu": {
+      "rename": "Omdøb",
+      "showRecipes": "Vis opskrifter"
     }
   }
 }

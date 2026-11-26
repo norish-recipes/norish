@@ -1405,6 +1405,10 @@
     },
     "countUnused": {
       "tag": "{count, plural, one {# tag non usato} other {# tag non usati}}"
+    },
+    "menu": {
+      "rename": "Rinomina",
+      "showRecipes": "Mostra ricette"
     }
   }
 }

@@ -1405,6 +1405,10 @@
     },
     "countUnused": {
       "tag": "{count, plural, one {# ubrukt tagg} other {# ubrukte tagger}}"
+    },
+    "menu": {
+      "rename": "Gi nytt navn",
+      "showRecipes": "Vis oppskrifter"
     }
   }
 }

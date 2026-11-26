@@ -1405,6 +1405,10 @@
     },
     "countUnused": {
       "tag": "{count, plural, one {# ongebruikte tag} other {# ongebruikte tags}}"
+    },
+    "menu": {
+      "rename": "Hernoemen",
+      "showRecipes": "Toon recepten"
     }
   }
 }

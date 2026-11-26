@@ -174,4 +174,15 @@ describe("ContentEntryScreen", () => {
     fireEvent.click(screen.getByTestId("content-entry-retry"));
     expect(held.retry).toHaveBeenCalled();
   });
+
+  it("asks to delete at once when opened from the long-press menu, and not otherwise", () => {
+    held.params = { kind: "tag", id: "e1", intent: "delete" };
+    render(<ContentEntryScreen />);
+    expect(alert).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not ask to delete on a plain open", () => {
+    render(<ContentEntryScreen />);
+    expect(alert).not.toHaveBeenCalled();
+  });
 });

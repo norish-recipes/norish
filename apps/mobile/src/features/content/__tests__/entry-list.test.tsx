@@ -77,10 +77,11 @@ const show = (
   list: Record<string, unknown>,
   onOpen = vi.fn(),
   onAdd = vi.fn(),
-  which: "tags" | "cuisines" = "cuisines"
+  which: "tags" | "cuisines" = "cuisines",
+  onUses = vi.fn()
 ) => {
   held.list = list;
-  render(<EntryList list={which} onAdd={onAdd} onOpen={onOpen} />);
+  render(<EntryList list={which} onAdd={onAdd} onOpen={onOpen} onUses={onUses} />);
 
   return { onOpen, onAdd };
 };
@@ -203,5 +204,42 @@ describe("EntryList", () => {
     expect(screen.getByTestId("heading-household").textContent).toBe(
       'settings.content.countUnused.tag{"count":2}'
     );
+  });
+
+  describe("long-press menu", () => {
+    const listed = (entries: ContentEntry[], over: Record<string, unknown> = {}) => ({
+      loaded: true,
+      failed: false,
+      view: { state: "list", sections: [section({ entries })] },
+      ...over,
+    });
+
+    it("offers Show recipes, Rename and Delete on an entry the reader may edit", () => {
+      const onOpen = vi.fn();
+      const onUses = vi.fn();
+
+      show(listed([entry("Diner")]), onOpen, vi.fn(), "tags", onUses);
+      fireEvent.click(screen.getByTestId("content-entry-Diner-menu-uses"));
+      expect(onUses).toHaveBeenCalledWith("Diner");
+      fireEvent.click(screen.getByTestId("content-entry-Diner-menu-rename"));
+      expect(onOpen).toHaveBeenLastCalledWith("Diner");
+      fireEvent.click(screen.getByTestId("content-entry-Diner-menu-delete"));
+      expect(onOpen).toHaveBeenLastCalledWith("Diner", "delete");
+      expect(
+        screen.getByTestId("content-entry-Diner-menu-delete").getAttribute("data-destructive")
+      ).toBe("true");
+    });
+
+    it("gives a read-only entry no menu", () => {
+      show(listed([entry("Italian", { instance: true, editable: false })]));
+      expect(screen.queryByTestId("content-entry-Italian-menu-uses")).toBeNull();
+    });
+
+    it("offline, leaves only Show recipes", () => {
+      show(listed([entry("Diner")], { offline: true }));
+      expect(screen.getByTestId("content-entry-Diner-menu-uses")).toBeTruthy();
+      expect(screen.queryByTestId("content-entry-Diner-menu-rename")).toBeNull();
+      expect(screen.queryByTestId("content-entry-Diner-menu-delete")).toBeNull();
+    });
   });
 });

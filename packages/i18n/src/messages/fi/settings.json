@@ -1405,6 +1405,10 @@
     },
     "countUnused": {
       "tag": "{count, plural, one {# käyttämätön tunniste} other {# käyttämätöntä tunnistetta}}"
+    },
+    "menu": {
+      "rename": "Nimeä uudelleen",
+      "showRecipes": "Näytä reseptit"
     }
   }
 }
