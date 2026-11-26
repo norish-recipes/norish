@@ -17,8 +17,7 @@ import {
   hasIngredientFilters,
   useIngredientFiltersStore,
   useIngredientIcons,
-  useIngredientListQuery,
-  useIngredientTree,
+  useIngredientList,
 } from "@norish/shared-react/ingredients";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 
@@ -38,17 +37,16 @@ export function IngredientList() {
 
   useIngredientsSubscription();
 
-  // A search or filter may match at any depth, so only the unfiltered list is a tree of roots.
-  const { tree: asTree, ...searchFilters } = filters;
-  const treeMode = asTree && !search && !hasIngredientFilters({ ...searchFilters, tree: true });
-  const { items, isLoading, isPaused, isPlaceholderData, hasNextPage, fetchNextPage } =
-    useIngredientListQuery({
-      search: search || undefined,
-      ...searchFilters,
-      rootsOnly: treeMode || undefined,
-      locale,
-    });
-  const tree = useIngredientTree(items, treeMode, locale);
+  const {
+    items,
+    isLoading,
+    isPaused,
+    isPlaceholderData,
+    hasNextPage,
+    fetchNextPage,
+    treeMode,
+    tree,
+  } = useIngredientList(search, filters, locale);
   const rows = tree.rows.map((row) => ({ ...row, foodId: row.item.id }));
 
   useIngredientIcons(rows.map((row) => row.foodId));

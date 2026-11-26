@@ -23,9 +23,11 @@ export { useDatasetFoodSearch } from "./use-dataset-food-search";
 export {
   aiChangesView,
   isOpenChange,
+  useAIChangeCounts,
   useAIChangeMutations,
   useAIChangesQuery,
 } from "./use-ai-changes";
+export { useIngredientList } from "./use-ingredient-list";
 export { useIngredientFor } from "./use-ingredient-for";
 export {
   useFoodsByName,

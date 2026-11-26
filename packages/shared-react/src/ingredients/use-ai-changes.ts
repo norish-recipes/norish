@@ -28,6 +28,14 @@ export function aiChangesView(changes: AIChange[]) {
   };
 }
 
+/** How many changes there are, and how many of them still wait to be kept or undone. */
+export function useAIChangeCounts() {
+  return useAIChangesQuery((changes) => ({
+    total: changes.length,
+    unsure: changes.filter(isOpenChange).length,
+  }));
+}
+
 const markKept = (ids: ReadonlySet<string>) => (list: AIChange[]) =>
   list.map((it) => (ids.has(it.id) ? { ...it, kept: true } : it));
 const drop = (ids: ReadonlySet<string>) => (list: AIChange[]) =>

@@ -6,16 +6,13 @@ import { useTokenColor } from "@/hooks/use-token-color";
 import { useText } from "@/lib/i18n/use-text";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
-import { isOpenChange, useAIChangesQuery } from "@norish/shared-react/ingredients";
+import { useAIChangeCounts } from "@norish/shared-react/ingredients";
 
 /** The row over the Ingredients list that opens Changed by AI, saying how many changes are left to check. */
 export function AiChangesRow({ onPress }: { onPress: () => void }) {
   const text = useText();
   const muted = useTokenColor("muted");
-  const { total, unsure } = useAIChangesQuery((changes) => ({
-    total: changes.length,
-    unsure: changes.filter(isOpenChange).length,
-  }));
+  const { total, unsure } = useAIChangeCounts();
 
   if (total === 0) return null;
 

@@ -15,10 +15,8 @@ import { useIngredientsSubscription } from "@norish/shared-react/config";
 import {
   DEFAULT_INGREDIENT_FILTERS,
   hasIngredientFilters,
-  isOpenChange,
-  useAIChangesQuery,
-  useIngredientListQuery,
-  useIngredientTree,
+  useAIChangeCounts,
+  useIngredientList,
 } from "@norish/shared-react/ingredients";
 
 import { ChangedByAIPanel } from "./components/changed-by-ai-panel";
@@ -47,9 +45,6 @@ export function IngredientsScreen() {
 
   useIngredientsSubscription();
 
-  // A search or filter may match at any depth, so only the unfiltered list is a tree of roots.
-  const { tree: asTree, ...searchFilters } = filters;
-  const treeMode = asTree && !search && !hasIngredientFilters({ ...searchFilters, tree: true });
   // Not deferred: a search lands in a transition, and a deferred copy kept the old page's rows with
   // the new one's kinds folded in.
   const {
@@ -60,15 +55,11 @@ export function IngredientsScreen() {
     hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
-  } = useIngredientListQuery({
-    search: search || undefined,
-    ...searchFilters,
-    rootsOnly: treeMode || undefined,
-    locale,
-  });
+    treeMode,
+    tree,
+  } = useIngredientList(search, filters, locale);
   // Another search's rows standing in, not a reread of the rows showing.
   const settling = isPending || isPlaceholderData;
-  const tree = useIngredientTree(items, treeMode, locale);
   // Every food on screen, the folded-out kinds included.
   const shown = tree.rows.map((row) => row.item);
   // The panel follows its food's row, and reads it on its own once a filter drops the row.
@@ -78,10 +69,7 @@ export function IngredientsScreen() {
   // Each opening starts a fresh Add panel, so it never keeps the name typed last time.
   const [addOpen, setAddOpen] = useState(false);
   const [addCount, setAddCount] = useState(0);
-  const { total, unsure } = useAIChangesQuery((changes) => ({
-    total: changes.length,
-    unsure: changes.filter(isOpenChange).length,
-  }));
+  const { total, unsure } = useAIChangeCounts();
 
   return (
     <div className="flex flex-col gap-6">

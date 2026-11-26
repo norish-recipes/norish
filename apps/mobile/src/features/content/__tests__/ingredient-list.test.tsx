@@ -70,16 +70,17 @@ vi.mock("@norish/shared-react/ingredients", async (importActual) => ({
   useIngredientFiltersStore: (select: (state: unknown) => unknown) =>
     select({ filters: held.filters }),
   useIngredientIcons: () => undefined,
-  useIngredientListQuery: () => ({
+  useIngredientList: () => ({
     items: held.rows,
     isLoading: false,
     isPaused: false,
     isPlaceholderData: false,
     hasNextPage: false,
     fetchNextPage: held.fetchNextPage,
+    treeMode: true,
+    tree: { rows: held.rows, toggle: held.toggle },
     ...held.query,
   }),
-  useIngredientTree: () => ({ rows: held.rows, toggle: held.toggle }),
 }));
 
 const { DEFAULT_INGREDIENT_FILTERS } = await import("@norish/shared-react/ingredients");
