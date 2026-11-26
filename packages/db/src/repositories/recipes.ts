@@ -1660,169 +1660,168 @@ export async function updateRecipeWithRefs(
     if (missing > 0 && entryOptions.createEntries === false) throw new ListsChangedError();
   };
 
-  return db
-    .transaction(async (tx): Promise<MutationOutcome<number | null>> => {
-      // The household first, as a leave or join locks it before the recipe row.
-      await lockRecipeHouseholdsTx(tx, { recipeIds: [recipeId] });
-      // Update recipe base fields
-      const updateData: any = {};
+  const written = db.transaction(async (tx): Promise<MutationOutcome<number | null>> => {
+    // The household first, as a leave or join locks it before the recipe row.
+    await lockRecipeHouseholdsTx(tx, { recipeIds: [recipeId] });
+    // Update recipe base fields
+    const updateData: any = {};
 
-      if (payload.name !== undefined) updateData.name = stripHtmlTags(payload.name);
-      if (payload.description !== undefined)
-        updateData.description = payload.description ? stripHtmlTags(payload.description) : null;
-      if (payload.notes !== undefined) updateData.notes = payload.notes;
-      if (payload.url !== undefined) updateData.url = payload.url;
-      if (payload.dishColor !== undefined) updateData.dishColor = payload.dishColor;
-      if (payload.servings !== undefined) updateData.servings = payload.servings;
-      if (payload.prepMinutes !== undefined) updateData.prepMinutes = payload.prepMinutes;
-      if (payload.cookMinutes !== undefined) updateData.cookMinutes = payload.cookMinutes;
-      if (payload.totalMinutes !== undefined) updateData.totalMinutes = payload.totalMinutes;
-      if (payload.systemUsed !== undefined) updateData.systemUsed = payload.systemUsed;
-      if (payload.calories !== undefined) updateData.calories = payload.calories;
-      if (payload.fat !== undefined) updateData.fat = payload.fat;
-      if (payload.carbs !== undefined) updateData.carbs = payload.carbs;
-      if (payload.protein !== undefined) updateData.protein = payload.protein;
-      if (payload.nutritionExtras !== undefined)
-        updateData.nutritionExtras = payload.nutritionExtras;
-      if (payload.originCountry !== undefined)
-        updateData.originCountry = normalizeOriginCountry(payload.originCountry);
-      if (payload.originCountryName !== undefined || payload.originCountry !== undefined)
-        // The written name accompanies the code: clearing or changing the code
-        // without a fresh name clears the stale name with it.
-        updateData.originCountryName =
-          normalizeOriginCountry(payload.originCountry) && payload.originCountryName
-            ? stripHtmlTags(payload.originCountryName)
-            : null;
-      if (payload.originRegion !== undefined)
-        updateData.originRegion = payload.originRegion ? stripHtmlTags(payload.originRegion) : null;
-      if (payload.provenanceNote !== undefined)
-        updateData.provenanceNote = payload.provenanceNote
-          ? stripHtmlTags(payload.provenanceNote)
+    if (payload.name !== undefined) updateData.name = stripHtmlTags(payload.name);
+    if (payload.description !== undefined)
+      updateData.description = payload.description ? stripHtmlTags(payload.description) : null;
+    if (payload.notes !== undefined) updateData.notes = payload.notes;
+    if (payload.url !== undefined) updateData.url = payload.url;
+    if (payload.dishColor !== undefined) updateData.dishColor = payload.dishColor;
+    if (payload.servings !== undefined) updateData.servings = payload.servings;
+    if (payload.prepMinutes !== undefined) updateData.prepMinutes = payload.prepMinutes;
+    if (payload.cookMinutes !== undefined) updateData.cookMinutes = payload.cookMinutes;
+    if (payload.totalMinutes !== undefined) updateData.totalMinutes = payload.totalMinutes;
+    if (payload.systemUsed !== undefined) updateData.systemUsed = payload.systemUsed;
+    if (payload.calories !== undefined) updateData.calories = payload.calories;
+    if (payload.fat !== undefined) updateData.fat = payload.fat;
+    if (payload.carbs !== undefined) updateData.carbs = payload.carbs;
+    if (payload.protein !== undefined) updateData.protein = payload.protein;
+    if (payload.nutritionExtras !== undefined) updateData.nutritionExtras = payload.nutritionExtras;
+    if (payload.originCountry !== undefined)
+      updateData.originCountry = normalizeOriginCountry(payload.originCountry);
+    if (payload.originCountryName !== undefined || payload.originCountry !== undefined)
+      // The written name accompanies the code: clearing or changing the code
+      // without a fresh name clears the stale name with it.
+      updateData.originCountryName =
+        normalizeOriginCountry(payload.originCountry) && payload.originCountryName
+          ? stripHtmlTags(payload.originCountryName)
           : null;
+    if (payload.originRegion !== undefined)
+      updateData.originRegion = payload.originRegion ? stripHtmlTags(payload.originRegion) : null;
+    if (payload.provenanceNote !== undefined)
+      updateData.provenanceNote = payload.provenanceNote
+        ? stripHtmlTags(payload.provenanceNote)
+        : null;
 
-      updateData.updatedAt = new Date();
+    updateData.updatedAt = new Date();
 
-      const whereConditions = [eq(recipes.id, recipeId)];
+    const whereConditions = [eq(recipes.id, recipeId)];
 
-      if (version) {
-        whereConditions.push(eq(recipes.version, version));
-      }
+    if (version) {
+      whereConditions.push(eq(recipes.version, version));
+    }
 
-      const [updatedRecipeRow] = await tx
-        .update(recipes)
-        .set({ ...updateData, version: sql`${recipes.version} + 1` })
-        .where(and(...whereConditions))
-        .returning({ id: recipes.id, version: recipes.version });
+    const [updatedRecipeRow] = await tx
+      .update(recipes)
+      .set({ ...updateData, version: sql`${recipes.version} + 1` })
+      .where(and(...whereConditions))
+      .returning({ id: recipes.id, version: recipes.version });
 
-      if (!updatedRecipeRow && version) {
-        return staleOutcome();
-      }
+    if (!updatedRecipeRow && version) {
+      return staleOutcome();
+    }
 
-      // Replace Cuisines if provided. An empty array is an editor clearing them,
-      // which is deliberately distinct from an enrichment run writing nothing.
-      if (payload.cuisines !== undefined) {
-        attached(await replaceRecipeEntryIdsTx(tx, "cuisine", recipeId, payload.cuisines));
-      }
+    // Replace Cuisines if provided. An empty array is an editor clearing them,
+    // which is deliberately distinct from an enrichment run writing nothing.
+    if (payload.cuisines !== undefined) {
+      attached(await replaceRecipeEntryIdsTx(tx, "cuisine", recipeId, payload.cuisines));
+    }
 
-      // An empty list leaves the Categories alone, as it always has.
-      if (payload.categories?.length) {
-        attached(
-          await attachCategoriesToRecipeByInputTx(tx, recipeId, payload.categories, entryOptions)
+    // An empty list leaves the Categories alone, as it always has.
+    if (payload.categories?.length) {
+      attached(
+        await attachCategoriesToRecipeByInputTx(tx, recipeId, payload.categories, entryOptions)
+      );
+    }
+
+    // Replace tags if provided
+    if (payload.tags !== undefined) {
+      attached(
+        await replaceRecipeEntriesByNameTx(
+          tx,
+          "tag",
+          recipeId,
+          payload.tags.map((t) => t.name),
+          entryOptions
+        )
+      );
+    }
+
+    // Replace ingredients if provided
+    if (payload.recipeIngredients !== undefined) {
+      // Determine which system is being updated
+      let systemToUpdate = payload.systemUsed;
+
+      // If systemUsed is not provided at top level, infer it from the ingredients themselves
+      if (!systemToUpdate && payload.recipeIngredients.length > 0) {
+        const inferredSystems = new Set(
+          payload.recipeIngredients.map((ri) => ri.systemUsed).filter(Boolean)
         );
+
+        // If all ingredients use the same system, use that
+        if (inferredSystems.size === 1) {
+          systemToUpdate = Array.from(inferredSystems)[0];
+        }
       }
 
-      // Replace tags if provided
-      if (payload.tags !== undefined) {
-        attached(
-          await replaceRecipeEntriesByNameTx(
-            tx,
-            "tag",
+      // Only delete ingredients for the system being updated (preserve other systems)
+      if (systemToUpdate) {
+        await syncRecipeIngredientsTx(
+          tx,
+          recipeId,
+          systemToUpdate,
+          payload.recipeIngredients.map((ri) => ({
+            ...ri,
             recipeId,
-            payload.tags.map((t) => t.name),
-            entryOptions
-          )
+            ingredientId: ri.ingredientId ?? null,
+            amount: ri.amount ?? null,
+            order: ri.order ?? 0,
+          })),
+          resolutions
         );
+      } else {
+        // If we still can't determine the system, this is an error
+        throw new Error("Cannot determine which measurement system to update.");
       }
+    }
 
-      // Replace ingredients if provided
-      if (payload.recipeIngredients !== undefined) {
-        // Determine which system is being updated
-        let systemToUpdate = payload.systemUsed;
+    // Replace steps if provided
+    if (payload.steps !== undefined) {
+      // Determine which system is being updated
+      let systemToUpdate = payload.systemUsed;
 
-        // If systemUsed is not provided at top level, infer it from the ingredients themselves
-        if (!systemToUpdate && payload.recipeIngredients.length > 0) {
-          const inferredSystems = new Set(
-            payload.recipeIngredients.map((ri) => ri.systemUsed).filter(Boolean)
-          );
+      // If systemUsed is not provided at top level, infer it from the steps themselves
+      if (!systemToUpdate && payload.steps.length > 0) {
+        const inferredSystems = new Set(payload.steps.map((s) => s.systemUsed).filter(Boolean));
 
-          // If all ingredients use the same system, use that
-          if (inferredSystems.size === 1) {
-            systemToUpdate = Array.from(inferredSystems)[0];
-          }
-        }
-
-        // Only delete ingredients for the system being updated (preserve other systems)
-        if (systemToUpdate) {
-          await syncRecipeIngredientsTx(
-            tx,
-            recipeId,
-            systemToUpdate,
-            payload.recipeIngredients.map((ri) => ({
-              ...ri,
-              recipeId,
-              ingredientId: ri.ingredientId ?? null,
-              amount: ri.amount ?? null,
-              order: ri.order ?? 0,
-            })),
-            resolutions
-          );
-        } else {
-          // If we still can't determine the system, this is an error
-          throw new Error("Cannot determine which measurement system to update.");
+        // If all steps use the same system, use that
+        if (inferredSystems.size === 1) {
+          systemToUpdate = Array.from(inferredSystems)[0];
         }
       }
 
-      // Replace steps if provided
-      if (payload.steps !== undefined) {
-        // Determine which system is being updated
-        let systemToUpdate = payload.systemUsed;
-
-        // If systemUsed is not provided at top level, infer it from the steps themselves
-        if (!systemToUpdate && payload.steps.length > 0) {
-          const inferredSystems = new Set(payload.steps.map((s) => s.systemUsed).filter(Boolean));
-
-          // If all steps use the same system, use that
-          if (inferredSystems.size === 1) {
-            systemToUpdate = Array.from(inferredSystems)[0];
-          }
-        }
-
-        // Only delete steps for the system being updated (preserve other systems)
-        if (systemToUpdate) {
-          await syncRecipeStepsTx(tx, recipeId, systemToUpdate, payload.steps);
-        } else {
-          // If we still can't determine the system, this is an error
-          throw new Error("Cannot determine which measurement system to update.");
-        }
+      // Only delete steps for the system being updated (preserve other systems)
+      if (systemToUpdate) {
+        await syncRecipeStepsTx(tx, recipeId, systemToUpdate, payload.steps);
+      } else {
+        // If we still can't determine the system, this is an error
+        throw new Error("Cannot determine which measurement system to update.");
       }
+    }
 
-      // Replace images if provided
-      if (payload.images !== undefined) {
-        await syncRecipeImagesTx(tx, recipeId, payload.images);
-      }
+    // Replace images if provided
+    if (payload.images !== undefined) {
+      await syncRecipeImagesTx(tx, recipeId, payload.images);
+    }
 
-      // Replace videos if provided
-      if (payload.videos !== undefined) {
-        await syncRecipeVideosTx(tx, recipeId, payload.videos);
-      }
+    // Replace videos if provided
+    if (payload.videos !== undefined) {
+      await syncRecipeVideosTx(tx, recipeId, payload.videos);
+    }
 
-      // The version this write stored, so a client can send its next edit on top of it.
-      return appliedOutcome(updatedRecipeRow?.version ?? null);
-    })
-    .catch((error: unknown) => {
-      if (error instanceof ListsChangedError) return staleOutcome<number | null>();
-      throw error;
-    });
+    // The version this write stored, so a client can send its next edit on top of it.
+    return appliedOutcome(updatedRecipeRow?.version ?? null);
+  });
+
+  return written.catch((error: unknown) => {
+    if (error instanceof ListsChangedError) return staleOutcome<number | null>();
+    throw error;
+  });
 }
 
 export interface RandomRecipeCandidate {
