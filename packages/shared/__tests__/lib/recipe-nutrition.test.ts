@@ -581,6 +581,49 @@ describe("a recipe's lines and supplied numbers", () => {
     expect(nutritionLinesOf(stored, undefined)).toBeUndefined();
   });
 
+  it("keeps both stored shares of two foods the reader's catalogue reads as one", () => {
+    const stored = {
+      ...recipe,
+      servings: 1,
+      recipeIngredients: [
+        {
+          id: "g",
+          ingredientName: "sjalot en ui",
+          ingredientId: "their-shallot",
+          joined: "together" as const,
+          foods: [
+            { ingredientId: "their-shallot", name: "sjalot" },
+            { ingredientId: "their-onion", name: "ui" },
+          ],
+          amount: 50,
+          unit: "gram",
+          systemUsed: "metric",
+        },
+      ],
+    };
+    const shares = nutritionLinesOf(stored, {}).map((one) => ({
+      key: lineKey(one),
+      calories: 10,
+      fat: 0,
+      carbs: 0,
+      protein: 0,
+    }));
+    const lines = nutritionLinesOf(stored, {
+      g: { ingredientId: "mine", joined: null, foods: [{ ingredientId: "mine", name: "ui" }] },
+    });
+    const result = workOutNutrition({
+      lines,
+      servings: 1,
+      nutrition: NUTRITION,
+      seasoning: [],
+      estimate: { lines: shares },
+    });
+
+    expect(lines.map((one) => one.ingredientId)).toEqual(["mine"]);
+    expect(result.leftOut).toMatchObject([{ name: "sjalot en ui", estimatedByAI: true }]);
+    expect(result.perServing?.calories).toBe(20);
+  });
+
   it("takes any value the recipe supplies as the whole group, and works nothing out beside it", () => {
     expect(suppliesNutrition(recipe)).toBe(false);
     expect(suppliesNutrition({ ...recipe, calories: 320 })).toBe(true);

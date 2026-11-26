@@ -117,15 +117,31 @@ export function nutritionLinesOf(
   const read = linesAsRead(stored, readings);
 
   if (!read) return undefined;
-  const storedKeys = new Map(
-    foodsToBuy(stored).map((food, index) => [asLine(food, index).id, lineKey(asLine(food, index))])
-  );
+  // Each read food keeps its place's stored key; the last also keeps those of foods read into it.
+  const storedKeys = new Map<string, string[]>();
 
-  return foodsToBuy(read).map((food, index) => {
+  foodsToBuy(stored).forEach((food, index) => {
+    if (food.lineId) {
+      storedKeys.set(food.lineId, [
+        ...(storedKeys.get(food.lineId) ?? []),
+        lineKey(asLine(food, index)),
+      ]);
+    }
+  });
+  const foods = foodsToBuy(read);
+
+  return foods.map((food, index) => {
     const line = asLine(food, index);
-    const key = food.lineId && readings?.[food.lineId] ? storedKeys.get(line.id) : undefined;
+    const keys = food.lineId && readings?.[food.lineId] ? storedKeys.get(food.lineId) : undefined;
 
-    return key && key !== lineKey(line) ? { ...line, key } : line;
+    if (!keys) return line;
+    const place = foods.slice(0, index).filter((one) => one.lineId === food.lineId).length;
+    const last = !foods.slice(index + 1).some((one) => one.lineId === food.lineId);
+    const mine = keys.slice(place, last ? undefined : place + 1);
+
+    return mine.length > 0 && (mine.length > 1 || mine[0] !== lineKey(line))
+      ? { ...line, keys: mine }
+      : line;
   });
 }
 
@@ -138,8 +154,8 @@ export interface NutritionLine {
   /** The unit as the line stores it: a units-map id ("tablespoon", "clove", "to_taste") or a spelling. */
   unit: string | null;
   ingredientId: string | null;
-  /** The line as it was stored, where the reader's catalogue reads it otherwise (`lineKey`). */
-  key?: string;
+  /** The stored lines it stands for, where the reader's catalogue reads it otherwise (`lineKey`). */
+  keys?: string[];
 }
 
 /** Calories and macros per serving, and the other nutrients any counted line knew. */
@@ -445,6 +461,7 @@ export function workOutNutrition({
   const knownGrams: Partial<Record<ExtraNutrient, number>> = {};
   let countedGrams = 0;
   const leftOut: LeftOutLine[] = [];
+  const storedKeysOf = new Map<LeftOutLine, string[]>();
   const counted: CountedLine[] = [];
   const credits = new Set<NutritionCredit>();
   let borrowedCalories = 0;
@@ -456,14 +473,18 @@ export function workOutNutrition({
       : weigh(line, line.ingredientId ? nutrition.get(line.ingredientId) : undefined, rules);
 
     if ("reason" in weighed) {
-      leftOut.push({
+      const keys = line.keys ?? [lineKey(line)];
+      const out: LeftOutLine = {
         lineId: line.id,
         name: line.name,
         ingredientId: line.ingredientId,
-        key: line.key ?? lineKey(line),
+        key: keys[0]!,
         reason: weighed.reason,
         estimatedByAI: false,
-      });
+      };
+
+      leftOut.push(out);
+      storedKeysOf.set(out, keys);
       continue;
     }
 
@@ -510,18 +531,22 @@ export function workOutNutrition({
   const sharedExtras: ExtraNutrients = {};
 
   for (const line of leftOut) {
-    const stored = line.reason === "seasoning" ? undefined : shareOf.get(line.key);
+    if (line.reason === "seasoning") continue;
+    // A food two stored foods read as takes both their shares.
+    for (const key of storedKeysOf.get(line) ?? []) {
+      const stored = shareOf.get(key);
 
-    if (!stored) continue;
-    line.estimatedByAI = true;
-    share.calories += stored.calories;
-    share.fat += stored.fat;
-    share.carbs += stored.carbs;
-    share.protein += stored.protein;
-    for (const key of EXTRA_NUTRIENTS) {
-      const value = stored.extras?.[key];
+      if (!stored) continue;
+      line.estimatedByAI = true;
+      share.calories += stored.calories;
+      share.fat += stored.fat;
+      share.carbs += stored.carbs;
+      share.protein += stored.protein;
+      for (const nutrient of EXTRA_NUTRIENTS) {
+        const value = stored.extras?.[nutrient];
 
-      if (value !== undefined) sharedExtras[key] = (sharedExtras[key] ?? 0) + value;
+        if (value !== undefined) sharedExtras[nutrient] = (sharedExtras[nutrient] ?? 0) + value;
+      }
     }
   }
 
