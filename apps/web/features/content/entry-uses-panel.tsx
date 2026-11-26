@@ -15,7 +15,11 @@ import { useEntryRecipes } from "@norish/shared-react/lists";
 function UsesContent({ kind, id, onClose }: { kind: PickerKind; id: string; onClose: () => void }) {
   const t = useTranslations("settings.content");
   const tActions = useTranslations("common.actions");
-  const { recipes, loaded, failed, retry } = useEntryRecipes(kind, id);
+  const { recipes, loaded, failed, retry, hasMore, loadingMore, loadMore } = useEntryRecipes(
+    kind,
+    id
+  );
+  const tMore = useTranslations("recipes.cookbooks");
 
   return (
     <>
@@ -31,6 +35,18 @@ function UsesContent({ kind, id, onClose }: { kind: PickerKind; id: string; onCl
         {!loaded && !failed ? <SkeletonRows count={3} /> : null}
         {loaded && recipes.length === 0 ? <Note>{t("recipes", { count: 0 })}</Note> : null}
         {recipes.length > 0 ? <RecipeLinks recipes={recipes} onOpen={onClose} /> : null}
+        {hasMore ? (
+          <Button
+            className="self-center"
+            data-testid="content-entry-uses-more"
+            isPending={loadingMore}
+            size="sm"
+            variant="tertiary"
+            onPress={loadMore}
+          >
+            {tMore("showMore")}
+          </Button>
+        ) : null}
       </Panel.Body>
       <Panel.Footer>
         <ActionButtonGroup>

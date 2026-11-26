@@ -491,13 +491,39 @@ describe("useContentAdd", () => {
 describe("useEntryRecipes", () => {
   it("reads the household's recipes carrying the entry through lists.uses", async () => {
     serveTRPC(async (path) =>
-      path === "lists.uses" ? [{ id: "r1", name: "Soup" }] : { stale: false }
+      path === "lists.uses"
+        ? { recipes: [{ id: "r1", name: "Soup" }], nextCursor: null }
+        : { stale: false }
     );
 
     const { result } = renderHook(() => useEntryRecipes("tag", "1"), { wrapper: wrapperFor() });
 
     expect(result.current.loaded).toBe(false);
     await waitFor(() => expect(result.current.recipes).toEqual([{ id: "r1", name: "Soup" }]));
+    expect(result.current.hasMore).toBe(false);
+  });
+
+  it("reads the next page from the cursor the last one named, until none is named", async () => {
+    const sent: unknown[] = [];
+
+    serveTRPC(async (_path, input) => {
+      sent.push(input);
+
+      return (input as { cursor?: number }).cursor === 50
+        ? { recipes: [{ id: "r2", name: "Tart" }], nextCursor: null }
+        : { recipes: [{ id: "r1", name: "Soup" }], nextCursor: 50 };
+    });
+
+    const { result } = renderHook(() => useEntryRecipes("tag", "1"), { wrapper: wrapperFor() });
+
+    await waitFor(() => expect(result.current.hasMore).toBe(true));
+    act(() => result.current.loadMore());
+    await waitFor(() => expect(result.current.recipes.map((r) => r.id)).toEqual(["r1", "r2"]));
+    expect(result.current.hasMore).toBe(false);
+    expect(sent).toEqual([
+      { kind: "tag", id: "1", cursor: undefined },
+      { kind: "tag", id: "1", cursor: 50 },
+    ]);
   });
 
   it("says a failed read, and reads again on retry", async () => {
@@ -507,7 +533,7 @@ describe("useEntryRecipes", () => {
       reads += 1;
       if (reads === 1) throw new Error("down");
 
-      return [];
+      return { recipes: [], nextCursor: null };
     });
 
     const { result } = renderHook(() => useEntryRecipes("tag", "1"), { wrapper: wrapperFor() });

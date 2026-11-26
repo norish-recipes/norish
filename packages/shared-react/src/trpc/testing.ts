@@ -54,6 +54,15 @@ function procedure(path: string[]) {
                     (pendingReads[name] ??= []).push({ resolve, reject })
                   ),
     }),
+    infiniteQueryOptions: (input?: unknown, options: object = {}) => ({
+      ...options,
+      queryKey: [path, { input, type: "infinite" }],
+      initialPageParam: null,
+      queryFn: ({ pageParam }: { pageParam: unknown }) =>
+        server
+          ? server(name, { ...(input as object), cursor: pageParam ?? undefined })
+          : new Promise((resolve, reject) => (pendingReads[name] ??= []).push({ resolve, reject })),
+    }),
     // Subscribes to nothing: a test mocks `useSubscription` and delivers through its `onData`.
     subscriptionOptions: (_input: unknown, options: object = {}) => ({
       ...options,

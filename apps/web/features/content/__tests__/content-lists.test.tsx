@@ -448,10 +448,21 @@ describe("an entry's panel", () => {
 
   it("opens the recipes carrying the entry from Used by, each a link to the recipe", async () => {
     entries = [entry("Diner", { recipeCount: 2 })];
-    readAnswers.set("lists.uses", async () => [
-      { id: "r1", name: "Burger" },
-      { id: "r2", name: "Fries" },
-    ]);
+    let pages = 0;
+
+    readAnswers.set("lists.uses", async () => {
+      pages += 1;
+
+      return pages === 1
+        ? {
+            recipes: [
+              { id: "r1", name: "Burger" },
+              { id: "r2", name: "Fries" },
+            ],
+            nextCursor: 2,
+          }
+        : { recipes: [{ id: "r3", name: "Shake" }], nextCursor: null };
+    });
     await renderList("tag");
 
     const panel = await open("Diner");
@@ -465,6 +476,9 @@ describe("an entry's panel", () => {
       "/recipes/r1"
     );
     expect(within(uses).getByRole("link", { name: "Fries" })).toBeVisible();
+    await userEvent.click(within(uses).getByTestId("content-entry-uses-more"));
+    expect(await within(uses).findByRole("link", { name: "Shake" })).toBeVisible();
+    expect(within(uses).queryByTestId("content-entry-uses-more")).not.toBeInTheDocument();
   });
 
   it("changes nothing offline: Save and Delete are off, and the panel says why", async () => {
