@@ -31,7 +31,10 @@ vi.mock("next/navigation", () => ({
     throw new Error("not-found");
   },
 }));
-vi.mock("next-intl", () => ({ useTranslations: () => (key: string) => key }));
+vi.mock("next-intl", () => ({
+  useTranslations: () => (key: string) => key,
+  useFormatter: () => ({ number: (value: number) => value.toLocaleString("en") }),
+}));
 vi.mock("@norish/shared-react/lists", () => ({
   useContentCounts: () => ({ tag: 89, cuisine: 32, category: 6 }),
 }));

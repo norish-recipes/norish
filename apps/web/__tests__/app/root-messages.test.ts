@@ -19,6 +19,8 @@ const SETTINGS_ROUTE = [
   "features/calendar/components/caldav/",
   "features/content/",
   "features/ingredients/components/ingredient-add-panel.tsx",
+  "components/Panel/add-panel.tsx",
+  "components/Panel/name-field.tsx",
 ];
 
 describe("the root layout's client messages", () => {

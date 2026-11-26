@@ -106,7 +106,7 @@ export function contentListView(
 
 export type ContentProblem = "loadFailed" | "tooLong" | "failed" | "stale" | "empty";
 
-/** The copy under `settings.content` that says a problem, or none where the field says it. */
+/** The Content page's copy key that says a problem, or none where the field says it. */
 export function problemCopy(problem: ContentProblem | null, max = 0) {
   if (problem === null || problem === "empty") return null;
   if (problem === "tooLong") return { key: "panel.tooLong" as const, values: { max } };
