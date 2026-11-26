@@ -64,9 +64,10 @@ export interface ResolveActor {
 
 /**
  * Who resolves and why: a "person"'s write (AI's pass follows a mint), an "upgrade" pass (mints so
- * flagged), a "repoint" of rows whose food went (no slip, no mint), a "split" part AI found no food for (no slip).
+ * flagged), a "repoint" of rows whose food went (no slip, no mint), a "split" part AI found no food for (no slip),
+ * a "read" that only looks (no slip, no mint, no write).
  */
-export type ResolveMode = "person" | "upgrade" | "repoint" | "split";
+export type ResolveMode = "person" | "upgrade" | "repoint" | "split" | "read";
 
 /** One text as written, and the alias and Ingredient it resolved to. */
 export interface ResolvedIngredient extends IngredientRef {
@@ -339,6 +340,14 @@ export async function resolveLineFoods(
   return await resolveTexts(texts, actor, mode, true);
 }
 
+/** `resolveLineFoods` as a read: what the household's catalogue already names, writing nothing. */
+export async function readLineFoods(
+  texts: readonly string[],
+  householdId: string
+): Promise<Array<ResolvedFoods | null>> {
+  return await resolveTexts(texts, { householdId, userId: null }, "read", true);
+}
+
 /**
  * Each row once per food its name's words join, minting nothing: "zout en peper" a row each,
  * alternatives ("boter of olie") the first or each. The first keeps the row's id (ADR-0003).
@@ -581,7 +590,7 @@ async function resolveTexts(
 
     const match = matchRead(spelling, known);
 
-    if (!match && mode === "repoint") continue;
+    if (!match && (mode === "repoint" || mode === "read")) continue;
     if (!match) {
       const slip = onlyNearest(slips.get(spelling.key) ?? []);
       // The food a slip names may have been merged away since it was found; the text is then minted.

@@ -431,6 +431,27 @@ export async function readTestRecipeLine(id: string) {
   return row ?? null;
 }
 
+/** One spelling as stored, or null once it is gone. */
+export async function readTestSpelling(id: string) {
+  const [row] = await getTestDb()
+    .select()
+    .from(schema.ingredientAliases)
+    .where(eq(schema.ingredientAliases.id, id));
+
+  return row ?? null;
+}
+
+/** How many foods and spellings every catalogue holds together. */
+export async function countTestCatalogueRows() {
+  const db = getTestDb();
+  const [foods, spellings] = await Promise.all([
+    db.select({ id: schema.ingredients.id }).from(schema.ingredients),
+    db.select({ id: schema.ingredientAliases.id }).from(schema.ingredientAliases),
+  ]);
+
+  return { foods: foods.length, spellings: spellings.length };
+}
+
 /** Every Ingredient's id: how many foods the catalogue holds. */
 export async function listTestIngredientIds(): Promise<string[]> {
   const rows = await getTestDb().select({ id: schema.ingredients.id }).from(schema.ingredients);

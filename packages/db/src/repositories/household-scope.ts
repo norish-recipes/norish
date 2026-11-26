@@ -1,6 +1,6 @@
 import type { SQL } from "drizzle-orm";
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
-import { and, eq, isNotNull, isNull, or, sql } from "drizzle-orm";
+import { and, eq, isNotNull, isNull, ne, or, sql } from "drizzle-orm";
 
 /**
  * Tables a household shares with the instance, by `household_id`: null is the instance's row (the
@@ -24,6 +24,11 @@ export function inScope(
 /** A household's catalogue: the seed plus its own foods, spellings and junk marks; null, the seed's. */
 export function inCatalogue(householdId: AnyPgColumn, catalogue: Scope): SQL {
   return inScope(householdId, catalogue, { offered: true });
+}
+
+/** A row of another household's catalogue than `catalogue`: neither the seed's nor that household's. */
+export function outsideCatalogue(householdId: AnyPgColumn, catalogue: string): SQL {
+  return and(isNotNull(householdId), ne(householdId, catalogue))!;
 }
 
 /** Who acts on catalogue rows: a member of `householdId`, and whether a server admin. */
