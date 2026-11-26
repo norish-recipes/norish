@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { eq, ne, sql } from "drizzle-orm";
 
 import type { Db } from "@norish/db/drizzle";
 import { decrypt, encrypt } from "@norish/config/crypto";
@@ -10,6 +10,7 @@ import { serverConfig } from "../schema/server-config";
 import {
   normalizeConfigValue,
   SENSITIVE_CONFIG_KEYS,
+  ServerConfigKeys,
   validateConfigValue,
 } from "../zodSchemas/server-config";
 
@@ -171,10 +172,13 @@ export async function normalizeAndBackfillConfig(key: ServerConfigKey): Promise<
   return true;
 }
 
+/** Every setting Admin reads; the Master Key's fingerprint is the master key repository's alone. */
 export async function getAllConfigs(
   includeSecrets = false
 ): Promise<Record<ServerConfigKey, unknown>> {
-  const configs = await db.query.serverConfig.findMany();
+  const configs = await db.query.serverConfig.findMany({
+    where: ne(serverConfig.key, ServerConfigKeys.MASTER_KEY_FINGERPRINT),
+  });
 
   const result: Record<string, unknown> = {};
 

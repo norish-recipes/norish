@@ -6,7 +6,7 @@ import { usePending } from "@/hooks/use-pending";
 import { Input, Label, TextField, useOverlayState } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import type { AuthProviderGitHub, ServerConfigKey } from "@norish/config/zod/server-config";
+import type { AuthProviderGitHub } from "@norish/config/zod/server-config";
 import type { WriteResult } from "@norish/shared-react/admin";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { useAuthProviderMutations, useConfigSecret } from "@norish/shared-react/admin";
@@ -17,10 +17,10 @@ import { ConnectionTestResult } from "../connection-test-result";
 import { DeleteProviderModal } from "./delete-provider-modal";
 import { ProviderActions } from "./provider-actions";
 
-const CONFIG_KEYS: Record<"github" | "google", ServerConfigKey> = {
+const CONFIG_KEYS = {
   github: ServerConfigKeys.AUTH_PROVIDER_GITHUB,
   google: ServerConfigKeys.AUTH_PROVIDER_GOOGLE,
-};
+} as const;
 
 interface AuthProviderFormProps {
   providerKey: "github" | "google";

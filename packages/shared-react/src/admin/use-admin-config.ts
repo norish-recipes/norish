@@ -1,7 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
-import type { ServerConfigKey } from "@norish/config/zod/server-config";
-
 import type { AdminConfigKey, AdminConfigs } from "./types";
 import { useTRPC } from "../trpc";
 
@@ -44,7 +42,7 @@ export function useConfigSecret() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
 
-  return (key: ServerConfigKey, field: string) =>
+  return (key: AdminConfigKey, field: string) =>
     queryClient
       .query({ ...trpc.admin.getSecretField.queryOptions({ key, field }), staleTime: 0, gcTime: 0 })
       .then((result) => result.value);

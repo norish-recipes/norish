@@ -31,6 +31,9 @@ export const ServerConfigKeys = {
 
 export type ServerConfigKey = (typeof ServerConfigKeys)[keyof typeof ServerConfigKeys];
 
+/** The keys Admin settings read and restore: all but the Master Key's fingerprint, boot's alone. */
+export const AdminConfigKeySchema = z.enum(ServerConfigKeys).exclude(["MASTER_KEY_FINGERPRINT"]);
+
 // ============================================================================
 // Auth Provider Schemas
 // ============================================================================

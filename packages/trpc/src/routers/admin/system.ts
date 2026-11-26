@@ -1,7 +1,5 @@
-import { z } from "zod";
-
-import type { ServerConfigKey } from "@norish/config/zod/server-config";
 import {
+  AdminConfigKeySchema,
   SchedulerCleanupMonthsSchema,
   SENSITIVE_CONFIG_KEYS,
   ServerConfigKeys,
@@ -42,19 +40,19 @@ const updateSchedulerMonths = adminProcedure
  * Restore a config to its default value.
  */
 const restoreDefault = adminProcedure
-  .input(z.enum(ServerConfigKeys))
+  .input(AdminConfigKeySchema)
   .mutation(async ({ input, ctx }) => {
     log.info({ userId: ctx.user.id, key: input }, "Restoring default config");
 
-    const defaultValue = getDefaultConfigValue(input as ServerConfigKey);
+    const defaultValue = getDefaultConfigValue(input);
 
     if (defaultValue === null) {
       return { success: false, error: `No default value available for ${input}` };
     }
 
-    const isSensitive = SENSITIVE_CONFIG_KEYS.includes(input as ServerConfigKey);
+    const isSensitive = SENSITIVE_CONFIG_KEYS.includes(input);
 
-    await setConfig(input as ServerConfigKey, defaultValue, ctx.user.id, isSensitive);
+    await setConfig(input, defaultValue, ctx.user.id, isSensitive);
     // Names are read by these two: the next one reads the restored words.
     if (input === ServerConfigKeys.UNITS || input === ServerConfigKeys.INGREDIENT_WORDS) {
       forgetSpellingRules();

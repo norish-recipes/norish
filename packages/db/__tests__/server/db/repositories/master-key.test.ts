@@ -11,7 +11,7 @@ import {
   findNewestCiphertext,
   getMasterKeyFingerprint,
 } from "@norish/db/repositories/master-key";
-import { getConfig, setConfig } from "@norish/db/repositories/server-config";
+import { getAllConfigs, getConfig, setConfig } from "@norish/db/repositories/server-config";
 import { serverConfig, users } from "@norish/db/schema";
 
 import { cleanDatabase, createTestUser, getTestDb } from "../../../helpers/db-test-helpers";
@@ -134,6 +134,23 @@ describe("what boot checks a Master Key against", () => {
 
     expect(row).toMatchObject({ value: fingerprint, valueEnc: null, isSensitive: false });
     expect(await getConfig(ServerConfigKeys.MASTER_KEY_FINGERPRINT)).toBe(fingerprint);
+  });
+
+  it("leaves the fingerprint out of the settings Admin reads", async () => {
+    await setConfig(ServerConfigKeys.REGISTRATION_ENABLED, true, null, false);
+    await setConfig(
+      ServerConfigKeys.MASTER_KEY_FINGERPRINT,
+      masterKeyFingerprint(Buffer.alloc(32, 7)),
+      null,
+      false
+    );
+
+    for (const includeSecrets of [false, true]) {
+      const configs = await getAllConfigs(includeSecrets);
+
+      expect(configs).toHaveProperty(ServerConfigKeys.REGISTRATION_ENABLED, true);
+      expect(configs).not.toHaveProperty(ServerConfigKeys.MASTER_KEY_FINGERPRINT);
+    }
   });
 
   it("claims the fingerprint for the first key, and keeps it from a second", async () => {
