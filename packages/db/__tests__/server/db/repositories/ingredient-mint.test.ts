@@ -10,6 +10,7 @@ import { mintIngredientWithAliases } from "@norish/db/repositories/ingredient-al
 import * as schema from "@norish/db/schema";
 
 import { createTestIngredient, getTestDb, testHouseholdOf } from "../../../helpers/db-test-helpers";
+import { raceBehind } from "../../../helpers/lock-race";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 describe("mintIngredientWithAliases on a name already taken", () => {
@@ -69,5 +70,28 @@ describe("mintIngredientWithAliases on a name already taken", () => {
     await mintRedOnion();
 
     expect(await read(bare!.id)).toMatchObject({ flagged: true, flagReason: "upgrade" });
+  });
+
+  it("waits out a delete of the food it joins, then mints its own", async () => {
+    const [food] = await getTestDb()
+      .insert(schema.ingredients)
+      .values({ name: "red onion", householdId })
+      .returning();
+
+    await getTestDb()
+      .insert(schema.ingredientAliases)
+      .values({ householdId, text: "red onion", fold: "red onion", ingredientId: food!.id });
+
+    const [minted] = await raceBehind(
+      (tx) => tx.delete(schema.ingredients).where(eq(schema.ingredients.id, food!.id)),
+      [mintRedOnion]
+    );
+
+    expect(minted).toMatchObject({ status: "fulfilled" });
+    const [alias] = (minted as PromiseFulfilledResult<Awaited<ReturnType<typeof mintRedOnion>>>)
+      .value;
+
+    expect(alias!.ingredientId).not.toBe(food!.id);
+    expect(await read(alias!.ingredientId)).toMatchObject({ name: "red onion", householdId });
   });
 });

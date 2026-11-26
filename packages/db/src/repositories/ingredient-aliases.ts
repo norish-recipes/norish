@@ -340,6 +340,9 @@ async function mintOnce(input: MintIngredientInput): Promise<IngredientAliasRow[
           )
           .orderBy(ownBeforeSeed(ingredients.householdId))
           .limit(1)
+          // Held until the spellings are in, so a delete of the food waits; it takes no tree lock,
+          // which every delete takes before the row, so no cycle closes.
+          .for("key share", { of: ingredients })
       ).at(0);
     const seedHolder = await holderOf();
     const [minted] = seedHolder
