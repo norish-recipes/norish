@@ -41,6 +41,7 @@ beforeEach(() => {
   clear.mockClear();
   range.household = "h1";
   stored.clear();
+  stored.set("calendar-widgets.household", "h1");
 });
 
 describe("useCalendarWidgets", () => {
@@ -74,5 +75,13 @@ describe("useCalendarWidgets", () => {
     renderHook(() => useCalendarWidgets());
 
     expect(clear).toHaveBeenCalledOnce();
+  });
+
+  it("empties the widgets when no household was recorded, as an older build may have filled them", () => {
+    stored.clear();
+    renderHook(() => useCalendarWidgets());
+
+    expect(clear).toHaveBeenCalledOnce();
+    expect(stored.get("calendar-widgets.household")).toBe("h1");
   });
 });

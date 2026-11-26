@@ -66,7 +66,7 @@ export function useCalendarWidgets() {
     if (!household) return;
     const shownFor = storage.getString(SHOWN_FOR_KEY);
 
-    if (shownFor && shownFor !== household) forget();
+    if (shownFor !== household) forget();
     storage.set(SHOWN_FOR_KEY, household);
   }, [household]);
 
