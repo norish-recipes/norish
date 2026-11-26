@@ -13,10 +13,8 @@ import { Skeleton } from "heroui-native";
 /** How far each level of a tree sets its rows in, in points. */
 const INDENT = 24;
 
-/** A card slice's row for a named entry: its `leading` picture, the name with a `tag`, the muted
- * `count`, and a lock mark (named by `lockLabel`) where it is read-only, else a chevron where it opens. A
- * tree's row is set in by its `depth` and may carry a `fold` button before it; `trailing`, a
- * control of its own, ends the row after the lock or chevron. */
+/** A card slice's row for a named entry: picture, name, tag, count, then a lock (read-only) or a
+ * chevron (opens), then `trailing`. One entry of a tree sets in by `depth` and may `fold`. */
 export function CountRow({
   name,
   count,

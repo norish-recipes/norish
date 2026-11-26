@@ -2,9 +2,8 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { useText } from "@/lib/i18n/use-text";
 
-/** One change AI made, as a row of a card: the food it names (opening it when `onOpen` is given),
- * what changed, and Undo with Keep where the viewer may answer it. `testID` prefixes `-<id>`,
- * `-open-<id>`, `-undo-<id>` and `-keep-<id>`. */
+/** One change AI made, as a card row: the food it names, what changed, Undo and Keep where the
+ * viewer may answer. `testID` prefixes `-<id>`, `-open-<id>`, `-undo-<id>`, `-keep-<id>`. */
 export function AiChange({
   id,
   subject,

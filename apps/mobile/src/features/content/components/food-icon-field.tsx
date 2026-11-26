@@ -27,9 +27,8 @@ const PICKER: ImagePicker.ImagePickerOptions = {
 const TILE = 76;
 const PICTURE = 56;
 
-/** The food's icon beside its name field (`children`), with Upload a picture, Generate one where
- * the instance can draw and Remove the food's own under the name; each is part of the draft.
- * A reader who hid icons gets the name alone. */
+/** The food's icon beside its name field (`children`), with Upload, Generate and Remove under it,
+ * all staged in the draft. A reader who hid icons gets the name alone. */
 export function FoodIconField({
   item,
   icons,
