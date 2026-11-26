@@ -12,7 +12,8 @@ import { ENTRY_KINDS, useContentList } from "@norish/shared-react/lists";
 
 import { LIST_ICONS } from "../utils/content-lists";
 
-/** A list of Tags, Cuisines or Categories: search, the unused filter, the household's entries and the server's. */
+/** A list of Tags, Cuisines or Categories: search, the unused filter, the household's entries and the server's.
+ * A section without a title (Tags) is headed by how many it lists. */
 export function EntryList({
   list,
   onOpen,
@@ -23,14 +24,15 @@ export function EntryList({
   onAdd: () => void;
 }) {
   const text = useText();
+  const kind = ENTRY_KINDS[list];
   const { loaded, failed, retry, search, setSearch, unusedOnly, setUnusedOnly, view } =
-    useContentList(ENTRY_KINDS[list]);
+    useContentList(kind);
   const icon = LIST_ICONS[list];
   const rows = sectionRows(
     view.sections.map((section) => ({
       key: section.scope,
       section,
-      heading: Boolean(section.title),
+      heading: true,
       items: section.entries,
     })),
     (entry) => entry.id
@@ -42,7 +44,7 @@ export function EntryList({
         view.state === "empty"
           ? {
               action: {
-                label: text(`settings.content.panel.addTitle.${ENTRY_KINDS[list]}`),
+                label: text(`settings.content.panel.addTitle.${kind}`),
                 icon: "add",
                 testID: "content-add",
                 onPress: onAdd,
@@ -74,7 +76,13 @@ export function EntryList({
                 item.section.help ? text(`settings.content.help.${item.section.help}`) : undefined
               }
               testID={item.key}
-              title={text(`settings.content.sections.${item.section.title}`)}
+              title={
+                item.section.title
+                  ? text(`settings.content.sections.${item.section.title}`)
+                  : text(`settings.content.${unusedOnly ? "countUnused" : "count"}.${kind}`, {
+                      count: item.section.entries.length,
+                    })
+              }
             />
           </HeadingRow>
         ) : (

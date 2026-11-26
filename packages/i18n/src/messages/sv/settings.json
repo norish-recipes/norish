@@ -1399,6 +1399,12 @@
         "category": "Ta bort kategori"
       }
     },
-    "countCell": "{count, plural, =0 {Används inte} other {#}}"
+    "countCell": "{count, plural, =0 {Används inte} other {#}}",
+    "count": {
+      "tag": "{count, plural, one {# tagg} other {# taggar}}"
+    },
+    "countUnused": {
+      "tag": "{count, plural, one {# oanvänd tagg} other {# oanvända taggar}}"
+    }
   }
 }

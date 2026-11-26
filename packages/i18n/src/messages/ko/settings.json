@@ -1399,6 +1399,12 @@
         "category": "카테고리 삭제"
       }
     },
-    "countCell": "{count, plural, =0 {사용 안 함} other {#}}"
+    "countCell": "{count, plural, =0 {사용 안 함} other {#}}",
+    "count": {
+      "tag": "{count, plural, other {태그 #개}}"
+    },
+    "countUnused": {
+      "tag": "{count, plural, other {사용하지 않는 태그 #개}}"
+    }
   }
 }

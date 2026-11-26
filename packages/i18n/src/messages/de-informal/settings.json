@@ -1399,6 +1399,12 @@
         "category": "Kategorie löschen"
       }
     },
-    "countCell": "{count, plural, =0 {Nicht verwendet} other {#}}"
+    "countCell": "{count, plural, =0 {Nicht verwendet} other {#}}",
+    "count": {
+      "tag": "{count, plural, one {# Tag} other {# Tags}}"
+    },
+    "countUnused": {
+      "tag": "{count, plural, one {# ungenutzter Tag} other {# ungenutzte Tags}}"
+    }
   }
 }

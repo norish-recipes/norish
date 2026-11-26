@@ -1399,6 +1399,12 @@
         "category": "Удалить категорию"
       }
     },
-    "countCell": "{count, plural, =0 {Не используется} other {#}}"
+    "countCell": "{count, plural, =0 {Не используется} other {#}}",
+    "count": {
+      "tag": "{count, plural, one {# тег} few {# тега} many {# тегов} other {# тега}}"
+    },
+    "countUnused": {
+      "tag": "{count, plural, one {# неиспользуемый тег} few {# неиспользуемых тега} many {# неиспользуемых тегов} other {# неиспользуемого тега}}"
+    }
   }
 }

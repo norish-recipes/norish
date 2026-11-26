@@ -1399,6 +1399,12 @@
         "category": "Poista luokka"
       }
     },
-    "countCell": "{count, plural, =0 {Ei käytössä} other {#}}"
+    "countCell": "{count, plural, =0 {Ei käytössä} other {#}}",
+    "count": {
+      "tag": "{count, plural, one {# tunniste} other {# tunnistetta}}"
+    },
+    "countUnused": {
+      "tag": "{count, plural, one {# käyttämätön tunniste} other {# käyttämätöntä tunnistetta}}"
+    }
   }
 }

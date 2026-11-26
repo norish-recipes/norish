@@ -1399,6 +1399,12 @@
         "category": "Slett kategori"
       }
     },
-    "countCell": "{count, plural, =0 {Ikke brukt} other {#}}"
+    "countCell": "{count, plural, =0 {Ikke brukt} other {#}}",
+    "count": {
+      "tag": "{count, plural, one {# tagg} other {# tagger}}"
+    },
+    "countUnused": {
+      "tag": "{count, plural, one {# ubrukt tagg} other {# ubrukte tagger}}"
+    }
   }
 }

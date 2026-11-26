@@ -73,9 +73,14 @@ const section = (over: Partial<ContentSection>): ContentSection => ({
   entries: [],
   ...over,
 });
-const show = (list: Record<string, unknown>, onOpen = vi.fn(), onAdd = vi.fn()) => {
+const show = (
+  list: Record<string, unknown>,
+  onOpen = vi.fn(),
+  onAdd = vi.fn(),
+  which: "tags" | "cuisines" = "cuisines"
+) => {
   held.list = list;
-  render(<EntryList list="cuisines" onAdd={onAdd} onOpen={onOpen} />);
+  render(<EntryList list={which} onAdd={onAdd} onOpen={onOpen} />);
 
   return { onOpen, onAdd };
 };
@@ -162,5 +167,41 @@ describe("EntryList", () => {
     fireEvent.click(screen.getByTestId("filter-all"));
     expect(held.setUnusedOnly).toHaveBeenCalledWith(false);
     expect(screen.getByTestId("content-nothingUnused")).toBeTruthy();
+  });
+
+  it("heads Tags, which have no section title, with how many there are", () => {
+    show(
+      {
+        loaded: true,
+        failed: false,
+        view: {
+          state: "list",
+          sections: [section({ entries: [entry("a"), entry("b"), entry("c")] })],
+        },
+      },
+      vi.fn(),
+      vi.fn(),
+      "tags"
+    );
+    expect(screen.getByTestId("heading-household").textContent).toBe(
+      'settings.content.count.tag{"count":3}'
+    );
+  });
+
+  it("counts the unused tags while the unused filter is on", () => {
+    show(
+      {
+        loaded: true,
+        failed: false,
+        unusedOnly: true,
+        view: { state: "list", sections: [section({ entries: [entry("a"), entry("b")] })] },
+      },
+      vi.fn(),
+      vi.fn(),
+      "tags"
+    );
+    expect(screen.getByTestId("heading-household").textContent).toBe(
+      'settings.content.countUnused.tag{"count":2}'
+    );
   });
 });

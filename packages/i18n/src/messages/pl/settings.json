@@ -1399,6 +1399,12 @@
         "category": "Usuń kategorię"
       }
     },
-    "countCell": "{count, plural, =0 {Nieużywane} other {#}}"
+    "countCell": "{count, plural, =0 {Nieużywane} other {#}}",
+    "count": {
+      "tag": "{count, plural, one {# tag} few {# tagi} many {# tagów} other {# tagu}}"
+    },
+    "countUnused": {
+      "tag": "{count, plural, one {# nieużywany tag} few {# nieużywane tagi} many {# nieużywanych tagów} other {# nieużywanego tagu}}"
+    }
   }
 }
