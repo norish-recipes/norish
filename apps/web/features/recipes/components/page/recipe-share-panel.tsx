@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Panel, { PanelPortal } from "@/components/Panel/Panel";
 import RecipeShareStatusChip from "@/components/recipes/recipe-share-status-chip";
+import { EmptyState } from "@/components/shared/empty-state";
 import {
   ArrowTopRightOnSquareIcon,
   ClipboardDocumentIcon,
@@ -164,9 +165,7 @@ export default function RecipeSharePanel({ open, onOpenChange }: Props) {
                 <Spinner size="sm" />
               </div>
             ) : shareRows.length === 0 ? (
-              <div className="text-muted rounded-2xl border border-dashed px-4 py-6 text-sm">
-                {t("empty")}
-              </div>
+              <EmptyState icon={LinkIcon} title={t("empty")} />
             ) : (
               <div className="flex flex-col gap-3">
                 {shareRows.map((share) => (

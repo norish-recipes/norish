@@ -7,6 +7,8 @@ import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
 import { changeMessage } from "@/components/ingredients/review-copy";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
+import { EmptyState } from "@/components/shared/empty-state";
+import { SparklesIcon } from "@heroicons/react/24/outline";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useLocale, useTranslations } from "next-intl";
 import { twMerge } from "tailwind-merge";
@@ -173,7 +175,7 @@ export function ChangedByAIPanel({ open, onClose }: { open: boolean; onClose: ()
 
     switch (row.kind) {
       case "empty":
-        return <p className="text-muted py-3 text-sm">{t("changedByAI.empty")}</p>;
+        return <EmptyState icon={SparklesIcon} title={t("changedByAI.empty")} />;
       case "heading":
         return (
           <h3

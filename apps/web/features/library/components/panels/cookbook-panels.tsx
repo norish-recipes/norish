@@ -6,7 +6,8 @@ import { SelectableRow } from "@/components/cookbooks/selectable-row";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import ConfirmModal from "@/components/shared/confirm-modal";
-import { PhotoIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { EmptyState } from "@/components/shared/empty-state";
+import { BookOpenIcon, PhotoIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { Button, Input, Label, Separator, Spinner } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -265,9 +266,7 @@ function CookbookEditContent({
             <Spinner color="accent" size="sm" />
           </div>
         ) : recipes.length === 0 ? (
-          <div className="text-muted flex flex-1 items-center justify-center px-4 text-center text-base">
-            {t("empty")}
-          </div>
+          <EmptyState icon={BookOpenIcon} title={t("empty")} />
         ) : (
           <div className="divide-border/40 flex min-h-0 flex-1 flex-col divide-y overflow-y-auto">
             {recipes.map((recipe) => {
