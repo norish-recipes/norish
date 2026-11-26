@@ -137,6 +137,54 @@ describe("an editor save after a Content merge", () => {
     expect((await getRecipeFull(id))!.name).toBe("Ribs");
   });
 
+  describe("after an instance Cuisine took the recipe's over", () => {
+    /** A recipe of the household's "Lao", which a new instance "Lao" then takes over. */
+    async function takenOver(name: string) {
+      const { addEntry } = await import("@norish/db/repositories/list-entries");
+      const { entry: lao } = await lists().add({ kind: "cuisine", name });
+      const id = await recipes().create({
+        name: "Larb",
+        description: null,
+        systemUsed: "metric",
+        servings: 2,
+        recipeIngredients: [{ ingredientName: "pork", ingredientId: null, amount: 1, order: 0 }],
+        steps: [{ step: "Toss.", order: 0, systemUsed: "metric" }],
+        tags: [],
+        cuisines: [lao.id],
+        categories: [],
+        images: [],
+        videos: [],
+      });
+      const opened = (await getRecipeFull(id))!;
+
+      await addEntry("cuisine", null, name);
+
+      return { id, version: opened.version, lao };
+    }
+
+    it("keeps the re-pointed link when the save leaves the Cuisines alone", async () => {
+      const { id, version } = await takenOver("Lao");
+
+      expect(await recipes().update({ id, version, data: { name: "Larb gai" } })).toMatchObject({
+        stale: false,
+      });
+      expect((await getRecipeFull(id))!.cuisines).toEqual([
+        expect.objectContaining({ name: "Lao" }),
+      ]);
+    });
+
+    it("answers stale for the household Cuisine's old id", async () => {
+      const { id, version, lao } = await takenOver("Isan");
+
+      expect(
+        await recipes().update({ id, version, data: { name: "Larb gai", cuisines: [lao.id] } })
+      ).toEqual({ stale: true, version: null });
+      expect((await getRecipeFull(id))!.cuisines).toEqual([
+        expect.objectContaining({ name: "Isan" }),
+      ]);
+    });
+  });
+
   it("answers stale, losing nothing, for a Cuisine the list no longer has", async () => {
     const { id, version, texan } = await mergedRecipe();
 
