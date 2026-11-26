@@ -259,6 +259,56 @@ describe("chooseProduct", () => {
     );
   });
 
+  it("answers NOT_FOUND, saving no link, when the Pack Size finds no product of the household", async () => {
+    const PRODUCT = "33333333-3333-4333-8333-333333333333";
+
+    storeProductsRepository.getStoreProductById.mockResolvedValue({
+      id: PRODUCT,
+      storeId: STORE,
+      isManual: false,
+    });
+    storeProductsRepository.setPackSizeByHand.mockResolvedValue(null);
+    storeProductsRepository.upsertProductLink.mockClear();
+
+    await expect(
+      caller.chooseProduct({
+        storeId: STORE,
+        name: "oude kaas",
+        choice: { kind: "product", storeProductId: PRODUCT },
+        pack: { quantity: 500, unit: "gram", byWeight: false },
+      })
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+    expect(storeProductsRepository.upsertProductLink).not.toHaveBeenCalled();
+  });
+
+  it("answers NOT_FOUND, saving no link, when the by-hand product it corrects is gone", async () => {
+    storeProductsRepository.getStoreProductById.mockResolvedValue({
+      id: MANUAL_ID,
+      storeId: STORE,
+      isManual: true,
+    });
+    storeProductsRepository.updateManualProduct.mockResolvedValue(null);
+    storeProductsRepository.upsertProductLink.mockClear();
+
+    await expect(
+      caller.chooseProduct({ storeId: STORE, name: "oude kaas", choice: manualChoice })
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+    expect(storeProductsRepository.upsertProductLink).not.toHaveBeenCalled();
+  });
+
+  it("answers NOT_FOUND to an edit of a by-hand product that is gone", async () => {
+    storeProductsRepository.getStoreProductById.mockResolvedValue({
+      id: MANUAL_ID,
+      storeId: STORE,
+      isManual: true,
+    });
+    storeProductsRepository.updateManualProduct.mockResolvedValue(null);
+
+    await expect(
+      caller.updateProduct({ id: MANUAL_ID, name: "Oude kaas", price: 6.5, currency: "EUR" })
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+
   it("leaves the Pack Size alone where the field was left alone", async () => {
     const PRODUCT = "33333333-3333-4333-8333-333333333333";
 

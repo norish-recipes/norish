@@ -84,6 +84,17 @@ const createProduct = authedProcedure
     return product;
   });
 
+/** A by-hand edit that changed no row: the product left the household, or a page wrote it and only
+ * a by-hand price is a person's to change. */
+function unchangedProduct(existing: { isManual: boolean }) {
+  return existing.isManual
+    ? new TRPCError({ code: "NOT_FOUND", message: "Product not found" })
+    : new TRPCError({
+        code: "PRECONDITION_FAILED",
+        message: "Only a by-hand product can be edited",
+      });
+}
+
 const updateProduct = authedProcedure
   .input(StoreProductManualUpdateSchema)
   .mutation(async ({ ctx, input }) => {
@@ -93,14 +104,7 @@ const updateProduct = authedProcedure
 
     const product = await updateManualProduct(ctx.householdId, input);
 
-    if (!product) {
-      // A product read from a page keeps what the page said; only a by-hand
-      // price is a person's to change.
-      throw new TRPCError({
-        code: "PRECONDITION_FAILED",
-        message: "Only a by-hand product can be edited",
-      });
-    }
+    if (!product) throw unchangedProduct(existing);
     void stores.publish("productUpdated", { product }, { householdId: ctx.householdId });
 
     return product;
@@ -221,12 +225,7 @@ async function writeManualProduct(
     dealWords: choice.dealWords,
   });
 
-  if (!updated) {
-    throw new TRPCError({
-      code: "PRECONDITION_FAILED",
-      message: "Only a by-hand product can be edited",
-    });
-  }
+  if (!updated) throw unchangedProduct(existing);
 
   return updated;
 }
@@ -288,8 +287,8 @@ const chooseProduct = authedProcedure
     if (storeProductId && input.pack !== undefined) {
       const product = await setPackSizeByHand(ctx.householdId, storeProductId, input.pack);
 
-      if (product)
-        void stores.publish("productUpdated", { product }, { householdId: ctx.householdId });
+      if (!product) throw new TRPCError({ code: "NOT_FOUND", message: "Product not found" });
+      void stores.publish("productUpdated", { product }, { householdId: ctx.householdId });
     }
 
     // The choice is about the food the grocery names, so every spelling of it
