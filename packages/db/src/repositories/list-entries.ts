@@ -380,9 +380,8 @@ async function lockedRecipeHouseholdTx(tx: DbTransaction, recipeId: string) {
   return (await lockRecipeHouseholdsTx(tx, { recipeIds: [recipeId] })).get(recipeId) ?? null;
 }
 
-/** Replaces a recipe's entries with `ids`, in order: the recipe's household's and the instance's
- * stay; any other is stale (read before a move) and becomes the instance's entry of its fold, else
- * the household's own, else ForeignHouseholdReferenceError. An id gone is dropped and counted. */
+/** Replaces a recipe's entries with `ids`: its household's and the instance's stay; another's takes
+ * its fold's entry there (instance first), else ForeignHouseholdReferenceError; a gone id is counted. */
 export async function replaceRecipeEntryIdsTx(
   tx: DbTransaction,
   kind: ListKind,
@@ -781,10 +780,8 @@ export async function mergeEntryTx(
   return target;
 }
 
-/** Gives `householdId` an entry of each fold of `ids` (other households' entries): the instance's
- * where it has one, else the household's own, else a copy keeping the name; its recipes carrying
- * one of `ids` carry that instead. A leave hands it the leaver's recipes' entries; a join, the
- * joiner's whole lists. The caller holds the folds. */
+/** Gives `householdId` an entry of each fold of `ids` (a leaver's carried or a joiner's entries,
+ * folds held): the instance's, else its own, else a copy; its recipes carrying `ids` carry that. */
 async function takeEntriesOfFoldsTx(
   tx: DbTransaction,
   kind: ListKind,
