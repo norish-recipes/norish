@@ -247,13 +247,15 @@ describe("the key file", () => {
   });
 
   it.each(["EPERM", "ENOTSUP", "EOPNOTSUPP", "ENOSYS"])(
-    "creates the file in place where a hard link fails with %s",
+    "places the file whole where a hard link fails with %s, never writing it in place",
     async (code) => {
       const keys = { current: randomBytes(32) };
+      const open = vi.spyOn(fs, "open");
 
       vi.spyOn(fs, "link").mockRejectedValue(failure(code));
       await writeKeyFile(keys);
 
+      expect(open.mock.calls.map(([target]) => target)).not.toContain(keyFilePath());
       expect(await readKeyFile()).toEqual(keys);
       expect(await modeOf(keyFilePath())).toBe(0o600);
       expect(await fs.readdir(keyDir())).toEqual(["master-key.json"]);
@@ -271,12 +273,14 @@ describe("the key file", () => {
     expect(await fs.readdir(keyDir())).toEqual(["master-key.json"]);
   });
 
-  it("fails, leaving no half-written file, when the file created in place cannot be flushed", async () => {
-    vi.spyOn(fs, "link").mockRejectedValue(failure("EPERM"));
-    failSyncOf("EIO", keyFilePath());
+  it("keeps a key file it placed when a flush fails, as another boot may have read it", async () => {
+    const keys = { current: randomBytes(32) };
 
-    await expect(writeKeyFile({ current: randomBytes(32) })).rejects.toThrow("EIO");
-    expect(await fs.readdir(keyDir())).toEqual([]);
+    vi.spyOn(fs, "link").mockRejectedValue(failure("EPERM"));
+    failSyncOf("EIO", keyFilePath(), keyDir());
+
+    await expect(writeKeyFile(keys)).rejects.toThrow("EIO");
+    expect(await readKeyFile()).toEqual(keys);
   });
 
   it.each(["EINVAL", "ENOTSUP", "EOPNOTSUPP", "EISDIR", "ENOSYS"])(

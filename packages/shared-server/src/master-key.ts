@@ -96,6 +96,18 @@ async function createFlushed(target: string, text: string): Promise<void> {
   }
 }
 
+/** Whether anything, a dangling link included, is at `target`. */
+async function exists(target: string): Promise<boolean> {
+  try {
+    await fs.lstat(target);
+
+    return true;
+  } catch (error) {
+    if (errorCode(error) === "ENOENT") return false;
+    throw error;
+  }
+}
+
 /** What a filesystem answers when it cannot flush a folder at all, as opposed to failing to. */
 const FLUSH_UNSUPPORTED = new Set(["EINVAL", "ENOTSUP", "EOPNOTSUPP", "EISDIR", "ENOSYS"]);
 
@@ -116,8 +128,8 @@ async function flushFolder(dir: string): Promise<void> {
 }
 
 /**
- * Write the key file readable by this user only, whole or not at all where hard links work. It
- * never replaces a key file (EEXIST) unless told to.
+ * Write the key file readable by this user only, whole or not at all: only a flushed copy is ever
+ * moved into place. It never replaces a key file (EEXIST) unless told to.
  */
 export async function writeKeyFile(keys: KeyFile, { replace = false } = {}): Promise<void> {
   const file = keyFilePath();
@@ -134,11 +146,15 @@ export async function writeKeyFile(keys: KeyFile, { replace = false } = {}): Pro
     if (replace) {
       await fs.rename(temp, file);
     } else {
-      // A link or an exclusive create fails where a file is already, so one first boot's key lands.
-      await fs.link(temp, file).catch((error: unknown) => {
+      // A link fails where a file is already, so of two first boots at once one key lands.
+      await fs.link(temp, file).catch(async (error: unknown) => {
         if (errorCode(error) === "EEXIST") throw error;
-
-        return createFlushed(file, text);
+        // No hard links: rename the copy in when no key file is there. Only a link keeps two first
+        // boots at once exclusive; Norish runs one process per database.
+        if (await exists(file)) {
+          throw Object.assign(new Error(`EEXIST: file already exists, ${file}`), { code: "EEXIST" });
+        }
+        await fs.rename(temp, file);
       });
     }
   } finally {
