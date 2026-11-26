@@ -92,12 +92,13 @@ export async function claimMasterKeyFingerprint(fingerprint: string): Promise<st
   });
 }
 
-/** A table's encrypted columns, and the lookup hash one of them is the source of. */
+/** A table's encrypted columns, the lookup hash one is the source of, if any were once plain. */
 type Sealing = {
   table: PgTable;
   key: PgColumn;
   sealed: PgColumn[];
   lookup?: { hash: PgColumn; of: PgColumn };
+  legacyPlaintext?: true;
 };
 
 /** Every value in Postgres the Master Key encrypts or hashes; the re-key reads only this. */
@@ -107,6 +108,8 @@ export const MASTER_KEY_COLUMNS: Sealing[] = [
     key: users.id,
     sealed: [users.email, users.name, users.image],
     lookup: { hash: users.emailHmac, of: users.email },
+    // The only columns the old tolerant read accepted in plain text.
+    legacyPlaintext: true,
   },
   {
     table: userCaldavConfig,
@@ -170,7 +173,7 @@ function propertyOf(table: PgTable, column: PgColumn): string {
 async function resealTable(
   tx: DbTransaction,
   rotation: MasterKeyRotation,
-  { table, key, sealed, lookup }: Sealing,
+  { table, key, sealed, lookup, legacyPlaintext }: Sealing,
   counts: ResealCounts
 ): Promise<void> {
   const keyProperty = propertyOf(table, key);
@@ -204,7 +207,7 @@ async function resealTable(
         // Nothing is stored empty encrypted, so an empty value has nothing to move.
         if (typeof value !== "string" || value === "") continue;
 
-        const { sealed: moved, plain, was } = rotation.reseal(value);
+        const { sealed: moved, plain, was } = rotation.reseal(value, { legacyPlaintext });
 
         tally[was] += 1;
         if (moved !== value) update[property] = moved;

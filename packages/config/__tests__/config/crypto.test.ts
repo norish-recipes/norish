@@ -116,12 +116,43 @@ describe("a re-key from the previous key to the current one", () => {
     expect(rotation.reseal(sealed)).toEqual({ sealed, plain: "ada@example.com", was: "current" });
   });
 
-  it("seals a value that is not ciphertext as the plain text it is", () => {
-    for (const value of ["ada@example.com", "bm90IGNpcGhlcnRleHQ=", "/avatars/ada.png"]) {
-      const moved = rotation.reseal(value);
+  it("seals a value that is not ciphertext as the plain text it is, where plain text was stored", () => {
+    for (const value of [
+      "ada@example.com",
+      "bm90IGNpcGhlcnRleHQ=",
+      "/avatars/ada.png",
+      // Long enough to decode to an IV and a tag, but not base64 alone.
+      "https://example.com/avatars/ada-lovelace.png",
+      "ada.lovelace.countess.of.lovelace@example.com",
+      // Base64 alone, one character short of decoding to an IV and a tag.
+      "a".repeat(37),
+    ]) {
+      const moved = rotation.reseal(value, { legacyPlaintext: true });
 
       expect(moved).toMatchObject({ plain: value, was: "plaintext" });
       expect(openedBy(current, moved.sealed)).toBe(value);
+    }
+  });
+
+  it("leaves a value neither key opens as it is where plain text was never stored", () => {
+    for (const value of ["site-cookie", "ada@example.com", "a".repeat(64)]) {
+      expect(rotation.reseal(value)).toEqual({ sealed: value, plain: null, was: "unreadable" });
+    }
+  });
+
+  it("reads base64 of an IV and a tag as ciphertext, padded or not, where plain text was stored", () => {
+    const sealed = sealedBy(randomBytes(32), "ada@example.com");
+    const stripped = sealed.replace(/=+$/, "");
+    const truncated = sealed.slice(0, -7);
+
+    expect(stripped).not.toBe(sealed);
+    // The ceiling: a plain-text value of 38 base64 characters reads as ciphertext too.
+    for (const value of [sealed, stripped, truncated, "a".repeat(38)]) {
+      expect(rotation.reseal(value, { legacyPlaintext: true })).toEqual({
+        sealed: value,
+        plain: null,
+        was: "unreadable",
+      });
     }
   });
 

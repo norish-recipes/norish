@@ -300,6 +300,63 @@ describe("re-keying to a new Master Key", () => {
     });
   });
 
+  it("leaves ciphertext stripped of its padding or cut short as it is, its lookup hash too", async () => {
+    const [before] = await getTestDb().select().from(schema.users);
+    const email = sealedBy(randomBytes(32), "ada@example.com").replace(/=+$/, "");
+    const name = sealedBy(randomBytes(32), "Ada Lovelace").slice(0, -7);
+
+    await getTestDb().update(schema.users).set({ email, name });
+
+    const { columns: counts } = await rekeyMasterKey(
+      masterKeyRotation(previous, current),
+      fingerprints
+    );
+
+    for (const column of ["user.email", "user.name"]) {
+      expect(counts[column]).toEqual({ previous: 0, current: 0, plaintext: 0, unreadable: 1 });
+    }
+    expect(await getTestDb().select().from(schema.users)).toMatchObject([
+      { email, name, emailHmac: before?.emailHmac },
+    ]);
+  });
+
+  it("leaves a value outside the user's columns that no key opens as it is, and counts it", async () => {
+    await getTestDb().update(schema.siteAuthTokens).set({ valueEnc: "site-cookie" });
+
+    const { columns: counts } = await rekeyMasterKey(
+      masterKeyRotation(previous, current),
+      fingerprints
+    );
+
+    expect(counts["site_auth_tokens.value_enc"]).toEqual({
+      previous: 0,
+      current: 0,
+      plaintext: 0,
+      unreadable: 1,
+    });
+    expect(await getTestDb().select().from(schema.siteAuthTokens)).toMatchObject([
+      { valueEnc: "site-cookie" },
+    ]);
+  });
+
+  it("encrypts an email stored in plain text, and finds the account by it after", async () => {
+    const [before] = await getTestDb().select().from(schema.users);
+
+    await getTestDb().update(schema.users).set({ email: "ada@example.com" });
+
+    const { columns: counts } = await rekeyMasterKey(
+      masterKeyRotation(previous, current),
+      fingerprints
+    );
+    const [after] = await getTestDb().select().from(schema.users);
+
+    expect(counts["user.email"]).toEqual({ previous: 0, current: 0, plaintext: 1, unreadable: 0 });
+    expect(after?.emailHmac).not.toBe(before?.emailHmac);
+    initMasterKey(current);
+    expect(decrypt(after?.email ?? "")).toBe("ada@example.com");
+    expect(await getUserByEmail("ada@example.com")).toMatchObject({ id: userId });
+  });
+
   it("keeps a value the new key wrote already, and still moves its lookup hash", async () => {
     const email = sealedBy(current, "ada@example.com");
 
@@ -388,11 +445,11 @@ describe("re-keying to a new Master Key", () => {
     let resealed = 0;
     const failing: MasterKeyRotation = {
       ...rotation,
-      reseal: (value) => {
+      reseal: (value, options) => {
         resealed += 1;
         if (resealed === 5) throw new Error("disk gone");
 
-        return rotation.reseal(value);
+        return rotation.reseal(value, options);
       },
     };
 

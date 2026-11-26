@@ -95,22 +95,23 @@ export function hmacIndex(value: string): string {
 /** A share token's lookup hash: the same keyed HMAC as an email's. */
 export const hashToken = hmacIndex;
 
-/** Whether `value` has the shape `encrypt` writes: base64 of an IV, a tag and the data. */
-function isCiphertext(value: string): boolean {
-  const data = Buffer.from(value, "base64");
-
-  return data.length >= IV_BYTES + TAG_BYTES && data.toString("base64") === value;
+/** Whether `value` may be what `encrypt` wrote, damaged: base64 of an IV and a tag, at least. */
+function mayBeCiphertext(value: string): boolean {
+  return (
+    /^[A-Za-z0-9+/]+={0,2}$/.test(value) &&
+    Buffer.from(value, "base64").length >= IV_BYTES + TAG_BYTES
+  );
 }
 
 /**
- * Which key had sealed a value a re-key met: `plaintext` when it is not ciphertext, `unreadable`
- * when it is ciphertext neither key opens (damaged, or sealed under another key).
+ * Which key had sealed a value a re-key met: `plaintext` when a column once plain holds no
+ * ciphertext, `unreadable` when neither key opens it otherwise (damaged, or another key's).
  */
 export type SealedBy = "previous" | "current" | "plaintext" | "unreadable";
 
 /**
- * A re-key from `previous` to `current`, its keys kept here. The only place a value that is not
- * ciphertext is read as plaintext; one the current key opens, or neither does, stays as it is.
+ * A re-key from `previous` to `current`, its keys kept here. The only place a value is read as
+ * plain text, and only with `legacyPlaintext`; one the current key opens, or neither does, stays.
  */
 export function masterKeyRotation(previous: Buffer, current: Buffer) {
   const from = deriveKey(previous, "encryption");
@@ -118,7 +119,10 @@ export function masterKeyRotation(previous: Buffer, current: Buffer) {
   const hmac = deriveKey(current, "hmac");
 
   return {
-    reseal(value: string): { sealed: string; plain: string | null; was: SealedBy } {
+    reseal(
+      value: string,
+      { legacyPlaintext = false } = {}
+    ): { sealed: string; plain: string | null; was: SealedBy } {
       const opened = tryDecryptWith(from, value);
 
       if (opened !== null)
@@ -127,7 +131,10 @@ export function masterKeyRotation(previous: Buffer, current: Buffer) {
       const already = tryDecryptWith(to, value);
 
       if (already !== null) return { sealed: value, plain: already, was: "current" };
-      if (isCiphertext(value)) return { sealed: value, plain: null, was: "unreadable" };
+      // ponytail: plain text of 38+ base64 characters reads as ciphertext; the re-key logs it.
+      if (!legacyPlaintext || mayBeCiphertext(value)) {
+        return { sealed: value, plain: null, was: "unreadable" };
+      }
 
       return { sealed: encryptWith(to, value), plain: value, was: "plaintext" };
     },
