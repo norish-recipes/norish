@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 
+import type { EndedSessions } from "@norish/db/repositories/master-key";
 import {
   initMasterKey,
   isBase64,
@@ -21,7 +22,7 @@ import {
 import { serverLogger as log } from "@norish/shared-server/logger";
 
 /** Ends every session the session store keeps; the server's boot hands in Better Auth's. */
-export type EndStoredSessions = () => Promise<{ sessions: number; verifications: number }>;
+export type EndStoredSessions = () => Promise<EndedSessions>;
 
 /**
  * The keys a key file holds, each as the text it was given, which a rewrite never re-encodes.

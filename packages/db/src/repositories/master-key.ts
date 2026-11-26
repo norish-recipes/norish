@@ -33,6 +33,9 @@ const fingerprintRow = eq(serverConfig.key, ServerConfigKeys.MASTER_KEY_FINGERPR
 const storedFingerprint = (value: unknown) =>
   typeof value === "string" && value !== "" ? value : null;
 
+/** How many sessions and verification values a session store ended. */
+export type EndedSessions = { sessions: number; verifications: number };
+
 /** Rows that hold encrypted data: every account and every secret setting; the rest belong to an account. */
 export async function countEncryptedRows(): Promise<number> {
   const [accounts, secrets] = await Promise.all([
@@ -69,6 +72,17 @@ export async function getMasterKeyFingerprint(): Promise<string | null> {
   return storedFingerprint(await getConfig(ServerConfigKeys.MASTER_KEY_FINGERPRINT));
 }
 
+/** The stored fingerprint, its row locked until `tx` ends, so a second claim or re-key waits. */
+async function lockFingerprint(tx: DbTransaction): Promise<string | null> {
+  const [row] = await tx
+    .select({ value: serverConfig.value })
+    .from(serverConfig)
+    .where(fingerprintRow)
+    .for("update");
+
+  return storedFingerprint(row?.value);
+}
+
 /** Store `fingerprint` unless a fingerprint is there already; the one the database holds after. */
 export async function claimMasterKeyFingerprint(fingerprint: string): Promise<string> {
   return await db.transaction(async (tx) => {
@@ -76,13 +90,8 @@ export async function claimMasterKeyFingerprint(fingerprint: string): Promise<st
       .insert(serverConfig)
       .values({ key: ServerConfigKeys.MASTER_KEY_FINGERPRINT, value: fingerprint })
       .onConflictDoNothing({ target: serverConfig.key });
-    // The row lock makes a second claimer wait, then read what the first one stored.
-    const [row] = await tx
-      .select({ value: serverConfig.value })
-      .from(serverConfig)
-      .where(fingerprintRow)
-      .for("update");
-    const stored = storedFingerprint(row?.value);
+    // A second claimer waits here, then reads what the first one stored.
+    const stored = await lockFingerprint(tx);
 
     if (stored) return stored;
     await tx
@@ -262,17 +271,11 @@ export async function rekeyMasterKey(
 ): Promise<{
   columns: ResealCounts;
   revokedShares: number;
-  ended: { sessions: number; verifications: number };
+  ended: EndedSessions;
 }> {
   return await db.transaction(async (tx) => {
-    // The row lock keeps a second re-key out until this one commits or rolls back.
-    const [row] = await tx
-      .select({ value: serverConfig.value })
-      .from(serverConfig)
-      .where(fingerprintRow)
-      .for("update");
-
-    if (storedFingerprint(row?.value) !== fingerprints.from) {
+    // A second re-key waits here until this one commits or rolls back.
+    if ((await lockFingerprint(tx)) !== fingerprints.from) {
       throw new Error("The Master Key fingerprint changed before the re-key could start");
     }
 
@@ -280,7 +283,7 @@ export async function rekeyMasterKey(
     const columns: ResealCounts = {};
 
     for (const sealing of MASTER_KEY_COLUMNS) await resealTable(tx, rotation, sealing, columns);
-    const ended = {
+    const ended: EndedSessions = {
       sessions: (await tx.delete(sessions)).rowCount ?? 0,
       verifications: (await tx.delete(verification)).rowCount ?? 0,
     };

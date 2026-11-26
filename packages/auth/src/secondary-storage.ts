@@ -1,5 +1,6 @@
 import type { SecondaryStorage } from "better-auth";
 
+import type { EndedSessions } from "@norish/db/repositories/master-key";
 import { getPublisherClient } from "@norish/shared-server/valkey/client";
 
 // The expiry is set only by the increment that creates the counter, so a window
@@ -76,9 +77,9 @@ function storedAs(key: string, value: string): "session" | "list" | "verificatio
  * Delete every session and verification value Better Auth keeps in Valkey, found by their shape
  * and not through its lists, which sign-ins at once can leave short. Nothing else is touched.
  */
-export async function endStoredSessions(): Promise<{ sessions: number; verifications: number }> {
+export async function endStoredSessions(): Promise<EndedSessions> {
   const valkey = await getPublisherClient();
-  const ended = { sessions: 0, verifications: 0 };
+  const ended: EndedSessions = { sessions: 0, verifications: 0 };
   let cursor = "0";
 
   do {
