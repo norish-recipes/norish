@@ -10,7 +10,13 @@ import { groupBy } from "@norish/shared/lib/group-by";
 import { lineMeaning } from "@norish/shared/lib/ingredient-text";
 
 import type { ResolveMode } from "./resolver";
-import { resolveIngredients, resolveLineFoods, typedParts, writeResolved } from "./resolver";
+import {
+  mintsIn,
+  resolveIngredients,
+  resolveLineFoods,
+  typedParts,
+  writeResolved,
+} from "./resolver";
 
 /**
  * Point each row at what its text resolves to in `mode` in its own household, minting there unless
@@ -24,7 +30,7 @@ export async function resolveAgain(
   mode: Exclude<ResolveMode, "split">,
   { refine = false }: { refine?: boolean } = {}
 ): Promise<number> {
-  const mint = mode !== "repoint";
+  const mint = mintsIn(mode);
 
   return await writeResolved(
     async () => {

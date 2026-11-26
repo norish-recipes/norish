@@ -69,6 +69,11 @@ export interface ResolveActor {
  */
 export type ResolveMode = "person" | "upgrade" | "repoint" | "split" | "read";
 
+/** Whether a mode mints a text the catalogue does not know; "repoint" and "read" only find. */
+export function mintsIn(mode: ResolveMode): boolean {
+  return mode !== "repoint" && mode !== "read";
+}
+
 /** One text as written, and the alias and Ingredient it resolved to. */
 export interface ResolvedIngredient extends IngredientRef {
   text: string;
@@ -590,7 +595,7 @@ async function resolveTexts(
 
     const match = matchRead(spelling, known);
 
-    if (!match && (mode === "repoint" || mode === "read")) continue;
+    if (!match && !mintsIn(mode)) continue;
     if (!match) {
       const slip = onlyNearest(slips.get(spelling.key) ?? []);
       // The food a slip names may have been merged away since it was found; the text is then minted.
