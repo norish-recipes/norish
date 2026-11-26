@@ -35,7 +35,8 @@ vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
   useFormatter: () => ({ number: (value: number) => value.toLocaleString("en") }),
 }));
-vi.mock("@norish/shared-react/lists", () => ({
+vi.mock("@norish/shared-react/lists", async (importActual) => ({
+  ...(await importActual<object>()),
   useContentCounts: () => ({ tag: 89, cuisine: 32, category: 6 }),
 }));
 vi.mock("@/features/ingredients/ingredients-screen", () => ({ IngredientsScreen: () => null }));
