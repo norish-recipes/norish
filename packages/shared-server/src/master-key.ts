@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import {
   initMasterKey,
+  isBase64,
   masterKeyFingerprint,
   masterKeyOpens,
   masterKeyRotation,
@@ -273,6 +274,17 @@ function pickKey(source: KeySource, fits: (key: Buffer) => boolean) {
   );
 }
 
+/** What the 32 characters MasterKeySchema asks for hold when each one is base64. */
+const NEW_KEY_BYTES = 24;
+
+/** Refuse a key the data is not on yet unless it is base64, as base64 skips any other character. */
+function checkNewKey(key: NamedKey): void {
+  if (isBase64(key.text) && key.bytes.length >= NEW_KEY_BYTES) return;
+  throw new Error(
+    `${key.label} is not base64, which a new Master Key must be. Make one with \`openssl rand -base64 32\`.`
+  );
+}
+
 /** A new key file, or the one another first boot wrote at the same time. */
 async function generateKeyFile(): Promise<string> {
   const key = generatedKey();
@@ -301,15 +313,21 @@ async function adoptKey(source: KeySource): Promise<[KeySource, string | null]> 
 
   // A value that does not decrypt, an empty one included, never shows that a key fits.
   const newest = encrypted ? await findNewestCiphertext() : null;
-  const key = encrypted
-    ? pickKey(source, (candidate) => newest !== null && masterKeyOpens(candidate, newest)).key
-    : (source.keys?.current ?? namedKey(await generateKeyFile(), fileLabels().current));
+  const found = encrypted
+    ? pickKey(source, (candidate) => newest !== null && masterKeyOpens(candidate, newest))
+    : null;
+  const key =
+    found?.key ?? source.keys?.current ?? namedKey(await generateKeyFile(), fileLabels().current);
+  const keys = source.keys ?? { current: key };
+
+  // Boot ends on the current key, which is new to this instance unless it opened the data.
+  if (found?.key !== keys.current) checkNewKey(keys.current);
   // Another first boot may have stored its fingerprint since this one looked; that one stands.
   const stored = await claimMasterKeyFingerprint(masterKeyFingerprint(key.bytes));
 
   log.info({ source: key.label }, "Master Key adopted");
 
-  return [{ ...source, keys: source.keys ?? { current: key } }, stored];
+  return [{ ...source, keys }, stored];
 }
 
 const hasFingerprint = (fingerprint: string | null) => (key: Buffer) =>
@@ -424,6 +442,7 @@ export async function resolveMasterKey(endStoredSessions: EndStoredSessions): Pr
   const { keys, key } = keyWithFingerprint(opening, stored);
 
   if (key !== keys.current) {
+    checkNewKey(keys.current);
     if (!opening.pinned) await flushKeyFile();
     await rekey(key, keys.current, endStoredSessions);
   }

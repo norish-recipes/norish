@@ -95,12 +95,12 @@ export function hmacIndex(value: string): string {
 /** A share token's lookup hash: the same keyed HMAC as an email's. */
 export const hashToken = hmacIndex;
 
+/** Base64 characters alone, padded or not, as `encrypt` writes and `openssl rand -base64` makes. */
+export const isBase64 = (value: string) => /^[A-Za-z0-9+/]+={0,2}$/.test(value);
+
 /** Whether `value` may be what `encrypt` wrote, damaged: base64 of an IV and a tag, at least. */
 function mayBeCiphertext(value: string): boolean {
-  return (
-    /^[A-Za-z0-9+/]+={0,2}$/.test(value) &&
-    Buffer.from(value, "base64").length >= IV_BYTES + TAG_BYTES
-  );
+  return isBase64(value) && Buffer.from(value, "base64").length >= IV_BYTES + TAG_BYTES;
 }
 
 /**

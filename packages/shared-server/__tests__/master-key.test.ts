@@ -599,6 +599,98 @@ describe("which key boot opens", () => {
     });
   });
 
+  describe("with a key that is not base64", () => {
+    // 32 characters, so the length rule passes, but base64 skips every one: no bytes at all.
+    const punctuation = "!@#$%^&*".repeat(4);
+    const bytes = Buffer.from(punctuation, "base64");
+    const NOT_BASE64 = "is not base64, which a new Master Key must be";
+
+    /** Boot's refusal, which says what a key must be and how to make one, and never the key. */
+    async function refusedAs(label: string) {
+      const error = await resolveMasterKey().catch((caught: unknown) => caught);
+
+      expect(error).toBeInstanceOf(Error);
+      expect(error).toMatchObject({ message: expect.stringContaining(`${label} ${NOT_BASE64}`) });
+      expect(error).toMatchObject({ message: expect.stringContaining("openssl rand -base64 32") });
+      expect(String(error)).not.toContain(punctuation);
+      expect(fingerprintWrites).toEqual([]);
+      expect(rekeys.steps).toEqual([]);
+      expect(opened).toThrow("used before boot resolved it");
+    }
+
+    it("decodes to nothing", () => {
+      expect(bytes).toHaveLength(0);
+    });
+
+    it("refuses it as MASTER_KEY on a first boot", async () => {
+      config.MASTER_KEY = punctuation;
+
+      await refusedAs("MASTER_KEY");
+    });
+
+    it("refuses it as the key file's key on a first boot", async () => {
+      await fs.mkdir(keyDir(), { recursive: true });
+      await fs.writeFile(keyFilePath(), JSON.stringify({ current: punctuation }));
+
+      await refusedAs(`The key in ${keyFilePath()}`);
+      expect(await readKeyFile()).toEqual({ current: punctuation });
+    });
+
+    it("refuses to re-key to it as MASTER_KEY", async () => {
+      database.fingerprint = masterKeyFingerprint(keyA);
+      config.MASTER_KEY = punctuation;
+      config.MASTER_KEY_PREVIOUS = textA;
+
+      await refusedAs("MASTER_KEY");
+      expect(database.fingerprint).toBe(masterKeyFingerprint(keyA));
+    });
+
+    it("refuses to re-key to it as the key file's key", async () => {
+      database.fingerprint = masterKeyFingerprint(keyA);
+      await fs.mkdir(keyDir(), { recursive: true });
+      await fs.writeFile(keyFilePath(), JSON.stringify({ current: punctuation, previous: textA }));
+
+      await refusedAs(`The key in ${keyFilePath()}`);
+      expect(await readKeyFile()).toEqual({ current: punctuation, previous: textA });
+    });
+
+    it("refuses to re-key to it before claiming the previous key on an instance from before", async () => {
+      database.encrypted = [sealedBy(keyA, "ada@example.com")];
+      config.MASTER_KEY = punctuation;
+      config.MASTER_KEY_PREVIOUS = textA;
+
+      await refusedAs("MASTER_KEY");
+    });
+
+    it("still opens it where the fingerprint names it already", async () => {
+      database.fingerprint = masterKeyFingerprint(bytes);
+      config.MASTER_KEY = punctuation;
+
+      await resolveMasterKey();
+
+      expect(opened()).toBe(lookupBy(bytes));
+    });
+
+    it("still adopts it as MASTER_KEY over the data it wrote on an instance from before", async () => {
+      database.encrypted = [sealedBy(bytes, "ada@example.com")];
+      config.MASTER_KEY = punctuation;
+
+      await resolveMasterKey();
+
+      expect(fingerprintWritten()).toBe(masterKeyFingerprint(bytes));
+      expect(opened()).toBe(lookupBy(bytes));
+    });
+
+    it("adopts unpadded base64 as a first key", async () => {
+      const unpadded = textA.replace(/=+$/, "");
+
+      config.MASTER_KEY = unpadded;
+      await resolveMasterKey();
+
+      expect(fingerprintWritten()).toBe(masterKeyFingerprint(keyA));
+    });
+  });
+
   describe("with a fingerprint in the database", () => {
     beforeEach(() => {
       database.fingerprint = masterKeyFingerprint(keyA);
@@ -874,7 +966,8 @@ describe("which key boot opens", () => {
       });
 
       it("keeps a current key's text as it was given, so the next boot starts plainly", async () => {
-        const given = "my own key, typed by hand. 2026: ok!";
+        // Unpadded, so its bytes written back as base64 would read differently.
+        const given = randomBytes(32).toString("base64").replace(/=+$/, "");
         const fingerprint = masterKeyFingerprint(Buffer.from(given, "base64"));
 
         await fs.mkdir(keyDir(), { recursive: true });
