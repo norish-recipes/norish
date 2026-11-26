@@ -181,7 +181,7 @@ beforeEach(() => {
 });
 
 describe("RecipeEditorScreen save of an untouched recipe", () => {
-  // Its Tags, Cuisines and Categories are left out: a merge made meanwhile on the Content page stays.
+  // Its untouched clearable fields and lists are left out, so a change made meanwhile elsewhere stays.
   it("sends exactly what it was given, active system only", async () => {
     render(<RecipeEditorScreen initialData={stored} mode="edit" />, {
       wrapper: createTestWrapper(createTestQueryClient()),
@@ -194,21 +194,7 @@ describe("RecipeEditorScreen save of an untouched recipe", () => {
       stored.id,
       {
         name: "Hoisin chicken",
-        description: "Sticky and quick.",
-        notes: "Thighs stay juicier.",
-        url: "https://example.com/hoisin",
         servings: 4,
-        prepMinutes: 15,
-        cookMinutes: 15,
-        totalMinutes: 30,
-        calories: 238,
-        fat: "9",
-        carbs: "14.5",
-        protein: "24",
-        originCountry: "CN",
-        originCountryName: "China",
-        originRegion: "Guangdong",
-        provenanceNote: "Cantonese roots.",
         systemUsed: "metric",
         recipeIngredients: [
           {
