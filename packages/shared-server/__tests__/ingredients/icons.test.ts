@@ -220,15 +220,25 @@ describe("Ingredient Icons", () => {
     expect(await shown(onion)).toBe(address(OWN));
   });
 
-  it("takes the merged-away food's own icon where the survivor has none", async () => {
+  it("takes the merged-away food's own icon where the household's survivor has none", async () => {
     const ui = await food("ui", { icon: OTHER_OWN });
-    const onion = await food("onion", { offId: "en:onion" });
+    const onion = await food("onion");
 
     await mergeIngredients(actor, ui, onion);
 
     await expect(ingredientIcons([onion], SET)).resolves.toEqual(
       new Map([[onion, { address: address(OTHER_OWN), own: true }]])
     );
+  });
+
+  it("gives a seeded survivor no icon of a household's: every household reads it", async () => {
+    const ui = await food("ui", { icon: OTHER_OWN });
+    const onion = await food("onion", { offId: "en:onion" });
+    const before = await shown(onion);
+
+    await mergeIngredients(actor, ui, onion);
+
+    await expect(shown(onion)).resolves.toBe(before);
   });
 
   it("sweeps the icon files no food points at, past a draft's grace", async () => {
