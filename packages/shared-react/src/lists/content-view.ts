@@ -109,15 +109,11 @@ export type ContentProblem = "loadFailed" | "tooLong" | "failed" | "stale" | "em
 /** The copy under `settings.content` that says a problem, or none where the field says it. */
 export function problemCopy(problem: ContentProblem | null, max = 0) {
   if (problem === null || problem === "empty") return null;
+  if (problem === "tooLong") return { key: "panel.tooLong" as const, values: { max } };
 
-  const key = {
-    loadFailed: "loadFailed",
-    tooLong: "panel.tooLong",
-    failed: "panel.failed",
-    stale: "panel.stale",
-  } as const;
+  const key = { loadFailed: "loadFailed", failed: "panel.failed", stale: "panel.stale" } as const;
 
-  return { key: key[problem], max };
+  return { key: key[problem], values: undefined };
 }
 
 export type RenameProblem = "empty" | "tooLong";

@@ -106,8 +106,8 @@ describe("entryDetail", () => {
 
 describe("problemCopy", () => {
   it("names the copy for a problem, and none where the field says it", () => {
-    expect(problemCopy("stale")).toEqual({ key: "panel.stale", max: 0 });
-    expect(problemCopy("tooLong", 40)).toEqual({ key: "panel.tooLong", max: 40 });
+    expect(problemCopy("stale")).toEqual({ key: "panel.stale", values: undefined });
+    expect(problemCopy("tooLong", 40)).toEqual({ key: "panel.tooLong", values: { max: 40 } });
     expect(problemCopy("empty")).toBeNull();
     expect(problemCopy(null)).toBeNull();
   });
