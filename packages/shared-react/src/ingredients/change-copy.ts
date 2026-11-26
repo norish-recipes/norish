@@ -11,7 +11,7 @@ export type ChangeCopyKey =
   | "changedByAI.spellingMoved"
   | "changedByAI.spellingRemoved";
 
-/** What an AI Change did to the food it is listed under: the copy key under `settings.ingredients`, and its values. */
+/** What an AI Change did to the food it is listed under: the copy key among the Ingredients words, and its values. */
 export function changeCopy(
   change: AIChange,
   locale: string
