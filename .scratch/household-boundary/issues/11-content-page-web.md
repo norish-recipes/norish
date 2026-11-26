@@ -100,3 +100,8 @@ Not run: the tests that need Postgres or Valkey, Docker was down (the `list-entr
 - The picker counts Ingredients as the boards do (`ingredients.count`, 3735bc643, 97eab36c8). All gates and the spec (x2) pass.
 
 Gatekeeper, 2026-11-26: closed at b3f58639a after the browser render, two fix rounds and an independent gate run (seven gates and the Content E2E spec, all exit 0). Kept on purpose: the shared templates' values (48 px rows, 12 px frame radius, 448 px modal) where the canvas draws 50, 16 and 400. Open for Mike: "Used by" opens as a stacked panel over the entry panel.
+
+Whole-branch review, client round:
+
+6. Fixed (9dcb35c3a): a list change rereads `lists.usage` too. `ingredients.countUses` and `ingredients.recipes` were already reread by the `ingredients.pathKey()` invalidation; f8c4f951f pins it with a test.
+8. Fixed (c09345edb): "Used by" is open only while its entry panel is (`open && !entry.gone`).

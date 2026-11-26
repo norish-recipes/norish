@@ -59,3 +59,8 @@ Rejected: an Owner moving household while a housemate edits their recipe; the RE
 Final review, server round:
 
 - Fixed (776002851): `recipes.updateCategories` had no caller (apps, REST) and is deleted with its allowlist entry.
+
+Whole-branch review, client round:
+
+4. Fixed (bfb266705, e1df81de5, 85a65083e): an edit sends Tags, Cuisines and Categories only when the form changed them; an editor `recipes.update` naming a Tag, Category or Cuisine id its lists no longer have answers `stale` and writes nothing. This replaces the silent drop decided above for updates; editor create, imports, AI and REST keep it.
+5. Fixed (2e3a87b1b): `createRecipe` and `updateRecipe` take `SaveCallbacks`; `onSaved` only for a stored or queued save, a stale answer or a refusal is `onFailed` and `failSave` shows it (stale as "Not saved: it changed elsewhere first"). Both editors leave only on `onSaved`.

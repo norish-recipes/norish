@@ -74,3 +74,11 @@ Review round 2:
 7. Fixed: the rename race holds the real rename uncommitted, so the join retries and merges; added a seeded target, a joiner parent and child both colliding, and several foods into one target; the Library test names seeded foods again. Races 20/20, moves 20/20.
 
 - Rejected: stranding a moved change whose Undo might still apply; parent chains longer than the walk's limit.
+
+Whole-branch review, client round:
+
+1. Fixed (e5c410c98): an Outbox entry records its `householdId`; before a Replay, Recovery reads `households.get` fresh and parks an entry made for another household unsent (`deterministic`, the existing notice). Entries stored before the field have none and park too.
+2. Fixed (5a16d41f6): a `households.get` answer naming another household than the held reads were made for (or than the restored copy) empties the query and persisted caches the way an account switch does, keeping `user`, `households.get`, `siteAuthTokens` and `caldav`, and rereads what is on screen. Both apps, through the shared engine.
+3. Fixed (543c315f2): `markHousehold`/`mayRestore` in `offline/optimistic-updates.ts`; calendar, groceries, Store delete, chosen products, recipe create/update/delete, convert, ratings and favourites restore no snapshot after a change of household. Account mutations keep restoring (the account's own data). Cookbooks, pantry, aisles, lists and ingredients roll back by rereading, so need none.
+7. Fixed (17dbcbc7c, 7fa7983c4): `recipeReadState` in shared-react; a failed recipe read shows web's error card and mobile's EmptyCard with Retry.
+9. Fixed (9d98f5b94, 081f9f17c): the join test now needs a row A made before the join on B's page; the removal test checks the page and B's saved copy hold none of A's grocery or plan; leaving-and-joining checks the admin's open recipe reads as not found. Not done: "the former household's rows are gone" after a join, since joining from a household of one merges them in. Not checked: that the removal E2E fails without fix 2.
