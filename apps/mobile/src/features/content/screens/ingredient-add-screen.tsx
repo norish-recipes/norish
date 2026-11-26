@@ -1,8 +1,7 @@
 import React from "react";
-import { View } from "react-native";
 import { Card, CardRow } from "@/components/card";
 import { IngredientIcon, IngredientIconSlots } from "@/components/ingredient-icon";
-import { ListHeading } from "@/components/list-heading";
+import { Section } from "@/components/section";
 import { Sheet, SheetBody } from "@/components/sheet";
 import { SheetInput } from "@/components/sheet-input";
 import { SheetNote } from "@/components/sheet-note";
@@ -63,8 +62,7 @@ export function IngredientAddScreen() {
           <SheetNote tone="problem">{text("settings.content.panel.failed")}</SheetNote>
         ) : null}
         {add.matches.length > 0 ? (
-          <View>
-            <ListHeading title={text("settings.content.panel.already.ingredient")} />
+          <Section title={text("settings.content.panel.already.ingredient")}>
             <IngredientIconSlots rows={rows}>
               <Card>
                 {add.matches.map((match, index) => (
@@ -79,7 +77,7 @@ export function IngredientAddScreen() {
                 ))}
               </Card>
             </IngredientIconSlots>
-          </View>
+          </Section>
         ) : null}
         {add.offline ? <SheetNote>{text("settings.content.offline")}</SheetNote> : null}
       </SheetBody>

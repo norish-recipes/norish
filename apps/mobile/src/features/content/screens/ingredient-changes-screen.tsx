@@ -2,14 +2,14 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { CardSlice } from "@/components/card-slice";
 import { EmptyCard } from "@/components/empty-card";
-import { ListHeading } from "@/components/list-heading";
+import { Section } from "@/components/section";
+import { HeadingRow, sectionRows } from "@/components/section-rows";
 import { Sheet, SheetBody, SheetList } from "@/components/sheet";
 import { edgeAt } from "@/lib/card-edges";
 import { useText } from "@/lib/i18n/use-text";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
-import type { AIChange } from "@norish/shared-react/ingredients";
 import {
   aiChangesView,
   changeCopy,
@@ -19,10 +19,6 @@ import {
 } from "@norish/shared-react/ingredients";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 
-type Row =
-  | { type: "heading"; key: string; of: "unsure" | "sure" }
-  | { type: "change"; key: string; change: AIChange; index: number; count: number };
-
 /** Changed by AI: the last month's changes, open ones first with Keep and Undo; a name opens its food. */
 export function IngredientChangesScreen() {
   const text = useText();
@@ -31,28 +27,18 @@ export function IngredientChangesScreen() {
   const changes = useAIChangesQuery((all) => all);
   const { keep, undo, keepAll, undoAll, clear } = useAIChangeMutations();
   const { unsure, rest, actionable, answerAll } = aiChangesView(changes);
-  const rows: Row[] = [
-    ...(unsure.length > 0
-      ? [{ type: "heading" as const, key: "h-unsure", of: "unsure" as const }]
-      : []),
-    ...unsure.map((change, index) => ({
-      type: "change" as const,
-      key: change.id,
-      change,
-      index,
-      count: unsure.length,
-    })),
-    ...(unsure.length > 0 && rest.length > 0
-      ? [{ type: "heading" as const, key: "h-sure", of: "sure" as const }]
-      : []),
-    ...rest.map((change, index) => ({
-      type: "change" as const,
-      key: change.id,
-      change,
-      index,
-      count: rest.length,
-    })),
-  ];
+  const rows = sectionRows(
+    [
+      { key: "unsure", section: "unsure" as const, heading: unsure.length > 0, items: unsure },
+      {
+        key: "sure",
+        section: "sure" as const,
+        heading: unsure.length > 0 && rest.length > 0,
+        items: rest,
+      },
+    ],
+    (change) => change.id
+  );
   const secondary = [
     ...(answerAll
       ? [
@@ -113,10 +99,14 @@ export function IngredientChangesScreen() {
         keyExtractor={(row) => row.key}
         renderItem={({ item }) => {
           if (item.type === "heading") {
-            return <ListHeading title={text(`settings.ingredients.changedByAI.${item.of}`)} />;
+            return (
+              <HeadingRow first={item.first}>
+                <Section title={text(`settings.ingredients.changedByAI.${item.section}`)} />
+              </HeadingRow>
+            );
           }
 
-          const { change } = item;
+          const change = item.item;
           const subject = change.ingredient
             ? ingredientDisplayName(change.ingredient, locale)
             : (change.from ?? "");

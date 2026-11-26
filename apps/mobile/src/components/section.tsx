@@ -17,7 +17,7 @@ export function Section({
   title: string;
   trailing?: ReactNode;
   dense?: boolean;
-  children: ReactNode;
+  children?: ReactNode;
 }) {
   const height = HEADING_HEIGHT[!dense ? "regular" : trailing ? "control" : "text"];
 

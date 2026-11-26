@@ -1,8 +1,7 @@
 import React from "react";
-import { View } from "react-native";
 import { Card, CardRow } from "@/components/card";
 import { EmptyCard } from "@/components/empty-card";
-import { ListHeading } from "@/components/list-heading";
+import { Section } from "@/components/section";
 import { Sheet, SheetBody } from "@/components/sheet";
 import { SheetInput } from "@/components/sheet-input";
 import { SheetNote } from "@/components/sheet-note";
@@ -88,17 +87,15 @@ export function ContentAddScreen() {
           />
         ) : null}
         {add.canAddForServer ? (
-          <View>
-            <ListHeading title={text("settings.content.panel.addTo")} />
+          <Section title={text("settings.content.panel.addTo")}>
             <Card>
               {choice(false, text("settings.content.panel.toHousehold"))}
               {choice(true, text("settings.content.panel.toServer"))}
             </Card>
-          </View>
+          </Section>
         ) : null}
         {add.matches.length > 0 ? (
-          <View>
-            <ListHeading title={text(`settings.content.panel.already.${kind}`)} />
+          <Section title={text(`settings.content.panel.already.${kind}`)}>
             <Card>
               {add.matches.map((match, index) => (
                 <CardRow
@@ -111,7 +108,7 @@ export function ContentAddScreen() {
                 />
               ))}
             </Card>
-          </View>
+          </Section>
         ) : null}
         {add.offline ? <SheetNote>{text("settings.content.offline")}</SheetNote> : null}
       </SheetBody>

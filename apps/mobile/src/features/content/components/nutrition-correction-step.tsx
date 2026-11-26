@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View } from "react-native";
 import { Card, CardRow } from "@/components/card";
-import { ListHeading } from "@/components/list-heading";
+import { Section } from "@/components/section";
 import { Sheet, SheetBody } from "@/components/sheet";
 import { SheetInput } from "@/components/sheet-input";
 import { SheetNote } from "@/components/sheet-note";
@@ -117,57 +117,56 @@ function FactEditor({
 
   return (
     <View testID={`nutrition-correction-${fact}`}>
-      <ListHeading
-        title={fact === "density" ? t(`spoon.${spoonKey(spoon)}`) : t(`facts.${fact}`)}
-      />
-      <View className="gap-3">
-        <SheetNote>{now}</SheetNote>
-        <View className="flex-row flex-wrap gap-2">
-          {MODES.map((mode) => (
-            <ToggleChip
-              key={mode}
-              active={draft.mode === mode}
-              label={t(MODE_COPY[mode])}
-              testID={`nutrition-correction-${fact}-${mode}`}
-              onPress={() => onChange({ mode })}
-            />
-          ))}
-        </View>
-        {draft.mode === "food" ? (
-          <DatasetFoodPicker
-            fact={fact}
-            picked={draft.food}
-            spoon={spoon}
-            onPick={(food) => onChange({ food })}
-          />
-        ) : null}
-        {draft.mode === "label"
-          ? fields.map((field, index) => (
-              <SheetInput
-                key={field}
-                accessibilityLabel={
-                  fact === "density"
-                    ? t(`label.spoonGrams.${spoonKey(spoon)}`)
-                    : t(`label.${field}`)
-                }
-                keyboardType="decimal-pad"
-                placeholder={
-                  fact === "density"
-                    ? t(`label.spoonGrams.${spoonKey(spoon)}`)
-                    : t(`label.${field}`)
-                }
-                testID={`nutrition-correction-${field}`}
-                value={draft.typed[index] ?? ""}
-                onChangeText={(value) => {
-                  const typed = [...draft.typed];
-
-                  typed[index] = value;
-                  onChange({ typed });
-                }}
+      <Section title={fact === "density" ? t(`spoon.${spoonKey(spoon)}`) : t(`facts.${fact}`)}>
+        <View className="gap-3">
+          <SheetNote>{now}</SheetNote>
+          <View className="flex-row flex-wrap gap-2">
+            {MODES.map((mode) => (
+              <ToggleChip
+                key={mode}
+                active={draft.mode === mode}
+                label={t(MODE_COPY[mode])}
+                testID={`nutrition-correction-${fact}-${mode}`}
+                onPress={() => onChange({ mode })}
               />
-            ))
-          : null}
-      </View>
+            ))}
+          </View>
+          {draft.mode === "food" ? (
+            <DatasetFoodPicker
+              fact={fact}
+              picked={draft.food}
+              spoon={spoon}
+              onPick={(food) => onChange({ food })}
+            />
+          ) : null}
+          {draft.mode === "label"
+            ? fields.map((field, index) => (
+                <SheetInput
+                  key={field}
+                  accessibilityLabel={
+                    fact === "density"
+                      ? t(`label.spoonGrams.${spoonKey(spoon)}`)
+                      : t(`label.${field}`)
+                  }
+                  keyboardType="decimal-pad"
+                  placeholder={
+                    fact === "density"
+                      ? t(`label.spoonGrams.${spoonKey(spoon)}`)
+                      : t(`label.${field}`)
+                  }
+                  testID={`nutrition-correction-${field}`}
+                  value={draft.typed[index] ?? ""}
+                  onChangeText={(value) => {
+                    const typed = [...draft.typed];
+
+                    typed[index] = value;
+                    onChange({ typed });
+                  }}
+                />
+              ))
+            : null}
+        </View>
+      </Section>
     </View>
   );
 }
