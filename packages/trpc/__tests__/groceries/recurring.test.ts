@@ -1034,7 +1034,7 @@ describe("a repeating grocery asks its Store what it knows", () => {
     });
 
     expect(storeProductsRepository.resolveProductLinks).toHaveBeenCalledWith([
-      { storeId, ingredientId: "ingredient:melk", name: "melk" },
+      { storeId, ingredientId: "ingredient:melk", name: "melk", groceryId: expect.any(String) },
     ]);
     expect(stores.publish).toHaveBeenCalledWith(
       "linkUpdated",
