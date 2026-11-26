@@ -4,7 +4,7 @@
 
 **Blocked by:** none
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] **The modal template** (web): a title, the content, and a footer whose way out or destructive action (Cancel, Delete, Remove) sits on the left and whose primary sits on the right, through `ActionButtonGroup`'s `start`. `components/shared/confirm-modal.tsx` becomes it, and every other `Modal.Footer` moves onto it:
   - `components/imports/import-from-image-modal.tsx`, `import-from-paste-modal.tsx`, `import-recipe-modal.tsx`;
