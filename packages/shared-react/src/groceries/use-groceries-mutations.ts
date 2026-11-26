@@ -9,9 +9,14 @@ import { createClientLogger } from "@norish/shared/lib/logger";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
 import { calculateNextOccurrence, getTodayString } from "@norish/shared/lib/recurrence/calculator";
 
+import type { HouseholdMark } from "../offline/optimistic-updates";
 import type { GroceriesData, GroceriesMutationsResult, GroceryCreateData } from "./types";
 import { useUnitsQuery } from "../config";
-import { shouldPreserveOptimisticUpdate } from "../offline/optimistic-updates";
+import {
+  markHousehold,
+  mayRestore,
+  shouldPreserveOptimisticUpdate,
+} from "../offline/optimistic-updates";
 import { writeOverRead } from "../offline/write-over-read";
 import { usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
@@ -239,7 +244,7 @@ function withEdit(
 }
 
 /** A write's undo: the lists before it, and the rows a create wrote for its answer to replace. */
-type Undo = {
+type Undo = HouseholdMark & {
   groceries: GroceryDto[];
   recurringGroceries: RecurringGroceryDto[];
   created: GroceryDto[];
@@ -293,6 +298,7 @@ export function useGroceriesMutations(): GroceriesMutationsResult {
       recurringGroceries: held()?.recurringGroceries ?? [],
       created,
       undone: false,
+      ...markHousehold(queryClient),
     };
 
     unsettled.add(was);
@@ -308,7 +314,7 @@ export function useGroceriesMutations(): GroceriesMutationsResult {
     return was;
   };
   const undo = (was: Undo) => {
-    if (was.undone) return;
+    if (was.undone || !mayRestore(queryClient, was)) return;
     setGroceriesData(
       (prev) =>
         prev && { ...prev, groceries: was.groceries, recurringGroceries: was.recurringGroceries }

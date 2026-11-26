@@ -8,8 +8,13 @@ import { plannedItemEditTarget } from "@norish/shared/contracts/zod";
 import { createClientLogger } from "@norish/shared/lib/logger";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
 
+import type { HouseholdMark } from "../offline/optimistic-updates";
 import type { CachedCalendarRange, CalendarMutationsResult } from "./types";
-import { shouldPreserveOptimisticUpdate } from "../offline/optimistic-updates";
+import {
+  markHousehold,
+  mayRestore,
+  shouldPreserveOptimisticUpdate,
+} from "../offline/optimistic-updates";
 import { usePlatform } from "../platform/platform";
 import { rereadOnceWritesSettle } from "../realtime/use-realtime-subscription";
 import { useTRPC } from "../trpc";
@@ -54,18 +59,20 @@ export function useCalendarMutations(): CalendarMutationsResult {
       rereadOnceWritesSettle(queryClient, (query) => cancelled.includes(query));
     }
 
-    return { held };
+    return { held, ...markHousehold(queryClient) };
   };
 
   const rollBack = (
     error: unknown,
     _variables: unknown,
-    context: { held: CachedCalendarRange[] } | undefined
+    context: ({ held: CachedCalendarRange[] } & HouseholdMark) | undefined
   ) => {
     // Queued: keep the optimistic write; the Outbox will Replay it.
     if (shouldPreserveOptimisticUpdate(error)) return;
 
-    for (const { key, items } of context?.held ?? []) writeRange(key, items);
+    if (mayRestore(queryClient, context)) {
+      for (const { key, items } of context?.held ?? []) writeRange(key, items);
+    }
     // The snapshots can predate a later write or event; reread so each range converges.
     rereadAllRanges();
     log.error({ error }, "Failed to save calendar change");

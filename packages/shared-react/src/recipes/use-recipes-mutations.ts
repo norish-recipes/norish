@@ -12,26 +12,31 @@ import type {
 } from "@norish/shared/contracts";
 import { primaryRecipeImage } from "@norish/shared/lib/recipe-media";
 
+import type { HouseholdMark } from "../offline/optimistic-updates";
 import type { InfiniteRecipeData } from "./library-cache";
 import type { RecipesMutationErrorHandler } from "./recipes-mutation-error";
-import { shouldPreserveOptimisticUpdate } from "../offline/optimistic-updates";
+import {
+  markHousehold,
+  mayRestore,
+  shouldPreserveOptimisticUpdate,
+} from "../offline/optimistic-updates";
 import { useReaderOwner } from "../reader";
 import { useTRPC } from "../trpc";
 import { handleRecipesMutationError } from "./recipes-mutation-error";
 import { removeRecipesFromLists, useRecipesCacheHelpers } from "./use-recipes-cache";
 
-type CreateMutationContext = {
+type CreateMutationContext = Partial<HouseholdMark> & {
   recipeId?: string;
   detailQueryKey?: QueryKey;
   previousDetail?: FullRecipeDTO | null | undefined;
 };
 
-type DeleteMutationContext = {
+type DeleteMutationContext = HouseholdMark & {
   previousDetails: [QueryKey, FullRecipeDTO | null | undefined][];
   previousRecipeLists: [QueryKey, InfiniteRecipeData | undefined][];
 };
 
-type UpdateMutationContext = {
+type UpdateMutationContext = HouseholdMark & {
   detailQueryKey: QueryKey;
   previousDetail: FullRecipeDTO | null | undefined;
   /** What this edit put in the cache, if it showed. */
@@ -306,7 +311,12 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
           addRecipeToLists(previousData, createOptimisticDashboardRecipe(optimisticRecipe))
         );
 
-        return { recipeId: optimisticRecipe.id, detailQueryKey, previousDetail };
+        return {
+          recipeId: optimisticRecipe.id,
+          detailQueryKey,
+          previousDetail,
+          ...markHousehold(queryClient),
+        };
       },
       onError: (error, _variables, context) => {
         handleRecipesMutationError(error, "create", onError, () => {
@@ -317,7 +327,7 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
           // Setting undefined is a no-op, so a detail that was not there is removed.
           if (detailQueryKey && previousDetail === undefined) {
             queryClient.removeQueries({ queryKey: detailQueryKey, exact: true });
-          } else if (detailQueryKey) {
+          } else if (detailQueryKey && mayRestore(queryClient, createContext as HouseholdMark)) {
             queryClient.setQueryData(detailQueryKey, previousDetail);
             queryClient.invalidateQueries({ queryKey: detailQueryKey });
           }
@@ -354,6 +364,8 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
   const rollBackEdit = (variables: UpdateVariables, context: unknown) => {
     const { detailQueryKey, previousDetail, optimisticDetail } = (context ??
       {}) as Partial<UpdateMutationContext>;
+
+    if (!mayRestore(queryClient, context as UpdateMutationContext | undefined)) return true;
     const others = otherPendingEdits(variables);
 
     if (others.length > 0) {
@@ -424,7 +436,12 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
           }
         );
 
-        return { detailQueryKey, previousDetail, optimisticDetail: shown ? written : undefined };
+        return {
+          detailQueryKey,
+          previousDetail,
+          optimisticDetail: shown ? written : undefined,
+          ...markHousehold(queryClient),
+        };
       },
       // Stored: the next write from the cache (an edit, a convert) is sent at that version.
       // Refused: the Outbox parks it as Conflicted and tells the reader.
@@ -483,7 +500,7 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
           queryClient.setQueryData<FullRecipeDTO | null>(queryKey, null);
         }
 
-        return { previousDetails, previousRecipeLists };
+        return { previousDetails, previousRecipeLists, ...markHousehold(queryClient) };
       },
       // A recipe skipped or kept left the lists tentatively; refetching brings it back.
       onSuccess: ({ deletedIds }, { recipes }) => {
@@ -518,7 +535,7 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
   );
 
   const restoreDeletedRecipes = (context: DeleteMutationContext | undefined): void => {
-    if (!context) {
+    if (!mayRestore(queryClient, context)) {
       return;
     }
 

@@ -2,7 +2,11 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { shouldPreserveOptimisticUpdate } from "../offline/optimistic-updates";
+import {
+  markHousehold,
+  mayRestore,
+  shouldPreserveOptimisticUpdate,
+} from "../offline/optimistic-updates";
 import { useTRPC } from "../trpc";
 
 type UserRatingData = { recipeId: string; userRating: number | null; version: number | null };
@@ -36,14 +40,19 @@ export function useRatingsMutation() {
           version: getOptimisticRatingVersion(previousUserRating?.version ?? null),
         });
 
-        return { previousUserRating, userRatingQueryKey, averageRatingQueryKey };
+        return {
+          previousUserRating,
+          userRatingQueryKey,
+          averageRatingQueryKey,
+          ...markHousehold(queryClient),
+        };
       },
       onError: (error, _variables, context) => {
         if (shouldPreserveOptimisticUpdate(error)) {
           return;
         }
 
-        if (context?.previousUserRating) {
+        if (mayRestore(queryClient, context) && context.previousUserRating) {
           queryClient.setQueryData(context.userRatingQueryKey, context.previousUserRating);
         }
       },

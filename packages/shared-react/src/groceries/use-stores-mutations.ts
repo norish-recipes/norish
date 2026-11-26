@@ -13,6 +13,8 @@ import { createClientId } from "@norish/shared/lib/operation-helpers";
 import type { GroceriesData, StoresData, StoresMutationsResult, StoreUpdateDraft } from "./types";
 import {
   invalidateUnlessPreserved,
+  markHousehold,
+  mayRestore,
   shouldPreserveOptimisticUpdate,
 } from "../offline/optimistic-updates";
 import { useTRPC } from "../trpc";
@@ -111,6 +113,7 @@ export function useStoresMutations(): StoresMutationsResult {
       const was = {
         stores: queryClient.getQueryData<StoresData>(storesKey),
         groceries: queryClient.getQueryData<GroceriesData>(groceriesKey),
+        ...markHousehold(queryClient),
       };
 
       setStoresData((prev) => prev?.filter((s) => s.id !== storeId));
@@ -135,7 +138,7 @@ export function useStoresMutations(): StoresMutationsResult {
     },
     onError: (error, _input, was) => {
       if (shouldPreserveOptimisticUpdate(error)) return;
-      if (was) {
+      if (mayRestore(queryClient, was)) {
         queryClient.setQueryData(storesKey, was.stores);
         queryClient.setQueryData(groceriesKey, was.groceries);
       }
