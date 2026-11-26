@@ -62,3 +62,4 @@ Kept as built: Cancel without a close X on the import, CalDAV and junk-spelling 
 - 4 fixed: `Modal.Heading` in `ConfirmModal` and the job detail header; the footer test finds `getByRole("dialog", { name })`. Not done: other modals that mount their own `Modal.Header` (delete store/ingredient, change password, CalDAV, sign-out, API key, offline status) still have no heading.
 - 5 fixed: the refusal line is the `cell` variant with an alert icon, so both lines of the popover share one inset.
 - Tests: one padding assertion per web variant and per mobile placement.
+- Follow-up: every modal takes its title from `ModalTitle` (a `Modal.Heading`, so the dialog has a name) and, bar CalDAV edit (own container: `scroll="inside"`, `lg`), its frame from `ModalFrame`; sign-out is a `ConfirmModal`; the model-listing spinner sits in `CellSlot`. `recipe-print` keeps its own header (a print toolbar with actions).
