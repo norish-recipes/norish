@@ -7,6 +7,7 @@ import {
   ActionButtonGroup,
   IconActionButton,
 } from "@/components/shared/action-button";
+import { Section } from "@/components/shared/section";
 import { CalendarIcon } from "@heroicons/react/16/solid";
 import { ToggleButton, ToggleButtonGroup } from "@heroui/react";
 import { AnimatePresence, motion } from "motion/react";
@@ -110,10 +111,7 @@ export function RecurrencePanel({
     >
       <Panel.Body sections>
         {/* Frequency Selector */}
-        <div>
-          <span className="text-muted mb-2.5 block text-xs font-semibold tracking-wider uppercase">
-            {t("frequency")}
-          </span>
+        <Section placement="panel" title={t("frequency")}>
           <ToggleButtonGroup
             disallowEmptySelection
             fullWidth
@@ -144,7 +142,7 @@ export function RecurrencePanel({
               {t("yearly")}
             </ToggleButton>
           </ToggleButtonGroup>
-        </div>
+        </Section>
 
         {/* Interval Stepper */}
         {pattern && (
@@ -163,32 +161,31 @@ export function RecurrencePanel({
               damping: 25,
             }}
           >
-            <span className="text-muted mb-2.5 block text-xs font-semibold tracking-wider uppercase">
-              {t("interval")}
-            </span>
-            <div className="flex items-center gap-2">
-              <IconActionButton
-                action="decrease"
-                className="h-8 min-w-8 shrink-0"
-                isDisabled={pattern.interval <= 1}
-                label="Decrease interval"
-                size="sm"
-                onPress={() => handleIntervalChange(-1)}
-                tooltipPlacement="bottom"
-              />
-              <div className="bg-surface-secondary flex-1 rounded-lg px-2 py-2.5 text-center">
-                <span className="text-foreground text-xl font-bold">{pattern.interval}</span>
-                <span className="text-muted ml-1.5 text-xs">{t(recurrenceUnitKey(pattern))}</span>
+            <Section placement="panel" title={t("interval")}>
+              <div className="flex items-center gap-2">
+                <IconActionButton
+                  action="decrease"
+                  className="h-8 min-w-8 shrink-0"
+                  isDisabled={pattern.interval <= 1}
+                  label="Decrease interval"
+                  size="sm"
+                  onPress={() => handleIntervalChange(-1)}
+                  tooltipPlacement="bottom"
+                />
+                <div className="bg-surface-secondary flex-1 rounded-lg px-2 py-2.5 text-center">
+                  <span className="text-foreground text-xl font-bold">{pattern.interval}</span>
+                  <span className="text-muted ml-1.5 text-xs">{t(recurrenceUnitKey(pattern))}</span>
+                </div>
+                <IconActionButton
+                  action="increase"
+                  className="h-8 min-w-8 shrink-0"
+                  label="Increase interval"
+                  size="sm"
+                  onPress={() => handleIntervalChange(1)}
+                  tooltipPlacement="bottom"
+                />
               </div>
-              <IconActionButton
-                action="increase"
-                className="h-8 min-w-8 shrink-0"
-                label="Increase interval"
-                size="sm"
-                onPress={() => handleIntervalChange(1)}
-                tooltipPlacement="bottom"
-              />
-            </div>
+            </Section>
           </motion.div>
         )}
 
@@ -214,35 +211,34 @@ export function RecurrencePanel({
                 damping: 30,
               }}
             >
-              <span className="text-muted mb-2.5 block text-xs font-semibold tracking-wider uppercase">
-                {t("onDay")}
-              </span>
-              <ToggleButtonGroup
-                disallowEmptySelection
-                fullWidth
-                selectedKeys={[String(pattern.weekday ?? 1)]}
-                selectionMode="single"
-                size="sm"
-                onSelectionChange={(keys) => {
-                  const [weekday] = Array.from(keys);
-                  const index = Number(weekday);
+              <Section placement="panel" title={t("onDay")}>
+                <ToggleButtonGroup
+                  disallowEmptySelection
+                  fullWidth
+                  selectedKeys={[String(pattern.weekday ?? 1)]}
+                  selectionMode="single"
+                  size="sm"
+                  onSelectionChange={(keys) => {
+                    const [weekday] = Array.from(keys);
+                    const index = Number(weekday);
 
-                  if (Number.isInteger(index)) {
-                    handleWeekdayChange(index);
-                  }
-                }}
-              >
-                {WEEKDAY_KEYS.map((key, index) => (
-                  <ToggleButton
-                    key={key}
-                    className="min-w-0 flex-1 px-2 text-xs font-medium"
-                    id={String(index)}
-                  >
-                    {index > 0 && <ToggleButtonGroup.Separator />}
-                    {t(`weekdays.${key}`)}
-                  </ToggleButton>
-                ))}
-              </ToggleButtonGroup>
+                    if (Number.isInteger(index)) {
+                      handleWeekdayChange(index);
+                    }
+                  }}
+                >
+                  {WEEKDAY_KEYS.map((key, index) => (
+                    <ToggleButton
+                      key={key}
+                      className="min-w-0 flex-1 px-2 text-xs font-medium"
+                      id={String(index)}
+                    >
+                      {index > 0 && <ToggleButtonGroup.Separator />}
+                      {t(`weekdays.${key}`)}
+                    </ToggleButton>
+                  ))}
+                </ToggleButtonGroup>
+              </Section>
             </motion.div>
           )}
         </AnimatePresence>

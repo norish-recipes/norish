@@ -261,7 +261,7 @@ function MiniGroceriesContent({
 
   return (
     <>
-      <Panel.Body className="flex min-h-0 flex-1 flex-col">
+      <Panel.Body>
         {isLoading ? (
           <div className="text-muted p-4 text-base">{t("loadingIngredients")}</div>
         ) : (

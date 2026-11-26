@@ -86,7 +86,7 @@ function MiniCookbooksContent({
 
   return (
     <>
-      <Panel.Body className="flex min-h-0 flex-1 flex-col">
+      <Panel.Body>
         <div className="flex items-center gap-2">
           <Input
             fullWidth

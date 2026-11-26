@@ -92,9 +92,12 @@ type PanelSectionProps = {
   className?: string;
 };
 
-type PanelBodyProps = PanelSectionProps & {
+type PanelBodyProps = {
+  children: ReactNode;
   /** The body holds sections: the gap between them is the panel's. */
   sections?: boolean;
+  /** The content scrolls itself (a list), so the body does not. */
+  fills?: boolean;
   "data-testid"?: string;
 };
 
@@ -105,13 +108,13 @@ const BACKDROP_VARIANT_CLASSES: Record<NonNullable<PanelProps["backdropVariant"]
   transparent: "bg-transparent",
 };
 
-function PanelBody({ children, className, sections, "data-testid": testId }: PanelBodyProps) {
+function PanelBody({ children, sections, fills, "data-testid": testId }: PanelBodyProps) {
   return (
     <div
       className={twMerge(
-        "flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-5 py-2",
+        "flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-5 pt-2 pb-4",
         sections && "gap-5",
-        className
+        fills && "overflow-hidden"
       )}
       data-slot="panel-body"
       data-testid={testId}

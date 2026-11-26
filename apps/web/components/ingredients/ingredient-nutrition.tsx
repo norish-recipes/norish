@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
+import { Section } from "@/components/shared/section";
 import { PlusIcon } from "@heroicons/react/16/solid";
 import { ChevronRightIcon } from "@heroicons/react/24/outline";
 import { Button, Skeleton } from "@heroui/react";
@@ -51,8 +52,7 @@ export function IngredientNutritionSection({
   };
 
   return (
-    <section className="flex flex-col gap-2" data-testid="ingredient-nutrition">
-      <h3 className="text-muted text-xs font-semibold tracking-wide uppercase">{t("section")}</h3>
+    <Section data-testid="ingredient-nutrition" placement="panel" title={t("section")}>
       {isPending ? (
         <Skeleton className="h-9 w-full rounded-3xl md:h-8" />
       ) : (
@@ -79,15 +79,13 @@ export function IngredientNutritionSection({
           if (!isOpen) setOpen(false);
         }}
       >
-        <Panel.Body>
-          <div className="flex flex-col gap-3 pb-2" data-testid="ingredient-nutrition-details">
-            <NutritionFacts
-              facts={facts}
-              measure={measure}
-              number={number}
-              onAskSpoon={() => correct(true)}
-            />
-          </div>
+        <Panel.Body data-testid="ingredient-nutrition-details" sections>
+          <NutritionFacts
+            facts={facts}
+            measure={measure}
+            number={number}
+            onAskSpoon={() => correct(true)}
+          />
         </Panel.Body>
         <Panel.Footer>
           <ActionButtonGroup>
@@ -114,7 +112,7 @@ export function IngredientNutritionSection({
           onClose={() => setCorrecting(false)}
         />
       </Panel>
-    </section>
+    </Section>
   );
 }
 

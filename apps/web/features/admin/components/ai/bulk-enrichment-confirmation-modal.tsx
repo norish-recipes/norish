@@ -58,15 +58,9 @@ export default function BulkEnrichmentConfirmationModal({
           onValueChange={onReplaceExistingChange}
         />
       </div>
-      {replaceExisting && (
-        <Note className="mt-2" status="danger">
-          {t("replaceWarning")}
-        </Note>
-      )}
+      {replaceExisting && <Note status="danger">{t("replaceWarning")}</Note>}
       <SweepImageCount replaceExisting={replaceExisting} />
-      <Note className="mt-2" status="warning">
-        {t("costWarning")}
-      </Note>
+      <Note status="warning">{t("costWarning")}</Note>
     </ConfirmModal>
   );
 }

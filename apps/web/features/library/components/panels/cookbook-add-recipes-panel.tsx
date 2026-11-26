@@ -78,7 +78,7 @@ function CookbookAddRecipesContent({
 
   return (
     <>
-      <Panel.Body className="flex min-h-0 flex-1 flex-col">
+      <Panel.Body>
         <Input
           fullWidth
           data-testid="cookbook-recipe-search"

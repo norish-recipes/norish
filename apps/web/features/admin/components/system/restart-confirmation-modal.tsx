@@ -17,6 +17,7 @@ export default function RestartConfirmationModal({
   onConfirm,
 }: RestartConfirmationModalProps) {
   const t = useTranslations("settings.admin.restart");
+
   return (
     <ConfirmModal
       confirm={
@@ -34,7 +35,7 @@ export default function RestartConfirmationModal({
       onOpenChange={onClose}
     >
       <p>{t("confirmMessage")}</p>
-      <Note className="mt-2" status="warning" title={t("importantTitle")}>
+      <Note status="warning" title={t("importantTitle")}>
         <ul className="list-inside list-disc space-y-1">
           <li>{t("warning1")}</li>
           <li>{t("warning2")}</li>

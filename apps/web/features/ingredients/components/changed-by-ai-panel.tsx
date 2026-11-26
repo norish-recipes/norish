@@ -8,6 +8,7 @@ import { changeMessage } from "@/components/ingredients/review-copy";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { EmptyState } from "@/components/shared/empty-state";
+import { SectionHeading } from "@/components/shared/section";
 import { SparklesIcon } from "@heroicons/react/24/outline";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useLocale, useTranslations } from "next-intl";
@@ -178,14 +179,9 @@ export function ChangedByAIPanel({ open, onClose }: { open: boolean; onClose: ()
         return <EmptyState icon={SparklesIcon} title={t("changedByAI.empty")} variant="row" />;
       case "heading":
         return (
-          <h3
-            className={twMerge(
-              "text-muted pb-1 text-xs font-semibold tracking-wide uppercase",
-              index > 0 && "pt-4"
-            )}
-          >
-            {t(`changedByAI.${row.of}`)}
-          </h3>
+          <div className={twMerge("pb-2", index > 0 && "pt-5")}>
+            <SectionHeading placement="panel">{t(`changedByAI.${row.of}`)}</SectionHeading>
+          </div>
         );
       case "change": {
         const { change } = row;

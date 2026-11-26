@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import Panel, { PanelComboBoxPopover } from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
+import { Section } from "@/components/shared/section";
 import {
   ComboBox,
   Input,
@@ -307,20 +308,18 @@ export function NutritionCorrectionPanel({
         if (!isOpen) onClose();
       }}
     >
-      <Panel.Body>
-        <div className="flex flex-col gap-5 pb-2" data-testid="nutrition-correction">
-          <p className="text-muted text-sm">{t("correctIntro")}</p>
-          {facts.map((fact) => (
-            <FactEditor
-              key={fact}
-              draft={draft[fact]}
-              fact={fact}
-              now={now[fact]}
-              spoon={spoon}
-              onChange={(next) => set(fact, next)}
-            />
-          ))}
-        </div>
+      <Panel.Body data-testid="nutrition-correction" sections>
+        <p className="text-muted text-sm">{t("correctIntro")}</p>
+        {facts.map((fact) => (
+          <FactEditor
+            key={fact}
+            draft={draft[fact]}
+            fact={fact}
+            now={now[fact]}
+            spoon={spoon}
+            onChange={(next) => set(fact, next)}
+          />
+        ))}
       </Panel.Body>
       <Panel.Footer>
         <ActionButtonGroup
@@ -370,15 +369,14 @@ function FactEditor({
   const fields = LABEL_FIELDS[fact];
 
   return (
-    <section className="flex flex-col gap-2" data-testid={`nutrition-correction-${fact}`}>
-      <div className="flex flex-col gap-0.5">
-        <h3 className="text-muted text-xs font-semibold tracking-wide uppercase">
-          {fact === "density" ? t(`spoon.${spoonKey(spoon)}`) : t(`facts.${fact}`)}
-        </h3>
-        <p className="text-muted text-xs" data-testid={`nutrition-correction-${fact}-now`}>
-          {now}
-        </p>
-      </div>
+    <Section
+      data-testid={`nutrition-correction-${fact}`}
+      placement="panel"
+      title={fact === "density" ? t(`spoon.${spoonKey(spoon)}`) : t(`facts.${fact}`)}
+    >
+      <p className="text-muted text-xs" data-testid={`nutrition-correction-${fact}-now`}>
+        {now}
+      </p>
       <ToggleButtonGroup
         disallowEmptySelection
         fullWidth
@@ -439,7 +437,7 @@ function FactEditor({
           ))}
         </div>
       ) : null}
-    </section>
+    </Section>
   );
 }
 

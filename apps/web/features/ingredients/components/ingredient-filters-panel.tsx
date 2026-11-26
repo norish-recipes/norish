@@ -4,6 +4,7 @@ import { useState } from "react";
 import Panel from "@/components/Panel/Panel";
 import UiSwitch from "@/components/settings/settings-switch";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
+import { Section } from "@/components/shared/section";
 import { Chip } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -47,12 +48,6 @@ export function hasIngredientFilters(filters: IngredientFilters): boolean {
     filters.match !== DEFAULT_INGREDIENT_FILTERS.match ||
     filters.fields.length !== DEFAULT_INGREDIENT_FILTERS.fields.length ||
     filters.fields.some((field) => !DEFAULT_INGREDIENT_FILTERS.fields.includes(field))
-  );
-}
-
-function SectionTitle({ children }: { children: string }) {
-  return (
-    <h3 className="text-muted mb-2 text-[11px] font-medium tracking-wide uppercase">{children}</h3>
   );
 }
 
@@ -120,9 +115,8 @@ export function IngredientFiltersPanel({
   return (
     <Panel open={open} title={tFilters("title")} onOpenChange={onOpenChange}>
       {open ? (
-        <Panel.Body className="gap-6">
-          <section>
-            <SectionTitle>{t("searchMatch")}</SectionTitle>
+        <Panel.Body sections>
+          <Section placement="panel" title={t("searchMatch")}>
             <div className="flex flex-wrap gap-1.5">
               {INGREDIENT_SEARCH_MATCHES.map((match) => (
                 <ToggleChip
@@ -135,10 +129,9 @@ export function IngredientFiltersPanel({
                 </ToggleChip>
               ))}
             </div>
-          </section>
+          </Section>
 
-          <section>
-            <SectionTitle>{t("searchIn")}</SectionTitle>
+          <Section placement="panel" title={t("searchIn")}>
             <div className="flex flex-wrap gap-1.5">
               {INGREDIENT_SEARCH_FIELDS.map((field) => (
                 <ToggleChip
@@ -156,10 +149,9 @@ export function IngredientFiltersPanel({
                 </ToggleChip>
               ))}
             </div>
-          </section>
+          </Section>
 
-          <section>
-            <SectionTitle>{t("layoutSection")}</SectionTitle>
+          <Section placement="panel" title={t("layoutSection")}>
             <UiSwitch
               data-testid="ingredients-as-tree"
               isSelected={working.tree}
@@ -167,10 +159,9 @@ export function IngredientFiltersPanel({
             >
               <span className="text-sm">{t("asTree")}</span>
             </UiSwitch>
-          </section>
+          </Section>
 
-          <section className="flex flex-col gap-3">
-            <SectionTitle>{t("showOnly")}</SectionTitle>
+          <Section placement="panel" title={t("showOnly")}>
             <UiSwitch
               data-testid="ingredients-flagged-only"
               isSelected={working.flaggedOnly}
@@ -185,7 +176,7 @@ export function IngredientFiltersPanel({
             >
               <span className="text-sm">{t("standaloneOnly")}</span>
             </UiSwitch>
-          </section>
+          </Section>
         </Panel.Body>
       ) : null}
 

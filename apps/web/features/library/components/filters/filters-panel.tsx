@@ -4,6 +4,7 @@ import { useState } from "react";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
 import { ChipButton } from "@/components/shared/chip-button";
+import { Section } from "@/components/shared/section";
 import { ChipSkeleton } from "@/features/library/components/skeleton";
 import { useCategoryLabel } from "@/lib/category-display";
 import {
@@ -114,38 +115,29 @@ function FiltersContent({ onOpenChange }: Omit<FiltersPanelProps, "open">) {
 
   return (
     <>
-      <Panel.Body className="gap-6">
+      <Panel.Body sections>
         {/* Search */}
-        <section>
-          <h3 className="text-muted mb-2 text-[11px] font-medium tracking-wide uppercase">
-            {t("search")}
-          </h3>
+        <Section placement="panel" title={t("search")}>
           <FilterSearchInput
             placeholder={tRecipes("searchRecipesPlaceholder")}
             value={draft.rawInput}
             onChange={(rawInput) => update({ rawInput })}
           />
-        </section>
+        </Section>
 
         {/* Search in — which fields a search looks at. It sits beside the
             other filters rather than under the page's search bar, and lands
             with this panel's Apply like everything else here. */}
-        <section>
-          <h3 className="text-muted mb-2 text-[11px] font-medium tracking-wide uppercase">
-            {t("searchIn")}
-          </h3>
+        <Section placement="panel" title={t("searchIn")}>
           <SearchFieldToggles
             itemClassName="h-9 px-3 text-xs"
             value={draft.searchFields}
             onChange={(searchFields) => update({ searchFields })}
           />
-        </section>
+        </Section>
 
         {/* Sort */}
-        <section>
-          <h3 className="text-muted mb-2 text-[11px] font-medium tracking-wide uppercase">
-            {t("sort")}
-          </h3>
+        <Section placement="panel" title={t("sort")}>
           <div className="flex gap-2">
             {[
               {
@@ -189,13 +181,10 @@ function FiltersContent({ onOpenChange }: Omit<FiltersPanelProps, "open">) {
               );
             })}
           </div>
-        </section>
+        </Section>
 
         {/* Mode */}
-        <section>
-          <h3 className="text-muted mb-2 text-[11px] font-medium tracking-wide uppercase">
-            {t("mode")}
-          </h3>
+        <Section placement="panel" title={t("mode")}>
           <div className="flex gap-2">
             {[
               {
@@ -223,14 +212,11 @@ function FiltersContent({ onOpenChange }: Omit<FiltersPanelProps, "open">) {
               );
             })}
           </div>
-        </section>
+        </Section>
 
         {/* Favorites & Rating */}
         {(showFavorites || showRatings) && (
-          <section>
-            <h3 className="text-muted mb-2 text-[11px] font-medium tracking-wide uppercase">
-              {t("favoritesAndRating")}
-            </h3>
+          <Section placement="panel" title={t("favoritesAndRating")}>
             <div className="flex items-center gap-4">
               {showFavorites && (
                 <Button
@@ -254,14 +240,11 @@ function FiltersContent({ onOpenChange }: Omit<FiltersPanelProps, "open">) {
                 />
               )}
             </div>
-          </section>
+          </Section>
         )}
 
         {/* Pantry */}
-        <section>
-          <h3 className="text-muted mb-2 text-[11px] font-medium tracking-wide uppercase">
-            {t("pantry")}
-          </h3>
+        <Section placement="panel" title={t("pantry")}>
           <Button
             aria-pressed={draft.showPantryOnly}
             className="h-9 min-w-16 rounded-full px-3 text-xs"
@@ -272,13 +255,10 @@ function FiltersContent({ onOpenChange }: Omit<FiltersPanelProps, "open">) {
             <ArchiveBoxIcon className="size-3.5" />
             {t("pantryOnly")}
           </Button>
-        </section>
+        </Section>
 
         {/* Cooking time */}
-        <section>
-          <h3 className="text-muted mb-2 text-[11px] font-medium tracking-wide uppercase">
-            {t("cookingTime")}
-          </h3>
+        <Section placement="panel" title={t("cookingTime")}>
           <div className="flex flex-wrap gap-2">
             {COOKING_TIME_OPTIONS.map(({ value, labelKey }) => {
               const active = draft.maxCookingTime === value;
@@ -296,13 +276,10 @@ function FiltersContent({ onOpenChange }: Omit<FiltersPanelProps, "open">) {
               );
             })}
           </div>
-        </section>
+        </Section>
 
         {/* Categories */}
-        <section>
-          <h3 className="text-muted mb-2 text-[11px] font-medium tracking-wide uppercase">
-            {t("categories")}
-          </h3>
+        <Section placement="panel" title={t("categories")}>
           <div className="flex flex-wrap gap-1">
             {categoryOptions.map((category) => {
               const active = draft.categories.includes(category);
@@ -321,15 +298,11 @@ function FiltersContent({ onOpenChange }: Omit<FiltersPanelProps, "open">) {
               );
             })}
           </div>
-        </section>
+        </Section>
 
         {/* Tags */}
-        <section>
-          <h3 className="text-muted mb-3 text-xs font-medium tracking-wide uppercase">
-            {t("tags")}
-          </h3>
-
-          <div className="relative mb-3">
+        <Section placement="panel" title={t("tags")}>
+          <div className="relative">
             <FilterSearchInput
               compact
               placeholder={t("searchTags")}
@@ -362,7 +335,7 @@ function FiltersContent({ onOpenChange }: Omit<FiltersPanelProps, "open">) {
                 })}
             </div>
           )}
-        </section>
+        </Section>
       </Panel.Body>
 
       <Panel.Footer>

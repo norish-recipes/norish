@@ -11,7 +11,6 @@ interface NoteProps {
   /** A lock instead of the status's own icon: what the note says cannot be changed. */
   locked?: boolean;
   children: ReactNode;
-  className?: string;
 }
 
 /**
@@ -19,12 +18,9 @@ interface NoteProps {
  * them: an icon that says what kind of note it is, so its words need no
  * "Note:" in front. One shape for every note in a card or a dialog.
  */
-export function Note({ status = "default", title, locked, children, className }: NoteProps) {
+export function Note({ status = "default", title, locked, children }: NoteProps) {
   return (
-    <Alert
-      className={`bg-surface-secondary rounded-2xl shadow-none ${className ?? ""}`}
-      status={status}
-    >
+    <Alert className="bg-surface-secondary rounded-2xl shadow-none" status={status}>
       <Alert.Indicator>
         {locked ? <LockClosedIcon aria-hidden className="size-5" /> : null}
       </Alert.Indicator>

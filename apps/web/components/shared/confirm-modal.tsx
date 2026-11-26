@@ -128,7 +128,7 @@ export default function ConfirmModal({
       {({ close }) => (
         <>
           <ModalTitle danger={danger}>{title}</ModalTitle>
-          <Modal.Body className="flex flex-col">{children}</Modal.Body>
+          <Modal.Body className="flex flex-col gap-2">{children}</Modal.Body>
           <ModalFooter
             start={
               <>

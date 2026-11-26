@@ -80,132 +80,128 @@ export function ProductDetailsPanel({
 
   return (
     <Panel nested open={open} title={t("productDetails")} onOpenChange={onOpenChange}>
-      <Panel.Body>
-        <div className="flex flex-col gap-3">
-          <TextField value={name} onChange={onNameChange}>
-            <Label>{t("byHandName")}</Label>
+      <Panel.Body sections>
+        <TextField value={name} onChange={onNameChange}>
+          <Label>{t("byHandName")}</Label>
+          <Input
+            className={FIELD_CLASS}
+            data-testid="product-by-hand-name"
+            style={FIELD_STYLE}
+            variant="secondary"
+          />
+        </TextField>
+
+        {/* What it costs, and in what */}
+        <div className="flex gap-3">
+          <TextField
+            className="min-w-0 flex-1"
+            isInvalid={priceInvalid}
+            value={price}
+            onChange={onPriceChange}
+          >
+            <Label>{t("byHandPrice")}</Label>
             <Input
               className={FIELD_CLASS}
-              data-testid="product-by-hand-name"
+              data-testid="product-details-price"
+              inputMode="decimal"
+              placeholder="0.00"
               style={FIELD_STYLE}
               variant="secondary"
             />
+            {priceInvalid && (
+              <FieldError data-testid="product-details-price-error">{t("invalidPrice")}</FieldError>
+            )}
           </TextField>
-
-          {/* What it costs, and in what */}
-          <div className="flex gap-3">
-            <TextField
-              className="min-w-0 flex-1"
-              isInvalid={priceInvalid}
-              value={price}
-              onChange={onPriceChange}
-            >
-              <Label>{t("byHandPrice")}</Label>
-              <Input
-                className={FIELD_CLASS}
-                data-testid="product-details-price"
-                inputMode="decimal"
-                placeholder="0.00"
-                style={FIELD_STYLE}
-                variant="secondary"
-              />
-              {priceInvalid && (
-                <FieldError data-testid="product-details-price-error">
-                  {t("invalidPrice")}
-                </FieldError>
-              )}
-            </TextField>
-            <TextField
-              className="w-28 shrink-0"
-              isInvalid={currencyInvalid}
-              value={currency}
-              onChange={onCurrencyChange}
-            >
-              <Label>{t("byHandCurrency")}</Label>
-              <Input
-                autoCapitalize="characters"
-                className={FIELD_CLASS}
-                data-testid="product-by-hand-currency"
-                maxLength={3}
-                placeholder={suggestedCurrency}
-                style={FIELD_STYLE}
-                variant="secondary"
-              />
-              {currencyInvalid && (
-                <FieldError data-testid="product-currency-error">{t("invalidCurrency")}</FieldError>
-              )}
-            </TextField>
-          </div>
-
-          {/* What one price buys: an amount and a unit, or neither */}
-          <div className="flex gap-3" data-testid="product-pack-size">
-            <TextField
-              className="min-w-0 flex-1"
-              isInvalid={packInvalid}
-              value={packQuantity}
-              onChange={onPackQuantityChange}
-            >
-              <Label>{t("packAmount")}</Label>
-              <Input
-                className={FIELD_CLASS}
-                data-testid="product-pack-quantity"
-                inputMode="decimal"
-                style={FIELD_STYLE}
-                variant="secondary"
-              />
-              {packInvalid && (
-                <FieldError data-testid="product-pack-error">{t("invalidPack")}</FieldError>
-              )}
-            </TextField>
-            <div className="min-w-0 flex-1" data-testid="product-pack-unit">
-              <Select
-                fullWidth
-                value={packUnit === "" ? NO_UNIT : packUnit}
-                variant="secondary"
-                onChange={handleUnitChange}
-              >
-                <Label>{t("packUnit")}</Label>
-                <Select.Trigger className="min-h-12 items-center">
-                  <Select.Value className="flex items-center" />
-                  <Select.Indicator />
-                </Select.Trigger>
-                <PanelPortal>
-                  <Select.Popover>
-                    <ListBox>
-                      <ListBox.Item id={NO_UNIT} textValue="—">
-                        <span className="text-muted">—</span>
-                        <ListBox.ItemIndicator />
-                      </ListBox.Item>
-                      {UNIT_IDS.map((unit) => (
-                        <ListBox.Item key={unit} id={unit} textValue={unitLabel(unit)}>
-                          <span>{unitLabel(unit)}</span>
-                          <ListBox.ItemIndicator />
-                        </ListBox.Item>
-                      ))}
-                    </ListBox>
-                  </Select.Popover>
-                </PanelPortal>
-              </Select>
-            </div>
-          </div>
-
-          {/* The product's page at the shop */}
-          <TextField isInvalid={pageUrlInvalid} value={pageUrl} onChange={onPageUrlChange}>
-            <Label>{t("productPage")}</Label>
+          <TextField
+            className="w-28 shrink-0"
+            isInvalid={currencyInvalid}
+            value={currency}
+            onChange={onCurrencyChange}
+          >
+            <Label>{t("byHandCurrency")}</Label>
             <Input
+              autoCapitalize="characters"
               className={FIELD_CLASS}
-              data-testid="product-by-hand-page"
-              inputMode="url"
-              placeholder="https://"
+              data-testid="product-by-hand-currency"
+              maxLength={3}
+              placeholder={suggestedCurrency}
               style={FIELD_STYLE}
-              type="url"
               variant="secondary"
             />
-            {pageUrlInvalid && (
-              <FieldError data-testid="product-page-error">{t("invalidUrl")}</FieldError>
+            {currencyInvalid && (
+              <FieldError data-testid="product-currency-error">{t("invalidCurrency")}</FieldError>
             )}
           </TextField>
         </div>
+
+        {/* What one price buys: an amount and a unit, or neither */}
+        <div className="flex gap-3" data-testid="product-pack-size">
+          <TextField
+            className="min-w-0 flex-1"
+            isInvalid={packInvalid}
+            value={packQuantity}
+            onChange={onPackQuantityChange}
+          >
+            <Label>{t("packAmount")}</Label>
+            <Input
+              className={FIELD_CLASS}
+              data-testid="product-pack-quantity"
+              inputMode="decimal"
+              style={FIELD_STYLE}
+              variant="secondary"
+            />
+            {packInvalid && (
+              <FieldError data-testid="product-pack-error">{t("invalidPack")}</FieldError>
+            )}
+          </TextField>
+          <div className="min-w-0 flex-1" data-testid="product-pack-unit">
+            <Select
+              fullWidth
+              value={packUnit === "" ? NO_UNIT : packUnit}
+              variant="secondary"
+              onChange={handleUnitChange}
+            >
+              <Label>{t("packUnit")}</Label>
+              <Select.Trigger className="min-h-12 items-center">
+                <Select.Value className="flex items-center" />
+                <Select.Indicator />
+              </Select.Trigger>
+              <PanelPortal>
+                <Select.Popover>
+                  <ListBox>
+                    <ListBox.Item id={NO_UNIT} textValue="—">
+                      <span className="text-muted">—</span>
+                      <ListBox.ItemIndicator />
+                    </ListBox.Item>
+                    {UNIT_IDS.map((unit) => (
+                      <ListBox.Item key={unit} id={unit} textValue={unitLabel(unit)}>
+                        <span>{unitLabel(unit)}</span>
+                        <ListBox.ItemIndicator />
+                      </ListBox.Item>
+                    ))}
+                  </ListBox>
+                </Select.Popover>
+              </PanelPortal>
+            </Select>
+          </div>
+        </div>
+
+        {/* The product's page at the shop */}
+        <TextField isInvalid={pageUrlInvalid} value={pageUrl} onChange={onPageUrlChange}>
+          <Label>{t("productPage")}</Label>
+          <Input
+            className={FIELD_CLASS}
+            data-testid="product-by-hand-page"
+            inputMode="url"
+            placeholder="https://"
+            style={FIELD_STYLE}
+            type="url"
+            variant="secondary"
+          />
+          {pageUrlInvalid && (
+            <FieldError data-testid="product-page-error">{t("invalidUrl")}</FieldError>
+          )}
+        </TextField>
       </Panel.Body>
       <Panel.Footer>
         <ActionButtonGroup>

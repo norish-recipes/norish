@@ -162,7 +162,7 @@ function ServingsPanel({
 
   return (
     <Panel open={open} title={t("servings")} onOpenChange={onOpenChange}>
-      <Panel.Body className="gap-3">
+      <Panel.Body sections>
         <div className="grid grid-cols-2 gap-3">
           <InputGroup className="h-12" variant="secondary">
             <InputGroup.Input
