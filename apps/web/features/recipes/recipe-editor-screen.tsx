@@ -209,6 +209,7 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
               <SmartInputHelp />
             </div>
             <IngredientInput
+              key={editor.version}
               ingredients={form.ingredients}
               systemUsed={form.systemUsed}
               onChange={(ingredients) => set("ingredients", ingredients)}
@@ -238,6 +239,7 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
               <SmartInputHelp showIngredientMention />
             </div>
             <StepInput
+              key={editor.version}
               ingredients={form.ingredients}
               lineMoves={lineMoves}
               recipeId={recipeId ?? undefined}

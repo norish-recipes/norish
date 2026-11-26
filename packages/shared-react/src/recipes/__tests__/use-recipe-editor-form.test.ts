@@ -266,4 +266,47 @@ describe("useRecipeEditorForm", () => {
     expect(payload).toMatchObject({ name: "Typed" });
     expect(payload).not.toHaveProperty("tags");
   });
+
+  const retryAfterStale = async (
+    fresh: FullRecipeDTO,
+    edit: (form: ReturnType<typeof useRecipeEditorForm>) => void
+  ) => {
+    server.recipe = fresh;
+    const { result } = renderHook(
+      () => useRecipeEditorForm({ mode: "edit", initialData: stored, locale: "en" }),
+      { wrapper: wrapper() }
+    );
+
+    act(() => edit(result.current));
+    act(() => void result.current.submit());
+    act(() => result.current.failSave(new RecipeChangedElsewhereError()));
+    await waitFor(() => expect(result.current.version).toBe(fresh.version));
+    let payload: unknown;
+
+    act(() => {
+      payload = result.current.submit();
+    });
+
+    return payload;
+  };
+
+  it("retries a stale draft with the fresh value of each field the reader left alone", async () => {
+    const fresh = {
+      ...stored,
+      version: 8,
+      servings: 6,
+      steps: [{ step: "Simmer.", order: 0, systemUsed: "metric" as const, version: 2 }],
+    };
+    const payload = await retryAfterStale(fresh, (form) => form.set("notes", "Salt it"));
+
+    expect(payload).toMatchObject({ servings: 6, notes: "Salt it", steps: [{ step: "Simmer." }] });
+  });
+
+  it("retries a stale draft with the reader's value of a field both changed", async () => {
+    const payload = await retryAfterStale({ ...stored, version: 8, servings: 6 }, (form) =>
+      form.set("servings", 3)
+    );
+
+    expect(payload).toMatchObject({ servings: 3 });
+  });
 });

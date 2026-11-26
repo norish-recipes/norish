@@ -448,10 +448,10 @@ describe("a draft kept after a stale answer", () => {
 
   it("keeps what the reader typed and changed, and takes the fresh lists they left alone", () => {
     const draft = { ...opened, name: "Typed", categories: ["Breakfast"] };
-    const rebased = rebaseRecipeForm(draft, opened, fresh);
+    const rebased = rebaseRecipeForm(draft, opened, fresh, labeller);
 
     expect(rebased).toMatchObject({ name: "Typed", categories: ["Breakfast"], tags: ["fresh"] });
-    expect(rebaseRecipeForm(opened, opened, fresh)).toMatchObject({
+    expect(rebaseRecipeForm(opened, opened, fresh, labeller)).toMatchObject({
       tags: ["fresh"],
       categories: ["Lunch"],
     });

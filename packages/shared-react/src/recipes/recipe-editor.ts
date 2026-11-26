@@ -235,29 +235,38 @@ export function validateRecipeForm(form: RecipeFormState): RecipeFormErrors {
 const changed = (now: readonly string[], was: readonly string[] | undefined) =>
   !was || now.length !== was.length || now.some((value) => !was.includes(value));
 
-const listsOf = (form: RecipeFormState) => ({
-  tags: form.tags,
-  categories: form.categories,
-  cuisineIds: form.provenance.cuisineIds,
-});
-
-/** A draft kept after a stale answer, on the fresh recipe: what the reader typed stays, and each
- * list they left as `opened` takes the fresh one. `opened` itself rebases as `(opened, opened)`. */
+/** A draft kept after a stale answer, on the fresh recipe: each field the reader changed from
+ * `opened` keeps their value, every other takes the fresh one. `opened` rebases to the fresh form. */
 export function rebaseRecipeForm(
   form: RecipeFormState,
   opened: RecipeFormState,
-  fresh: FullRecipeDTO
+  fresh: FullRecipeDTO,
+  labeller: UnitLabeller
 ): RecipeFormState {
-  const mine = listsOf(form);
-  const was = listsOf(opened);
-  const now = listsOf(initialRecipeForm(fresh));
-  const keep = (key: keyof typeof mine) => (changed(mine[key], was[key]) ? mine[key] : now[key]);
+  const now: RecipeFormState = {
+    ...initialRecipeForm(fresh),
+    ingredients: editorIngredientsOf(fresh, labeller),
+    steps: editorStepsOf(fresh),
+  };
+  const mine = <T>(value: T, was: T) =>
+    Array.isArray(value) && value.every((item) => typeof item === "string")
+      ? changed(value, was as string[])
+      : isDirtyState(value, was);
+  const rebased = { ...now };
+
+  for (const key of Object.keys(now) as (keyof RecipeFormState)[]) {
+    if (mine(form[key], opened[key])) Object.assign(rebased, { [key]: form[key] });
+  }
+  const { cuisineIds, ...place } = form.provenance;
+  const { cuisineIds: wasCuisines, ...wasPlace } = opened.provenance;
+  const { cuisineIds: nowCuisines, ...nowPlace } = now.provenance;
 
   return {
-    ...form,
-    tags: keep("tags"),
-    categories: keep("categories"),
-    provenance: { ...form.provenance, cuisineIds: keep("cuisineIds") },
+    ...rebased,
+    provenance: {
+      ...(isDirtyState(place, wasPlace) ? place : nowPlace),
+      cuisineIds: changed(cuisineIds, wasCuisines) ? cuisineIds : nowCuisines,
+    },
   };
 }
 

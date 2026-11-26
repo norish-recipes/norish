@@ -231,6 +231,7 @@ function Editor({ mode, initialData, recipeId }: EditorProps & { recipeId: strin
               }
             >
               <IngredientRows
+                key={editor.version}
                 ingredients={form.ingredients}
                 systemUsed={form.systemUsed}
                 onChange={(ingredients) => set("ingredients", ingredients)}
@@ -254,6 +255,7 @@ function Editor({ mode, initialData, recipeId }: EditorProps & { recipeId: strin
               }
             >
               <StepRows
+                key={editor.version}
                 ingredients={form.ingredients}
                 lineMoves={lineMoves}
                 steps={form.steps}

@@ -93,11 +93,13 @@ export function useRecipeEditorForm({ mode, initialData, locale }: UseRecipeEdit
     !isLoadingUnits &&
     initializedRecipeId !== initialData.id
   ) {
-    setForm((prev) => ({
-      ...prev,
+    const seeded = {
       ingredients: editorIngredientsOf(initialData, labeller),
       steps: editorStepsOf(initialData),
-    }));
+    };
+
+    setForm((prev) => ({ ...prev, ...seeded }));
+    setOpened((prev) => ({ ...prev, ...seeded }));
     setInitializedRecipeId(initialData.id);
   }
 
@@ -199,8 +201,8 @@ export function useRecipeEditorForm({ mode, initialData, locale }: UseRecipeEdit
 
     if (!fresh) return;
     setVersion(fresh.version);
-    setForm((prev) => rebaseRecipeForm(prev, opened, fresh));
-    setOpened(rebaseRecipeForm(opened, opened, fresh));
+    setForm((prev) => rebaseRecipeForm(prev, opened, fresh, labeller));
+    setOpened(rebaseRecipeForm(opened, opened, fresh, labeller));
   };
   /** A save not taken leaves the draft as it is and says why; a stale one rebases it. */
   const failSave = (error: unknown) => {
