@@ -30,7 +30,7 @@ Existing screenshots to retake (under `apps/docs/static/img/screenshots/`):
 
 - `admin-cuisines.png`: The admin card no longer has Cuisines. Not currently embedded.
 - `recipe-archive-admin-export.png`: The admin card no longer has the server-wide export. Not currently embedded.
-- `ingredients-list.png`: Ingredients are inside Content, with a picker and filters. Embedded in Manage ingredients.
+- `ingredients-list.png`: Ingredients are inside Content, with a picker, filters and updated list rows. Embedded in Manage ingredients.
 - `ingredients-page.png`: Ingredients are inside Content, with a picker and filters. Not currently embedded.
 - `ingredients-changed-by-ai.png`: The review panel layout changed. Not currently embedded.
 - `ingredients-clean-names.png`: The Content page is behind the new dialog layout. Not currently embedded.
@@ -57,7 +57,8 @@ New screenshots needed:
 
 - Web Content page with the list picker and a list with household and server entries.
 - Web entry panel with Used by, rename turning into Merge, and the delete confirmation.
-- Mobile Content screen with its tabs.
+- Mobile Content screen with its tabs, including Ingredients with data sources and catalogue export.
+- Ingredient editor showing Spellings instead of Translations, wherever an existing screenshot shows the old label.
 - Mobile long-press menu and an entry sheet.
 - Permission Policy setting for the households page.
 
