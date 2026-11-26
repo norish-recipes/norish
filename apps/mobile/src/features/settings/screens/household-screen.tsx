@@ -43,7 +43,7 @@ export function HouseholdScreen() {
 
     return confirmedWrite({
       title: text("settings.household.info.leaveModal.title"),
-      message: `${text("settings.household.info.leaveModal.confirmMessage", { name: held.name })}${warning}`,
+      message: `${text("settings.household.info.leaveModal.confirmMessage", { name: held.name })}\n\n${text("settings.household.info.leaveModal.goesAndStays")}${warning}`,
       confirmLabelId: "settings.household.info.leaveModal.confirmButton",
       send: () => leaveHousehold(held.id),
       key: "leave",
