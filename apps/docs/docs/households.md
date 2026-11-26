@@ -16,6 +16,8 @@ When you leave, your recipes and cookbooks go with you into a new household of o
 
 When you join, your groceries, pantry, stores, meal plan, lists and foods join the destination household along with your recipes and cookbooks.
 
+See [offline changes](/offline#changes-made-offline) for what happens on your device when your household changes.
+
 ## Delete an account
 
 Deleting your account erases the recipes and cookbooks you own. A planned meal whose recipe is erased becomes a note, and grocery items keep their text. If you are alone, your household is deleted too. If other members remain, household content stays and another member takes over as household admin if needed.

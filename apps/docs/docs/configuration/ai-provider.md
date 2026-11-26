@@ -73,7 +73,7 @@ Options under **Automatic for new ingredients** are off by default.
 Use **Clean up catalogue** for existing ingredients. **Recipe foods** reviews
 unreviewed ingredients from recipes. **Whole catalogue** includes previously
 reviewed ingredients and can revisit changes you undid. For built-in entries,
-it reviews only added translations.
+it reviews only added spellings.
 
 ![Clean up catalogue](/img/screenshots/admin-clean-up-catalogue.png)
 

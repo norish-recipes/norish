@@ -31,6 +31,8 @@ Norish queues offline changes and sends them when the server is reachable. You c
 Use **Sync now** to send queued changes, **Retry all** to retry failures and
 conflicts, or **Discard all** to delete every unsent change.
 
+When your household changes, the app removes saved data from your former household. A change made offline for that household is not sent automatically to your new household. On web, it appears as not synced. **Retry all** sends it to your current household.
+
 ## Accounts and shared devices
 
 Sign out while online. Signing out clears saved data and discards unsent
