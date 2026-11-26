@@ -60,7 +60,7 @@ export async function addPickedToPantry(
   const lineId = input.recipeIngredientId;
   const [read, stored] = await Promise.all([
     readLines(input.householdId, { of: "lines", ids: [lineId] }),
-    findRecipeLineAliases([lineId]),
+    findRecipeLineAliases([lineId], input.householdId),
   ]);
   const line = read.get(lineId);
   const place = stored

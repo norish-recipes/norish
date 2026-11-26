@@ -89,7 +89,12 @@ export async function resolveAgain(
           });
         });
 
-      const before = refine ? await findRecipeLineAliases(lines.map((line) => line.id)) : null;
+      const before = refine
+        ? await findRecipeLineAliases(
+            lines.map((line) => line.id),
+            null
+          )
+        : null;
       const seeded = before
         ? await findSeededAmong(
             [...before.values()].flatMap((line) => line.foods.map((food) => food.ingredientId))

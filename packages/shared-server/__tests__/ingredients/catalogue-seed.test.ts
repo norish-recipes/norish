@@ -427,7 +427,7 @@ describe("the ingredient catalogue seed", () => {
       const own = await ingredientNamed("chicken drumstick");
 
       expect(own).toMatchObject({ offId: null });
-      expect((await findRecipeLineAliases([line.id])).get(line.id)?.foods).toEqual([
+      expect((await findRecipeLineAliases([line.id], null)).get(line.id)?.foods).toEqual([
         expect.objectContaining({ ingredientId: own!.id }),
       ]);
     });

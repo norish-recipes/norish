@@ -9,8 +9,8 @@ import { lineFoodOutsideCatalogue, withLineFoods } from "./line-foods";
 import { buildPolicyCondition } from "./recipes";
 
 /**
- * Which lines to look at: these, these recipes', or, of the recipes the household may view, a
- * cookbook's or all. A caller naming lines or recipes has checked what may be read of them.
+ * Which lines to look at, of the recipes the household may view (a line out of view is as missing):
+ * these, these recipes', a cookbook's or all.
  */
 export type LineScope =
   | { of: "lines"; ids: readonly string[] }
@@ -28,16 +28,16 @@ export interface StoredLineText {
 }
 
 async function linesWithin(householdId: string, scope: LineScope): Promise<SQL | undefined> {
-  const viewed = () => buildPolicyCondition({ householdId }, recipes.householdId, "view");
+  const viewed = await buildPolicyCondition({ householdId }, recipes.householdId, "view");
 
   switch (scope.of) {
     case "lines":
-      return isAnyOf(recipeIngredients.id, scope.ids, "uuid");
+      return and(viewed, isAnyOf(recipeIngredients.id, scope.ids, "uuid"));
     case "recipes":
-      return isAnyOf(recipeIngredients.recipeId, scope.ids, "uuid");
+      return and(viewed, isAnyOf(recipeIngredients.recipeId, scope.ids, "uuid"));
     case "cookbook":
       return and(
-        await viewed(),
+        viewed,
         inArray(
           recipeIngredients.recipeId,
           db
@@ -47,7 +47,7 @@ async function linesWithin(householdId: string, scope: LineScope): Promise<SQL |
         )
       );
     case "visible":
-      return await viewed();
+      return viewed;
   }
 }
 
@@ -79,7 +79,8 @@ export async function findLinesOutsideCatalogue(
     .where(and(lineFoodOutsideCatalogue(householdId), within));
 }
 
-/** Which of these foods the recipe's own lines name outside the household's catalogue. */
+/** Which of these foods the recipe's own lines name outside the household's catalogue, none where
+ * the household may not view the recipe. */
 export async function findRecipeFoodsOutsideCatalogue(
   householdId: string,
   recipeId: string,
@@ -88,13 +89,16 @@ export async function findRecipeFoodsOutsideCatalogue(
   if (ingredientIds.length === 0) return [];
   const rows = await withLineFoods(
     db.selectDistinct({ id: ingredients.id }).from(recipeIngredients).$dynamic()
-  ).where(
-    and(
-      eq(recipeIngredients.recipeId, recipeId),
-      isAnyOf(ingredients.id, ingredientIds, "uuid"),
-      lineFoodOutsideCatalogue(householdId)
-    )
-  );
+  )
+    .innerJoin(recipes, eq(recipes.id, recipeIngredients.recipeId))
+    .where(
+      and(
+        await buildPolicyCondition({ householdId }, recipes.householdId, "view"),
+        eq(recipeIngredients.recipeId, recipeId),
+        isAnyOf(ingredients.id, ingredientIds, "uuid"),
+        lineFoodOutsideCatalogue(householdId)
+      )
+    );
 
   return rows.map((row) => row.id);
 }

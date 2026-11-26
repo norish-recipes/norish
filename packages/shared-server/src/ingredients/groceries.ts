@@ -67,7 +67,7 @@ async function meaningsOf(
     item.recipeIngredientId ? [item.recipeIngredientId] : []
   );
   const [lines, read, edited] = await Promise.all([
-    findRecipeLineAliases(lineIds),
+    findRecipeLineAliases(lineIds, householdId),
     readLines(householdId, { of: "lines", ids: lineIds }),
     editedFoods(items),
   ]);

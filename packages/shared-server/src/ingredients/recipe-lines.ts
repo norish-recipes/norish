@@ -69,7 +69,10 @@ export async function withResolvedIngredients<
   });
   const units = await getUnits();
   const stored = recipeId
-    ? await findRecipeLineAliases(written.flatMap((line) => (line.id ? [line.id] : [])))
+    ? await findRecipeLineAliases(
+        written.flatMap((line) => (line.id ? [line.id] : [])),
+        null
+      )
     : new Map<string, RecipeLineAlias>();
   const resolved = new Map<string, LineResolution | null>();
   const foodTexts = new Map<string, string>();

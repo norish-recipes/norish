@@ -10,6 +10,7 @@ import {
   ingredients,
   recipeIngredientFoods,
   recipeIngredients,
+  recipes,
 } from "@norish/db/schema";
 import { CATALOGUE_LANGUAGES, chooseLocaleNames } from "@norish/shared/lib/ingredient-names";
 import { slipLengths } from "@norish/shared/lib/name-slips";
@@ -19,6 +20,7 @@ import { isAnyOf } from "./array-params";
 import { isConstraintViolation } from "./constraint-violation";
 import { inCatalogue, isInstanceRow, ownBeforeSeed } from "./household-scope";
 import { ingredientIsListed } from "./ingredient-catalogue";
+import { buildPolicyCondition } from "./recipes";
 
 /**
  * The Ingredient Alias rows the resolver reads and writes; only the resolver
@@ -554,9 +556,13 @@ export interface RecipeLineAlias extends LineResolution {
   foods: IngredientRef[];
 }
 
-/** Recipe lines' texts and the foods they resolved to, by line id; a line naming no food has none. */
+/**
+ * Recipe lines' texts and the foods they resolved to, by line id; a line naming no food has none.
+ * Asked for a reader's household, a line of a recipe it may not view is as missing; null, any line.
+ */
 export async function findRecipeLineAliases(
-  recipeIngredientIds: readonly string[]
+  recipeIngredientIds: readonly string[],
+  readerHouseholdId: string | null
 ): Promise<Map<string, RecipeLineAlias>> {
   const unique = Array.from(new Set(recipeIngredientIds));
 
@@ -579,7 +585,19 @@ export async function findRecipeLineAliases(
       eq(recipeIngredientFoods.recipeIngredientId, recipeIngredients.id)
     )
     .leftJoin(ingredientAliases, eq(recipeIngredientFoods.ingredientAliasId, ingredientAliases.id))
-    .where(inArray(recipeIngredients.id, unique))
+    .innerJoin(recipes, eq(recipes.id, recipeIngredients.recipeId))
+    .where(
+      and(
+        inArray(recipeIngredients.id, unique),
+        readerHouseholdId === null
+          ? undefined
+          : await buildPolicyCondition(
+              { householdId: readerHouseholdId },
+              recipes.householdId,
+              "view"
+            )
+      )
+    )
     .orderBy(asc(recipeIngredientFoods.position));
   const lines = new Map<string, RecipeLineAlias>();
 

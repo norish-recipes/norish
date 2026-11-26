@@ -9,7 +9,9 @@ import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { createRecipeWithRefs, getRecipeFull } from "@norish/db";
 import { addRecipesToCookbook, createCookbook } from "@norish/db/repositories/cookbooks";
 import { joinHousehold, moveToHouseholdOfOne } from "@norish/db/repositories/households";
+import { findRecipeLineAliases } from "@norish/db/repositories/ingredient-aliases";
 import { listLibrary } from "@norish/db/repositories/library";
+import { findRecipeFoodsOutsideCatalogue } from "@norish/db/repositories/line-readings";
 import { listRecipes } from "@norish/db/repositories/recipes";
 import { setConfig } from "@norish/db/repositories/server-config";
 import { groceryParts, resolveGroceryNames } from "@norish/shared-server/ingredients/groceries";
@@ -309,6 +311,61 @@ describe("lines read through the reader's catalogue", () => {
     expect((await readTestIngredient(tomaten!))?.name).toBe("CHERRYTOMATEN");
     await expect(
       addPickedToPantry(crypto.randomUUID(), { ...actor, ingredientId: uiLine!.ingredientId! })
+    ).resolves.toEqual([]);
+  });
+
+  it("answers a line of a recipe out of view as it does a missing one", async () => {
+    await setConfig(
+      ServerConfigKeys.RECIPE_PERMISSION_POLICY,
+      { view: "household", edit: "household", delete: "household" },
+      null,
+      false
+    );
+    const household = testHouseholdOf(reader);
+    const ui = await createTestIngredient({ name: "Ui" });
+
+    await addTestSpelling(ui!.id, "uien");
+    await createTestIngredient({ name: "Knoflook" });
+    const knoflook = await mintTestFood(testHouseholdOf(author), "knoflook");
+    const {
+      recipeId,
+      lines: [line],
+    } = await recipe(author, ["uien en knoflook"]);
+    const hidden = line!.id!;
+    const missing = crypto.randomUUID();
+    const actor = { userId: reader, householdId: household };
+    const answers = async (lineId: string) => {
+      const items = [
+        { name: "uien en knoflook", recipeIngredientId: lineId },
+        {
+          name: "uien en knoflook",
+          recipeIngredientId: lineId,
+          groceryId: crypto.randomUUID(),
+          householdId: household,
+        },
+      ];
+      const parts = (await groceryParts(household, items)).flat();
+      const pantry = await addPickedToPantry(crypto.randomUUID(), {
+        ...actor,
+        ingredientId: knoflook.ingredientId,
+        recipeIngredientId: lineId,
+      });
+
+      return {
+        pantry: pantry.length,
+        lines: (await findRecipeLineAliases([lineId], household)).size,
+        readings: await lineReadingsOf(household, { of: "lines", ids: [lineId] }),
+        names: parts.map((part) => part.name),
+        foods: await resolveGroceryNames(parts, actor),
+      };
+    };
+
+    await expect(answers(hidden)).resolves.toEqual(await answers(missing));
+    await expect(lineReadingsOf(household, { of: "recipes", ids: [recipeId] })).resolves.toEqual(
+      {}
+    );
+    await expect(
+      findRecipeFoodsOutsideCatalogue(household, recipeId, [knoflook.ingredientId])
     ).resolves.toEqual([]);
   });
 });
