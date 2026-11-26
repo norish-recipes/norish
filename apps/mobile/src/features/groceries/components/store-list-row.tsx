@@ -3,8 +3,9 @@ import React from "react";
 import { Text, View } from "react-native";
 import { ItemSlice } from "@/components/card-slice";
 import { DragPressable } from "@/components/drag-list/drag-list";
-import { Ionicons, MaterialCommunityIcons } from "@/components/icon";
+import { Ionicons } from "@/components/icon";
 import { IconButton } from "@/components/icon-button";
+import { MaterialCommunityIcons } from "@/components/material-icon";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
