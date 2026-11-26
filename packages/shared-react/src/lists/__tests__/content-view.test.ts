@@ -153,6 +153,11 @@ describe("renameView", () => {
     expect(renameView("tag", all, diner, "  ")).toMatchObject({ canSave: false, problem: "empty" });
   });
 
+  it("bounds a name by its kind's limit, and a Tag's by none", () => {
+    expect(renameView("cuisine", all, diner, "Supper").max).toBe(80);
+    expect(renameView("tag", all, diner, "Supper").max).toBeUndefined();
+  });
+
   it("changes only the case of its own name as a rename, not a merge", () => {
     expect(renameView("tag", all, diner, "DINER")).toMatchObject({ action: "save", canSave: true });
   });

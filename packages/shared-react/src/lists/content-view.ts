@@ -157,7 +157,8 @@ export function renameView(
 
   return {
     problem,
-    max: LIST_NAME_MAX[kind],
+    // A field takes no bound for a kind without one: `maxLength={Infinity}` takes no typing on iOS.
+    max: Number.isFinite(LIST_NAME_MAX[kind]) ? LIST_NAME_MAX[kind] : undefined,
     target,
     action: target ? ("merge" as const) : ("save" as const),
     /** The recipes a merge moves onto the target. */
