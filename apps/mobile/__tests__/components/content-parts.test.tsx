@@ -12,6 +12,7 @@ vi.mock("@/components/search-filter-row", () => ({
 const { CountRow } = await import("@/components/count-row");
 const { ListHeading } = await import("@/components/list-heading");
 const { SheetNote } = await import("@/components/sheet-note");
+const { AiChange } = await import("@/components/ai-change");
 const { ListFrame } = await import("@/components/list-frame");
 const { sectionRows } = await import("@/components/section-rows");
 
@@ -140,5 +141,23 @@ describe("ListFrame", () => {
     ready.unmount();
     frame({ nothing: { icon: "leaf-outline", testID: "none", title: "None" } });
     expect(screen.getByTestId("none")).toBeTruthy();
+  });
+});
+
+describe("AiChange", () => {
+  it("answers with Undo, and with Keep only where it is given", () => {
+    const onUndo = vi.fn();
+    const onKeep = vi.fn();
+    const open = render(
+      <AiChange id="a" note="Merged" subject="Rice" testID="c" onKeep={onKeep} onUndo={onUndo} />
+    );
+
+    fireEvent.click(screen.getByTestId("c-undo-a"));
+    fireEvent.click(screen.getByTestId("c-keep-a"));
+    expect([onUndo.mock.calls.length, onKeep.mock.calls.length]).toEqual([1, 1]);
+    open.unmount();
+    render(<AiChange id="b" note="Merged" testID="c" onUndo={onUndo} />);
+    expect(screen.queryByTestId("c-keep-b")).toBeNull();
+    expect(screen.queryByTestId("c-open-b")).toBeNull();
   });
 });

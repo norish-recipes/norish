@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Alert, Pressable, Text, View } from "react-native";
+import { Alert, Text, View } from "react-native";
+import { AiChange } from "@/components/ai-change";
 import { Card, CardRow } from "@/components/card";
 import { destructiveAction } from "@/components/modal-header";
 import { PillButton } from "@/components/pill-button";
@@ -174,23 +175,15 @@ function FoodSheet({ item }: { item: IngredientItem }) {
           const copy = changeCopy(change, locale);
 
           return (
-            <View key={change.id} className="gap-1.5" testID={`food-ai-change-${change.id}`}>
-              <SheetNote>{t(copy.key, copy.values)}</SheetNote>
-              {change.canAct ? (
-                <View className="flex-row gap-4 px-2">
-                  <Pressable accessibilityRole="button" onPress={() => void aiChanges.undo(change)}>
-                    <Text className="text-danger text-[15px] font-medium">
-                      {t("changedByAI.undo")}
-                    </Text>
-                  </Pressable>
-                  <Pressable accessibilityRole="button" onPress={() => void aiChanges.keep(change)}>
-                    <Text className="text-accent-text text-[15px] font-medium">
-                      {t("changedByAI.keep")}
-                    </Text>
-                  </Pressable>
-                </View>
-              ) : null}
-            </View>
+            <Card key={change.id}>
+              <AiChange
+                id={change.id}
+                note={t(copy.key, copy.values)}
+                testID="food-ai-change"
+                onKeep={change.canAct ? () => void aiChanges.keep(change) : undefined}
+                onUndo={change.canAct ? () => void aiChanges.undo(change) : undefined}
+              />
+            </Card>
           );
         })}
         {item.flagged ? (

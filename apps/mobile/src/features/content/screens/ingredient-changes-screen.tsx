@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { AiChange } from "@/components/ai-change";
 import { CardSlice } from "@/components/card-slice";
 import { EmptyCard } from "@/components/empty-card";
 import { Section } from "@/components/section";
@@ -107,58 +107,31 @@ export function IngredientChangesScreen() {
           }
 
           const change = item.item;
-          const subject = change.ingredient
-            ? ingredientDisplayName(change.ingredient, locale)
-            : (change.from ?? "");
           const copy = changeCopy(change, locale);
 
           return (
             <CardSlice edge={edgeAt(item.index, item.count)}>
-              <View className="gap-1.5 px-4 py-3" testID={`ingredient-change-${change.id}`}>
-                {change.ingredient ? (
-                  <Pressable
-                    accessibilityRole="button"
-                    testID={`ingredient-change-open-${change.id}`}
-                    onPress={() =>
-                      router.push({
-                        pathname: "/settings/ingredient",
-                        params: { id: change.ingredient?.id },
-                      })
-                    }
-                  >
-                    <Text className="text-accent-text text-base font-medium">{subject}</Text>
-                  </Pressable>
-                ) : (
-                  <Text className="text-foreground text-base font-medium">{subject}</Text>
-                )}
-                <Text className="text-muted text-sm">
-                  {text(`settings.ingredients.${copy.key}`, copy.values)}
-                </Text>
-                {change.canAct ? (
-                  <View className="flex-row gap-4 pt-1">
-                    <Pressable
-                      accessibilityRole="button"
-                      testID={`ingredient-change-undo-${change.id}`}
-                      onPress={() => void undo(change)}
-                    >
-                      <Text className="text-danger text-[15px] font-medium">
-                        {text("settings.ingredients.changedByAI.undo")}
-                      </Text>
-                    </Pressable>
-                    {isOpenChange(change) ? (
-                      <Pressable
-                        accessibilityRole="button"
-                        testID={`ingredient-change-keep-${change.id}`}
-                        onPress={() => void keep(change)}
-                      >
-                        <Text className="text-accent-text text-[15px] font-medium">
-                          {text("settings.ingredients.changedByAI.keep")}
-                        </Text>
-                      </Pressable>
-                    ) : null}
-                  </View>
-                ) : null}
-              </View>
+              <AiChange
+                id={change.id}
+                note={text(`settings.ingredients.${copy.key}`, copy.values)}
+                subject={
+                  change.ingredient
+                    ? ingredientDisplayName(change.ingredient, locale)
+                    : (change.from ?? "")
+                }
+                testID="ingredient-change"
+                onKeep={change.canAct && isOpenChange(change) ? () => void keep(change) : undefined}
+                onOpen={
+                  change.ingredient
+                    ? () =>
+                        router.push({
+                          pathname: "/settings/ingredient",
+                          params: { id: change.ingredient?.id },
+                        })
+                    : undefined
+                }
+                onUndo={change.canAct ? () => void undo(change) : undefined}
+              />
             </CardSlice>
           );
         }}
