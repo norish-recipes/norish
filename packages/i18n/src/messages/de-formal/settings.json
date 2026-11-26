@@ -1401,7 +1401,8 @@
     },
     "countCell": "{count, plural, =0 {Nicht verwendet} other {#}}",
     "count": {
-      "tag": "{count, plural, one {# Tag} other {# Tags}}"
+      "tag": "{count, plural, one {# Tag} other {# Tags}}",
+      "ingredient": "{count, plural, one {# Zutat} other {# Zutaten}}"
     },
     "countUnused": {
       "tag": "{count, plural, one {# ungenutzter Tag} other {# ungenutzte Tags}}"

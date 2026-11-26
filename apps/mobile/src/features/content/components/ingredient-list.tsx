@@ -3,7 +3,9 @@ import { CardSlice } from "@/components/card-slice";
 import { CountRow } from "@/components/count-row";
 import { IngredientIcon, IngredientIconSlots } from "@/components/ingredient-icon";
 import { ListFrame } from "@/components/list-frame";
+import { ListHeading } from "@/components/list-heading";
 import { Pill } from "@/components/pill";
+import { HeadingRow } from "@/components/section-rows";
 import { edgeAt } from "@/lib/card-edges";
 import { useText } from "@/lib/i18n/use-text";
 import { useRouter } from "expo-router";
@@ -16,6 +18,7 @@ import {
   useIngredientIcons,
   useIngredientList,
 } from "@norish/shared-react/ingredients";
+import { useIngredientCount } from "@norish/shared-react/lists";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 
 import { AiChangesRow } from "./ai-changes-row";
@@ -42,7 +45,15 @@ export function IngredientList() {
     treeMode,
     tree,
   } = useIngredientList(search, filters, locale);
+  const total = useIngredientCount();
   const rows = tree.rows.map((row) => ({ ...row, foodId: row.item.id }));
+  // The total is of the whole list, so a search or filter leaves the heading off.
+  const headed =
+    total !== undefined && !search && !hasIngredientFilters({ ...filters, tree: true });
+  const data = [
+    ...(headed ? [{ type: "heading" as const, key: "heading-count" }] : []),
+    ...rows.map((row, index) => ({ type: "row" as const, key: row.item.id, row, index })),
+  ];
 
   useIngredientIcons(rows.map((row) => row.foodId));
 
@@ -50,9 +61,9 @@ export function IngredientList() {
     <IngredientIconSlots rows={rows}>
       <ListFrame
         above={<AiChangesRow onPress={() => router.push("/settings/ingredient-changes")} />}
-        data={rows}
+        data={data}
         failed={failed ? { title: text("settings.content.loadFailed"), onRetry: retry } : undefined}
-        keyExtractor={(row) => row.item.id}
+        keyExtractor={(each) => each.key}
         loading={isLoading || (isPlaceholderData && items.length === 0 && !isPaused)}
         nothing={
           rows.length === 0
@@ -67,7 +78,19 @@ export function IngredientList() {
               }
             : undefined
         }
-        renderItem={({ item: row, index }) => {
+        renderItem={({ item }) => {
+          if (item.type === "heading") {
+            return (
+              <HeadingRow first>
+                <ListHeading
+                  testID={item.key}
+                  title={text("settings.content.count.ingredient", { count: total })}
+                />
+              </HeadingRow>
+            );
+          }
+
+          const { row, index } = item;
           const name = ingredientDisplayName(row.item, locale);
           const foldable = treeMode && row.item.kinds > 0;
 

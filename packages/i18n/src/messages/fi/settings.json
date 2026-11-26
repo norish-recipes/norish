@@ -1401,7 +1401,8 @@
     },
     "countCell": "{count, plural, =0 {Ei käytössä} other {#}}",
     "count": {
-      "tag": "{count, plural, one {# tunniste} other {# tunnistetta}}"
+      "tag": "{count, plural, one {# tunniste} other {# tunnistetta}}",
+      "ingredient": "{count, plural, one {# ainesosa} other {# ainesosaa}}"
     },
     "countUnused": {
       "tag": "{count, plural, one {# käyttämätön tunniste} other {# käyttämätöntä tunnistetta}}"

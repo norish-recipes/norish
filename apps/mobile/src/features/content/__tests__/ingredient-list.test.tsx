@@ -13,6 +13,7 @@ const held = vi.hoisted(() => ({
   fetchNextPage: vi.fn(),
   retry: vi.fn(),
   filters: {} as object,
+  total: undefined as number | undefined,
 }));
 
 vi.mock("expo-router", () => ({ useRouter: () => held.router }));
@@ -50,6 +51,10 @@ vi.mock("../components/ai-changes-row", () => ({
   AiChangesRow: ({ onPress }: { onPress: () => void }) => (
     <button data-testid="ai-row" onClick={onPress} />
   ),
+}));
+vi.mock("@norish/shared-react/lists", async (importActual) => ({
+  ...(await importActual<object>()),
+  useIngredientCount: () => held.total,
 }));
 vi.mock("@norish/shared-react/config", () => ({ useIngredientsSubscription: () => undefined }));
 vi.mock("@norish/shared-react/ingredients", async (importActual) => ({
@@ -95,6 +100,7 @@ describe("IngredientList", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     held.query = {};
+    held.total = undefined;
     held.filters = DEFAULT_INGREDIENT_FILTERS;
     held.rows = [row("Rice", { kinds: 3 }), row("Soy sauce", { flagged: true })];
   });
@@ -116,6 +122,33 @@ describe("IngredientList", () => {
       pathname: "/settings/ingredient",
       params: { id: "Rice" },
     });
+  });
+
+  it("heads the list with how many ingredients there are", () => {
+    held.total = 1204;
+    render(<IngredientList />);
+    expect(screen.getByTestId("heading-count").textContent).toBe(
+      'settings.content.count.ingredient{"count":1204}'
+    );
+  });
+
+  it("drops the heading under a filter, which narrows the total", () => {
+    held.total = 1204;
+    held.filters = { ...DEFAULT_INGREDIENT_FILTERS, flaggedOnly: true };
+    render(<IngredientList />);
+    expect(screen.queryByTestId("heading-count")).toBeNull();
+  });
+
+  it("drops the heading while a search is typed", () => {
+    held.total = 1204;
+    render(<IngredientList />);
+    fireEvent.change(screen.getByTestId("search"), { target: { value: "rice" } });
+    expect(screen.queryByTestId("heading-count")).toBeNull();
+  });
+
+  it("draws no heading before the count is read", () => {
+    render(<IngredientList />);
+    expect(screen.queryByTestId("heading-count")).toBeNull();
   });
 
   it("folds a food's kinds out, only for a food that has some", () => {

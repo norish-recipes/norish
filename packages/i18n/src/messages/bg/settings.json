@@ -1401,7 +1401,8 @@
     },
     "countCell": "{count, plural, =0 {Не се използва} other {#}}",
     "count": {
-      "tag": "{count, plural, one {# етикет} other {# етикета}}"
+      "tag": "{count, plural, one {# етикет} other {# етикета}}",
+      "ingredient": "{count, plural, one {# съставка} other {# съставки}}"
     },
     "countUnused": {
       "tag": "{count, plural, one {# неизползван етикет} other {# неизползвани етикета}}"

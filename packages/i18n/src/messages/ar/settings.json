@@ -1401,7 +1401,8 @@
     },
     "countCell": "{count, plural, =0 {غير مستخدم} other {#}}",
     "count": {
-      "tag": "{count, plural, one {وسم واحد} two {وسمان} few {# وسوم} many {# وسمًا} other {# وسم}}"
+      "tag": "{count, plural, one {وسم واحد} two {وسمان} few {# وسوم} many {# وسمًا} other {# وسم}}",
+      "ingredient": "{count, plural, one {مكوّن واحد} two {مكوّنان} few {# مكوّنات} many {# مكوّنًا} other {# مكوّن}}"
     },
     "countUnused": {
       "tag": "{count, plural, one {وسم واحد غير مستخدم} two {وسمان غير مستخدمين} few {# وسوم غير مستخدمة} many {# وسمًا غير مستخدم} other {# وسم غير مستخدم}}"

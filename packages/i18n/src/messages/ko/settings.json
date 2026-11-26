@@ -1401,7 +1401,8 @@
     },
     "countCell": "{count, plural, =0 {사용 안 함} other {#}}",
     "count": {
-      "tag": "{count, plural, other {태그 #개}}"
+      "tag": "{count, plural, other {태그 #개}}",
+      "ingredient": "{count, plural, other {재료 #개}}"
     },
     "countUnused": {
       "tag": "{count, plural, other {사용하지 않는 태그 #개}}"
