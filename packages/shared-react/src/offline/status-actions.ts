@@ -1,4 +1,6 @@
 import type { OutboxStore } from "./outbox-store";
+import type { OutboxEntry } from "./outbox-types";
+import { referencesParkedEntity } from "./replay";
 
 /**
  * Bulk Outbox actions for the status modal (commit 9).
@@ -9,15 +11,35 @@ import type { OutboxStore } from "./outbox-store";
 
 /**
  * Un-park every Parked/Conflicted entry for an owner. Recovery owns the ensuing
- * Replay and cache reconciliation.
+ * Replay and cache reconciliation. A write made for another household, and an edit
+ * parked behind it, is the user's to send: it goes to `household`, the one they are in now.
  */
-export async function requeueParkedEntries(ownerId: string, store: OutboxStore): Promise<void> {
+export async function requeueParkedEntries(
+  ownerId: string,
+  store: OutboxStore,
+  household: string | null
+): Promise<void> {
   const parked = (await store.forOwner(ownerId)).filter(
     (entry) => entry.status === "parked" || entry.status === "conflicted"
   );
+  const foreign = new Set(
+    parked.flatMap((entry) =>
+      entry.parkedReason === "other-household" && entry.entityId ? [entry.entityId] : []
+    )
+  );
+  const sentHere = (entry: OutboxEntry) =>
+    household !== null &&
+    (entry.parkedReason === "other-household" ||
+      (entry.parkedReason === "dependency" && referencesParkedEntity(entry.input, foreign)));
 
   await Promise.all(
-    parked.map((entry) => store.update(entry.seq, { status: "pending", parkedReason: undefined }))
+    parked.map((entry) =>
+      store.update(entry.seq, {
+        status: "pending",
+        parkedReason: undefined,
+        ...(sentHere(entry) && { householdId: household }),
+      })
+    )
   );
 }
 

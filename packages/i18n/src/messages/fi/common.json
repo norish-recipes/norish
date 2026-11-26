@@ -262,6 +262,7 @@
       "syncing": "{count, plural, =0 {Synkronoidaan} one {Synkronoidaan # muutos} other {Synkronoidaan # muutosta}}",
       "syncNow": "Synkronoi nyt",
       "retryAll": "Yritä kaikkia uudelleen",
+      "otherHousehold": "Jotkin muutokset tehtiin toiselle kotitaloudelle. ”Yritä kaikkia uudelleen” lähettää ne kotitalouteen, jossa olet nyt.",
       "discardAll": "Hylkää kaikki",
       "discardConfirmBody": "{count, plural, one {Hylätäänkö # jonossa oleva muutos pysyvästi? Sitä ei lähetetä.} other {Hylätäänkö # jonossa olevaa muutosta pysyvästi? Niitä ei lähetetä.}}",
       "discardConfirm": "Hylkää",

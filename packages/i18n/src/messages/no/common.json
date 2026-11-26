@@ -262,6 +262,7 @@
       "syncing": "{count, plural, =0 {Synkroniserer} one {Synkroniserer # endring} other {Synkroniserer # endringer}}",
       "syncNow": "Synkroniser nå",
       "retryAll": "Prøv alle igjen",
+      "otherHousehold": "Noen endringer ble gjort for en annen husstand. «Prøv alle igjen» sender dem til husstanden du er i nå.",
       "discardAll": "Forkast alle",
       "discardConfirmBody": "{count, plural, one {Forkaste # endring i kø permanent? Den blir ikke sendt.} other {Forkaste # endringer i kø permanent? De blir ikke sendt.}}",
       "discardConfirm": "Forkast",

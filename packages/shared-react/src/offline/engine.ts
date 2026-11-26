@@ -95,7 +95,8 @@ export interface OfflineEngine {
   /** Recovery over the applied owner's Outbox: sync now is `recover()`. */
   createRecovery(deps: RecoveryTransport): Recovery;
   createWarmSet(trpc: TRPCOptionsProxy<AppRouter>): WarmSet;
-  /** Retry: un-park an owner's Parked and Conflicted entries, then `recover()`. */
+  /** Retry: un-park an owner's Parked and Conflicted entries, then `recover()`; one made for
+   * another household is sent to the current one. */
   requeueParked(ownerId: string): Promise<void>;
   /** Discard an owner's whole queue; resolves with how many entries went. */
   discardAll(ownerId: string): Promise<number>;
@@ -153,7 +154,7 @@ export function createOfflineEngine(options: OfflineEngineOptions): OfflineEngin
         calendarRanges: options.calendarRanges,
         warmImages: options.warmImages,
       }),
-    requeueParked: (ownerId) => requeueParkedEntries(ownerId, outbox),
+    requeueParked: (ownerId) => requeueParkedEntries(ownerId, outbox, cache.household()),
     discardAll: (ownerId) => discardAllEntries(ownerId, outbox),
     unsyncedChanges: async () => {
       const owner = cache.owner();

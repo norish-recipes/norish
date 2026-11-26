@@ -262,6 +262,7 @@
       "syncing": "{count, plural, =0 {Synchronisation} one {Synchronisation de # modification} other {Synchronisation de # modifications}}",
       "syncNow": "Synchroniser maintenant",
       "retryAll": "Tout réessayer",
+      "otherHousehold": "Certaines modifications ont été faites pour un autre foyer. « Tout réessayer » les envoie au foyer dont vous faites partie maintenant.",
       "discardAll": "Tout abandonner",
       "discardConfirmBody": "{count, plural, one {Abandonner définitivement # modification en attente ? Elle ne sera pas envoyée.} other {Abandonner définitivement # modifications en attente ? Elles ne seront pas envoyées.}}",
       "discardConfirm": "Abandonner",

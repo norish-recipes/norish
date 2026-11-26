@@ -262,6 +262,7 @@
       "syncing": "{count, plural, =0 {Synchronizacja} one {Synchronizacja # zmiany} few {Synchronizacja # zmian} many {Synchronizacja # zmian} other {Synchronizacja # zmiany}}",
       "syncNow": "Synchronizuj teraz",
       "retryAll": "Ponów wszystkie",
+      "otherHousehold": "Niektóre zmiany wprowadzono dla innego gospodarstwa domowego. „Ponów wszystkie” wysyła je do gospodarstwa, w którym jesteś teraz.",
       "discardAll": "Odrzuć wszystkie",
       "discardConfirmBody": "{count, plural, one {Trwale odrzucić # oczekującą zmianę? Nie zostanie wysłana.} few {Trwale odrzucić # oczekujące zmiany? Nie zostaną wysłane.} many {Trwale odrzucić # oczekujących zmian? Nie zostaną wysłane.} other {Trwale odrzucić # oczekującej zmiany? Nie zostaną wysłane.}}",
       "discardConfirm": "Odrzuć",

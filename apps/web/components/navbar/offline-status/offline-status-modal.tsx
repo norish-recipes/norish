@@ -228,6 +228,9 @@ function OutboxSection({ status }: { status: OfflineStatus }) {
               ? t("syncing", { count: outbox.pending })
               : t("pending", { count: outbox.pending })}
           </p>
+          {outbox.otherHousehold > 0 ? (
+            <p className="text-muted text-xs">{t("otherHousehold")}</p>
+          ) : null}
         </>
       )}
 
