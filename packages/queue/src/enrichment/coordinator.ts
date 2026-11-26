@@ -41,7 +41,7 @@ const log = createLogger("queue:enrichment-coordinator");
 
 export interface RecipeEnrichmentContext {
   recipeId: string;
-  /** The user whose creation or request this is; also whose household allergies apply. */
+  /** The user whose creation or request this is. */
   userId: string;
   householdId: string;
 }
@@ -97,7 +97,7 @@ export async function enrichRecipe(
 
   const attempts = kinds.map(async (kind): Promise<RecipeEnrichmentEnrollment> => {
     const householdHasAllergies =
-      kind === "allergy-detection" ? await loadHouseholdHasAllergies(context) : false;
+      kind === "allergy-detection" ? await householdHasAllergiesOf(recipe.householdId) : false;
     const imageProviderConfigured =
       kind === "image-generation" ? await isImageGenerationConfigured() : true;
     const eligibility = evaluate(kind, {
@@ -258,8 +258,9 @@ function evaluate(kind: RecipeEnrichmentKind, input: EvaluationInput): Eligibili
   }
 }
 
-async function loadHouseholdHasAllergies(context: RecipeEnrichmentContext): Promise<boolean> {
-  return (await getHouseholdAllergyNames(context.householdId)).length > 0;
+/** Detection asks about the allergies of the recipe's household, whoever requested it. */
+async function householdHasAllergiesOf(householdId: string): Promise<boolean> {
+  return (await getHouseholdAllergyNames(householdId)).length > 0;
 }
 
 function queueForKind(kind: RecipeEnrichmentKind): Queue<RecipeEnrichmentJobData> {
