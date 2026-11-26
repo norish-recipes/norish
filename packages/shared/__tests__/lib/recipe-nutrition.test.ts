@@ -764,7 +764,15 @@ describe("rekeyedShares", () => {
     ];
 
     expect(rekeyedShares(shares, new Map([["a", "b"]]))).toEqual([
-      { key: key("b"), calories: 15, fat: 2, carbs: 2, protein: 4, extras: { fiber: 3, salt: 1 } },
+      {
+        key: key("b"),
+        combined: true,
+        calories: 15,
+        fat: 2,
+        carbs: 2,
+        protein: 4,
+        extras: { fiber: 3, salt: 1 },
+      },
     ]);
   });
 });

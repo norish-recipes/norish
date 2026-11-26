@@ -17,6 +17,7 @@ import {
   kickUserFromHousehold,
   moveToHouseholdOfOne,
 } from "@norish/db/repositories/households";
+import { repointLines } from "@norish/db/repositories/ingredient-cleanup";
 import { addToJunkPile, listJunkFolds } from "@norish/db/repositories/ingredient-junk-pile";
 import { mergeCatalogueIngredients } from "@norish/db/repositories/ingredient-relocation";
 import {
@@ -30,6 +31,7 @@ import {
 } from "@norish/db/repositories/list-entries";
 import { listPlannedItemsByHouseholdAndDateRange } from "@norish/db/repositories/planned-items";
 import { saveRecipeNutritionEstimate } from "@norish/db/repositories/recipe-enrichment";
+import { getRecipeFull } from "@norish/db/repositories/recipes";
 import { deleteConfig, setConfig } from "@norish/db/repositories/server-config";
 import * as schema from "@norish/db/schema";
 import {
@@ -60,7 +62,7 @@ import {
   stores,
   tags,
 } from "@norish/db/schema";
-import { lineKey } from "@norish/shared/lib/recipe-nutrition";
+import { lineKey, nutritionLinesOf, workOutNutrition } from "@norish/shared/lib/recipe-nutrition";
 
 import {
   addTestSpelling,
@@ -243,6 +245,20 @@ describe("household moves", () => {
     return row?.lines.map((line) => line.key) ?? [];
   }
 
+  /** The calories the recipe's stored shares bring, every line left out. */
+  async function sharedCalories(recipeId: string) {
+    const recipe = (await getRecipeFull(recipeId))!;
+    const worked = workOutNutrition({
+      lines: nutritionLinesOf(recipe, {}),
+      servings: 1,
+      nutrition: new Map(),
+      seasoning: [],
+      estimate: recipe.nutritionEstimate,
+    });
+
+    return worked.perServing?.calories;
+  }
+
   describe("leaving keeps the recipes' foods", () => {
     async function leaverWithFoods() {
       const { admin, member, householdId } = await sharedHousehold();
@@ -408,11 +424,116 @@ describe("household moves", () => {
       await moveToHouseholdOfOne(householdId, member.id);
       await saveRecipeNutritionEstimate(
         recipe.id,
-        { lines: [{ key: key(kimchi.ingredientId), calories: 4, fat: 0, carbs: 0, protein: 0 }] },
+        {
+          lines: [
+            {
+              lineId: line.id,
+              key: key(kimchi.ingredientId),
+              calories: 4,
+              fat: 0,
+              carbs: 0,
+              protein: 0,
+            },
+          ],
+        },
         new Map([[line.id, [kimchi.ingredientId]]])
       );
 
       expect(await sharesOf(recipe.id)).toEqual([key((await lineFood(line.id)).food.id)]);
+    });
+
+    it("a merge meeting two lines' shares keeps the recipe's shared total", async () => {
+      const user = await createTestUser();
+      const householdId = await householdOf(user.id);
+      const soja = await mintTestFood(householdId, "soja");
+      const soy = await mintTestFood(householdId, "soy");
+      const recipe = await createTestRecipe(user.id);
+      const share = (name: string, ingredientId: string, calories: number) => ({
+        key: lineKey({ name, amount: 1, unit: null, ingredientId }),
+        calories,
+        fat: 0,
+        carbs: 0,
+        protein: 0,
+      });
+
+      for (const [name, food] of [
+        ["soja", soja],
+        ["soy", soy],
+      ] as const) {
+        await insertTestRecipeLine({ recipeId: recipe.id, name, amount: "1", unit: null }, [
+          food.aliasId,
+        ]);
+      }
+      await saveRecipeNutritionEstimate(recipe.id, {
+        lines: [share("soja", soja.ingredientId, 5), share("soy", soy.ingredientId, 7)],
+      });
+      expect(await sharedCalories(recipe.id)).toBe(12);
+
+      await getTestDb().transaction((tx) =>
+        mergeCatalogueIngredients(tx, soja.ingredientId, soy.ingredientId)
+      );
+
+      // Both lines now read one key; its combined share counts once.
+      expect(await sharesOf(recipe.id)).toEqual([share("soy", soy.ingredientId, 0).key]);
+      expect(await sharedCalories(recipe.id)).toBe(12);
+    });
+
+    it("an estimate's save keys each share by its own line's foods", async () => {
+      const user = await createTestUser();
+      const householdId = await householdOf(user.id);
+      const [kool, spitskool, rodekool] = await Promise.all(
+        ["kool", "spitskool", "rodekool"].map((name) => mintTestFood(householdId, name))
+      );
+      const recipe = await createTestRecipe(user.id);
+      const [first, second] = await Promise.all(
+        ["1", "2"].map((amount) =>
+          insertTestRecipeLine({ recipeId: recipe.id, name: "kool", amount, unit: null }, [
+            kool!.aliasId,
+          ])
+        )
+      );
+      const key = (amount: number, ingredientId: string) =>
+        lineKey({ name: "kool", amount, unit: null, ingredientId });
+
+      // Read with "kool" on both lines; each line takes another food before the save.
+      await getTestDb().transaction((tx) =>
+        repointLines(tx, [
+          { id: first!.id, aliasIds: [spitskool!.aliasId], joined: null },
+          { id: second!.id, aliasIds: [rodekool!.aliasId], joined: null },
+        ])
+      );
+      await saveRecipeNutritionEstimate(
+        recipe.id,
+        {
+          lines: [
+            {
+              lineId: first!.id,
+              key: key(1, kool!.ingredientId),
+              calories: 3,
+              fat: 0,
+              carbs: 0,
+              protein: 0,
+            },
+            {
+              lineId: second!.id,
+              key: key(2, kool!.ingredientId),
+              calories: 4,
+              fat: 0,
+              carbs: 0,
+              protein: 0,
+            },
+          ],
+        },
+        new Map([
+          [first!.id, [kool!.ingredientId]],
+          [second!.id, [kool!.ingredientId]],
+        ])
+      );
+
+      expect((await sharesOf(recipe.id)).sort()).toEqual(
+        [key(1, spitskool!.ingredientId), key(2, rodekool!.ingredientId)].sort()
+      );
+      expect(await sharedCalories(recipe.id)).toBe(7);
     });
 
     it("a merge keys the AI's share again for the merged line", async () => {

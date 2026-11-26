@@ -225,6 +225,8 @@ export interface EstimatedLine {
   carbs: number;
   protein: number;
   extras?: ExtraNutrients;
+  /** Added up from shares whose keys met after a move: counted once, not per line of its key. */
+  combined?: boolean;
 }
 
 /** The language model's estimate of the lines a worked-out total left out: one share per line. */
@@ -376,20 +378,21 @@ export type FoodTargets = ReadonlyMap<string, string>;
 
 /**
  * Stored shares keyed again after their lines' foods were re-pointed, so a share is still found;
- * two whose keys become one add up. Null when no key names those foods.
+ * two whose keys become one add up. `foods` may differ per share (its line's). Null when none moved.
  */
 export function rekeyedShares<S extends EstimatedLine>(
   shares: readonly S[],
-  foods: FoodTargets
+  foods: FoodTargets | ((share: S) => FoodTargets)
 ): S[] | null {
-  if (foods.size === 0) return null;
+  if (typeof foods !== "function" && foods.size === 0) return null;
   let changed = false;
   const byKey = new Map<string, S>();
 
   for (const share of shares) {
-    const parsed: unknown = JSON.parse(share.key);
+    const targets = typeof foods === "function" ? foods(share) : foods;
+    const parsed: unknown = targets.size > 0 ? JSON.parse(share.key) : null;
     const food =
-      Array.isArray(parsed) && typeof parsed[0] === "string" ? foods.get(parsed[0]) : undefined;
+      Array.isArray(parsed) && typeof parsed[0] === "string" ? targets.get(parsed[0]) : undefined;
     const key =
       food === undefined ? share.key : JSON.stringify([food, ...(parsed as unknown[]).slice(1)]);
     const earlier = byKey.get(key);
@@ -413,6 +416,7 @@ function addedShares<S extends EstimatedLine>(a: S, b: S): S {
 
   return {
     ...a,
+    combined: true,
     calories: a.calories + b.calories,
     fat: a.fat + b.fat,
     carbs: a.carbs + b.carbs,
@@ -579,6 +583,7 @@ export function workOutNutrition({
   const shareOf = new Map((estimate?.lines ?? []).map((line) => [line.key, line]));
   const share = { calories: 0, fat: 0, carbs: 0, protein: 0 };
   const sharedExtras: ExtraNutrients = {};
+  const countedCombined = new Set<string>();
 
   for (const line of leftOut) {
     if (line.reason === "seasoning") continue;
@@ -588,6 +593,9 @@ export function workOutNutrition({
 
       if (!stored) continue;
       line.estimatedByAI = true;
+      // A combined share already holds every line of its key.
+      if (stored.combined && countedCombined.has(key)) continue;
+      if (stored.combined) countedCombined.add(key);
       share.calories += stored.calories;
       share.fat += stored.fat;
       share.carbs += stored.carbs;

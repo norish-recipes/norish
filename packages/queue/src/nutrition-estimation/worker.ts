@@ -30,6 +30,7 @@ import {
 import { NO_CORRECTIONS } from "@norish/shared-server/ingredients/nutrition/ingredient-nutrition";
 import { workOutRecipeNutrition } from "@norish/shared-server/ingredients/nutrition/recipe-nutrition";
 import { createLogger } from "@norish/shared-server/logger";
+import { foodsToBuy } from "@norish/shared/lib/line-foods";
 import { enrichmentWriteMode } from "@norish/shared/lib/recipe-enrichment";
 import { nutritionLinesOf, suppliesNutrition } from "@norish/shared/lib/recipe-nutrition";
 
@@ -83,11 +84,16 @@ export async function processNutritionEstimationJob(
 
     // The lines as the total read them: each food of an "and" line is one, with the line's amount.
     const lineById = new Map(nutritionLinesOf(recipe, {}).map((line) => [line.id, line]));
+    // The recipe line each food read is of, so the save keys its share by that line's foods.
+    const recipeLineOf = new Map(
+      foodsToBuy(recipe.recipeIngredients).map((food) => [food.id, food.lineId])
+    );
     const shares = await estimateNutritionGap(
       recipe.name,
       recipe.servings ?? 1,
       gaps.map((named) => ({
         key: named.key,
+        lineId: recipeLineOf.get(named.lineId),
         ingredientName: named.name,
         amount: lineById.get(named.lineId)?.amount ?? null,
         unit: lineById.get(named.lineId)?.unit ?? null,

@@ -156,12 +156,12 @@ export async function replaceRecipeNutrition(
  * nutrition leaves out (ADR-0039): one per-serving share per line, under
  * the line's key, replacing any earlier estimate. Never the recipe's own
  * Nutrition Information. False where the recipe is gone. `readFoods` is each
- * line's foods as the estimate read them: a share is keyed by the foods the
- * line names when it is saved, should a move or merge have re-pointed it since.
+ * line's foods as the estimate read them: a share (of its `lineId`) is keyed by
+ * the foods its line names at the save, should a move or merge have re-pointed it.
  */
 export async function saveRecipeNutritionEstimate(
   recipeId: string,
-  estimate: { lines: EstimatedLineRow[] },
+  estimate: { lines: Array<EstimatedLineRow & { lineId?: string }> },
   readFoods: ReadonlyMap<string, readonly (string | null)[]> = new Map()
 ): Promise<boolean> {
   return await db.transaction(async (tx) => {
@@ -179,16 +179,24 @@ export async function saveRecipeNutritionEstimate(
       )
       .where(isAnyOf(recipeIngredientFoods.recipeIngredientId, [...readFoods.keys()], "uuid"))
       .orderBy(recipeIngredientFoods.recipeIngredientId, recipeIngredientFoods.position);
-    const foods = new Map<string, string>();
+    // Per line: one food read on two lines may be two foods now.
+    const foodsOf = new Map<string, Map<string, string>>();
 
     for (const [lineId, held] of groupBy(now, (row) => row.lineId)) {
+      const foods = new Map<string, string>();
+
       readFoods.get(lineId)?.forEach((was, position) => {
         const is = held[position]?.ingredientId;
 
         if (was && is && was !== is) foods.set(was, is);
       });
+      foodsOf.set(lineId, foods);
     }
-    const lines = rekeyedShares(estimate.lines, foods) ?? estimate.lines;
+    const keyed = rekeyedShares(
+      estimate.lines,
+      (share) => foodsOf.get(share.lineId ?? "") ?? new Map()
+    );
+    const lines = (keyed ?? estimate.lines).map(({ lineId: _lineId, ...share }) => share);
 
     await tx
       .insert(recipeNutritionEstimates)

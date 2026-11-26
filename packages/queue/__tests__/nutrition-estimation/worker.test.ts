@@ -154,7 +154,15 @@ describe("processNutritionEstimationJob", () => {
     expect(mocks.estimateGap).toHaveBeenCalledWith(
       "Fried rice",
       2,
-      [{ key: "key-oil", ingredientName: "oil for frying", amount: null, unit: null }],
+      [
+        {
+          key: "key-oil",
+          lineId: "oil",
+          ingredientName: "oil for frying",
+          amount: null,
+          unit: null,
+        },
+      ],
       [
         expect.objectContaining({
           text: "200 gram rice",
@@ -209,7 +217,15 @@ describe("processNutritionEstimationJob", () => {
     expect(mocks.estimateGap).toHaveBeenCalledWith(
       "Fried rice",
       2,
-      [{ key: "key-kaas", ingredientName: "kaas", amount: 100, unit: "gram" }],
+      [
+        {
+          key: "key-kaas",
+          lineId: "sandwich",
+          ingredientName: "kaas",
+          amount: 100,
+          unit: "gram",
+        },
+      ],
       [expect.objectContaining({ text: "100 gram ham" })]
     );
   });

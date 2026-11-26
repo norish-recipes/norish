@@ -138,6 +138,7 @@ export const RecipeNutritionEstimateSchema = z.object({
       // The other nutrients the model estimated for the line; dropped by an
       // undeclared key, they would never reach the page.
       extras: ExtraNutrientsSchema.optional(),
+      combined: z.boolean().optional(),
     })
   ),
 });
