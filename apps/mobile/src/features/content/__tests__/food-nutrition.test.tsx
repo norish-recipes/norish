@@ -72,6 +72,7 @@ vi.mock("@norish/shared-react/ingredients", async (importActual) => ({
     corrected: true,
     complete: true,
     canSave: true,
+    overHundred: [],
     set: held.set,
     save: held.save,
     removeAll: held.removeAll,
@@ -168,6 +169,19 @@ describe("NutritionCorrectionStep", () => {
       ).disabled
     ).toBe(true);
     expect(screen.getByText("settings.content.offline")).toBeTruthy();
+  });
+
+  it("keeps each label field titled once it holds a value", () => {
+    open();
+    expect(screen.getByText("settings.ingredients.nutrition.label.fat")).toBeTruthy();
+    expect(screen.queryByText("settings.ingredients.nutrition.overHundred")).toBeNull();
+  });
+
+  it("says a mass per 100 g above 100 g is refused", () => {
+    held.draft = { canSave: false, overHundred: ["numbers"] };
+    open();
+    expect(screen.getByText("settings.ingredients.nutrition.overHundred")).toBeTruthy();
+    held.draft = {};
   });
 
   it("cannot save an incomplete draft, and has no Remove where nothing is corrected", () => {

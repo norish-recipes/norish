@@ -98,6 +98,7 @@ export function NutritionCorrectionStep({
           draft={draft[fact]}
           fact={fact}
           now={now[fact]}
+          overHundred={nutrition.overHundred.includes(fact)}
           spoon={spoon}
           onChange={(next) => set(fact, next)}
         />
@@ -110,12 +111,14 @@ function FactEditor({
   fact,
   draft,
   now,
+  overHundred,
   spoon,
   onChange,
 }: {
   fact: NutritionFactName;
   draft: FactDraft;
   now: string;
+  overHundred: boolean;
   spoon: SpoonMeasure;
   onChange: (next: Partial<FactDraft>) => void;
 }) {
@@ -148,31 +151,32 @@ function FactEditor({
             />
           ) : null}
           {draft.mode === "label"
-            ? fields.map((field, index) => (
-                <SheetInput
-                  key={field}
-                  accessibilityLabel={
-                    fact === "density"
-                      ? t(`label.spoonGrams.${spoonKey(spoon)}`)
-                      : t(`label.${field}`)
-                  }
-                  keyboardType="decimal-pad"
-                  placeholder={
-                    fact === "density"
-                      ? t(`label.spoonGrams.${spoonKey(spoon)}`)
-                      : t(`label.${field}`)
-                  }
-                  testID={`nutrition-correction-${field}`}
-                  value={draft.typed[index] ?? ""}
-                  onChangeText={(value) => {
-                    const typed = [...draft.typed];
+            ? fields.map((field, index) => {
+                const label =
+                  fact === "density"
+                    ? t(`label.spoonGrams.${spoonKey(spoon)}`)
+                    : t(`label.${field}`);
 
-                    typed[index] = value;
-                    onChange({ typed });
-                  }}
-                />
-              ))
+                // Titled, as the sheets' other fields are, so the label stays once it holds a value.
+                return (
+                  <Section key={field} dense title={label}>
+                    <SheetInput
+                      accessibilityLabel={label}
+                      keyboardType="decimal-pad"
+                      testID={`nutrition-correction-${field}`}
+                      value={draft.typed[index] ?? ""}
+                      onChangeText={(value) => {
+                        const typed = [...draft.typed];
+
+                        typed[index] = value;
+                        onChange({ typed });
+                      }}
+                    />
+                  </Section>
+                );
+              })
             : null}
+          {overHundred ? <SheetNote tone="problem">{t("overHundred")}</SheetNote> : null}
         </Stack>
       </Section>
     </View>
