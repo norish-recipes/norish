@@ -22,6 +22,7 @@ import {
   announceListsChanged,
   announceTakenOverLists,
 } from "@norish/shared-server/realtime/list-changes";
+import { RecipeNameCursorSchema } from "@norish/shared/contracts/list-queries";
 import { ListEntryNameSchemas } from "@norish/shared/contracts/zod";
 
 import type { AuthedProcedureContext } from "../../middleware";
@@ -212,7 +213,7 @@ const usage = adminProcedure
 
 /** A page of the household's recipes carrying an entry of its list or the instance's, for "Used by". */
 const uses = authedProcedure
-  .input(z.object({ kind: KindSchema, id: z.uuid(), cursor: z.number().int().min(0).default(0) }))
+  .input(z.object({ kind: KindSchema, id: z.uuid(), cursor: RecipeNameCursorSchema.nullish() }))
   .query(async ({ ctx, input }) => {
     const known =
       (await findOwnEntry(input.kind, ctx.householdId, input.id)) ??
@@ -220,14 +221,9 @@ const uses = authedProcedure
 
     if (!known) throw new TRPCError({ code: "NOT_FOUND", message: "Not found" });
 
-    const page = await listRecipesCarryingEntry(input.kind, input.id, ctx.householdId, {
-      offset: input.cursor,
+    return await listRecipesCarryingEntry(input.kind, input.id, ctx.householdId, {
+      cursor: input.cursor,
     });
-
-    return {
-      recipes: page.recipes,
-      nextCursor: page.hasMore ? input.cursor + page.recipes.length : null,
-    };
   });
 
 export const listsProcedures = router({ list, add, rename, merge, delete: remove, usage, uses });

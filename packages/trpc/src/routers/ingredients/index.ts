@@ -58,6 +58,7 @@ import { findIngredientFor } from "@norish/shared-server/ingredients/resolver";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { ICON_FILE_PATTERN } from "@norish/shared-server/media/ingredient-icon";
 import { ICON_PICTURE_MIME_TYPES } from "@norish/shared/contracts";
+import { RecipeNameCursorSchema } from "@norish/shared/contracts/list-queries";
 import { MAX_FILTER_INGREDIENTS } from "@norish/shared/contracts/zod";
 import {
   INGREDIENT_SEARCH_FIELDS,
@@ -221,18 +222,15 @@ const countUses = authedProcedure
 
 /** A page of the household's recipes using a food, for "Used by". */
 const recipes = authedProcedure
-  .input(z.object({ ingredientId: z.uuid(), cursor: z.number().int().min(0).default(0) }))
+  .input(z.object({ ingredientId: z.uuid(), cursor: RecipeNameCursorSchema.nullish() }))
   .query(async ({ ctx, input }) => {
     const page = await listIngredientRecipes(ctx.householdId, input.ingredientId, {
-      offset: input.cursor,
+      cursor: input.cursor,
     });
 
     if (!page) throw new TRPCError({ code: "NOT_FOUND", message: "not-found" });
 
-    return {
-      recipes: page.recipes,
-      nextCursor: page.hasMore ? input.cursor + page.recipes.length : null,
-    };
+    return page;
   });
 
 /**

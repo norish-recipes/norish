@@ -383,7 +383,7 @@ describe("ingredient uses", () => {
     });
     expect(await listIngredientRecipes(mine, chickenId)).toEqual({
       recipes: [{ id: recipeId, name: "Saté" }],
-      hasMore: false,
+      nextCursor: null,
     });
     expect(await countIngredientUses(mine, chickenId)).toEqual({
       recipes: 1,
@@ -396,7 +396,10 @@ describe("ingredient uses", () => {
       groceries: [{ id: expect.any(String), name: "kipfilet", done: false, recurring: false }],
       pantry: false,
     });
-    expect(await listIngredientRecipes(theirs, chickenId)).toEqual({ recipes: [], hasMore: false });
+    expect(await listIngredientRecipes(theirs, chickenId)).toEqual({
+      recipes: [],
+      nextCursor: null,
+    });
     expect(await countIngredientUses(theirs, chickenId)).toEqual({
       recipes: 0,
       recipeLines: 0,
@@ -405,20 +408,39 @@ describe("ingredient uses", () => {
     });
   });
 
-  it("pages the household's recipes using a food by name, the last page saying no more", async () => {
+  it("pages the household's recipes using a food by lowered name and a cursor", async () => {
     const mine = testHouseholdOf(me.id);
     const other = (await createTestRecipe(me.id, { name: "Kip curry" })).id;
+    const lower = (await createTestRecipe(me.id, { name: "kip pilav" })).id;
     const neighbours = (await createTestRecipe(neighbourId, { name: "Kip pie" })).id;
 
-    await createTestRecipeIngredients(other, chickenId, "metric");
-    await createTestRecipeIngredients(neighbours, chickenId, "metric");
+    for (const id of [other, lower, neighbours]) {
+      await createTestRecipeIngredients(id, chickenId, "metric");
+    }
 
     const first = await listIngredientRecipes(mine, chickenId, { limit: 1 });
-    const second = await listIngredientRecipes(mine, chickenId, { limit: 1, offset: 1 });
 
-    expect(first).toEqual({ recipes: [{ id: other, name: "Kip curry" }], hasMore: true });
-    expect(second).toEqual({ recipes: [{ id: recipeId, name: "Saté" }], hasMore: false });
-    expect((await countIngredientUses(mine, chickenId))?.recipes).toBe(2);
+    expect(first).toEqual({
+      recipes: [{ id: other, name: "Kip curry" }],
+      nextCursor: { name: "kip curry", id: other },
+    });
+    // A recipe added before the cursor between pages repeats none.
+    const early = (await createTestRecipe(me.id, { name: "Aardappel kip" })).id;
+
+    await createTestRecipeIngredients(early, chickenId, "metric");
+    const second = await listIngredientRecipes(mine, chickenId, {
+      limit: 2,
+      cursor: first!.nextCursor,
+    });
+
+    expect(second).toEqual({
+      recipes: [
+        { id: lower, name: "kip pilav" },
+        { id: recipeId, name: "Saté" },
+      ],
+      nextCursor: null,
+    });
+    expect((await countIngredientUses(mine, chickenId))?.recipes).toBe(4);
   });
 
   it("finds nothing of another household's own food by its id", async () => {

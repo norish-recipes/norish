@@ -22,6 +22,7 @@ import { alias, QueryBuilder } from "drizzle-orm/pg-core";
 
 import type { Db, DbTransaction } from "@norish/db/drizzle";
 import type { FlagReason } from "@norish/shared/contracts/ingredient-catalogue";
+import type { RecipeNameCursor } from "@norish/shared/contracts/list-queries";
 import type { IngredientSearch, IngredientSearchField } from "@norish/shared/lib/ingredient-search";
 import { db } from "@norish/db/drizzle";
 import {
@@ -38,7 +39,14 @@ import {
 import { escapeLike } from "@norish/shared/lib/ingredient-search";
 import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
-import { ENTRY_RECIPES_PAGE } from "./entry-recipes";
+import type { RecipeNamePage } from "./entry-recipes";
+import {
+  afterRecipe,
+  byRecipeName,
+  ENTRY_RECIPES_PAGE,
+  recipeNameColumns,
+  recipeNamePage,
+} from "./entry-recipes";
 import { inCatalogue, inScope, ownBeforeSeed } from "./household-scope";
 import { ONE_ROW } from "./raw-sql";
 
@@ -1053,12 +1061,12 @@ export async function countIngredientUses(
 export async function listIngredientRecipes(
   householdId: string,
   ingredientId: string,
-  { limit = ENTRY_RECIPES_PAGE, offset = 0 }: { limit?: number; offset?: number } = {}
-): Promise<{ recipes: Array<{ id: string; name: string }>; hasMore: boolean } | null> {
+  { limit = ENTRY_RECIPES_PAGE, cursor }: { limit?: number; cursor?: RecipeNameCursor | null } = {}
+): Promise<RecipeNamePage | null> {
   if (!(await findCatalogueIngredientOwner(db, householdId, ingredientId))) return null;
 
   const rows = await db
-    .select({ id: recipes.id, name: recipes.name })
+    .select(recipeNameColumns)
     .from(recipes)
     .where(
       and(
@@ -1069,14 +1077,14 @@ export async function listIngredientRecipes(
             .select({ id: recipeIngredients.recipeId })
             .from(recipeIngredients)
             .where(inArray(recipeIngredients.id, linesNaming(ingredientId)))
-        )
+        ),
+        afterRecipe(cursor)
       )
     )
-    .orderBy(asc(recipes.name), asc(recipes.id))
-    .limit(limit + 1)
-    .offset(offset);
+    .orderBy(...byRecipeName)
+    .limit(limit + 1);
 
-  return { recipes: rows.slice(0, limit), hasMore: rows.length > limit };
+  return recipeNamePage(rows, limit);
 }
 
 /**

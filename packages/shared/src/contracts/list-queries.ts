@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 import type { toRecipesQueryFilters } from "./filter-contract";
 
 /** Filters as the list queries take them: toRecipesQueryFilters' answer, or any part of it. */
@@ -65,7 +67,12 @@ export function cookbookRecipesInput(cookbookId: string, filters: ListQueryFilte
   return { cookbookId, ...listQueryInput(filters, filters.limit ?? 50) };
 }
 
-/** How both list queries page: from the cursor their last page names. */
+/** How the paged queries page: from the cursor their last page names. */
 export const byNextCursor = {
-  getNextPageParam: (lastPage: { nextCursor: number | null }) => lastPage.nextCursor,
+  getNextPageParam: <C>(lastPage: { nextCursor: C | null }) => lastPage.nextCursor,
 };
+
+/** Where a page of recipes by name starts: after the last one's lowered name and id. */
+export const RecipeNameCursorSchema = z.object({ name: z.string(), id: z.uuid() });
+
+export type RecipeNameCursor = z.infer<typeof RecipeNameCursorSchema>;

@@ -684,23 +684,23 @@ describe("household lists", () => {
         { id: ann.recipe, name: "Ann's soup" },
         { id: apple.id, name: "Apple pie" },
       ],
-      hasMore: false,
+      nextCursor: null,
     });
     expect(await listRecipesCarryingEntry("cuisine", italian!.id, bob.household)).toEqual({
       recipes: [{ id: bob.recipe, name: "Bob's stew" }],
-      hasMore: false,
+      nextCursor: null,
     });
     expect(await listRecipesCarryingEntry("tag", soja!.id, ann.household)).toEqual({
       recipes: [{ id: ann.recipe, name: "Ann's soup" }],
-      hasMore: false,
+      nextCursor: null,
     });
     expect(await listRecipesCarryingEntry("tag", soja!.id, bob.household)).toEqual({
       recipes: [],
-      hasMore: false,
+      nextCursor: null,
     });
   });
 
-  it("pages the recipes carrying an entry, ties on a name broken by id, the last page saying no more", async () => {
+  it("pages the recipes carrying an entry by a cursor, ties on a name broken by id", async () => {
     const twin = await createTestRecipe(ann.id, { name: "Ann's soup" });
     const apple = await createTestRecipe(ann.id, { name: "Apple pie" });
     const [italian] = (await listEntries("cuisine", ann.household)).filter((e) => e.instance);
@@ -710,19 +710,24 @@ describe("household lists", () => {
     }
 
     const [firstSoup, secondSoup] = [ann.recipe, twin.id].sort();
-    const page = (offset: number) =>
-      listRecipesCarryingEntry("cuisine", italian!.id, ann.household, { limit: 2, offset });
+    const first = await listRecipesCarryingEntry("cuisine", italian!.id, ann.household, {
+      limit: 2,
+    });
 
-    expect(await page(0)).toEqual({
+    expect(first).toEqual({
       recipes: [
         { id: firstSoup, name: "Ann's soup" },
         { id: secondSoup, name: "Ann's soup" },
       ],
-      hasMore: true,
+      nextCursor: { name: "ann's soup", id: secondSoup },
     });
-    expect(await page(2)).toEqual({
-      recipes: [{ id: apple.id, name: "Apple pie" }],
-      hasMore: false,
-    });
+    // A recipe gone between pages skips none after it.
+    await getTestDb().delete(recipes).where(eq(recipes.id, firstSoup!));
+    expect(
+      await listRecipesCarryingEntry("cuisine", italian!.id, ann.household, {
+        limit: 2,
+        cursor: first.nextCursor,
+      })
+    ).toEqual({ recipes: [{ id: apple.id, name: "Apple pie" }], nextCursor: null });
   });
 });
