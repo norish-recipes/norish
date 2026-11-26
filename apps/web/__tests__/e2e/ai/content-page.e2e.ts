@@ -17,6 +17,7 @@ interface ListedEntry {
 }
 
 const tagList = { kind: "tag" } as const;
+const DEFAULT_POLICY = { view: "everyone", edit: "household", delete: "household" };
 
 function entry(page: Page, name: string) {
   return page.getByTestId("content-entry").filter({ hasText: name });
@@ -183,52 +184,62 @@ test("a member sees a server Cuisine read only, and an admin edits and deletes i
   }
 });
 
-test("household B never sees household A's entries", async ({ browser, aiStack }) => {
-  const word = `Con${Date.now().toString(36)}`;
-  const secret = `${word} Secret`;
-  const owner = aiStack.ownerCookies;
+for (const view of ["everyone", "household"] as const) {
+  test(`household B never sees household A's entries under view ${view}`, async ({
+    browser,
+    aiStack,
+  }) => {
+    const word = `Con${Date.now().toString(36)}`;
+    const secret = `${word} Secret`;
+    const owner = aiStack.ownerCookies;
 
-  // Household A is the member; household B the owner.
-  const member = await signIn(aiStack.baseURL, MEMBER);
+    // Household A is the member; household B the owner.
+    const member = await signIn(aiStack.baseURL, MEMBER);
 
-  await callTrpc(aiStack.baseURL, member, "lists.add", { kind: "tag", name: secret });
-  await callTrpc(aiStack.baseURL, member, "lists.add", { kind: "cuisine", name: secret });
+    await callTrpc(aiStack.baseURL, owner, "admin.updateRecipePermissionPolicy", {
+      ...DEFAULT_POLICY,
+      view,
+    });
+    await callTrpc(aiStack.baseURL, member, "lists.add", { kind: "tag", name: secret });
+    await callTrpc(aiStack.baseURL, member, "lists.add", { kind: "cuisine", name: secret });
 
-  for (const kind of ["tag", "cuisine"] as const) {
-    const theirs = await queryTrpc<ListedEntry[]>(aiStack.baseURL, owner, "lists.list", { kind });
+    for (const kind of ["tag", "cuisine"] as const) {
+      const theirs = await queryTrpc<ListedEntry[]>(aiStack.baseURL, owner, "lists.list", { kind });
 
-    expect(theirs.map((each) => each.name)).not.toContain(secret);
-  }
+      expect(theirs.map((each) => each.name)).not.toContain(secret);
+    }
 
-  const own = `${word} Own`;
+    const own = `${word} Own`;
 
-  await callTrpc(aiStack.baseURL, owner, "lists.add", { kind: "tag", name: own });
+    await callTrpc(aiStack.baseURL, owner, "lists.add", { kind: "tag", name: own });
 
-  const { context, page } = await openList(browser, aiStack.baseURL, OWNER, "tags");
+    const { context, page } = await openList(browser, aiStack.baseURL, OWNER, "tags");
 
-  try {
-    // The list has loaded once B's own Tag shows; only then is A's absence a finding.
-    await page.getByTestId("content-search").fill(word);
-    await expect(entry(page, own)).toBeVisible();
-    await expect(entry(page, secret)).toHaveCount(0);
+    try {
+      // The list has loaded once B's own Tag shows; only then is A's absence a finding.
+      await page.getByTestId("content-search").fill(word);
+      await expect(entry(page, own)).toBeVisible();
+      await expect(entry(page, secret)).toHaveCount(0);
 
-    // B's own Tag of the same name is a new entry, not A's.
-    await page.getByTestId("content-add").click();
-    await page.getByTestId("content-add-name").fill(secret);
-    await expect(page.getByTestId("content-add-match")).toHaveCount(0);
-    await page.getByTestId("content-add-submit").click();
-    await expect(entry(page, secret)).toBeVisible();
+      // B's own Tag of the same name is a new entry, not A's.
+      await page.getByTestId("content-add").click();
+      await page.getByTestId("content-add-name").fill(secret);
+      await expect(page.getByTestId("content-add-match")).toHaveCount(0);
+      await page.getByTestId("content-add-submit").click();
+      await expect(entry(page, secret)).toBeVisible();
 
-    const ours = await queryTrpc<ListedEntry[]>(aiStack.baseURL, owner, "lists.list", tagList);
-    const theirs = await queryTrpc<ListedEntry[]>(aiStack.baseURL, member, "lists.list", tagList);
+      const ours = await queryTrpc<ListedEntry[]>(aiStack.baseURL, owner, "lists.list", tagList);
+      const theirs = await queryTrpc<ListedEntry[]>(aiStack.baseURL, member, "lists.list", tagList);
 
-    expect(ours.find((tag) => tag.name === secret)!.id).not.toBe(
-      theirs.find((tag) => tag.name === secret)!.id
-    );
-  } finally {
-    await context.close();
-  }
-});
+      expect(ours.find((tag) => tag.name === secret)!.id).not.toBe(
+        theirs.find((tag) => tag.name === secret)!.id
+      );
+    } finally {
+      await callTrpc(aiStack.baseURL, owner, "admin.updateRecipePermissionPolicy", DEFAULT_POLICY);
+      await context.close();
+    }
+  });
+}
 
 async function box(locator: Locator) {
   const found = await locator.boundingBox({ timeout: 5000 });
