@@ -115,7 +115,7 @@ async function exists(target: string): Promise<boolean> {
 const FLUSH_UNSUPPORTED = new Set(["EINVAL", "ENOTSUP", "EOPNOTSUPP", "EISDIR", "ENOSYS"]);
 
 /** Flush a new name in `dir` to disk; a filesystem that cannot flush a folder only warns. */
-async function flushFolder(dir: string): Promise<void> {
+async function flushFolder(dir: string, mustLand: boolean): Promise<void> {
   try {
     const handle = await fs.open(dir, "r");
 
@@ -125,7 +125,7 @@ async function flushFolder(dir: string): Promise<void> {
       await handle.close();
     }
   } catch (error) {
-    if (!FLUSH_UNSUPPORTED.has(errorCode(error))) throw error;
+    if (mustLand && !FLUSH_UNSUPPORTED.has(errorCode(error))) throw error;
     log.warn({ path: dir, err: error }, "Could not flush the key file's folder to disk");
   }
 }
@@ -165,7 +165,8 @@ export async function writeKeyFile(keys: KeyFile, { replace = false } = {}): Pro
   } finally {
     await fs.rm(temp, { force: true });
   }
-  await flushFolder(dir);
+  // A crash that undoes a replacement leaves the old file, which still holds the data's key.
+  await flushFolder(dir, !replace);
 }
 
 /** Remove the copies a crash mid-write left beside the key file; failing only warns. */

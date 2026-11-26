@@ -1086,6 +1086,19 @@ describe("which key boot opens", () => {
       expect(await readKeyFile()).toEqual({ current: textA });
     });
 
+    it("keeps the new key file and warns when its folder fails to flush after it is in place", async () => {
+      await writeKeyFile({ current: textA });
+      failSyncOf("EIO", keyDir());
+
+      await rotate();
+
+      const { current, previous } = await rotated();
+
+      expect(previous).toBe(textA);
+      expect(current).not.toBe(textA);
+      expect(warnings()).toHaveLength(1);
+    });
+
     it("leaves the old key file whole when the new one cannot be put in place", async () => {
       await writeKeyFile({ current: textA });
       vi.spyOn(fs, "rename").mockRejectedValueOnce(failure("ENOSPC"));

@@ -119,6 +119,28 @@ describe("rotating the Master Key from the Admin action", () => {
     expect(JSON.stringify(logged)).not.toContain(keyA);
   });
 
+  it("restarts when the new key file is in place but its folder fails to flush", async () => {
+    await writeKeyFile({ current: keyA });
+    const open = fs.open;
+
+    vi.spyOn(fs, "open").mockImplementation(async (...args) => {
+      const handle = await open(...args);
+
+      if (args[0] === path.dirname(keyFilePath())) {
+        vi.spyOn(handle, "sync").mockRejectedValue(
+          Object.assign(new Error("EIO"), { code: "EIO" })
+        );
+      }
+
+      return handle;
+    });
+
+    await expect(createCaller().rotateMasterKey()).resolves.toEqual({ success: true });
+    expect((await readKeyFile())?.previous).toBe(keyA);
+    await vi.runAllTimersAsync();
+    expect(process.exit).toHaveBeenCalledWith(0);
+  });
+
   it("is admin-only, writing nothing", async () => {
     await writeKeyFile({ current: keyA });
 
