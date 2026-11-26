@@ -71,7 +71,7 @@ describe("useMasterKeyPinned", () => {
   it("is unknown until the server answers, then whether MASTER_KEY pins the key", async () => {
     const { wrapper } = setUp();
 
-    serveTRPC(async (path) => (path === "admin.getMasterKeySource" ? { pinned: true } : null));
+    serveTRPC(async (path) => (path === "admin.masterKeyPinned" ? { pinned: true } : null));
     const { result } = renderHook(() => useMasterKeyPinned(), { wrapper });
 
     expect(result.current).toBeUndefined();

@@ -83,9 +83,6 @@ const restartServer = adminProcedure.mutation(async ({ ctx }) => {
   return { success: true };
 });
 
-/** Whether MASTER_KEY pins the Master Key (env mode), decided as boot decides it. */
-const getMasterKeySource = adminProcedure.query(() => ({ pinned: masterKeyPinned() }));
-
 /**
  * Rotate a generated Master Key: the new key file is on disk before the restart, whose boot
  * re-encrypts everything and ends every session. Never answers or logs a key.
@@ -127,6 +124,7 @@ export const systemProcedures = router({
   updateSchedulerMonths,
   restoreDefault,
   restartServer,
-  getMasterKeySource,
+  /** Whether MASTER_KEY pins the Master Key (env mode), decided as boot decides it. */
+  masterKeyPinned: adminProcedure.query(() => ({ pinned: masterKeyPinned() })),
   rotateMasterKey,
 });

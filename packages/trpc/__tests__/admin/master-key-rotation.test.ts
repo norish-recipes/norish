@@ -165,19 +165,19 @@ describe("rotating the Master Key from the Admin action", () => {
   });
 });
 
-describe("the Master Key source the System card reads", () => {
+describe("whether MASTER_KEY pins the Master Key, as the System card reads it", () => {
   it("is pinned when MASTER_KEY is set, as boot decides it", async () => {
     config.MASTER_KEY = keyA;
 
-    await expect(createCaller().getMasterKeySource()).resolves.toEqual({ pinned: true });
+    await expect(createCaller().masterKeyPinned()).resolves.toEqual({ pinned: true });
   });
 
-  it("is the key file when MASTER_KEY is unset", async () => {
-    await expect(createCaller().getMasterKeySource()).resolves.toEqual({ pinned: false });
+  it("is not pinned when MASTER_KEY is unset", async () => {
+    await expect(createCaller().masterKeyPinned()).resolves.toEqual({ pinned: false });
   });
 
   it("is admin-only", async () => {
-    await expect(createCaller(false).getMasterKeySource()).rejects.toThrow(
+    await expect(createCaller(false).masterKeyPinned()).rejects.toThrow(
       "Server admin access required"
     );
   });

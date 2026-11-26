@@ -9,7 +9,7 @@ export function useMasterKeyPinned(): boolean | undefined {
   const trpc = useTRPC();
   // The environment only changes with a restart, which reloads the page.
   const { data } = useQuery(
-    trpc.admin.getMasterKeySource.queryOptions(undefined, { staleTime: Infinity })
+    trpc.admin.masterKeyPinned.queryOptions(undefined, { staleTime: Infinity })
   );
 
   return data?.pinned;
