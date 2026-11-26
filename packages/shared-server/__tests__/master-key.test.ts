@@ -482,6 +482,7 @@ describe("which key boot opens", () => {
       expect(opened()).toBe(lookupBy(keyA));
       expect(fingerprintWrites).toEqual([]);
       expect(await readKeyFile()).toBeNull();
+      expect(warnings()).toEqual([]);
     });
 
     it("opens the key file's key when it matches", async () => {
@@ -543,6 +544,37 @@ describe("which key boot opens", () => {
         "MASTER_KEY_PREVIOUS is the key this database is encrypted with"
       );
       expect(opened).toThrow("used before boot resolved it");
+    });
+
+    const leftover = () => `${keyFilePath()}.0123456789abcdef.tmp`;
+
+    it("removes the copies a crash mid-write left beside the key file", async () => {
+      await writeKeyFile({ current: keyA });
+      await fs.writeFile(leftover(), JSON.stringify({ current: keyB.toString("base64") }));
+
+      await resolveMasterKey();
+
+      expect(opened()).toBe(lookupBy(keyA));
+      expect(await fs.readdir(keyDir())).toEqual(["master-key.json"]);
+    });
+
+    it("never opens a leftover copy, and keeps it when boot refuses", async () => {
+      await fs.mkdir(keyDir(), { recursive: true });
+      await fs.writeFile(leftover(), JSON.stringify({ current: keyA.toString("base64") }));
+
+      await expect(resolveMasterKey()).rejects.toThrow("MASTER_KEY is not set");
+      expect(await fs.readdir(keyDir())).toEqual([path.basename(leftover())]);
+    });
+
+    it("still starts when it cannot remove a leftover copy, and says so", async () => {
+      await writeKeyFile({ current: keyA });
+      await fs.writeFile(leftover(), JSON.stringify({ current: keyB.toString("base64") }));
+      vi.spyOn(fs, "rm").mockRejectedValue(failure("EACCES"));
+
+      await resolveMasterKey();
+
+      expect(opened()).toBe(lookupBy(keyA));
+      expect(warnings()).toHaveLength(1);
     });
 
     it("refuses to re-key yet when the key file's previous key matches", async () => {

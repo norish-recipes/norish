@@ -143,6 +143,23 @@ export async function writeKeyFile(keys: KeyFile, { replace = false } = {}): Pro
   await flushFolder(dir);
 }
 
+/** Remove the copies a crash mid-write left beside the key file; failing only warns. */
+async function removeLeftoverCopies(): Promise<void> {
+  const dir = path.dirname(keyFilePath());
+  const copy = `${path.basename(keyFilePath())}.`;
+
+  try {
+    for (const name of await fs.readdir(dir)) {
+      if (name.startsWith(copy) && name.endsWith(".tmp")) {
+        await fs.rm(path.join(dir, name), { force: true });
+      }
+    }
+  } catch (error) {
+    if (errorCode(error) === "ENOENT") return;
+    log.warn({ path: dir, err: error }, "Could not remove a leftover copy of the key file");
+  }
+}
+
 /** Where boot's keys come from: MASTER_KEY pins them, else the key file holds them. */
 type KeySource = {
   pinned: boolean;
@@ -249,6 +266,7 @@ export async function resolveMasterKey(): Promise<void> {
     : await adoptKey(source);
 
   openByFingerprint(opening, stored);
+  await removeLeftoverCopies();
 }
 
 /** Open the key a server's boot resolved, for a tool or script: never generates nor writes one. */
