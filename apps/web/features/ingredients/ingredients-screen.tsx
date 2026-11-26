@@ -22,6 +22,7 @@ import {
 import type { IngredientFilters } from "./components/ingredient-filters-panel";
 import { ChangedByAIPanel } from "./components/changed-by-ai-panel";
 import DataSourcesCard from "./components/data-sources-card";
+import { IngredientAddPanel } from "./components/ingredient-add-panel";
 import {
   DEFAULT_INGREDIENT_FILTERS,
   hasIngredientFilters,
@@ -35,6 +36,7 @@ import { useIngredientTree } from "./hooks/use-ingredient-tree";
 export function IngredientsScreen() {
   const t = useTranslations("settings.ingredients");
   const tFilters = useTranslations("common.filters");
+  const tActions = useTranslations("common.actions");
   const locale = useLocale();
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<IngredientFilters>(DEFAULT_INGREDIENT_FILTERS);
@@ -76,6 +78,9 @@ export function IngredientsScreen() {
   const openItem = openId ? (shown.find((item) => item.id === openId) ?? null) : null;
 
   const [changesOpen, setChangesOpen] = useState(false);
+  // Each opening starts a fresh Add panel, so it never keeps the name typed last time.
+  const [addOpen, setAddOpen] = useState(false);
+  const [addCount, setAddCount] = useState(0);
   const { total, unsure } = useAIChangesQuery((changes) => ({
     total: changes.length,
     unsure: changes.filter(isOpenChange).length,
@@ -85,19 +90,29 @@ export function IngredientsScreen() {
     <div className="flex flex-col gap-6">
       <SettingsCard
         actions={
-          total > 0 ? (
+          <>
+            {total > 0 ? (
+              <ActionButton
+                action="edit"
+                data-testid="ingredients-ai-changes-open"
+                icon={SparklesIcon}
+                onPress={() => setChangesOpen(true)}
+              >
+                {t("changedByAI.open", { count: unsure })}
+              </ActionButton>
+            ) : null}
             <ActionButton
-              action="edit"
-              data-testid="ingredients-ai-changes-open"
-              icon={SparklesIcon}
-              size="sm"
-              onPress={() => setChangesOpen(true)}
+              action="add"
+              data-testid="ingredients-add"
+              onPress={() => {
+                setAddCount(addCount + 1);
+                setAddOpen(true);
+              }}
             >
-              {t("changedByAI.open", { count: unsure })}
+              {tActions("add")}
             </ActionButton>
-          ) : null
+          </>
         }
-        description={t("description")}
         icon={BookOpenIcon}
         title={t("title")}
       >
@@ -162,6 +177,14 @@ export function IngredientsScreen() {
         onClose={() => setOpenId(null)}
       />
       <ChangedByAIPanel open={changesOpen} onClose={() => setChangesOpen(false)} />
+      {addCount > 0 ? (
+        <IngredientAddPanel
+          key={addCount}
+          open={addOpen}
+          onOpenChange={setAddOpen}
+          onOpenFood={setOpenId}
+        />
+      ) : null}
     </div>
   );
 }
