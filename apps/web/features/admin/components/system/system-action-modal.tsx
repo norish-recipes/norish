@@ -7,36 +7,36 @@ import { Note } from "@/components/shared/note";
 import { ExclamationTriangleIcon } from "@heroicons/react/16/solid";
 import { useTranslations } from "next-intl";
 
-type RestartConfirmationModalProps = {
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
+/** What one action's confirmation says; the modal adds the lines every restart carries. */
+export type SystemActionCopy = {
   icon: ComponentType<SVGProps<SVGSVGElement>>;
   title: string;
   message: string;
   confirmLabel: string;
-  /** What this restart ends, listed before the warning every restart carries. */
   warnings: string[];
 };
 
-/** Confirms an action that restarts the server: a plain restart, or one that rotates the key. */
-export default function RestartConfirmationModal({
+type SystemActionModalProps = {
+  copy: SystemActionCopy;
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+};
+
+/** Confirms a System card action, each of which restarts the server. */
+export default function SystemActionModal({
+  copy,
   isOpen,
   onClose,
   onConfirm,
-  icon,
-  title,
-  message,
-  confirmLabel,
-  warnings,
-}: RestartConfirmationModalProps) {
+}: SystemActionModalProps) {
   const t = useTranslations("settings.admin.restart");
 
   return (
     <ConfirmModal
       confirm={
-        <ActionButton action="apply" icon={icon} variant="secondary" onPress={onConfirm}>
-          {confirmLabel}
+        <ActionButton action="apply" icon={copy.icon} variant="secondary" onPress={onConfirm}>
+          {copy.confirmLabel}
         </ActionButton>
       }
       headerClassName="flex items-center gap-2"
@@ -44,15 +44,15 @@ export default function RestartConfirmationModal({
       title={
         <>
           <ExclamationTriangleIcon className="text-warning h-5 w-5" />
-          {title}
+          {copy.title}
         </>
       }
       onOpenChange={onClose}
     >
-      <p>{message}</p>
+      <p>{copy.message}</p>
       <Note className="mt-2" status="warning" title={t("importantTitle")}>
         <ul className="list-inside list-disc space-y-1">
-          {warnings.map((warning) => (
+          {copy.warnings.map((warning) => (
             <li key={warning}>{warning}</li>
           ))}
           <li>

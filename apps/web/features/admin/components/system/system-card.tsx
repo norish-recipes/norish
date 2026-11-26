@@ -20,8 +20,11 @@ import {
   useSchedulerMonthsMutation,
 } from "@norish/shared-react/admin";
 
+import type { SystemActionCopy } from "./system-action-modal";
 import { UnsavedChangesChip } from "../unsaved-changes-chip";
-import RestartConfirmationModal from "./restart-confirmation-modal";
+import SystemActionModal from "./system-action-modal";
+
+type SystemAction = "restart" | "rotate";
 
 export default function SystemCard() {
   const t = useTranslations("settings.admin.system");
@@ -35,8 +38,8 @@ export default function SystemCard() {
   const rotateMasterKey = useRotateMasterKeyMutation();
   const [months, setMonths] = useState(schedulerCleanupMonths ?? 3);
   const [saving, whileSaving] = usePending();
-  const restartModal = useOverlayState();
-  const rotateModal = useOverlayState();
+  const confirmModal = useOverlayState();
+  const [action, setAction] = useState<SystemAction>("restart");
   const hasSchedulerChanges =
     schedulerCleanupMonths !== undefined && months !== schedulerCleanupMonths;
 
@@ -52,12 +55,35 @@ export default function SystemCard() {
   const handleSaveScheduler = async () => {
     await whileSaving(() => saveSchedulerMonths(months));
   };
-  const handleRestart = async () => {
-    if (await restartServer()) restartModal.close();
+  const actions: Record<SystemAction, { copy: SystemActionCopy; run: () => Promise<boolean> }> = {
+    restart: {
+      copy: {
+        icon: ArrowPathIcon,
+        title: tRestart("title"),
+        message: tRestart("confirmMessage"),
+        confirmLabel: tRestart("confirmButton"),
+        warnings: [tRestart("warning1"), tRestart("warning2")],
+      },
+      run: restartServer,
+    },
+    // The server restarts once it answers; its new key ends this session, so the page signs out.
+    rotate: {
+      copy: {
+        icon: KeyIcon,
+        title: tRotate("title"),
+        message: tRotate("confirmMessage"),
+        confirmLabel: tRotate("confirmButton"),
+        warnings: [tRotate("sessions"), tRotate("shareLinks")],
+      },
+      run: rotateMasterKey,
+    },
   };
-  // The server restarts once it answers; its new key ends this session, so the page signs out.
-  const handleRotate = async () => {
-    if (await rotateMasterKey()) rotateModal.close();
+  const confirm = (next: SystemAction) => {
+    setAction(next);
+    confirmModal.open();
+  };
+  const handleConfirm = async () => {
+    if (await actions[action].run()) confirmModal.close();
   };
 
   return (
@@ -96,7 +122,7 @@ export default function SystemCard() {
           action="apply"
           icon={ArrowPathIcon}
           variant="tertiary"
-          onPress={restartModal.open}
+          onPress={() => confirm("restart")}
         >
           {t("server.restartButton")}
         </ActionButton>
@@ -116,32 +142,18 @@ export default function SystemCard() {
             action="apply"
             icon={KeyIcon}
             variant="tertiary"
-            onPress={rotateModal.open}
+            onPress={() => confirm("rotate")}
           >
             {t("masterKey.button")}
           </ActionButton>
         </SettingRow>
       ) : null}
 
-      <RestartConfirmationModal
-        confirmLabel={tRestart("confirmButton")}
-        icon={ArrowPathIcon}
-        isOpen={restartModal.isOpen}
-        message={tRestart("confirmMessage")}
-        title={tRestart("title")}
-        warnings={[tRestart("warning1"), tRestart("warning2")]}
-        onClose={restartModal.close}
-        onConfirm={handleRestart}
-      />
-      <RestartConfirmationModal
-        confirmLabel={tRotate("confirmButton")}
-        icon={KeyIcon}
-        isOpen={rotateModal.isOpen}
-        message={tRotate("confirmMessage")}
-        title={tRotate("title")}
-        warnings={[tRotate("sessions"), tRotate("shareLinks")]}
-        onClose={rotateModal.close}
-        onConfirm={handleRotate}
+      <SystemActionModal
+        copy={actions[action].copy}
+        isOpen={confirmModal.isOpen}
+        onClose={confirmModal.close}
+        onConfirm={handleConfirm}
       />
     </SettingsCard>
   );
