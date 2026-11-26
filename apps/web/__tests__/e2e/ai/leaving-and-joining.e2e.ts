@@ -48,122 +48,135 @@ async function carried(baseURL: string, cookies: SessionCookies, recipeId: strin
   };
 }
 
-test("a member who leaves keeps their recipe with its Tag and food; joining back merges them in", async ({
-  browser,
-  aiStack,
-}) => {
-  const tag = randomUUID().slice(0, 8);
-  const users: ThrowawayUser[] = [];
-  const contexts: BrowserContext[] = [];
-  const signedIn = async (role: string) => {
-    const user = await signUpThrowawayUser(aiStack, {
-      email: `moves-${role}-${tag}@norish.test`,
-      password: `moves-${role}-${tag}-password`,
-      name: `Moves ${role} ${tag}`,
-    });
+for (const view of ["everyone", "household"] as const) {
+  test(`a member who leaves keeps their recipe with its Tag and food; joining back merges them in, under view ${view}`, async ({
+    browser,
+    aiStack,
+  }) => {
+    const tag = randomUUID().slice(0, 8);
+    const users: ThrowawayUser[] = [];
+    const contexts: BrowserContext[] = [];
+    const signedIn = async (role: string) => {
+      const user = await signUpThrowawayUser(aiStack, {
+        email: `moves-${role}-${tag}@norish.test`,
+        password: `moves-${role}-${tag}-password`,
+        name: `Moves ${role} ${tag}`,
+      });
 
-    users.push(user);
-    const context = await signedInContext(browser, aiStack.baseURL, user);
+      users.push(user);
+      const context = await signedInContext(browser, aiStack.baseURL, user);
 
-    contexts.push(context);
+      contexts.push(context);
 
-    return { user, page: await context.newPage(), cookies: await signIn(aiStack.baseURL, user) };
-  };
-  const names = { recipe: `Stoof ${tag}`, tag: `Pittig ${tag}`, food: `gochujang ${tag}` };
+      return { user, page: await context.newPage(), cookies: await signIn(aiStack.baseURL, user) };
+    };
+    const names = { recipe: `Stoof ${tag}`, tag: `Pittig ${tag}`, food: `gochujang ${tag}` };
 
-  try {
-    await callTrpc(aiStack.baseURL, aiStack.ownerCookies, "admin.updateRecipePermissionPolicy", {
-      ...DEFAULT_POLICY,
-      view: "household",
-    });
-    const admin = await signedIn("admin");
-    const member = await signedIn("member");
-    const householdId = await seedHousehold(`Moves ${tag}`, admin.user.id, [
-      admin.user.id,
-      member.user.id,
-    ]);
+    try {
+      await callTrpc(aiStack.baseURL, aiStack.ownerCookies, "admin.updateRecipePermissionPolicy", {
+        ...DEFAULT_POLICY,
+        view,
+      });
+      const admin = await signedIn("admin");
+      const member = await signedIn("member");
+      const householdId = await seedHousehold(`Moves ${tag}`, admin.user.id, [
+        admin.user.id,
+        member.user.id,
+      ]);
 
-    // The member's recipe carries the household's Tag and names a food of the household's own.
-    await callTrpc(aiStack.baseURL, member.cookies, "lists.add", { kind: "tag", name: names.tag });
-    const recipeId = await createRecipe(
-      aiStack.baseURL,
-      member.cookies,
-      names.recipe,
-      [names.food],
-      {
-        tags: [{ name: names.tag }],
+      // The member's recipe carries the household's Tag and names a food of the household's own.
+      await callTrpc(aiStack.baseURL, member.cookies, "lists.add", {
+        kind: "tag",
+        name: names.tag,
+      });
+      const recipeId = await createRecipe(
+        aiStack.baseURL,
+        member.cookies,
+        names.recipe,
+        [names.food],
+        {
+          tags: [{ name: names.tag }],
+        }
+      );
+      const before = await carried(aiStack.baseURL, member.cookies, recipeId);
+
+      expect(before.tags).toEqual([names.tag]);
+      expect(await readRecipe(aiStack.baseURL, admin.cookies, recipeId)).not.toBeNull();
+      // The admin's page holds the recipe before the member leaves.
+      await admin.page.goto(`/recipes/${recipeId}`);
+      await expect(admin.page.getByText(names.recipe).first()).toBeVisible();
+
+      // The leave dialog says what goes with the member and what stays.
+      await member.page.goto(HOUSEHOLD_SETTINGS);
+      await member.page.getByRole("button", { name: "Leave household" }).click();
+      const dialog = member.page.getByRole("dialog");
+
+      await expect(dialog).toContainText("Your recipes and cookbooks go with you");
+      await expect(dialog).toContainText("stay with the household");
+      await dialog.getByRole("button", { name: "Leave household" }).click();
+      await expect(member.page.getByText("Your household (just you)")).toBeVisible();
+      const ofOne = await householdOf(aiStack.baseURL, member.cookies);
+
+      expect(ofOne.id).not.toBe(householdId);
+
+      // The recipe went with them, its Tag and food now their new household's own.
+      const after = await carried(aiStack.baseURL, member.cookies, recipeId);
+
+      expect(after.tags).toEqual([names.tag]);
+      expect(await ownTags(aiStack.baseURL, member.cookies)).toEqual([names.tag]);
+      expect(after.foods[0]).not.toBe(before.foods[0]);
+      await expect(
+        queryTrpc(aiStack.baseURL, member.cookies, "ingredients.get", {
+          ingredientId: after.foods[0],
+        })
+      ).resolves.toMatchObject({ name: names.food });
+      if (view === "household") {
+        // The old household no longer sees it, nor does the page it has open.
+        await expect.poll(() => readRecipe(aiStack.baseURL, admin.cookies, recipeId)).toBeNull();
+        await expect(admin.page.getByText("Recipe Not Found")).toBeVisible({ timeout: 30_000 });
+      } else {
+        // Everyone may still view it: the old household reads it, and its open page stays.
+        expect(await readRecipe(aiStack.baseURL, admin.cookies, recipeId)).not.toBeNull();
+        await admin.page.reload();
+        await expect(admin.page.getByText(names.recipe).first()).toBeVisible();
+        await expect(admin.page.getByText("Recipe Not Found")).toHaveCount(0);
       }
-    );
-    const before = await carried(aiStack.baseURL, member.cookies, recipeId);
+      // The old household keeps its own Tag.
+      expect(await ownTags(aiStack.baseURL, admin.cookies)).toEqual([names.tag]);
 
-    expect(before.tags).toEqual([names.tag]);
-    expect(await readRecipe(aiStack.baseURL, admin.cookies, recipeId)).not.toBeNull();
-    // The admin's page holds the recipe before the member leaves.
-    await admin.page.goto(`/recipes/${recipeId}`);
-    await expect(admin.page.getByText(names.recipe).first()).toBeVisible();
+      // Joining back: the join card says the household of one is merged into the one joined.
+      await callTrpc(aiStack.baseURL, admin.cookies, "households.regenerateCode", {
+        householdId,
+        version: (await householdOf(aiStack.baseURL, admin.cookies)).version,
+      });
+      await expect
+        .poll(async () => (await householdOf(aiStack.baseURL, admin.cookies)).joinCode)
+        .toMatch(/^\d{6}$/);
+      const code = (await householdOf(aiStack.baseURL, admin.cookies)).joinCode!;
 
-    // The leave dialog says what goes with the member and what stays.
-    await member.page.goto(HOUSEHOLD_SETTINGS);
-    await member.page.getByRole("button", { name: "Leave household" }).click();
-    const dialog = member.page.getByRole("dialog");
+      await expect(card(member.page, "Join household")).toContainText(
+        "Your household is merged into it"
+      );
+      await joinWithCode(member.page, code);
+      await expect
+        .poll(async () => (await householdOf(aiStack.baseURL, member.cookies)).id)
+        .toBe(householdId);
 
-    await expect(dialog).toContainText("Your recipes and cookbooks go with you");
-    await expect(dialog).toContainText("stay with the household");
-    await dialog.getByRole("button", { name: "Leave household" }).click();
-    await expect(member.page.getByText("Your household (just you)")).toBeVisible();
-    const ofOne = await householdOf(aiStack.baseURL, member.cookies);
+      // The Tag and the food of the same name join the household's: one of each, the recipe on them.
+      const joined = await carried(aiStack.baseURL, member.cookies, recipeId);
 
-    expect(ofOne.id).not.toBe(householdId);
-
-    // The recipe went with them, its Tag and food now their new household's own.
-    const after = await carried(aiStack.baseURL, member.cookies, recipeId);
-
-    expect(after.tags).toEqual([names.tag]);
-    expect(await ownTags(aiStack.baseURL, member.cookies)).toEqual([names.tag]);
-    expect(after.foods[0]).not.toBe(before.foods[0]);
-    await expect(
-      queryTrpc(aiStack.baseURL, member.cookies, "ingredients.get", {
-        ingredientId: after.foods[0],
-      })
-    ).resolves.toMatchObject({ name: names.food });
-    // Under view Household the old household no longer sees it; it keeps its own Tag.
-    await expect.poll(() => readRecipe(aiStack.baseURL, admin.cookies, recipeId)).toBeNull();
-    // Nor in the page: the recipe the admin has open reads as not found.
-    await expect(admin.page.getByText("Recipe Not Found")).toBeVisible({ timeout: 30_000 });
-    expect(await ownTags(aiStack.baseURL, admin.cookies)).toEqual([names.tag]);
-
-    // Joining back: the join card says the household of one is merged into the one joined.
-    await callTrpc(aiStack.baseURL, admin.cookies, "households.regenerateCode", {
-      householdId,
-      version: (await householdOf(aiStack.baseURL, admin.cookies)).version,
-    });
-    await expect
-      .poll(async () => (await householdOf(aiStack.baseURL, admin.cookies)).joinCode)
-      .toMatch(/^\d{6}$/);
-    const code = (await householdOf(aiStack.baseURL, admin.cookies)).joinCode!;
-
-    await expect(card(member.page, "Join household")).toContainText(
-      "Your household is merged into it"
-    );
-    await joinWithCode(member.page, code);
-    await expect
-      .poll(async () => (await householdOf(aiStack.baseURL, member.cookies)).id)
-      .toBe(householdId);
-
-    // The Tag and the food of the same name join the household's: one of each, the recipe on them.
-    const joined = await carried(aiStack.baseURL, member.cookies, recipeId);
-
-    expect(await ownTags(aiStack.baseURL, admin.cookies)).toEqual([names.tag]);
-    expect(joined.tags).toEqual([names.tag]);
-    expect(joined.foods[0]).toBe(before.foods[0]);
-    expect(await readRecipe(aiStack.baseURL, admin.cookies, recipeId)).not.toBeNull();
-  } finally {
-    await callTrpc(
-      aiStack.baseURL,
-      aiStack.ownerCookies,
-      "admin.updateRecipePermissionPolicy",
-      DEFAULT_POLICY
-    );
-    await closeAndDelete(contexts, users);
-  }
-});
+      expect(await ownTags(aiStack.baseURL, admin.cookies)).toEqual([names.tag]);
+      expect(joined.tags).toEqual([names.tag]);
+      expect(joined.foods[0]).toBe(before.foods[0]);
+      expect(await readRecipe(aiStack.baseURL, admin.cookies, recipeId)).not.toBeNull();
+    } finally {
+      await callTrpc(
+        aiStack.baseURL,
+        aiStack.ownerCookies,
+        "admin.updateRecipePermissionPolicy",
+        DEFAULT_POLICY
+      );
+      await closeAndDelete(contexts, users);
+    }
+  });
+}
