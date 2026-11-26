@@ -109,7 +109,7 @@ export function useIngredientIconMutations(ingredientId: string) {
     answered(write.then(({ file, address }): StoredIcon => ({ file, address })));
 
   return {
-    upload: (image: File) => stored(upload.mutateAsync(uploadForm({ ingredientId, image }))),
+    upload: (image: Blob) => stored(upload.mutateAsync(uploadForm({ ingredientId, image }))),
     generate: () => stored(generate.mutateAsync({ ingredientId })),
     isPending: upload.isPending || generate.isPending,
   };

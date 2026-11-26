@@ -74,9 +74,9 @@ export function useIngredientDraft(
   const iconChanged = icon !== undefined;
   const dirty = nameChanged || parentChanged || iconChanged || added.length > 0 || removed.size > 0;
 
-  /** Lands the draft as one edit the draft keeps if refused. */
-  const save = async () => {
-    if (!dirty) return;
+  /** Lands the draft as one edit the draft keeps if refused; resolves whether it went through. */
+  const save = async (): Promise<boolean> => {
+    if (!dirty) return true;
     const draft = { added, removed, junk, parent, icon };
 
     // The row reads as the draft has it, and the draft is spent, at once.
@@ -104,6 +104,8 @@ export function useIngredientDraft(
       setParent(draft.parent);
       setIcon(draft.icon);
     }
+
+    return saved;
   };
 
   /** A spelling typed joins the draft clean, as it is stored; the field clears for the next. */

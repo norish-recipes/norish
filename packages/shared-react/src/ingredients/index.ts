@@ -58,3 +58,4 @@ export {
   useIngredientUsesQuery,
 } from "./use-ingredient-query";
 export { INGREDIENT_NAME_MAX, useIngredientAdd } from "./use-ingredient-add";
+export { useIngredientFiltersStore } from "./ingredient-filters-store";

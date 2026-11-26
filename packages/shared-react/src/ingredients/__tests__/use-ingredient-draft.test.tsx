@@ -62,7 +62,12 @@ describe("useIngredientDraft", () => {
     const { result } = setUp();
 
     act(() => result.current.setName("Shoyu"));
-    await act(() => result.current.save());
+    let saved = true;
+
+    await act(async () => {
+      saved = await result.current.save();
+    });
+    expect(saved).toBe(false);
     expect(result.current.name).toBe("Shoyu");
     expect(result.current.dirty).toBe(true);
   });
