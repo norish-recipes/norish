@@ -86,6 +86,7 @@ vi.mock("@norish/db/repositories/master-key", () => ({
         "user.email": { previous: 1, current: 0, plaintext: 0, unreadable: 0 },
         "user.name": { previous: 0, current: 0, plaintext: 2, unreadable: 0 },
         "user.image": { previous: 0, current: 0, plaintext: 0, unreadable: 3 },
+        "site_auth_tokens.value_enc": { previous: 0, current: 0, plaintext: 0, unreadable: 5 },
       },
       revokedShares: 4,
     };
@@ -586,6 +587,10 @@ describe("which key boot opens", () => {
 
     describe("and the previous key matching it", () => {
       const said = () => JSON.stringify(logged);
+      const UNREADABLE =
+        "Values neither key opens were left as they are: damaged, or encrypted under another key. " +
+        "A user whose email is one of them cannot be found by that address, so the address could sign up again. " +
+        "A plain-text name, email or image of 38 or more base64 characters is counted here too";
 
       it("ends every session, then re-keys from MASTER_KEY_PREVIOUS to MASTER_KEY", async () => {
         config.MASTER_KEY = keyB.toString("base64");
@@ -628,16 +633,18 @@ describe("which key boot opens", () => {
         expect(said()).not.toContain("ada@example.com");
       });
 
-      it("logs how many values in each column no key opens, and what that means", async () => {
+      it("logs in one line how many values in each column no key opens, and what that means", async () => {
         config.MASTER_KEY = keyB.toString("base64");
         config.MASTER_KEY_PREVIOUS = keyA.toString("base64");
 
         await resolveMasterKey();
 
-        expect(warnings()).toContainEqual([
-          "warn",
-          { column: "user.image", count: 3 },
-          "Values neither key opens were left as they are: damaged, or encrypted under another key",
+        const unreadable = warnings().filter(([, , message]) =>
+          String(message).startsWith("Values neither key opens")
+        );
+
+        expect(unreadable).toEqual([
+          ["warn", { columns: { "user.image": 3, "site_auth_tokens.value_enc": 5 } }, UNREADABLE],
         ]);
         expect(
           warnings().filter(([, fields]) => JSON.stringify(fields).includes("user.email"))

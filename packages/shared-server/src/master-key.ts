@@ -311,16 +311,24 @@ async function rekey(
   });
 
   log.info({ columns, ...ended }, "Master Key re-keyed and every session ended");
-  for (const [column, { plaintext, unreadable }] of Object.entries(columns)) {
+  for (const [column, { plaintext }] of Object.entries(columns)) {
     if (plaintext > 0) {
       log.warn({ column, count: plaintext }, "Values stored in plain text were encrypted");
     }
-    if (unreadable > 0) {
-      log.warn(
-        { column, count: unreadable },
-        "Values neither key opens were left as they are: damaged, or encrypted under another key"
-      );
-    }
+  }
+  const unreadable = Object.fromEntries(
+    Object.entries(columns)
+      .filter(([, counts]) => counts.unreadable > 0)
+      .map(([column, counts]) => [column, counts.unreadable])
+  );
+
+  if (Object.keys(unreadable).length > 0) {
+    log.warn(
+      { columns: unreadable },
+      "Values neither key opens were left as they are: damaged, or encrypted under another key. " +
+        "A user whose email is one of them cannot be found by that address, so the address could sign up again. " +
+        "A plain-text name, email or image of 38 or more base64 characters is counted here too"
+    );
   }
   if (revokedShares > 0) {
     log.warn(
