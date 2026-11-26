@@ -2,14 +2,15 @@ import React, { useEffect, useState } from "react";
 import { View } from "react-native";
 import { ModalHeader } from "@/components/modal-header";
 import { OfflineCapsule } from "@/components/offline-capsule";
+import { PageControls } from "@/components/page-controls";
+import { Segmented } from "@/components/segmented";
 import { useText } from "@/lib/i18n/use-text";
 import { useLocalSearchParams, useRouter } from "expo-router";
 
 import { useIngredientFiltersStore } from "@norish/shared-react/ingredients";
-import { ENTRY_KINDS, isContentList } from "@norish/shared-react/lists";
+import { CONTENT_LISTS, ENTRY_KINDS, isContentList } from "@norish/shared-react/lists";
 import { useConnectivity } from "@norish/shared-react/offline/react";
 
-import { ContentTabs } from "../components/content-tabs";
 import { EntryList } from "../components/entry-list";
 import { IngredientList } from "../components/ingredient-list";
 import { LIST_ONE } from "../utils/content-lists";
@@ -50,7 +51,18 @@ export function ContentScreen() {
       />
       <View className="bg-background flex-1" testID="settings-content-screen">
         <OfflineCapsule />
-        <ContentTabs value={list} onChange={setList} />
+        <PageControls>
+          <Segmented
+            segments={CONTENT_LISTS.map((each) => ({
+              value: each,
+              label: text(`settings.content.lists.${each}`),
+              testID: `content-tab-${each}`,
+            }))}
+            testID="content-tabs"
+            value={list}
+            onChange={setList}
+          />
+        </PageControls>
         {list === "ingredients" ? (
           <IngredientList />
         ) : (

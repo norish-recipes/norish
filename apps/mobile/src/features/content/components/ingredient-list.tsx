@@ -1,11 +1,9 @@
 import React from "react";
-import { FlatList } from "react-native";
 import { CardSlice } from "@/components/card-slice";
 import { CountRow } from "@/components/count-row";
-import { EmptyCard } from "@/components/empty-card";
 import { IngredientIcon, IngredientIconSlots } from "@/components/ingredient-icon";
+import { ListFrame } from "@/components/list-frame";
 import { Pill } from "@/components/pill";
-import { SearchFilterRow } from "@/components/search-filter-row";
 import { edgeAt } from "@/lib/card-edges";
 import { useText } from "@/lib/i18n/use-text";
 import { useRouter } from "expo-router";
@@ -21,7 +19,6 @@ import {
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 
 import { AiChangesRow } from "./ai-changes-row";
-import { ContentSkeleton } from "./content-skeleton";
 
 /** The catalogue of Ingredients: a tree of kinds unless searched or filtered, a page at a time. */
 export function IngredientList() {
@@ -47,48 +44,26 @@ export function IngredientList() {
 
   useIngredientIcons(rows.map((row) => row.foodId));
 
-  if (isLoading || (isPlaceholderData && items.length === 0 && !isPaused)) {
-    return <ContentSkeleton />;
-  }
-
-  const header = (
-    <>
-      <SearchFilterRow
-        filter={{
-          label: text("common.filters.title"),
-          active: hasIngredientFilters(filters),
-          testID: "content-filter",
-          onPress: () => router.push("/settings/ingredient-filters"),
-        }}
-        label={text("settings.ingredients.search")}
-        testID="content-search"
-        value={search}
-        onChange={setSearch}
-      />
-      <AiChangesRow onPress={() => router.push("/settings/ingredient-changes")} />
-      {rows.length === 0 ? (
-        <EmptyCard
-          icon="leaf-outline"
-          placement="screen"
-          testID="content-empty"
-          title={text(
-            filters.flaggedOnly ? "settings.ingredients.emptyFlagged" : "settings.ingredients.empty"
-          )}
-        />
-      ) : null}
-    </>
-  );
-
   return (
     <IngredientIconSlots rows={rows}>
-      <FlatList
-        ListHeaderComponent={header}
-        contentContainerClassName="pb-16"
-        contentInsetAdjustmentBehavior="never"
+      <ListFrame
+        above={<AiChangesRow onPress={() => router.push("/settings/ingredient-changes")} />}
         data={rows}
-        keyboardDismissMode="on-drag"
-        keyboardShouldPersistTaps="handled"
         keyExtractor={(row) => row.item.id}
+        loading={isLoading || (isPlaceholderData && items.length === 0 && !isPaused)}
+        nothing={
+          rows.length === 0
+            ? {
+                icon: "leaf-outline",
+                testID: "content-empty",
+                title: text(
+                  filters.flaggedOnly
+                    ? "settings.ingredients.emptyFlagged"
+                    : "settings.ingredients.empty"
+                ),
+              }
+            : undefined
+        }
         renderItem={({ item: row, index }) => {
           const name = ingredientDisplayName(row.item, locale);
           const foldable = treeMode && row.item.kinds > 0;
@@ -133,12 +108,22 @@ export function IngredientList() {
             </CardSlice>
           );
         }}
-        showsVerticalScrollIndicator={false}
-        testID="content-list"
+        search={{
+          filter: {
+            label: text("common.filters.title"),
+            active: hasIngredientFilters(filters),
+            testID: "content-filter",
+            onPress: () => router.push("/settings/ingredient-filters"),
+          },
+          label: text("settings.ingredients.search"),
+          testID: "content-search",
+          value: search,
+          onChange: setSearch,
+        }}
+        testID="content"
         onEndReached={() => {
           if (hasNextPage) fetchNextPage();
         }}
-        onEndReachedThreshold={0.6}
       />
     </IngredientIconSlots>
   );

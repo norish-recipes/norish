@@ -5,8 +5,8 @@ import { IconButton } from "@/components/icon-button";
 import { IconMenu } from "@/components/icon-menu";
 import { SheetSearchField } from "@/components/sheet-search-field";
 
-/** A list's search field on the page, with the filter menu or button beside it, marked by a dot
- * while a filter applies. */
+/** A list's search field, with the filter menu or button beside it, marked by a dot while a filter
+ * applies. Its page's `PageControls` own its inset. */
 export function SearchFilterRow({
   label,
   value,
@@ -28,7 +28,7 @@ export function SearchFilterRow({
   onChange: (value: string) => void;
 }) {
   return (
-    <View className="flex-row items-center gap-2 px-5 pt-3 pb-1">
+    <View className="flex-row items-center gap-2">
       <View className="min-w-0 flex-1">
         <SheetSearchField label={label} testID={testID} value={value} onChange={onChange} />
       </View>

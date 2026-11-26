@@ -1,5 +1,4 @@
 import React from "react";
-import { View } from "react-native";
 import { Card } from "@/components/card";
 import { CountRow } from "@/components/count-row";
 import { useTokenColor } from "@/hooks/use-token-color";
@@ -17,15 +16,13 @@ export function AiChangesRow({ onPress }: { onPress: () => void }) {
   if (total === 0) return null;
 
   return (
-    <View className="px-5">
-      <Card surface>
-        <CountRow
-          leading={<Ionicons color={muted} name="sparkles-outline" size={20} />}
-          name={text("settings.ingredients.changedByAI.openCompact", { count: unsure })}
-          testID="content-ai-changes"
-          onPress={onPress}
-        />
-      </Card>
-    </View>
+    <Card surface>
+      <CountRow
+        leading={<Ionicons color={muted} name="sparkles-outline" size={20} />}
+        name={text("settings.ingredients.changedByAI.openCompact", { count: unsure })}
+        testID="content-ai-changes"
+        onPress={onPress}
+      />
+    </Card>
   );
 }
