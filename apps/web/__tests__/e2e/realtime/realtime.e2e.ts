@@ -854,6 +854,9 @@ test("a removed browser holds none of the former household's groceries or plan, 
 
     try {
       await after.goto("/calendar");
+      // The skeleton shows no plan either: absence counts only once the days are read.
+      await expect(after.locator("[data-day-key]").first()).toBeVisible();
+      await expect(after.locator("[data-calendar-skeleton]")).toHaveCount(0);
       await expect(after.getByText(plan)).toHaveCount(0);
     } finally {
       await after.close();
