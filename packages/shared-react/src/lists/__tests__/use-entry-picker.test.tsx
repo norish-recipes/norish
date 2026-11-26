@@ -348,7 +348,7 @@ describe("useEntryPicker", () => {
 
     expect(onSelect).not.toHaveBeenCalled();
     expect(queryClient.getQueryData(keyOf("lists.list", { kind: "tag" }))).toEqual([
-      entry("9", "Grill"),
+      { ...entry("9", "Grill"), recipeCount: 0 },
     ]);
   });
 });

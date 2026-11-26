@@ -135,7 +135,7 @@ export function useEntryPicker({
     // The list shows it at once, so a repeated Enter finds it instead of offering it again.
     queryClient.setQueryData(trpc.lists.list.queryKey({ kind, recipeId }), (current) =>
       current && !current.some((known) => known.id === added.entry.id)
-        ? [...current, added.entry]
+        ? [...current, { ...added.entry, recipeCount: 0 }]
         : current
     );
 
