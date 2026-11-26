@@ -72,7 +72,7 @@ export function decrypt(enc: string): string {
 }
 
 /** `enc` in plain text, or null when `encryptionKey` did not write it. */
-function openWith(encryptionKey: Buffer, enc: string): string | null {
+function tryDecryptWith(encryptionKey: Buffer, enc: string): string | null {
   try {
     return decryptWith(encryptionKey, enc);
   } catch {
@@ -82,7 +82,7 @@ function openWith(encryptionKey: Buffer, enc: string): string | null {
 
 /** Whether `masterKey` wrote `enc`, without making it the key in use. */
 export function masterKeyOpens(masterKey: Buffer, enc: string): boolean {
-  return openWith(deriveKey(masterKey, "encryption"), enc) !== null;
+  return tryDecryptWith(deriveKey(masterKey, "encryption"), enc) !== null;
 }
 
 const lookupWith = (hmacKey: Buffer, value: string) =>
@@ -92,9 +92,8 @@ export function hmacIndex(value: string): string {
   return lookupWith(derivedKeys().hmac, value);
 }
 
-export function hashToken(token: string): string {
-  return lookupWith(derivedKeys().hmac, token);
-}
+/** A share token's lookup hash: the same keyed HMAC as an email's. */
+export const hashToken = hmacIndex;
 
 /** Whether `value` has the shape `encrypt` writes: base64 of an IV, a tag and the data. */
 function isCiphertext(value: string): boolean {
@@ -120,12 +119,12 @@ export function masterKeyRotation(previous: Buffer, current: Buffer) {
 
   return {
     reseal(value: string): { sealed: string; plain: string | null; was: SealedBy } {
-      const opened = openWith(from, value);
+      const opened = tryDecryptWith(from, value);
 
       if (opened !== null)
         return { sealed: encryptWith(to, opened), plain: opened, was: "previous" };
 
-      const already = openWith(to, value);
+      const already = tryDecryptWith(to, value);
 
       if (already !== null) return { sealed: value, plain: already, was: "current" };
       if (isCiphertext(value)) return { sealed: value, plain: null, was: "unreadable" };
