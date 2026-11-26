@@ -11,6 +11,7 @@ import {
   isNull,
   lte,
   ne,
+  not,
   notExists,
   or,
   sql,
@@ -143,15 +144,24 @@ export function matchingSearch(
         ? sql`lower(${column}) = ${search.fold}`
         : holds(sql`lower(${column})`, search.fold, start)
     ) ?? sql`false`;
-  const spellingOf = (ingredientId: SQL | typeof ingredients.id) =>
-    sql`exists (select 1 from ${ingredientAliases} where ${ingredientAliases.ingredientId} = ${ingredientId} and ${inCatalogue(ingredientAliases.householdId, householdId)} and ${test(sql`${ingredientAliases.fold}`)})`;
+  const spellingOf = (ingredientId: AnyPgColumn) =>
+    exists(
+      qb
+        .select({ id: ingredientAliases.id })
+        .from(ingredientAliases)
+        .where(
+          and(
+            eq(ingredientAliases.ingredientId, ingredientId),
+            inCatalogue(ingredientAliases.householdId, householdId),
+            test(sql`${ingredientAliases.fold}`)
+          )
+        )
+    );
 
   const byField: Record<IngredientSearchField, SQL> = {
     name: name(ingredients.name),
     translations: spellingOf(ingredients.id),
-    parent: parents
-      ? (or(name(parents.name), spellingOf(sql`${parents.id}`)) ?? sql`false`)
-      : sql`false`,
+    parent: parents ? (or(name(parents.name), spellingOf(parents.id)) ?? sql`false`) : sql`false`,
   };
 
   return or(...search.fields.map((field) => byField[field])) ?? sql`false`;
@@ -175,7 +185,19 @@ function searchRank(
   const exact = (text: SQL) => sql`${text} = ${search.fold}`;
   const wordStart = (text: SQL) => holds(text, search.words[0] ?? search.fold, true);
   const translated = (test: (text: SQL) => SQL) =>
-    sql`${ingredients.id} in (select ${ingredientAliases.ingredientId} from ${ingredientAliases} where ${inCatalogue(ingredientAliases.householdId, householdId)} and (${ingredientAliases.locale} is null or ${inArray(ingredientAliases.locale, [...languages])}) and ${test(sql`${ingredientAliases.fold}`)})`;
+    inArray(
+      ingredients.id,
+      qb
+        .select({ id: ingredientAliases.ingredientId })
+        .from(ingredientAliases)
+        .where(
+          and(
+            inCatalogue(ingredientAliases.householdId, householdId),
+            or(isNull(ingredientAliases.locale), inArray(ingredientAliases.locale, [...languages])),
+            test(sql`${ingredientAliases.fold}`)
+          )
+        )
+    );
 
   return sql`least(case when ${exact(searchedName.fold)} then 0 when ${wordStart(searchedName.fold)} then 1 else 2 end, case when ${translated(exact)} then 0 when ${translated(wordStart)} then 1 else 2 end)`;
 }
@@ -344,7 +366,7 @@ function namedByARecipeLine(food: SQL): SQL {
  * AI leaves them.
  */
 function listedFood(food: { id: SQL; offId: SQL; addedByHand: SQL }): SQL {
-  return sql`(${food.offId} is not null or ${food.addedByHand} or ${namedByARecipeLine(food.id)})`;
+  return or(isNotNull(food.offId), food.addedByHand, namedByARecipeLine(food.id))!;
 }
 
 /**
@@ -364,14 +386,14 @@ export function ingredientIsListed(): SQL {
  * or parented (ADR-0037). Built per call, as `ingredientIsNamed`: importing runs no query builder.
  */
 function askableByAI(): SQL<boolean> {
-  return sql<boolean>`(${and(
+  return and(
     isNotNull(ingredients.householdId),
     eq(ingredients.addedByHand, false),
     eq(ingredients.keptDistinct, false),
     eq(ingredients.nameChosen, false),
     eq(ingredients.parentChosen, false),
     namedByARecipeLine(qualified(ingredients.id))
-  )})`;
+  )!.mapWith(Boolean);
 }
 
 /** Whether AI may still ask about the food, read through the caller's transaction and lock. */
@@ -434,7 +456,7 @@ export async function findCatalogueIngredient(id: string): Promise<
       parentId: ingredients.parentId,
       nameSettled: ingredients.nameSettled,
       askable: askableByAI(),
-      seeded: sql<boolean>`${ingredients.offId} is not null`,
+      seeded: isNotNull(ingredients.offId).mapWith(Boolean),
     })
     .from(ingredients)
     .where(eq(ingredients.id, id))
@@ -602,7 +624,7 @@ export async function unflagHiddenFoods(tx: Db, householdId: string): Promise<nu
       and(
         eq(ingredients.householdId, householdId),
         eq(ingredients.flagged, true),
-        sql`not ${ingredientIsListed()}`
+        not(ingredientIsListed())
       )
     )
     .returning({ id: ingredients.id });
@@ -822,7 +844,7 @@ export async function deleteCatalogueAlias(tx: DbTransaction, aliasId: string): 
       )
     )
     .orderBy(
-      desc(sql`${ingredientAliases.fold} = ${ingredientAliasFold(food.name)}`),
+      desc(eq(ingredientAliases.fold, ingredientAliasFold(food.name))),
       asc(ingredientAliases.createdAt),
       asc(ingredientAliases.id)
     )
@@ -984,12 +1006,12 @@ export function ingredientIsNamed(): SQL {
         .where(where)
     );
 
-  return sql`(${or(
+  return or(
     any(recipeIngredientFoods, naming.lineFoods),
     any(groceries, naming.groceries),
     any(recurringGroceries, naming.recurringGroceries),
     any(pantryIngredients, naming.pantry)
-  )})`;
+  )!;
 }
 
 /**
@@ -1030,11 +1052,11 @@ export async function deleteUnnamedOwnFoods(
       and(
         or(
           ids.length > 0 ? inArray(ingredients.id, [...new Set(ids)]) : undefined,
-          sql`not exists (${notJunk})`
+          notExists(notJunk)
         ),
         isNull(ingredients.offId),
         eq(ingredients.addedByHand, false),
-        sql`not ${ingredientIsNamed()}`,
+        not(ingredientIsNamed()),
         hasNoKinds()
       )
     )
@@ -1067,7 +1089,7 @@ export async function sweepUnusedCatalogueIngredients(
         own,
         // Half a day's slack: night 90 deletes what night 0 marked, whichever started earlier.
         lte(ingredients.unusedSince, sql`now() - interval '89 days 12 hours'`),
-        sql`not ${ingredientIsNamed()}`,
+        not(ingredientIsNamed()),
         // A parent waits for its children; its mark stands, so it goes the night after the last.
         hasNoKinds()
       )
@@ -1077,7 +1099,7 @@ export async function sweepUnusedCatalogueIngredients(
   await tx
     .update(ingredients)
     .set({ unusedSince: sql`now()` })
-    .where(and(own, isNull(ingredients.unusedSince), sql`not ${ingredientIsNamed()}`));
+    .where(and(own, isNull(ingredients.unusedSince), not(ingredientIsNamed())));
   // A food whose last recipe line went is hidden now.
   await unflagHiddenFoods(tx, householdId);
 

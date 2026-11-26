@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, isNotNull, isNull, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, isNotNull, isNull, ne, or, sql } from "drizzle-orm";
 
 import type { IngredientRef } from "@norish/db/repositories/ingredient-aliases";
 import type { NamingRow, NamingRows } from "@norish/db/repositories/ingredient-cleanup";
@@ -179,7 +179,7 @@ export async function setPantryIngredientFood(id: string, food: IngredientRef): 
         and(
           eq(pantryIngredients.householdId, row.householdId),
           eq(pantryIngredients.ingredientId, food.ingredientId),
-          sql`${pantryIngredients.id} <> ${id}`
+          ne(pantryIngredients.id, id)
         )
       );
 
@@ -242,8 +242,8 @@ export async function listParkedLinks(): Promise<ParkedLink[]> {
       addedBy: users.id,
     })
     .from(parkedNameKeyedLinks)
-    .leftJoin(stores, sql`${stores.id} = (${parkedNameKeyedLinks.link}->>'store_id')::uuid`)
-    .leftJoin(users, sql`${users.id} = ${parkedNameKeyedLinks.link}->>'user_id'`)
+    .leftJoin(stores, eq(stores.id, sql`(${parkedNameKeyedLinks.link}->>'store_id')::uuid`))
+    .leftJoin(users, eq(users.id, sql`${parkedNameKeyedLinks.link}->>'user_id'`))
     .orderBy(desc(sql`${parkedNameKeyedLinks.link}->>'updated_at'`));
 }
 

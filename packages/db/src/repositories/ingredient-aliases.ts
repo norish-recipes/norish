@@ -286,34 +286,14 @@ export interface MintIngredientInput {
   parentId?: string | null;
 }
 
-/** The parent `id` where it is still in the household's catalogue: a mint never files across households. */
-function catalogueParent(householdId: string, id: string) {
-  return qb
-    .select({ id: parentRow.id })
-    .from(parentRow)
-    .where(and(eq(parentRow.id, id), inCatalogue(parentRow.householdId, householdId)));
-}
-
 /**
  * Mint an Ingredient in a household with its aliases, answering each fold's alias. A lost race or a
  * name the household's or the seed's food has (any case) joins it; a household's food with no
- * spelling is taken over.
+ * spelling is taken over. A parent no longer in the household's catalogue is left out.
  */
 export async function mintIngredientWithAliases(
   input: MintIngredientInput
 ): Promise<IngredientAliasRow[]> {
-  try {
-    return await mintOnce(input);
-  } catch (error) {
-    // The parent was merged away between the read and the insert: mint without it.
-    if (input.parentId && isConstraintViolation(error, "23503")) {
-      return await mintOnce({ ...input, parentId: null });
-    }
-    throw error;
-  }
-}
-
-async function mintOnce(input: MintIngredientInput): Promise<IngredientAliasRow[]> {
   const folds = input.aliases.map((alias) => alias.fold);
   const { householdId } = input;
 
@@ -344,6 +324,17 @@ async function mintOnce(input: MintIngredientInput): Promise<IngredientAliasRow[
           // which every delete takes before the row, so no cycle closes.
           .for("key share", { of: ingredients })
       ).at(0);
+    // The parent still in the household's catalogue, held so a delete waits for the mint.
+    const [parent] = input.parentId
+      ? await tx
+          .select({ id: parentRow.id })
+          .from(parentRow)
+          .where(
+            and(eq(parentRow.id, input.parentId), inCatalogue(parentRow.householdId, householdId))
+          )
+          .for("key share")
+      : [];
+    const parentId = parent?.id ?? null;
     const seedHolder = await holderOf();
     const [minted] = seedHolder
       ? []
@@ -355,7 +346,7 @@ async function mintOnce(input: MintIngredientInput): Promise<IngredientAliasRow[
             ownerId: input.ownerId,
             flagged: input.flagged,
             flagReason: input.flagged ? (input.flagReason ?? null) : null,
-            parentId: input.parentId ? sql`${catalogueParent(householdId, input.parentId)}` : null,
+            parentId,
           })
           .onConflictDoNothing()
           .returning({ id: ingredients.id });
@@ -375,7 +366,7 @@ async function mintOnce(input: MintIngredientInput): Promise<IngredientAliasRow[
           ownerId: sql`coalesce(${ingredients.ownerId}, ${input.ownerId})`,
           flagged: input.flagged,
           flagReason: input.flagged ? (input.flagReason ?? null) : null,
-          parentId: input.parentId ? sql`${catalogueParent(householdId, input.parentId)}` : null,
+          parentId,
           version: sql`${ingredients.version} + 1`,
         })
         .where(eq(ingredients.id, ingredientId));

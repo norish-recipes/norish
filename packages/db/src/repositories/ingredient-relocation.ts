@@ -1,6 +1,6 @@
 import type { SQL } from "drizzle-orm";
-import { and, asc, count, eq, exists, inArray, isNotNull, ne, sql } from "drizzle-orm";
-import { alias, QueryBuilder } from "drizzle-orm/pg-core";
+import { and, asc, count, eq, inArray, isNotNull, ne, sql } from "drizzle-orm";
+import { QueryBuilder } from "drizzle-orm/pg-core";
 
 import type { Db, DbTransaction } from "@norish/db/drizzle";
 import type { LineJoin } from "@norish/shared/lib/line-foods";
@@ -81,25 +81,16 @@ async function repointKeyed(
   which: SQL,
   targetId: string
 ): Promise<void> {
-  const held = alias(table, "held");
-
-  await tx.delete(table).where(
-    and(
-      which,
-      exists(
-        qb
-          .select({ id: held.id })
-          .from(held)
-          .where(
-            and(
-              eq(held.ingredientId, targetId),
-              eq(sql`${held}.${sql.identifier(key.name)}`, key),
-              ne(held.id, table.id)
-            )
-          )
+  // The inner `table` is the target's rows: one of `which` whose key the target holds goes.
+  await tx
+    .delete(table)
+    .where(
+      and(
+        which,
+        ne(table.ingredientId, targetId),
+        inArray(key, qb.select({ key }).from(table).where(eq(table.ingredientId, targetId)))
       )
-    )
-  );
+    );
   await tx.update(table).set({ ingredientId: targetId }).where(which);
 }
 
@@ -207,14 +198,14 @@ export async function mergeCatalogueIngredients(
   // Where the target sat under the source it first moves up to the source's parent, so the children
   // re-parented onto it can never close a cycle.
   if ((await ancestorsOf(tx, [targetId])).get(targetId)?.includes(sourceId)) {
-    const sourceParent = qb
+    const [source] = await tx
       .select({ parentId: ingredients.parentId })
       .from(ingredients)
       .where(eq(ingredients.id, sourceId));
 
     await tx
       .update(ingredients)
-      .set({ parentId: sql`${sourceParent}` })
+      .set({ parentId: source?.parentId ?? null })
       .where(eq(ingredients.id, targetId));
   }
   await tx

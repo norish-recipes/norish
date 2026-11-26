@@ -16,6 +16,7 @@ import {
 } from "@norish/db/schema";
 
 import type { RecipeListContext } from "./recipes";
+import { isAnyOf } from "./array-params";
 import { inCatalogue } from "./catalogue-scope";
 import { lineageCte } from "./ingredient-kinds";
 import { isFirstLineFood } from "./ingredients";
@@ -150,14 +151,20 @@ export async function findNutritionFoods(
 
   if (pairs.length === 0 && wantedNdbs.length === 0) return [];
 
+  const codesOf = new Map<string, string[]>();
+
+  for (const [dataset, code] of pairs)
+    codesOf.set(dataset, [...(codesOf.get(dataset) ?? []), code]);
+
   return await db
     .select()
     .from(nutritionFoods)
     .where(
       or(
-        sql`(${nutritionFoods.dataset}, ${nutritionFoods.code}) in (
-          select * from unnest(${sql.param(pairs.map(([dataset]) => dataset))}::text[],
-                               ${sql.param(pairs.map(([, code]) => code))}::text[]))`,
+        // One array of codes per dataset, so the (dataset, code) key finds them.
+        ...[...codesOf].map(([dataset, codes]) =>
+          and(eq(nutritionFoods.dataset, dataset), isAnyOf(nutritionFoods.code, codes, "text"))
+        ),
         wantedNdbs.length > 0
           ? and(eq(nutritionFoods.dataset, "usda"), inArray(nutritionFoods.ndb, wantedNdbs))
           : undefined

@@ -1,5 +1,19 @@
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
-import { and, asc, desc, eq, gt, inArray, isNotNull, isNull, not, or, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  exists,
+  gt,
+  inArray,
+  isNotNull,
+  isNull,
+  not,
+  notExists,
+  or,
+  sql,
+} from "drizzle-orm";
 import { alias, QueryBuilder } from "drizzle-orm/pg-core";
 
 import type { Db, DbTransaction } from "@norish/db/drizzle";
@@ -19,6 +33,7 @@ import {
   users,
 } from "@norish/db/schema";
 
+import { isAnyOf } from "./array-params";
 import { findGroceryRows, nameIsFree, rowsNaming } from "./ingredient-catalogue";
 import { repointLines } from "./ingredient-cleanup";
 
@@ -100,20 +115,27 @@ const open = and(
   isNull(ingredientAIChanges.undoneAt)
 );
 
-/** Whether an open change is listed under the food. */
-function hasOpenChange(ingredientId: string) {
-  return sql`exists (select 1 from ${ingredientAIChanges} where ${and(
-    eq(ingredientAIChanges.ingredientId, ingredientId),
-    open
-  )})`;
+/** The open changes listed under the food, for `exists` and `notExists`. */
+function openChangesOf(ingredientId: string | AnyPgColumn) {
+  return qb
+    .select({ id: ingredientAIChanges.id })
+    .from(ingredientAIChanges)
+    .where(and(eq(ingredientAIChanges.ingredientId, ingredientId), open));
 }
 
 /** Whether AI's parent answer about a food is still open, in a query over `ingredients`. */
-export const parentIsOpenAnswer = sql<boolean>`exists (select 1 from ${ingredientAIChanges} where ${and(
-  eq(ingredientAIChanges.ingredientId, ingredients.id),
-  eq(ingredientAIChanges.kind, "parent"),
-  open
-)})`;
+export const parentIsOpenAnswer = exists(
+  qb
+    .select({ id: ingredientAIChanges.id })
+    .from(ingredientAIChanges)
+    .where(
+      and(
+        eq(ingredientAIChanges.ingredientId, ingredients.id),
+        eq(ingredientAIChanges.kind, "parent"),
+        open
+      )
+    )
+).mapWith(Boolean);
 
 /** A food a change names is listed by name only where it is the change's household's or the seed's. */
 function inChangesCatalogue(householdId: AnyPgColumn) {
@@ -148,7 +170,7 @@ function selectChanges(tx: Db = db) {
       and(
         eq(ingredientAIChanges.kind, "parent"),
         isNull(ingredientAIChanges.targetId),
-        sql`${dropped.id} = (${ingredientAIChanges.undo} ->> 'formerParentId')::uuid`,
+        eq(dropped.id, sql`(${ingredientAIChanges.undo} ->> 'formerParentId')::uuid`),
         inChangesCatalogue(dropped.householdId)
       )
     );
@@ -188,7 +210,7 @@ export async function listAIChanges(
   const rows = await selectChanges()
     .where(and(readBy(reader), isNull(ingredientAIChanges.undoneAt), or(open, settled)))
     .orderBy(
-      desc(sql`${open}`),
+      desc(open!),
       sql`case when ${open} then ${ingredientAIChanges.createdAt} end asc`,
       desc(ingredientAIChanges.createdAt),
       asc(ingredientAIChanges.id)
@@ -207,7 +229,7 @@ export async function sweepAIChanges(): Promise<number> {
     .where(
       and(
         isNull(ingredientAIChanges.undoneAt),
-        sql`not ${open}`,
+        not(open!),
         sql`${ingredientAIChanges.createdAt} <= now() - ${LISTED_FOR}`
       )
     )
@@ -229,11 +251,6 @@ export async function lockAIChange(
     .for("update", { of: ingredientAIChanges });
 
   return row ? toStoredChange(row) : null;
-}
-
-/** `column` is one of `ids`, bound as one array. */
-function amongIds(column: AnyPgColumn, ids: readonly string[]) {
-  return sql`${column} = any(${sql.param([...ids])}::uuid[])`;
 }
 
 /** The foods, spellings and rows a change's Undo reads, moves or points back. */
@@ -297,7 +314,7 @@ export async function undoStaysIn(
       tx
         .select({ id: ingredients.id })
         .from(ingredients)
-        .where(and(amongIds(ingredients.id, foods), not(seen(ingredients.householdId)!)))
+        .where(and(isAnyOf(ingredients.id, foods, "uuid"), not(seen(ingredients.householdId)!)))
         .limit(1),
     () =>
       tx
@@ -306,10 +323,10 @@ export async function undoStaysIn(
         .where(
           or(
             and(
-              amongIds(ingredientAliases.id, spellings),
+              isAnyOf(ingredientAliases.id, spellings, "uuid"),
               not(seen(ingredientAliases.householdId)!)
             ),
-            and(amongIds(ingredientAliases.id, moved), not(editable!))
+            and(isAnyOf(ingredientAliases.id, moved, "uuid"), not(editable!))
           )
         )
         .limit(1),
@@ -318,14 +335,14 @@ export async function undoStaysIn(
         .select({ id: recipeIngredients.id })
         .from(recipeIngredients)
         .innerJoin(recipes, eq(recipes.id, recipeIngredients.recipeId))
-        .where(and(amongIds(recipeIngredients.id, rows), not(own(recipes.householdId))))
+        .where(and(isAnyOf(recipeIngredients.id, rows, "uuid"), not(own(recipes.householdId))))
         .limit(1),
     ...[groceries, recurringGroceries].map(
       (table) => () =>
         tx
           .select({ id: table.id })
           .from(table)
-          .where(and(amongIds(table.id, rows), not(own(table.householdId))))
+          .where(and(isAnyOf(table.id, rows, "uuid"), not(own(table.householdId))))
           .limit(1)
     ),
   ];
@@ -412,7 +429,7 @@ export async function moveMergedAIChanges(
     .where(
       and(
         eq(ingredientAIChanges.kind, "parent"),
-        sql`${ingredientAIChanges.undo} ->> 'formerParentId' = ${sourceId}`
+        eq(sql`${ingredientAIChanges.undo} ->> 'formerParentId'`, sourceId)
       )
     );
 }
@@ -431,11 +448,8 @@ export async function wasMergeUndone(
       and(
         eq(ingredientAIChanges.ingredientId, intoId),
         eq(ingredientAIChanges.kind, "merge"),
-        sql`${ingredientAIChanges.undoneAt} is not null`,
-        sql`${ingredientAIChanges.undo} -> 'aliasIds' ?| ${sql`array[${sql.join(
-          aliasIds.map((id) => sql`${id}`),
-          sql`, `
-        )}]::text[]`}`
+        isNotNull(ingredientAIChanges.undoneAt),
+        sql`${ingredientAIChanges.undo} -> 'aliasIds' ?| ${sql.param([...aliasIds])}::text[]`
       )
     )
     .limit(1);
@@ -512,7 +526,7 @@ export async function refreshAIFlag(
   ingredientId: string,
   { unsure, reason = "ai-unsure" }: { unsure: boolean; reason?: FlagReason }
 ): Promise<void> {
-  const flagged = sql`(${unsure} or ${hasOpenChange(ingredientId)})`;
+  const flagged = unsure ? sql`true` : exists(openChangesOf(ingredientId));
 
   await tx
     .update(ingredients)
@@ -537,10 +551,7 @@ const RETIRED_FLAG_REASONS = ["ai-queued", "ai-off", "ai-unavailable", "ai-key-r
 
 /** Lift every flag for a retired reason; a food under an open change keeps AI's doubt. How many. */
 export async function clearRetiredFlags(tx: Db): Promise<number> {
-  const doubted = sql`exists (select 1 from ${ingredientAIChanges} where ${and(
-    eq(ingredientAIChanges.ingredientId, ingredients.id),
-    open
-  )})`;
+  const doubted = exists(openChangesOf(ingredients.id));
   const cleared = await tx
     .update(ingredients)
     .set({
@@ -567,7 +578,7 @@ export async function clearAIFlagUnlessOpen(tx: Db, ingredientId: string): Promi
         eq(ingredients.id, ingredientId),
         isNotNull(ingredients.householdId),
         eq(ingredients.flagReason, "ai-unsure"),
-        sql`not ${hasOpenChange(ingredientId)}`
+        notExists(openChangesOf(ingredientId))
       )
     );
 }
@@ -642,7 +653,7 @@ export async function wasDeletionUndone(tx: Db, ingredientId: string): Promise<b
       and(
         eq(ingredientAIChanges.kind, "not-a-food"),
         isNotNull(ingredientAIChanges.undoneAt),
-        sql`${ingredientAIChanges.undo} -> 'food' ->> 'ingredientId' = ${ingredientId}`
+        eq(sql`${ingredientAIChanges.undo} -> 'food' ->> 'ingredientId'`, ingredientId)
       )
     )
     .limit(1);
@@ -711,11 +722,20 @@ export async function readDeletedFood(
   };
 }
 
-/** The row's id where it is still there, so a restore never points at one deleted since. */
-function stillThere(table: typeof users | typeof ingredients, id: string | null) {
-  return id === null
-    ? null
-    : sql`${qb.select({ id: table.id }).from(table).where(eq(table.id, id))}`;
+/** The row's id where it is still there, held until commit, so a restore never names one deleted. */
+async function stillThere(
+  tx: DbTransaction,
+  table: typeof users | typeof ingredients,
+  id: string | null
+): Promise<string | null> {
+  if (id === null) return null;
+  const [row] = await tx
+    .select({ id: table.id })
+    .from(table)
+    .where(eq(table.id, id))
+    .for("key share");
+
+  return row?.id ?? null;
 }
 
 /**
@@ -731,19 +751,22 @@ export async function restoreDeletedFood(
     id: food.ingredientId,
     householdId,
     name: food.name,
-    ownerId: stillThere(users, food.ownerId),
-    parentId: stillThere(ingredients, food.parentId),
+    ownerId: await stillThere(tx, users, food.ownerId),
+    parentId: await stillThere(tx, ingredients, food.parentId),
   });
+  const aliases = [];
+
+  for (const spelling of food.aliases) {
+    aliases.push({
+      ...spelling,
+      householdId,
+      ingredientId: food.ingredientId,
+      ownerId: await stillThere(tx, users, spelling.ownerId),
+    });
+  }
   const restored = await tx
     .insert(ingredientAliases)
-    .values(
-      food.aliases.map((spelling) => ({
-        ...spelling,
-        householdId,
-        ingredientId: food.ingredientId,
-        ownerId: stillThere(users, spelling.ownerId),
-      }))
-    )
+    .values(aliases)
     .onConflictDoNothing()
     .returning({ id: ingredientAliases.id });
   const back = new Set(restored.map((row) => row.id));
@@ -915,7 +938,7 @@ export async function wasSpellingUndone(tx: Db, aliasId: string): Promise<boolea
       and(
         eq(ingredientAIChanges.kind, "spelling"),
         isNotNull(ingredientAIChanges.undoneAt),
-        sql`${ingredientAIChanges.undo} -> 'spelling' ->> 'id' = ${aliasId}`
+        eq(sql`${ingredientAIChanges.undo} -> 'spelling' ->> 'id'`, aliasId)
       )
     )
     .limit(1);
@@ -969,7 +992,7 @@ export async function restoreSpelling(
       ...spelling,
       householdId,
       ingredientId,
-      ownerId: stillThere(users, spelling.ownerId),
+      ownerId: await stillThere(tx, users, spelling.ownerId),
     })
     .onConflictDoNothing()
     .returning({ id: ingredientAliases.id });

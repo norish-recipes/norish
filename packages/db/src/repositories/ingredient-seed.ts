@@ -27,6 +27,7 @@ import {
 } from "@norish/db/schema";
 
 import type { NamingRows } from "./ingredient-cleanup";
+import { isAnyOf, pickedByKey } from "./array-params";
 import { inCatalogue } from "./catalogue-scope";
 import {
   clearAIFlagUnlessOpen,
@@ -59,28 +60,6 @@ import {
  */
 
 const qb = new QueryBuilder();
-
-/** A `(values …) as v(…)` relation for an update-from: its alias and columns are local names. */
-function valuesOf<K extends string>(columns: readonly K[], rows: ReadonlyArray<Record<K, SQL>>) {
-  const v = sql.identifier("v");
-
-  return {
-    from: sql`(values ${sql.join(
-      rows.map(
-        (row) =>
-          sql`(${sql.join(
-            columns.map((column) => row[column]),
-            sql`, `
-          )})`
-      ),
-      sql`, `
-    )}) as ${v}(${sql.join(
-      columns.map((column) => sql.identifier(column)),
-      sql`, `
-    )})`,
-    column: (column: K) => sql`${v}.${sql.identifier(column)}`,
-  };
-}
 
 /** One taxonomy entry as the seed applies it, its spellings already folded. */
 export interface SeedEntry {
@@ -332,17 +311,20 @@ export async function applyIngredientSeed(entries: readonly SeedEntry[]): Promis
 
     // A spelling the entry keeps takes the language the file now gives it first.
     for (const part of chunks(restamps)) {
-      const v = valuesOf(
-        ["fold", "locale"],
-        part.map(({ fold, locale }) => ({ fold: sql`${fold}`, locale: sql`${locale}::text` }))
-      );
+      const folds = part.map((row) => row.fold);
 
       await tx
         .update(ingredientAliases)
-        .set({ locale: v.column("locale") })
-        .from(v.from)
+        .set({
+          locale: pickedByKey(
+            ingredientAliases.fold,
+            folds,
+            "text",
+            part.map((row) => row.locale)
+          ),
+        })
         .where(
-          and(eq(ingredientAliases.fold, v.column("fold")), isNull(ingredientAliases.householdId))
+          and(isAnyOf(ingredientAliases.fold, folds, "text"), isNull(ingredientAliases.householdId))
         );
     }
 
@@ -369,19 +351,18 @@ export async function applyIngredientSeed(entries: readonly SeedEntry[]): Promis
     }
 
     for (const part of chunks(parentUpdates)) {
-      const v = valuesOf(
-        ["id", "parent_id"],
-        part.map(({ id, parentId }) => ({
-          id: sql`${id}::uuid`,
-          parent_id: sql`${parentId}::uuid`,
-        }))
+      const ids = part.map((row) => row.id);
+      const parentOf = pickedByKey(
+        ingredients.id,
+        ids,
+        "uuid",
+        part.map((row) => row.parentId)
       );
 
       await tx
         .update(ingredients)
-        .set({ parentId: v.column("parent_id") })
-        .from(v.from)
-        .where(eq(ingredients.id, v.column("id")));
+        .set({ parentId: sql`${parentOf}::uuid` })
+        .where(isAnyOf(ingredients.id, ids, "uuid"));
     }
     outcome.parentsSet = parentUpdates.length;
 
@@ -400,19 +381,18 @@ export async function applyIngredientSeed(entries: readonly SeedEntry[]): Promis
     }
 
     for (const part of chunks(codeUpdates)) {
-      const v = valuesOf(
-        ["id", "codes"],
-        part.map(({ id, codes }) => ({
-          id: sql`${id}::uuid`,
-          codes: sql`${codes ? JSON.stringify(codes) : null}::jsonb`,
-        }))
+      const ids = part.map((row) => row.id);
+      const codesOf = pickedByKey(
+        ingredients.id,
+        ids,
+        "uuid",
+        part.map(({ codes }) => (codes ? JSON.stringify(codes) : null))
       );
 
       await tx
         .update(ingredients)
-        .set({ nutritionCodes: v.column("codes") })
-        .from(v.from)
-        .where(eq(ingredients.id, v.column("id")));
+        .set({ nutritionCodes: sql`${codesOf}::jsonb` })
+        .where(isAnyOf(ingredients.id, ids, "uuid"));
     }
     outcome.nutritionChanged = codeUpdates.length;
 
@@ -446,14 +426,12 @@ async function removeUnusedDropped(tx: DbTransaction, listed: readonly string[])
         isNotNull(ingredients.offId),
         isNull(ingredients.ownerId),
         // One array parameter, not one per entry: a statement holds at most 65,535.
-        listed.length > 0
-          ? sql`${ingredients.offId} <> all(${sql.param([...listed])}::text[])`
-          : undefined,
-        sql`not ${ingredientIsNamed()}`,
-        sql`not ${usedById(aisleLinks)}`,
-        sql`not ${usedById(storeProductLinks)}`,
-        sql`not ${usedById(ingredientStorePreferences)}`,
-        sql`not ${usedById(ingredientNutritionCorrections)}`,
+        listed.length > 0 ? not(isAnyOf(ingredients.offId, listed, "text")) : undefined,
+        not(ingredientIsNamed()),
+        not(usedById(aisleLinks)),
+        not(usedById(storeProductLinks)),
+        not(usedById(ingredientStorePreferences)),
+        not(usedById(ingredientNutritionCorrections)),
         notExists(
           qb
             .select({ id: ingredientAliases.id })
@@ -702,7 +680,7 @@ export async function listParentlessMintsSpelledWith(
         eq(ingredients.keptDistinct, false),
         eq(ingredients.parentChosen, false),
         not(inArray(ingredients.id, [...ids])),
-        sql`not ${parentIsOpenAnswer}`,
+        not(parentIsOpenAnswer),
         ingredientIsListed(),
         or(...holds)
       )

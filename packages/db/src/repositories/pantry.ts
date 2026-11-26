@@ -232,10 +232,12 @@ export async function findIngredientOwnSpelling(
       desc(sql`lower(${ingredientAliases.text}) = lower(${ingredients.name})`),
       asc(ingredientAliases.createdAt)
     )
-    .limit(1);
+    .limit(1)
+    .as("own_spelling");
   const [row] = await db
-    .select({ ingredientId: ingredients.id, ingredientAliasId: sql<string | null>`${ownSpelling}` })
+    .select({ ingredientId: ingredients.id, ingredientAliasId: ownSpelling.id })
     .from(ingredients)
+    .leftJoinLateral(ownSpelling, sql`true`)
     .where(
       and(eq(ingredients.id, ingredientId), inCatalogue(ingredients.householdId, householdId))
     );

@@ -1,5 +1,5 @@
 import type { SQL } from "drizzle-orm";
-import { and, asc, eq, inArray, isNull, ne, or, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, ne, notExists, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
 import type { Db, DbTransaction } from "@norish/db/drizzle";
@@ -50,10 +50,9 @@ export async function listSpellingsForCleanup(): Promise<CleanupSpelling[]> {
       fold: ingredientAliases.fold,
       seeded: ingredientAliases.seeded,
       ingredientId: ingredientAliases.ingredientId,
-      cleanable: sql<boolean>`(${and(
-        isNull(ingredients.offId),
-        eq(ingredients.parentChosen, false)
-      )})`,
+      cleanable: and(isNull(ingredients.offId), eq(ingredients.parentChosen, false))!.mapWith(
+        Boolean
+      ),
     })
     .from(ingredientAliases)
     .innerJoin(ingredients, eq(ingredients.id, ingredientAliases.ingredientId))
@@ -86,7 +85,7 @@ export async function rewriteSpelling(
   const rewritten = await db
     .update(ingredientAliases)
     .set({ text, fold, version: sql`${ingredientAliases.version} + 1`, updatedAt: new Date() })
-    .where(and(eq(ingredientAliases.id, id), sql`not exists (${others})`))
+    .where(and(eq(ingredientAliases.id, id), notExists(others)))
     .returning({ id: ingredientAliases.id });
 
   return rewritten.length > 0;
