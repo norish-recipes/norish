@@ -89,10 +89,12 @@ describe("a Master Key rotation in env mode, over real Postgres and Valkey", () 
   const keyA = randomBytes(32);
   const keyB = randomBytes(32);
   let container: StartedValkeyContainer;
-  let before: { userId: string; cookie: string };
+  let before: { userId: string; cookie: string; token: string };
   let rotation: { info: unknown[]; warn: unknown[]; fingerprint: string | null };
   let secondStart: { info: unknown[]; warn: unknown[] };
   let after: AuthModule;
+  // The keys Valkey held just before the rotating boot, and after it.
+  let stored: { before: string[]; after: string[] };
 
   beforeAll(async () => {
     await testBase.setup();
@@ -108,12 +110,17 @@ describe("a Master Key rotation in env mode, over real Postgres and Valkey", () 
       request("/sign-up/email", { body: { email: EMAIL, password: PASSWORD, name: "Grace" } })
     );
     const cookie = cookiesFrom(signUp);
+    const { token } = (await signUp.json()) as { token: string };
 
-    before = { userId: (await sessionOf(first, { cookie }))?.user.id ?? "", cookie };
+    before = { userId: (await sessionOf(first, { cookie }))?.user.id ?? "", cookie, token };
 
     // The rotation: MASTER_KEY moves to key B, key A beside it as MASTER_KEY_PREVIOUS.
     pin(keyB, keyA);
+    const valkey = await getPublisherClient();
+
+    stored = { before: await valkey.keys("*"), after: [] };
     rotation = { ...(await boot()), fingerprint: await getMasterKeyFingerprint() };
+    stored.after = await valkey.keys("*");
     // The next start, MASTER_KEY_PREVIOUS not yet removed.
     secondStart = await boot();
     // A new process: every module evaluated again, on key B.
@@ -139,6 +146,11 @@ describe("a Master Key rotation in env mode, over real Postgres and Valkey", () 
   });
 
   it("ends the session made before the rotation, and signs in under the new key", async () => {
+    // The sign-up's session and its user's list of sessions, gone from Valkey.
+    const sessionKeys = [before.token, `active-sessions-${before.userId}`];
+
+    expect(stored.before).toEqual(expect.arrayContaining(sessionKeys));
+    expect(stored.after.filter((key) => sessionKeys.includes(key))).toEqual([]);
     expect(await sessionOf(after, { cookie: before.cookie })).toBeNull();
 
     const response = await after.auth.handler(
