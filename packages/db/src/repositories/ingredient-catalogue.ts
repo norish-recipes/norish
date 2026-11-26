@@ -574,12 +574,21 @@ export async function listListedFoodsOfEveryCatalogue(): Promise<string[]> {
   return listed;
 }
 
-/** Every household with an own food: what a run over the catalogue loops over, each in its own. */
+/**
+ * Every household with a food or spelling of its own (on a seeded food too): what a run over the
+ * catalogue loops over, each in its own.
+ */
 export async function listCatalogueHouseholds(): Promise<string[]> {
   const rows = await db
-    .selectDistinct({ householdId: ingredients.householdId })
+    .select({ householdId: ingredients.householdId })
     .from(ingredients)
-    .where(isNotNull(ingredients.householdId));
+    .where(isNotNull(ingredients.householdId))
+    .union(
+      db
+        .select({ householdId: ingredientAliases.householdId })
+        .from(ingredientAliases)
+        .where(isNotNull(ingredientAliases.householdId))
+    );
 
   return rows.flatMap((row) => (row.householdId ? [row.householdId] : []));
 }

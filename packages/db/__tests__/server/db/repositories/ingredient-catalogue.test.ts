@@ -6,6 +6,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { withTransaction } from "@norish/db/drizzle";
 import {
   deleteCatalogueAlias,
+  listCatalogueHouseholds,
   listCatalogueIngredients,
   listIngredientUses,
 } from "@norish/db/repositories/ingredient-catalogue";
@@ -477,5 +478,45 @@ describe("insertSeededIngredient", () => {
       { text: "courgette", locale: "en", seeded: true },
       { text: "zucchine", locale: "it", seeded: true },
     ]);
+  });
+});
+
+describe("listCatalogueHouseholds", () => {
+  const testBase = new RepositoryTestBase("test_catalogue_households");
+
+  beforeAll(async () => {
+    await testBase.setup();
+  });
+
+  beforeEach(async () => {
+    await testBase.beforeEachTest();
+  });
+
+  afterAll(async () => {
+    await testBase.teardown();
+  });
+
+  it("lists every household holding a food or a spelling of its own, a seeded food's included", async () => {
+    const [withFood, withSpelling, without] = [
+      testHouseholdOf((await createTestUser()).id),
+      testHouseholdOf((await createTestUser()).id),
+      testHouseholdOf((await createTestUser()).id),
+    ];
+    const leek = (await createTestIngredient({ name: "leek" }))!;
+
+    await createTestIngredient({ name: "prei", householdId: withFood });
+    await getTestDb()
+      .insert(schema.ingredientAliases)
+      .values({
+        householdId: withSpelling,
+        text: "stokprei",
+        fold: "stokprei",
+        ingredientId: leek.id,
+      });
+
+    const listed = await listCatalogueHouseholds();
+
+    expect(listed.sort()).toEqual([withFood, withSpelling].sort());
+    expect(listed).not.toContain(without);
   });
 });
