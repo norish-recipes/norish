@@ -4,7 +4,6 @@ export { normalizeLocaleConfig } from "./normalize-locale-config";
 export { useAuthProvidersQuery } from "./use-auth-providers-query";
 export { useCategoriesQuery } from "./use-categories-query";
 export { useConfigSubscription } from "./use-config-subscription";
-export { useCuisinesQuery } from "./use-cuisines-query";
 export { nutritionQueryKeys, useIngredientsSubscription } from "./use-ingredients-subscription";
 export { useLocaleConfigQuery } from "./use-locale-config-query";
 export { useRecurrenceConfigQuery } from "./use-recurrence-config-query";
