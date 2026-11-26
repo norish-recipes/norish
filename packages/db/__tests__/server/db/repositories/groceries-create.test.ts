@@ -12,12 +12,14 @@ import {
   createGroceries,
   deleteGroceryByIds,
   findNewestGroceryNamed,
+  findStoreGroceryFood,
   listGroceriesByHousehold,
   lockGroceryList,
   markAllDoneInStore,
   reorderGroceriesInStore,
   updateGroceries,
 } from "@norish/db/repositories/groceries";
+import { insertSeededIngredient } from "@norish/db/repositories/ingredient-seed";
 import { createStore } from "@norish/db/repositories/stores";
 import { groceries } from "@norish/db/schema";
 
@@ -72,6 +74,22 @@ describe("what a create shifts", () => {
       storeId,
       ...overrides,
     },
+  });
+
+  it("finds the food the Store's newest grocery of a name names, as pricing trims it", async () => {
+    const seeded = (name: string) =>
+      insertSeededIngredient({ name, offId: `en:${name}` }, [
+        { text: name, fold: name, locale: null },
+      ]);
+    const [kaas, kip] = [await seeded("kaas"), await seeded("kip")];
+
+    await createGroceries([line(" oude kaas ", { ingredientId: kaas })], householdId);
+    await createGroceries([line("oude kaas", { ingredientId: kip })], householdId);
+    await createGroceries([line("brie")], householdId);
+
+    await expect(findStoreGroceryFood(storeId, "oude kaas")).resolves.toBe(kip);
+    await expect(findStoreGroceryFood(storeId, "brie")).resolves.toBeNull();
+    await expect(findStoreGroceryFood(crypto.randomUUID(), "oude kaas")).resolves.toBeNull();
   });
 
   it("hands back every active sibling in the Store, shifted down at the version it had", async () => {

@@ -15,6 +15,7 @@ import {
   isGoneStoreReference,
   isStaleIngredientReference,
 } from "@norish/db/repositories/constraint-violation";
+import { findStoreGroceryFood } from "@norish/db/repositories/groceries";
 import {
   clearPendingLink,
   linkIfUnanswered,
@@ -160,26 +161,31 @@ export async function searchStore(
  */
 export async function matchGroceryName(input: {
   storeId: string;
-  /** The Ingredient asked about; what the answer is filed under. */
+  /** The Ingredient asked about when queued; the answer goes under the one its grocery names now. */
   ingredientId: string;
   /** The grocery's name: what the shop is searched for. */
   name: string;
   onStep?: (step: string) => Promise<void>;
   onStepDone?: (detail: LookupStepDetail) => Promise<void>;
 }): Promise<{ matched: boolean }> {
-  const { storeId, ingredientId, name } = input;
-  // Read when the job runs, so the answer reaches the household the Store is in now.
+  const { storeId, name } = input;
+  // Read when the job runs, so the answer reaches the household the Store is in now, filed under
+  // the food its grocery names now: a merge since the job was queued moved the name to another.
   const householdId = await getStoreHouseholdId(storeId);
   const store = householdId ? await getStoreById(storeId, householdId) : null;
+  const ingredientId = await findStoreGroceryFood(storeId, name);
   // Nothing was learned: the Pending Link the producer wrote goes, so the
   // name is unknown again rather than "being asked" for ever.
   const gaveUp = async (): Promise<{ matched: boolean }> => {
-    await clearPendingLink(storeId, ingredientId);
+    await clearPendingLink(storeId, ingredientId ?? input.ingredientId);
 
     return { matched: false };
   };
 
-  if (!householdId || !store?.searchAddress) return gaveUp();
+  if (ingredientId && ingredientId !== input.ingredientId) {
+    await clearPendingLink(storeId, input.ingredientId);
+  }
+  if (!ingredientId || !householdId || !store?.searchAddress) return gaveUp();
 
   // The job is only ever queued for a name the Store did not know. By the time
   // it runs a shopper may have said which product this is — through the

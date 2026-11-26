@@ -26,6 +26,11 @@ const mocks = vi.hoisted(() => ({
   noteProductUnreadable: vi.fn(),
   publish: vi.fn(async () => undefined),
   decideProduct: vi.fn(),
+  findStoreGroceryFood: vi.fn(),
+}));
+
+vi.mock("@norish/db/repositories/groceries", () => ({
+  findStoreGroceryFood: mocks.findStoreGroceryFood,
 }));
 
 vi.mock("@norish/db/repositories/stores", () => ({
@@ -110,6 +115,7 @@ describe("matchGroceryName", () => {
     for (const mock of Object.values(mocks)) mock.mockReset();
     mocks.getStoreById.mockResolvedValue({ id: STORE, searchAddress: SEARCH_ADDRESS });
     mocks.getStoreHouseholdId.mockResolvedValue(HOUSEHOLD);
+    mocks.findStoreGroceryFood.mockResolvedValue(KAAS);
     mocks.resolveProductLink.mockResolvedValue({
       storeId: STORE,
       ingredientId: KAAS,
@@ -122,6 +128,37 @@ describe("matchGroceryName", () => {
     mocks.linkIfUnanswered.mockResolvedValue(true);
     // No Decision Model: the name rule alone decides, as it always has.
     mocks.decideProduct.mockResolvedValue(OFF);
+  });
+
+  it("files the answer under the food the Store's grocery names when the job runs", async () => {
+    const KIP = "33333333-3333-4333-8333-333333333333";
+
+    useShop({
+      candidates: [candidate("Oude kaas")],
+      product: { name: "Oude kaas", price: 7.99, currency: "EUR", size: "930 g" },
+    });
+    mocks.findStoreGroceryFood.mockResolvedValue(KIP);
+    mocks.resolveProductLink.mockResolvedValue(null);
+
+    await matchGroceryName({ storeId: STORE, ingredientId: KAAS, name: "oude kaas" });
+
+    expect(mocks.findStoreGroceryFood).toHaveBeenCalledWith(STORE, "oude kaas");
+    expect(mocks.clearPendingLink).toHaveBeenCalledWith(STORE, KAAS);
+    expect(mocks.linkIfUnanswered).toHaveBeenCalledWith(STORE, KIP, "product-1");
+    expect(mocks.linkIfUnanswered).not.toHaveBeenCalledWith(STORE, KAAS, expect.anything());
+  });
+
+  it("asks nothing once no grocery of the Store names a food by that name", async () => {
+    const visited = useShop({ candidates: [candidate("Oude kaas")] });
+
+    mocks.findStoreGroceryFood.mockResolvedValue(null);
+
+    await expect(
+      matchGroceryName({ storeId: STORE, ingredientId: KAAS, name: "oude kaas" })
+    ).resolves.toEqual({ matched: false });
+    expect(visited).toEqual([]);
+    expect(mocks.clearPendingLink).toHaveBeenCalledWith(STORE, KAAS);
+    expect(mocks.linkIfUnanswered).not.toHaveBeenCalled();
   });
 
   it("searches the shop with the grocery's own name", async () => {

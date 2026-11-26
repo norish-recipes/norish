@@ -1,4 +1,15 @@
-import { and, asc, desc, eq, getTableColumns, inArray, isNull, lte, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  getTableColumns,
+  inArray,
+  isNotNull,
+  isNull,
+  lte,
+  sql,
+} from "drizzle-orm";
 import z from "zod";
 
 import type { Db, DbTransaction } from "@norish/db/drizzle";
@@ -43,6 +54,27 @@ async function readerColumns(householdId: string, executor: Db = db) {
       string | null
     >`CASE WHEN EXISTS (${inView}) THEN ${groceries.recipeIngredientId} END`,
   };
+}
+
+/**
+ * The food the Store's newest grocery of this name (trimmed, as pricing asks) names: what a lookup
+ * queued for it files its answer under when it runs. Null where none names a food now.
+ */
+export async function findStoreGroceryFood(storeId: string, name: string): Promise<string | null> {
+  const [row] = await db
+    .select({ ingredientId: groceries.ingredientId })
+    .from(groceries)
+    .where(
+      and(
+        eq(groceries.storeId, storeId),
+        eq(sql`btrim(${groceries.name})`, name),
+        isNotNull(groceries.ingredientId)
+      )
+    )
+    .orderBy(desc(groceries.createdAt))
+    .limit(1);
+
+  return row?.ingredientId ?? null;
 }
 
 /** The grocery last added under this name on the household's list. */
