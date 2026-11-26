@@ -18,6 +18,7 @@ import { runWithOperationContext } from "@norish/shared-server/lib/operation-con
 import { ResolveSharedRecipeInputSchema } from "@norish/shared/contracts/zod/recipe-shares";
 
 import type { Context } from "./context";
+import { assertWriteHousehold } from "./household-write";
 import { withIdempotency } from "./idempotency-middleware";
 import { middleware, publicProcedure } from "./trpc";
 
@@ -46,6 +47,8 @@ const withAuth = middleware(async ({ ctx, next }) => {
   if (!household) {
     throw new TRPCError({ code: "UNAUTHORIZED", message: "Your account no longer exists" });
   }
+  // Made before a move, it would land in the household the caller is in now.
+  assertWriteHousehold(ctx.writeHousehold, household.id);
 
   const isServerAdmin = user.isServerAdmin ?? false;
 

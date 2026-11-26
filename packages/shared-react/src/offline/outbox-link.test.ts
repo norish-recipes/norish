@@ -2,10 +2,15 @@ import { MutationObserver, QueryClient } from "@tanstack/react-query";
 import { observable } from "@trpc/server/observable";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { hasOutboxAdmissionFailed, isQueuedOutboxSignal } from "@norish/shared/lib/trpc-errors";
+import {
+  hasOutboxAdmissionFailed,
+  HOUSEHOLD_HEADER,
+  isQueuedOutboxSignal,
+} from "@norish/shared/lib/trpc-errors";
 
 import type { OutboxStore } from "./outbox-store";
 import type { NewOutboxEntry, OutboxEntry } from "./outbox-types";
+import { noteWriteStart } from "./household";
 import { isEncodedFormData } from "./input-codec";
 import { createOutboxLink, MUTATION_SEND_TIMEOUT_MS } from "./outbox-link";
 import { createOutboxStore } from "./outbox-store";
@@ -240,6 +245,75 @@ describe("createOutboxLink", () => {
 
     expect(isEncodedFormData(stored.input)).toBe(true);
     expect(stored.entityId).toBe("33333333-3333-4333-8333-333333333333");
+  });
+});
+
+describe("createOutboxLink: the household a write names", () => {
+  beforeEach(() => enqueue.mockClear());
+
+  /** The link while the client holds the account in `held()`; resolves with the op sent on. */
+  function send(
+    op: FakeOp,
+    held: () => string | null,
+    terminal: () => ReturnType<typeof observable>
+  ) {
+    const link = createOutboxLink({
+      store: { enqueue } as unknown as OutboxStore,
+      owner,
+      household: held,
+      replayHeaderValue: REPLAY_HEADER_VALUE,
+    })({} as never);
+    let sent: FakeOp | null = null;
+
+    return new Promise<FakeOp | null>((resolve) => {
+      link({
+        op,
+        next: (forwarded: FakeOp) => ((sent = forwarded), terminal()),
+      } as never).subscribe({
+        next: () => resolve(sent),
+        error: () => resolve(sent),
+        complete: () => resolve(sent),
+      });
+    });
+  }
+
+  it("is the one it started in, when a removal lands before it fails and is queued", async () => {
+    let held = "h1";
+    const failLater = () =>
+      observable((observer) => {
+        held = "h2";
+        queueMicrotask(() => observer.error(new TypeError("Failed to fetch")));
+      });
+
+    const sent = await send(mutationOp(), () => held, failLater);
+
+    expect((sent?.context.headers as Record<string, string>)[HOUSEHOLD_HEADER]).toBe("h1");
+    expect(enqueue).toHaveBeenCalledWith(
+      expect.objectContaining({ householdId: "h1", headers: { "x-operation-id": "op-1" } })
+    );
+  });
+
+  it("is the one its mutation started in, though it waited behind its scope meanwhile", async () => {
+    const op = mutationOp();
+
+    noteWriteStart(op.input, "h1");
+    const sent = await send(op, () => "h2", errorWith(new TypeError("Failed to fetch")));
+
+    expect((sent?.context.headers as Record<string, string>)[HOUSEHOLD_HEADER]).toBe("h1");
+    expect(enqueue).toHaveBeenCalledWith(expect.objectContaining({ householdId: "h1" }));
+  });
+
+  it("is none for the account's own writes and for a replay", async () => {
+    const own = await send(mutationOp({ path: "user.updateName" }), () => "h1", succeedWith({}));
+    const replay = await send(
+      mutationOp({ context: { headers: { [OUTBOX_REPLAY_HEADER]: REPLAY_HEADER_VALUE } } }),
+      () => "h1",
+      succeedWith({})
+    );
+
+    for (const sent of [own, replay]) {
+      expect((sent?.context.headers as Record<string, string>)[HOUSEHOLD_HEADER]).toBeUndefined();
+    }
   });
 });
 

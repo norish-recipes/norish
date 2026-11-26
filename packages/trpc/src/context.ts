@@ -9,6 +9,7 @@ import { readSessionPrincipal, verifySessionPrincipal } from "@norish/auth/sessi
 import { getHouseholdForUser } from "@norish/db";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { isOperationId } from "@norish/shared/lib/operation-helpers";
+import { HOUSEHOLD_HEADER } from "@norish/shared/lib/trpc-errors";
 
 /**
  * What the WebSocket upgrade leaves on the request for `createWsContext`.
@@ -40,17 +41,21 @@ export type Context = {
    * WebSocket path carries subscriptions alone, so it never has one.
    */
   operationId?: OperationId | null;
+  /** The household an app's write was made for (HTTP only); none for REST and API-key clients. */
+  writeHousehold?: string | null;
 };
 
 export async function createHttpContextFromHeaders(
   headers: Headers,
   operationId: OperationId | null
 ): Promise<Context> {
+  const writeHousehold = headers.get(HOUSEHOLD_HEADER);
   const anonymous: Context = {
     user: null,
     household: null,
     connectionId: null,
     operationId,
+    writeHousehold,
   };
 
   try {
@@ -91,7 +96,7 @@ export async function createHttpContextFromHeaders(
         }
       : null;
 
-    return { user, household, connectionId: null, operationId };
+    return { user, household, connectionId: null, operationId, writeHousehold };
   } catch (error) {
     // "Slow down" must not read as "your key was revoked" (#670).
     if (apiKeyRetryAfter(error)) {

@@ -104,6 +104,13 @@ describe("classifyReplayError", () => {
     );
   });
 
+  it("tells a write made for another household from other refusals", () => {
+    expect(classifyReplayError({ data: { httpStatus: 412, otherHousehold: true } })).toBe(
+      "other-household"
+    );
+    expect(classifyReplayError({ data: { httpStatus: 412 } })).toBe("deterministic");
+  });
+
   it("treats 401 ahead of any status heuristic", () => {
     expect(classifyReplayError({ data: { code: "UNAUTHORIZED", httpStatus: 401 } })).not.toBe(
       "deterministic"

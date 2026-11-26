@@ -18,7 +18,9 @@ export type ParkedReason =
   /** Transient 5xx retried past its budget. */
   | "retries-exhausted"
   /** A create this entry depends on was itself parked (one broken story). */
-  | "dependency";
+  | "dependency"
+  /** Made for a household the account has left; a Retry sends it to the current one. */
+  | "other-household";
 
 export interface OutboxEntry {
   /** FIFO sequence the storage adapter assigns on append; never reused. */

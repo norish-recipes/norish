@@ -5,6 +5,7 @@ import type { Query } from "@tanstack/react-query";
 import {
   dehydrate,
   hydrate,
+  MutationCache,
   partialMatchKey,
   QueryCache,
   QueryClient,
@@ -19,7 +20,7 @@ import { isSearchListInput } from "@norish/shared/contracts/list-queries";
 import type { OfflineStorage } from "./storage";
 import { isNotFoundError } from "../trpc/not-found";
 import { ownerDataKey, ownerDataPrefix, purgeForeignReadArtifacts } from "./cache-identity";
-import { householdIdOf, householdQueryKey } from "./household";
+import { currentHousehold, householdIdOf, householdQueryKey, noteWriteStart } from "./household";
 import { clearLastWarmedAt } from "./last-warmed";
 import { createQueryStore } from "./persister";
 import { shareEqual } from "./share-equal";
@@ -113,6 +114,9 @@ export function createOfflineQueryClient({
       ((await outbox?.all()) ?? []).some((entry) => entry.entityId === id));
 
   const queryClient: QueryClient = new QueryClient({
+    mutationCache: new MutationCache({
+      onMutate: (variables) => noteWriteStart(variables, currentHousehold(queryClient)),
+    }),
     queryCache: new QueryCache({
       // A refused read keeps no copy, here or stored, unless it is a create not stored yet.
       onError: (error, query) => {

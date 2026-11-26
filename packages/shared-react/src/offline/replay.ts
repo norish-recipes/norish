@@ -152,9 +152,10 @@ export async function runReplayPass({
   };
 
   for (const entry of await store.forOwner(ownerId, "pending")) {
+    // An early exit only: the server refuses one made for another household when it is sent.
     if (entry.householdId !== householdId) {
-      await store.park(entry.seq, "deterministic");
-      countParked(entry, "deterministic");
+      await store.park(entry.seq, "other-household");
+      countParked(entry, "other-household");
 
       continue;
     }
@@ -204,7 +205,8 @@ export async function runReplayPass({
         break;
 
       case "deterministic":
-        await park("deterministic");
+      case "other-household":
+        await park(outcome.kind);
         break;
 
       case "unauthorized":

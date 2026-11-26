@@ -12,16 +12,23 @@
  *                      with backoff, then park.
  *  - `deterministic` — a 4xx / validation error that will re-fail forever: park
  *                      this one, but keep draining the rest.
+ *  - `other-household` — made for a household the account has left: park it
+ *                      for the user to send to this one or discard.
  *  - `conflict`      — a *successful* response carrying `stale: true`: first
  *                      writer won, this write was dropped; park as Conflicted so
  *                      the loss is visible, never silent.
  */
 
-import { httpStatusOf, isBackendUnreachableError } from "@norish/shared/lib/trpc-errors";
+import {
+  httpStatusOf,
+  isBackendUnreachableError,
+  isOtherHouseholdError,
+} from "@norish/shared/lib/trpc-errors";
 
 import { isUnauthorizedTRPCError } from "../trpc/trpc-links";
 
-type ReplayFailureClass = "unreachable" | "unauthorized" | "ambiguous" | "deterministic";
+type ReplayFailureClass =
+  "unreachable" | "unauthorized" | "ambiguous" | "deterministic" | "other-household";
 
 export type ReplayOutcome = { kind: "success" } | { kind: "conflict" | ReplayFailureClass };
 
@@ -36,6 +43,10 @@ export function classifyReplayError(error: unknown): ReplayFailureClass {
 
   if (isUnauthorizedTRPCError(error)) {
     return "unauthorized";
+  }
+
+  if (isOtherHouseholdError(error)) {
+    return "other-household";
   }
 
   const status = httpStatusOf(error);

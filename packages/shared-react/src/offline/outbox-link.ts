@@ -26,6 +26,7 @@ import { observable } from "@trpc/server/observable";
 import { createClientLogger } from "@norish/shared/lib/logger";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
 import {
+  HOUSEHOLD_HEADER,
   isBackendUnreachableError,
   markOutboxAdmissionFailed,
 } from "@norish/shared/lib/trpc-errors";
@@ -34,6 +35,7 @@ import type { LockManagerLike } from "./leader";
 import type { OutboxStore } from "./outbox-store";
 import type { OutboxEntry } from "./outbox-types";
 import { isStaleResult } from "./error-classification";
+import { householdAtStart } from "./household";
 import { encodedFormDataId, encodeOutboxInput, isEncodedFormData } from "./input-codec";
 import { runIfLeader } from "./leader";
 import { isOutboxReplayContext } from "./replay-client";
@@ -66,7 +68,7 @@ interface OutboxLinkDependencies {
   store: OutboxStore;
   /** The applied cache owner; admission fails while there is none. */
   owner: () => string | null;
-  /** The household the client holds the account to be in, which an entry records. */
+  /** The household the client holds the account to be in: a write names the one it started in. */
   household: () => string | null;
   replayHeaderValue: string;
   /** Procedures that save a whole entity at the version it was read at; they create nothing. */
@@ -108,7 +110,7 @@ function entityIdOf(input: unknown): string | null {
 
 /** Durably admit the mutation to the Outbox; rejects when persistence fails. */
 async function captureToOutbox(
-  { store, owner, household, wholeEdits }: OutboxLinkDependencies,
+  { store, owner, wholeEdits }: OutboxLinkDependencies,
   path: string,
   input: unknown,
   context: unknown
@@ -118,7 +120,7 @@ async function captureToOutbox(
   return store.enqueue({
     id: createClientId(),
     ownerId: captureOwner(owner),
-    householdId: household(),
+    householdId: householdOf(context),
     path,
     input: encodedInput,
     entityId: wholeEdits?.has(path) ? null : entityIdOf(encodedInput),
@@ -126,12 +128,49 @@ async function captureToOutbox(
   });
 }
 
+/** The household a write names; an entry keeps it as `householdId`, not among its headers. */
+function householdOf(context: unknown): string | null {
+  const headers = (context as { headers?: Record<string, unknown> } | undefined)?.headers;
+  const named = headers?.[HOUSEHOLD_HEADER];
+
+  return typeof named === "string" ? named : null;
+}
+
 function operationOf(context: unknown) {
   const ctx = (context ?? {}) as { operationId?: unknown; headers?: HTTPHeaders };
+  const { [HOUSEHOLD_HEADER]: _named, ...headers } = normalizeHeaders(ctx.headers);
 
   return {
     operationId: typeof ctx.operationId === "string" ? ctx.operationId : null,
-    headers: normalizeHeaders(ctx.headers),
+    headers,
+  };
+}
+
+/** The account's own writes, which no household change makes foreign. */
+const ACCOUNT_ROUTERS: ReadonlySet<string> = new Set([
+  "admin",
+  "user",
+  "caldav",
+  "caldavSubscriptions",
+  "siteAuthTokens",
+]);
+
+/** A live write names the household it started in; a replay names its entry's, set by Replay. */
+function withHousehold(deps: OutboxLinkDependencies, op: Operation): Operation {
+  if (
+    ACCOUNT_ROUTERS.has(op.path.split(".")[0] ?? "") ||
+    isOutboxReplayContext(op.context, deps.replayHeaderValue)
+  ) {
+    return op;
+  }
+  const household = householdAtStart(op.input, deps.household);
+
+  if (!household) return op;
+  const headers = (op.context as { headers?: Record<string, string> }).headers;
+
+  return {
+    ...op,
+    context: { ...op.context, headers: { ...headers, [HOUSEHOLD_HEADER]: household } },
   };
 }
 
@@ -145,7 +184,12 @@ async function replaceUnsent(
   const ownerId = deps.owner();
   const pending = ownerId ? await deps.store.forOwner(ownerId, "pending") : [];
   const last = pending
-    .filter((entry) => entry.path === op.path && idOf(entry.input) === idOf(op.input))
+    .filter(
+      (entry) =>
+        entry.path === op.path &&
+        idOf(entry.input) === idOf(op.input) &&
+        entry.householdId === householdOf(op.context)
+    )
     .at(-1);
 
   if (!last) return "none";
@@ -241,10 +285,11 @@ export function createOutboxLink<TRouter extends AnyTRPCRouter>(
         };
       });
 
-    return ({ op, next }) => {
-      if (op.type !== "mutation" || isUncaptured(op.path)) {
-        return next(op);
-      }
+    return ({ op: sent, next }) => {
+      if (sent.type !== "mutation") return next(sent);
+      const op = withHousehold(deps, sent);
+
+      if (isUncaptured(op.path)) return next(op);
 
       if (
         !deps.wholeEdits?.has(op.path) ||

@@ -1,4 +1,10 @@
-import { dehydrate, hydrate, QueryClient, QueryObserver } from "@tanstack/react-query";
+import {
+  dehydrate,
+  hydrate,
+  MutationObserver,
+  QueryClient,
+  QueryObserver,
+} from "@tanstack/react-query";
 import { createTRPCClient, TRPCClientError } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -14,6 +20,7 @@ import {
   OWNER_WRITE_WAIT_MS,
   PERSIST_THROTTLE_MS,
 } from "./cache-manager";
+import { householdAtStart } from "./household";
 import { readLastWarmedAt, writeLastWarmedAt } from "./last-warmed";
 import { createQueryStore } from "./persister";
 import { createMemoryStorage } from "./testing/memory-storage";
@@ -211,6 +218,20 @@ describe("createCacheManager", () => {
       expect(manager.queryClient.getQueryData(recipeKey)).toBeUndefined();
       expect(manager.queryClient.getQueryData(householdKey)).toEqual(inHousehold("h2"));
       expect(await storedKeys()).toEqual([JSON.stringify(householdKey)]);
+    });
+
+    it("notes the household a write starts in, as its mutation starts", async () => {
+      const manager = createManager();
+      const client = manager.queryClient;
+      const input = { id: "g1" };
+
+      client.setQueryData(householdKey, inHousehold("h1"));
+      const observer = new MutationObserver(client, { mutationFn: async () => null });
+
+      await observer.mutate(input);
+      client.setQueryData(householdKey, inHousehold("h2"));
+
+      expect(householdAtStart(input, () => "h2")).toBe("h1");
     });
 
     it("keeps everything while the household stays the same", async () => {

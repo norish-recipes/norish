@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { HOUSEHOLD_HEADER } from "@norish/shared/lib/trpc-errors";
+
 import type { ReplayOutcome } from "./error-classification";
 import type { OutboxStore } from "./outbox-store";
 import type { NewOutboxEntry, OutboxEntry } from "./outbox-types";
@@ -10,6 +12,7 @@ import {
   retryDelayMs,
   runReplayPass,
 } from "./replay";
+import { replayOutboxEntry } from "./replay-client";
 import { createMemoryStorage } from "./testing/memory-storage";
 
 function entry(overrides: Partial<NewOutboxEntry> = {}): NewOutboxEntry {
@@ -66,7 +69,40 @@ describe("runReplayPass", () => {
     expect(submitted).toEqual(["b"]);
     expect(result).toMatchObject({ removed: 1, parked: 1, halted: null });
     expect((await store.forOwner("u1", "parked")).map((e) => [e.id, e.parkedReason])).toEqual([
-      ["a", "deterministic"],
+      ["a", "other-household"],
+    ]);
+  });
+
+  it("parks the second of two entries when a removal lands between their sends", async () => {
+    await store.enqueue(entry({ id: "a", path: "groceries.create", input: { id: "g1" } }));
+    await store.enqueue(entry({ id: "b", path: "groceries.create", input: { id: "g2" } }));
+    // The server: the account is removed from h1 once the first write lands.
+    let serverHousehold = "h1";
+    const mutate = vi.fn(
+      async (_input: unknown, opts: { context: { headers: Record<string, string> } }) => {
+        const named = opts.context.headers[HOUSEHOLD_HEADER];
+
+        if (named && named !== serverHousehold) {
+          throw { data: { httpStatus: 412, otherHousehold: true } };
+        }
+        serverHousehold = "h2";
+
+        return null;
+      }
+    );
+    const client = { groceries: { create: { mutate } } };
+
+    const result = await runReplayPass({
+      store,
+      submit: (stored) => replayOutboxEntry(client, stored, "test-outbox"),
+      ownerId: "u1",
+      householdId: "h1",
+    });
+
+    expect(mutate).toHaveBeenCalledTimes(2);
+    expect(result).toMatchObject({ removed: 1, parked: 1 });
+    expect((await store.forOwner("u1", "parked")).map((e) => [e.id, e.parkedReason])).toEqual([
+      ["b", "other-household"],
     ]);
   });
 

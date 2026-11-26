@@ -26,3 +26,18 @@ export function householdIdOf(data: unknown): string | null {
 /** The household the client holds the Reader to be in now, or null before it is read. */
 export const currentHousehold = (queryClient: QueryClient): string | null =>
   householdIdOf(queryClient.getQueryData(householdQueryKey()));
+
+// Keyed by the mutation's input, which tRPC hands its links unchanged.
+const startedIn = new WeakMap<object, string | null>();
+
+/** Notes the household a write starts in, before it waits behind its scope's earlier writes. */
+export function noteWriteStart(input: unknown, household: string | null): void {
+  if (input && typeof input === "object") startedIn.set(input, household);
+}
+
+/** The household a write was started in, or `now` for one sent without a mutation. */
+export function householdAtStart(input: unknown, now: () => string | null): string | null {
+  return input && typeof input === "object" && startedIn.has(input)
+    ? (startedIn.get(input) ?? null)
+    : now();
+}
