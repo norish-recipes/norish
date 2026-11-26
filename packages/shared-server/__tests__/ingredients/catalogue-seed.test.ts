@@ -21,6 +21,7 @@ import { listPantryIngredientsByHousehold } from "@norish/db/repositories/pantry
 import { mergeByAI, parentByAI } from "@norish/shared-server/ingredients/ai-changes";
 import {
   addAlias,
+  addIngredient,
   listIngredients,
   mergeIngredients,
   moveAlias,
@@ -54,6 +55,7 @@ import {
   createTestUser,
   getSpellingTexts,
   nameInATestRecipe,
+  readTestIngredient,
   readTestIngredientNamed,
   readTestSeedSpelling,
   setTestSeedSpellingLocale,
@@ -565,6 +567,24 @@ describe("the ingredient catalogue seed", () => {
       await expect(resolve("sjalot")).resolves.toMatchObject({
         ingredientId: shallot.ingredientId,
       });
+    });
+
+    it("never merges or flags a food a person added by hand on the first load", async () => {
+      const minted = await resolve("onions");
+      const added = await addIngredient(actor, "ajuin", ["uien"]);
+
+      await refreshIngredientCatalogue(serving(excerpt, '"v1"').fetchImpl);
+
+      const onion = (await resolve("onion")).ingredientId;
+
+      await expect(findIngredientByAliasId(minted.aliasId)).resolves.toMatchObject({ id: onion });
+      await expect(readTestIngredient(added.ingredientId)).resolves.toMatchObject({
+        name: "ajuin",
+        householdId: actor.householdId,
+        flagged: false,
+        addedByHand: true,
+      });
+      expect(await getSpellingTexts(added.ingredientId)).toEqual(["ajuin", "uien"]);
     });
 
     it("asks only for a newer file, and applies nothing when there is none", async () => {

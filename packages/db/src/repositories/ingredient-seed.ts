@@ -530,7 +530,7 @@ export async function takeOffSeededSpelling(
   });
 }
 
-/** Every household's listed own foods under `parentId` that no person filed there. */
+/** Every household's listed minted foods under `parentId` that no person filed there. */
 export async function listUnchosenOwnChildren(
   parentId: string
 ): Promise<Array<{ id: string; name: string; householdId: string | null }>> {
@@ -541,6 +541,7 @@ export async function listUnchosenOwnChildren(
       and(
         eq(ingredients.parentId, parentId),
         isNull(ingredients.offId),
+        eq(ingredients.addedByHand, false),
         eq(ingredients.parentChosen, false),
         // A hidden food (a grocery's) keeps its parent, and so its aisle.
         ingredientIsListed()
@@ -567,7 +568,10 @@ export async function listSeededIngredientIds(): Promise<Map<string, string>> {
   return new Map(rows.map((row) => [row.offId!, row.id]));
 }
 
-/** Every spelling of every Ingredient that is no taxonomy entry: what the seed's one pass reads. */
+/**
+ * Every spelling of every minted Ingredient (no taxonomy entry, not added by hand): what the seed's
+ * one pass reads. A food a person added is never merged or flagged by a seed load.
+ */
 export async function listUnseededSpellings(): Promise<
   Array<{ ingredientId: string; householdId: string | null; text: string; fold: string }>
 > {
@@ -580,7 +584,7 @@ export async function listUnseededSpellings(): Promise<
     })
     .from(ingredientAliases)
     .innerJoin(ingredients, eq(ingredients.id, ingredientAliases.ingredientId))
-    .where(isNull(ingredients.offId));
+    .where(and(isNull(ingredients.offId), eq(ingredients.addedByHand, false)));
 }
 
 /** Flag an Ingredient: the seed's one pass was not sure which entry it is. */
@@ -602,7 +606,7 @@ export interface UndecidedMint {
 }
 
 /**
- * The listed own Ingredients no person decided about (no entry, not distinct, no chosen parent),
+ * The listed minted Ingredients no person decided about (no entry, not distinct, no chosen parent),
  * flagged or not, which the startup recheck reads again when the rules change.
  */
 export async function listUndecidedMints(): Promise<UndecidedMint[]> {
@@ -620,6 +624,7 @@ export async function listUndecidedMints(): Promise<UndecidedMint[]> {
     .where(
       and(
         isNull(ingredients.offId),
+        eq(ingredients.addedByHand, false),
         eq(ingredients.keptDistinct, false),
         eq(ingredients.parentChosen, false),
         // A hidden food (a grocery's) is left alone: its aisle walks its parent.
@@ -676,6 +681,7 @@ export async function listParentlessMintsSpelledWith(
       and(
         eq(ingredients.householdId, householdId),
         isNull(ingredients.parentId),
+        eq(ingredients.addedByHand, false),
         eq(ingredients.keptDistinct, false),
         eq(ingredients.parentChosen, false),
         not(inArray(ingredients.id, [...ids])),

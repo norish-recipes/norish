@@ -149,8 +149,8 @@ export async function applySeedEntries(entries: SeedEntry[]): Promise<{
 }
 
 /**
- * The first seed's pass over older Ingredients, no AI: one whose spellings (or stripped ones) the
- * seed gives one entry merges into it, one it gives several is flagged.
+ * The first seed's pass over older minted Ingredients, no AI: one whose spellings (or stripped ones)
+ * the seed gives one entry merges into it, one it gives several is flagged; one added by hand stays.
  */
 export async function mergeExistingIntoSeed(
   entries: readonly SeedEntry[]
