@@ -34,6 +34,7 @@ export default function ProfileCard() {
   const handleSaveProfile = async () => {
     const hasNameChanges = name !== user?.name;
     const hasImageChanges = pendingImageFile !== null;
+
     if (!hasNameChanges && !hasImageChanges) {
       return;
     }
@@ -51,6 +52,7 @@ export default function ProfileCard() {
   };
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+
     if (!file) {
       return;
     }
@@ -64,6 +66,7 @@ export default function ProfileCard() {
     }
 
     const reader = new FileReader();
+
     reader.onload = (event) => {
       setImagePreview(event.target?.result as string);
     };
@@ -77,6 +80,7 @@ export default function ProfileCard() {
   };
   const hasPendingChanges = name !== user?.name || pendingImageFile !== null;
   const hasImage = imagePreview || user?.image;
+
   return (
     <SettingsCard icon={UserCircleIcon} title={t("title")}>
       <div className="flex items-center gap-4">

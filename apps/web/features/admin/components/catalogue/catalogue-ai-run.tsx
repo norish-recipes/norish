@@ -6,7 +6,7 @@ import ConfirmModal from "@/components/shared/confirm-modal";
 import { cssAIIconColor } from "@/config/css-tokens";
 import { AIButton } from "@/features/admin/components/ai-button";
 import { SparklesIcon } from "@heroicons/react/24/outline";
-import { Modal, Spinner } from "@heroui/react";
+import { Spinner } from "@heroui/react";
 import { twMerge } from "tailwind-merge";
 
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
@@ -79,7 +79,7 @@ export function CatalogueAIRun({
         title={
           <>
             <SparklesIcon className={twMerge("size-5 shrink-0", cssAIIconColor)} />
-            <Modal.Heading>{title}</Modal.Heading>
+            {title}
           </>
         }
         onOpenChange={onOpenChange}

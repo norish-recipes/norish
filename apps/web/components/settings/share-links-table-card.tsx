@@ -48,6 +48,7 @@ const CONFIRM_BUTTONS = {
   reactivate: { action: "apply", icon: PlayIcon, variant: "primary" },
   delete: { action: "delete", variant: "danger" },
 } as const;
+
 function hasOwnerFields(share: ShareRow): share is AdminRecipeShareInventoryDto {
   return "ownerId" in share;
 }
@@ -174,6 +175,7 @@ export default function ShareLinksTableCard({
         );
     }
   };
+
   return (
     <>
       <SettingsCard

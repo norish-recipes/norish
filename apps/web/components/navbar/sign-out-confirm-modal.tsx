@@ -1,7 +1,8 @@
 "use client";
 
+import { ActionButton } from "@/components/shared/action-button";
+import ConfirmModal from "@/components/shared/confirm-modal";
 import { usePending } from "@/hooks/use-pending";
-import { Button, Modal } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 interface SignOutConfirmModalProps {
@@ -25,7 +26,6 @@ export function SignOutConfirmModal({
   onConfirm,
 }: SignOutConfirmModalProps) {
   const t = useTranslations("navbar.userMenu");
-  const tCommon = useTranslations("common");
   const [busy, whileBusy] = usePending();
 
   const confirm = async () => {
@@ -33,39 +33,23 @@ export function SignOutConfirmModal({
   };
 
   return (
-    <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={onOpenChange}>
-      <Modal.Container className="z-[1100]" size="sm">
-        <Modal.Dialog>
-          {() => (
-            <>
-              <Modal.Header>{t("signOutConfirm.title")}</Modal.Header>
-              <Modal.Body className="pb-4">
-                <p className="text-sm">
-                  {t("signOutConfirm.description", { count: unsyncedCount })}
-                </p>
-                <div className="flex justify-end gap-2 pt-3">
-                  <Button
-                    isDisabled={busy}
-                    size="sm"
-                    variant="tertiary"
-                    onPress={() => onOpenChange(false)}
-                  >
-                    {tCommon("cancel")}
-                  </Button>
-                  <Button
-                    isDisabled={busy}
-                    size="sm"
-                    variant="danger"
-                    onPress={() => void confirm()}
-                  >
-                    {t("logout")}
-                  </Button>
-                </div>
-              </Modal.Body>
-            </>
-          )}
-        </Modal.Dialog>
-      </Modal.Container>
-    </Modal.Backdrop>
+    <ConfirmModal
+      confirm={
+        <ActionButton
+          action="delete"
+          isDisabled={busy}
+          variant="danger"
+          onPress={() => void confirm()}
+        >
+          {t("logout")}
+        </ActionButton>
+      }
+      isCancelDisabled={busy}
+      isOpen={isOpen}
+      title={t("signOutConfirm.title")}
+      onOpenChange={onOpenChange}
+    >
+      <p className="text-sm">{t("signOutConfirm.description", { count: unsyncedCount })}</p>
+    </ConfirmModal>
   );
 }

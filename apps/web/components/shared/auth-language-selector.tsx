@@ -27,6 +27,7 @@ export function AuthLanguageSelector() {
   if (enabledLocales.length <= 1) {
     return null;
   }
+
   return (
     <Dropdown>
       <Button

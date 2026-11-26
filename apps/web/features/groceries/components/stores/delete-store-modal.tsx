@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 import { ActionButton } from "@/components/shared/action-button";
-import { CancelButton, ModalFooter } from "@/components/shared/confirm-modal";
+import {
+  CancelButton,
+  ModalFooter,
+  ModalFrame,
+  ModalTitle,
+} from "@/components/shared/confirm-modal";
 import { Modal, Radio, RadioGroup } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -23,20 +28,14 @@ export function DeleteStoreModal({
   onConfirm,
 }: DeleteStoreModalProps) {
   return (
-    // Portalled to <body> above the open drawer (z-[1001]); pointer-events-auto undoes the
-    // `pointer-events: none` vaul sets on <body>, which would swallow every click.
-    <Modal.Backdrop className="pointer-events-auto z-[1099]" isOpen={isOpen} onOpenChange={onClose}>
-      <Modal.Container className="z-[1100]">
-        <Modal.Dialog>
-          <DeleteStoreDialog
-            storeId={storeId}
-            storeName={storeName}
-            onClose={onClose}
-            onConfirm={onConfirm}
-          />
-        </Modal.Dialog>
-      </Modal.Container>
-    </Modal.Backdrop>
+    <ModalFrame isOpen={isOpen} onOpenChange={onClose}>
+      <DeleteStoreDialog
+        storeId={storeId}
+        storeName={storeName}
+        onClose={onClose}
+        onConfirm={onConfirm}
+      />
+    </ModalFrame>
   );
 }
 
@@ -59,7 +58,7 @@ function DeleteStoreDialog({
 
   return (
     <>
-      <Modal.Header>{t("deleteStore")}</Modal.Header>
+      <ModalTitle>{t("deleteStore")}</ModalTitle>
       <Modal.Body className="gap-4">
         <p className="text-muted text-base">
           {t("confirmDelete", {

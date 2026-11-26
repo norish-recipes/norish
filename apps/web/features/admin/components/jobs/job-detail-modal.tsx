@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 import { ActionButton } from "@/components/shared/action-button";
-import { CancelButton, ModalFooter, ModalFrame } from "@/components/shared/confirm-modal";
+import {
+  CancelButton,
+  ModalFooter,
+  ModalFrame,
+  ModalTitle,
+} from "@/components/shared/confirm-modal";
 import { ArrowPathIcon, StopCircleIcon } from "@heroicons/react/16/solid";
 import {
   CheckCircleIcon,
@@ -264,12 +269,11 @@ function JobDetail({ picked, onClose }: { picked: JobRef; onClose: () => void })
 
   return (
     <>
-      <Modal.Header>
-        <div className="flex items-center gap-3">
-          <Modal.Heading>{t("detail.title")}</Modal.Heading>
-          {job ? <JobStatusChip isHanging={job.isHanging} state={job.state} /> : null}
-        </div>
-      </Modal.Header>
+      <ModalTitle
+        aside={job ? <JobStatusChip isHanging={job.isHanging} state={job.state} /> : null}
+      >
+        {t("detail.title")}
+      </ModalTitle>
       <Modal.Body className="gap-6">
         {isLoading && !job ? <JobDetailSkeleton /> : null}
         {error && !job ? <p className="text-danger text-sm">{t("detail.notFound")}</p> : null}

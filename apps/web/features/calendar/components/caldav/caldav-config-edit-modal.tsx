@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import { ActionButton } from "@/components/shared/action-button";
-import { CancelButton, ModalFooter } from "@/components/shared/confirm-modal";
+import { CancelButton, ModalFooter, ModalTitle } from "@/components/shared/confirm-modal";
 import { ServerIcon } from "@heroicons/react/24/outline";
 import { Modal } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -95,10 +95,10 @@ function CaldavConfigEditFields({
 
   return (
     <>
-      <Modal.Header className="flex items-center gap-2">
+      <ModalTitle>
         <ServerIcon className="h-5 w-5" />
         {tConfig("editTitle")}
-      </Modal.Header>
+      </ModalTitle>
       <Modal.Body>
         <CaldavFormFields
           form={form}

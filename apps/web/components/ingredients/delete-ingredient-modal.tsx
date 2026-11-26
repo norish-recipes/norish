@@ -1,7 +1,12 @@
 "use client";
 
 import { ActionButton } from "@/components/shared/action-button";
-import { CancelButton, ModalFooter } from "@/components/shared/confirm-modal";
+import {
+  CancelButton,
+  ModalFooter,
+  ModalFrame,
+  ModalTitle,
+} from "@/components/shared/confirm-modal";
 import { ExclamationTriangleIcon, EyeIcon } from "@heroicons/react/16/solid";
 import { Button, Modal } from "@heroui/react";
 import { useTranslations } from "next-intl";
@@ -24,13 +29,9 @@ export function DeleteIngredientModal({
   onShowUses: () => void;
 }) {
   return (
-    <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={onClose}>
-      <Modal.Container className="z-[1100]">
-        <Modal.Dialog data-testid="ingredient-delete-dialog">
-          <DeleteIngredientContent onClose={onClose} {...content} />
-        </Modal.Dialog>
-      </Modal.Container>
-    </Modal.Backdrop>
+    <ModalFrame data-testid="ingredient-delete-dialog" isOpen={isOpen} onOpenChange={onClose}>
+      <DeleteIngredientContent onClose={onClose} {...content} />
+    </ModalFrame>
   );
 }
 
@@ -55,10 +56,10 @@ function DeleteIngredientContent({
 
   return (
     <>
-      <Modal.Header className="flex items-center gap-2">
+      <ModalTitle>
         <ExclamationTriangleIcon className="text-danger h-5 w-5" />
         {t("deleteTitle", { name })}
-      </Modal.Header>
+      </ModalTitle>
       <Modal.Body className="flex flex-col gap-3">
         <p>{t("deleteConfirm")}</p>
         {data && touched.length > 0 ? (

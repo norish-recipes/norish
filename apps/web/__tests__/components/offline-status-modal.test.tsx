@@ -51,6 +51,7 @@ vi.mock("@heroui/react", () => ({
       <div>{typeof children === "function" ? children() : children}</div>
     ),
     Header: ({ children }: any) => <div>{children}</div>,
+    Heading: ({ children }: any) => <h2>{children}</h2>,
     Body: ({ children }: any) => <div>{children}</div>,
   },
 }));

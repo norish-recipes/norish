@@ -39,6 +39,24 @@ export function CancelButton({
   );
 }
 
+/** Every modal's header: the title as the dialog's heading (its accessible name), `aside` after it. */
+export function ModalTitle({
+  children,
+  aside,
+  danger,
+}: {
+  children: ReactNode;
+  aside?: ReactNode;
+  danger?: boolean;
+}) {
+  return (
+    <Modal.Header className={twMerge("flex-row items-center gap-2", danger && "text-danger")}>
+      <Modal.Heading className="flex items-center gap-2">{children}</Modal.Heading>
+      {aside}
+    </Modal.Header>
+  );
+}
+
 const WIDE_DIALOG = "max-h-[85vh] max-w-3xl";
 
 type ModalFrameProps = {
@@ -46,6 +64,8 @@ type ModalFrameProps = {
   onOpenChange: (open: boolean) => void;
   /** The wide placement, for content such as a log or a payload; the height rule goes with it. */
   wide?: boolean;
+  /** False where only the dialog's own button closes it. */
+  isDismissable?: boolean;
   "data-testid"?: string;
   children: ComponentProps<typeof Modal.Dialog>["children"];
 };
@@ -55,11 +75,18 @@ export function ModalFrame({
   isOpen,
   onOpenChange,
   wide,
+  isDismissable,
   "data-testid": testId,
   children,
 }: ModalFrameProps) {
   return (
-    <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={onOpenChange}>
+    // pointer-events-auto undoes the `pointer-events: none` vaul sets on <body> under a drawer.
+    <Modal.Backdrop
+      className="pointer-events-auto z-[1099]"
+      isDismissable={isDismissable}
+      isOpen={isOpen}
+      onOpenChange={onOpenChange}
+    >
       <Modal.Container className="z-[1100]">
         <Modal.Dialog className={wide ? WIDE_DIALOG : undefined} data-testid={testId}>
           {children}
@@ -100,9 +127,7 @@ export default function ConfirmModal({
     <ModalFrame data-testid={testId} isOpen={isOpen} onOpenChange={onOpenChange}>
       {({ close }) => (
         <>
-          <Modal.Header className={twMerge("flex-row items-center gap-2", danger && "text-danger")}>
-            <Modal.Heading>{title}</Modal.Heading>
-          </Modal.Header>
+          <ModalTitle danger={danger}>{title}</ModalTitle>
           <Modal.Body className="flex flex-col">{children}</Modal.Body>
           <ModalFooter
             start={

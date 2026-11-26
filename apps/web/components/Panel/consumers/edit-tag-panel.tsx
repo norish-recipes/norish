@@ -41,6 +41,7 @@ export default function EditTagPanel({
   // Exclude the current tag being edited from the check
   const isDuplicate = useMemo(() => {
     const trimmed = tagName.trim().toLowerCase();
+
     if (!trimmed) return false;
     if (trimmed === tag.toLowerCase()) return false; // Same as original is OK
 
@@ -58,6 +59,7 @@ export default function EditTagPanel({
     onDelete();
     onOpenChange(false);
   };
+
   return (
     <Panel open={open} title={t("editTitle")} onOpenChange={onOpenChange}>
       <Panel.Body>

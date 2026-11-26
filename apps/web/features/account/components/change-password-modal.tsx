@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 import { ActionButton } from "@/components/shared/action-button";
-import { CancelButton, ModalFooter } from "@/components/shared/confirm-modal";
+import {
+  CancelButton,
+  ModalFooter,
+  ModalFrame,
+  ModalTitle,
+} from "@/components/shared/confirm-modal";
 import UiSwitch from "@/components/shared/ui-switch";
 import { KeyIcon } from "@heroicons/react/16/solid";
 import { Description, FieldError, Input, Label, Modal, TextField, toast } from "@heroui/react";
@@ -19,14 +24,10 @@ interface ChangePasswordModalProps {
 
 export function ChangePasswordModal({ isOpen, onOpenChange }: ChangePasswordModalProps) {
   return (
-    <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={onOpenChange}>
-      <Modal.Container className="z-[1100]">
-        <Modal.Dialog>
-          {/* The form mounts per opening, so a closed dialog keeps no password. */}
-          {({ close }) => <ChangePasswordForm close={close} />}
-        </Modal.Dialog>
-      </Modal.Container>
-    </Modal.Backdrop>
+    <ModalFrame isOpen={isOpen} onOpenChange={onOpenChange}>
+      {/* The form mounts per opening, so a closed dialog keeps no password. */}
+      {({ close }) => <ChangePasswordForm close={close} />}
+    </ModalFrame>
   );
 }
 
@@ -72,7 +73,7 @@ function ChangePasswordForm({ close }: { close: () => void }) {
         if (isValid) change.mutate();
       }}
     >
-      <Modal.Header>{t("changePassword")}</Modal.Header>
+      <ModalTitle>{t("changePassword")}</ModalTitle>
       <Modal.Body className="flex flex-col gap-4">
         <TextField
           fullWidth

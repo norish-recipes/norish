@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Panel from "@/components/Panel/Panel";
+import { ModalFrame, ModalTitle } from "@/components/shared/confirm-modal";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { usePending } from "@/hooks/use-pending";
 import { OFFLINE_FORCED_AVAILABLE, switchOfflineForced } from "@/lib/connectivity/forced-offline";
@@ -48,18 +49,14 @@ export function OfflineStatusModal({ isOpen, onOpenChange }: OfflineStatusModalP
   }
 
   return (
-    <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={onOpenChange}>
-      <Modal.Container className="z-[1100]" size="md">
-        <Modal.Dialog>
-          {() => (
-            <>
-              <Modal.Header>{t("title")}</Modal.Header>
-              <Modal.Body className="pb-4">{body}</Modal.Body>
-            </>
-          )}
-        </Modal.Dialog>
-      </Modal.Container>
-    </Modal.Backdrop>
+    <ModalFrame isOpen={isOpen} onOpenChange={onOpenChange}>
+      {() => (
+        <>
+          <ModalTitle>{t("title")}</ModalTitle>
+          <Modal.Body className="pb-4">{body}</Modal.Body>
+        </>
+      )}
+    </ModalFrame>
   );
 }
 

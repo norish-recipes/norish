@@ -15,6 +15,11 @@ type EmptyStateProps = {
   "data-testid"?: string;
 };
 
+/** The inset of a table or list body's one line: an empty row, or a spinner while it loads. */
+export function CellSlot({ children }: { children: ReactNode }) {
+  return <div className="px-4 py-6">{children}</div>;
+}
+
 /** A list with nothing in it: the muted icon, the title, the action at the end. */
 export function EmptyState({
   icon: Icon,
@@ -42,5 +47,5 @@ export function EmptyState({
     );
   }
 
-  return variant === "cell" ? <div className="px-4 py-6">{row}</div> : row;
+  return variant === "cell" ? <CellSlot>{row}</CellSlot> : row;
 }
