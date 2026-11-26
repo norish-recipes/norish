@@ -8,7 +8,7 @@
     "household": "Casa",
     "caldav": "CalDAV",
     "admin": "Admin",
-    "ingredients": "Ingredientes"
+    "content": "Conteúdo"
   },
   "user": {
     "signInMethods": {
@@ -389,7 +389,6 @@
   },
   "ingredients": {
     "title": "Ingredientes",
-    "description": "O catálogo de ingredientes que o Norish usa para determinar informações nutricionais, ícones de ingredientes e traduções.",
     "search": "Buscar ingredientes",
     "searchMatch": "Correspondência",
     "searchIn": "Buscar em",
@@ -836,10 +835,6 @@
         "title": "Prompts",
         "subtitle": "Personalize instruções de IA para processamento de receitas"
       },
-      "cuisines": {
-        "title": "Culinárias",
-        "subtitle": "O vocabulário do qual receitas e IA escolhem"
-      },
       "bulkEnrichment": {
         "title": "Enriquecimento em massa",
         "subtitle": "Executar o enriquecimento habilitado em todas as receitas",
@@ -1284,17 +1279,6 @@
       },
       "pagination": "Página {current} de {total}"
     },
-    "cuisineVocabulary": {
-      "description": "Culinárias são um vocabulário curado que você controla. Os nomes aparecem exatamente como escritos aqui, em todos os idiomas.",
-      "namePlaceholder": "Nome da culinária",
-      "addLabel": "Adicionar culinária",
-      "renameLabel": "Renomear {name}",
-      "deleteLabel": "Excluir {name}",
-      "deleteConfirm": "Excluir \"{name}\"? As receitas que a usam vão perdê-la.",
-      "empty": "Nenhuma culinária ainda.",
-      "duplicate": "Já existe uma culinária com esse nome.",
-      "saveFailed": "Não foi possível salvar essa culinária."
-    },
     "toasts": {
       "localesSaved": "Configurações de idioma salvas",
       "localesError": "Falha ao salvar configurações de idioma",
@@ -1327,5 +1311,82 @@
     "changePhoto": "Alterar foto",
     "accountGroup": "Sua conta",
     "phonesGroup": "No celular"
+  },
+  "content": {
+    "ariaLabel": "Conteúdo",
+    "listPicker": "Lista",
+    "lists": {
+      "tags": "Tags",
+      "cuisines": "Culinárias",
+      "categories": "Categorias",
+      "ingredients": "Ingredientes"
+    },
+    "search": {
+      "tags": "Buscar tags",
+      "cuisines": "Buscar culinárias",
+      "categories": "Buscar categorias"
+    },
+    "show": "Mostrar",
+    "all": "Todas",
+    "unused": "Não usadas",
+    "recipes": "{count, plural, =0 {Não usado} one {# receita} other {# receitas}}",
+    "sections": {
+      "ownCuisines": "Suas culinárias",
+      "ownCategories": "Suas categorias",
+      "server": "Do seu servidor",
+      "builtIn": "Integradas"
+    },
+    "help": {
+      "server": "O administrador do seu servidor as mantém para todas as casas",
+      "serverAdmin": "Todas as casas deste servidor recebem estas. Como administrador, você as mantém.",
+      "builtIn": "As categorias integradas são iguais em todos os servidores e não podem ser alteradas"
+    },
+    "readOnly": "Somente leitura",
+    "empty": {
+      "tags": "Ainda não há tags",
+      "cuisines": "Ainda não há culinárias",
+      "categories": "Ainda não há categorias"
+    },
+    "nothingUnused": "Nada está sem uso",
+    "noMatch": "Nada corresponde",
+    "loadFailed": "Não foi possível carregar esta lista",
+    "offline": "Você pode alterar esta lista quando estiver online.",
+    "panel": {
+      "addTitle": {
+        "tag": "Adicionar tag",
+        "cuisine": "Adicionar culinária",
+        "category": "Adicionar categoria",
+        "ingredient": "Adicionar ingrediente"
+      },
+      "editTitle": {
+        "tag": "Editar tag",
+        "cuisine": "Editar culinária",
+        "category": "Editar categoria"
+      },
+      "server": "Servidor",
+      "name": "Nome",
+      "usedBy": "Usado por",
+      "usedByOwn": "{count} das suas receitas",
+      "already": {
+        "tag": "Já é uma tag",
+        "cuisine": "Já é uma culinária",
+        "category": "Já é uma categoria",
+        "ingredient": "Já é um ingrediente"
+      },
+      "addTo": "Adicionar a",
+      "toHousehold": "Sua casa",
+      "toServer": "Todas as casas deste servidor",
+      "serverReadOnly": "O administrador do seu servidor mantém esta culinária para todas as casas.",
+      "serverEditable": "Todas as casas deste servidor recebem esta culinária.",
+      "merge": "“{target}” já existe. Ao mesclar {count, plural, =0 {{name} é removido} one {# receita de {name} passa para ela} other {# receitas de {name} passam para ela}}.",
+      "mergeAction": "Mesclar",
+      "tooLong": "Os nomes podem ter no máximo {max} caracteres.",
+      "failed": "Não foi possível salvar. Tente novamente."
+    },
+    "delete": {
+      "title": "Excluir “{name}”?",
+      "body": "{count, plural, =0 {Nenhuma receita usa.} one {Sai de # receita. A receita fica.} other {Sai de # receitas. As receitas ficam.}}",
+      "bodyServer": "{count, plural, =0 {Nenhuma receita usa.} one {Sai de # receita de todas as casas deste servidor. A receita fica.} other {Sai de # receitas de todas as casas deste servidor. As receitas ficam.}}"
+    }
   }
 }

@@ -8,7 +8,7 @@
     "household": "Hushåll",
     "caldav": "CalDAV",
     "admin": "Administration",
-    "ingredients": "Ingredienser"
+    "content": "Innehåll"
   },
   "user": {
     "signInMethods": {
@@ -389,7 +389,6 @@
   },
   "ingredients": {
     "title": "Ingredienser",
-    "description": "Ingredienskatalogen som Norish använder för att bestämma näringsvärden, ingrediensikoner och översättningar.",
     "search": "Sök efter ingredienser",
     "searchMatch": "Matchning",
     "searchIn": "Sök i",
@@ -836,10 +835,6 @@
         "title": "Promptar",
         "subtitle": "Anpassa AI-instruktioner för receptbearbetning"
       },
-      "cuisines": {
-        "title": "Matkulturer",
-        "subtitle": "Listan som recept och AI väljer från"
-      },
       "bulkEnrichment": {
         "title": "Komplettera alla recept",
         "subtitle": "Kör aktiverade kompletteringar på alla recept",
@@ -1284,17 +1279,6 @@
       },
       "pagination": "Sida {current} av {total}"
     },
-    "cuisineVocabulary": {
-      "description": "Matkulturer är en lista som du själv förvaltar. Namnen visas exakt som de skrivs här, på alla språk.",
-      "namePlaceholder": "Matkulturens namn",
-      "addLabel": "Lägg till matkultur",
-      "renameLabel": "Byt namn på {name}",
-      "deleteLabel": "Ta bort {name}",
-      "deleteConfirm": "Ta bort ”{name}”? Den tas bort från recepten som använder den.",
-      "empty": "Inga matkulturer ännu.",
-      "duplicate": "En matkultur med det namnet finns redan.",
-      "saveFailed": "Det gick inte att spara matkulturen."
-    },
     "toasts": {
       "localesSaved": "Språkinställningarna har sparats",
       "localesError": "Det gick inte att spara språkinställningarna",
@@ -1327,5 +1311,82 @@
     "changePhoto": "Ändra foto",
     "accountGroup": "Ditt konto",
     "phonesGroup": "På telefoner"
+  },
+  "content": {
+    "ariaLabel": "Innehåll",
+    "listPicker": "Lista",
+    "lists": {
+      "tags": "Taggar",
+      "cuisines": "Matkulturer",
+      "categories": "Kategorier",
+      "ingredients": "Ingredienser"
+    },
+    "search": {
+      "tags": "Sök taggar",
+      "cuisines": "Sök matkulturer",
+      "categories": "Sök kategorier"
+    },
+    "show": "Visa",
+    "all": "Alla",
+    "unused": "Oanvända",
+    "recipes": "{count, plural, =0 {Används inte} one {# recept} other {# recept}}",
+    "sections": {
+      "ownCuisines": "Dina matkulturer",
+      "ownCategories": "Dina kategorier",
+      "server": "Från din server",
+      "builtIn": "Inbyggda"
+    },
+    "help": {
+      "server": "Din serveradministratör underhåller dessa för alla hushåll",
+      "serverAdmin": "Alla hushåll på den här servern erbjuds dessa. Som administratör underhåller du dem.",
+      "builtIn": "Inbyggda kategorier är likadana på alla servrar och kan inte ändras"
+    },
+    "readOnly": "Skrivskyddad",
+    "empty": {
+      "tags": "Inga taggar än",
+      "cuisines": "Inga matkulturer än",
+      "categories": "Inga kategorier än"
+    },
+    "nothingUnused": "Inget är oanvänt",
+    "noMatch": "Inget matchar",
+    "loadFailed": "Det gick inte att läsa in listan",
+    "offline": "Du kan ändra den här listan när du är online.",
+    "panel": {
+      "addTitle": {
+        "tag": "Lägg till tagg",
+        "cuisine": "Lägg till matkultur",
+        "category": "Lägg till kategori",
+        "ingredient": "Lägg till ingrediens"
+      },
+      "editTitle": {
+        "tag": "Redigera tagg",
+        "cuisine": "Redigera matkultur",
+        "category": "Redigera kategori"
+      },
+      "server": "Server",
+      "name": "Namn",
+      "usedBy": "Används av",
+      "usedByOwn": "{count} av dina recept",
+      "already": {
+        "tag": "Redan en tagg",
+        "cuisine": "Redan en matkultur",
+        "category": "Redan en kategori",
+        "ingredient": "Redan en ingrediens"
+      },
+      "addTo": "Lägg till i",
+      "toHousehold": "Ditt hushåll",
+      "toServer": "Alla hushåll på den här servern",
+      "serverReadOnly": "Din serveradministratör underhåller den här matkulturen för alla hushåll.",
+      "serverEditable": "Alla hushåll på den här servern erbjuds den här matkulturen.",
+      "merge": "”{target}” finns redan. När du slår ihop {count, plural, =0 {tas {name} bort} one {flyttas # recept från {name} över till den} other {flyttas # recept från {name} över till den}}.",
+      "mergeAction": "Slå ihop",
+      "tooLong": "Namn får vara högst {max} tecken.",
+      "failed": "Det gick inte att spara. Försök igen."
+    },
+    "delete": {
+      "title": "Ta bort ”{name}”?",
+      "body": "{count, plural, =0 {Inget recept använder den.} one {Den tas bort från # recept. Receptet finns kvar.} other {Den tas bort från # recept. Recepten finns kvar.}}",
+      "bodyServer": "{count, plural, =0 {Inget recept använder den.} one {Den tas bort från # recept i alla hushåll på den här servern. Receptet finns kvar.} other {Den tas bort från # recept i alla hushåll på den här servern. Recepten finns kvar.}}"
+    }
   }
 }

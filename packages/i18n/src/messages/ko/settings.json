@@ -8,7 +8,7 @@
     "household": "가구",
     "caldav": "CalDAV",
     "admin": "관리자",
-    "ingredients": "재료"
+    "content": "콘텐츠"
   },
   "user": {
     "signInMethods": {
@@ -389,7 +389,6 @@
   },
   "ingredients": {
     "title": "재료",
-    "description": "Norish가 영양 정보, 재료 아이콘, 번역을 정하는 데 쓰는 재료 카탈로그입니다.",
     "search": "재료 검색",
     "searchMatch": "일치 방식",
     "searchIn": "검색 범위",
@@ -836,10 +835,6 @@
         "title": "프롬프트",
         "subtitle": "레시피 처리를 위한 AI 지침 사용자 정의"
       },
-      "cuisines": {
-        "title": "요리",
-        "subtitle": "레시피와 AI가 선택하는 어휘 목록"
-      },
       "bulkEnrichment": {
         "title": "대량 보강",
         "subtitle": "모든 레시피에 활성화된 보강 실행",
@@ -1284,17 +1279,6 @@
       },
       "pagination": "{total}페이지 중 {current}페이지"
     },
-    "cuisineVocabulary": {
-      "description": "요리는 관리자가 소유하는 선별된 어휘 목록입니다. 이름은 모든 언어에서 여기 적힌 그대로 표시됩니다.",
-      "namePlaceholder": "요리 이름",
-      "addLabel": "요리 추가",
-      "renameLabel": "{name} 이름 변경",
-      "deleteLabel": "{name} 삭제",
-      "deleteConfirm": "\"{name}\"을(를) 삭제할까요? 사용 중인 레시피에서 사라집니다.",
-      "empty": "아직 요리가 없습니다.",
-      "duplicate": "같은 이름의 요리가 이미 있습니다.",
-      "saveFailed": "해당 요리를 저장할 수 없습니다."
-    },
     "toasts": {
       "localesSaved": "언어 설정이 저장되었습니다",
       "localesError": "언어 설정을 저장하지 못했습니다.",
@@ -1327,5 +1311,82 @@
     "changePhoto": "사진 변경",
     "accountGroup": "내 계정",
     "phonesGroup": "휴대폰에서"
+  },
+  "content": {
+    "ariaLabel": "콘텐츠",
+    "listPicker": "목록",
+    "lists": {
+      "tags": "태그",
+      "cuisines": "요리",
+      "categories": "카테고리",
+      "ingredients": "재료"
+    },
+    "search": {
+      "tags": "태그 검색",
+      "cuisines": "요리 검색",
+      "categories": "카테고리 검색"
+    },
+    "show": "보기",
+    "all": "전체",
+    "unused": "미사용",
+    "recipes": "{count, plural, =0 {사용 안 함} other {레시피 #개}}",
+    "sections": {
+      "ownCuisines": "내 요리",
+      "ownCategories": "내 카테고리",
+      "server": "내 서버 제공",
+      "builtIn": "기본 제공"
+    },
+    "help": {
+      "server": "서버 관리자가 모든 가구를 위해 관리합니다",
+      "serverAdmin": "이 서버의 모든 가구에 제공됩니다. 관리자는 직접 관리할 수 있습니다.",
+      "builtIn": "기본 카테고리는 모든 서버에서 같고 변경할 수 없습니다"
+    },
+    "readOnly": "읽기 전용",
+    "empty": {
+      "tags": "아직 태그가 없습니다",
+      "cuisines": "아직 요리가 없습니다",
+      "categories": "아직 카테고리가 없습니다"
+    },
+    "nothingUnused": "미사용 항목이 없습니다",
+    "noMatch": "일치하는 항목이 없습니다",
+    "loadFailed": "이 목록을 불러오지 못했습니다",
+    "offline": "온라인일 때 이 목록을 변경할 수 있습니다.",
+    "panel": {
+      "addTitle": {
+        "tag": "태그 추가",
+        "cuisine": "요리 추가",
+        "category": "카테고리 추가",
+        "ingredient": "재료 추가"
+      },
+      "editTitle": {
+        "tag": "태그 편집",
+        "cuisine": "요리 편집",
+        "category": "카테고리 편집"
+      },
+      "server": "서버",
+      "name": "이름",
+      "usedBy": "사용처",
+      "usedByOwn": "내 레시피 {count}개",
+      "already": {
+        "tag": "이미 있는 태그",
+        "cuisine": "이미 있는 요리",
+        "category": "이미 있는 카테고리",
+        "ingredient": "이미 있는 재료"
+      },
+      "addTo": "추가할 곳",
+      "toHousehold": "내 가구",
+      "toServer": "이 서버의 모든 가구",
+      "serverReadOnly": "서버 관리자가 모든 가구를 위해 이 요리를 관리합니다.",
+      "serverEditable": "이 서버의 모든 가구에 이 요리가 제공됩니다.",
+      "merge": "“{target}”이(가) 이미 있습니다. 병합하면 {count, plural, =0 {{name}이(가) 삭제됩니다} other {{name}의 레시피 #개가 그쪽으로 옮겨집니다}}.",
+      "mergeAction": "병합",
+      "tooLong": "이름은 최대 {max}자까지 쓸 수 있습니다.",
+      "failed": "저장하지 못했습니다. 다시 시도하세요."
+    },
+    "delete": {
+      "title": "“{name}”을(를) 삭제할까요?",
+      "body": "{count, plural, =0 {이것을 쓰는 레시피가 없습니다.} other {레시피 #개에서 빠집니다. 레시피는 그대로 남습니다.}}",
+      "bodyServer": "{count, plural, =0 {이것을 쓰는 레시피가 없습니다.} other {이 서버 모든 가구의 레시피 #개에서 빠집니다. 레시피는 그대로 남습니다.}}"
+    }
   }
 }

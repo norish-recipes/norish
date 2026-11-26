@@ -8,7 +8,7 @@
     "household": "Household",
     "caldav": "CalDAV",
     "admin": "Admin",
-    "ingredients": "Ingredients"
+    "content": "Content"
   },
   "user": {
     "signInMethods": {
@@ -389,7 +389,6 @@
   },
   "ingredients": {
     "title": "Ingredients",
-    "description": "The ingredient catalogue Norish uses to determine macros, ingredient icons and translations.",
     "search": "Search ingredients",
     "searchMatch": "Match",
     "searchIn": "Search in",
@@ -836,10 +835,6 @@
         "title": "Prompts",
         "subtitle": "Customize AI instructions for recipe processing"
       },
-      "cuisines": {
-        "title": "Cuisines",
-        "subtitle": "The vocabulary recipes and AI pick from"
-      },
       "bulkEnrichment": {
         "title": "Bulk enrichment",
         "subtitle": "Run enabled enrichment on every recipe",
@@ -1284,17 +1279,6 @@
       },
       "pagination": "Page {current} of {total}"
     },
-    "cuisineVocabulary": {
-      "description": "Cuisines are a curated vocabulary you own. Names are shown exactly as written here, in every language.",
-      "namePlaceholder": "Cuisine name",
-      "addLabel": "Add a cuisine",
-      "renameLabel": "Rename {name}",
-      "deleteLabel": "Delete {name}",
-      "deleteConfirm": "Delete \"{name}\"? Recipes using it will lose it.",
-      "empty": "No Cuisines yet.",
-      "duplicate": "A Cuisine with that name already exists.",
-      "saveFailed": "Could not save that Cuisine."
-    },
     "toasts": {
       "localesSaved": "Language settings saved",
       "localesError": "Failed to save language settings",
@@ -1327,5 +1311,82 @@
     "changePhoto": "Change photo",
     "accountGroup": "Your account",
     "phonesGroup": "On phones"
+  },
+  "content": {
+    "ariaLabel": "Content",
+    "listPicker": "List",
+    "lists": {
+      "tags": "Tags",
+      "cuisines": "Cuisines",
+      "categories": "Categories",
+      "ingredients": "Ingredients"
+    },
+    "search": {
+      "tags": "Search tags",
+      "cuisines": "Search cuisines",
+      "categories": "Search categories"
+    },
+    "show": "Show",
+    "all": "All",
+    "unused": "Unused",
+    "recipes": "{count, plural, =0 {Not used} one {# recipe} other {# recipes}}",
+    "sections": {
+      "ownCuisines": "Your cuisines",
+      "ownCategories": "Your categories",
+      "server": "From your server",
+      "builtIn": "Built in"
+    },
+    "help": {
+      "server": "Your server admin keeps these for every household",
+      "serverAdmin": "Every household on this server is offered these. As an admin you keep them.",
+      "builtIn": "Built-in categories are the same on every server and can’t be changed"
+    },
+    "readOnly": "Read only",
+    "empty": {
+      "tags": "No tags yet",
+      "cuisines": "No cuisines yet",
+      "categories": "No categories yet"
+    },
+    "nothingUnused": "Nothing is unused",
+    "noMatch": "Nothing matches",
+    "loadFailed": "Could not load this list",
+    "offline": "You can change this list when you are online.",
+    "panel": {
+      "addTitle": {
+        "tag": "Add tag",
+        "cuisine": "Add cuisine",
+        "category": "Add category",
+        "ingredient": "Add ingredient"
+      },
+      "editTitle": {
+        "tag": "Edit tag",
+        "cuisine": "Edit cuisine",
+        "category": "Edit category"
+      },
+      "server": "Server",
+      "name": "Name",
+      "usedBy": "Used by",
+      "usedByOwn": "{count} of your recipes",
+      "already": {
+        "tag": "Already a tag",
+        "cuisine": "Already a cuisine",
+        "category": "Already a category",
+        "ingredient": "Already an ingredient"
+      },
+      "addTo": "Add to",
+      "toHousehold": "Your household",
+      "toServer": "Every household on this server",
+      "serverReadOnly": "Your server admin keeps this cuisine for every household.",
+      "serverEditable": "Every household on this server is offered this cuisine.",
+      "merge": "“{target}” already exists. Merging {count, plural, =0 {removes {name}} one {moves {name}’s # recipe onto it} other {moves {name}’s # recipes onto it}}.",
+      "mergeAction": "Merge",
+      "tooLong": "Names can have at most {max} characters.",
+      "failed": "Could not save that. Try again."
+    },
+    "delete": {
+      "title": "Delete “{name}”?",
+      "body": "{count, plural, =0 {No recipe uses it.} one {It comes off # recipe. The recipe stays.} other {It comes off # recipes. The recipes stay.}}",
+      "bodyServer": "{count, plural, =0 {No recipe uses it.} one {It comes off # recipe in every household on this server. The recipe stays.} other {It comes off # recipes in every household on this server. The recipes stay.}}"
+    }
   }
 }

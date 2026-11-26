@@ -8,7 +8,7 @@
     "household": "Husstand",
     "caldav": "CalDAV",
     "admin": "Admin",
-    "ingredients": "Ingredienser"
+    "content": "Indhold"
   },
   "user": {
     "signInMethods": {
@@ -389,7 +389,6 @@
   },
   "ingredients": {
     "title": "Ingredienser",
-    "description": "Ingredienskataloget, som Norish bruger til at bestemme næringsindhold, ingrediensikoner og oversættelser.",
     "search": "Søg i ingredienser",
     "searchMatch": "Match",
     "searchIn": "Søg i",
@@ -836,10 +835,6 @@
         "title": "Prompt-tekster",
         "subtitle": "Tilpas AI-instruktioner til opskriftbehandling"
       },
-      "cuisines": {
-        "title": "Køkkener",
-        "subtitle": "Ordforrådet som opskrifter og AI vælger fra"
-      },
       "bulkEnrichment": {
         "title": "Masseberigelse",
         "subtitle": "Kør aktiveret berigelse på alle opskrifter",
@@ -1284,17 +1279,6 @@
       },
       "pagination": "Side {current} af {total}"
     },
-    "cuisineVocabulary": {
-      "description": "Køkkener er et kurateret ordforråd, du ejer. Navne vises præcis som skrevet her, på alle sprog.",
-      "namePlaceholder": "Køkkenets navn",
-      "addLabel": "Tilføj et køkken",
-      "renameLabel": "Omdøb {name}",
-      "deleteLabel": "Slet {name}",
-      "deleteConfirm": "Slet \"{name}\"? Opskrifter, der bruger det, mister det.",
-      "empty": "Ingen køkkener endnu.",
-      "duplicate": "Der findes allerede et køkken med det navn.",
-      "saveFailed": "Kunne ikke gemme det køkken."
-    },
     "toasts": {
       "localesSaved": "Sprogindstillinger gemt",
       "localesError": "Kunne ikke gemme sprogindstillinger",
@@ -1327,5 +1311,82 @@
     "changePhoto": "Skift billede",
     "accountGroup": "Din konto",
     "phonesGroup": "På telefoner"
+  },
+  "content": {
+    "ariaLabel": "Indhold",
+    "listPicker": "Liste",
+    "lists": {
+      "tags": "Tags",
+      "cuisines": "Køkkener",
+      "categories": "Kategorier",
+      "ingredients": "Ingredienser"
+    },
+    "search": {
+      "tags": "Søg i tags",
+      "cuisines": "Søg i køkkener",
+      "categories": "Søg i kategorier"
+    },
+    "show": "Vis",
+    "all": "Alle",
+    "unused": "Ubrugte",
+    "recipes": "{count, plural, =0 {Ikke brugt} one {# opskrift} other {# opskrifter}}",
+    "sections": {
+      "ownCuisines": "Dine køkkener",
+      "ownCategories": "Dine kategorier",
+      "server": "Fra din server",
+      "builtIn": "Indbygget"
+    },
+    "help": {
+      "server": "Din serveradministrator vedligeholder disse for alle husstande",
+      "serverAdmin": "Alle husstande på denne server får disse tilbudt. Som administrator vedligeholder du dem.",
+      "builtIn": "Indbyggede kategorier er ens på alle servere og kan ikke ændres"
+    },
+    "readOnly": "Skrivebeskyttet",
+    "empty": {
+      "tags": "Ingen tags endnu",
+      "cuisines": "Ingen køkkener endnu",
+      "categories": "Ingen kategorier endnu"
+    },
+    "nothingUnused": "Intet er ubrugt",
+    "noMatch": "Intet passer",
+    "loadFailed": "Listen kunne ikke indlæses",
+    "offline": "Du kan ændre denne liste, når du er online.",
+    "panel": {
+      "addTitle": {
+        "tag": "Tilføj tag",
+        "cuisine": "Tilføj køkken",
+        "category": "Tilføj kategori",
+        "ingredient": "Tilføj ingrediens"
+      },
+      "editTitle": {
+        "tag": "Rediger tag",
+        "cuisine": "Rediger køkken",
+        "category": "Rediger kategori"
+      },
+      "server": "Server",
+      "name": "Navn",
+      "usedBy": "Bruges af",
+      "usedByOwn": "{count} af dine opskrifter",
+      "already": {
+        "tag": "Allerede et tag",
+        "cuisine": "Allerede et køkken",
+        "category": "Allerede en kategori",
+        "ingredient": "Allerede en ingrediens"
+      },
+      "addTo": "Tilføj til",
+      "toHousehold": "Din husstand",
+      "toServer": "Alle husstande på denne server",
+      "serverReadOnly": "Din serveradministrator vedligeholder dette køkken for alle husstande.",
+      "serverEditable": "Alle husstande på denne server får dette køkken tilbudt.",
+      "merge": "“{target}” findes allerede. Når du fletter, {count, plural, =0 {fjernes {name}} one {flyttes # opskrift fra {name} over på det} other {flyttes # opskrifter fra {name} over på det}}.",
+      "mergeAction": "Flet",
+      "tooLong": "Navne kan højst have {max} tegn.",
+      "failed": "Det kunne ikke gemmes. Prøv igen."
+    },
+    "delete": {
+      "title": "Slet “{name}”?",
+      "body": "{count, plural, =0 {Ingen opskrift bruger det.} one {Det fjernes fra # opskrift. Opskriften bliver.} other {Det fjernes fra # opskrifter. Opskrifterne bliver.}}",
+      "bodyServer": "{count, plural, =0 {Ingen opskrift bruger det.} one {Det fjernes fra # opskrift i alle husstande på denne server. Opskriften bliver.} other {Det fjernes fra # opskrifter i alle husstande på denne server. Opskrifterne bliver.}}"
+    }
   }
 }

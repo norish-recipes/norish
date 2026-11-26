@@ -8,7 +8,7 @@
     "household": "Huishouden",
     "caldav": "CalDAV",
     "admin": "Admin",
-    "ingredients": "Ingrediënten"
+    "content": "Content"
   },
   "user": {
     "signInMethods": {
@@ -389,7 +389,6 @@
   },
   "ingredients": {
     "title": "Ingrediënten",
-    "description": "De ingrediëntencatalogus waarmee Norish voedingswaarden, ingrediënticonen en vertalingen bepaalt.",
     "search": "Ingrediënten zoeken",
     "searchMatch": "Overeenkomst",
     "searchIn": "Zoek in",
@@ -836,10 +835,6 @@
         "title": "Prompts",
         "subtitle": "Pas AI-instructies aan voor receptverwerking"
       },
-      "cuisines": {
-        "title": "Keukens",
-        "subtitle": "De woordenlijst waaruit recepten en AI kiezen"
-      },
       "bulkEnrichment": {
         "title": "Bulkverrijking",
         "subtitle": "Voer ingeschakelde verrijking uit op elk recept",
@@ -1284,17 +1279,6 @@
       },
       "pagination": "Pagina {current} van {total}"
     },
-    "cuisineVocabulary": {
-      "description": "Keukens zijn een gecureerde woordenlijst die jij beheert. Namen worden in elke taal getoond zoals ze hier staan.",
-      "namePlaceholder": "Naam van keuken",
-      "addLabel": "Keuken toevoegen",
-      "renameLabel": "{name} hernoemen",
-      "deleteLabel": "{name} verwijderen",
-      "deleteConfirm": "\"{name}\" verwijderen? Recepten die deze gebruiken raken hem kwijt.",
-      "empty": "Nog geen keukens.",
-      "duplicate": "Er bestaat al een keuken met die naam.",
-      "saveFailed": "Kon die keuken niet opslaan."
-    },
     "toasts": {
       "localesSaved": "Taalinstellingen opgeslagen",
       "localesError": "Taalinstellingen opslaan mislukt",
@@ -1327,5 +1311,82 @@
     "changePhoto": "Foto wijzigen",
     "accountGroup": "Je account",
     "phonesGroup": "Op telefoons"
+  },
+  "content": {
+    "ariaLabel": "Content",
+    "listPicker": "Lijst",
+    "lists": {
+      "tags": "Tags",
+      "cuisines": "Keukens",
+      "categories": "Categorieën",
+      "ingredients": "Ingrediënten"
+    },
+    "search": {
+      "tags": "Tags zoeken",
+      "cuisines": "Keukens zoeken",
+      "categories": "Categorieën zoeken"
+    },
+    "show": "Tonen",
+    "all": "Alle",
+    "unused": "Ongebruikt",
+    "recipes": "{count, plural, =0 {Niet gebruikt} one {# recept} other {# recepten}}",
+    "sections": {
+      "ownCuisines": "Je keukens",
+      "ownCategories": "Je categorieën",
+      "server": "Van je server",
+      "builtIn": "Ingebouwd"
+    },
+    "help": {
+      "server": "De beheerder van je server beheert deze voor elk huishouden",
+      "serverAdmin": "Elk huishouden op deze server krijgt deze aangeboden. Als beheerder beheer je ze.",
+      "builtIn": "Ingebouwde categorieën zijn op elke server hetzelfde en kunnen niet worden gewijzigd"
+    },
+    "readOnly": "Alleen lezen",
+    "empty": {
+      "tags": "Nog geen tags",
+      "cuisines": "Nog geen keukens",
+      "categories": "Nog geen categorieën"
+    },
+    "nothingUnused": "Niets is ongebruikt",
+    "noMatch": "Niets komt overeen",
+    "loadFailed": "Deze lijst laden is niet gelukt",
+    "offline": "Je kunt deze lijst wijzigen als je online bent.",
+    "panel": {
+      "addTitle": {
+        "tag": "Tag toevoegen",
+        "cuisine": "Keuken toevoegen",
+        "category": "Categorie toevoegen",
+        "ingredient": "Ingrediënt toevoegen"
+      },
+      "editTitle": {
+        "tag": "Tag bewerken",
+        "cuisine": "Keuken bewerken",
+        "category": "Categorie bewerken"
+      },
+      "server": "Server",
+      "name": "Naam",
+      "usedBy": "Gebruikt door",
+      "usedByOwn": "{count} van je recepten",
+      "already": {
+        "tag": "Al een tag",
+        "cuisine": "Al een keuken",
+        "category": "Al een categorie",
+        "ingredient": "Al een ingrediënt"
+      },
+      "addTo": "Toevoegen aan",
+      "toHousehold": "Je huishouden",
+      "toServer": "Elk huishouden op deze server",
+      "serverReadOnly": "De beheerder van je server beheert deze keuken voor elk huishouden.",
+      "serverEditable": "Elk huishouden op deze server krijgt deze keuken aangeboden.",
+      "merge": "“{target}” bestaat al. Samenvoegen {count, plural, =0 {verwijdert {name}} one {verplaatst # recept van {name} ernaartoe} other {verplaatst # recepten van {name} ernaartoe}}.",
+      "mergeAction": "Samenvoegen",
+      "tooLong": "Namen mogen maximaal {max} tekens hebben.",
+      "failed": "Opslaan is niet gelukt. Probeer het opnieuw."
+    },
+    "delete": {
+      "title": "“{name}” verwijderen?",
+      "body": "{count, plural, =0 {Geen enkel recept gebruikt het.} one {Het gaat van # recept af. Het recept blijft.} other {Het gaat van # recepten af. De recepten blijven.}}",
+      "bodyServer": "{count, plural, =0 {Geen enkel recept gebruikt het.} one {Het gaat van # recept af in elk huishouden op deze server. Het recept blijft.} other {Het gaat van # recepten af in elk huishouden op deze server. De recepten blijven.}}"
+    }
   }
 }

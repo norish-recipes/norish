@@ -8,7 +8,7 @@
     "household": "Gospodarstwo domowe",
     "caldav": "CalDAV",
     "admin": "Administrator",
-    "ingredients": "Składniki"
+    "content": "Zawartość"
   },
   "user": {
     "signInMethods": {
@@ -389,7 +389,6 @@
   },
   "ingredients": {
     "title": "Składniki",
-    "description": "Katalog składników, z którego Norish korzysta, by określać wartości odżywcze, ikony składników i tłumaczenia.",
     "search": "Szukaj składników",
     "searchMatch": "Dopasowanie",
     "searchIn": "Szukaj w",
@@ -836,10 +835,6 @@
         "title": "Prompty",
         "subtitle": "Dostosuj instrukcje AI do przetwarzania przepisów"
       },
-      "cuisines": {
-        "title": "Kuchnie",
-        "subtitle": "Słownik, z którego wybierają przepisy i AI"
-      },
       "bulkEnrichment": {
         "title": "Masowe wzbogacanie",
         "subtitle": "Uruchom włączone wzbogacanie dla wszystkich przepisów",
@@ -1284,17 +1279,6 @@
       },
       "pagination": "Strona {current} z {total}"
     },
-    "cuisineVocabulary": {
-      "description": "Kuchnie to wyselekcjonowany słownik, który należy do Ciebie. Nazwy są pokazywane dokładnie tak, jak je tu zapiszesz, we wszystkich językach.",
-      "namePlaceholder": "Nazwa kuchni",
-      "addLabel": "Dodaj kuchnię",
-      "renameLabel": "Zmień nazwę {name}",
-      "deleteLabel": "Usuń {name}",
-      "deleteConfirm": "Usunąć „{name}”? Przepisy, które jej używają, ją stracą.",
-      "empty": "Brak kuchni.",
-      "duplicate": "Kuchnia o tej nazwie już istnieje.",
-      "saveFailed": "Nie udało się zapisać tej kuchni."
-    },
     "toasts": {
       "localesSaved": "Zapisano ustawienia językowe",
       "localesError": "Nie udało się zapisać ustawień językowych",
@@ -1327,5 +1311,82 @@
     "changePhoto": "Zmień zdjęcie",
     "accountGroup": "Twoje konto",
     "phonesGroup": "Na telefonach"
+  },
+  "content": {
+    "ariaLabel": "Zawartość",
+    "listPicker": "Lista",
+    "lists": {
+      "tags": "Tagi",
+      "cuisines": "Kuchnie",
+      "categories": "Kategorie",
+      "ingredients": "Składniki"
+    },
+    "search": {
+      "tags": "Szukaj tagów",
+      "cuisines": "Szukaj kuchni",
+      "categories": "Szukaj kategorii"
+    },
+    "show": "Pokaż",
+    "all": "Wszystkie",
+    "unused": "Nieużywane",
+    "recipes": "{count, plural, =0 {Nieużywane} one {# przepis} few {# przepisy} other {# przepisów}}",
+    "sections": {
+      "ownCuisines": "Twoje kuchnie",
+      "ownCategories": "Twoje kategorie",
+      "server": "Z Twojego serwera",
+      "builtIn": "Wbudowane"
+    },
+    "help": {
+      "server": "Administrator Twojego serwera zarządza nimi dla każdego gospodarstwa",
+      "serverAdmin": "Każde gospodarstwo na tym serwerze dostaje je w ofercie. Jako administrator zarządzasz nimi.",
+      "builtIn": "Wbudowane kategorie są takie same na każdym serwerze i nie można ich zmienić"
+    },
+    "readOnly": "Tylko do odczytu",
+    "empty": {
+      "tags": "Jeszcze brak tagów",
+      "cuisines": "Jeszcze brak kuchni",
+      "categories": "Jeszcze brak kategorii"
+    },
+    "nothingUnused": "Nic nie jest nieużywane",
+    "noMatch": "Nic nie pasuje",
+    "loadFailed": "Nie udało się wczytać tej listy",
+    "offline": "Tę listę możesz zmienić, gdy jesteś online.",
+    "panel": {
+      "addTitle": {
+        "tag": "Dodaj tag",
+        "cuisine": "Dodaj kuchnię",
+        "category": "Dodaj kategorię",
+        "ingredient": "Dodaj składnik"
+      },
+      "editTitle": {
+        "tag": "Edytuj tag",
+        "cuisine": "Edytuj kuchnię",
+        "category": "Edytuj kategorię"
+      },
+      "server": "Serwer",
+      "name": "Nazwa",
+      "usedBy": "Używane w",
+      "usedByOwn": "{count} Twoich przepisów",
+      "already": {
+        "tag": "Już jest tagiem",
+        "cuisine": "Już jest kuchnią",
+        "category": "Już jest kategorią",
+        "ingredient": "Już jest składnikiem"
+      },
+      "addTo": "Dodaj do",
+      "toHousehold": "Twoje gospodarstwo",
+      "toServer": "Każde gospodarstwo na tym serwerze",
+      "serverReadOnly": "Administrator Twojego serwera zarządza tą kuchnią dla każdego gospodarstwa.",
+      "serverEditable": "Każde gospodarstwo na tym serwerze dostaje tę kuchnię w ofercie.",
+      "merge": "„{target}” już istnieje. Po scaleniu {count, plural, =0 {{name} zniknie} one {# przepis z {name} trafi do niego} few {# przepisy z {name} trafią do niego} other {# przepisów z {name} trafi do niego}}.",
+      "mergeAction": "Scal",
+      "tooLong": "Nazwa może mieć najwyżej {max} znaków.",
+      "failed": "Nie udało się zapisać. Spróbuj ponownie."
+    },
+    "delete": {
+      "title": "Usunąć „{name}”?",
+      "body": "{count, plural, =0 {Żaden przepis tego nie używa.} one {Zniknie z # przepisu. Przepis zostaje.} few {Zniknie z # przepisów. Przepisy zostają.} other {Zniknie z # przepisów. Przepisy zostają.}}",
+      "bodyServer": "{count, plural, =0 {Żaden przepis tego nie używa.} one {Zniknie z # przepisu w każdym gospodarstwie na tym serwerze. Przepis zostaje.} few {Zniknie z # przepisów w każdym gospodarstwie na tym serwerze. Przepisy zostają.} other {Zniknie z # przepisów w każdym gospodarstwie na tym serwerze. Przepisy zostają.}}"
+    }
   }
 }

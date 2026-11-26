@@ -8,7 +8,7 @@
     "household": "Haushalt",
     "caldav": "CalDAV",
     "admin": "Admin",
-    "ingredients": "Zutaten"
+    "content": "Inhalte"
   },
   "user": {
     "signInMethods": {
@@ -389,7 +389,6 @@
   },
   "ingredients": {
     "title": "Zutaten",
-    "description": "Der Zutatenkatalog, mit dem Norish Nährwerte, Zutatensymbole und Übersetzungen bestimmt.",
     "search": "Zutaten suchen",
     "searchMatch": "Treffer",
     "searchIn": "Suchen in",
@@ -836,10 +835,6 @@
         "title": "Prompts",
         "subtitle": "Passe KI-Anweisungen für Rezept-Verarbeitung an"
       },
-      "cuisines": {
-        "title": "Küchen",
-        "subtitle": "Das Vokabular, aus dem Rezepte und KI wählen"
-      },
       "bulkEnrichment": {
         "title": "Massen-Anreicherung",
         "subtitle": "Aktivierte Anreicherung für alle Rezepte ausführen",
@@ -1284,17 +1279,6 @@
       },
       "pagination": "Seite {current} von {total}"
     },
-    "cuisineVocabulary": {
-      "description": "Küchen sind ein kuratiertes Vokabular, das Ihnen gehört. Namen werden in jeder Sprache genau so angezeigt, wie sie hier stehen.",
-      "namePlaceholder": "Name der Küche",
-      "addLabel": "Küche hinzufügen",
-      "renameLabel": "{name} umbenennen",
-      "deleteLabel": "{name} löschen",
-      "deleteConfirm": "\"{name}\" löschen? Rezepte, die sie verwenden, verlieren sie.",
-      "empty": "Noch keine Küchen.",
-      "duplicate": "Eine Küche mit diesem Namen existiert bereits.",
-      "saveFailed": "Diese Küche konnte nicht gespeichert werden."
-    },
     "toasts": {
       "localesSaved": "Spracheinstellungen gespeichert",
       "localesError": "Spracheinstellungen konnten nicht gespeichert werden",
@@ -1327,5 +1311,82 @@
     "changePhoto": "Foto ändern",
     "accountGroup": "Ihr Konto",
     "phonesGroup": "Auf Smartphones"
+  },
+  "content": {
+    "ariaLabel": "Inhalte",
+    "listPicker": "Liste",
+    "lists": {
+      "tags": "Tags",
+      "cuisines": "Küchen",
+      "categories": "Kategorien",
+      "ingredients": "Zutaten"
+    },
+    "search": {
+      "tags": "Tags suchen",
+      "cuisines": "Küchen suchen",
+      "categories": "Kategorien suchen"
+    },
+    "show": "Anzeigen",
+    "all": "Alle",
+    "unused": "Unbenutzt",
+    "recipes": "{count, plural, =0 {Nicht verwendet} one {# Rezept} other {# Rezepte}}",
+    "sections": {
+      "ownCuisines": "Ihre Küchen",
+      "ownCategories": "Ihre Kategorien",
+      "server": "Von Ihrem Server",
+      "builtIn": "Eingebaut"
+    },
+    "help": {
+      "server": "Der Administrator Ihres Servers pflegt diese für jeden Haushalt",
+      "serverAdmin": "Jedem Haushalt auf diesem Server werden diese angeboten. Als Administrator pflegen Sie sie.",
+      "builtIn": "Eingebaute Kategorien sind auf jedem Server gleich und lassen sich nicht ändern"
+    },
+    "readOnly": "Schreibgeschützt",
+    "empty": {
+      "tags": "Noch keine Tags",
+      "cuisines": "Noch keine Küchen",
+      "categories": "Noch keine Kategorien"
+    },
+    "nothingUnused": "Nichts ist unbenutzt",
+    "noMatch": "Nichts passt",
+    "loadFailed": "Diese Liste konnte nicht geladen werden",
+    "offline": "Sie können diese Liste ändern, wenn Sie online sind.",
+    "panel": {
+      "addTitle": {
+        "tag": "Tag hinzufügen",
+        "cuisine": "Küche hinzufügen",
+        "category": "Kategorie hinzufügen",
+        "ingredient": "Zutat hinzufügen"
+      },
+      "editTitle": {
+        "tag": "Tag bearbeiten",
+        "cuisine": "Küche bearbeiten",
+        "category": "Kategorie bearbeiten"
+      },
+      "server": "Server",
+      "name": "Name",
+      "usedBy": "Verwendet von",
+      "usedByOwn": "{count} Ihrer Rezepte",
+      "already": {
+        "tag": "Schon ein Tag",
+        "cuisine": "Schon eine Küche",
+        "category": "Schon eine Kategorie",
+        "ingredient": "Schon eine Zutat"
+      },
+      "addTo": "Hinzufügen zu",
+      "toHousehold": "Ihrem Haushalt",
+      "toServer": "Jedem Haushalt auf diesem Server",
+      "serverReadOnly": "Der Administrator Ihres Servers pflegt diese Küche für jeden Haushalt.",
+      "serverEditable": "Jedem Haushalt auf diesem Server wird diese Küche angeboten.",
+      "merge": "„{target}“ gibt es schon. Beim Zusammenführen {count, plural, =0 {entfällt {name}} one {wandert # Rezept von {name} dorthin} other {wandern # Rezepte von {name} dorthin}}.",
+      "mergeAction": "Zusammenführen",
+      "tooLong": "Namen dürfen höchstens {max} Zeichen haben.",
+      "failed": "Das konnte nicht gespeichert werden. Versuchen Sie es erneut."
+    },
+    "delete": {
+      "title": "„{name}“ löschen?",
+      "body": "{count, plural, =0 {Kein Rezept verwendet es.} one {Es wird von # Rezept entfernt. Das Rezept bleibt.} other {Es wird von # Rezepten entfernt. Die Rezepte bleiben.}}",
+      "bodyServer": "{count, plural, =0 {Kein Rezept verwendet es.} one {Es wird von # Rezept in jedem Haushalt auf diesem Server entfernt. Das Rezept bleibt.} other {Es wird von # Rezepten in jedem Haushalt auf diesem Server entfernt. Die Rezepte bleiben.}}"
+    }
   }
 }

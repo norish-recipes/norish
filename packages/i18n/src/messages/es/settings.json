@@ -8,7 +8,7 @@
     "household": "Hogar",
     "caldav": "CalDAV",
     "admin": "Administración",
-    "ingredients": "Ingredientes"
+    "content": "Contenido"
   },
   "user": {
     "signInMethods": {
@@ -389,7 +389,6 @@
   },
   "ingredients": {
     "title": "Ingredientes",
-    "description": "El catálogo de ingredientes que Norish usa para determinar los valores nutricionales, los iconos de ingredientes y las traducciones.",
     "search": "Buscar ingredientes",
     "searchMatch": "Coincidencia",
     "searchIn": "Buscar en",
@@ -836,10 +835,6 @@
         "title": "Prompts",
         "subtitle": "Personaliza las instrucciones de IA para el procesamiento de recetas"
       },
-      "cuisines": {
-        "title": "Cocinas",
-        "subtitle": "El vocabulario del que eligen las recetas y la IA"
-      },
       "bulkEnrichment": {
         "title": "Enriquecimiento masivo",
         "subtitle": "Ejecutar el enriquecimiento habilitado en todas las recetas",
@@ -1284,17 +1279,6 @@
       },
       "pagination": "Página {current} de {total}"
     },
-    "cuisineVocabulary": {
-      "description": "Las cocinas son un vocabulario curado que tú controlas. Los nombres se muestran tal como se escriben aquí, en todos los idiomas.",
-      "namePlaceholder": "Nombre de la cocina",
-      "addLabel": "Añadir cocina",
-      "renameLabel": "Renombrar {name}",
-      "deleteLabel": "Eliminar {name}",
-      "deleteConfirm": "¿Eliminar «{name}»? Las recetas que la usan la perderán.",
-      "empty": "Aún no hay cocinas.",
-      "duplicate": "Ya existe una cocina con ese nombre.",
-      "saveFailed": "No se pudo guardar esa cocina."
-    },
     "toasts": {
       "localesSaved": "Ajustes de idioma guardados",
       "localesError": "No se pudieron guardar los ajustes de idioma",
@@ -1327,5 +1311,82 @@
     "changePhoto": "Cambiar foto",
     "accountGroup": "Tu cuenta",
     "phonesGroup": "En teléfonos"
+  },
+  "content": {
+    "ariaLabel": "Contenido",
+    "listPicker": "Lista",
+    "lists": {
+      "tags": "Etiquetas",
+      "cuisines": "Cocinas",
+      "categories": "Categorías",
+      "ingredients": "Ingredientes"
+    },
+    "search": {
+      "tags": "Buscar etiquetas",
+      "cuisines": "Buscar cocinas",
+      "categories": "Buscar categorías"
+    },
+    "show": "Mostrar",
+    "all": "Todas",
+    "unused": "Sin usar",
+    "recipes": "{count, plural, =0 {Sin usar} one {# receta} other {# recetas}}",
+    "sections": {
+      "ownCuisines": "Tus cocinas",
+      "ownCategories": "Tus categorías",
+      "server": "De tu servidor",
+      "builtIn": "Integradas"
+    },
+    "help": {
+      "server": "El administrador de tu servidor las mantiene para todos los hogares",
+      "serverAdmin": "A todos los hogares de este servidor se les ofrecen estas. Como administrador, las mantienes tú.",
+      "builtIn": "Las categorías integradas son iguales en todos los servidores y no se pueden cambiar"
+    },
+    "readOnly": "Solo lectura",
+    "empty": {
+      "tags": "Aún no hay etiquetas",
+      "cuisines": "Aún no hay cocinas",
+      "categories": "Aún no hay categorías"
+    },
+    "nothingUnused": "Nada sin usar",
+    "noMatch": "Nada coincide",
+    "loadFailed": "No se pudo cargar esta lista",
+    "offline": "Puedes cambiar esta lista cuando estés en línea.",
+    "panel": {
+      "addTitle": {
+        "tag": "Añadir etiqueta",
+        "cuisine": "Añadir cocina",
+        "category": "Añadir categoría",
+        "ingredient": "Añadir ingrediente"
+      },
+      "editTitle": {
+        "tag": "Editar etiqueta",
+        "cuisine": "Editar cocina",
+        "category": "Editar categoría"
+      },
+      "server": "Servidor",
+      "name": "Nombre",
+      "usedBy": "Usada en",
+      "usedByOwn": "{count} de tus recetas",
+      "already": {
+        "tag": "Ya es una etiqueta",
+        "cuisine": "Ya es una cocina",
+        "category": "Ya es una categoría",
+        "ingredient": "Ya es un ingrediente"
+      },
+      "addTo": "Añadir a",
+      "toHousehold": "Tu hogar",
+      "toServer": "Todos los hogares de este servidor",
+      "serverReadOnly": "El administrador de tu servidor mantiene esta cocina para todos los hogares.",
+      "serverEditable": "A todos los hogares de este servidor se les ofrece esta cocina.",
+      "merge": "«{target}» ya existe. Al fusionar {count, plural, =0 {se elimina {name}} one {se mueve # receta de {name} a ella} other {se mueven # recetas de {name} a ella}}.",
+      "mergeAction": "Fusionar",
+      "tooLong": "Los nombres pueden tener como máximo {max} caracteres.",
+      "failed": "No se pudo guardar. Inténtalo de nuevo."
+    },
+    "delete": {
+      "title": "¿Eliminar «{name}»?",
+      "body": "{count, plural, =0 {Ninguna receta la usa.} one {Se quita de # receta. La receta se queda.} other {Se quita de # recetas. Las recetas se quedan.}}",
+      "bodyServer": "{count, plural, =0 {Ninguna receta la usa.} one {Se quita de # receta de todos los hogares de este servidor. La receta se queda.} other {Se quita de # recetas de todos los hogares de este servidor. Las recetas se quedan.}}"
+    }
   }
 }

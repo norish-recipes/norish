@@ -8,7 +8,7 @@
     "household": "Kotitalous",
     "caldav": "CalDAV",
     "admin": "Ylläpito",
-    "ingredients": "Ainesosat"
+    "content": "Sisältö"
   },
   "user": {
     "signInMethods": {
@@ -389,7 +389,6 @@
   },
   "ingredients": {
     "title": "Ainesosat",
-    "description": "Ainesosaluettelo, jonka avulla Norish määrittää ravintosisällön, ainesosien kuvakkeet ja käännökset.",
     "search": "Hae ainesosia",
     "searchMatch": "Vastaavuus",
     "searchIn": "Hae kohteesta",
@@ -836,10 +835,6 @@
         "title": "Kehotteet",
         "subtitle": "Mukauta tekoälyn ohjeita reseptien käsittelyyn"
       },
-      "cuisines": {
-        "title": "Ruokakulttuurit",
-        "subtitle": "Sanasto, josta reseptit ja tekoäly valitsevat"
-      },
       "bulkEnrichment": {
         "title": "Joukkorikastus",
         "subtitle": "Aja käytössä olevat rikastukset kaikille resepteille",
@@ -1284,17 +1279,6 @@
       },
       "pagination": "Sivu {current} / {total}"
     },
-    "cuisineVocabulary": {
-      "description": "Ruokakulttuurit ovat sinun ylläpitämäsi sanasto. Nimet näytetään täsmälleen sellaisina kuin ne on tähän kirjoitettu, kaikilla kielillä.",
-      "namePlaceholder": "Ruokakulttuurin nimi",
-      "addLabel": "Lisää ruokakulttuuri",
-      "renameLabel": "Nimeä {name} uudelleen",
-      "deleteLabel": "Poista {name}",
-      "deleteConfirm": "Poistetaanko \"{name}\"? Sitä käyttävät reseptit menettävät sen.",
-      "empty": "Ei vielä ruokakulttuureita.",
-      "duplicate": "Samanniminen ruokakulttuuri on jo olemassa.",
-      "saveFailed": "Ruokakulttuuria ei voitu tallentaa."
-    },
     "toasts": {
       "localesSaved": "Kieliasetukset tallennettu",
       "localesError": "Kieliasetusten tallennus epäonnistui",
@@ -1327,5 +1311,82 @@
     "changePhoto": "Vaihda kuva",
     "accountGroup": "Tilisi",
     "phonesGroup": "Puhelimissa"
+  },
+  "content": {
+    "ariaLabel": "Sisältö",
+    "listPicker": "Luettelo",
+    "lists": {
+      "tags": "Tunnisteet",
+      "cuisines": "Ruokakulttuurit",
+      "categories": "Luokat",
+      "ingredients": "Ainesosat"
+    },
+    "search": {
+      "tags": "Hae tunnisteita",
+      "cuisines": "Hae ruokakulttuureja",
+      "categories": "Hae luokkia"
+    },
+    "show": "Näytä",
+    "all": "Kaikki",
+    "unused": "Käyttämättömät",
+    "recipes": "{count, plural, =0 {Ei käytössä} one {# resepti} other {# reseptiä}}",
+    "sections": {
+      "ownCuisines": "Omat ruokakulttuurisi",
+      "ownCategories": "Omat luokkasi",
+      "server": "Palvelimeltasi",
+      "builtIn": "Sisäänrakennetut"
+    },
+    "help": {
+      "server": "Palvelimesi ylläpitäjä hallinnoi näitä kaikille kotitalouksille",
+      "serverAdmin": "Kaikille tämän palvelimen kotitalouksille tarjotaan nämä. Ylläpitäjänä hallinnoit niitä.",
+      "builtIn": "Sisäänrakennetut luokat ovat samat jokaisella palvelimella, eikä niitä voi muuttaa"
+    },
+    "readOnly": "Vain luku",
+    "empty": {
+      "tags": "Ei vielä tunnisteita",
+      "cuisines": "Ei vielä ruokakulttuureja",
+      "categories": "Ei vielä luokkia"
+    },
+    "nothingUnused": "Mikään ei ole käyttämättä",
+    "noMatch": "Ei osumia",
+    "loadFailed": "Luetteloa ei voitu ladata",
+    "offline": "Voit muuttaa tätä luetteloa, kun olet verkossa.",
+    "panel": {
+      "addTitle": {
+        "tag": "Lisää tunniste",
+        "cuisine": "Lisää ruokakulttuuri",
+        "category": "Lisää luokka",
+        "ingredient": "Lisää ainesosa"
+      },
+      "editTitle": {
+        "tag": "Muokkaa tunnistetta",
+        "cuisine": "Muokkaa ruokakulttuuria",
+        "category": "Muokkaa luokkaa"
+      },
+      "server": "Palvelin",
+      "name": "Nimi",
+      "usedBy": "Käytössä",
+      "usedByOwn": "{count} reseptistäsi",
+      "already": {
+        "tag": "Jo tunniste",
+        "cuisine": "Jo ruokakulttuuri",
+        "category": "Jo luokka",
+        "ingredient": "Jo ainesosa"
+      },
+      "addTo": "Lisää kohteeseen",
+      "toHousehold": "Kotitaloutesi",
+      "toServer": "Kaikki tämän palvelimen kotitaloudet",
+      "serverReadOnly": "Palvelimesi ylläpitäjä hallinnoi tätä ruokakulttuuria kaikille kotitalouksille.",
+      "serverEditable": "Kaikille tämän palvelimen kotitalouksille tarjotaan tätä ruokakulttuuria.",
+      "merge": "”{target}” on jo olemassa. Yhdistäminen {count, plural, =0 {poistaa kohteen {name}} one {siirtää # reseptin kohteesta {name} siihen} other {siirtää # reseptiä kohteesta {name} siihen}}.",
+      "mergeAction": "Yhdistä",
+      "tooLong": "Nimessä voi olla enintään {max} merkkiä.",
+      "failed": "Tallennus ei onnistunut. Yritä uudelleen."
+    },
+    "delete": {
+      "title": "Poistetaanko ”{name}”?",
+      "body": "{count, plural, =0 {Mikään resepti ei käytä sitä.} one {Se poistetaan # reseptistä. Resepti säilyy.} other {Se poistetaan # reseptistä. Reseptit säilyvät.}}",
+      "bodyServer": "{count, plural, =0 {Mikään resepti ei käytä sitä.} one {Se poistetaan # reseptistä jokaisessa tämän palvelimen kotitaloudessa. Resepti säilyy.} other {Se poistetaan # reseptistä jokaisessa tämän palvelimen kotitaloudessa. Reseptit säilyvät.}}"
+    }
   }
 }
