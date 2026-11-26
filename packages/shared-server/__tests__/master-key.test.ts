@@ -750,6 +750,63 @@ describe("which key boot opens", () => {
       });
     });
 
+    describe("and a key file that cannot be rewritten to drop the retired key", () => {
+      const RETAINED =
+        "The retired Master Key is still in the key file; every boot retries removing it";
+
+      /** The key folder read-only, and its mode as another user's folder's is: not ours to change. */
+      async function lockKeyFolder() {
+        const chmod = fs.chmod;
+
+        await fs.chmod(keyDir(), 0o500);
+        const locked = vi
+          .spyOn(fs, "chmod")
+          .mockImplementation(async (target, mode) =>
+            target === keyDir() ? Promise.reject(failure("EPERM")) : chmod(target, mode)
+          );
+
+        return async () => {
+          locked.mockRestore();
+          await fs.chmod(keyDir(), 0o700);
+        };
+      }
+
+      const errors = () => logged.filter(([level]) => level === "error");
+
+      it("still starts, says so, and drops it on the first boot that can", async () => {
+        database.fingerprint = masterKeyFingerprint(keyB);
+        await writeKeyFile({ current: keyB, previous: keyA });
+        const unlock = await lockKeyFolder();
+
+        await resolveMasterKey();
+
+        expect(opened()).toBe(lookupBy(keyB));
+        expect(errors()).toEqual([["error", { path: keyFilePath(), code: "EPERM" }, RETAINED]]);
+        expect(await readKeyFile()).toEqual({ current: keyB, previous: keyA });
+
+        await unlock();
+        await resolveMasterKey();
+        expect(await readKeyFile()).toEqual({ current: keyB });
+      });
+
+      it("still starts right after the re-key commits, the database on the new key", async () => {
+        await writeKeyFile({ current: keyB, previous: keyA });
+        const unlock = await lockKeyFolder();
+
+        await resolveMasterKey();
+
+        expect(rekeys.calls).toHaveLength(1);
+        expect(database.fingerprint).toBe(masterKeyFingerprint(keyB));
+        expect(opened()).toBe(lookupBy(keyB));
+        expect(errors()).toEqual([["error", { path: keyFilePath(), code: "EPERM" }, RETAINED]]);
+
+        await unlock();
+        await resolveMasterKey();
+        expect(rekeys.calls).toHaveLength(1);
+        expect(await readKeyFile()).toEqual({ current: keyB });
+      });
+    });
+
     describe("and a previous key that is retired already", () => {
       it("drops it from a key file a crash left it in after the re-key committed", async () => {
         database.fingerprint = masterKeyFingerprint(keyB);
