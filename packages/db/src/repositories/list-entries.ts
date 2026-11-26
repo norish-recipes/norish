@@ -305,28 +305,13 @@ export async function entriesByFoldTx(
 
   const found = new Map<string, ListEntryRow>();
 
-  if (create) await holdHouseholdTx(tx, householdId);
+  // Every fold is held before what the list has is read, so none goes and comes back unlocked.
+  if (create) {
+    await holdHouseholdTx(tx, householdId);
+    await lockEntryFoldsTx(tx, kind, [...wanted.keys()]);
+  }
   for (let attempt = 0; attempt < ATTACH_ATTEMPTS && found.size < wanted.size; attempt += 1) {
     const missing = [...wanted.keys()].filter((fold) => !found.has(fold));
-
-    // A fold the list lacks is held before any entry is locked, so an instance add of it waits.
-    if (create) {
-      const listed = await tx
-        .select({ fold: table.nameFold })
-        .from(table)
-        .where(
-          and(
-            inScope(table.householdId, householdId, { offered: true }),
-            inArray(table.nameFold, missing)
-          )
-        );
-
-      await lockEntryFoldsTx(
-        tx,
-        kind,
-        missing.filter((fold) => !listed.some((row) => row.fold === fold))
-      );
-    }
     const rows = await tx
       .select({ ...rowColumns(table), nameFold: table.nameFold })
       .from(table)

@@ -10,7 +10,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { db } from "@norish/db/drizzle";
 import { attachCategoriesToRecipeByInputTx } from "@norish/db/repositories/categories";
-import { getRecipeCuisines } from "@norish/db/repositories/cuisines";
+import { cuisinesForNames, getRecipeCuisines } from "@norish/db/repositories/cuisines";
 import { listRecipesCarryingEntry } from "@norish/db/repositories/entry-recipes";
 import { ForeignHouseholdReferenceError } from "@norish/db/repositories/household-rows";
 import {
@@ -577,6 +577,19 @@ describe("household lists", () => {
       expect(runs.map((run) => run.status)).toEqual(["fulfilled", "fulfilled"]);
       expect(await tagsOf(recipeId)).toEqual(["Smoky"]);
       expect(await tagsOf(ann.recipe)).toEqual(["Smoky"]);
+    });
+
+    it("a Cuisine looked up by name holds its fold before it reads the entry it finds", async () => {
+      const lao = (await addEntry("cuisine", null, "Lao"))!.entry;
+      const [run] = await raceBehind(
+        (tx) => lockEntryFoldsTx(tx, "cuisine", ["lao"]),
+        [() => cuisinesForNames(ann.household, ["Lao"], { create: true })]
+      );
+
+      expect(run).toEqual({
+        status: "fulfilled",
+        value: [expect.objectContaining({ id: lao.id })],
+      });
     });
 
     it("an instance rename racing a Content merge of the same entries surfaces no deadlock", async () => {
