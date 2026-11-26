@@ -235,9 +235,8 @@ export function validateRecipeForm(form: RecipeFormState): RecipeFormErrors {
 const changed = (now: readonly string[], was: readonly string[] | undefined) =>
   !was || now.length !== was.length || now.some((value) => !was.includes(value));
 
-/** What a save sends for the form, shared by create and update; servings must be valid. An edit
- * passes the form it `opened` with: a list left as it was is not sent, so a change made to it
- * elsewhere meanwhile stays. */
+/** A save's payload (servings valid). An edit passes the form it `opened` with: a list left as it
+ * was is not sent, so a change made to it elsewhere meanwhile stays. */
 export function recipeFormPayload(
   form: RecipeFormState & { servings: number },
   opened?: RecipeFormState
