@@ -268,6 +268,9 @@ export function createCacheManager({
 
     if (!named || named === left) return;
     household = named;
+    // A household read sent before the change would answer with the former one; cancelled, it
+    // reverts to the state written since (`setQueryData` keeps its revert state current).
+    void queryClient.cancelQueries({ queryKey: householdQueryKey(), exact: true });
     if (left !== null) void enqueue(() => resetHouseholdCopy(), false, appliedOwner);
   });
 

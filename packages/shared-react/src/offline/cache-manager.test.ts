@@ -220,6 +220,31 @@ describe("createCacheManager", () => {
       expect(await storedKeys()).toEqual([JSON.stringify(householdKey)]);
     });
 
+    it("lets no household read sent before the change answer after it", async () => {
+      useFakeTimers();
+      const manager = createManager();
+      const client = manager.queryClient;
+      let answer = (_value: unknown) => {};
+
+      await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+      client.setQueryData(householdKey, inHousehold("h1"));
+      const older = client
+        .fetchQuery({
+          queryKey: householdKey,
+          queryFn: () => new Promise((resolve) => (answer = resolve)),
+          staleTime: 0,
+        })
+        .catch(() => null);
+
+      client.setQueryData(householdKey, inHousehold("h2"));
+      answer(inHousehold("h1"));
+      await older;
+      await vi.advanceTimersByTimeAsync(SAVED_MS);
+
+      expect(client.getQueryData(householdKey)).toEqual(inHousehold("h2"));
+      expect(manager.household()).toBe("h2");
+    });
+
     it("notes the household a write starts in, as its mutation starts", async () => {
       const manager = createManager();
       const client = manager.queryClient;
