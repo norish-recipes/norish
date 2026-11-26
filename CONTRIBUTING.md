@@ -36,7 +36,6 @@ Edit `.env.local` with your local configuration. At minimum, you need:
 - `DATABASE_URL` - PostgreSQL connection string
 - `VALKEY_URL` - Valkey connection string
 - `AUTH_URL` - Your local URL (e.g., `http://localhost:3000`)
-- `MASTER_KEY` - Generate with `openssl rand -base64 32`
 
 ### 4. Start Required Services
 
