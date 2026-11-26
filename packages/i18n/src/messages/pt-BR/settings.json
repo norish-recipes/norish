@@ -415,7 +415,6 @@
       "seed-ambiguous": "O catálogo conhece vários ingredientes que este poderia ser.",
       "ai-junk": "A IA achou que isto não é um alimento, como um utensílio de cozinha ou um trecho de uma linha de receita."
     },
-    "empty": "Nenhum ingrediente encontrado",
     "emptyFlagged": "Nada está marcado",
     "rename": "Renomear",
     "delete": "Excluir",

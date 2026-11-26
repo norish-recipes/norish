@@ -1588,10 +1588,10 @@ describe("IngredientsScreen", () => {
     expect(screen.getByTestId("catalogue-export")).toHaveAttribute("href", "/export/ingredients");
   });
 
-  it("says when nothing is flagged", async () => {
+  it("says nothing matches when no ingredient is listed", async () => {
     items = [];
     await renderScreen();
 
-    expect(screen.getByTestId("ingredients-empty")).toHaveTextContent("empty");
+    expect(screen.getByTestId("ingredients-empty")).toHaveTextContent("noMatch");
   });
 });

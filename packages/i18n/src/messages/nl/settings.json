@@ -415,7 +415,6 @@
       "seed-ambiguous": "De catalogus kent meerdere ingrediënten die dit kunnen zijn.",
       "ai-junk": "AI dacht dat dit geen ingrediënt is, zoals keukengerei of een stukje van een receptregel."
     },
-    "empty": "Geen ingrediënten gevonden",
     "emptyFlagged": "Niets is gemarkeerd",
     "rename": "Hernoemen",
     "delete": "Verwijderen",

@@ -415,7 +415,6 @@
       "seed-ambiguous": "Kataloget kender flere ingredienser, dette kunne være.",
       "ai-junk": "AI troede, at dette ikke er en ingrediens, som et køkkenredskab eller et stykke af en opskriftslinje."
     },
-    "empty": "Ingen ingredienser fundet",
     "emptyFlagged": "Intet er markeret",
     "rename": "Omdøb",
     "delete": "Slet",

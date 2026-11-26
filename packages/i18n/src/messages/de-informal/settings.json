@@ -415,7 +415,6 @@
       "seed-ambiguous": "Der Katalog kennt mehrere Zutaten, die dies sein könnten.",
       "ai-junk": "KI hielt dies für keine Zutat, etwa ein Küchenutensil oder ein Bruchstück einer Rezeptzeile."
     },
-    "empty": "Keine Zutaten gefunden",
     "emptyFlagged": "Nichts ist markiert",
     "rename": "Umbenennen",
     "delete": "Löschen",

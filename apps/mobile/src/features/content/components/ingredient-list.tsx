@@ -70,7 +70,7 @@ export function IngredientList() {
                 title: text(
                   filters.flaggedOnly
                     ? "settings.ingredients.emptyFlagged"
-                    : "settings.ingredients.empty"
+                    : "settings.content.noMatch"
                 ),
               }
             : undefined

@@ -415,7 +415,6 @@
       "seed-ambiguous": "Katalogen innehåller flera livsmedel som detta kan vara.",
       "ai-junk": "AI bedömde att detta inte är ett livsmedel, till exempel ett köksredskap eller en del av en receptrad."
     },
-    "empty": "Inga ingredienser hittades",
     "emptyFlagged": "Inget är flaggat",
     "rename": "Byt namn",
     "delete": "Ta bort",

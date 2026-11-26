@@ -415,7 +415,6 @@
       "seed-ambiguous": "The catalogue lists several foods this could be.",
       "ai-junk": "AI thought this is not a food, like a kitchen tool or a fragment of a recipe line."
     },
-    "empty": "No ingredients found",
     "emptyFlagged": "Nothing is flagged",
     "rename": "Rename",
     "delete": "Delete",

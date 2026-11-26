@@ -415,7 +415,6 @@
       "seed-ambiguous": "Katalog zna kilka składników, którymi to może być.",
       "ai-junk": "AI uznała, że to nie jest składnik, tylko np. przybór kuchenny lub fragment wiersza przepisu."
     },
-    "empty": "Nie znaleziono składników",
     "emptyFlagged": "Nic nie jest oznaczone",
     "rename": "Zmień nazwę",
     "delete": "Usuń",

@@ -171,7 +171,7 @@ describe("IngredientList", () => {
     expect(screen.queryByTestId("content-kinds-Soy sauce")).toBeNull();
   });
 
-  it("says nothing is flagged under the flagged filter, and nothing found otherwise", () => {
+  it("says nothing is flagged under the flagged filter, and nothing matches otherwise", () => {
     held.rows = [];
     held.filters = { ...DEFAULT_INGREDIENT_FILTERS, flaggedOnly: true };
     const first = render(<IngredientList />);
@@ -180,7 +180,7 @@ describe("IngredientList", () => {
     first.unmount();
     held.filters = DEFAULT_INGREDIENT_FILTERS;
     render(<IngredientList />);
-    expect(screen.getByTestId("content-empty").textContent).toContain("settings.ingredients.empty");
+    expect(screen.getByTestId("content-empty").textContent).toContain("settings.content.noMatch");
   });
 
   it("marks the filter button while a filter applies, and opens the filters and Changed by AI", () => {

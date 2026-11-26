@@ -415,7 +415,6 @@
       "seed-ambiguous": "Luettelo tuntee useita ainesosia, joita tämä voisi olla.",
       "ai-junk": "Tekoäly arveli, ettei tämä ole ainesosa, vaan esimerkiksi keittiöväline tai reseptirivin katkelma."
     },
-    "empty": "Ainesosia ei löytynyt",
     "emptyFlagged": "Mitään ei ole merkitty",
     "rename": "Nimeä uudelleen",
     "delete": "Poista",

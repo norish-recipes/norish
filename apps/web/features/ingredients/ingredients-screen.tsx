@@ -32,6 +32,7 @@ import { IngredientRowsSkeleton } from "./components/ingredients-skeleton";
 export function IngredientsScreen() {
   const t = useTranslations("settings.ingredients");
   const tActions = useTranslations("common.actions");
+  const tContent = useTranslations("settings.content");
   const locale = useLocale();
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<IngredientFilters>(DEFAULT_INGREDIENT_FILTERS);
@@ -120,7 +121,7 @@ export function IngredientsScreen() {
           <EmptyState
             data-testid="ingredients-empty"
             icon={BookOpenIcon}
-            title={filters.flaggedOnly ? t("emptyFlagged") : t("empty")}
+            title={filters.flaggedOnly ? t("emptyFlagged") : tContent("noMatch")}
             variant="row"
           />
         ) : (
