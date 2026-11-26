@@ -168,7 +168,7 @@ describe("NutritionCorrectionStep", () => {
         ) as HTMLButtonElement
       ).disabled
     ).toBe(true);
-    expect(screen.getByText("settings.content.offline")).toBeTruthy();
+    expect(screen.getByText("settings.ingredients.offline")).toBeTruthy();
   });
 
   it("keeps each label field titled once it holds a value", () => {

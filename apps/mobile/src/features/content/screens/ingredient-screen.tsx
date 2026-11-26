@@ -278,7 +278,7 @@ function FoodSheet({ item }: { item: IngredientItem }) {
           onPress={() => draft.setRelocation({ kind: "merge" })}
         />
       ) : null}
-      {isOffline && item.canEdit ? <SheetNote>{text("settings.content.offline")}</SheetNote> : null}
+      {isOffline && item.canEdit ? <SheetNote>{t("offline")}</SheetNote> : null}
     </FitSheet>
   );
 }

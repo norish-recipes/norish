@@ -424,8 +424,8 @@
       "pantry": "{count, plural, one {# артикул от килера се премахва} other {# артикула от килера се премахват}}"
     },
     "markDistinct": "Отбележи като отделна",
-    "summary": "{spellings, plural, one {# превод} other {# превода}}{kinds, plural, =0 {} one {, # вид} other {, # вида}}{parent, select, none {} other {, родител: {parent}}}",
-    "addAlias": "Добави превод",
+    "summary": "{spellings, plural, one {# изписване} other {# изписвания}}{kinds, plural, =0 {} one {, # вид} other {, # вида}}{parent, select, none {} other {, родител: {parent}}}",
+    "addAlias": "Добавяне на изписване",
     "removeAlias": "Премахни {alias}",
     "mergeInto": "Обедини с…",
     "merge": "Обедини",
@@ -445,10 +445,10 @@
     "clearParent": "Премахване на родител",
     "nameSection": "Име",
     "parentSection": "Родител",
-    "spellingsSection": "Преводи",
+    "spellingsSection": "Изписвания",
     "shownAs": "Показва се за вас като {name}",
     "changeParent": "Смяна на родителя…",
-    "spellingsCount": "{count, plural, one {# превод} other {# превода}}",
+    "spellingsCount": "{count, plural, one {# изписване} other {# изписвания}}",
     "dataSources": {
       "title": "Източници на данни",
       "notice": "Каталогът на съставките се основава на таксономията на съставките на <off>Open Food Facts</off>, достъпна под лиценза <odbl>Open Database License (ODbL)</odbl>. Каталогът, който Norish изгражда от нея, се предлага под същия лиценз.",
@@ -595,7 +595,8 @@
       "generate": "Генерирай с AI",
       "generateFailed": "Иконата не можа да бъде генерирана."
     },
-    "keepDistinct": "Запази като отделен"
+    "keepDistinct": "Запази като отделен",
+    "offline": "Можете да промените тази съставка, когато сте онлайн."
   },
   "admin": {
     "shareLinks": {

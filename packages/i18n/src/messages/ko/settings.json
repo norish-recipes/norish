@@ -424,8 +424,8 @@
       "pantry": "{count, plural, other {식료품 저장실 항목 #개가 삭제됩니다}}"
     },
     "markDistinct": "별개로 표시",
-    "summary": "번역 {spellings}개{kinds, plural, =0 {} other {, 종류 #}}{parent, select, none {} other {, 상위: {parent}}}",
-    "addAlias": "번역 추가",
+    "summary": "표기 {spellings}개{kinds, plural, =0 {} other {, 종류 #}}{parent, select, none {} other {, 상위: {parent}}}",
+    "addAlias": "표기 추가",
     "removeAlias": "{alias} 제거",
     "mergeInto": "다음으로 병합…",
     "merge": "병합",
@@ -445,10 +445,10 @@
     "clearParent": "상위 재료 제거",
     "nameSection": "이름",
     "parentSection": "상위",
-    "spellingsSection": "번역",
+    "spellingsSection": "표기",
     "shownAs": "내게는 {name}(으)로 표시됨",
     "changeParent": "상위 식재료 변경…",
-    "spellingsCount": "번역 {count}개",
+    "spellingsCount": "표기 {count}개",
     "dataSources": {
       "title": "데이터 출처",
       "notice": "재료 카탈로그는 <off>Open Food Facts</off>의 재료 분류 체계를 바탕으로 하며, 이는 <odbl>Open Database License (ODbL)</odbl>로 제공됩니다. Norish가 이를 바탕으로 만든 카탈로그도 같은 라이선스로 제공됩니다.",
@@ -595,7 +595,8 @@
       "generate": "AI로 생성",
       "generateFailed": "아이콘을 생성할 수 없습니다."
     },
-    "keepDistinct": "별개로 유지"
+    "keepDistinct": "별개로 유지",
+    "offline": "온라인일 때 이 재료를 변경할 수 있습니다."
   },
   "admin": {
     "shareLinks": {

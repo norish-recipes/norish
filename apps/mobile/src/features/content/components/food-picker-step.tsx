@@ -116,7 +116,9 @@ export function FoodPickerStep({
           />
         </View>
       ) : null}
-      {isOffline && writesNow ? <SheetNote>{text("settings.content.offline")}</SheetNote> : null}
+      {isOffline && writesNow ? (
+        <SheetNote>{text("settings.ingredients.offline")}</SheetNote>
+      ) : null}
     </FitSheet>
   );
 }

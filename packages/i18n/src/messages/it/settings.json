@@ -424,8 +424,8 @@
       "pantry": "{count, plural, one {# voce della dispensa viene rimossa} other {# voci della dispensa vengono rimosse}}"
     },
     "markDistinct": "Segna come distinto",
-    "summary": "{spellings, plural, one {# traduzione} other {# traduzioni}}{kinds, plural, =0 {} one {, # tipo} other {, # tipi}}{parent, select, none {} other {, genitore: {parent}}}",
-    "addAlias": "Aggiungi una traduzione",
+    "summary": "{spellings, plural, one {# grafia} other {# grafie}}{kinds, plural, =0 {} one {, # tipo} other {, # tipi}}{parent, select, none {} other {, genitore: {parent}}}",
+    "addAlias": "Aggiungi una grafia",
     "removeAlias": "Rimuovi {alias}",
     "mergeInto": "Unisci a…",
     "merge": "Unisci",
@@ -445,10 +445,10 @@
     "clearParent": "Rimuovi il genitore",
     "nameSection": "Nome",
     "parentSection": "Genitore",
-    "spellingsSection": "Traduzioni",
+    "spellingsSection": "Grafie",
     "shownAs": "Mostrato a te come {name}",
     "changeParent": "Cambia il genitore…",
-    "spellingsCount": "{count, plural, one {# traduzione} other {# traduzioni}}",
+    "spellingsCount": "{count, plural, one {# grafia} other {# grafie}}",
     "dataSources": {
       "title": "Fonti dei dati",
       "notice": "Il catalogo degli ingredienti parte dalla tassonomia degli ingredienti di <off>Open Food Facts</off>, disponibile con la <odbl>Open Database License (ODbL)</odbl>. Il catalogo che Norish ne ricava è offerto con la stessa licenza.",
@@ -595,7 +595,8 @@
       "generate": "Genera con l’IA",
       "generateFailed": "Non è stato possibile generare l’icona."
     },
-    "keepDistinct": "Mantieni distinto"
+    "keepDistinct": "Mantieni distinto",
+    "offline": "Puoi modificare questo ingrediente quando sei online."
   },
   "admin": {
     "shareLinks": {

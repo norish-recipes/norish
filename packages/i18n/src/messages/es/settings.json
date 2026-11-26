@@ -424,8 +424,8 @@
       "pantry": "{count, plural, one {# artículo de la despensa se elimina} other {# artículos de la despensa se eliminan}}"
     },
     "markDistinct": "Marcar como distinto",
-    "summary": "{spellings, plural, one {# traducción} other {# traducciones}}{kinds, plural, =0 {} one {, # tipo} other {, # tipos}}{parent, select, none {} other {, padre: {parent}}}",
-    "addAlias": "Añadir una traducción",
+    "summary": "{spellings, plural, one {# grafía} other {# grafías}}{kinds, plural, =0 {} one {, # tipo} other {, # tipos}}{parent, select, none {} other {, padre: {parent}}}",
+    "addAlias": "Añadir una grafía",
     "removeAlias": "Eliminar {alias}",
     "mergeInto": "Fusionar con…",
     "merge": "Fusionar",
@@ -445,10 +445,10 @@
     "clearParent": "Quitar superior",
     "nameSection": "Nombre",
     "parentSection": "Padre",
-    "spellingsSection": "Traducciones",
+    "spellingsSection": "Grafías",
     "shownAs": "Se te muestra como {name}",
     "changeParent": "Cambiar el padre…",
-    "spellingsCount": "{count, plural, one {# traducción} other {# traducciones}}",
+    "spellingsCount": "{count, plural, one {# grafía} other {# grafías}}",
     "dataSources": {
       "title": "Fuentes de datos",
       "notice": "El catálogo de ingredientes parte de la taxonomía de ingredientes de <off>Open Food Facts</off>, disponible bajo la <odbl>Open Database License (ODbL)</odbl>. El catálogo que Norish construye a partir de ella se ofrece bajo la misma licencia.",
@@ -595,7 +595,8 @@
       "generate": "Generar con IA",
       "generateFailed": "No se pudo generar el icono."
     },
-    "keepDistinct": "Mantener separado"
+    "keepDistinct": "Mantener separado",
+    "offline": "Puedes cambiar este ingrediente cuando estés en línea."
   },
   "admin": {
     "shareLinks": {

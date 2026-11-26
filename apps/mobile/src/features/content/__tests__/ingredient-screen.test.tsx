@@ -234,7 +234,7 @@ describe("IngredientScreen", () => {
     expect(off("food-keep-distinct")).toBe(true);
     expect(off("food-ai-change-keep-c1")).toBe(true);
     expect(off("food-ai-change-undo-c1")).toBe(true);
-    expect(screen.getByText("settings.content.offline")).toBeTruthy();
+    expect(screen.getByText("settings.ingredients.offline")).toBeTruthy();
   });
 
   it("is writable online, without the offline note", () => {
@@ -246,7 +246,7 @@ describe("IngredientScreen", () => {
     expect((screen.getByTestId("food-ai-change-keep-c1") as HTMLButtonElement).disabled).toBe(
       false
     );
-    expect(screen.queryByText("settings.content.offline")).toBeNull();
+    expect(screen.queryByText("settings.ingredients.offline")).toBeNull();
   });
 
   it("opens the recipes that use the food on the Used by screen", () => {

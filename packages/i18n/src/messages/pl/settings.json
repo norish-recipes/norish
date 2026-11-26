@@ -424,8 +424,8 @@
       "pantry": "{count, plural, one {# pozycja spiżarni zostanie usunięta} few {# pozycje spiżarni zostaną usunięte} many {# pozycji spiżarni zostanie usuniętych} other {# pozycji spiżarni zostanie usunięte}}"
     },
     "markDistinct": "Oznacz jako odrębny",
-    "summary": "{spellings, plural, one {# tłumaczenie} few {# tłumaczenia} other {# tłumaczeń}}{kinds, plural, =0 {} one {, # rodzaj} few {, # rodzaje} many {, # rodzajów} other {, # rodzaju}}{parent, select, none {} other {, nadrzędny: {parent}}}",
-    "addAlias": "Dodaj tłumaczenie",
+    "summary": "{spellings, plural, one {# pisownia} few {# pisownie} other {# pisowni}}{kinds, plural, =0 {} one {, # rodzaj} few {, # rodzaje} many {, # rodzajów} other {, # rodzaju}}{parent, select, none {} other {, nadrzędny: {parent}}}",
+    "addAlias": "Dodaj pisownię",
     "removeAlias": "Usuń {alias}",
     "mergeInto": "Scal z…",
     "merge": "Scal",
@@ -445,10 +445,10 @@
     "clearParent": "Usuń nadrzędny",
     "nameSection": "Nazwa",
     "parentSection": "Nadrzędny",
-    "spellingsSection": "Tłumaczenia",
+    "spellingsSection": "Pisownie",
     "shownAs": "Wyświetlane dla Ciebie jako {name}",
     "changeParent": "Zmień nadrzędny…",
-    "spellingsCount": "{count, plural, one {# tłumaczenie} few {# tłumaczenia} other {# tłumaczeń}}",
+    "spellingsCount": "{count, plural, one {# pisownia} few {# pisownie} other {# pisowni}}",
     "dataSources": {
       "title": "Źródła danych",
       "notice": "Katalog składników opiera się na taksonomii składników <off>Open Food Facts</off>, dostępnej na licencji <odbl>Open Database License (ODbL)</odbl>. Katalog, który Norish na jej podstawie buduje, jest udostępniany na tej samej licencji.",
@@ -595,7 +595,8 @@
       "generate": "Wygeneruj z AI",
       "generateFailed": "Nie udało się wygenerować ikony."
     },
-    "keepDistinct": "Zachowaj osobno"
+    "keepDistinct": "Zachowaj osobno",
+    "offline": "Możesz zmienić ten składnik, gdy będziesz online."
   },
   "admin": {
     "shareLinks": {

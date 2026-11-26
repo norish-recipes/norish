@@ -424,8 +424,8 @@
       "pantry": "{count, plural, one {# voorraaditem gaat weg} other {# voorraaditems gaan weg}}"
     },
     "markDistinct": "Markeer als apart",
-    "summary": "{spellings, plural, one {# vertaling} other {# vertalingen}}{kinds, plural, =0 {} one {, # soort} other {, # soorten}}{parent, select, none {} other {, hoofdingrediënt: {parent}}}",
-    "addAlias": "Vertaling toevoegen",
+    "summary": "{spellings, plural, one {# schrijfwijze} other {# schrijfwijzen}}{kinds, plural, =0 {} one {, # soort} other {, # soorten}}{parent, select, none {} other {, hoofdingrediënt: {parent}}}",
+    "addAlias": "Schrijfwijze toevoegen",
     "removeAlias": "{alias} verwijderen",
     "mergeInto": "Samenvoegen met…",
     "merge": "Samenvoegen",
@@ -445,10 +445,10 @@
     "clearParent": "Bovenliggend verwijderen",
     "nameSection": "Naam",
     "parentSection": "Hoofdingrediënt",
-    "spellingsSection": "Vertalingen",
+    "spellingsSection": "Schrijfwijzen",
     "shownAs": "Voor jou getoond als {name}",
     "changeParent": "Ander hoofdingrediënt…",
-    "spellingsCount": "{count, plural, one {# vertaling} other {# vertalingen}}",
+    "spellingsCount": "{count, plural, one {# schrijfwijze} other {# schrijfwijzen}}",
     "dataSources": {
       "title": "Gegevensbronnen",
       "notice": "De ingrediëntencatalogus is gevuld met de ingrediëntentaxonomie van <off>Open Food Facts</off>, beschikbaar onder de <odbl>Open Database License (ODbL)</odbl>. De catalogus die Norish ermee opbouwt, wordt onder dezelfde licentie aangeboden.",
@@ -595,7 +595,8 @@
       "generate": "Genereren met AI",
       "generateFailed": "Het icoon kon niet worden gegenereerd."
     },
-    "keepDistinct": "Apart houden"
+    "keepDistinct": "Apart houden",
+    "offline": "Je kunt dit ingrediënt wijzigen als je online bent."
   },
   "admin": {
     "shareLinks": {

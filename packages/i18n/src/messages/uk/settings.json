@@ -424,8 +424,8 @@
       "pantry": "{count, plural, one {# позицію в коморі буде видалено} few {# позиції в коморі буде видалено} many {# позицій у коморі буде видалено} other {# позиції в коморі буде видалено}}"
     },
     "markDistinct": "Позначити як окремий",
-    "summary": "{spellings, plural, one {# переклад} few {# переклади} many {# перекладів} other {# перекладу}}{kinds, plural, =0 {} one {, # різновид} few {, # різновиди} many {, # різновидів} other {, # різновиду}}{parent, select, none {} other {, батьківський: {parent}}}",
-    "addAlias": "Додати переклад",
+    "summary": "{spellings, plural, one {# написання} few {# написання} many {# написань} other {# написання}}{kinds, plural, =0 {} one {, # різновид} few {, # різновиди} many {, # різновидів} other {, # різновиду}}{parent, select, none {} other {, батьківський: {parent}}}",
+    "addAlias": "Додати написання",
     "removeAlias": "Прибрати {alias}",
     "mergeInto": "Об’єднати з…",
     "merge": "Об’єднати",
@@ -445,10 +445,10 @@
     "clearParent": "Прибрати батьківський",
     "nameSection": "Назва",
     "parentSection": "Батьківський",
-    "spellingsSection": "Переклади",
+    "spellingsSection": "Написання",
     "shownAs": "Для вас показано як {name}",
     "changeParent": "Змінити батьківський…",
-    "spellingsCount": "{count, plural, one {# переклад} few {# переклади} many {# перекладів} other {# перекладу}}",
+    "spellingsCount": "{count, plural, one {# написання} few {# написання} many {# написань} other {# написання}}",
     "dataSources": {
       "title": "Джерела даних",
       "notice": "Каталог інгредієнтів створено на основі таксономії інгредієнтів <off>Open Food Facts</off>, доступної за ліцензією <odbl>Open Database License (ODbL)</odbl>. Каталог, який Norish будує на її основі, поширюється за тією самою ліцензією.",
@@ -595,7 +595,8 @@
       "generate": "Згенерувати за допомогою ШІ",
       "generateFailed": "Не вдалося згенерувати іконку."
     },
-    "keepDistinct": "Залишити окремим"
+    "keepDistinct": "Залишити окремим",
+    "offline": "Змінити цей інгредієнт можна, коли ви в мережі."
   },
   "admin": {
     "shareLinks": {

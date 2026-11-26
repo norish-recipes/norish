@@ -91,7 +91,7 @@ export function NutritionCorrectionStep({
       onClose={onClose}
     >
       <SheetNote>{t("correctIntro")}</SheetNote>
-      {isOffline ? <SheetNote>{text("settings.content.offline")}</SheetNote> : null}
+      {isOffline ? <SheetNote>{text("settings.ingredients.offline")}</SheetNote> : null}
       {facts.map((fact) => (
         <FactEditor
           key={fact}

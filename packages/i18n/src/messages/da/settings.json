@@ -424,8 +424,8 @@
       "pantry": "{count, plural, one {# vare i spisekammeret fjernes} other {# varer i spisekammeret fjernes}}"
     },
     "markDistinct": "Marker som selvstændig",
-    "summary": "{spellings, plural, one {# oversættelse} other {# oversættelser}}{kinds, plural, =0 {} one {, # slags} other {, # slags}}{parent, select, none {} other {, overordnet: {parent}}}",
-    "addAlias": "Tilføj en oversættelse",
+    "summary": "{spellings, plural, one {# stavemåde} other {# stavemåder}}{kinds, plural, =0 {} one {, # slags} other {, # slags}}{parent, select, none {} other {, overordnet: {parent}}}",
+    "addAlias": "Tilføj en stavemåde",
     "removeAlias": "Fjern {alias}",
     "mergeInto": "Flet med…",
     "merge": "Flet",
@@ -445,10 +445,10 @@
     "clearParent": "Fjern overordnet",
     "nameSection": "Navn",
     "parentSection": "Overordnet",
-    "spellingsSection": "Oversættelser",
+    "spellingsSection": "Stavemåder",
     "shownAs": "Vises for dig som {name}",
     "changeParent": "Skift overordnet…",
-    "spellingsCount": "{count, plural, one {# oversættelse} other {# oversættelser}}",
+    "spellingsCount": "{count, plural, one {# stavemåde} other {# stavemåder}}",
     "dataSources": {
       "title": "Datakilder",
       "notice": "Ingredienskataloget bygger på ingredienstaksonomien fra <off>Open Food Facts</off>, tilgængelig under <odbl>Open Database License (ODbL)</odbl>. Det katalog, Norish bygger ud fra den, tilbydes under samme licens.",
@@ -595,7 +595,8 @@
       "generate": "Generér med AI",
       "generateFailed": "Ikonet kunne ikke genereres."
     },
-    "keepDistinct": "Hold adskilt"
+    "keepDistinct": "Hold adskilt",
+    "offline": "Du kan ændre denne ingrediens, når du er online."
   },
   "admin": {
     "shareLinks": {

@@ -424,8 +424,8 @@
       "pantry": "{count, plural, one {# pantry item is removed} other {# pantry items are removed}}"
     },
     "markDistinct": "Mark distinct",
-    "summary": "{spellings, plural, one {# translation} other {# translations}}{kinds, plural, =0 {} one {, # kind} other {, # kinds}}{parent, select, none {} other {, parent: {parent}}}",
-    "addAlias": "Add a translation",
+    "summary": "{spellings, plural, one {# spelling} other {# spellings}}{kinds, plural, =0 {} one {, # kind} other {, # kinds}}{parent, select, none {} other {, parent: {parent}}}",
+    "addAlias": "Add a spelling",
     "removeAlias": "Remove {alias}",
     "mergeInto": "Merge into…",
     "merge": "Merge",
@@ -445,10 +445,10 @@
     "clearParent": "Remove parent",
     "nameSection": "Name",
     "parentSection": "Parent",
-    "spellingsSection": "Translations",
+    "spellingsSection": "Spellings",
     "shownAs": "Shown to you as {name}",
     "changeParent": "Change parent…",
-    "spellingsCount": "{count, plural, one {# translation} other {# translations}}",
+    "spellingsCount": "{count, plural, one {# spelling} other {# spellings}}",
     "dataSources": {
       "title": "Data sources",
       "notice": "The ingredient catalogue is seeded from the <off>Open Food Facts</off> ingredients taxonomy, available under the <odbl>Open Database License (ODbL)</odbl>. The catalogue Norish builds from it is offered under the same licence.",
@@ -595,7 +595,8 @@
       "generate": "Generate with AI",
       "generateFailed": "The icon could not be generated."
     },
-    "keepDistinct": "Keep distinct"
+    "keepDistinct": "Keep distinct",
+    "offline": "You can change this ingredient when you are online."
   },
   "admin": {
     "shareLinks": {

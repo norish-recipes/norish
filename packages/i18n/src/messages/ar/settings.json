@@ -424,8 +424,8 @@
       "pantry": "{count, plural, zero {لا يُزال أي غرض من المونة} one {يُزال غرض واحد من المونة} two {يُزال غرضان من المونة} few {تُزال # أغراض من المونة} many {يُزال # غرضًا من المونة} other {يُزال # غرض من المونة}}"
     },
     "markDistinct": "تعليم كمستقل",
-    "summary": "{spellings, plural, one {ترجمة واحدة} two {ترجمتان} few {# ترجمات} many {# ترجمة} other {# ترجمة}}{kinds, plural, =0 {} one {، نوع واحد} two {، نوعان} few {، # أنواع} other {، # نوع}}{parent, select, none {} other {، الأصل: {parent}}}",
-    "addAlias": "إضافة ترجمة",
+    "summary": "{spellings, plural, one {طريقة كتابة واحدة} two {طريقتا كتابة} few {# طرق كتابة} many {# طريقة كتابة} other {# طريقة كتابة}}{kinds, plural, =0 {} one {، نوع واحد} two {، نوعان} few {، # أنواع} other {، # نوع}}{parent, select, none {} other {، الأصل: {parent}}}",
+    "addAlias": "إضافة طريقة كتابة",
     "removeAlias": "إزالة {alias}",
     "mergeInto": "دمج في…",
     "merge": "دمج",
@@ -445,10 +445,10 @@
     "clearParent": "إزالة الأصل",
     "nameSection": "الاسم",
     "parentSection": "الأصل",
-    "spellingsSection": "الترجمات",
+    "spellingsSection": "طرق الكتابة",
     "shownAs": "يظهر لك باسم {name}",
     "changeParent": "تغيير الأصل…",
-    "spellingsCount": "{count, plural, zero {لا توجد ترجمات} one {ترجمة واحدة} two {ترجمتان} few {# ترجمات} many {# ترجمة} other {# ترجمة}}",
+    "spellingsCount": "{count, plural, zero {لا توجد طرق كتابة} one {طريقة كتابة واحدة} two {طريقتا كتابة} few {# طرق كتابة} many {# طريقة كتابة} other {# طريقة كتابة}}",
     "dataSources": {
       "title": "مصادر البيانات",
       "notice": "كتالوج المكوّنات مبني على تصنيف المكوّنات في <off>Open Food Facts</off>، المتاح بموجب <odbl>رخصة قواعد البيانات المفتوحة (ODbL)</odbl>. والكتالوج الذي يبنيه Norish منه متاح بموجب الرخصة نفسها.",
@@ -595,7 +595,8 @@
       "generate": "إنشاء بالذكاء الاصطناعي",
       "generateFailed": "تعذّر إنشاء الأيقونة."
     },
-    "keepDistinct": "إبقاؤه منفصلاً"
+    "keepDistinct": "إبقاؤه منفصلاً",
+    "offline": "يمكنك تغيير هذا المكوّن عندما تكون متصلاً بالإنترنت."
   },
   "admin": {
     "shareLinks": {

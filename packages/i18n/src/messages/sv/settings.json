@@ -424,8 +424,8 @@
       "pantry": "{count, plural, one {# vara i skafferiet tas bort} other {# varor i skafferiet tas bort}}"
     },
     "markDistinct": "Markera som eget livsmedel",
-    "summary": "{spellings, plural, one {# översättning} other {# översättningar}}{kinds, plural, =0 {} one {, # sort} other {, # sorter}}{parent, select, none {} other {, överordnad: {parent}}}",
-    "addAlias": "Lägg till översättning",
+    "summary": "{spellings, plural, one {# stavning} other {# stavningar}}{kinds, plural, =0 {} one {, # sort} other {, # sorter}}{parent, select, none {} other {, överordnad: {parent}}}",
+    "addAlias": "Lägg till en stavning",
     "removeAlias": "Ta bort {alias}",
     "mergeInto": "Slå ihop med…",
     "merge": "Slå ihop",
@@ -445,10 +445,10 @@
     "clearParent": "Ta bort överordnad ingrediens",
     "nameSection": "Namn",
     "parentSection": "Överordnad ingrediens",
-    "spellingsSection": "Översättningar",
+    "spellingsSection": "Stavningar",
     "shownAs": "Visas för dig som {name}",
     "changeParent": "Byt överordnad ingrediens…",
-    "spellingsCount": "{count, plural, one {# översättning} other {# översättningar}}",
+    "spellingsCount": "{count, plural, one {# stavning} other {# stavningar}}",
     "dataSources": {
       "title": "Datakällor",
       "notice": "Ingredienskatalogen bygger på ingredienstaxonomin från <off>Open Food Facts</off>, som är tillgänglig under <odbl>Open Database License (ODbL)</odbl>. Katalogen som Norish skapar utifrån den tillhandahålls under samma licens.",
@@ -595,7 +595,8 @@
       "generate": "Skapa med AI",
       "generateFailed": "Det gick inte att skapa ikonen."
     },
-    "keepDistinct": "Behåll separat"
+    "keepDistinct": "Behåll separat",
+    "offline": "Du kan ändra den här ingrediensen när du är online."
   },
   "admin": {
     "shareLinks": {

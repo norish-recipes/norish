@@ -424,8 +424,8 @@
       "pantry": "{count, plural, one {# Vorratseintrag wird entfernt} other {# Vorratseinträge werden entfernt}}"
     },
     "markDistinct": "Als eigenständig markieren",
-    "summary": "{spellings, plural, one {# Übersetzung} other {# Übersetzungen}}{kinds, plural, =0 {} one {, # Sorte} other {, # Sorten}}{parent, select, none {} other {, übergeordnet: {parent}}}",
-    "addAlias": "Übersetzung hinzufügen",
+    "summary": "{spellings, plural, one {# Schreibweise} other {# Schreibweisen}}{kinds, plural, =0 {} one {, # Sorte} other {, # Sorten}}{parent, select, none {} other {, übergeordnet: {parent}}}",
+    "addAlias": "Schreibweise hinzufügen",
     "removeAlias": "{alias} entfernen",
     "mergeInto": "Zusammenführen mit…",
     "merge": "Zusammenführen",
@@ -445,10 +445,10 @@
     "clearParent": "Oberbegriff entfernen",
     "nameSection": "Name",
     "parentSection": "Übergeordnet",
-    "spellingsSection": "Übersetzungen",
+    "spellingsSection": "Schreibweisen",
     "shownAs": "Ihnen angezeigt als {name}",
     "changeParent": "Übergeordnete Zutat ändern…",
-    "spellingsCount": "{count, plural, one {# Übersetzung} other {# Übersetzungen}}",
+    "spellingsCount": "{count, plural, one {# Schreibweise} other {# Schreibweisen}}",
     "dataSources": {
       "title": "Datenquellen",
       "notice": "Der Zutatenkatalog basiert auf der Zutatentaxonomie von <off>Open Food Facts</off>, verfügbar unter der <odbl>Open Database License (ODbL)</odbl>. Der Katalog, den Norish daraus aufbaut, steht unter derselben Lizenz.",
@@ -595,7 +595,8 @@
       "generate": "Mit KI erstellen",
       "generateFailed": "Das Symbol konnte nicht erstellt werden."
     },
-    "keepDistinct": "Getrennt halten"
+    "keepDistinct": "Getrennt halten",
+    "offline": "Sie können diese Zutat ändern, wenn Sie online sind."
   },
   "admin": {
     "shareLinks": {

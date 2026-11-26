@@ -424,8 +424,8 @@
       "pantry": "{count, plural, one {# ruokakomeron tuote poistetaan} other {# ruokakomeron tuotetta poistetaan}}"
     },
     "markDistinct": "Merkitse erilliseksi",
-    "summary": "{spellings, plural, one {# käännös} other {# käännöstä}}{kinds, plural, =0 {} one {, # laji} other {, # lajia}}{parent, select, none {} other {, yläkäsite: {parent}}}",
-    "addAlias": "Lisää käännös",
+    "summary": "{spellings, plural, one {# kirjoitusasu} other {# kirjoitusasua}}{kinds, plural, =0 {} one {, # laji} other {, # lajia}}{parent, select, none {} other {, yläkäsite: {parent}}}",
+    "addAlias": "Lisää kirjoitusasu",
     "removeAlias": "Poista {alias}",
     "mergeInto": "Yhdistä…",
     "merge": "Yhdistä",
@@ -445,10 +445,10 @@
     "clearParent": "Poista yläkäsite",
     "nameSection": "Nimi",
     "parentSection": "Yläkäsite",
-    "spellingsSection": "Käännökset",
+    "spellingsSection": "Kirjoitusasut",
     "shownAs": "Näytetään sinulle nimellä {name}",
     "changeParent": "Vaihda yläkäsite…",
-    "spellingsCount": "{count, plural, one {# käännös} other {# käännöstä}}",
+    "spellingsCount": "{count, plural, one {# kirjoitusasu} other {# kirjoitusasua}}",
     "dataSources": {
       "title": "Tietolähteet",
       "notice": "Ainesosaluettelo perustuu <off>Open Food Factsin</off> ainesosataksonomiaan, joka on saatavilla <odbl>Open Database License (ODbL)</odbl> -lisenssillä. Norishin siitä rakentama luettelo tarjotaan samalla lisenssillä.",
@@ -595,7 +595,8 @@
       "generate": "Luo tekoälyllä",
       "generateFailed": "Kuvaketta ei voitu luoda."
     },
-    "keepDistinct": "Pidä erillisenä"
+    "keepDistinct": "Pidä erillisenä",
+    "offline": "Voit muuttaa tätä ainesosaa, kun olet verkossa."
   },
   "admin": {
     "shareLinks": {

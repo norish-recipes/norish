@@ -424,8 +424,8 @@
       "pantry": "{count, plural, one {# позиция в кладовой будет удалена} few {# позиции в кладовой будут удалены} many {# позиций в кладовой будут удалены} other {# позиции в кладовой будут удалены}}"
     },
     "markDistinct": "Отметить как отдельный",
-    "summary": "{spellings, plural, one {# перевод} few {# перевода} other {# переводов}}{kinds, plural, =0 {} one {, # вид} few {, # вида} many {, # видов} other {, # вида}}{parent, select, none {} other {, родительский: {parent}}}",
-    "addAlias": "Добавить перевод",
+    "summary": "{spellings, plural, one {# написание} few {# написания} other {# написаний}}{kinds, plural, =0 {} one {, # вид} few {, # вида} many {, # видов} other {, # вида}}{parent, select, none {} other {, родительский: {parent}}}",
+    "addAlias": "Добавить написание",
     "removeAlias": "Удалить {alias}",
     "mergeInto": "Объединить с…",
     "merge": "Объединить",
@@ -445,10 +445,10 @@
     "clearParent": "Убрать родителя",
     "nameSection": "Название",
     "parentSection": "Родительский",
-    "spellingsSection": "Переводы",
+    "spellingsSection": "Написания",
     "shownAs": "Показано вам как {name}",
     "changeParent": "Изменить родительский…",
-    "spellingsCount": "{count, plural, one {# перевод} few {# перевода} other {# переводов}}",
+    "spellingsCount": "{count, plural, one {# написание} few {# написания} other {# написаний}}",
     "dataSources": {
       "title": "Источники данных",
       "notice": "Каталог ингредиентов основан на таксономии ингредиентов <off>Open Food Facts</off>, доступной по лицензии <odbl>Open Database License (ODbL)</odbl>. Каталог, который Norish строит на её основе, предоставляется по той же лицензии.",
@@ -595,7 +595,8 @@
       "generate": "Создать с помощью ИИ",
       "generateFailed": "Не удалось создать значок."
     },
-    "keepDistinct": "Оставить отдельным"
+    "keepDistinct": "Оставить отдельным",
+    "offline": "Изменить этот ингредиент можно, когда вы в сети."
   },
   "admin": {
     "shareLinks": {
