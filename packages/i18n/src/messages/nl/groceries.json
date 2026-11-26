@@ -16,7 +16,6 @@
   },
   "empty": {
     "title": "Je boodschappenlijst wacht op je",
-    "description": "Voeg items toe met de knop \"Item toevoegen\" hierboven om te beginnen.",
     "manual": "Handmatige items"
   },
   "item": {
@@ -185,7 +184,6 @@
     "viewByStore": "Per winkel",
     "viewByRecipe": "Per recept",
     "listSettings": "Lijstinstellingen",
-    "emptyHint": "Voeg items toe met de knop hieronder.",
     "addTitle": "Boodschappen toevoegen",
     "editTitle": "Boodschap bewerken",
     "store": "Winkel",

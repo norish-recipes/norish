@@ -16,7 +16,6 @@
   },
   "empty": {
     "title": "Din inköpslista väntar",
-    "description": "Lägg till varor med knappen ”Lägg till vara” ovan för att komma igång.",
     "manual": "Manuellt tillagda varor"
   },
   "item": {
@@ -185,7 +184,6 @@
     "viewByStore": "Efter butik",
     "viewByRecipe": "Efter recept",
     "listSettings": "Listinställningar",
-    "emptyHint": "Lägg till varor med knappen nedan.",
     "addTitle": "Lägg till varor",
     "editTitle": "Redigera vara",
     "store": "Butik",

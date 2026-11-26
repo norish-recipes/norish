@@ -41,12 +41,8 @@
   },
   "empty": {
     "title": "Your library awaits",
-    "description": "Paste a recipe URL in the search field above and watch the magic happen.",
     "noResults": "No recipes found",
-    "noResultsHint": "Try adjusting or clearing your filters.",
-    "noCookbooks": "No cookbooks yet",
-    "noCookbooksHint": "A cookbook is a titled set of recipes. Make your first one to give your library some order.",
-    "descriptionMobile": "Add your first recipe from a link, text or photos."
+    "noCookbooks": "No cookbooks yet"
   },
   "card": {
     "noImage": "No image available",
@@ -442,7 +438,6 @@
     "singular": "Cookbook",
     "notFound": "Cookbook not found",
     "notFoundHint": "It may have been deleted, or it is not visible to you.",
-    "emptyHint": "Add recipes from any recipe’s quick actions menu.",
     "panelTitle": "Add to cookbook",
     "newWithRecipe": "New cookbook with this recipe",
     "noneEditable": "There are no cookbooks you can edit yet.",

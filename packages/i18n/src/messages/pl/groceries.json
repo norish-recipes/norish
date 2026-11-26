@@ -16,7 +16,6 @@
   },
   "empty": {
     "title": "Twoja lista zakupów czeka",
-    "description": "Dodaj produkty przyciskiem \"Dodaj produkt\" powyżej.",
     "manual": "Ręczne produkty"
   },
   "item": {
@@ -185,7 +184,6 @@
     "viewByStore": "Według sklepu",
     "viewByRecipe": "Według przepisu",
     "listSettings": "Ustawienia listy",
-    "emptyHint": "Dodaj produkty przyciskiem poniżej.",
     "addTitle": "Dodaj zakupy",
     "editTitle": "Edytuj produkt",
     "store": "Sklep",

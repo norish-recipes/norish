@@ -16,7 +16,6 @@
   },
   "empty": {
     "title": "Handlelisten din venter",
-    "description": "Legg til varer ved å bruke knappen \"Legg til vare\" ovenfor for å komme i gang.",
     "manual": "Manuelle varer"
   },
   "item": {
@@ -185,7 +184,6 @@
     "viewByStore": "Etter butikk",
     "viewByRecipe": "Etter oppskrift",
     "listSettings": "Listeinnstillinger",
-    "emptyHint": "Legg til varer med knappen nedenfor.",
     "addTitle": "Legg til varer",
     "editTitle": "Rediger vare",
     "store": "Butikk",

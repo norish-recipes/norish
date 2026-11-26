@@ -41,12 +41,8 @@
   },
   "empty": {
     "title": "Twoja biblioteka czeka",
-    "description": "Wklej URL przepisu w pole wyszukiwania powyżej i obserwuj magię.",
     "noResults": "Nie znaleziono przepisów",
-    "noResultsHint": "Spróbuj zmienić lub wyczyścić filtry.",
-    "noCookbooks": "Brak książek kucharskich",
-    "noCookbooksHint": "Książka kucharska to nazwany zbiór przepisów. Utwórz pierwszą, aby uporządkować bibliotekę.",
-    "descriptionMobile": "Dodaj swój pierwszy przepis z linku, tekstu lub zdjęć."
+    "noCookbooks": "Brak książek kucharskich"
   },
   "card": {
     "noImage": "Brak obrazu",
@@ -442,7 +438,6 @@
     "singular": "Książka kucharska",
     "notFound": "Nie znaleziono książki kucharskiej",
     "notFoundHint": "Mogła zostać usunięta lub nie jest dla Ciebie widoczna.",
-    "emptyHint": "Dodawaj przepisy z menu szybkich akcji przepisu.",
     "panelTitle": "Dodaj do książki kucharskiej",
     "newWithRecipe": "Nowa książka z tym przepisem",
     "noneEditable": "Nie ma jeszcze książek kucharskich, które możesz edytować.",

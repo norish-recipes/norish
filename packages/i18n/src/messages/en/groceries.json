@@ -16,7 +16,6 @@
   },
   "empty": {
     "title": "Your grocery list awaits",
-    "description": "Add items using the \"Add Item\" button above to get started.",
     "manual": "Manual Items"
   },
   "item": {
@@ -185,7 +184,6 @@
     "viewByStore": "By store",
     "viewByRecipe": "By recipe",
     "listSettings": "List settings",
-    "emptyHint": "Add items with the button below.",
     "addTitle": "Add groceries",
     "editTitle": "Edit grocery",
     "store": "Store",

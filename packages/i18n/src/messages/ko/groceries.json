@@ -16,7 +16,6 @@
   },
   "empty": {
     "title": "아직 장보기 목록이 비어 있어요",
-    "description": "시작하려면 위의 '항목 추가' 버튼을 사용하여 항목을 추가하세요.",
     "manual": "직접 추가한 항목"
   },
   "item": {
@@ -185,7 +184,6 @@
     "viewByStore": "매장별",
     "viewByRecipe": "레시피별",
     "listSettings": "목록 설정",
-    "emptyHint": "아래 버튼으로 항목을 추가하세요.",
     "addTitle": "식료품 추가",
     "editTitle": "식료품 수정",
     "store": "매장",

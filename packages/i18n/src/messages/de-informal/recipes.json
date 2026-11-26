@@ -41,12 +41,8 @@
   },
   "empty": {
     "title": "Deine Bibliothek wartet",
-    "description": "Füge eine Rezept-URL in das Suchfeld oben ein und schau, wie die Magie passiert.",
     "noResults": "Keine Rezepte gefunden",
-    "noResultsHint": "Versuche, deine Filter anzupassen oder zu löschen.",
-    "noCookbooks": "Noch keine Kochbücher",
-    "noCookbooksHint": "Ein Kochbuch ist eine benannte Sammlung von Rezepten. Erstelle dein erstes, um deine Bibliothek zu ordnen.",
-    "descriptionMobile": "Füge dein erstes Rezept über einen Link, Text oder Fotos hinzu."
+    "noCookbooks": "Noch keine Kochbücher"
   },
   "card": {
     "noImage": "Kein Bild verfügbar",
@@ -442,7 +438,6 @@
     "singular": "Kochbuch",
     "notFound": "Kochbuch nicht gefunden",
     "notFoundHint": "Es wurde möglicherweise gelöscht oder ist für dich nicht sichtbar.",
-    "emptyHint": "Füge Rezepte über das Aktionsmenü eines Rezepts hinzu.",
     "panelTitle": "Zu Kochbuch hinzufügen",
     "newWithRecipe": "Neues Kochbuch mit diesem Rezept",
     "noneEditable": "Es gibt keine Kochbücher, die du bearbeiten kannst.",

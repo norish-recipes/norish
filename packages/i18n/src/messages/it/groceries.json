@@ -16,7 +16,6 @@
   },
   "empty": {
     "title": "La tua lista della spesa ti aspetta",
-    "description": "Aggiungi articoli usando il pulsante \"Aggiungi articolo\" sopra per iniziare.",
     "manual": "Articoli manuali"
   },
   "item": {
@@ -185,7 +184,6 @@
     "viewByStore": "Per negozio",
     "viewByRecipe": "Per ricetta",
     "listSettings": "Impostazioni della lista",
-    "emptyHint": "Aggiungi articoli con il pulsante qui sotto.",
     "addTitle": "Aggiungi alla spesa",
     "editTitle": "Modifica articolo",
     "store": "Negozio",

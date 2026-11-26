@@ -16,7 +16,6 @@
   },
   "empty": {
     "title": "Din indkøbsliste venter",
-    "description": "Tilføj varer ved at bruge knappen \"Tilføj vare\" ovenfor for at komme i gang.",
     "manual": "Manuelle varer"
   },
   "item": {
@@ -185,7 +184,6 @@
     "viewByStore": "Efter butik",
     "viewByRecipe": "Efter opskrift",
     "listSettings": "Listeindstillinger",
-    "emptyHint": "Tilføj varer med knappen nedenfor.",
     "addTitle": "Tilføj indkøb",
     "editTitle": "Rediger vare",
     "store": "Butik",

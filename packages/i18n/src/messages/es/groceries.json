@@ -16,7 +16,6 @@
   },
   "empty": {
     "title": "Tu lista de la compra te espera",
-    "description": "Añade productos usando el botón «Añadir producto» arriba para empezar.",
     "manual": "Productos manuales"
   },
   "item": {
@@ -185,7 +184,6 @@
     "viewByStore": "Por tienda",
     "viewByRecipe": "Por receta",
     "listSettings": "Ajustes de la lista",
-    "emptyHint": "Añade artículos con el botón de abajo.",
     "addTitle": "Añadir compras",
     "editTitle": "Editar artículo",
     "store": "Tienda",

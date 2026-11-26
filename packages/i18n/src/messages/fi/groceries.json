@@ -16,7 +16,6 @@
   },
   "empty": {
     "title": "Ostoslistasi odottaa",
-    "description": "Aloita lisäämällä ostoksia yllä olevalla \"Lisää ostos\" -painikkeella.",
     "manual": "Käsin lisätyt"
   },
   "item": {
@@ -185,7 +184,6 @@
     "viewByStore": "Kaupoittain",
     "viewByRecipe": "Resepteittäin",
     "listSettings": "Listan asetukset",
-    "emptyHint": "Lisää tuotteita alla olevalla painikkeella.",
     "addTitle": "Lisää ostokset",
     "editTitle": "Muokkaa tuotetta",
     "store": "Kauppa",

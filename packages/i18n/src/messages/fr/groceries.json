@@ -16,7 +16,6 @@
   },
   "empty": {
     "title": "Votre liste de courses vous attend",
-    "description": "Ajoutez des articles en utilisant le bouton « Ajouter un article » ci‑dessus pour commencer.",
     "manual": "Articles manuels"
   },
   "item": {
@@ -185,7 +184,6 @@
     "viewByStore": "Par magasin",
     "viewByRecipe": "Par recette",
     "listSettings": "Réglages de la liste",
-    "emptyHint": "Ajoutez des articles avec le bouton ci-dessous.",
     "addTitle": "Ajouter des courses",
     "editTitle": "Modifier l'article",
     "store": "Magasin",

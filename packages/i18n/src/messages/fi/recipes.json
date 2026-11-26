@@ -41,12 +41,8 @@
   },
   "empty": {
     "title": "Kirjastosi odottaa",
-    "description": "Liitä reseptin osoite yllä olevaan hakukenttään ja katso, kun taika tapahtuu.",
     "noResults": "Reseptejä ei löytynyt",
-    "noResultsHint": "Kokeile muuttaa tai tyhjentää suodattimet.",
-    "noCookbooks": "Ei vielä keittokirjoja",
-    "noCookbooksHint": "Keittokirja on nimetty kokoelma reseptejä. Tee ensimmäinen ja tuo kirjastoosi järjestystä.",
-    "descriptionMobile": "Lisää ensimmäinen reseptisi linkistä, tekstistä tai kuvista."
+    "noCookbooks": "Ei vielä keittokirjoja"
   },
   "card": {
     "noImage": "Ei kuvaa saatavilla",
@@ -442,7 +438,6 @@
     "singular": "Keittokirja",
     "notFound": "Keittokirjaa ei löytynyt",
     "notFoundHint": "Se on voitu poistaa, tai se ei ole sinulle näkyvissä.",
-    "emptyHint": "Lisää reseptejä minkä tahansa reseptin pikatoimintovalikosta.",
     "panelTitle": "Lisää keittokirjaan",
     "newWithRecipe": "Uusi keittokirja tällä reseptillä",
     "noneEditable": "Sinulla ei ole vielä muokattavia keittokirjoja.",
