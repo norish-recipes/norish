@@ -9,6 +9,9 @@ import { callTrpc, queryTrpc } from "../harness/trpc";
 import { expect, MEMBER, test } from "./fixture";
 
 type Entry = { id: string; name: string };
+
+const DEFAULT_POLICY = { view: "everyone", edit: "household", delete: "household" };
+
 type Kind = "tag" | "cuisine" | "category";
 
 /** The form fills its lines once units load; a save before that finds none. */
@@ -170,3 +173,49 @@ test("a name typed in a picker and never created through its Create row is not m
     await context.close();
   }
 });
+
+for (const view of ["everyone", "household"] as const) {
+  test(`another household's Tag is never offered in the picker under view ${view}`, async ({
+    browser,
+    aiStack,
+  }) => {
+    const word = `Their${Date.now().toString(36)}`;
+    const recipeName = `${word} Soup`;
+    const theirTag = `${word} Smoky`;
+    // Household A is the member; household B the owner.
+    const recipeId = await seedRecipe(await userIdOf(MEMBER), recipeName, ["leek"], {
+      steps: [{ step: "Stir", systemUsed: "metric", order: 0 }],
+    });
+
+    await callTrpc(aiStack.baseURL, aiStack.ownerCookies, "lists.add", {
+      kind: "tag",
+      name: theirTag,
+    });
+    await callTrpc(aiStack.baseURL, aiStack.ownerCookies, "admin.updateRecipePermissionPolicy", {
+      ...DEFAULT_POLICY,
+      view,
+    });
+
+    const context = await signedInContext(browser, aiStack.baseURL, MEMBER, {
+      viewport: { width: 1280, height: 1400 },
+    });
+
+    try {
+      const page = await context.newPage();
+
+      await openEditor(page, recipeId, recipeName);
+      await page.getByRole("combobox", { name: "Add a tag" }).fill(theirTag);
+      // The member's own list has no such Tag: only its Create row is offered.
+      await expect(page.getByRole("option", { name: `Create "${theirTag}"` })).toBeVisible();
+      await expect(page.getByRole("option", { name: theirTag, exact: true })).toHaveCount(0);
+    } finally {
+      await callTrpc(
+        aiStack.baseURL,
+        aiStack.ownerCookies,
+        "admin.updateRecipePermissionPolicy",
+        DEFAULT_POLICY
+      );
+      await context.close();
+    }
+  });
+}
