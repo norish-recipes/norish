@@ -62,7 +62,41 @@ describe("what boot checks a Master Key against", () => {
     await getTestDb().update(users).set({ email: "" });
 
     expect(await countEncryptedRows()).toBe(1);
-    expect(await findNewestCiphertext()).toBe("");
+    expect(await findNewestCiphertext()).toBeNull();
+  });
+
+  it("skips the newest account when its stored email is empty", async () => {
+    const newest = new Date("2026-06-01");
+
+    await createTestUser({ email: "old@example.com", createdAt: new Date("2026-01-01") });
+    await createTestUser({ email: "new@example.com", createdAt: newest });
+    await getTestDb().update(users).set({ email: "" }).where(eq(users.createdAt, newest));
+
+    const written = await findNewestCiphertext();
+
+    expect(written && decrypt(written)).toBe("old@example.com");
+  });
+
+  it("skips a secret setting whose stored value is empty", async () => {
+    await setConfig(
+      ServerConfigKeys.IMAGE_GENERATION_CONFIG,
+      { provider: "openai", model: "gpt-image-1", apiKey: "openai-key" },
+      null,
+      true
+    );
+    await getTestDb()
+      .insert(serverConfig)
+      // Newer than any other setting, so only skipping it finds the one below.
+      .values({
+        key: ServerConfigKeys.AI_CONFIG,
+        valueEnc: "",
+        isSensitive: true,
+        updatedAt: new Date(Date.now() + 60_000),
+      });
+
+    const written = await findNewestCiphertext();
+
+    expect(written && JSON.parse(decrypt(written))).toMatchObject({ apiKey: "openai-key" });
   });
 
   it("finds the newest account's email", async () => {

@@ -73,7 +73,8 @@ vi.mock("@norish/db/repositories/master-key", () => ({
 
     return database.encrypted.length;
   },
-  findNewestCiphertext: async () => database.encrypted.at(-1) ?? null,
+  // As the repository reads it: the newest value that is not empty.
+  findNewestCiphertext: async () => database.encrypted.findLast((value) => value !== "") ?? null,
   // A transaction: it moves the fingerprint when it commits, and nothing when it fails.
   rekeyMasterKey: async (
     rotation: MasterKeyRotation,
@@ -440,7 +441,7 @@ describe("which key boot opens", () => {
       const boot = resolveMasterKey();
 
       await expect(boot).rejects.toThrow(
-        "MASTER_KEY is not the key this database is encrypted with."
+        "MASTER_KEY is not the key this database is encrypted with. A key this instance ran under before belongs in MASTER_KEY_PREVIOUS, beside the current one in MASTER_KEY."
       );
       await expect(boot).rejects.toThrow(RESTORE);
       expect(fingerprintWrites).toEqual([]);

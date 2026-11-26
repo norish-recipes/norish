@@ -260,8 +260,11 @@ function findKey(source: KeySource, fits: (key: Buffer) => boolean) {
   return null;
 }
 
-/** The current or previous key, whichever `fits` the database, else the refusal naming the key. */
-function pickKey(source: KeySource, fits: (key: Buffer) => boolean) {
+/**
+ * The current or previous key, whichever `fits` the database, else the refusal naming the key
+ * with `hint`, a sentence on what else may open it.
+ */
+function pickKey(source: KeySource, fits: (key: Buffer) => boolean, hint = "") {
   const found = findKey(source, fits);
 
   if (found) return found;
@@ -269,7 +272,7 @@ function pickKey(source: KeySource, fits: (key: Buffer) => boolean) {
 
   throw refusal(
     keys
-      ? `${keys.current.label} is not the key this database is encrypted with.`
+      ? `${keys.current.label} is not the key this database is encrypted with.${hint}`
       : `MASTER_KEY is not set, and there is no key file at ${keyFilePath()}. This database is encrypted with a key that one of them held.`
   );
 }
@@ -311,10 +314,14 @@ async function adoptKey(source: KeySource): Promise<[KeySource, string | null]> 
     throw refusal("MASTER_KEY is not set, and this database holds data an earlier key encrypted.");
   }
 
-  // A value that does not decrypt, an empty one included, never shows that a key fits.
+  // No value to try, as when every one is empty, never shows that a key fits.
   const newest = encrypted ? await findNewestCiphertext() : null;
   const found = encrypted
-    ? pickKey(source, (candidate) => newest !== null && masterKeyOpens(candidate, newest))
+    ? pickKey(
+        source,
+        (candidate) => newest !== null && masterKeyOpens(candidate, newest),
+        " A key this instance ran under before belongs in MASTER_KEY_PREVIOUS, beside the current one in MASTER_KEY."
+      )
     : null;
   const key =
     found?.key ?? source.keys?.current ?? namedKey(await generateKeyFile(), fileLabels().current);

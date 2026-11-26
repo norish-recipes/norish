@@ -10,6 +10,7 @@ import {
   gt,
   isNotNull,
   isNull,
+  ne,
   or,
 } from "drizzle-orm";
 
@@ -42,11 +43,12 @@ export async function countEncryptedRows(): Promise<number> {
   return accounts + secrets;
 }
 
-/** What to try a key on: the newest account's email, else the newest secret setting. */
+/** What to try a key on: the newest account's email, else the newest secret setting, never empty. */
 export async function findNewestCiphertext(): Promise<string | null> {
   const [user] = await db
     .select({ email: users.email })
     .from(users)
+    .where(ne(users.email, ""))
     .orderBy(desc(users.createdAt))
     .limit(1);
 
@@ -55,7 +57,7 @@ export async function findNewestCiphertext(): Promise<string | null> {
   const [setting] = await db
     .select({ valueEnc: serverConfig.valueEnc })
     .from(serverConfig)
-    .where(secretSetting)
+    .where(and(secretSetting, ne(serverConfig.valueEnc, "")))
     .orderBy(desc(serverConfig.updatedAt))
     .limit(1);
 
