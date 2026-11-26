@@ -176,6 +176,15 @@ function withHousehold(deps: OutboxLinkDependencies, op: Operation): Operation {
 
 const idOf = (input: unknown) => (input as { id?: unknown } | null)?.id;
 
+type WholeEdit = { version?: unknown; data?: Record<string, unknown> };
+
+/** The later edit on the earlier one's version: what it leaves out keeps the earlier's value. */
+function mergedEdit(earlier: unknown, later: unknown): WholeEdit {
+  const { version, data } = earlier as WholeEdit;
+
+  return { ...(later as WholeEdit), version, data: { ...data, ...(later as WholeEdit).data } };
+}
+
 /** Put a whole edit in place of its recipe's unsent pending entry, on that entry's version. */
 async function replaceUnsent(
   deps: OutboxLinkDependencies,
@@ -201,10 +210,7 @@ async function replaceUnsent(
       (!stored.sending || (otherMarksStale && stored.sending !== own))
         ? {
             ...stored,
-            input: {
-              ...(encodeOutboxInput(op.input) as object),
-              version: (stored.input as { version?: unknown }).version,
-            },
+            input: mergedEdit(stored.input, encodeOutboxInput(op.input)),
             ...operationOf(op.context),
           }
         : undefined

@@ -392,6 +392,17 @@ describe("createOutboxLink: a whole edit waits behind its pending save", () => {
     expect(await createOutboxStore(storage.outbox).forOwner("u1", "pending")).toHaveLength(1);
   });
 
+  it("keeps what the first save changed and the second left out", async () => {
+    const tagged = { id, version: 3, data: { name: "First", tags: [{ name: "Quick" }] } };
+
+    await save(tagged, unreachable);
+    await save(edit("Second", 4), unreachable);
+
+    expect((await store.loadAll()).map((entry) => entry.input)).toEqual([
+      { id, version: 3, data: { name: "Second", tags: [{ name: "Quick" }] } },
+    ]);
+  });
+
   it("replays the one save, and it lands", async () => {
     await save(edit("First"), unreachable);
     await save(edit("Second"), unreachable);
