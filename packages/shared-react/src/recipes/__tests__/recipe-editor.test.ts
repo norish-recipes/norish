@@ -422,6 +422,15 @@ describe("what an edit's save sends of its lists", () => {
     expect(payload).not.toHaveProperty("categories");
   });
 
+  it("counts the same entries in another order as no change, and an emptied list as one", () => {
+    const two = { ...opened, tags: ["quick", "spicy"] };
+    const reordered = recipeFormPayload({ ...two, tags: ["spicy", "quick"], servings: 2 }, two);
+    const emptied = recipeFormPayload({ ...two, tags: [], categories: [], servings: 2 }, two);
+
+    expect(reordered).not.toHaveProperty("tags");
+    expect(emptied).toMatchObject({ tags: [], categories: [] });
+  });
+
   it("sends every list for a new recipe", () => {
     expect(valid(opened)).toMatchObject({ tags: [{ name: "quick" }], categories: ["Dinner"] });
   });

@@ -231,8 +231,9 @@ export function validateRecipeForm(form: RecipeFormState): RecipeFormErrors {
   return errors;
 }
 
+// A list's entries, not their order: the same ones removed and added back are no change.
 const changed = (now: readonly string[], was: readonly string[] | undefined) =>
-  !was || now.length !== was.length || now.some((value, index) => value !== was[index]);
+  !was || now.length !== was.length || now.some((value) => !was.includes(value));
 
 /** What a save sends for the form, shared by create and update; servings must be valid. An edit
  * passes the form it `opened` with: a list left as it was is not sent, so a change made to it
