@@ -285,7 +285,9 @@ const NEW_KEY_BYTES = 24;
 function checkNewKey(key: NamedKey): void {
   if (isBase64(key.text) && key.bytes.length >= NEW_KEY_BYTES) return;
   throw new Error(
-    `${key.label} is not base64, which a new Master Key must be. Make one with \`openssl rand -base64 32\`.`
+    `${key.label} cannot be a new Master Key, which must be standard base64 (A-Z, a-z, 0-9, + and /, ` +
+      `with optional = padding) that decodes to at least ${NEW_KEY_BYTES} bytes. ` +
+      "`openssl rand -base64 32` makes one."
   );
 }
 

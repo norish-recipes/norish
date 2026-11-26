@@ -626,16 +626,18 @@ describe("which key boot opens", () => {
     // 32 characters, so the length rule passes, but base64 skips every one: no bytes at all.
     const punctuation = "!@#$%^&*".repeat(4);
     const bytes = Buffer.from(punctuation, "base64");
-    const NOT_BASE64 = "is not base64, which a new Master Key must be";
+    const NOT_BASE64 =
+      "cannot be a new Master Key, which must be standard base64 (A-Z, a-z, 0-9, + and /, " +
+      "with optional = padding) that decodes to at least 24 bytes.";
 
     /** Boot's refusal, which says what a key must be and how to make one, and never the key. */
-    async function refusedAs(label: string) {
+    async function refusedAs(label: string, key = punctuation) {
       const error = await resolveMasterKey().catch((caught: unknown) => caught);
 
       expect(error).toBeInstanceOf(Error);
       expect(error).toMatchObject({ message: expect.stringContaining(`${label} ${NOT_BASE64}`) });
       expect(error).toMatchObject({ message: expect.stringContaining("openssl rand -base64 32") });
-      expect(String(error)).not.toContain(punctuation);
+      expect(String(error)).not.toContain(key);
       expect(fingerprintWrites).toEqual([]);
       expect(rekeys.steps).toEqual([]);
       expect(opened).toThrow("used before boot resolved it");
@@ -649,6 +651,15 @@ describe("which key boot opens", () => {
       config.MASTER_KEY = punctuation;
 
       await refusedAs("MASTER_KEY");
+    });
+
+    it.each([
+      ["URL-safe base64", Buffer.alloc(32, 0xfb).toString("base64url")],
+      ["base64 of 23 bytes in 32 characters", randomBytes(23).toString("base64")],
+    ])("refuses %s as MASTER_KEY on a first boot, saying what a key must be", async (_, key) => {
+      config.MASTER_KEY = key;
+
+      await refusedAs("MASTER_KEY", key);
     });
 
     it("refuses it as the key file's key on a first boot", async () => {
