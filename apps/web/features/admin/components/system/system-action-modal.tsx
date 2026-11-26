@@ -19,6 +19,8 @@ export type SystemActionCopy = {
 type SystemActionModalProps = {
   copy: SystemActionCopy;
   isOpen: boolean;
+  /** The confirmed action is running: its button is held, and Cancel with it. */
+  isPending: boolean;
   onClose: () => void;
   onConfirm: () => void;
 };
@@ -27,6 +29,7 @@ type SystemActionModalProps = {
 export default function SystemActionModal({
   copy,
   isOpen,
+  isPending,
   onClose,
   onConfirm,
 }: SystemActionModalProps) {
@@ -35,11 +38,18 @@ export default function SystemActionModal({
   return (
     <ConfirmModal
       confirm={
-        <ActionButton action="apply" icon={copy.icon} variant="secondary" onPress={onConfirm}>
+        <ActionButton
+          action="apply"
+          icon={copy.icon}
+          isPending={isPending}
+          variant="secondary"
+          onPress={onConfirm}
+        >
           {copy.confirmLabel}
         </ActionButton>
       }
       headerClassName="flex items-center gap-2"
+      isCancelDisabled={isPending}
       isOpen={isOpen}
       title={
         <>

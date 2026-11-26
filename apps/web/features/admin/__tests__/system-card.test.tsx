@@ -10,13 +10,14 @@ import "@testing-library/jest-dom";
 import { setConfigs } from "./admin-config-fake";
 
 const rotate = vi.fn();
+const restart = vi.fn();
 const pinned = vi.hoisted(() => ({ current: undefined as boolean | undefined }));
 
 vi.mock("@norish/shared-react/admin", async () => ({
   useAdminConfig: (await import("./admin-config-fake")).useAdminConfig,
   useMasterKeyPinned: () => pinned.current,
   useRotateMasterKeyMutation: () => rotate,
-  useRestartServerMutation: () => vi.fn(),
+  useRestartServerMutation: () => restart,
   useSchedulerMonthsMutation: () => vi.fn(),
 }));
 vi.mock("next-intl", () => ({
@@ -32,6 +33,7 @@ const ROTATE = "settings.admin.system.masterKey.button";
 
 beforeEach(() => {
   rotate.mockReset().mockResolvedValue(true);
+  restart.mockReset().mockResolvedValue(true);
   pinned.current = false;
   setConfigs({});
 });
@@ -65,6 +67,30 @@ describe("SystemCard's master key rotation", () => {
     await waitFor(() => expect(rotate).toHaveBeenCalledOnce());
     expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
+
+  it.each([
+    ["restart", restart, "settings.admin.system.server.restartButton", "settings.admin.restart"],
+    ["rotation", rotate, ROTATE, "settings.admin.rotateMasterKey"],
+  ])(
+    "holds the %s's confirm button while it runs, so a second press sends nothing",
+    async (_, run, open, copy) => {
+      let answer: (taken: boolean) => void = () => {};
+
+      run.mockReturnValue(new Promise<boolean>((resolve) => (answer = resolve)));
+      render(<SystemCard />);
+      fireEvent.click(screen.getByRole("button", { name: open }));
+
+      const confirm = await screen.findByRole("button", { name: `${copy}.confirmButton` });
+
+      fireEvent.click(confirm);
+      await waitFor(() => expect(confirm).toHaveAttribute("data-pending", "true"));
+      fireEvent.click(confirm);
+      expect(run).toHaveBeenCalledOnce();
+
+      answer(true);
+      await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    }
+  );
 
   it("shows the MASTER_KEY instruction in env mode, in place of the button", () => {
     pinned.current = true;

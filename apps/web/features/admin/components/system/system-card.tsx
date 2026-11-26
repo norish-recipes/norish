@@ -40,6 +40,7 @@ export default function SystemCard() {
   const [saving, whileSaving] = usePending();
   const confirmModal = useOverlayState();
   const [action, setAction] = useState<SystemAction>("restart");
+  const [confirming, whileConfirming] = usePending();
   const hasSchedulerChanges =
     schedulerCleanupMonths !== undefined && months !== schedulerCleanupMonths;
 
@@ -83,7 +84,7 @@ export default function SystemCard() {
     confirmModal.open();
   };
   const handleConfirm = async () => {
-    if (await actions[action].run()) confirmModal.close();
+    if (await whileConfirming(actions[action].run)) confirmModal.close();
   };
 
   return (
@@ -152,6 +153,7 @@ export default function SystemCard() {
       <SystemActionModal
         copy={actions[action].copy}
         isOpen={confirmModal.isOpen}
+        isPending={confirming}
         onClose={confirmModal.close}
         onConfirm={handleConfirm}
       />
