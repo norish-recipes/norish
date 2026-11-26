@@ -63,12 +63,9 @@ function createEncryptedEmailAdapter<T extends BetterAuthOptions>(
       ...baseAdapter,
       findOne: async <R>(params: Parameters<DBAdapter<T>["findOne"]>[0]) => {
         if (params.model === "user" && params.where) {
-          const emailWhere = params.where.find(
-            (w: Where) => w.field === "email" && w.value && typeof w.value === "string"
-          );
+          const email = params.where.find((w: Where) => w.field === "email")?.value;
 
-          if (emailWhere) {
-            const email = emailWhere.value as string;
+          if (typeof email === "string" && email) {
             const modifiedWhere = params.where.map((w: Where) =>
               w.field === "email" ? { ...w, field: "emailHmac", value: hmacIndex(email) } : w
             );
@@ -102,8 +99,20 @@ function withJoinedUserEmail<R>(row: R): R {
 
 type StoredUser = { id: string; email: string; name?: string | null; image?: string | null };
 
+const isNullableString = (value: unknown) =>
+  value === null || value === undefined || typeof value === "string";
+
 function isStoredUser(user: unknown): user is StoredUser {
-  return Boolean(user && typeof user === "object" && "id" in user && "email" in user);
+  return (
+    typeof user === "object" &&
+    user !== null &&
+    "id" in user &&
+    typeof user.id === "string" &&
+    "email" in user &&
+    typeof user.email === "string" &&
+    (!("name" in user) || isNullableString(user.name)) &&
+    (!("image" in user) || isNullableString(user.image))
+  );
 }
 
 // Nothing stored is empty encrypted, as the user hooks below write it.
