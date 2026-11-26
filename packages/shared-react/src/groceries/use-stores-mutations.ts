@@ -81,12 +81,15 @@ export function useStoresMutations(): StoresMutationsResult {
   // Each answer is handled in useMutation's own options, which run whatever is mounted: a `mutate`
   // call's own callbacks are dropped once its observer mutates again.
   const createOptions = trpc.stores.create.mutationOptions({
-    onSuccess: (storeId, data) => insertCreated(storeId, data),
-    onError: (error, data) => {
+    onMutate: () => markHousehold(queryClient),
+    onSuccess: (storeId, data, made) => {
+      if (mayRestore(queryClient, made)) insertCreated(storeId, data);
+    },
+    onError: (error, data, made) => {
       // Queued: the row goes in under the client-minted id the server honours on Replay
       // (ADR-0003), a tentative success rather than a failure.
       if (shouldPreserveOptimisticUpdate(error)) {
-        if (data.id) insertCreated(data.id, data);
+        if (data.id && mayRestore(queryClient, made)) insertCreated(data.id, data);
 
         return;
       }

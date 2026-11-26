@@ -533,6 +533,27 @@ describe("a delete, move or edit with no range", () => {
     expect(itemsIn(THIS_WEEK)).toEqual(theirs);
   });
 
+  it.each(["move", "edit"] as const)(
+    "places no answer once the household changed under a %s",
+    async (write) => {
+      const inHousehold = (id: string) => ({ household: { id }, currentUserId: "user-1" });
+      const answer = deferred<{ item: PlannedItemFromQuery }>();
+      const theirs = [cachedItem({ id: "theirs", title: "Their plan" })];
+
+      queryClient.setQueryData(householdQueryKey(), inHousehold("h1"));
+      mount(answer.promise);
+      act(() => writes[write]());
+      act(() => {
+        queryClient.setQueryData(householdQueryKey(), inHousehold("h2"));
+        queryClient.setQueryData(rangeKeyOf(THIS_WEEK), theirs);
+      });
+      answer.resolve({ item: { ...WEEK_ITEMS[0]!, version: 3 } });
+      await settle();
+
+      expect(itemsIn(THIS_WEEK)).toEqual(theirs);
+    }
+  );
+
   it.each(WRITES)("keeps a Queued %s in both ranges", async (write) => {
     // Backend unreachable: the write sits in the Outbox (ADR-0009).
     mount(new TypeError("Failed to fetch"));

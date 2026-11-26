@@ -17,7 +17,8 @@ export const markHousehold = (queryClient: QueryClient): HouseholdMark => ({
   household: currentHousehold(queryClient),
 });
 
-/** A snapshot from before a change of household would put the former household's rows back. */
+/** A snapshot or answer from before a change of household would put the former household's
+ * rows into the new one's reads. */
 export function mayRestore<T extends HouseholdMark>(
   queryClient: QueryClient,
   mark: T | undefined

@@ -345,6 +345,7 @@ export function useGroceriesMutations(): GroceriesMutationsResult {
   // before it bumped in the cache, so one sent ahead would be refused as stale.
   const inOrder = { ...settles, scope: { id: "grocery-writes" } };
   const reconcileCreated = (result: CreateGroceriesResult, was: Undo) =>
+    mayRestore(queryClient, was) &&
     setGroceriesData(
       (prev) =>
         prev &&
@@ -414,7 +415,8 @@ export function useGroceriesMutations(): GroceriesMutationsResult {
     ...settles,
     // Nothing is written before the answer, which says where the new line goes.
     onMutate: () => hold(),
-    onSuccess: (result: CreateRecurringResult) =>
+    onSuccess: (result: CreateRecurringResult, _input, was) =>
+      mayRestore(queryClient, was) &&
       setGroceriesData((prev) => prev && applyRecurringCreatedToCache(prev, result)),
   });
   const toggleOptions = trpc.groceries.toggle.mutationOptions({

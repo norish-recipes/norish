@@ -81,9 +81,13 @@ export function useCalendarMutations(): CalendarMutationsResult {
 
   // A move or edit answers with its item, new version included: the echo is the fast path (ADR-0011).
   // No item (stale, no-op, failed): the optimistic version was never earned, so reread.
-  const placeAnswer = (result: { item?: PlannedItemWithRecipePayload }) => {
-    if (result.item) upsertItemAcrossRanges(result.item);
-    else rereadAllRanges();
+  const placeAnswer = (
+    result: { item?: PlannedItemWithRecipePayload },
+    _variables: unknown,
+    context: HouseholdMark | undefined
+  ) => {
+    if (!result.item) rereadAllRanges();
+    else if (mayRestore(queryClient, context)) upsertItemAcrossRanges(result.item);
   };
 
   // The newest copy: a range left behind (narrower, or after a reconnect) can hold an older one.
@@ -150,8 +154,8 @@ export function useCalendarMutations(): CalendarMutationsResult {
             : items
         );
       },
-      onSuccess: (result) => {
-        if (result.item) upsertItemAcrossRanges(result.item);
+      onSuccess: (result, _variables, context) => {
+        if (result.item && mayRestore(queryClient, context)) upsertItemAcrossRanges(result.item);
       },
       onError: rollBack,
       // A move or edit of the new plan waits for it to be stored.
