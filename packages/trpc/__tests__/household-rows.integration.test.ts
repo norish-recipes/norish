@@ -310,6 +310,84 @@ describe("household rows through their routers", () => {
     expect(await mine.listItems(range)).toEqual([]);
   });
 
+  it("groceries: one toggle ticks several of the household's lines, and unticks them", async () => {
+    const lines = [
+      await helpers.addTestGrocery(admin.id, { name: "melk" }),
+      await helpers.addTestGrocery(housemate.id, { name: "brood" }),
+    ];
+    const mine = await as(routers.groceries, admin);
+    const done = async () =>
+      (await mine.list()).groceries.map((row) => [row.id, row.isDone]).sort();
+
+    await mine.toggle({
+      groceries: lines.map(({ id, version }) => ({ id, version })),
+      isDone: true,
+    });
+    expect(await done()).toEqual(lines.map(({ id }) => [id, true]).sort());
+    const ticked = (await mine.list()).groceries;
+
+    await mine.toggle({
+      groceries: ticked.map(({ id, version }) => ({ id, version })),
+      isDone: false,
+    });
+    expect(await done()).toEqual(lines.map(({ id }) => [id, false]).sort());
+  });
+
+  it("plan: a reorder within a slot and a delete renumber the slot", async () => {
+    const mine = await as(routers.calendar, admin);
+    const ids: string[] = [];
+
+    for (const title of ["Soep", "Brood", "Salade"]) {
+      ids.push(
+        (
+          await mine.createItem({
+            id: crypto.randomUUID(),
+            date: DAY,
+            slot: "Dinner",
+            itemType: "note",
+            title,
+          })
+        ).id
+      );
+    }
+    const slot = async () =>
+      (await mine.listItems({ startISO: DAY, endISO: DAY }))
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map((row) => [row.title, row.sortOrder]);
+    const versionOf = async (id: string) =>
+      (await mine.listItems({ startISO: DAY, endISO: DAY })).find((row) => row.id === id)!.version;
+
+    await expect(
+      mine.moveItem({
+        itemId: ids[2]!,
+        version: await versionOf(ids[2]!),
+        targetDate: DAY,
+        targetSlot: "Dinner",
+        targetIndex: 0,
+      })
+    ).resolves.toMatchObject({ success: true, moved: true, stale: false });
+    expect(await slot()).toEqual([
+      ["Salade", 0],
+      ["Soep", 1],
+      ["Brood", 2],
+    ]);
+    // A drop where it already is moves nothing.
+    await expect(
+      mine.moveItem({
+        itemId: ids[2]!,
+        version: await versionOf(ids[2]!),
+        targetDate: DAY,
+        targetSlot: "Dinner",
+        targetIndex: 0,
+      })
+    ).resolves.toEqual({ success: true, moved: false, stale: false });
+    await mine.deleteItem({ itemId: ids[0]!, version: await versionOf(ids[0]!) });
+    expect(await slot()).toEqual([
+      ["Salade", 0],
+      ["Brood", 1],
+    ]);
+  });
+
   it("a member who has left writes into their new household, never the old one", async () => {
     const store = await housemateStore();
 

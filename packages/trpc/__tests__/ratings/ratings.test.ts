@@ -69,6 +69,26 @@ describe("ratings procedures", () => {
     });
   });
 
+  it("answers a visible recipe nobody rated as unrated, with no average", async () => {
+    const recipeId = crypto.randomUUID();
+
+    policy.view = "everyone";
+    getUserRatingWithVersion.mockResolvedValue({ rating: null, version: null });
+    getAverageRating.mockResolvedValue({ averageRating: null, ratingCount: 0 });
+
+    await expect(caller().getUserRating({ recipeId })).resolves.toEqual({
+      recipeId,
+      userRating: null,
+      version: null,
+    });
+    await expect(caller().getAverage({ recipeId })).resolves.toEqual({
+      recipeId,
+      averageRating: null,
+      ratingCount: 0,
+    });
+    expect(getAverageRating).toHaveBeenCalledWith(recipeId);
+  });
+
   describe("a recipe out of view", () => {
     beforeEach(() => {
       policy.view = "household";
@@ -123,6 +143,30 @@ describe("ratings procedures", () => {
       );
     });
 
+    it("changes an existing rating, logging it as no new one", async () => {
+      const recipeId = crypto.randomUUID();
+
+      ratings.publish.mockClear();
+      rateRecipe.mockResolvedValue({ rating: 3, isNew: false });
+      getAverageRating.mockResolvedValue({ averageRating: 3.5, ratingCount: 2 });
+
+      await expect(caller().rate({ recipeId, rating: 3, version: 2 })).resolves.toEqual({
+        success: true,
+      });
+      await vi.waitFor(() => expect(ratings.publish).toHaveBeenCalled());
+      expect(trpcLogger.info).toHaveBeenCalledWith(
+        { userId: ctx.user.id, recipeId, rating: 3, isNew: false },
+        "Recipe rated"
+      );
+      expect(ratings.publish.mock.calls).toEqual([
+        [
+          "ratingUpdated",
+          { recipeId, averageRating: 3.5, ratingCount: 2 },
+          expect.objectContaining({ householdId: "another-household" }),
+        ],
+      ]);
+    });
+
     it("logs stale rating mutations as no-ops", async () => {
       const recipeId = crypto.randomUUID();
 
@@ -168,11 +212,10 @@ describe("ratings procedures", () => {
       await ratingsProcedures.createCaller(ctx as never).rate({ recipeId, rating: 4, version: 1 });
       await vi.waitFor(() => expect(ratings.publish).toHaveBeenCalled());
 
-      expect(ratings.publish).toHaveBeenCalledWith(
-        "ratingFailed",
-        { recipeId, reason: "database down" },
-        { userId: ctx.user.id }
-      );
+      // One publish, to the account alone: no average goes to the recipe's audience.
+      expect(ratings.publish.mock.calls).toEqual([
+        ["ratingFailed", { recipeId, reason: "database down" }, { userId: ctx.user.id }],
+      ]);
     });
 
     it("validates rating is between 1 and 5, or null", async () => {
