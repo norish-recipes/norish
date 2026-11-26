@@ -13,6 +13,7 @@ import { resetTRPCFake, serveTRPC, trpcCalls } from "../../trpc/testing";
 import { useContentAdd } from "../use-content-add";
 import { useContentEntry } from "../use-content-entry";
 import { useContentList } from "../use-content-list";
+import { useEntryRecipes } from "../use-entry-recipes";
 
 vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
 
@@ -424,5 +425,35 @@ describe("useContentAdd", () => {
       expect(await result.current.add()).toBeNull();
     });
     expect(trpcCalls["lists.add"]).toBeUndefined();
+  });
+});
+
+describe("useEntryRecipes", () => {
+  it("reads the household's recipes carrying the entry through lists.uses", async () => {
+    serveTRPC(async (path) =>
+      path === "lists.uses" ? [{ id: "r1", name: "Soup" }] : { stale: false }
+    );
+
+    const { result } = renderHook(() => useEntryRecipes("tag", "1"), { wrapper: wrapperFor() });
+
+    expect(result.current.loaded).toBe(false);
+    await waitFor(() => expect(result.current.recipes).toEqual([{ id: "r1", name: "Soup" }]));
+  });
+
+  it("says a failed read, and reads again on retry", async () => {
+    let reads = 0;
+
+    serveTRPC(async () => {
+      reads += 1;
+      if (reads === 1) throw new Error("down");
+
+      return [];
+    });
+
+    const { result } = renderHook(() => useEntryRecipes("tag", "1"), { wrapper: wrapperFor() });
+
+    await waitFor(() => expect(result.current.failed).toBe(true));
+    act(() => result.current.retry());
+    await waitFor(() => expect(result.current.loaded).toBe(true));
   });
 });

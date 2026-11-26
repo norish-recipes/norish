@@ -35,3 +35,4 @@ export type { ContentTarget } from "./use-content-target";
 export { useContentTarget } from "./use-content-target";
 export type { ContentWrite, EntryRef } from "./use-content-writes";
 export { useContentWrites } from "./use-content-writes";
+export { useEntryRecipes } from "./use-entry-recipes";
