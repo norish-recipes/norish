@@ -11,12 +11,12 @@ See the spec, "Membership changes".
 
 **Status:** ready-for-agent
 
-- [ ] **Leave and remove** (one shared path) move the person's recipes and cookbooks to the new household, with their images, videos and share links. Then:
+- [x] **Leave and remove** (one shared path) move the person's recipes and cookbooks to the new household, with their images, videos and share links. Then:
   - their Tags, Cuisines and Categories are matched on the folded name in the new household and created where missing;
   - each household food their lines use is copied into the new household with its name, the spellings those lines use, its icon and any seed parent, and the lines are re-pointed at the copies;
   - nutrition corrections, Aisle Links and store links stay behind.
-- [ ] **The leave and remove dialogs** (web and mobile) say what goes and what stays.
-- [ ] **Joining as the last member of a household of one** merges it in:
+- [x] **The leave and remove dialogs** (web and mobile) say what goes and what stays.
+- [x] **Joining as the last member of a household of one** merges it in:
   - recipes, cookbooks and every household row move to the joined household;
   - Tags, Cuisines and Categories with the same folded name join the household's entry;
   - a spelling both catalogues hold merges the joiner's food into the household's, through the existing merge;
@@ -26,9 +26,20 @@ See the spec, "Membership changes".
 
   This lifts ticket 01's interim refusal. A member of a larger household leaves first, as today's flow does.
 
-- [ ] **Old household's plan:** its entries for the moved recipes show only the title wherever it can no longer see them (ticket 03).
-- [ ] **Each move is one transaction** followed by a Scope Change.
-- [ ] **Tests:**
+- [x] **Old household's plan:** its entries for the moved recipes show only the title wherever it can no longer see them (ticket 03).
+- [x] **Each move is one transaction** followed by a Scope Change.
+- [x] **Tests:**
   - leaving under view Household: the leaver keeps their recipes with tags and foods intact, and the household no longer sees them;
   - joining merges "soja" and "ui" into the household's;
   - E2E for leave and join.
+
+## Comments
+
+- Leave/remove (`moveToHouseholdOfOne`, shared by both): after the triggers move recipes and cookbooks, `homeRecipeEntriesTx` gives the new household an entry of each fold its recipes carry of another household (copy keeps name and casing) and re-points the links; instance entries stay. `homeRecipeFoodsTx` copies each foreign own food the lines use (name, flags, `icon` file name, AI estimate; no owner, not "unused"), its parent if seeded, else the copy of an own parent only when the lines use that one too, else none; the spellings the lines use go with it, a household spelling on a seeded food becomes the new household's on that food; lines re-pointed. Icon files are content-addressed and only `deleteUnusedIngredientIcons` removes one, after checking no food names it, so a shared file is safe. Corrections, Aisle/Product Links, store preferences and everything household-owned stay.
+- Join (`mergeHouseholdTx` before the household is deleted): `stores` move (sort after the household's; aisles, Store Products and links follow), `groceries`, `recurring_groceries`, `planned_items` move; `pantry_ingredients`, `ingredient_nutrition_corrections`, `ingredient_store_preferences` move, the joiner's row dropped where the household has one for that food (the household's is what its members set and see); `tags`/`cuisines`/`categories` become the household's entry of their fold (made where missing); an own food the household has by name, else by a shared spelling, merges through the merge core (`mergeLockedFoods`, ADR-0037); a spelling both hold gives its lines, groceries and Pantry rows (duplicates dropped) to the household's; junk marks of a shared fold stay the household's (names-a-food marks included); remaining `ingredients`, `ingredient_aliases`, `ingredient_junk_pile`, `ingredient_ai_changes` move; `recipes`/`cookbooks`/`household_users` via the membership. A test enumerates every schema table with `household_id` (17) and checks moved/merged/dropped counts and the old id nowhere.
+- AI shares: `rekeyedShares` (shared) + `rekeyNutritionSharesTx` re-key stored keys by food id in one write; used by the leave, the merge core (so every catalogue merge keeps shares now) and the join's spelling re-point. A recipe with two lines of one food, amount and unit where only one moves loses that one share.
+- Locks: households (id order), membership, recipe rows (triggers), then the carried list entries and foreign foods then spellings `FOR SHARE` (the household's own of those folds `FOR KEY SHARE`), re-read until nothing new (`lockUntilSettled`: a housemate's merge committing during the wait moved rows onto ones the first read missed; two race tests fail without it). The join retries a unique violation from a housemate's concurrent write. A save resolved before a move commits is refused in its transaction (`StaleLineHouseholdError`) and resolves again. Races 20/20.
+- Cost: a leave is ~35 statements, a join ~45 plus ~15 per colliding food; each is set-based on indexed columns, so thousands of recipes and tens of thousands of lines add rows to statements, not statements (not measured).
+- Told: the mover's `created` and Scope Change, then `userJoined`/`userLeft`/`memberRemoved` to who stays; those three now reread every query, as `created` does. Dialogs: leave (web and mobile) and kick say recipes and cookbooks go with tags and ingredients, groceries, pantry, plan and stores stay; the join card says the household of one is merged in. A member of a larger household sees no join card until they leave.
+- Removed: `HELD_BY_*`, `holdsAnything`, the `holds-things` refusal and its copy in all locales. Not run: the E2E (`ai/leaving-and-joining.e2e.ts`) typechecks and lints.
+
