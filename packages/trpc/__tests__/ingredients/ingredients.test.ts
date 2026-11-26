@@ -184,7 +184,12 @@ describe("the edit policy", () => {
 
     if (allowed) {
       await expect(rename).resolves.toEqual({ success: true });
-      expect(catalogue.renameCatalogueIngredient).toHaveBeenCalledWith(TX, ONION, "Onion");
+      expect(catalogue.renameCatalogueIngredient).toHaveBeenCalledWith(
+        TX,
+        ONION,
+        "Onion",
+        householdOfOwner(owner)
+      );
     } else {
       await expect(rename).rejects.toMatchObject({ code: "NOT_FOUND" });
       expect(catalogue.renameCatalogueIngredient).not.toHaveBeenCalled();
@@ -778,7 +783,9 @@ describe("Ingredient Icons", () => {
 
       if (allowed) {
         await expect(save).resolves.toEqual({ success: true });
-        expect(iconsRepo.setIngredientIcon).toHaveBeenCalledWith(TX, ONION, FILE);
+        expect(iconsRepo.setIngredientIcon).toHaveBeenCalledWith(TX, ONION, FILE, {
+          householdId: householdOfOwner(owner),
+        });
         expect(ingredientsRealtime.published).toEqual([
           expect.objectContaining({ event: "changed", payload: { ingredientIds: [ONION] } }),
         ]);
@@ -801,7 +808,9 @@ describe("Ingredient Icons", () => {
       remove: [],
       icon: null,
     });
-    expect(iconsRepo.setIngredientIcon).toHaveBeenCalledWith(TX, ONION, null);
+    expect(iconsRepo.setIngredientIcon).toHaveBeenCalledWith(TX, ONION, null, {
+      householdId: null,
+    });
   });
 
   it("refuses a draft icon no upload stored", async () => {
