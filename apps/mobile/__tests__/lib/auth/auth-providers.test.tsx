@@ -37,6 +37,8 @@ const seen = vi.hoisted(() => ({
   // How many sessions the platform had been handed when the offline clear and the leave ran.
   clearedAt: [] as { discardQueue: boolean; at: number }[],
   leftAt: -1,
+  // Every error and toast the platform was asked to show.
+  shown: [] as unknown[][],
 }));
 
 vi.mock("expo-file-system", () => ({ Paths: { appleSharedContainers: {} } }));
@@ -101,6 +103,8 @@ vi.mock("@/lib/platform/platform-provider", async () => {
       // The real adapter's sequence steps: the offline clear, and leave as publishSignedOut.
       const adapter = {
         ...fakePlatformAdapter(),
+        toast: { show: (...args: unknown[]) => void seen.shown.push(args), translate: String },
+        showError: (...args: unknown[]) => void seen.shown.push(args),
         session: props.session,
         endSession: (scope: SessionScope) => props.endSession(scope, "Sign in"),
         leave: () => {
@@ -151,6 +155,7 @@ describe("AuthProviders", () => {
     seen.sessions.length = 0;
     seen.clearedAt.length = 0;
     seen.leftAt = -1;
+    seen.shown.length = 0;
     // The persisted session an Offline launch falls back on.
     await authStorage().setItemAsync(AUTH_COOKIE_KEY, JSON.stringify({ token: { value: "t" } }));
     await authStorage().setItemAsync("norish_session_data", JSON.stringify({ user: USER }));
@@ -233,6 +238,30 @@ describe("AuthProviders", () => {
       });
     }
   );
+
+  it("lands on sign-in without an error once a server restarted on a new Master Key answers", async () => {
+    render(<ReKeyed />);
+    act(() => clients[0]?.session.set({ data: { user: USER }, isPending: false, error: null }));
+    await waitFor(() => expect(getAuthTransportSnapshot().hasActiveSession).toBe(true));
+
+    const { version } = getAuthTransportSnapshot();
+
+    // Restarting: the re-read fails and better-auth keeps the session, which stays shown.
+    act(() =>
+      clients[0]?.session.set({ data: { user: USER }, isPending: false, error: { status: 502 } })
+    );
+    await act(() => new Promise((resolve) => setTimeout(resolve, 10)));
+    expect(seen.sessions.at(-1)?.user?.id).toBe(USER.id);
+    expect(seen.clearedAt).toEqual([]);
+
+    // Back up, the re-key ended every session, so the server knows this one no more.
+    act(() => clients[0]?.session.set({ data: null, isPending: false, error: null }));
+
+    await waitFor(() => expect(seen.sessions.at(-1)).toEqual(SIGNED_OUT));
+    expect(seen.clearedAt).toEqual([{ discardQueue: false, at: expect.any(Number) }]);
+    expect(getAuthTransportSnapshot()).toEqual({ hasActiveSession: false, version: version + 1 });
+    expect(seen.shown).toEqual([]);
+  });
 
   /** Signed in, then the session store moves to `next`; answers the sessions handed on since. */
   async function afterSignedIn(next: SessionState) {
