@@ -487,8 +487,8 @@ describe("household lists", () => {
     const [soja] = (await listEntries("tag", ann.household)).filter((e) => e.name === "soja");
 
     expect(await listRecipesCarryingEntry("cuisine", italian!.id, ann.household)).toEqual([
-      { id: apple.id, name: "Apple pie" },
       { id: ann.recipe, name: "Ann's soup" },
+      { id: apple.id, name: "Apple pie" },
     ]);
     expect(await listRecipesCarryingEntry("cuisine", italian!.id, bob.household)).toEqual([
       { id: bob.recipe, name: "Bob's stew" },
