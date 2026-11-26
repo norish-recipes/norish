@@ -40,6 +40,20 @@ export const LABEL_FIELDS: Record<NutritionFactName, readonly string[]> = {
   density: ["spoonGrams"],
 };
 
+/** The label fields that weigh grams of a food's 100 g, so can be no more than 100. */
+const MASS_PER_100G: ReadonlySet<string> = new Set(["fat", "carbs", "protein"]);
+
+/** Whether a fact's typed label holds a mass per 100 g above 100 g. */
+function overHundredGrams(fact: NutritionFactName, draft: FactDraft) {
+  return (
+    draft.mode === "label" &&
+    LABEL_FIELDS[fact].some(
+      (field, index) =>
+        MASS_PER_100G.has(field) && (typedNumber(draft.typed[index] ?? "") ?? 0) > 100
+    )
+  );
+}
+
 /** The dataset food a pick names, as a fact credits it. */
 function foodRef(food: PickedFood): NutritionFoodRef {
   const [dataset, ...code] = food.key.split(":");
@@ -163,7 +177,11 @@ export function useNutritionDraft({
 
     const values = typed.map(typedNumber);
 
-    if (values.length !== LABEL_FIELDS[fact].length || values.some((value) => value === null)) {
+    if (
+      values.length !== LABEL_FIELDS[fact].length ||
+      values.some((value) => value === null) ||
+      overHundredGrams(fact, draft[fact])
+    ) {
       return undefined;
     }
 
@@ -236,6 +254,8 @@ export function useNutritionDraft({
     complete,
     nothing,
     canSave: complete && !(nothing && !corrected),
+    /** The facts whose label has a mass per 100 g above 100 g, which none can save. */
+    overHundred: facts.filter((fact) => overHundredGrams(fact, draft[fact])),
     set: (fact: NutritionFactName, next: Partial<FactDraft>) =>
       setDraft((previous) => ({ ...previous, [fact]: { ...previous[fact], ...next } })),
     /** The panel closes and the facts change at once; the server's word follows, and a refusal undoes it. */

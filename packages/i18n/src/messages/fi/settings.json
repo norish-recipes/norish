@@ -505,6 +505,7 @@
           "hundredMl": "100 ml painaa (g)"
         }
       },
+      "overHundred": "Rasvaa, hiilihydraatteja ja proteiinia voi olla enintään 100 g 100 grammassa.",
       "searchFood": "Hae tietoaineistoista (englanniksi), esimerkiksi milk semi-skimmed",
       "foodHint": "Kirjoita muutama sana nimestä",
       "searchingFoods": "Haetaan…",

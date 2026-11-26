@@ -505,6 +505,7 @@
           "hundredMl": "100 ml waży (g)"
         }
       },
+      "overHundred": "Tłuszcz, węglowodany i białko nie mogą przekraczać 100 g na 100 g.",
       "searchFood": "Szukaj w bazach (po angielsku), np. milk semi-skimmed",
       "foodHint": "Wpisz kilka słów z nazwy",
       "searchingFoods": "Szukanie…",

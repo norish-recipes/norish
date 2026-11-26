@@ -66,7 +66,7 @@ export function NutritionCorrectionPanel({
   const t = useTranslations("settings.ingredients.nutrition");
   const tActions = useTranslations("common.actions");
   const format = useFormatter();
-  const { spoon, draft, facts, corrected, complete, nothing, set, save, removeAll } =
+  const { spoon, draft, facts, corrected, complete, nothing, overHundred, set, save, removeAll } =
     useNutritionDraft({ ingredientId, current, measure, askSpoon, onClose });
 
   // What each fact is now, and where it came from, so the viewer sees what
@@ -101,6 +101,7 @@ export function NutritionCorrectionPanel({
             draft={draft[fact]}
             fact={fact}
             now={now[fact]}
+            overHundred={overHundred.includes(fact)}
             spoon={spoon}
             onChange={(next) => set(fact, next)}
           />
@@ -139,6 +140,7 @@ function FactEditor({
   fact,
   draft,
   now,
+  overHundred,
   spoon,
   onChange,
 }: {
@@ -146,6 +148,8 @@ function FactEditor({
   draft: FactDraft;
   /** What the fact is now and where it came from, in a line. */
   now: string;
+  /** The label has a mass per 100 g above 100 g. */
+  overHundred: boolean;
   /** The measure a density is typed in. */
   spoon: SpoonMeasure;
   onChange: (next: Partial<FactDraft>) => void;
@@ -221,6 +225,11 @@ function FactEditor({
             </TextField>
           ))}
         </div>
+      ) : null}
+      {overHundred ? (
+        <p className="text-danger text-xs" data-testid={`nutrition-correction-${fact}-over`}>
+          {t("overHundred")}
+        </p>
       ) : null}
     </Section>
   );

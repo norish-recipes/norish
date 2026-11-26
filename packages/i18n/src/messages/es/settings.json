@@ -505,6 +505,7 @@
           "hundredMl": "100 ml pesan (g)"
         }
       },
+      "overHundred": "Las grasas, los carbohidratos y las proteínas no pueden superar 100 g por 100 g.",
       "searchFood": "Buscar en los conjuntos de datos (en inglés), como milk semi-skimmed",
       "foodHint": "Escribe unas palabras del nombre",
       "searchingFoods": "Buscando…",

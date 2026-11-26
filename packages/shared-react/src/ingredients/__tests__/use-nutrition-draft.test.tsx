@@ -64,4 +64,15 @@ describe("useNutritionDraft", () => {
       })
     );
   });
+
+  it("refuses a mass per 100 g above 100 g, and says which fact has one", () => {
+    const { result } = setUp(null);
+
+    act(() => result.current.set("numbers", { mode: "label", typed: ["900", "111", "0", "0"] }));
+    expect(result.current.canSave).toBe(false);
+    expect(result.current.overHundred).toEqual(["numbers"]);
+    act(() => result.current.set("numbers", { mode: "label", typed: ["900", "100", "0", "0"] }));
+    expect(result.current.canSave).toBe(true);
+    expect(result.current.overHundred).toEqual([]);
+  });
 });

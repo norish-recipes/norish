@@ -505,6 +505,7 @@
           "hundredMl": "100 ml pèsent (g)"
         }
       },
+      "overHundred": "Les lipides, les glucides et les protéines ne peuvent pas dépasser 100 g pour 100 g.",
       "searchFood": "Chercher dans les bases (en anglais), par exemple milk semi-skimmed",
       "foodHint": "Tapez quelques mots du nom",
       "searchingFoods": "Recherche…",

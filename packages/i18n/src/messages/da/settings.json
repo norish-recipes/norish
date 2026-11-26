@@ -505,6 +505,7 @@
           "hundredMl": "100 ml vejer (g)"
         }
       },
+      "overHundred": "Fedt, kulhydrater og protein kan ikke være mere end 100 g pr. 100 g.",
       "searchFood": "Søg i datasættene (på engelsk), fx milk semi-skimmed",
       "foodHint": "Skriv et par ord af navnet",
       "searchingFoods": "Søger…",

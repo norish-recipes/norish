@@ -505,6 +505,7 @@
           "hundredMl": "100 ml väger (g)"
         }
       },
+      "overHundred": "Fett, kolhydrater och protein kan inte vara mer än 100 g per 100 g.",
       "searchFood": "Sök i datakällorna, till exempel mellanmjölk",
       "foodHint": "Skriv några ord ur livsmedlets namn",
       "searchingFoods": "Söker…",

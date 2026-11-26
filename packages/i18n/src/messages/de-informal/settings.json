@@ -503,6 +503,7 @@
           "hundredMl": "100 ml wiegen (g)"
         }
       },
+      "overHundred": "Fett, Kohlenhydrate und Eiweiß können nicht mehr als 100 g pro 100 g sein.",
       "searchingFoods": "Suche…",
       "noFoods": "Kein Lebensmittel in den Datensätzen hat all diese Wörter.",
       "saved": "Korrektur gespeichert",

@@ -505,6 +505,7 @@
           "hundredMl": "100 ml pesam (g)"
         }
       },
+      "overHundred": "Gorduras, carboidratos e proteínas não podem passar de 100 g por 100 g.",
       "searchFood": "Buscar nos conjuntos de dados (em inglês), como milk semi-skimmed",
       "foodHint": "Digite algumas palavras do nome",
       "searchingFoods": "Buscando…",

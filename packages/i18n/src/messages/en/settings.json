@@ -505,6 +505,7 @@
           "hundredMl": "100 ml weighs (g)"
         }
       },
+      "overHundred": "Fat, carbohydrates and protein can be no more than 100 g per 100 g.",
       "searchFood": "Search the datasets, such as milk semi-skimmed",
       "foodHint": "Type a few words of the food's name",
       "searchingFoods": "Searching…",

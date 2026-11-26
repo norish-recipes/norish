@@ -505,6 +505,7 @@
           "hundredMl": "100 ml veier (g)"
         }
       },
+      "overHundred": "Fett, karbohydrater og protein kan ikke være mer enn 100 g per 100 g.",
       "searchFood": "Søk i datasettene (på engelsk), for eksempel milk semi-skimmed",
       "foodHint": "Skriv noen ord av navnet",
       "searchingFoods": "Søker…",

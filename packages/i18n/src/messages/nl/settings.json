@@ -505,6 +505,7 @@
           "hundredMl": "100 ml weegt (g)"
         }
       },
+      "overHundred": "Vet, koolhydraten en eiwit kunnen niet meer dan 100 g per 100 g zijn.",
       "searchFood": "Zoek in de datasets (Engels), zoals milk semi-skimmed",
       "foodHint": "Typ een paar woorden van de naam",
       "searchingFoods": "Zoeken…",

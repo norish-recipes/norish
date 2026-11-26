@@ -505,6 +505,7 @@
           "hundredMl": "100 ml의 무게 (g)"
         }
       },
+      "overHundred": "지방, 탄수화물, 단백질은 100 g당 100 g을 넘을 수 없습니다.",
       "searchFood": "데이터셋에서 검색 (영어), 예: milk semi-skimmed",
       "foodHint": "이름의 단어 몇 개를 입력하세요",
       "searchingFoods": "검색 중…",
