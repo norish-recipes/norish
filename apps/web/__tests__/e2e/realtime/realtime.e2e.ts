@@ -290,7 +290,7 @@ test("a rename, a repeating grocery and a Pantry add naming two foods are a row 
         recurrenceRule: "week",
         recurrenceInterval: 1,
         recurrenceWeekday: null,
-        nextPlannedFor: new Date().toISOString().slice(0, 10),
+        nextPlannedFor: dateKey(new Date()),
       })
     ).ok
   ).toBe(true);
