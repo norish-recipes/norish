@@ -11,6 +11,7 @@ import { File } from "expo-file-system";
 
 import type { IconDraft, IngredientItem } from "@norish/shared-react/ingredients";
 import { useIngredientIconMutations } from "@norish/shared-react/ingredients";
+import { useConnectivity } from "@norish/shared-react/offline/react";
 import { useHiddenItemVisibility, usePermissions } from "@norish/shared-react/reader";
 
 const PICKER: ImagePicker.ImagePickerOptions = {
@@ -42,6 +43,7 @@ export function FoodIconField({
   const mutations = useIngredientIconMutations(item.id);
   const canDrawImages = usePermissions((permissions) => permissions.canDrawImages);
   const { showIngredientIcons } = useHiddenItemVisibility();
+  const { isOffline } = useConnectivity();
   const pick = usePhotoSourceSheet(text("settings.ingredients.icon.change"));
 
   if (!showIngredientIcons) return children;
@@ -85,6 +87,7 @@ export function FoodIconField({
         {item.canEdit && !mutations.isPending ? (
           <View className="flex-row flex-wrap gap-2">
             <PillButton
+              disabled={isOffline}
               icon="cloud-upload-outline"
               label={text("settings.ingredients.icon.upload")}
               testID="food-icon-upload"
@@ -92,6 +95,7 @@ export function FoodIconField({
             />
             {canDrawImages ? (
               <PillButton
+                disabled={isOffline}
                 icon="sparkles-outline"
                 label={text("settings.ingredients.icon.generate")}
                 testID="food-icon-generate"
@@ -100,6 +104,7 @@ export function FoodIconField({
             ) : null}
             {icons.hasOwn ? (
               <PillButton
+                disabled={isOffline}
                 label={text("settings.ingredients.icon.remove")}
                 testID="food-icon-remove"
                 tone="danger"

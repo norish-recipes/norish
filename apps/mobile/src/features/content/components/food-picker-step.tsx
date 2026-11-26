@@ -10,6 +10,7 @@ import { useIntl } from "react-intl";
 
 import type { IngredientPick, PickerOption, Relocation } from "@norish/shared-react/ingredients";
 import { useIngredientPicker } from "@norish/shared-react/ingredients";
+import { useConnectivity } from "@norish/shared-react/offline/react";
 
 /** Picks the food a merge, a parent or a spelling's move names; the caller owns what the pick does. */
 export function FoodPickerStep({
@@ -26,6 +27,7 @@ export function FoodPickerStep({
   const text = useText();
   const { locale } = useIntl();
   const [target, setTarget] = useState<PickerOption | null>(null);
+  const { isOffline } = useConnectivity();
   const picker = useIngredientPicker({
     excludeId: ingredient.id,
     editableOnly: relocation.kind === "merge",
@@ -57,7 +59,8 @@ export function FoodPickerStep({
               ? "settings.ingredients.merge"
               : "common.actions.apply"
         ),
-        disabled: !target,
+        // A parent is only a draft; a merge or a move writes at once.
+        disabled: !target || (isOffline && relocation.kind !== "parent"),
         onPress: () => {
           if (target) onConfirm(relocation, target);
         },

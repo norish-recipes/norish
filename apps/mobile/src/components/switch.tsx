@@ -6,11 +6,13 @@ import { lightImpact } from "@/lib/haptics";
 export function Switch({
   isSelected,
   accessibilityLabel,
+  disabled = false,
   testID,
   onSelectedChange,
 }: {
   isSelected: boolean;
   accessibilityLabel: string;
+  disabled?: boolean;
   testID: string;
   onSelectedChange: (selected: boolean) => void;
 }) {
@@ -18,8 +20,9 @@ export function Switch({
     <Pressable
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="switch"
-      accessibilityState={{ checked: isSelected }}
-      className={`h-[30px] w-[58px] flex-row rounded-full p-0.5 ${isSelected ? "bg-accent justify-end" : "bg-sand border-stroke justify-start border"}`}
+      accessibilityState={{ checked: isSelected, disabled }}
+      className={`${disabled ? "opacity-50" : ""} h-[30px] w-[58px] flex-row rounded-full p-0.5 ${isSelected ? "bg-accent justify-end" : "bg-sand border-stroke justify-start border"}`}
+      disabled={disabled}
       testID={testID}
       onPress={() => {
         lightImpact();

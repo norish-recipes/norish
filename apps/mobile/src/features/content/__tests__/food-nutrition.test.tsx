@@ -14,8 +14,12 @@ const held = vi.hoisted(() => ({
   icons: { upload: vi.fn(), generate: vi.fn(), isPending: false },
   canDrawImages: true,
   pickFile: vi.fn(),
+  offline: false,
 }));
 
+vi.mock("@norish/shared-react/offline/react", () => ({
+  useConnectivity: () => ({ isOffline: held.offline }),
+}));
 vi.mock("@/components/server-image", () => ({ ServerImage: () => <i data-testid="picture" /> }));
 vi.mock("@/hooks/use-photo-source-sheet", () => ({
   usePhotoSourceSheet: () => (_options: unknown, onPicked: (assets: { uri: string }[]) => void) =>
@@ -84,6 +88,7 @@ const fact = <T,>(value: T) => ({ value, source: { kind: "household" }, borrowed
 describe("FoodNutritionStep", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    held.offline = false;
     held.nutrition = { nutrition: null, measure: null };
   });
 
@@ -94,6 +99,12 @@ describe("FoodNutritionStep", () => {
     expect(screen.getByTestId("food-nutrition-none")).toBeTruthy();
     fireEvent.click(screen.getByTestId("sheet-confirm"));
     expect(onCorrect).toHaveBeenCalledWith(false);
+  });
+
+  it("cannot open the correction offline", () => {
+    held.offline = true;
+    render(<FoodNutritionStep ingredientId="soy" onBack={vi.fn()} onCorrect={vi.fn()} />);
+    expect((screen.getByTestId("sheet-confirm") as HTMLButtonElement).disabled).toBe(true);
   });
 
   it("lists the numbers with their source, and asks for a spoon's weight where none is known", () => {
@@ -116,7 +127,10 @@ describe("FoodNutritionStep", () => {
 });
 
 describe("NutritionCorrectionStep", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    held.offline = false;
+  });
 
   const open = () =>
     render(
@@ -142,6 +156,20 @@ describe("NutritionCorrectionStep", () => {
     expect(held.removeAll).toHaveBeenCalled();
   });
 
+  it("cannot Save or Remove offline, and says so", () => {
+    held.offline = true;
+    open();
+    expect((screen.getByTestId("sheet-confirm") as HTMLButtonElement).disabled).toBe(true);
+    expect(
+      (
+        screen.getByTestId(
+          "sheet-secondary-settings.ingredients.nutrition.remove"
+        ) as HTMLButtonElement
+      ).disabled
+    ).toBe(true);
+    expect(screen.getByText("settings.content.offline")).toBeTruthy();
+  });
+
   it("cannot save an incomplete draft, and has no Remove where nothing is corrected", () => {
     held.draft = { canSave: false, corrected: false };
     open();
@@ -159,6 +187,7 @@ describe("FoodIconField", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    held.offline = false;
     held.canDrawImages = true;
     held.icons.isPending = false;
   });
@@ -188,6 +217,18 @@ describe("FoodIconField", () => {
     );
     fireEvent.click(screen.getByTestId("food-icon-remove"));
     expect(icons.remove).toHaveBeenCalled();
+  });
+
+  it("cannot upload, generate or remove an icon offline", () => {
+    held.offline = true;
+    render(
+      <FoodIconField icons={icons} item={item} onDraftChange={vi.fn()}>
+        <i data-testid="name" />
+      </FoodIconField>
+    );
+    for (const id of ["food-icon-upload", "food-icon-generate", "food-icon-remove"]) {
+      expect((screen.getByTestId(id) as HTMLButtonElement).disabled, id).toBe(true);
+    }
   });
 
   it("offers Generate only where the instance can draw, and Remove only for the food's own", () => {

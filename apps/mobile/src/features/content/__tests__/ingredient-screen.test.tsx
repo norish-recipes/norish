@@ -14,11 +14,16 @@ const held = vi.hoisted(() => ({
   setRelocation: vi.fn(),
   markDistinct: vi.fn(),
   uses: undefined as unknown,
+  offline: false,
+  unsure: [] as unknown[],
 }));
 
 vi.mock("expo-router", () => ({
   useRouter: () => held.router,
   useLocalSearchParams: () => ({ id: "soy" }),
+}));
+vi.mock("@norish/shared-react/offline/react", () => ({
+  useConnectivity: () => ({ isOffline: held.offline }),
 }));
 vi.mock("../components/food-icon-field", () => ({
   FoodIconField: ({ children }: { children: ReactNode }) => (
@@ -64,7 +69,8 @@ vi.mock("@norish/shared-react/ingredients", async (importActual) => ({
   useIngredientUsesQuery: () => ({ uses: held.uses }),
   useIngredientNutritionQuery: () => ({ nutrition: null, measure: null }),
   useAIChangeMutations: () => ({ keep: vi.fn(), undo: vi.fn() }),
-  useAIChangesQuery: () => [],
+  useAIChangesQuery: () => held.unsure,
+  changeCopy: () => ({ key: "merge", values: {} }),
   useIngredientDraft: () => ({
     name: "Soy sauce",
     setName: vi.fn(),
@@ -101,6 +107,8 @@ describe("IngredientScreen", () => {
     vi.clearAllMocks();
     held.item = food();
     held.draft = {};
+    held.offline = false;
+    held.unsure = [];
     held.uses = { counts: { recipeLines: 4, groceries: 0, pantry: 1 } };
     held.save.mockResolvedValue(true);
   });
@@ -184,5 +192,35 @@ describe("IngredientScreen", () => {
     expect(screen.getByTestId("food-flag").textContent).toContain("flagReasons.similar");
     fireEvent.click(screen.getByTestId("food-keep-distinct"));
     expect(held.markDistinct).toHaveBeenCalled();
+  });
+
+  it("writes nothing offline: every write is off and the sheet says so", () => {
+    held.offline = true;
+    held.item = food({ flagged: true, flagReason: "similar" });
+    held.draft = { dirty: true };
+    held.unsure = [{ id: "c1", canAct: true }];
+    render(<IngredientScreen />);
+
+    const off = (id: string) => (screen.getByTestId(id) as HTMLButtonElement).disabled;
+
+    expect(off("sheet-confirm")).toBe(true);
+    expect(off("sheet-secondary-common.actions.delete")).toBe(true);
+    expect(off("food-merge")).toBe(true);
+    expect(off("food-keep-distinct")).toBe(true);
+    expect(off("food-ai-change-keep-c1")).toBe(true);
+    expect(off("food-ai-change-undo-c1")).toBe(true);
+    expect(screen.getByText("settings.content.offline")).toBeTruthy();
+  });
+
+  it("is writable online, without the offline note", () => {
+    held.item = food({ flagged: true, flagReason: "similar" });
+    held.draft = { dirty: true };
+    held.unsure = [{ id: "c1", canAct: true }];
+    render(<IngredientScreen />);
+    expect((screen.getByTestId("sheet-confirm") as HTMLButtonElement).disabled).toBe(false);
+    expect((screen.getByTestId("food-ai-change-keep-c1") as HTMLButtonElement).disabled).toBe(
+      false
+    );
+    expect(screen.queryByText("settings.content.offline")).toBeNull();
   });
 });

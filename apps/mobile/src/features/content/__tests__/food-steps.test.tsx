@@ -9,8 +9,12 @@ const held = vi.hoisted(() => ({
   picker: {} as Record<string, unknown>,
   pick: vi.fn(),
   type: vi.fn(),
+  offline: false,
 }));
 
+vi.mock("@norish/shared-react/offline/react", () => ({
+  useConnectivity: () => ({ isOffline: held.offline }),
+}));
 vi.mock("@/components/icon-button", () => ({
   IconButton: ({ testID, onPress }: { testID: string; onPress: () => void }) => (
     <button data-testid={testID} onClick={onPress} />
@@ -36,13 +40,16 @@ vi.mock("@/components/card", () => ({
 vi.mock("@norish/shared-react/ingredients", async (importActual) => ({
   ...(await importActual<object>()),
   useIngredientSpellingsQuery: () => undefined,
-  useIngredientPicker: () => ({
+  useIngredientPicker: (input: { onPick: (option: unknown) => void }) => ({
     term: "",
     picked: null,
     options: [{ id: "s1", name: "Sauces" }],
     hint: null,
     type: held.type,
-    pick: held.pick,
+    pick: (option: unknown) => {
+      held.pick(option);
+      input.onPick(option);
+    },
     ...held.picker,
   }),
 }));
@@ -127,7 +134,28 @@ describe("FoodSpellingsStep", () => {
 });
 
 describe("FoodPickerStep", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    held.offline = false;
+  });
+
+  it.each([
+    ["merge", { kind: "merge" }, true],
+    ["move", { kind: "move", aliasId: "a1", text: "sojasaus" }, true],
+    ["parent", { kind: "parent" }, false],
+  ] as const)("offline, a picked %s is blocked: %s", (_name, relocation, blocked) => {
+    held.offline = true;
+    render(
+      <FoodPickerStep
+        ingredient={{ id: "soy", name: "Soy" }}
+        relocation={relocation}
+        onBack={vi.fn()}
+        onConfirm={vi.fn()}
+      />
+    );
+    fireEvent.click(screen.getByTestId("food-picker-option"));
+    expect((screen.getByTestId("sheet-confirm") as HTMLButtonElement).disabled).toBe(blocked);
+  });
 
   it("applies a pick only once a food is picked", () => {
     const onConfirm = vi.fn();

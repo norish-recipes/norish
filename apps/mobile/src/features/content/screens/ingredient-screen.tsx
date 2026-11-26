@@ -25,6 +25,7 @@ import {
   useIngredientQuery,
   useIngredientUsesQuery,
 } from "@norish/shared-react/ingredients";
+import { useConnectivity } from "@norish/shared-react/offline/react";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
 
 import { FoodIconField } from "../components/food-icon-field";
@@ -60,6 +61,7 @@ function FoodSheet({ item }: { item: IngredientItem }) {
   const cancel = useCancelButton();
   const { locale } = useIntl();
   const displayName = ingredientDisplayName(item, locale);
+  const { isOffline } = useConnectivity();
   const draft = useIngredientDraft(item, displayName, () => router.back());
   const [step, setStep] = useState<Step>("food");
   const { uses } = useIngredientUsesQuery(item.id);
@@ -130,7 +132,7 @@ function FoodSheet({ item }: { item: IngredientItem }) {
     <FitSheet
       confirm={{
         label: text("common.actions.save"),
-        disabled: !draft.dirty,
+        disabled: !draft.dirty || isOffline,
         onPress: async () => {
           if (await draft.save()) router.back();
         },
@@ -141,7 +143,7 @@ function FoodSheet({ item }: { item: IngredientItem }) {
           ? [
               {
                 ...destructiveAction(text("common.actions.delete"), confirmDelete),
-                disabled: !uses,
+                disabled: !uses || isOffline,
               },
             ]
           : undefined
@@ -156,7 +158,9 @@ function FoodSheet({ item }: { item: IngredientItem }) {
             testID="food-name"
             value={draft.name}
             onChangeText={draft.setName}
-            onSubmitEditing={() => void draft.save()}
+            onSubmitEditing={() => {
+              if (!isOffline) void draft.save();
+            }}
           />
         ) : (
           <Text className="text-foreground text-lg font-medium">{item.name}</Text>
@@ -173,6 +177,7 @@ function FoodSheet({ item }: { item: IngredientItem }) {
             <AiChange
               id={change.id}
               note={t(copy.key, copy.values)}
+              disabled={isOffline}
               testID="food-ai-change"
               onKeep={change.canAct ? () => void aiChanges.keep(change) : undefined}
               onUndo={change.canAct ? () => void aiChanges.undo(change) : undefined}
@@ -222,6 +227,7 @@ function FoodSheet({ item }: { item: IngredientItem }) {
           <CardRow label={t("markDistinct")}>
             <Switch
               accessibilityLabel={t("markDistinct")}
+              disabled={isOffline}
               isSelected={false}
               testID="food-keep-distinct"
               onSelectedChange={() => void draft.markDistinct()}
@@ -232,12 +238,14 @@ function FoodSheet({ item }: { item: IngredientItem }) {
       {item.canEdit ? (
         <PillButton
           centred
+          disabled={isOffline}
           icon="git-merge-outline"
           label={t("mergeInto")}
           testID="food-merge"
           onPress={() => draft.setRelocation({ kind: "merge" })}
         />
       ) : null}
+      {isOffline && item.canEdit ? <SheetNote>{text("settings.content.offline")}</SheetNote> : null}
     </FitSheet>
   );
 }

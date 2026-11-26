@@ -205,6 +205,7 @@ export const kit = {
     onSelectedChange,
     isSelected,
     active,
+    disabled,
   }: {
     testID?: string;
     label?: string;
@@ -212,11 +213,13 @@ export const kit = {
     onSelectedChange?: (on: boolean) => void;
     isSelected?: boolean;
     active?: boolean;
+    disabled?: boolean;
   }) =>
     createElement(
       "button",
       {
         "data-testid": testID,
+        disabled,
         "aria-pressed": isSelected ?? active,
         onClick: () => (onSelectedChange ? onSelectedChange(!isSelected) : onPress?.()),
       },

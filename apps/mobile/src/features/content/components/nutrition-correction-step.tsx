@@ -21,6 +21,7 @@ import {
   useDatasetFoodSearch,
   useNutritionDraft,
 } from "@norish/shared-react/ingredients";
+import { useConnectivity } from "@norish/shared-react/offline/react";
 import { spoonWeight } from "@norish/shared/lib/spoon-measure";
 
 import { factSourceText } from "../utils/nutrition-text";
@@ -48,6 +49,7 @@ export function NutritionCorrectionStep({
   const intl = useIntl();
   const t = (key: string, values?: Record<string, string | number>) =>
     text(`settings.ingredients.nutrition.${key}`, values);
+  const { isOffline } = useConnectivity();
   const nutrition = useNutritionDraft({ ingredientId, current, measure, askSpoon, onClose });
   const { spoon, draft, facts, corrected, canSave, set } = nutrition;
   const whole = (value: number) => intl.formatNumber(value, { maximumFractionDigits: 1 });
@@ -64,7 +66,11 @@ export function NutritionCorrectionStep({
   return (
     <FitSheet
       back
-      confirm={{ label: text("common.actions.save"), disabled: !canSave, onPress: nutrition.save }}
+      confirm={{
+        label: text("common.actions.save"),
+        disabled: !canSave || isOffline,
+        onPress: nutrition.save,
+      }}
       name="nutrition-correction"
       secondary={
         corrected
@@ -73,6 +79,7 @@ export function NutritionCorrectionStep({
                 label: t("remove"),
                 symbol: "trash",
                 destructive: true,
+                disabled: isOffline,
                 onPress: nutrition.removeAll,
               },
             ]
@@ -82,6 +89,7 @@ export function NutritionCorrectionStep({
       onClose={onClose}
     >
       <SheetNote>{t("correctIntro")}</SheetNote>
+      {isOffline ? <SheetNote>{text("settings.content.offline")}</SheetNote> : null}
       {facts.map((fact) => (
         <FactEditor
           key={fact}

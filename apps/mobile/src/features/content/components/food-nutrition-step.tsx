@@ -9,6 +9,7 @@ import { useIntl } from "react-intl";
 
 import type { IngredientNutrition } from "@norish/shared/contracts/ingredient-nutrition";
 import { spoonKey, useIngredientNutritionQuery } from "@norish/shared-react/ingredients";
+import { useConnectivity } from "@norish/shared-react/offline/react";
 import { spoonWeight } from "@norish/shared/lib/spoon-measure";
 
 import { factSourceText } from "../utils/nutrition-text";
@@ -25,6 +26,7 @@ export function FoodNutritionStep({
 }) {
   const text = useText();
   const intl = useIntl();
+  const { isOffline } = useConnectivity();
   const { nutrition: facts, measure } = useIngredientNutritionQuery(ingredientId);
   const number = (value: number) => intl.formatNumber(value, { maximumFractionDigits: 1 });
   const t = (key: string, values?: Record<string, string | number>) =>
@@ -47,7 +49,7 @@ export function FoodNutritionStep({
   return (
     <FitSheet
       back
-      confirm={{ label: t("correct"), onPress: () => onCorrect(false) }}
+      confirm={{ label: t("correct"), disabled: isOffline, onPress: () => onCorrect(false) }}
       name="food-nutrition"
       title={t("section")}
       onClose={onBack}

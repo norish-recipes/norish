@@ -18,6 +18,7 @@ export function PillButton({
   icon,
   tone = "default",
   centred = false,
+  disabled = false,
   testID,
   onPress,
 }: {
@@ -25,6 +26,7 @@ export function PillButton({
   icon?: ComponentProps<typeof Ionicons>["name"];
   tone?: "default" | "danger" | "accent";
   centred?: boolean;
+  disabled?: boolean;
   testID?: string;
   onPress: () => void;
 }) {
@@ -33,7 +35,9 @@ export function PillButton({
   return (
     <Pressable
       accessibilityRole="button"
-      className={`flex-row items-center gap-[7px] ${centred ? "self-center" : "self-start"} rounded-full shadow-sm ${tone === "accent" ? "bg-accent h-9 px-[15px]" : "bg-thumb h-[34px] px-3.5"}`}
+      accessibilityState={{ disabled }}
+      className={`${disabled ? "opacity-50" : ""} flex-row items-center gap-[7px] ${centred ? "self-center" : "self-start"} rounded-full shadow-sm ${tone === "accent" ? "bg-accent h-9 px-[15px]" : "bg-thumb h-[34px] px-3.5"}`}
+      disabled={disabled}
       testID={testID}
       onPress={onPress}
     >

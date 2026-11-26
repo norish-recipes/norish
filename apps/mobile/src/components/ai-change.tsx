@@ -12,6 +12,7 @@ export function AiChange({
   onOpen,
   onUndo,
   onKeep,
+  disabled = false,
   testID,
 }: {
   id: string;
@@ -21,6 +22,8 @@ export function AiChange({
   /** Undo and Keep show only where the viewer may answer; Keep only for a change still open. */
   onUndo?: () => void;
   onKeep?: () => void;
+  /** Undo and Keep stay shown but off, as offline. */
+  disabled?: boolean;
   testID: string;
 }) {
   const text = useText();
@@ -37,13 +40,27 @@ export function AiChange({
       <Text className="text-muted text-sm">{note}</Text>
       {onUndo ? (
         <View className="flex-row gap-4 pt-1">
-          <Pressable accessibilityRole="button" testID={`${testID}-undo-${id}`} onPress={onUndo}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ disabled }}
+            className={disabled ? "opacity-50" : ""}
+            disabled={disabled}
+            testID={`${testID}-undo-${id}`}
+            onPress={onUndo}
+          >
             <Text className="text-danger text-[15px] font-medium">
               {text("settings.ingredients.changedByAI.undo")}
             </Text>
           </Pressable>
           {onKeep ? (
-            <Pressable accessibilityRole="button" testID={`${testID}-keep-${id}`} onPress={onKeep}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={{ disabled }}
+              className={disabled ? "opacity-50" : ""}
+              disabled={disabled}
+              testID={`${testID}-keep-${id}`}
+              onPress={onKeep}
+            >
               <Text className="text-accent-text text-[15px] font-medium">
                 {text("settings.ingredients.changedByAI.keep")}
               </Text>
