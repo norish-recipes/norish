@@ -69,6 +69,7 @@ export default function HouseholdInfoCard() {
         onOpenChange={setShowLeaveModal}
       >
         <p>{t("leaveModal.confirmMessage", { name: household.name })}</p>
+        <p className="text-muted mt-2 text-base">{t("leaveModal.goesAndStays")}</p>
         {leaveWarns({ isAdmin, otherMemberCount: otherMembers.length }) && (
           <p className="text-warning mt-2">{t("leaveModal.adminWarning")}</p>
         )}
