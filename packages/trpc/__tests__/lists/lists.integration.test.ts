@@ -56,6 +56,9 @@ describe("the lists router", () => {
     await testBase.teardown();
   });
 
+  const asStranger = (row: { id: string; name: string | null }) =>
+    ({ ...row, isServerAdmin: false }) as User;
+
   async function as(user: User) {
     const household = await households.getHouseholdForUser(user.id);
 
@@ -192,6 +195,36 @@ describe("the lists router", () => {
     expect(
       await theirs.rename({ kind: "cuisine", id: basque.id, version: 1, name: "Basque Country" })
     ).toMatchObject({ entry: { name: "Basque Country", editable: true } });
+  });
+
+  it("tells each household whose Cuisine an admin's instance entry took over", async () => {
+    const stranger = asStranger(await helpers.createTestUser());
+    const mine = await as(member);
+    const theirs = await as(stranger);
+
+    const { entry: ours } = await mine.add({ kind: "cuisine", name: "Moravian" });
+    const { entry: strangers } = await theirs.add({ kind: "cuisine", name: "moravian!" });
+
+    realtime.reset();
+    const { entry } = await (
+      await as(admin)
+    ).add({ kind: "cuisine", name: "Moravian", instance: true });
+
+    expect(entry.instance).toBe(true);
+    expect(
+      realtime.published.map(({ event, target }) => [event, target.householdId]).sort()
+    ).toEqual(
+      [
+        ["changed", helpers.testHouseholdOf(member.id)],
+        ["changed", helpers.testHouseholdOf(stranger.id)],
+      ].sort()
+    );
+    for (const gone of [ours, strangers]) {
+      expect((await mine.list({ kind: "cuisine" })).some((e) => e.id === gone.id)).toBe(false);
+    }
+    expect((await theirs.list({ kind: "cuisine" })).filter((e) => e.name === "Moravian")).toEqual([
+      expect.objectContaining({ id: entry.id, instance: true }),
+    ]);
   });
 
   it("tells an admin how many recipes in every household carry an instance Cuisine, and nobody else", async () => {

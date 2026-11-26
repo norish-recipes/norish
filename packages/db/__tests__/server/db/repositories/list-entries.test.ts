@@ -16,6 +16,7 @@ import {
   addEntry,
   deleteEntry,
   entriesByFoldTx,
+  entryName,
   listEntries,
   mergeEntries,
   mergeEntryTx,
@@ -31,7 +32,7 @@ import {
   updateRecipeWithRefs,
 } from "@norish/db/repositories/recipes";
 import { appendRecipeTags } from "@norish/db/repositories/tags";
-import { recipes, recipeTags, tags } from "@norish/db/schema";
+import { cuisines, recipes, recipeTags, tags } from "@norish/db/schema";
 import { FullRecipeInsertSchema } from "@norish/shared/contracts/zod";
 
 import {
@@ -88,7 +89,7 @@ describe("household lists", () => {
     const other = await addEntry("tag", bob.household, "GLUTEN FREE");
 
     expect(first).toMatchObject({ created: true, entry: { name: "Gluten-free", instance: false } });
-    expect(again).toEqual({ created: false, entry: first!.entry });
+    expect(again).toEqual({ created: false, entry: first!.entry, households: [] });
     expect(other?.created).toBe(true);
     expect(other?.entry.id).not.toBe(first?.entry.id);
     expect(await rowCount("gluten free")).toBe(2);
@@ -222,8 +223,6 @@ describe("household lists", () => {
     const own = (await addEntry("cuisine", ann.household, "Grandma's"))!.entry;
     const [instance] = (await listEntries("cuisine", ann.household)).filter((e) => e.instance);
     const bobsCopy = (await addEntry("cuisine", bob.household, "Grandma's"))!.entry;
-    const bobsFusion = (await addEntry("cuisine", bob.household, "Fusion"))!.entry;
-    const fusion = (await addEntry("cuisine", null, "Fusion"))!.entry;
     const bobsOnly = (await addEntry("cuisine", bob.household, "Bob's"))!.entry;
     const cuisinesOf = async (recipeId: string) =>
       (await getRecipeCuisines(recipeId)).map((c) => c.id);
@@ -233,17 +232,89 @@ describe("household lists", () => {
     );
     expect(await cuisinesOf(ann.recipe)).toEqual([own.id, instance!.id]);
 
-    // Another household's id takes the household's own entry of its fold, else the instance's,
-    // else none; an id gone is dropped too.
+    // Another household's id takes the household's own entry of its fold, else none; an id gone
+    // is dropped too.
     await db.transaction((tx) =>
       replaceRecipeEntryIdsTx(tx, "cuisine", ann.recipe, [
         bobsCopy.id,
-        bobsFusion.id,
         bobsOnly.id,
         "00000000-0000-4000-8000-000000000000",
       ])
     );
-    expect(await cuisinesOf(ann.recipe)).toEqual([own.id, fusion.id]);
+    expect(await cuisinesOf(ann.recipe)).toEqual([own.id]);
+  });
+
+  describe("a name is the instance's or a household's, never both", () => {
+    const cuisinesOf = async (recipeId: string) =>
+      (await getRecipeCuisines(recipeId)).map((c) => c.name);
+    const attachCuisines = (recipeId: string, ids: string[]) =>
+      db.transaction((tx) => replaceRecipeEntryIdsTx(tx, "cuisine", recipeId, ids));
+    // Instance Cuisines outlive a test, so each test names its own.
+    const householdsHold = async (name: string) => {
+      const anns = (await addEntry("cuisine", ann.household, `${name}!`))!.entry;
+      const bobs = (await addEntry("cuisine", bob.household, name.toLowerCase()))!.entry;
+
+      await attachCuisines(ann.recipe, [anns.id]);
+      await attachCuisines(bob.recipe, [bobs.id]);
+    };
+
+    it("an instance add takes over the households' entries of its fold", async () => {
+      await householdsHold("Isaan");
+      const added = await addEntry("cuisine", null, "Isaan");
+
+      expect(added).toMatchObject({ created: true, entry: { name: "Isaan", instance: true } });
+      expect([...added!.households].sort()).toEqual([ann.household, bob.household].sort());
+      expect(await cuisinesOf(ann.recipe)).toEqual(["Isaan"]);
+      expect(await cuisinesOf(bob.recipe)).toEqual(["Isaan"]);
+      expect(
+        (await listEntries("cuisine", ann.household)).filter(
+          (e) => entryName(e.name)?.fold === "isaan"
+        )
+      ).toEqual([expect.objectContaining({ id: added!.entry.id, instance: true, recipeCount: 1 })]);
+    });
+
+    it("an instance rename onto a households' fold takes theirs over too", async () => {
+      await householdsHold("Lanna");
+      const siam = (await addEntry("cuisine", null, "Siam"))!.entry;
+      const renamed = await renameEntry("cuisine", null, siam, "LANNA");
+
+      expect(renamed).toMatchObject({ value: { merged: false, entry: { id: siam.id } } });
+      expect([...renamed!.value!.households].sort()).toEqual([ann.household, bob.household].sort());
+      expect(await cuisinesOf(ann.recipe)).toEqual(["LANNA"]);
+      expect(await cuisinesOf(bob.recipe)).toEqual(["LANNA"]);
+    });
+
+    it("a household never adds or renames onto a fold an instance entry holds", async () => {
+      const khmer = (await addEntry("cuisine", null, "Khmer"))!.entry;
+      const mine = (await addEntry("cuisine", ann.household, "Champa"))!.entry;
+
+      await attachCuisines(ann.recipe, [mine.id]);
+      expect(await addEntry("cuisine", ann.household, "khmer!")).toMatchObject({
+        created: false,
+        entry: { id: khmer.id },
+      });
+      expect(await renameEntry("cuisine", ann.household, mine, "Khmer")).toMatchObject({
+        value: { merged: true, entry: { id: khmer.id } },
+      });
+      expect(await cuisinesOf(ann.recipe)).toEqual(["Khmer"]);
+    });
+
+    it("a stale id takes the instance entry of its fold before a household's own", async () => {
+      const lao = (await addEntry("cuisine", null, "Lao"))!.entry;
+      const bobsLao = (await addEntry("cuisine", bob.household, "Vientiane"))!.entry;
+
+      // A household twin only a pre-0.28 database could hold.
+      await getTestDb()
+        .insert(cuisines)
+        .values({ householdId: ann.household, name: "lao", nameFold: "lao" });
+      await getTestDb()
+        .update(cuisines)
+        .set({ nameFold: "lao" })
+        .where(eq(cuisines.id, bobsLao.id));
+      await attachCuisines(ann.recipe, [bobsLao.id]);
+
+      expect((await getRecipeCuisines(ann.recipe)).map((c) => c.id)).toEqual([lao.id]);
+    });
   });
 
   it("filters across households on the folded name", async () => {
@@ -342,7 +413,7 @@ describe("household lists", () => {
             .insert(recipeTags)
             .values(chunk.map((recipeId) => ({ recipeId, tagId: soja!.entry.id })));
         }
-        await mergeEntryTx(tx, "tag", soja!.entry.id, soy!.entry.id);
+        await mergeEntryTx(tx, "tag", [soja!.entry.id], soy!.entry.id);
         moved = (
           await tx
             .select({ n: count() })
@@ -420,8 +491,8 @@ describe("household lists", () => {
 
       expect(runs.map((run) => run.status)).toEqual(["fulfilled", "fulfilled"]);
       expect(runs.map((run) => (run.status === "fulfilled" ? run.value : null))).toEqual([
-        { created: false, entry: expect.objectContaining({ name: "Soja" }) },
-        { created: false, entry: expect.objectContaining({ name: "Soja" }) },
+        { created: false, entry: expect.objectContaining({ name: "Soja" }), households: [] },
+        { created: false, entry: expect.objectContaining({ name: "Soja" }), households: [] },
       ]);
       expect(await rowCount("soja")).toBe(1);
     });
@@ -460,7 +531,7 @@ describe("household lists", () => {
       const [run] = await raceBehind(
         async (tx) => {
           await tx.select({ id: tags.id }).from(tags).where(eq(tags.id, soja!.id)).for("update");
-          await mergeEntryTx(tx, "tag", soja!.id, soy!.id);
+          await mergeEntryTx(tx, "tag", [soja!.id], soy!.id);
         },
         [
           () =>

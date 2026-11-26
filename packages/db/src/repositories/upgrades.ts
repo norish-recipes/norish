@@ -32,6 +32,7 @@ import {
   listPendingFoldEntries,
   mergeEntryTx,
   setEntryFoldTx,
+  takeOverHouseholdTwinsTx,
 } from "./list-entries";
 
 /** What the boot upgrades from older releases (startup/upgrades) read and write. */
@@ -324,7 +325,8 @@ export async function unparkLink(
 
 /**
  * Folds the Tag, Cuisine and Category names migration 0092 could not fold exactly. Two entries of
- * one list folding alike merge: the older keeps its id, the other's recipes move onto it.
+ * one list folding alike merge: the older keeps its id, the other's recipes move onto it. Then a
+ * household entry folding like an instance entry of its kind merges into that one (ADR-0043).
  */
 export async function foldPendingListEntries(): Promise<number> {
   let folded = 0;
@@ -338,14 +340,14 @@ export async function foldPendingListEntries(): Promise<number> {
         const twin = await findFoldedTwinTx(tx, kind, entry.householdId, fold, entry.id);
 
         if (twin?.older) {
-          await mergeEntryTx(tx, kind, entry.id, twin.id);
+          await mergeEntryTx(tx, kind, [entry.id], twin.id);
           continue;
         }
-        if (twin) await mergeEntryTx(tx, kind, twin.id, entry.id);
+        if (twin) await mergeEntryTx(tx, kind, [twin.id], entry.id);
         await setEntryFoldTx(tx, kind, entry.id, fold);
       }
 
-      return pending.length;
+      return pending.length + (await takeOverHouseholdTwinsTx(tx, kind));
     });
   }
 
