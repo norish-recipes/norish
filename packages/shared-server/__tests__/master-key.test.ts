@@ -725,6 +725,40 @@ describe("which key boot opens", () => {
       expect(opened()).toBe(lookupBy(keyA));
     });
 
+    describe("and a key file left from before MASTER_KEY pinned the key", () => {
+      const RETIRED = "The key file holds a retired Master Key and can be deleted";
+
+      it("says it can be deleted once the move to MASTER_KEY re-keys, and on every boot after", async () => {
+        await writeKeyFile({ current: textA });
+        config.MASTER_KEY = textB;
+        config.MASTER_KEY_PREVIOUS = textA;
+
+        await resolveMasterKey();
+
+        expect(database.fingerprint).toBe(masterKeyFingerprint(keyB));
+        expect(warnings()).toContainEqual(["warn", { path: keyFilePath() }, RETIRED]);
+
+        logged.length = 0;
+        config.MASTER_KEY_PREVIOUS = undefined;
+        await resolveMasterKey();
+
+        expect(warnings()).toEqual([["warn", { path: keyFilePath() }, RETIRED]]);
+        expect(await readKeyFile()).toEqual({ current: textA });
+      });
+
+      it.each([
+        ["its current key", { current: textA }],
+        ["its previous key", { current: textB, previous: textA }],
+      ])("says nothing when %s is the one MASTER_KEY pins", async (_, keys) => {
+        await writeKeyFile(keys);
+        config.MASTER_KEY = textA;
+
+        await resolveMasterKey();
+
+        expect(warnings()).toEqual([]);
+      });
+    });
+
     it("refuses a mismatched MASTER_KEY", async () => {
       config.MASTER_KEY = keyB.toString("base64");
 

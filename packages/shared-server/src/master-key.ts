@@ -427,6 +427,16 @@ async function retirePrevious(source: KeySource, current: string): Promise<void>
   log.info({ source: keyFilePath() }, "Previous Master Key removed from the key file");
 }
 
+/** Env mode never uses the key file, so one left from file mode may keep a retired key: say so. */
+async function warnOfRetiredKeyFile(fingerprint: string): Promise<void> {
+  // A file env mode cannot read is not its concern.
+  const file = await readKeyFile().catch(() => null);
+  const fileSource = file && { pinned: false, keys: named(file, fileLabels()) };
+
+  if (!fileSource || findKey(fileSource, hasFingerprint(fingerprint))) return;
+  log.warn({ path: keyFilePath() }, "The key file holds a retired Master Key and can be deleted");
+}
+
 /**
  * Pick the Master Key by the database's fingerprint and open it: once, after the database is
  * reachable and before any crypto. Generates one only for an instance that holds nothing encrypted.
@@ -448,6 +458,7 @@ export async function resolveMasterKey(endStoredSessions: EndStoredSessions): Pr
   }
   initMasterKey(keys.current.bytes);
   log.info({ source: keys.current.label }, "Master Key opened");
+  if (opening.pinned) await warnOfRetiredKeyFile(masterKeyFingerprint(keys.current.bytes));
   if (keys.previous) await retirePrevious(opening, keys.current.text);
   await removeLeftoverCopies();
 }
