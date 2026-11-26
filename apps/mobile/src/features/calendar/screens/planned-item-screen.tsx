@@ -1,5 +1,4 @@
 import React from "react";
-import { View } from "react-native";
 import { Card, CardRow } from "@/components/card";
 import { destructiveAction } from "@/components/modal-header";
 import { PlanPicker } from "@/components/plan-block";
@@ -79,34 +78,30 @@ function PlannedItemSheet({ item, sheet }: { item: PlannedItemFromQuery; sheet: 
           : title
       }
     >
-      <SheetBody contentClassName="">
+      <SheetBody>
         {recipeId ? (
-          <View className="mb-3">
-            <Card>
-              <CardRow
-                first
-                hint={subtitle || undefined}
-                label={title}
-                media={<PlannedThumb className="size-10 rounded-xl" item={item} />}
-                testID="planned-item-recipe"
-                onPress={() => {
-                  openAfterSheet(
-                    sheet,
-                    () => router.back(),
-                    () => navigation.toRecipe(recipeId)
-                  );
-                }}
-              />
-            </Card>
-          </View>
+          <Card>
+            <CardRow
+              first
+              hint={subtitle || undefined}
+              label={title}
+              media={<PlannedThumb className="size-10 rounded-xl" item={item} />}
+              testID="planned-item-recipe"
+              onPress={() => {
+                openAfterSheet(
+                  sheet,
+                  () => router.back(),
+                  () => navigation.toRecipe(recipeId)
+                );
+              }}
+            />
+          </Card>
         ) : outOfView ? (
-          <View className="mb-3">
-            <Card>
-              <CardRow first label={title} testID="planned-item-recipe-title-only" />
-            </Card>
-          </View>
+          <Card>
+            <CardRow first label={title} testID="planned-item-recipe-title-only" />
+          </Card>
         ) : (
-          <TextField className="mb-3">
+          <TextField>
             <SheetInput
               accessibilityLabel={intl.formatMessage({ id: "calendar.editNote.noteLabel" })}
               placeholder={intl.formatMessage({ id: "calendar.editNote.notePlaceholder" })}
