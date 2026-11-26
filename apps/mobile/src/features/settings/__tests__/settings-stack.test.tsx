@@ -28,12 +28,11 @@ vi.mock("@/lib/header-title", () => ({ HEADER_TITLE_STYLE: {} }));
 const { SettingsStack } = await import("../components/settings-stack");
 
 describe("SettingsStack", () => {
-  it("gives a sheet whose content loads or swaps after its first layout one fixed height", () => {
+  it("fits the Content sheets to their content, with no detents", () => {
     render(<SettingsStack />);
 
     for (const name of ["content-add", "content-entry", "ingredient", "ingredient-add"]) {
-      expect(screens.get(name)?.sheetAllowedDetents, name).not.toBe("fitToContents");
-      expect(screens.get(name)?.sheetAllowedDetents, name).toEqual([0.62]);
+      expect(screens.get(name)?.sheetAllowedDetents, name).toBe("fitToContents");
     }
   });
 });
