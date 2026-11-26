@@ -75,6 +75,7 @@
     "./realtime/resume": "./src/realtime/resume.ts",
     "./realtime/stores": "./src/realtime/stores.ts",
     "./valkey/client": "./src/valkey/client.ts",
+    "./valkey/session-store": "./src/valkey/session-store.ts",
     "./valkey/token": "./src/valkey/token.ts",
     "./valkey/url": "./src/valkey/url.ts"
   },

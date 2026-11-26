@@ -13,6 +13,7 @@ import Valkey from "ioredis";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getValkeyConnectionOptions } from "@norish/shared-server/valkey/client";
+import { endStoredSessions } from "@norish/shared-server/valkey/session-store";
 
 import type { Identity } from "../helpers/identity-provider";
 import { VALKEY_IMAGE, valkeyUrl } from "../../../shared-server/__tests__/helpers/valkey";
@@ -554,6 +555,34 @@ describe("sign-out", () => {
     expect(response.headers.get("location")).toBeNull();
     expect(await response.json()).not.toHaveProperty("url");
     expect(await sessionFor(cookie)).toBeNull();
+  });
+});
+
+describe("ending every stored session, as a re-key does", () => {
+  it("deletes Better Auth's sessions and verification values in Valkey, and no other key", async () => {
+    const ada = await signUpWithPassword();
+    const grace = await signUpWithPassword("grace@norish.test");
+
+    // A sign-in left at the provider keeps its state as a verification value.
+    await authModule.auth.handler(post("/sign-in/social", { provider: "oidc", callbackURL: "/" }));
+    for (const key of ["bull:caldav-sync:1", "norish:pending-recipe-media:r1", "plain-key"]) {
+      await valkey.set(key, "[]");
+    }
+
+    const before = await valkey.keys("*");
+    const lists = before.filter((key) => key.startsWith("active-sessions-"));
+    const tokens = (await Promise.all(lists.map((list) => valkey.get(list)))).flatMap((list) =>
+      (JSON.parse(list ?? "[]") as { token: string }[]).map(({ token }) => token)
+    );
+    const verifications = before.filter((key) => key.startsWith("verification:"));
+    const ended = new Set([...lists, ...tokens, ...verifications]);
+
+    expect([lists.length, tokens.length, verifications.length]).toEqual([2, 2, 1]);
+    expect(await endStoredSessions()).toEqual({ sessions: 2, verifications: 1 });
+
+    expect(await sessionFor(ada.cookie)).toBeNull();
+    expect(await sessionFor(grace.cookie)).toBeNull();
+    expect((await valkey.keys("*")).sort()).toEqual(before.filter((key) => !ended.has(key)).sort());
   });
 });
 
