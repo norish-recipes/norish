@@ -162,12 +162,25 @@ describe("useLinesToBuy", () => {
           unit: "pcs",
           isDone: false,
           recipeIngredientId: "l-chicken",
+          lineFoodId: null,
         },
       ]);
       expect(adapter.toast.show).toHaveBeenCalledWith({
         severity: "success",
         title: "groceries.panel.ingredientsAdded",
       });
+    });
+
+    it("sends an untouched line as the line's food, for the server to read through the line", async () => {
+      const { result } = setup({ "l-oil": { name: "rapeseed oil", amount: 2, unit: null } });
+
+      await act(async () => {
+        await result.current.addLines(result.current.toBuy);
+      });
+
+      expect(
+        state.create.mock.calls[0]![0].map((row: { lineFoodId: string | null }) => row.lineFoodId)
+      ).toEqual([null, "i-chicken breast"]);
     });
 
     it("adds once however often it is called, and shows it is adding", async () => {

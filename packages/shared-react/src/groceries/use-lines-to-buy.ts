@@ -71,13 +71,19 @@ export function useLinesToBuy<T extends ScaledFood>(
     setIsAdding(true);
 
     return createGroceriesFromData(
-      picked.map((ri) => ({
-        name: editedIngredients[ri.id]?.name ?? ri.ingredientName,
-        amount: editedIngredients[ri.id]?.amount ?? ri.amount,
-        unit: editedIngredients[ri.id]?.unit ?? ri.unit ?? null,
-        isDone: false,
-        recipeIngredientId: ri.lineId,
-      }))
+      picked.map((ri) => {
+        const edited = editedIngredients[ri.id]?.name;
+
+        return {
+          name: edited ?? ri.ingredientName,
+          amount: editedIngredients[ri.id]?.amount ?? ri.amount,
+          unit: editedIngredients[ri.id]?.unit ?? ri.unit ?? null,
+          isDone: false,
+          recipeIngredientId: ri.lineId,
+          // An untouched chip is the line's food, which the server reads through the line.
+          lineFoodId: edited === undefined ? ri.ingredientId : null,
+        };
+      })
     )
       .then(() => {
         toast.show({

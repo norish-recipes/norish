@@ -615,6 +615,7 @@ export function useGroceriesMutations(): GroceriesMutationsResult {
       unit: g.unit ?? null,
       isDone: g.isDone ?? false,
       recipeIngredientId: g.recipeIngredientId ?? null,
+      lineFoodId: g.lineFoodId ?? null,
     }));
 
     return mutateCreateMany(rows).then(

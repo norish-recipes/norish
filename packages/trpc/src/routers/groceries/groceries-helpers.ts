@@ -214,6 +214,7 @@ export async function createGroceriesData(
   }
 
   const groceriesToCreate: Array<{
+    lineFoodId?: string | null;
     id: string;
     groceries: {
       householdId: string;
@@ -285,6 +286,7 @@ export async function createGroceriesData(
 
     groceriesToCreate.push({
       id,
+      lineFoodId: grocery.lineFoodId,
       groceries: {
         householdId: ctx.householdId,
         userId: ctx.user.id,
@@ -342,7 +344,10 @@ export async function createGroceriesData(
     () =>
       resolveGroceryNames(
         [
-          ...groceriesToCreate.map(({ groceries: grocery }) => grocery),
+          ...groceriesToCreate.map(({ groceries: grocery, lineFoodId }) => ({
+            ...grocery,
+            lineFoodId,
+          })),
           ...(edit ? [edit.name] : []),
         ],
         { userId: ctx.user.id, householdId: ctx.householdId }

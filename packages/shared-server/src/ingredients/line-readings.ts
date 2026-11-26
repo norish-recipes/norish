@@ -57,6 +57,23 @@ export async function readLines(
   );
 }
 
+/**
+ * The food an untouched chip of a read line is, by the food it names: that read food, else the one at
+ * the stored food's place (`{}` where the line reads none there); undefined where it is not the line's.
+ */
+export function chipFood(
+  line: ReadLine,
+  stored: readonly IngredientRef[] | undefined,
+  ingredientId: string
+): { food?: ReadLine["foods"][number] } | undefined {
+  const read = line.foods.find((food) => food.ingredientId === ingredientId);
+
+  if (read) return { food: read };
+  const place = stored?.findIndex((food) => food.ingredientId === ingredientId) ?? -1;
+
+  return place < 0 ? undefined : { food: line.foods[place] };
+}
+
 /** How the household uses the lines in `scope` naming a food outside its catalogue (`readLines`). */
 export async function lineReadingsOf(householdId: string, scope: LineScope): Promise<LineReadings> {
   return Object.fromEntries(

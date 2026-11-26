@@ -41,6 +41,8 @@ export type GroceryCreateData = {
   unit?: string | null;
   isDone?: boolean;
   recipeIngredientId?: string | null;
+  /** The line's food a chip left untouched is, read through the line by the server. */
+  lineFoodId?: string | null;
 };
 
 export type GroceriesMutationsResult = {

@@ -13,7 +13,7 @@ import { findRecipeLineAliases } from "@norish/db/repositories/ingredient-aliase
 import { listLibrary } from "@norish/db/repositories/library";
 import { findRecipeFoodsOutsideCatalogue } from "@norish/db/repositories/line-readings";
 import { listRecipes } from "@norish/db/repositories/recipes";
-import { setConfig } from "@norish/db/repositories/server-config";
+import { deleteConfig, setConfig } from "@norish/db/repositories/server-config";
 import { groceryParts, resolveGroceryNames } from "@norish/shared-server/ingredients/groceries";
 import { lineReadingsOf } from "@norish/shared-server/ingredients/line-readings";
 import { onIngredientsMinted } from "@norish/shared-server/ingredients/minted";
@@ -55,7 +55,10 @@ describe("lines read through the reader's catalogue", () => {
     onIngredientsMinted(async (ids) => void announced.push(...ids));
   });
 
-  afterEach(() => onIngredientsMinted(undefined));
+  afterEach(async () => {
+    onIngredientsMinted(undefined);
+    await deleteConfig(ServerConfigKeys.RECIPE_PERMISSION_POLICY);
+  });
 
   afterAll(async () => {
     await testBase.teardown();
@@ -367,5 +370,54 @@ describe("lines read through the reader's catalogue", () => {
     await expect(
       findRecipeFoodsOutsideCatalogue(household, recipeId, [knoflook.ingredientId])
     ).resolves.toEqual([]);
+  });
+
+  it("takes an untouched chip of a line the sheet could not read as the line's own food", async () => {
+    const household = testHouseholdOf(reader);
+    const knoflook = await createTestIngredient({ name: "Knoflook" });
+    const ui = await mintTestFood(testHouseholdOf(author), "ui");
+
+    await addTestSpelling(ui.ingredientId, "uien");
+    // Here "uien" are the household's shallots, and garlic is its own.
+    const sjalot = await mintTestFood(household, "sjalot");
+
+    await addTestSpelling(sjalot.ingredientId, "uien");
+    const ownKnoflook = (await createTestIngredient({ name: "Knoflook", householdId: household }))!;
+    const {
+      lines: [line],
+    } = await recipe(author, ["uien en knoflook"]);
+    const chips = foodsToBuy([line!]);
+
+    expect(chips.map((chip) => chip.ingredientId)).toEqual([ui.ingredientId, knoflook!.id]);
+    const actor = { userId: reader, householdId: household };
+    const parts = (
+      await groceryParts(
+        household,
+        chips.map((chip) => ({
+          name: chip.ingredientName ?? null,
+          recipeIngredientId: chip.lineId,
+          lineFoodId: chip.ingredientId,
+        }))
+      )
+    ).flat();
+
+    expect(parts.map((part) => part.name)).toEqual(["sjalot", "Knoflook"]);
+    expect((await resolveGroceryNames(parts, actor)).map((food) => food?.ingredientId)).toEqual([
+      sjalot.ingredientId,
+      ownKnoflook.id,
+    ]);
+    const kept = await Promise.all(
+      chips.map(async (chip) =>
+        (
+          await addPickedToPantry(crypto.randomUUID(), {
+            ...actor,
+            ingredientId: chip.ingredientId!,
+            recipeIngredientId: chip.lineId,
+          })
+        ).map(({ item }) => item.ingredientId)
+      )
+    );
+
+    expect(kept).toEqual([[sjalot.ingredientId], [ownKnoflook.id]]);
   });
 });

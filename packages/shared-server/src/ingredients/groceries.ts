@@ -6,13 +6,17 @@ import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
 import type { ReadLine } from "./line-readings";
 import type { ResolveActor } from "./resolver";
-import { readLines } from "./line-readings";
+import { chipFood, readLines } from "./line-readings";
 import { cleanIngredientText, resolveIngredients, typedParts } from "./resolver";
 
-/** A grocery's name as written, the recipe line it was added from, and the grocery it edits, if any. */
+/**
+ * A grocery's name as written, the recipe line it was added from, the line's food it is where the
+ * member left its chip untouched, and the grocery it edits, if any.
+ */
 export type GroceryName = {
   name: string | null;
   recipeIngredientId?: string | null;
+  lineFoodId?: string | null;
 } & ({ groceryId?: null } | { groceryId: string; householdId: string });
 
 /** The groceries edits name, read in their own households. */
@@ -79,6 +83,14 @@ async function meaningsOf(
     const line = item.recipeIngredientId ? lines.get(item.recipeIngredientId) : undefined;
 
     if (!fold) return undefined;
+    const chip =
+      readLine && item.lineFoodId ? chipFood(readLine, line?.foods, item.lineFoodId) : undefined;
+
+    if (readLine && chip) {
+      return chip.food
+        ? { parts: [{ name: chip.food.name, food: chip.food }] }
+        : { meaning: readLine.meaning };
+    }
     if (grocery && ingredientAliasFold(cleanIngredientText(grocery.name ?? "")) === fold) {
       return grocery;
     }
