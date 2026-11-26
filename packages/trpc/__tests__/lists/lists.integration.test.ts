@@ -211,13 +211,21 @@ describe("the lists router", () => {
     ).add({ kind: "cuisine", name: "Moravian", instance: true });
 
     expect(entry.instance).toBe(true);
-    expect(
-      realtime.published.map(({ event, target }) => [event, target.householdId]).sort()
-    ).toEqual(
-      [
-        ["changed", helpers.testHouseholdOf(member.id)],
-        ["changed", helpers.testHouseholdOf(stranger.id)],
-      ].sort()
+    // Each on its own household's channel once, never a broadcast per household.
+    const { buildChannel } = await import("@norish/shared-server/realtime/channel");
+
+    expect(realtime.published.map(({ event, channel }) => [event, channel]).sort()).toEqual(
+      [member.id, stranger.id]
+        .map((id) => [
+          "changed",
+          buildChannel({
+            namespace: "lists",
+            scope: "household",
+            id: helpers.testHouseholdOf(id),
+            event: "changed",
+          }),
+        ])
+        .sort()
     );
     for (const gone of [ours, strangers]) {
       expect((await mine.list({ kind: "cuisine" })).some((e) => e.id === gone.id)).toBe(false);

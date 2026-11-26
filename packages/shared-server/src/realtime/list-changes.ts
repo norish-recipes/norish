@@ -12,6 +12,17 @@ export async function announceListsChanged(
   void lists.publish("changed", { kinds: [...kinds] }, await policyAudience(householdId));
 }
 
+/** Tells households an instance entry took entries from: its `config` event reaches every reader
+ * already, so each hears it once, on its own household's channel. */
+export function announceTakenOverLists(
+  householdIds: readonly string[],
+  kinds: readonly ListKind[]
+) {
+  for (const householdId of householdIds) {
+    void lists.publish("changed", { kinds: [...kinds] }, { viewPolicy: "household", householdId });
+  }
+}
+
 /** {@link announceListsChanged} for the household a recipe is in now, after a write to it. */
 export async function announceRecipeListsChanged(
   recipeId: string,

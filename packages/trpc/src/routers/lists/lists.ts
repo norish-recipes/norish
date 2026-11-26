@@ -18,7 +18,10 @@ import {
 } from "@norish/db/repositories/list-entries";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { config } from "@norish/shared-server/realtime/config";
-import { announceListsChanged } from "@norish/shared-server/realtime/list-changes";
+import {
+  announceListsChanged,
+  announceTakenOverLists,
+} from "@norish/shared-server/realtime/list-changes";
 import { ListEntryNameSchemas } from "@norish/shared/contracts/zod";
 
 import type { AuthedProcedureContext } from "../../middleware";
@@ -87,7 +90,7 @@ async function changeableScope(ctx: ListContext, kind: ListKind, id: string): Pr
 async function announce(kind: ListKind, scope: ListScope, households: readonly string[] = []) {
   if (scope === null) void config.publish("changed", {}, undefined);
   else await announceListsChanged(scope, [kind]);
-  for (const household of households) await announceListsChanged(household, [kind]);
+  announceTakenOverLists(households, [kind]);
 }
 
 /** The household's entries plus the instance's, with how many of its recipes carry each; with
