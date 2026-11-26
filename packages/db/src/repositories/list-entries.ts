@@ -121,14 +121,15 @@ const asEntryRow = ({ id, name, instance, version }: ListEntryRow): ListEntryRow
   version,
 });
 
-/** Holds each of `folds` in `kind` until the commit: every write giving an entry a fold takes it,
- * after the household rows and before list rows, so a fold is never the instance's and a household's. */
-export async function lockEntryFoldsTx(
+/** Holds each kind's `folds` until the commit: every write giving an entry a fold takes it, after the
+ * household rows and before list rows, so a fold is never the instance's and a household's. */
+export async function lockFoldsTx(
   tx: DbTransaction,
-  kind: ListKind,
-  folds: readonly string[]
+  folds: Partial<Record<ListKind, readonly string[]>>
 ): Promise<void> {
-  const keys = [...new Set(folds)].map((fold) => `${kind}:${fold}`);
+  const keys = [
+    ...new Set(LIST_KINDS.flatMap((kind) => (folds[kind] ?? []).map((fold) => `${kind}:${fold}`))),
+  ];
   const key = sql`fold_key.key`;
 
   if (keys.length === 0) return;
@@ -138,6 +139,23 @@ export async function lockEntryFoldsTx(
     .from(sql`unnest(${arrayParam(keys, "text")}) as fold_key(key)`)
     .orderBy(key);
 }
+
+/** {@link lockFoldsTx} for one kind. */
+export const lockEntryFoldsTx = (tx: DbTransaction, kind: ListKind, folds: readonly string[]) =>
+  lockFoldsTx(tx, { [kind]: folds });
+
+/** {@link lockFoldsTx} for the folds of each kind's `names`: a write of several lists takes them in
+ * this one call, before any list's rows. */
+export const lockEntryNamesTx = (
+  tx: DbTransaction,
+  names: Partial<Record<ListKind, readonly string[]>>
+) =>
+  lockFoldsTx(
+    tx,
+    Object.fromEntries(
+      LIST_KINDS.map((kind) => [kind, (names[kind] ?? []).flatMap((n) => entryName(n)?.fold ?? [])])
+    )
+  );
 
 /** A row 0092 could not fold exactly: keyed by " <id>", which no fold can be. */
 const PENDING_FOLD_PREFIX = " ";
@@ -175,25 +193,29 @@ export async function findFoldedTwinTx(
   return row;
 }
 
+/** Each household entry of `kind` folding like an instance entry, with that entry, by id. */
+function householdTwinPairs(tx: DbTransaction, kind: ListKind) {
+  const { table } = KINDS[kind];
+  const instance = alias(table, "instance");
+
+  return tx
+    .select({ id: table.id, instanceId: instance.id, fold: table.nameFold })
+    .from(table)
+    .innerJoin(instance, and(isNull(instance.householdId), eq(instance.nameFold, table.nameFold)))
+    .where(isNotNull(table.householdId))
+    .orderBy(table.id);
+}
+
+/** The folds {@link takeOverHouseholdTwinsTx} locks, for a caller to take with its own in one call. */
+export async function householdTwinFoldsTx(tx: DbTransaction, kind: ListKind) {
+  return (await householdTwinPairs(tx, kind)).map((pair) => pair.fold);
+}
+
 /** Merges each household entry of `kind` folding like an instance entry into it; answers how many
  * went. Only data from before 0.28 holds such a pair. */
 export async function takeOverHouseholdTwinsTx(tx: DbTransaction, kind: ListKind): Promise<number> {
-  const { table } = KINDS[kind];
-  const instance = alias(table, "instance");
-  const twinPairs = () =>
-    tx
-      .select({ id: table.id, instanceId: instance.id, fold: table.nameFold })
-      .from(table)
-      .innerJoin(instance, and(isNull(instance.householdId), eq(instance.nameFold, table.nameFold)))
-      .where(isNotNull(table.householdId))
-      .orderBy(table.id);
-
-  await lockEntryFoldsTx(
-    tx,
-    kind,
-    (await twinPairs()).map((pair) => pair.fold)
-  );
-  const pairs = await twinPairs();
+  await lockEntryFoldsTx(tx, kind, await householdTwinFoldsTx(tx, kind));
+  const pairs = await householdTwinPairs(tx, kind);
 
   for (const [instanceId, twins] of groupBy(pairs, (pair) => pair.instanceId)) {
     await mergeEntryTx(
@@ -870,6 +892,18 @@ async function takeEntriesOfFoldsTx(
     .where(and(isAnyOf(entity, ids, "uuid"), inArray(link.recipeId, householdRecipes)));
 }
 
+/** Each kind's folds as `read` answers them, one kind after another. */
+async function foldsByKind(
+  read: (list: (typeof KINDS)[ListKind], kind: ListKind) => Promise<readonly { fold: string }[]>
+) {
+  const folds: Partial<Record<ListKind, string[]>> = {};
+
+  for (const kind of LIST_KINDS)
+    folds[kind] = (await read(KINDS[kind], kind)).map((row) => row.fold);
+
+  return folds;
+}
+
 /** After a leave (ADR-0043): no recipe of the household carries another household's entry; each
  * becomes the household's own of its fold. The carried entries are held against a change meanwhile. */
 export async function carryRecipeEntriesTx(tx: DbTransaction, householdId: string): Promise<void> {
@@ -896,14 +930,10 @@ export async function carryRecipeEntriesTx(tx: DbTransaction, householdId: strin
         );
   };
 
-  // Every fold before any entry is locked.
-  for (const kind of LIST_KINDS) {
-    await lockEntryFoldsTx(
-      tx,
-      kind,
-      (await carried(kind)()).map((row) => row.fold)
-    );
-  }
+  // Every kind's folds in one call before any entry is locked.
+  await lockFoldsTx(tx, await foldsByKind((_list, kind) => carried(kind)()));
+  const foreign = new Map<ListKind, { id: string; fold: string }[]>();
+
   for (const kind of LIST_KINDS) {
     const { table } = KINDS[kind];
     const foreignEntries = await lockUntilSettled(
@@ -924,17 +954,16 @@ export async function carryRecipeEntriesTx(tx: DbTransaction, householdId: strin
       (row) => row.id
     );
 
-    // An entry renamed before the lock landed.
-    await lockEntryFoldsTx(
-      tx,
-      kind,
-      foreignEntries.map((row) => row.fold)
-    );
+    foreign.set(kind, foreignEntries);
+  }
+  // An entry renamed before the lock landed; the folds already held are taken again at no wait.
+  await lockFoldsTx(tx, await foldsByKind(async (_list, kind) => foreign.get(kind) ?? []));
+  for (const kind of LIST_KINDS) {
     await takeEntriesOfFoldsTx(
       tx,
       kind,
       householdId,
-      foreignEntries.map((row) => row.id)
+      (foreign.get(kind) ?? []).map((row) => row.id)
     );
   }
 }
@@ -947,19 +976,12 @@ export async function mergeHouseholdEntriesTx(
   into: string
 ): Promise<void> {
   // The joiner's household is held, so its folds cannot change before their lock.
-  for (const kind of LIST_KINDS) {
-    const { table } = KINDS[kind];
-    const folds = await tx
-      .select({ fold: table.nameFold })
-      .from(table)
-      .where(eq(table.householdId, from));
-
-    await lockEntryFoldsTx(
-      tx,
-      kind,
-      folds.map((row) => row.fold)
-    );
-  }
+  await lockFoldsTx(
+    tx,
+    await foldsByKind(({ table }) =>
+      tx.select({ fold: table.nameFold }).from(table).where(eq(table.householdId, from))
+    )
+  );
   for (const kind of LIST_KINDS) {
     const { table } = KINDS[kind];
     const joinerEntries = await tx

@@ -28,6 +28,7 @@ import { entryFold } from "@norish/shared/lib/fold-name";
 import { assertOwnReferences } from "./household-rows";
 import {
   findFoldedTwinTx,
+  householdTwinFoldsTx,
   LIST_KINDS,
   listPendingFoldEntries,
   lockEntryFoldsTx,
@@ -336,11 +337,11 @@ export async function foldPendingListEntries(): Promise<number> {
     folded += await db.transaction(async (tx) => {
       const pending = await listPendingFoldEntries(kind, tx);
 
-      await lockEntryFoldsTx(
-        tx,
-        kind,
-        pending.map((entry) => entryFold(entry.name))
-      );
+      // The twins' folds with the pending ones, in one call: none is taken out of order later.
+      await lockEntryFoldsTx(tx, kind, [
+        ...pending.map((entry) => entryFold(entry.name)),
+        ...(await householdTwinFoldsTx(tx, kind)),
+      ]);
 
       for (const entry of pending) {
         const fold = entryFold(entry.name);

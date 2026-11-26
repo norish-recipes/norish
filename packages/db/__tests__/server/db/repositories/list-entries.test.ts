@@ -549,6 +549,36 @@ describe("household lists", () => {
       }
     );
 
+    it("a create and an update naming one new Tag and Category both land, neither deadlocked", async () => {
+      const recipeId = crypto.randomUUID();
+      const runs = await raceBehind(
+        (tx) => lockEntryFoldsTx(tx, "tag", ["smoky"]),
+        [
+          () =>
+            createRecipeWithRefs(
+              recipeId,
+              ann.id,
+              FullRecipeInsertSchema.parse({
+                name: "Ribs",
+                servings: 2,
+                systemUsed: "metric",
+                tags: [{ name: "Smoky" }],
+                categories: ["Picnic"],
+              })
+            ),
+          () =>
+            updateRecipeWithRefs(ann.recipe, ann.id, {
+              tags: [{ name: "Smoky" }],
+              categories: ["Picnic"],
+            }),
+        ]
+      );
+
+      expect(runs.map((run) => run.status)).toEqual(["fulfilled", "fulfilled"]);
+      expect(await tagsOf(recipeId)).toEqual(["Smoky"]);
+      expect(await tagsOf(ann.recipe)).toEqual(["Smoky"]);
+    });
+
     it("an instance rename racing a Content merge of the same entries surfaces no deadlock", async () => {
       // The instance entry's id sorts first, so a merge locks it before the household's.
       const [instanceId, householdsId] = [

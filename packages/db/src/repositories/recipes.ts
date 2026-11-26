@@ -16,7 +16,7 @@ import {
 import { alias, QueryBuilder } from "drizzle-orm/pg-core";
 import z from "zod";
 
-import type { Db } from "@norish/db/drizzle";
+import type { Db, DbTransaction } from "@norish/db/drizzle";
 import type {
   FullRecipeDTO,
   FullRecipeInsertDTO,
@@ -66,7 +66,11 @@ import {
   FullRecipeUpdateSchema,
   RecipeDashboardSchema,
 } from "../zodSchemas";
-import { attachCategoriesToRecipeByInputTx, RECIPE_CATEGORY_NAMES_SQL } from "./categories";
+import {
+  attachCategoriesToRecipeByInputTx,
+  categoryNamesToWrite,
+  RECIPE_CATEGORY_NAMES_SQL,
+} from "./categories";
 import { TakenIdError } from "./constraint-violation";
 import { currentHouseholdIdSql, householdMemberIdsSql } from "./household-members";
 import { lockRecipeHouseholdsTx } from "./household-rows";
@@ -78,6 +82,7 @@ import {
   writeRecipeLineFoodsTx,
 } from "./ingredients";
 import {
+  lockEntryNamesTx,
   recipeCarriesFoldsSql,
   replaceRecipeEntriesByNameTx,
   replaceRecipeEntryIdsTx,
@@ -810,6 +815,21 @@ export type CreateRecipeResult =
  */
 export type WithIngredientResolutions<T> = T & { ingredientResolutions: IngredientResolutions };
 
+/** The Tag and Category folds a recipe write creates entries of, in one sorted call before any
+ * list row, so two writes naming the same new Tag and Category cannot deadlock. */
+function lockRecipeEntryFoldsTx(
+  tx: DbTransaction,
+  payload: { tags?: readonly { name: string }[]; categories?: readonly string[] },
+  entryOptions: EntryWriteOptions
+) {
+  if (entryOptions.createEntries === false) return;
+
+  return lockEntryNamesTx(tx, {
+    tag: payload.tags?.map((tag) => tag.name),
+    category: payload.categories && categoryNamesToWrite(payload.categories, entryOptions),
+  });
+}
+
 /** The files a recipe's gallery rows name: images, videos and their thumbnails. */
 function galleryMedia(
   images: ReadonlyArray<{ image: string }> = [],
@@ -897,6 +917,8 @@ export async function createRecipeWithRefs(
 
     const rid = inserted.id;
 
+    await lockRecipeHouseholdsTx(tx, { recipeIds: [rid] });
+    await lockRecipeEntryFoldsTx(tx, payload, entryOptions);
     if (payload.tags.length) {
       await replaceRecipeEntriesByNameTx(
         tx,
@@ -1716,6 +1738,7 @@ export async function updateRecipeWithRefs(
       return staleOutcome();
     }
 
+    await lockRecipeEntryFoldsTx(tx, payload, entryOptions);
     // Replace Cuisines if provided. An empty array is an editor clearing them,
     // which is deliberately distinct from an enrichment run writing nothing.
     if (payload.cuisines !== undefined) {

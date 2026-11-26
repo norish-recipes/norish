@@ -53,10 +53,18 @@ export async function attachCategoriesToRecipeByInputTx(
   names: readonly string[],
   options: EntryWriteOptions = {}
 ): Promise<number> {
-  const resolved =
-    options.createEntries === false
-      ? names
-      : names.map((name) => resolveCategoryName(name, BUILT_IN_ALIASES, []));
+  return replaceRecipeEntriesByNameTx(
+    tx,
+    "category",
+    recipeId,
+    categoryNamesToWrite(names, options),
+    options
+  );
+}
 
-  return replaceRecipeEntriesByNameTx(tx, "category", recipeId, resolved, options);
+/** The Categories {@link attachCategoriesToRecipeByInputTx} writes for `names`. */
+export function categoryNamesToWrite(names: readonly string[], options: EntryWriteOptions = {}) {
+  return options.createEntries === false
+    ? names
+    : names.map((name) => resolveCategoryName(name, BUILT_IN_ALIASES, []));
 }
