@@ -13,12 +13,13 @@ const log = createLogger("worker:store-lookup");
 
 async function processStoreLookup(job: Job<StoreLookupJobData>): Promise<void> {
   if (job.data.kind === "match") {
-    const { storeId, ingredientId, name } = job.data;
+    const { storeId, ingredientId, name, groceryId } = job.data;
 
     await matchGroceryName({
       storeId,
       ingredientId,
       name,
+      groceryId,
       onStep: (step) => reportStep(job, step),
       onStepDone: (detail) => completeStep(job, detail),
     });

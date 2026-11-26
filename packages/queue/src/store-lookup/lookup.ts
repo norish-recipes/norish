@@ -163,6 +163,8 @@ export async function matchGroceryName(input: {
   storeId: string;
   /** The Ingredient asked about when queued; the answer goes under the one its grocery names now. */
   ingredientId: string;
+  /** The grocery that asked. */
+  groceryId: string;
   /** The grocery's name: what the shop is searched for. */
   name: string;
   onStep?: (step: string) => Promise<void>;
@@ -173,7 +175,7 @@ export async function matchGroceryName(input: {
   // the food its grocery names now: a merge since the job was queued moved the name to another.
   const householdId = await getStoreHouseholdId(storeId);
   const store = householdId ? await getStoreById(storeId, householdId) : null;
-  const ingredientId = await findStoreGroceryFood(storeId, name);
+  const ingredientId = await findStoreGroceryFood(storeId, input.groceryId);
   // Nothing was learned: the Pending Link the producer wrote goes, so the
   // name is unknown again rather than "being asked" for ever.
   const gaveUp = async (): Promise<{ matched: boolean }> => {

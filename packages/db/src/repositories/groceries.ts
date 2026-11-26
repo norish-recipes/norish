@@ -5,7 +5,6 @@ import {
   eq,
   getTableColumns,
   inArray,
-  isNotNull,
   isNull,
   lte,
   sql,
@@ -57,22 +56,17 @@ async function readerColumns(householdId: string, executor: Db = db) {
 }
 
 /**
- * The food the Store's newest grocery of this name (trimmed, as pricing asks) names: what a lookup
- * queued for it files its answer under when it runs. Null where none names a food now.
+ * The food a Store's grocery names now: what a lookup queued for that grocery files its answer under
+ * when it runs. Null where it names none, or is gone from the Store.
  */
-export async function findStoreGroceryFood(storeId: string, name: string): Promise<string | null> {
+export async function findStoreGroceryFood(
+  storeId: string,
+  groceryId: string
+): Promise<string | null> {
   const [row] = await db
     .select({ ingredientId: groceries.ingredientId })
     .from(groceries)
-    .where(
-      and(
-        eq(groceries.storeId, storeId),
-        eq(sql`btrim(${groceries.name})`, name),
-        isNotNull(groceries.ingredientId)
-      )
-    )
-    .orderBy(desc(groceries.createdAt))
-    .limit(1);
+    .where(and(eq(groceries.id, groceryId), eq(groceries.storeId, storeId)));
 
   return row?.ingredientId ?? null;
 }

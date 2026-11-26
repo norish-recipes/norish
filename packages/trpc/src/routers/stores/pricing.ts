@@ -32,13 +32,15 @@ import { productLinkKey } from "@norish/shared/lib/store-link-key";
  */
 const MAX_REFRESHED_PER_VIEW = 10;
 
-type PriceableGrocery = Pick<GroceryDto, "name" | "storeId" | "ingredientId">;
+type PriceableGrocery = Pick<GroceryDto, "id" | "name" | "storeId" | "ingredientId">;
 
 /** What a Store is asked about: an Ingredient, under the name the list gives it. */
 interface PriceablePair {
   storeId: string;
   ingredientId: string;
   name: string;
+  /** The grocery the question is asked for. */
+  groceryId: string;
 }
 
 interface PricingContext {
@@ -57,7 +59,9 @@ function priceablePairs(groceries: PriceableGrocery[]): PriceablePair[] {
     if (seen.has(key)) return [];
     seen.add(key);
 
-    return [{ storeId: grocery.storeId, ingredientId: grocery.ingredientId, name }];
+    return [
+      { storeId: grocery.storeId, ingredientId: grocery.ingredientId, name, groceryId: grocery.id },
+    ];
   });
 }
 
@@ -80,6 +84,7 @@ async function askStore(
     storeId: pair.storeId,
     ingredientId: pair.ingredientId,
     name: pair.name,
+    groceryId: pair.groceryId,
   }).catch((err: unknown) => {
     log.error({ err, storeId: pair.storeId }, "Failed to enqueue a store lookup");
   });

@@ -37,7 +37,7 @@ const searchable = { id: STORE, searchAddress: "https://shop.example.nl/zoeken?q
 
 /** A grocery at the Store whose name resolved to the Ingredient named for its lowercase self. */
 function grocery(name: string, ingredientId = `ingredient:${name.toLowerCase()}`) {
-  return { name, storeId: STORE, ingredientId };
+  return { id: `grocery:${name}`, name, storeId: STORE, ingredientId };
 }
 
 describe("asking a Store what an Ingredient means", () => {
@@ -67,6 +67,7 @@ describe("asking a Store what an Ingredient means", () => {
         storeId: STORE,
         ingredientId: "ingredient:oude kaas",
         name: "Oude kaas",
+        groceryId: "grocery:Oude kaas",
       },
       expect.not.objectContaining({ delay: expect.anything() })
     );
@@ -203,13 +204,19 @@ describe("asking a Store what an Ingredient means", () => {
     );
     expect(queue.add).toHaveBeenCalledExactlyOnceWith(
       "match",
-      expect.objectContaining({ ingredientId: "ingredient:onion", name: "onions, diced" }),
+      expect.objectContaining({
+        ingredientId: "ingredient:onion",
+        name: "onions, diced",
+        groceryId: "grocery:onions, diced",
+      }),
       expect.anything()
     );
   });
 
   it("asks nothing about a grocery the server has not resolved yet", async () => {
-    await noticeGroceries(ctx, [{ name: "kaas", storeId: STORE, ingredientId: null }]);
+    await noticeGroceries(ctx, [
+      { id: "grocery:kaas", name: "kaas", storeId: STORE, ingredientId: null },
+    ]);
 
     expect(storeProductsRepository.markLinkPending).not.toHaveBeenCalled();
     expect(queue.add).not.toHaveBeenCalled();

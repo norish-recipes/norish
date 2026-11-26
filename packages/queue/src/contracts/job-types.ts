@@ -122,6 +122,8 @@ export type StoreLookupJobData =
       storeId: string;
       /** The Ingredient asked about, which the answer is filed under (ADR-0037). */
       ingredientId: string;
+      /** The grocery that asked: the answer goes under the food it names when the job runs. */
+      groceryId: string;
       /** The grocery's name as the list shows it: what the shop is searched for. */
       name: string;
     }

@@ -30,6 +30,7 @@ describe("the store lookup producer", () => {
       kind: "match",
       storeId: STORE,
       ingredientId: KAAS,
+      groceryId: "grocery-1",
       name: "kaas",
     });
     await addStoreRefreshJob(queue, {
@@ -49,18 +50,21 @@ describe("the store lookup producer", () => {
       kind: "match",
       storeId: STORE,
       ingredientId: KAAS,
+      groceryId: "grocery-1",
       name: "Oude Kaas",
     });
     await addStoreMatchJob(queue, {
       kind: "match",
       storeId: STORE,
       ingredientId: KAAS,
+      groceryId: "grocery-1",
       name: "oude kaas, belegen",
     });
     await addStoreMatchJob(queue, {
       kind: "match",
       storeId: STORE,
       ingredientId: "33333333-3333-4333-8333-333333333333",
+      groceryId: "grocery-1",
       name: "Oude Kaas",
     });
 
@@ -96,6 +100,7 @@ describe("the store lookup producer", () => {
       kind: "match" as const,
       storeId: STORE,
       ingredientId: KAAS,
+      groceryId: "grocery-1",
       name: "kaas",
     };
 
@@ -114,6 +119,7 @@ describe("the store lookup producer", () => {
       kind: "match",
       storeId: STORE,
       ingredientId: KAAS,
+      groceryId: "grocery-1",
       name: "kaas: oud",
     });
     await addStoreRefreshJob(queue, {

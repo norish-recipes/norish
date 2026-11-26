@@ -76,20 +76,24 @@ describe("what a create shifts", () => {
     },
   });
 
-  it("finds the food the Store's newest grocery of a name names, as pricing trims it", async () => {
+  it("finds the food a Store's grocery names, though a newer one of its name names another", async () => {
     const seeded = (name: string) =>
       insertSeededIngredient({ name, offId: `en:${name}` }, [
         { text: name, fold: name, locale: null },
       ]);
     const [kaas, kip] = [await seeded("kaas"), await seeded("kip")];
+    const older = line(" oude kaas ", { ingredientId: kaas });
+    const newer = line("oude kaas", { ingredientId: kip });
+    const brie = line("brie");
 
-    await createGroceries([line(" oude kaas ", { ingredientId: kaas })], householdId);
-    await createGroceries([line("oude kaas", { ingredientId: kip })], householdId);
-    await createGroceries([line("brie")], householdId);
+    await createGroceries([older], householdId);
+    await createGroceries([newer], householdId);
+    await createGroceries([brie], householdId);
 
-    await expect(findStoreGroceryFood(storeId, "oude kaas")).resolves.toBe(kip);
-    await expect(findStoreGroceryFood(storeId, "brie")).resolves.toBeNull();
-    await expect(findStoreGroceryFood(crypto.randomUUID(), "oude kaas")).resolves.toBeNull();
+    await expect(findStoreGroceryFood(storeId, older.id)).resolves.toBe(kaas);
+    await expect(findStoreGroceryFood(storeId, newer.id)).resolves.toBe(kip);
+    await expect(findStoreGroceryFood(storeId, brie.id)).resolves.toBeNull();
+    await expect(findStoreGroceryFood(crypto.randomUUID(), older.id)).resolves.toBeNull();
   });
 
   it("hands back every active sibling in the Store, shifted down at the version it had", async () => {
