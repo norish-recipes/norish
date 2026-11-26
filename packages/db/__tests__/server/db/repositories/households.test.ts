@@ -2,7 +2,7 @@
 /**
  * Every account is in exactly one household (ADR-0041): an account starts in a
  * household of one, leaving or removal ends in a new one, and joining from a
- * household of one is refused unless it holds nothing but its member.
+ * household of one merges it into the joined household.
  */
 import { eq, sql } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
@@ -25,7 +25,8 @@ import {
   renameHouseholdOfOne,
   transferHouseholdAdmin,
 } from "@norish/db/repositories/households";
-import { addEntry } from "@norish/db/repositories/list-entries";
+import { addEntry, listEntryNames } from "@norish/db/repositories/list-entries";
+import { getRecipeFull } from "@norish/db/repositories/recipes";
 import { households, householdUsers, users } from "@norish/db/schema";
 
 import { createTestRecipe, createTestUser, getTestDb } from "../../../helpers/db-test-helpers";
@@ -198,32 +199,20 @@ describe("households", () => {
       expect(await getHouseholdMemberIdsByHouseholdId(left)).toEqual([]);
     });
 
-    it("is refused from a household of one that holds a recipe", async () => {
-      const admin = await createTestUser();
-      const joiner = await createTestUser();
-      const own = await householdOf(joiner.id);
-
-      await createTestRecipe(joiner.id, { name: "Soup" });
-
-      expect(await joinHousehold(joiner.id, { householdId: await householdOf(admin.id) })).toEqual({
-        refused: "holds-things",
-      });
-      expect(await householdOf(joiner.id)).toBe(own);
-    });
-
     it.each(["tag", "cuisine", "category"] as const)(
-      "is refused from a household of one that holds an unused %s",
+      "from a household of one holding a recipe and an unused %s takes both along",
       async (kind) => {
         const admin = await createTestUser();
         const joiner = await createTestUser();
-        const own = await householdOf(joiner.id);
+        const target = await householdOf(admin.id);
+        const recipe = await createTestRecipe(joiner.id, { name: "Soup" });
 
-        await addEntry(kind, own, "Kept");
+        await addEntry(kind, await householdOf(joiner.id), "Kept");
 
-        expect(
-          await joinHousehold(joiner.id, { householdId: await householdOf(admin.id) })
-        ).toEqual({ refused: "holds-things" });
-        expect(await householdOf(joiner.id)).toBe(own);
+        expect(await joinHousehold(joiner.id, { householdId: target })).toHaveProperty("joined");
+        expect(await householdOf(joiner.id)).toBe(target);
+        expect((await getRecipeFull(recipe.id))?.householdId).toBe(target);
+        expect((await listEntryNames(kind, target)).includes("Kept")).toBe(true);
       }
     );
 

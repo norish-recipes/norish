@@ -429,11 +429,11 @@ describe("processClaimsForUser", () => {
       expect(mockRenameHouseholdOfOne).not.toHaveBeenCalled();
     });
 
-    it("keeps a household of one that holds things when joining is refused", async () => {
+    it("keeps the household when joining is refused", async () => {
       const profile = { groups: ["norish_household_smiths"] };
 
       mockFindHouseholdByName.mockResolvedValue({ id: "hh-123", name: "smiths" });
-      mockJoinHousehold.mockResolvedValue({ refused: "holds-things" });
+      mockJoinHousehold.mockResolvedValue({ refused: "shared" });
 
       await processClaimsForUser(userId, profile, enabledConfig);
 

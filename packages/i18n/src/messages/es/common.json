@@ -317,8 +317,7 @@
       "invalidCode": "Ese código de unión no es válido.",
       "expired": "Ese código de unión ha caducado. Pide uno nuevo.",
       "alreadyMember": "Ya estás en este hogar.",
-      "shared": "Sal primero de tu hogar para unirte a otro.",
-      "holdsThings": "Tu hogar tiene sus propias recetas, compras o planes, así que todavía no puede unirse a otro hogar."
+      "shared": "Sal primero de tu hogar para unirte a otro."
     }
   },
   "photos": {

@@ -131,7 +131,6 @@ describe("household mutations announce before they restart the socket", () => {
 
   it.each([
     ["shared", /Leave it first/],
-    ["holds-things", /cannot join another household yet/],
     ["already-member", /already in this household/],
     ["gone", /Invalid join code/],
     ["expired", /join code has expired/],

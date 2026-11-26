@@ -317,8 +317,7 @@
       "invalidCode": "Ten kod dołączenia jest nieprawidłowy.",
       "expired": "Ten kod dołączenia wygasł. Poproś o nowy.",
       "alreadyMember": "Jesteś już w tym gospodarstwie domowym.",
-      "shared": "Najpierw opuść swoje gospodarstwo domowe, aby dołączyć do innego.",
-      "holdsThings": "Twoje gospodarstwo domowe ma własne przepisy, zakupy lub plany, więc nie może jeszcze dołączyć do innego."
+      "shared": "Najpierw opuść swoje gospodarstwo domowe, aby dołączyć do innego."
     }
   },
   "photos": {

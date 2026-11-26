@@ -317,8 +317,7 @@
       "invalidCode": "Ce code d'invitation n'est pas valide.",
       "expired": "Ce code d'invitation a expiré. Demandez-en un nouveau.",
       "alreadyMember": "Vous faites déjà partie de ce foyer.",
-      "shared": "Quittez d'abord votre foyer pour en rejoindre un autre.",
-      "holdsThings": "Votre foyer a ses propres recettes, courses ou plannings, il ne peut donc pas encore rejoindre un autre foyer."
+      "shared": "Quittez d'abord votre foyer pour en rejoindre un autre."
     }
   },
   "photos": {
