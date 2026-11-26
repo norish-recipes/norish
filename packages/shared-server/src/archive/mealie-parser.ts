@@ -700,7 +700,7 @@ export async function parseMealieRecipeToDTO(
   }
 
   return withLineFoodTexts(
-    carriedLists(parsed.data, true),
+    carriedLists(parsed.data, allTags.length > 0),
     lines.map((line) => line.foodText)
   );
 }

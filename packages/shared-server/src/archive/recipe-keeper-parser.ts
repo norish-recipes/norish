@@ -220,7 +220,7 @@ export async function parseRecipeKeeperRecipeToDTO(
         protein: protein != null ? protein.toString() : null,
         images,
       },
-      true
+      recipe.courses.length + recipe.categories.length > 0
     ),
     importedRating: recipe.rating,
     importedFavorite: recipe.favorite || undefined,

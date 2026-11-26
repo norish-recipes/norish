@@ -408,8 +408,8 @@ describe("Mealie Legacy Parser", () => {
       expect(dto.images).toEqual([{ image: "mocked-image-guid", order: 0 }]);
     });
 
-    it("handles recipe with no tags or categories", async () => {
-      const recipe = createLegacyRecipe({ tags: [], recipe_category: [] });
+    it("carries no list a recipe has no labels for, so an overwrite keeps its own", async () => {
+      const recipe = createLegacyRecipe({ tags: undefined, recipe_category: [] });
       const dto = await parseMealieLegacyRecipeToDTO(
         recipe,
         "123e4567-e89b-42d3-a456-426614174000",
@@ -417,7 +417,8 @@ describe("Mealie Legacy Parser", () => {
         BUILT_IN_CATEGORIES
       );
 
-      expect(dto.tags).toHaveLength(0);
+      expect(dto).not.toHaveProperty("tags");
+      expect(dto).not.toHaveProperty("categories");
     });
 
     it("handles nutrition data", async () => {

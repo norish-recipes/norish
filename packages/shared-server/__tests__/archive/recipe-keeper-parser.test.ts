@@ -364,6 +364,13 @@ describe("Recipe Keeper import", () => {
     expect(dtos[0].url).toBeUndefined();
   });
 
+  it("carries no list a recipe has no course or category for, so an overwrite keeps its own", async () => {
+    const { dtos } = await importBlocks([recipeBlock({ extra: "" })]);
+
+    expect(dtos[0]).not.toHaveProperty("tags");
+    expect(dtos[0]).not.toHaveProperty("categories");
+  });
+
   it("imports a recipe without ingredients", async () => {
     const { result, dtos } = await importBlocks([recipeBlock({ ingredients: [] })]);
 
