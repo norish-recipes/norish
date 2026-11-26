@@ -15,6 +15,7 @@ import { CATALOGUE_LANGUAGES, chooseLocaleNames } from "@norish/shared/lib/ingre
 import { slipLengths } from "@norish/shared/lib/name-slips";
 
 import type { LineResolution } from "./ingredients";
+import { isAnyOf } from "./array-params";
 import { isConstraintViolation } from "./constraint-violation";
 import { inCatalogue, isInstanceRow, ownBeforeSeed } from "./household-scope";
 import { ingredientIsListed } from "./ingredient-catalogue";
@@ -294,6 +295,18 @@ export interface MintIngredientInput {
 export async function mintIngredientWithAliases(
   input: MintIngredientInput
 ): Promise<{ aliases: IngredientAliasRow[]; created: boolean }> {
+  // A name another mint took meanwhile starts again, so its food is locked in order too.
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const done = await mintOnce(input);
+
+    if (done) return done;
+  }
+  throw new Error("Failed to mint or find ingredient");
+}
+
+async function mintOnce(
+  input: MintIngredientInput
+): Promise<{ aliases: IngredientAliasRow[]; created: boolean } | null> {
   const folds = input.aliases.map((alias) => alias.fold);
   const { householdId } = input;
 
@@ -320,11 +333,8 @@ export async function mintIngredientWithAliases(
           )
           .orderBy(ownBeforeSeed(ingredients.householdId))
           .limit(1)
-          // Held until the spellings are in, so a delete of the food waits; it takes no tree lock,
-          // which every delete takes before the row, so no cycle closes.
-          .for("key share", { of: ingredients })
       ).at(0);
-    // The parent still in the household's catalogue, held so a delete waits for the mint.
+    // The parent still in the household's catalogue.
     const [parent] = input.parentId
       ? await tx
           .select({ id: parentRow.id })
@@ -332,11 +342,27 @@ export async function mintIngredientWithAliases(
           .where(
             and(eq(parentRow.id, input.parentId), inCatalogue(parentRow.householdId, householdId))
           )
-          .for("key share")
       : [];
-    const parentId = parent?.id ?? null;
-    const seedHolder = await holderOf();
-    const [minted] = seedHolder
+    const named = await holderOf();
+    const toHold = [named?.id, parent?.id].filter((id) => id !== undefined);
+    // Both held until the spellings are in, so a delete waits; in id order, as every edit locks foods.
+    const held = new Set(
+      toHold.length === 0
+        ? []
+        : (
+            await tx
+              .select({ id: ingredients.id })
+              .from(ingredients)
+              .where(isAnyOf(ingredients.id, toHold, "uuid"))
+              .orderBy(asc(ingredients.id))
+              .for("key share")
+          ).map((row) => row.id)
+    );
+    const parentId = parent && held.has(parent.id) ? parent.id : null;
+    // Read again under the lock: renamed or deleted meanwhile, it is no holder.
+    const again = named && held.has(named.id) ? await holderOf() : undefined;
+    const holder = again?.id === named?.id ? again : undefined;
+    const [minted] = holder
       ? []
       : await tx
           .insert(ingredients)
@@ -350,7 +376,8 @@ export async function mintIngredientWithAliases(
           })
           .onConflictDoNothing()
           .returning({ id: ingredients.id });
-    const holder = minted ? undefined : (seedHolder ?? (await holderOf()));
+
+    if (!minted && !holder) return null;
     const ingredientId = minted?.id ?? holder?.id;
 
     if (!ingredientId) throw new Error("Failed to mint or find ingredient");

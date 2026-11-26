@@ -7,10 +7,11 @@ import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { mintIngredientWithAliases } from "@norish/db/repositories/ingredient-aliases";
+import { lockIngredients } from "@norish/db/repositories/ingredient-relocation";
 import * as schema from "@norish/db/schema";
 
 import { createTestIngredient, getTestDb, testHouseholdOf } from "../../../helpers/db-test-helpers";
-import { raceBehind } from "../../../helpers/lock-race";
+import { lockWaits, raceBehind, waitFor } from "../../../helpers/lock-race";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 describe("mintIngredientWithAliases on a name already taken", () => {
@@ -97,5 +98,32 @@ describe("mintIngredientWithAliases on a name already taken", () => {
 
     expect(alias!.ingredientId).not.toBe(food!.id);
     expect(await read(alias!.ingredientId)).toMatchObject({ name: "red onion", householdId });
+  });
+
+  it("locks the food it joins and the parent in id order, as an edit does, so the two never deadlock", async () => {
+    const [low, high] = [
+      await createTestIngredient({ name: "red onion" }),
+      await createTestIngredient({ name: "onion" }),
+    ].sort((a, b) => a!.id.localeCompare(b!.id));
+    let mint: ReturnType<typeof mintIngredientWithAliases> | undefined;
+
+    // An edit over both foods, holding the lower: the mint waits there, holding nothing the edit wants.
+    await getTestDb().transaction(async (tx) => {
+      await lockIngredients(tx, [low!.id]);
+      mint = mintIngredientWithAliases({
+        householdId,
+        name: low!.name,
+        aliases: [{ text: low!.name, fold: low!.name }],
+        ownerId: null,
+        locale: null,
+        flagged: false,
+        parentId: high!.id,
+      });
+      mint.catch(() => undefined);
+      await waitFor(async () => ((await lockWaits()).size > 0 ? true : undefined), "the mint");
+      await lockIngredients(tx, [high!.id]);
+    });
+
+    await expect(mint).resolves.toMatchObject({ created: false });
   });
 });
