@@ -29,7 +29,9 @@ import {
   householdIdOf,
   mintTestFood,
   readTestIngredient,
+  readTestSpelling,
   testHouseholdOf,
+  testPantrySpellings,
 } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 
@@ -297,6 +299,9 @@ describe("lines read through the reader's catalogue", () => {
       ).map(({ item }) => item.ingredientId);
 
     await expect(kept(uiLine)).resolves.toEqual([ui.ingredientId]);
+    const [row] = await testPantrySpellings(reader);
+
+    expect((await readTestSpelling(row!.ingredientAliasId!))?.householdId).toBe(household);
     const [tomaten] = await kept(tomatenLine);
 
     // A line it reads as no food is its own text, resolved (here minted) in the reader's household.

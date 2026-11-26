@@ -2,8 +2,8 @@
  * Another household's recipe reads through your own catalogue (ADR-0042), in a browser, under view
  * Everyone. Household A writes "sjalot" and "prei"; household B keeps its own "sjalot" in its Pantry.
  * B's add-to-groceries panel holds A's "sjalot" line as in the Pantry, the Library's pantry filter
- * counts it, adding the lines gives B its own foods (a "prei" minted in B), and A's recipe and foods
- * are left as they are. B sees A's food icons only through A's recipe, never by id.
+ * counts it, adding the lines gives B foods of its own catalogue and none of A's, and A's recipe and
+ * foods are left as they are. B sees A's food icons only through A's recipe, never by id.
  */
 import type { GroceryDto } from "@norish/shared/contracts";
 
@@ -108,23 +108,32 @@ test("another household's recipe is used through the reader's own catalogue", as
     await context.close();
   }
 
-  // B's groceries name B's foods: its own "sjalot", and a "prei" minted in B.
-  const groceryFood = async (name: string) => {
+  // B's groceries name B's foods: its own "sjalot", and a "prei" of B's catalogue, none of A's.
+  const groceryFoods = async () => {
     const { groceries } = await callTrpc<{ groceries: GroceryDto[] }>(
       aiStack.baseURL,
       bCookies,
       "groceries.list"
     );
 
-    return groceries.find((grocery) => grocery.name === name)?.ingredientId;
+    return groceries.flatMap((grocery) =>
+      grocery.name === shallot || grocery.name === leek ? [grocery.ingredientId] : []
+    );
   };
 
-  await expect.poll(() => groceryFood(shallot)).toBe(bShallot);
-  const [bLeek] = await foodsOf(bCookies, leek);
+  await expect.poll(async () => (await groceryFoods()).length).toBe(2);
+  const foods = await groceryFoods();
 
-  expect(bLeek).toBeDefined();
-  expect(bLeek!.id).not.toBe(aLeek);
-  await expect.poll(() => groceryFood(leek)).toBe(bLeek!.id);
+  expect(foods).toContain(bShallot);
+  for (const food of foods) {
+    expect([aShallot, aLeek]).not.toContain(food);
+    // B reads by id only the foods of its own catalogue, the seed's included.
+    await expect(
+      queryTrpc<ListedFood | null>(aiStack.baseURL, bCookies, "ingredients.get", {
+        ingredientId: food,
+      })
+    ).resolves.toMatchObject({ id: food });
+  }
 
   // A's recipe and A's own foods are as they were.
   const after = (await readRecipe(aiStack.baseURL, aCookies, recipeId))!;

@@ -22,6 +22,7 @@ import {
   mintTestFood,
   readTestIngredient,
   readTestSpelling,
+  testGroceryFoods,
   testHouseholdOf,
 } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
@@ -280,6 +281,34 @@ describe("grocery names through aliases", () => {
       // A seeded food is everyone's, so the line keeps it.
       expect(resolved[1]?.ingredientId).toBe(zout.ingredientId);
       expect(resolved[2]?.ingredientId).not.toBe(prei.ingredientId);
+      await createGroceries(
+        [ui, zout, prei].map((line, index) => ({
+          id: crypto.randomUUID(),
+          groceries: {
+            householdId: readerHousehold,
+            userId: reader,
+            name: line.ingredientName,
+            unit: null,
+            amount: null,
+            isDone: false,
+            recipeIngredientId: line.id,
+            recurringGroceryId: null,
+            ingredientAliasId: resolved[index]!.aliasId,
+            ingredientId: resolved[index]!.ingredientId,
+          },
+        })),
+        readerHousehold
+      );
+      // The rows as written, by name: prei, ui, zout.
+      const written = await testGroceryFoods(reader);
+
+      await expect(
+        homes(written.map((row) => ({ aliasId: row.aliasId!, ingredientId: row.ingredientId! })))
+      ).resolves.toEqual([
+        { food: readerHousehold, spelling: readerHousehold },
+        { food: readerHousehold, spelling: readerHousehold },
+        { food: null, spelling: null },
+      ]);
       await expect(homes(resolved)).resolves.toEqual([
         { food: readerHousehold, spelling: readerHousehold },
         { food: null, spelling: null },
