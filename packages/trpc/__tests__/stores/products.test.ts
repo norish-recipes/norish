@@ -208,7 +208,7 @@ describe("chooseProduct", () => {
 
     await caller.chooseProduct({ storeId: STORE, name: "oude kaas", choice: manualChoice });
 
-    expect(storeProductsRepository.updateManualProduct).toHaveBeenCalledWith({
+    expect(storeProductsRepository.updateManualProduct).toHaveBeenCalledWith(ctx.householdId, {
       id: MANUAL_ID,
       name: "Oude kaas",
       price: 6.5,
@@ -243,6 +243,7 @@ describe("chooseProduct", () => {
     });
 
     expect(storeProductsRepository.setPackSizeByHand).toHaveBeenCalledExactlyOnceWith(
+      ctx.householdId,
       PRODUCT,
       pack
     );

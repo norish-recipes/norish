@@ -91,7 +91,7 @@ const updateProduct = authedProcedure
 
     if (!existing) throw new TRPCError({ code: "NOT_FOUND", message: "Product not found" });
 
-    const product = await updateManualProduct(input);
+    const product = await updateManualProduct(ctx.householdId, input);
 
     if (!product) {
       // A product read from a page keeps what the page said; only a by-hand
@@ -209,7 +209,7 @@ async function writeManualProduct(
   if (existing.storeId !== storeId) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Product not found in this store" });
   }
-  const updated = await updateManualProduct({
+  const updated = await updateManualProduct(householdId, {
     id: existing.id,
     name: choice.name,
     price: choice.price,
@@ -286,7 +286,7 @@ const chooseProduct = authedProcedure
     // A Pack Size the shopper set is the last word for whichever product the
     // choice resolved to; cleared, the product reads its own size words again.
     if (storeProductId && input.pack !== undefined) {
-      const product = await setPackSizeByHand(storeProductId, input.pack);
+      const product = await setPackSizeByHand(ctx.householdId, storeProductId, input.pack);
 
       if (product)
         void stores.publish("productUpdated", { product }, { householdId: ctx.householdId });
