@@ -1,5 +1,5 @@
 import type { SQL } from "drizzle-orm";
-import { and, asc, count, eq, exists, inArray, ne, sql } from "drizzle-orm";
+import { and, asc, count, eq, exists, inArray, isNotNull, ne, sql } from "drizzle-orm";
 import { alias, QueryBuilder } from "drizzle-orm/pg-core";
 
 import type { Db, DbTransaction } from "@norish/db/drizzle";
@@ -191,8 +191,9 @@ export async function setCatalogueIngredientParent(
 
 /**
  * Merge source into target, locking both: spellings and rows move, links unless the target has its
- * own; its icon fills a gap, the flag clears unless `keepFlag`. False where one is gone, or the
- * target is neither the source's household's nor the seed's (`fitsInCatalogueOf`).
+ * own; its icon fills a gap, the flag clears unless `keepFlag`. A seeded target's row is left as it
+ * is: the household's spellings stay the household's on it. False where one is gone, or the target
+ * is neither the source's household's nor the seed's (`fitsInCatalogueOf`).
  */
 export async function mergeCatalogueIngredients(
   tx: DbTransaction,
@@ -248,7 +249,7 @@ export async function mergeCatalogueIngredients(
       ...(keepFlag ? {} : { flagged: false, flagReason: null }),
       icon: sql`coalesce(${ingredients.icon}, ${gone?.icon ?? null})`,
     })
-    .where(eq(ingredients.id, targetId));
+    .where(and(eq(ingredients.id, targetId), isNotNull(ingredients.householdId)));
 
   return true;
 }

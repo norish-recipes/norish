@@ -18,6 +18,7 @@ import {
   takeOpenParentChanges,
 } from "@norish/db/repositories/ingredient-ai-changes";
 import { findIngredientByAliasId } from "@norish/db/repositories/ingredient-aliases";
+import { setIngredientIcon } from "@norish/db/repositories/ingredient-icons";
 import { listJunkFolds } from "@norish/db/repositories/ingredient-junk-pile";
 import { findIngredientAncestors, lockTree } from "@norish/db/repositories/ingredient-relocation";
 import { insertSeededIngredient } from "@norish/db/repositories/ingredient-seed";
@@ -270,6 +271,26 @@ describe("keeping and undoing AI Changes", () => {
     ]);
     await undoAIChange(actor, change.id);
     await expect(findIngredientByAliasId(prei.aliasId)).resolves.toMatchObject({ name: "prei" });
+  });
+
+  it("changes nothing on a seeded food a household's food is merged into, by AI or an admin", async () => {
+    const seeded = await insertSeededIngredient({ name: "leek", offId: "en:leek" }, [
+      { text: "leek", fold: "leek", locale: "en" },
+    ]);
+    const before = await readTestIngredient(seeded);
+    const prei = await mint("prei");
+    const stokprei = await mint("stokprei");
+
+    await withTransaction((tx) => setIngredientIcon(tx, prei.ingredientId, "prei.webp"));
+    await withTransaction((tx) => setIngredientIcon(tx, stokprei.ingredientId, "stokprei.webp"));
+    await expect(mergeByAI(prei.ingredientId, seeded, false)).resolves.toBe("applied");
+    await keepAIChange(actor, (await onlyChange()).id);
+    await mergeIngredients({ ...actor, isServerAdmin: true }, stokprei.ingredientId, seeded);
+
+    await expect(readTestIngredient(seeded)).resolves.toEqual(before);
+    // The household's spellings and lines now name the seeded food, as the household's spellings.
+    await expect(findIngredientByAliasId(prei.aliasId)).resolves.toMatchObject({ id: seeded });
+    await expect(findIngredientByAliasId(stokprei.aliasId)).resolves.toMatchObject({ id: seeded });
   });
 
   it("lets only the food's household bring back a food AI deleted as not a food, with its lines", async () => {

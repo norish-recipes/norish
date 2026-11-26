@@ -504,8 +504,8 @@ async function hasParentChange(
 }
 
 /**
- * Flag the food while it has an open change or AI just doubted it (`unsure`, for `reason`); clear
- * it otherwise.
+ * Flag a household's food while it has an open change or AI just doubted it (`unsure`, for
+ * `reason`); clear it otherwise. AI never flags a seeded food: every household reads it.
  */
 export async function refreshAIFlag(
   tx: Db,
@@ -521,15 +521,15 @@ export async function refreshAIFlag(
       flagReason: sql`case when ${flagged} then ${unsure ? reason : "ai-unsure"} end`,
       version: sql`${ingredients.version} + 1`,
     })
-    .where(eq(ingredients.id, ingredientId));
+    .where(and(eq(ingredients.id, ingredientId), isNotNull(ingredients.householdId)));
 }
 
-/** Flag the food an unsure change joined. */
+/** Flag the household's food an unsure change joined; a seeded one stays as it is. */
 export async function flagUnderOpenChange(tx: Db, ingredientId: string): Promise<void> {
   await tx
     .update(ingredients)
     .set({ flagged: true, flagReason: "ai-unsure", version: sql`${ingredients.version} + 1` })
-    .where(eq(ingredients.id, ingredientId));
+    .where(and(eq(ingredients.id, ingredientId), isNotNull(ingredients.householdId)));
 }
 
 /** What earlier releases flagged a food for that is no flag now: AI waiting, off or failing. */
@@ -554,7 +554,10 @@ export async function clearRetiredFlags(tx: Db): Promise<number> {
   return cleared.length;
 }
 
-/** Clear AI's doubt once no open change is left; a flag for another reason is not AI's to clear. */
+/**
+ * Clear AI's doubt on a household's food once no open change is left; a flag for another reason,
+ * or on a seeded food, is not AI's to clear.
+ */
 export async function clearAIFlagUnlessOpen(tx: Db, ingredientId: string): Promise<void> {
   await tx
     .update(ingredients)
@@ -562,6 +565,7 @@ export async function clearAIFlagUnlessOpen(tx: Db, ingredientId: string): Promi
     .where(
       and(
         eq(ingredients.id, ingredientId),
+        isNotNull(ingredients.householdId),
         eq(ingredients.flagReason, "ai-unsure"),
         sql`not ${hasOpenChange(ingredientId)}`
       )
