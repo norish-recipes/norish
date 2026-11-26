@@ -4,7 +4,7 @@
 
 **Blocked by:** 01–09, 11, 12, 14
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] **Release notes** (`apps/docs/docs/release-notes/0.28.0-beta.md`) in plain product language:
   - households are the boundary;
@@ -60,3 +60,5 @@ New screenshots needed:
 - Mobile Content screen with its tabs.
 - Mobile long-press menu and an entry sheet.
 - Permission Policy setting for the households page.
+
+Gatekeeper, 2026-11-26: closed at 099ee43e6 after one review round against the code (three wrong upgrade notes corrected, Households page added, Content page moved to the top level). Root format check and the docs build pass. Not ours and left alone: the docs format check fails on eight older release-note files; `docs/adr/index.html` (another session's file) does not yet show the reworded ADRs 0032, 0033 and 0041.
