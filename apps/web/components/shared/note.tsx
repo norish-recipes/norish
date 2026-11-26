@@ -8,7 +8,7 @@ interface NoteProps {
   /** `warning` only for real caution; something merely worth knowing stays `default`. */
   status?: "default" | "accent" | "warning" | "danger";
   title?: ReactNode;
-  /** A lock instead of the status's own icon: what the note says cannot be changed. */
+  /** A lock instead of the status's own icon: what cannot be changed; a given `icon` wins. */
   locked?: boolean;
   /** An icon instead of the status's own: what the note is about, such as a merge. */
   icon?: ComponentType<SVGProps<SVGSVGElement>>;
@@ -24,8 +24,8 @@ export function Note({ status = "default", title, locked, icon: Icon, children }
   return (
     <Alert className="bg-surface-secondary rounded-2xl shadow-none" status={status}>
       <Alert.Indicator>
-        {locked ? <LockClosedIcon aria-hidden className="size-5" /> : null}
         {Icon ? <Icon aria-hidden className="size-5" /> : null}
+        {locked && !Icon ? <LockClosedIcon aria-hidden className="size-5" /> : null}
       </Alert.Indicator>
       <Alert.Content className="gap-1">
         {title ? <Alert.Title>{title}</Alert.Title> : null}
