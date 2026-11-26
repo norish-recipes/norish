@@ -509,7 +509,9 @@ export async function mintTestFood(
   text: string,
   options: Partial<Omit<MintIngredientInput, "householdId" | "name" | "aliases">> = {}
 ) {
-  const [row] = await mintIngredientWithAliases({
+  const {
+    aliases: [row],
+  } = await mintIngredientWithAliases({
     householdId,
     name: text,
     aliases: [{ text, fold: ingredientAliasFold(text) }],

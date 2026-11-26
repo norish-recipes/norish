@@ -81,7 +81,7 @@ describe("the first-start cleanup", () => {
 
   /** An own food as earlier versions minted it: its name and every text as written a spelling. */
   async function oldMint(name: string, texts: string[]) {
-    const rows = await mintIngredientWithAliases({
+    const { aliases: rows } = await mintIngredientWithAliases({
       householdId: testHouseholdOf(userId),
       name,
       aliases: texts.map((text) => ({ text, fold: ingredientAliasFold(text) })),

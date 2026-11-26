@@ -287,13 +287,13 @@ export interface MintIngredientInput {
 }
 
 /**
- * Mint an Ingredient in a household with its aliases, answering each fold's alias. A lost race or a
- * name the household's or the seed's food has (any case) joins it; a household's food with no
- * spelling is taken over. A parent no longer in the household's catalogue is left out.
+ * Mint an Ingredient in a household with its aliases, answering each fold's alias and whether a food
+ * was created. A lost race or a name the household's or the seed's food has (any case) joins it; a
+ * household's food with no spelling is taken over. A parent outside the catalogue is left out.
  */
 export async function mintIngredientWithAliases(
   input: MintIngredientInput
-): Promise<IngredientAliasRow[]> {
+): Promise<{ aliases: IngredientAliasRow[]; created: boolean }> {
   const folds = input.aliases.map((alias) => alias.fold);
   const { householdId } = input;
 
@@ -391,13 +391,13 @@ export async function mintIngredientWithAliases(
       (a, b) => folds.indexOf(a.fold) - folds.indexOf(b.fold)
     );
 
-    if (!minted) return rows;
+    if (!minted) return { aliases: rows, created: false };
 
     // Lost the race for a spelling: what this mint got joins the Ingredient holding it, so one food
     // stays one Ingredient.
     const winner = rows.find((row) => row.ingredientId !== minted.id)?.ingredientId;
 
-    if (!winner) return rows;
+    if (!winner) return { aliases: rows, created: true };
 
     await tx
       .update(ingredientAliases)
@@ -405,9 +405,12 @@ export async function mintIngredientWithAliases(
       .where(eq(ingredientAliases.ingredientId, minted.id));
     await tx.delete(ingredients).where(eq(ingredients.id, minted.id));
 
-    return rows.map((row) =>
-      row.ingredientId === minted.id ? { ...row, ingredientId: winner } : row
-    );
+    return {
+      aliases: rows.map((row) =>
+        row.ingredientId === minted.id ? { ...row, ingredientId: winner } : row
+      ),
+      created: false,
+    };
   });
 }
 

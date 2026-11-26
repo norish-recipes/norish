@@ -594,16 +594,17 @@ async function resolveTexts(
             locale: actor.locale ?? null,
           })
         : null;
-      const rows =
-        joined ??
-        (await mint(spelling, actor, {
-          // A mint for someone's action is unflagged: AI's pass, where on, looks at it after.
-          flagReason: slip ? "food-gone" : mode === "upgrade" ? "upgrade" : null,
-          parent: await parentFromWords(householdId, spelling),
-        }));
+      const { aliases: rows, created } = joined
+        ? { aliases: joined, created: false }
+        : await mint(spelling, actor, {
+            // A mint for someone's action is unflagged: AI's pass, where on, looks at it after.
+            flagReason: slip ? "food-gone" : mode === "upgrade" ? "upgrade" : null,
+            parent: await parentFromWords(householdId, spelling),
+          });
 
       for (const row of rows) known.set(row.fold, row);
-      if (!joined) for (const row of rows) minted.add(row.ingredientId);
+      // Only a food created here is new: one the mint joined by name has had its pass.
+      if (created) for (const row of rows) minted.add(row.ingredientId);
     }
 
     const alias = match ?? matchKnown(spelling, known)!;
@@ -693,7 +694,7 @@ async function mint(
   spelling: Spelling,
   actor: ResolveActor,
   { flagReason, parent }: { flagReason: FlagReason | null; parent: string | null }
-): Promise<IngredientAliasRow[]> {
+) {
   const alias = cleanAlias(spelling);
 
   return await mintIngredientWithAliases({

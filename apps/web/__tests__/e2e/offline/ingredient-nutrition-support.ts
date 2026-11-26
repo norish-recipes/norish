@@ -128,7 +128,9 @@ export async function seedNutritionScenario(): Promise<NutritionScenario> {
   const householdId = await getHouseholdIdForUser(owner);
 
   if (!householdId) throw new Error("User A has no household");
-  const [legacy] = await mintIngredientWithAliases({
+  const {
+    aliases: [legacy],
+  } = await mintIngredientWithAliases({
     householdId,
     name: "salt to taste",
     aliases: [{ text: "salt to taste", fold: ingredientAliasFold("salt to taste") }],

@@ -55,9 +55,10 @@ describe("mintIngredientWithAliases on a name already taken", () => {
       .set({ parentId: onion!.id })
       .where(eq(schema.ingredients.id, redOnion!.id));
 
-    const aliases = await mintRedOnion();
+    const { aliases, created } = await mintRedOnion();
 
     expect(aliases.map((alias) => alias.ingredientId)).toEqual([redOnion!.id]);
+    expect(created).toBe(false);
     expect(await read(redOnion!.id)).toMatchObject({ parentId: onion!.id, flagged: false });
   });
 
@@ -67,8 +68,7 @@ describe("mintIngredientWithAliases on a name already taken", () => {
       .values({ name: "red onion", householdId })
       .returning();
 
-    await mintRedOnion();
-
+    await expect(mintRedOnion()).resolves.toMatchObject({ created: false });
     expect(await read(bare!.id)).toMatchObject({ flagged: true, flagReason: "upgrade" });
   });
 
@@ -88,8 +88,12 @@ describe("mintIngredientWithAliases on a name already taken", () => {
     );
 
     expect(minted).toMatchObject({ status: "fulfilled" });
-    const [alias] = (minted as PromiseFulfilledResult<Awaited<ReturnType<typeof mintRedOnion>>>)
-      .value;
+    const { aliases, created } = (
+      minted as PromiseFulfilledResult<Awaited<ReturnType<typeof mintRedOnion>>>
+    ).value;
+    const [alias] = aliases;
+
+    expect(created).toBe(true);
 
     expect(alias!.ingredientId).not.toBe(food!.id);
     expect(await read(alias!.ingredientId)).toMatchObject({ name: "red onion", householdId });

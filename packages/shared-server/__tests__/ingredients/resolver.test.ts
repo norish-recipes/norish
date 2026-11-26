@@ -42,6 +42,7 @@ import {
   listTestIngredientIds,
   mintTestFood,
   readTestIngredient,
+  setTestIngredients,
   testHouseholdOf,
 } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
@@ -196,6 +197,28 @@ describe("ingredient resolver", () => {
         "upgrade"
       );
       expect(minted).toHaveLength(1);
+    } finally {
+      onIngredientsMinted(undefined);
+    }
+  });
+
+  it("hands on nothing for a mint that joins a seeded or the household's food by its name", async () => {
+    const leek = await insertSeededIngredient({ name: "leek", offId: "en:leek" }, [
+      { text: "poireau", fold: "poireau", locale: "fr" },
+    ]);
+    const prei = await mintTestFood(testHouseholdOf(userId), "stokprei");
+    const minted: string[][] = [];
+
+    await setTestIngredients(prei.ingredientId, { name: "prei" });
+    onIngredientsMinted(async (ids) => void minted.push(ids));
+    try {
+      const [seeded, own] = await resolveIngredients(["leek", "prei"], {
+        userId,
+        householdId: testHouseholdOf(userId),
+      });
+
+      expect([seeded!.ingredientId, own!.ingredientId]).toEqual([leek, prei.ingredientId]);
+      expect(minted).toEqual([]);
     } finally {
       onIngredientsMinted(undefined);
     }
@@ -538,7 +561,9 @@ describe("ingredient resolver", () => {
 
   it("a mint that loses the race for one of its spellings joins the winner with the other", async () => {
     // Another request minted "onions, diced" between this mint's read and write.
-    const [winner] = await mintIngredientWithAliases({
+    const {
+      aliases: [winner],
+    } = await mintIngredientWithAliases({
       householdId: testHouseholdOf(userId),
       name: "onions, diced",
       aliases: [{ text: "onions, diced", fold: ingredientAliasFold("onions, diced") }],
@@ -547,7 +572,7 @@ describe("ingredient resolver", () => {
       flagged: true,
     });
 
-    const rows = await mintIngredientWithAliases({
+    const { aliases: rows } = await mintIngredientWithAliases({
       householdId: testHouseholdOf(userId),
       name: "onions",
       aliases: [
@@ -1056,7 +1081,9 @@ describe("ingredient resolver", () => {
     });
 
     it("names one food where every part is a spelling of it", async () => {
-      const [row] = await mintIngredientWithAliases({
+      const {
+        aliases: [row],
+      } = await mintIngredientWithAliases({
         householdId: testHouseholdOf(userId),
         name: "spring onion",
         aliases: [

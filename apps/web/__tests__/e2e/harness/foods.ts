@@ -5,7 +5,7 @@ import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 /** A plain food of the household, added by no one, its name its one spelling; its alias and Ingredient. */
 export async function mintFood(householdId: string, name: string): Promise<IngredientRef> {
   const fold = ingredientAliasFold(name);
-  const aliases = await mintIngredientWithAliases({
+  const { aliases } = await mintIngredientWithAliases({
     householdId,
     name,
     aliases: [{ text: name, fold }],
