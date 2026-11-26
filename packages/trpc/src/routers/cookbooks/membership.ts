@@ -132,7 +132,7 @@ const recipes = authedProcedure
         favoritesOnly: input.favoritesOnly,
         pantryOnly: input.pantryOnly,
         lineReadings: input.pantryOnly
-          ? await lineReadingsOf(ctx.householdId, "visible")
+          ? await lineReadingsOf(ctx.householdId, { of: "cookbook", id: input.cookbookId })
           : undefined,
       }
     );

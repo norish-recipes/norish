@@ -7,6 +7,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { createRecipeWithRefs, getRecipeFull } from "@norish/db";
+import { addRecipesToCookbook, createCookbook } from "@norish/db/repositories/cookbooks";
 import { joinHousehold, moveToHouseholdOfOne } from "@norish/db/repositories/households";
 import { listLibrary } from "@norish/db/repositories/library";
 import { listRecipes } from "@norish/db/repositories/recipes";
@@ -86,7 +87,10 @@ describe("lines read through the reader's catalogue", () => {
     const before = await countTestCatalogueRows();
 
     announced.length = 0;
-    const readings = await lineReadingsOf(testHouseholdOf(reader), { recipeIds: [recipeId] });
+    const readings = await lineReadingsOf(testHouseholdOf(reader), {
+      of: "recipes",
+      ids: [recipeId],
+    });
 
     expect(readings).toEqual({
       [uiLine!.id!]: {
@@ -102,8 +106,25 @@ describe("lines read through the reader's catalogue", () => {
     expect(announced).toEqual([]);
     // The author reads their own recipe as stored.
     await expect(
-      lineReadingsOf(testHouseholdOf(author), { recipeIds: [recipeId] })
+      lineReadingsOf(testHouseholdOf(author), { of: "recipes", ids: [recipeId] })
     ).resolves.toEqual({});
+  });
+
+  it("reads only a cookbook's lines for that cookbook", async () => {
+    const inBook = await recipe(author, ["ui"]);
+    const outside = await recipe(author, ["prei"]);
+    const cookbook = await createCookbook({ userId: author, title: "Soups" });
+
+    await addRecipesToCookbook(cookbook.id, [inBook.recipeId]);
+
+    expect(
+      Object.keys(
+        await lineReadingsOf(testHouseholdOf(reader), { of: "cookbook", id: cookbook.id })
+      )
+    ).toEqual([inBook.lines[0]!.id]);
+    expect(
+      Object.keys(await lineReadingsOf(testHouseholdOf(reader), { of: "visible" })).sort()
+    ).toEqual([inBook.lines[0]!.id, outside.lines[0]!.id].sort());
   });
 
   it("reads a slip of the reader's food as no food rather than writing a spelling", async () => {
@@ -112,7 +133,7 @@ describe("lines read through the reader's catalogue", () => {
     const before = await countTestCatalogueRows();
 
     await expect(
-      lineReadingsOf(testHouseholdOf(reader), { lineIds: [lines[0]!.id!] })
+      lineReadingsOf(testHouseholdOf(reader), { of: "lines", ids: [lines[0]!.id!] })
     ).resolves.toEqual({ [lines[0]!.id!]: { ingredientId: null, joined: null, foods: [] } });
     await expect(countTestCatalogueRows()).resolves.toEqual(before);
   });
@@ -125,7 +146,7 @@ describe("lines read through the reader's catalogue", () => {
     const own = await mintTestFood(await householdIdOf(reader), "kapucijners");
 
     await expect(
-      lineReadingsOf(await householdIdOf(reader), { recipeIds: [recipeId] })
+      lineReadingsOf(await householdIdOf(reader), { of: "recipes", ids: [recipeId] })
     ).resolves.toEqual({
       [lines[0]!.id!]: {
         ingredientId: own.ingredientId,
@@ -148,7 +169,7 @@ describe("lines read through the reader's catalogue", () => {
     await recipe(author, ["ui", "prei"]);
     const viewer = { userId: reader, householdId: testHouseholdOf(reader) };
     const before = await countTestCatalogueRows();
-    const lineReadings = await lineReadingsOf(viewer.householdId, "visible");
+    const lineReadings = await lineReadingsOf(viewer.householdId, { of: "visible" });
     const library = await listLibrary(viewer, { limit: 10, pantryOnly: true, lineReadings });
     const members = await listRecipes(
       viewer,

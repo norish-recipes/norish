@@ -221,7 +221,7 @@ const lineReadingsProcedure = authedProcedure
   .query(async ({ ctx, input }): Promise<LineReadings> => {
     const viewable = [...(await recipeAccess(ctx, input.recipeIds, "view")).keys()];
 
-    return await lineReadingsOf(ctx.householdId, { recipeIds: viewable });
+    return await lineReadingsOf(ctx.householdId, { of: "recipes", ids: viewable });
   });
 
 export const getEditableProcedure = authedProcedure

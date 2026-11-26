@@ -42,7 +42,9 @@ const list = authedProcedure
       categories: input.categories,
       favoritesOnly: input.favoritesOnly,
       pantryOnly: input.pantryOnly,
-      lineReadings: input.pantryOnly ? await lineReadingsOf(ctx.householdId, "visible") : undefined,
+      lineReadings: input.pantryOnly
+        ? await lineReadingsOf(ctx.householdId, { of: "visible" })
+        : undefined,
       type: input.type,
       sortBeatsRank: input.sortBeatsRank,
       withMatch: input.withMatch,

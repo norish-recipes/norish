@@ -40,7 +40,7 @@ async function keptFoods(
   );
   const [lines, outside, edited] = await Promise.all([
     findRecipeLineAliases(lineIds),
-    findLinesOutsideCatalogue(householdId, { lineIds }),
+    findLinesOutsideCatalogue(householdId, { of: "lines", ids: lineIds }),
     editedFoods(items),
   ]);
   const readAgain = new Set(outside.map((line) => line.id));

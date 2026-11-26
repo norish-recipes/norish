@@ -206,7 +206,7 @@ describe("recipes procedures", () => {
           .createCaller({ ...ctx, connectionId: null, operationId: null })
           .lineReadings({ recipeIds: [shown, hidden] })
       ).resolves.toEqual({});
-      expect(lineReadingsOf).toHaveBeenCalledWith(ctx.householdId, { recipeIds: [shown] });
+      expect(lineReadingsOf).toHaveBeenCalledWith(ctx.householdId, { of: "recipes", ids: [shown] });
     });
   });
 

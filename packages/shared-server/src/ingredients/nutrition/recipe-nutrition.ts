@@ -97,7 +97,7 @@ async function readByReader(
 ): Promise<RecipeForNutrition> {
   if (!householdId || suppliesNutrition(recipe)) return recipe;
   const lineIds = recipe.recipeIngredients.flatMap((line) => (line.id ? [line.id] : []));
-  const readings = await lineReadingsOf(householdId, { lineIds });
+  const readings = await lineReadingsOf(householdId, { of: "lines", ids: lineIds });
 
   return { ...recipe, recipeIngredients: linesAsRead(recipe.recipeIngredients, readings) };
 }
