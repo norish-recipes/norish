@@ -315,6 +315,8 @@ function createBetterAuth() {
   return betterAuth({
     database: encryptedEmailAdapter,
     secret: authSecret(),
+    // Given, so Better Auth never reads BETTER_AUTH_SECRETS, which would replace the secret above.
+    secrets: [{ version: 1, value: authSecret() }],
     // A path in `baseURL` would replace `basePath`, so the prefix rides on `basePath` alone.
     baseURL: new URL(SERVER_CONFIG.AUTH_URL).origin,
     basePath: addBasePath("/api/auth"),

@@ -6,16 +6,19 @@
  * and counters. Better Auth's memory adapter stands in for Postgres, so the
  * encrypted-email adapter runs as shipped.
  */
+import { randomBytes } from "node:crypto";
 import type { StartedValkeyContainer } from "@testcontainers/valkey";
 import { ValkeyContainer } from "@testcontainers/valkey";
 import { splitSetCookieHeader } from "better-auth/cookies";
 import Valkey from "ioredis";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { authSecret, initMasterKey } from "@norish/config/crypto";
 import { getValkeyConnectionOptions } from "@norish/shared-server/valkey/client";
 import { endStoredSessions } from "@norish/shared-server/valkey/session-store";
 
 import type { Identity } from "../helpers/identity-provider";
+import { openBase64MasterKey } from "../../../config/__tests__/helpers/master-key";
 import { VALKEY_IMAGE, valkeyUrl } from "../../../shared-server/__tests__/helpers/valkey";
 import { createIdentityProvider, IDP_CLIENT_ID } from "../helpers/identity-provider";
 
@@ -583,6 +586,37 @@ describe("ending every stored session, as a re-key does", () => {
     expect(await sessionFor(ada.cookie)).toBeNull();
     expect(await sessionFor(grace.cookie)).toBeNull();
     expect((await valkey.keys("*")).sort()).toEqual(before.filter((key) => !ended.has(key)).sort());
+  });
+});
+
+describe("the secret that signs sessions", () => {
+  it("is the Master Key's alone, whatever Better Auth's own variables say", async () => {
+    vi.stubEnv("BETTER_AUTH_SECRETS", "1:an-env-secret-that-no-master-key-rotation-changes");
+    vi.stubEnv("BETTER_AUTH_SECRET", "another-env-secret-that-no-master-key-rotation-changes");
+
+    try {
+      authModule = await importAuth();
+      const ctx = await context();
+
+      expect(ctx.secret).toBe(authSecret());
+      expect(ctx.secretConfig).toEqual({
+        keys: new Map([[1, authSecret()]]),
+        currentVersion: 1,
+        legacySecret: authSecret(),
+      });
+
+      const { cookie } = await signUpWithPassword();
+
+      // A new Master Key signs with a new secret, so a cookie signed before it is no session.
+      initMasterKey(randomBytes(32));
+      authModule = await importAuth();
+      expect(await sessionFor(cookie)).toBeNull();
+    } finally {
+      vi.stubEnv("BETTER_AUTH_SECRETS", undefined);
+      vi.stubEnv("BETTER_AUTH_SECRET", undefined);
+      openBase64MasterKey(process.env.MASTER_KEY ?? "");
+      authModule = await importAuth();
+    }
   });
 });
 
