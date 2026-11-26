@@ -36,4 +36,28 @@ describe("EmptyState", () => {
 
     expect(screen.queryByRole("heading")).toBeNull();
   });
+
+  it("keeps each variant's spacing in the template: page card, flat row, padded cell", () => {
+    const wrapper = (variant: "page" | "row" | "cell") => {
+      const { container, unmount } = render(
+        <EmptyState data-testid="e" icon={PlusIcon} title="Nothing" variant={variant} />
+      );
+      const row = screen.getByTestId("e");
+      const outer = (container.firstElementChild as HTMLElement)!;
+
+      unmount();
+
+      return {
+        row: row.className,
+        outer: outer.className,
+        card: outer.firstElementChild?.className ?? "",
+      };
+    };
+
+    expect(wrapper("page").outer).toContain("px-4 py-20");
+    expect(wrapper("page").card).toContain("max-w-xl");
+    expect(wrapper("cell").outer).toBe("px-4 py-6");
+    expect(wrapper("row").row).toBe("flex min-h-9 items-center gap-2.5");
+    expect(wrapper("row").row).not.toMatch(/\b(p|px|py|m|mx|my)-/);
+  });
 });

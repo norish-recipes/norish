@@ -133,7 +133,7 @@ export function IngredientsScreen() {
             data-testid="ingredients-empty"
             icon={BookOpenIcon}
             title={filters.flaggedOnly ? t("emptyFlagged") : t("empty")}
-            variant="page"
+            variant="row"
           />
         ) : (
           <IngredientList

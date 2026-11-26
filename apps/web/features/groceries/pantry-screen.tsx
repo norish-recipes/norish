@@ -134,19 +134,23 @@ export function PantryScreen() {
           ))}
         </div>
       ) : items.length === 0 ? (
-        <EmptyState
-          data-testid="pantry-empty"
-          icon={ArchiveBoxIcon}
-          title={t("empty")}
-          variant="page"
-        />
+        <div className="bg-surface overflow-hidden rounded-lg">
+          <EmptyState
+            data-testid="pantry-empty"
+            icon={ArchiveBoxIcon}
+            title={t("empty")}
+            variant="cell"
+          />
+        </div>
       ) : kept.length === 0 ? (
-        <EmptyState
-          data-testid="pantry-no-match"
-          icon={MagnifyingGlassOutlineIcon}
-          title={tStatus("noResults")}
-          variant="page"
-        />
+        <div className="bg-surface overflow-hidden rounded-lg">
+          <EmptyState
+            data-testid="pantry-no-match"
+            icon={MagnifyingGlassOutlineIcon}
+            title={tStatus("noResults")}
+            variant="cell"
+          />
+        </div>
       ) : (
         <ul
           className="divide-border divide-y overflow-hidden rounded-lg"
