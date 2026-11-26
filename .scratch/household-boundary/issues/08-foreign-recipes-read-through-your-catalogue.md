@@ -10,7 +10,7 @@ The recipe itself is never changed. See the spec, "Ingredient catalogue".
 
 **Blocked by:** 07
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] **Recipe to groceries:** the add-to-groceries path for a recipe outside the reader's household resolves each line's text through the reader's household's resolver, instead of copying the line's food.
 - [x] **Pantry coverage** of a foreign recipe's lines resolves them in the reader's household before matching.
