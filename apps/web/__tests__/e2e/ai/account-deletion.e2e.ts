@@ -40,7 +40,8 @@ for (const view of ["everyone", "household"] as const) {
     browser,
     aiStack,
   }) => {
-    const tag = randomUUID().slice(0, 8);
+    // A letter first: an all-digit tag after a name parses as the line's amount.
+    const tag = `t${randomUUID().slice(0, 7)}`;
     const users: ThrowawayUser[] = [];
     const contexts: BrowserContext[] = [];
     const signedIn = async (role: string) => {
