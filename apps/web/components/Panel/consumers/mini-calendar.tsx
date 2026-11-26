@@ -15,7 +15,6 @@ import { useAfterPlanning } from "./after-planning";
 
 // An empty day: its header card and the gap around it
 const ESTIMATED_DAY_HEIGHT = 72;
-
 type MiniCalendarProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -57,7 +56,6 @@ function MiniCalendarContent({
     overscan: 3,
     getItemKey: (index) => {
       const day = allDays[index];
-
       return day ? dateKey(day) : `missing-${index}`;
     },
     initialOffset,
@@ -72,7 +70,6 @@ function MiniCalendarContent({
 
   useLandOnDay(virtualizer, todayIndex, isLoading, landingAskedRef);
   const virtualItems = virtualizer.getVirtualItems();
-
   if (isLoading) {
     return <>Loading...</>;
   }
@@ -83,7 +80,6 @@ function MiniCalendarContent({
       </div>
     );
   }
-
   return (
     <div className="relative min-h-0 flex-1">
       <div ref={parentRef} className="absolute inset-0 overflow-auto">
@@ -96,14 +92,12 @@ function MiniCalendarContent({
         >
           {virtualItems.map((virtualItem) => {
             const d = allDays[virtualItem.index];
-
             if (!d) {
               return null;
             }
             const key = dateKey(d);
             const items = calendarData[key] ?? [];
             const isToday = key === todayKey;
-
             return (
               <div
                 key={virtualItem.key}

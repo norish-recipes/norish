@@ -101,7 +101,6 @@ export function TimerDock({
   });
   const hasCompletedTimers = completedTimers.length > 0;
   const isPlayingRef = useRef(false);
-
   useEffect(() => {
     if (hasCompletedTimers) {
       if (!isPlayingRef.current) {
@@ -300,7 +299,6 @@ function TimerRow({
   const handleTimerClick = () => {
     router.push(`/recipes/${timer.recipeId}`);
   };
-
   return (
     <div
       className={`flex items-center gap-4 p-4 ${!isLast ? "border-border border-b" : ""} hover:bg-surface-secondary/50 transition-colors`}

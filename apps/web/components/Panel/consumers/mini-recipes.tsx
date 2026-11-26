@@ -59,7 +59,6 @@ const MiniRecipeItem = memo(function MiniRecipeItem({
       </div>
     </div>
   );
-
   if (slot) {
     return (
       <div
@@ -78,7 +77,6 @@ const MiniRecipeItem = memo(function MiniRecipeItem({
       </div>
     );
   }
-
   return (
     <SlotDropdown ariaLabel="Choose slot" onSelectSlot={(slot) => onPlan(recipe, slot)}>
       {content}
@@ -121,12 +119,10 @@ const VirtualizedRecipeList = memo(function VirtualizedRecipeList({
   useEffect(() => {
     if (virtualItems.length === 0) return;
     const lastItem = virtualItems[virtualItems.length - 1];
-
     if (!lastItem) return;
 
     // Check if we're within 3 items of the end
     const isNearEnd = lastItem.index >= recipes.length - 3;
-
     if (isNearEnd && !isLoading && !loadMoreTriggeredRef.current) {
       loadMoreTriggeredRef.current = true;
       loadMore();
@@ -145,7 +141,6 @@ const VirtualizedRecipeList = memo(function VirtualizedRecipeList({
       </div>
     );
   }
-
   return (
     <div ref={parentRef} className="min-h-0 flex-1 overflow-auto">
       <div
@@ -157,11 +152,9 @@ const VirtualizedRecipeList = memo(function VirtualizedRecipeList({
       >
         {virtualItems.map((virtualItem) => {
           const recipe = recipes[virtualItem.index];
-
           if (!recipe) {
             return null;
           }
-
           return (
             <div
               key={virtualItem.key}
@@ -183,7 +176,6 @@ const VirtualizedRecipeList = memo(function VirtualizedRecipeList({
     </div>
   );
 });
-
 function MiniRecipesContent({
   date,
   onOpenChange,
@@ -213,7 +205,6 @@ function MiniRecipesContent({
   useRecipeListSubscription();
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-
     setRawInput(value);
     startTransition(() => {
       setSearch(value.trim());
@@ -226,7 +217,6 @@ function MiniRecipesContent({
     close: () => onOpenChange(false),
     onPlanned,
   });
-
   if (error) {
     return (
       <div className="flex min-h-0 flex-1 flex-col gap-3">
@@ -247,7 +237,6 @@ function MiniRecipesContent({
   }
   const showAddNote = rawInput.trim().length > 0;
   const showRandom = !showAddNote && slot !== undefined;
-
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
       <Input

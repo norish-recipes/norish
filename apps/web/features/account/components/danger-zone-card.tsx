@@ -13,7 +13,6 @@ export default function DangerZoneCard() {
   const t = useTranslations("settings.user.dangerZone");
   const { deleteAccount } = useDeleteAccountMutation();
   const [showAccountDeleteModal, setShowAccountDeleteModal] = useState(false);
-
   return (
     <>
       <SettingsCard
