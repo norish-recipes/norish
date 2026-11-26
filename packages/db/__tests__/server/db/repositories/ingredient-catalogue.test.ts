@@ -5,6 +5,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { withTransaction } from "@norish/db/drizzle";
 import {
+  catalogueIngredientsPageQuery,
   countIngredientUses,
   countListedIngredients,
   deleteCatalogueAlias,
@@ -94,6 +95,21 @@ describe("listCatalogueIngredients search", () => {
         offset: 0,
       })
     ).map((row) => row.name);
+
+  it("folds the name once per row: a limit keeps the lateral subquery from being flattened", () => {
+    const { sql } = catalogueIngredientsPageQuery({
+      householdId: household,
+      search: parseIngredientSearch("onion"),
+      languages: ["en"],
+      flaggedOnly: false,
+      limit: 10,
+      offset: 0,
+    }).toSQL();
+
+    expect(sql).toMatch(
+      /cross join lateral \(select .* as "searched_name" from .* limit \$\d+\) "searched"/
+    );
+  });
 
   it("finds the text anywhere in a name, the exact name first", async () => {
     expect(await names(parseIngredientSearch("onion"))).toEqual(["Onion", "Red onion"]);

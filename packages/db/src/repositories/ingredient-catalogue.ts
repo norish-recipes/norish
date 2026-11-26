@@ -126,13 +126,13 @@ function containsText(text: SQL, word: string, start = false): SQL {
     : sql`${text} like ${`%${escaped}%`}`;
 }
 
-/** The rank's folded name, joined laterally once a matched row (`offset 0` keeps Postgres from
- * inlining it into every use). */
+/** The rank's folded name, joined laterally once a matched row: a `limit` keeps Postgres from
+ * flattening the subquery into every use (the builder drops `offset 0`). */
 const searched = qb
   // Wrapped, or the one-table select would print the outer `ingredients.name` bare.
   .select({ searchedName: sql`${folded(ingredients.name)}`.as("searched_name") })
   .from(ONE_ROW)
-  .offset(0)
+  .limit(1)
   .as("searched");
 const searchedName = { lateral: searched, column: sql`${searched.searchedName}` };
 
@@ -217,9 +217,8 @@ function searchRank(
   return sql`least(case when ${exact(searchedName.column)} then 0 when ${wordStart(searchedName.column)} then 1 else 2 end, case when ${translated(exact)} then 0 when ${translated(wordStart)} then 1 else 2 end)`;
 }
 
-/** A page of the catalogue (all, the flagged, or what a search finds by name or spelling): the
- * search's ranks first, then the flagged, then by name. */
-export async function listCatalogueIngredients(query: {
+/** What a page of the catalogue lists. */
+export interface CatalogueIngredientsQuery {
   /** The reader's household: the page lists the seed and its own foods. */
   householdId: string;
   search: IngredientSearch | null;
@@ -236,7 +235,10 @@ export async function listCatalogueIngredients(query: {
   listedOnly?: boolean;
   limit: number;
   offset: number;
-}): Promise<CatalogueIngredient[]> {
+}
+
+/** {@link listCatalogueIngredients}' page of foods, unrun, so its SQL can be read. */
+export function catalogueIngredientsPageQuery(query: CatalogueIngredientsQuery) {
   const parents = alias(ingredients, "parent");
   const matchesSearch = query.search
     ? matchingSearch(query.search, query.householdId, parents)
@@ -276,7 +278,8 @@ export async function listCatalogueIngredients(query: {
     .from(ingredients)
     .leftJoin(parents, eq(parents.id, ingredients.parentId))
     .$dynamic();
-  const rows = await (query.search ? page.crossJoinLateral(searchedName.lateral) : page)
+
+  return (query.search ? page.crossJoinLateral(searchedName.lateral) : page)
     .where(
       and(
         inCatalogue(ingredients.householdId, query.householdId),
@@ -302,6 +305,14 @@ export async function listCatalogueIngredients(query: {
     )
     .limit(query.limit)
     .offset(query.offset);
+}
+
+/** A page of the catalogue (all, the flagged, or what a search finds by name or spelling): the
+ * search's ranks first, then the flagged, then by name. */
+export async function listCatalogueIngredients(
+  query: CatalogueIngredientsQuery
+): Promise<CatalogueIngredient[]> {
+  const rows = await catalogueIngredientsPageQuery(query);
 
   if (rows.length === 0) return [];
 
