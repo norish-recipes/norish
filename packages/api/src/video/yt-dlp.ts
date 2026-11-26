@@ -139,14 +139,21 @@ export function ytDlpArgs(url: string, options: readonly string[]): string[] {
 /** Options whose value is a credential: a saved site header, a proxy URL that may hold a login. */
 const CREDENTIAL_OPTIONS = new Set(["--add-header", "--proxy"]);
 
-/** `text` with every credential in `args` masked, a header's value on its own too. */
-function withoutCredentials(text: string, args: readonly string[]): string {
-  const credentials = args
-    .filter((_, index) => CREDENTIAL_OPTIONS.has(args[index - 1] ?? ""))
-    .flatMap((value) => [value, value.slice(value.indexOf(":") + 1).trim()])
-    .filter(Boolean);
+/** A header value shorter than this is masked only as its whole argument, as alone it is common text. */
+const MASKED_VALUE_LENGTH = 8;
 
-  return credentials.reduce((masked, value) => masked.replaceAll(value, "[redacted]"), text);
+/** `text` with each credential argument in `args` masked, and a long header value on its own too. */
+function withoutCredentials(text: string, args: readonly string[]): string {
+  const credentials = args.filter((_, index) => CREDENTIAL_OPTIONS.has(args[index - 1] ?? ""));
+  // yt-dlp's info JSON shows a header's value alone, in each format's http_headers.
+  const values = args
+    .filter((_, index) => args[index - 1] === "--add-header")
+    .map((header) => header.slice(header.indexOf(":") + 1).trim())
+    .filter((value) => value.length >= MASKED_VALUE_LENGTH);
+
+  return [...credentials, ...values]
+    .filter(Boolean)
+    .reduce((masked, value) => masked.replaceAll(value, "[redacted]"), text);
 }
 
 /**

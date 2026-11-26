@@ -11,7 +11,8 @@ const secrets = vi.hoisted(() => ({
 }));
 const logged = vi.hoisted(() => [] as unknown[][]);
 
-// A yt-dlp that fails, printing its arguments on stderr and stdout as a verbose run would.
+// A yt-dlp that fails, printing its arguments as a verbose run would, and each header's value
+// alone as its info JSON's http_headers do.
 vi.mock("@norish/config/env-config-server", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@norish/config/env-config-server")>();
   const fs = await import("node:fs");
@@ -21,7 +22,7 @@ vi.mock("@norish/config/env-config-server", async (importOriginal) => {
 
   fs.writeFileSync(
     path.join(dir, "yt-dlp"),
-    '#!/bin/sh\necho "ERROR: refused $*" >&2\necho "seen $*"\nexit 1\n',
+    '#!/bin/sh\necho "ERROR: refused $*" >&2\necho "seen $*"\nfor a; do echo "value ${a#*: }"; done\nexit 1\n',
     { mode: 0o755 }
   );
 
@@ -86,4 +87,14 @@ describe("a failed yt-dlp run", () => {
       }
     }
   );
+
+  it("masks a short header as its whole argument, leaving the rest of the error readable", async () => {
+    const short = { ...token, name: "X-Token", value: "1" };
+    const error = await getVideoMetadata("https://example.com/v1", [short]).catch(
+      (caught: unknown) => caught
+    );
+
+    expect(shown(error)).toContain("--dump-json -- https://example.com/v1");
+    expect(shown(error)).not.toContain("X-Token: 1");
+  });
 });
