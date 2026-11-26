@@ -3,13 +3,18 @@ import type { ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-type Props = { children?: ReactNode; testID?: string; onPress?: () => void };
+type Props = {
+  children?: ReactNode;
+  testID?: string;
+  accessibilityLabel?: string;
+  onPress?: () => void;
+};
 
 vi.mock("react-native", () => ({
   View: ({ children, testID }: Props) => <div data-testid={testID}>{children}</div>,
   Text: ({ children }: Props) => <span>{children}</span>,
-  Pressable: ({ children, testID, onPress }: Props) => (
-    <button data-testid={testID} onClick={onPress}>
+  Pressable: ({ children, testID, accessibilityLabel, onPress }: Props) => (
+    <button aria-label={accessibilityLabel} data-testid={testID} onClick={onPress}>
       {children}
     </button>
   ),
@@ -27,6 +32,7 @@ vi.mock("@/components/native-menu", () => ({
     </div>
   ),
 }));
+vi.mock("@/components/pill", () => ({ Pill: ({ children }: Props) => <b>{children}</b> }));
 vi.mock("@/components/on-sheet", () => ({ useOnSheet: () => false }));
 
 const { CountRow } = await import("@/components/count-row");
@@ -73,5 +79,19 @@ describe("CountRow's end", () => {
       />
     );
     expect(screen.getByTestId("menu").dataset.fill).toBe("true");
+  });
+
+  it("speaks a row as its non-empty parts, without a stray separator", () => {
+    render(
+      <CountRow
+        count="4"
+        countLabel="4 recipes"
+        name="basil"
+        tag=""
+        testID="row"
+        onPress={vi.fn()}
+      />
+    );
+    expect(screen.getByTestId("row").getAttribute("aria-label")).toBe("basil, 4 recipes");
   });
 });

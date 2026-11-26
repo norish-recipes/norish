@@ -4,7 +4,6 @@ import { CountRow } from "@/components/count-row";
 import { IngredientIcon, IngredientIconSlots } from "@/components/ingredient-icon";
 import { ListFrame } from "@/components/list-frame";
 import { ListHeading } from "@/components/list-heading";
-import { Pill } from "@/components/pill";
 import { HeadingRow } from "@/components/section-rows";
 import { edgeAt } from "@/lib/card-edges";
 import { useText } from "@/lib/i18n/use-text";
@@ -116,13 +115,7 @@ export function IngredientList() {
                 }
                 leading={<IngredientIcon ingredientId={row.item.id} />}
                 name={name}
-                tag={
-                  row.item.flagged ? (
-                    <Pill size="tag" tone="warning">
-                      {text("settings.ingredients.flagged")}
-                    </Pill>
-                  ) : undefined
-                }
+                tag={row.item.flagged ? text("settings.ingredients.flagged") : undefined}
                 testID={`content-ingredient-${row.item.id}`}
                 onPress={() =>
                   router.push({

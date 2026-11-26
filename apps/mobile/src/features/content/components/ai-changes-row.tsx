@@ -1,7 +1,6 @@
 import React from "react";
 import { Card } from "@/components/card";
 import { CountRow } from "@/components/count-row";
-import { Pill } from "@/components/pill";
 import { useTokenColor } from "@/hooks/use-token-color";
 import { useText } from "@/lib/i18n/use-text";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -22,11 +21,9 @@ export function AiChangesRow({ onPress }: { onPress: () => void }) {
         leading={<Ionicons color={muted} name="sparkles-outline" size={20} />}
         name={text("settings.ingredients.changedByAI.title")}
         tag={
-          unsure > 0 ? (
-            <Pill size="tag" tone="warning">
-              {text("settings.ingredients.changedByAI.toCheck", { count: unsure })}
-            </Pill>
-          ) : undefined
+          unsure > 0
+            ? text("settings.ingredients.changedByAI.toCheck", { count: unsure })
+            : undefined
         }
         testID="content-ai-changes"
         onPress={onPress}

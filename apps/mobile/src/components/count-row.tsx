@@ -5,8 +5,10 @@ import { Pressable, Text, View } from "react-native";
 import { CardSlice } from "@/components/card-slice";
 import { NativeMenu } from "@/components/native-menu";
 import { useOnSheet } from "@/components/on-sheet";
+import { Pill } from "@/components/pill";
 import { useTokenColor } from "@/hooks/use-token-color";
 import { edgeAt } from "@/lib/card-edges";
+import { spokenLabel } from "@/lib/spoken-label";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Skeleton } from "heroui-native";
 
@@ -37,7 +39,8 @@ export function CountRow({
   count?: string;
   /** What the count counts, for a screen reader, which hears the number alone otherwise. */
   countLabel?: string;
-  tag?: ReactNode;
+  /** A warning tag after the name, such as a flag. */
+  tag?: string;
   leading?: ReactNode;
   depth?: number;
   /** Folds the kinds under this entry out or in; `foldable` false leaves an empty cell, no button. */
@@ -70,7 +73,11 @@ export function CountRow({
         >
           {name}
         </Text>
-        {tag}
+        {tag ? (
+          <Pill size="tag" tone="warning">
+            {tag}
+          </Pill>
+        ) : null}
       </View>
       {count ? (
         <Text accessibilityLabel={countLabel} className="text-muted text-base">
@@ -86,6 +93,8 @@ export function CountRow({
       ) : null}
     </>
   );
+  // Spoken as one: iOS would otherwise join every child's label, empty ones too.
+  const spoken = spokenLabel(name, tag, countLabel ?? count, lockLabel);
   const row = `${ROW_HEIGHT} flex-row items-center gap-3 px-4`;
   const className = `${row} min-w-0 flex-1`;
 
@@ -118,9 +127,9 @@ export function CountRow({
         <NativeMenu
           fill
           items={menu}
-          label={name}
+          label={spokenLabel(name, tag)}
           testID={testID ?? name}
-          value={countLabel ?? count}
+          value={spokenLabel(countLabel ?? count, lockLabel) || undefined}
           onPress={onPress}
         >
           {/* Opaque, as the long press lifts a snapshot of the whole row. */}
@@ -128,6 +137,7 @@ export function CountRow({
         </NativeMenu>
       ) : onPress ? (
         <Pressable
+          accessibilityLabel={spoken}
           accessibilityRole="button"
           className={className}
           testID={testID}

@@ -2,6 +2,7 @@ import type { ComponentProps, ReactElement, ReactNode } from "react";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { NativeMenu } from "@/components/native-menu";
+import { spokenLabel } from "@/lib/spoken-label";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 
@@ -138,7 +139,7 @@ export function SettingsRow({
         label={menuLabel ?? title}
         testID={testID}
         // The menu hides what the row draws, so VoiceOver hears the rest of it as the value.
-        value={[subtitle, value].filter(Boolean).join(", ") || undefined}
+        value={spokenLabel(subtitle, value) || undefined}
         onPress={() => onPress?.()}
       >
         {/* Opaque, as the long press lifts a snapshot of it: the whole row, not its glyphs alone. */}
