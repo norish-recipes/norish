@@ -10,7 +10,7 @@ import { useConnectivity } from "@norish/shared-react/offline/react";
 import { usePlatform } from "@norish/shared-react/platform";
 import { passwordChecks } from "@norish/shared/lib/auth/password";
 
-import { OfflineCapsule } from "../components/offline-capsule";
+import { OfflineCapsule } from "@/components/offline-capsule";
 import { SettingsField } from "../components/settings-form";
 import { refusalOf } from "../utils/refusal-of";
 import { DROPPED, settingsWrite, tellWentThroughLate } from "../utils/settings-write";

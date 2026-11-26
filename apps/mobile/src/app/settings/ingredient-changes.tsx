@@ -1,1 +1,1 @@
-export { IngredientChangesScreen as default } from "@/features/settings/screens/ingredient-changes-screen";
+export { IngredientChangesScreen as default } from "@/features/content/screens/ingredient-changes-screen";

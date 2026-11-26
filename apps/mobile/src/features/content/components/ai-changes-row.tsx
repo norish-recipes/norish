@@ -1,15 +1,17 @@
 import React from "react";
 import { View } from "react-native";
+import { Card } from "@/components/card";
+import { CountRow } from "@/components/count-row";
+import { useTokenColor } from "@/hooks/use-token-color";
 import { useText } from "@/lib/i18n/use-text";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 import { isOpenChange, useAIChangesQuery } from "@norish/shared-react/ingredients";
-
-import { SettingsGroup } from "./settings-group";
-import { SettingsRow } from "./settings-row";
 
 /** The row over the Ingredients list that opens Changed by AI, saying how many changes are left to check. */
 export function AiChangesRow({ onPress }: { onPress: () => void }) {
   const text = useText();
+  const muted = useTokenColor("muted");
   const { total, unsure } = useAIChangesQuery((changes) => ({
     total: changes.length,
     unsure: changes.filter(isOpenChange).length,
@@ -19,15 +21,14 @@ export function AiChangesRow({ onPress }: { onPress: () => void }) {
 
   return (
     <View className="px-5">
-      <SettingsGroup>
-        <SettingsRow
-          accessory="chevron"
-          icon="sparkles-outline"
+      <Card surface>
+        <CountRow
+          leading={<Ionicons color={muted} name="sparkles-outline" size={20} />}
+          name={text("settings.ingredients.changedByAI.openCompact", { count: unsure })}
           testID="content-ai-changes"
-          title={text("settings.ingredients.changedByAI.openCompact", { count: unsure })}
           onPress={onPress}
         />
-      </SettingsGroup>
+      </Card>
     </View>
   );
 }

@@ -14,7 +14,7 @@ import {
   useApiKeyMutations,
 } from "@norish/shared-react/reader";
 
-import { OfflineCapsule } from "../components/offline-capsule";
+import { OfflineCapsule } from "@/components/offline-capsule";
 import { SettingsField } from "../components/settings-form";
 import { settingsWrite, tellWentThroughLate } from "../utils/settings-write";
 

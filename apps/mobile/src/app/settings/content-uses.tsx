@@ -1,1 +1,1 @@
-export { ContentUsesScreen as default } from "@/features/settings/screens/content-uses-screen";
+export { ContentUsesScreen as default } from "@/features/content/screens/content-uses-screen";

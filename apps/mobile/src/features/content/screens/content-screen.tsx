@@ -10,7 +10,7 @@ import { useConnectivity } from "@norish/shared-react/offline/react";
 import { ContentTabs } from "../components/content-tabs";
 import { EntryList } from "../components/entry-list";
 import { IngredientList } from "../components/ingredient-list";
-import { OfflineCapsule } from "../components/offline-capsule";
+import { OfflineCapsule } from "@/components/offline-capsule";
 import { ENTRY_KINDS, isContentList, LIST_ONE } from "../utils/content-lists";
 
 /** Content: Tags, Cuisines, Categories and Ingredients as segmented tabs on one screen; the plus adds to the one shown. */

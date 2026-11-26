@@ -3,7 +3,7 @@ import React from "react";
 import { ScrollView } from "react-native";
 import { ModalHeader } from "@/components/modal-header";
 
-import { OfflineCapsule } from "./offline-capsule";
+import { OfflineCapsule } from "@/components/offline-capsule";
 
 /** A settings page: the native back header with its small centred title, and the scrolling groups.
  * Offline, a glass capsule says why the page's changes are off. */

@@ -1,1 +1,1 @@
-export { ContentScreen as default } from "@/features/settings/screens/content-screen";
+export { ContentScreen as default } from "@/features/content/screens/content-screen";

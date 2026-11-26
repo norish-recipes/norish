@@ -70,7 +70,7 @@ vi.mock("@/components/segmented", async () => {
       ),
   };
 });
-vi.mock("../components/offline-capsule", () => ({ OfflineCapsule: () => null }));
+vi.mock("@/components/offline-capsule", () => ({ OfflineCapsule: () => null }));
 vi.mock("../components/entry-list", () => ({
   EntryList: ({ list, onOpen }: { list: string; onOpen: (id: string) => void }) => {
     held.list.onOpen = onOpen;

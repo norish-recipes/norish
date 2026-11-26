@@ -1,1 +1,1 @@
-export { ContentEntryScreen as default } from "@/features/settings/screens/content-entry-screen";
+export { ContentEntryScreen as default } from "@/features/content/screens/content-entry-screen";

@@ -1,1 +1,1 @@
-export { IngredientScreen as default } from "@/features/settings/screens/ingredient-screen";
+export { IngredientScreen as default } from "@/features/content/screens/ingredient-screen";
