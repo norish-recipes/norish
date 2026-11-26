@@ -4,6 +4,8 @@ import { resetDbConnection } from "@norish/db/drizzle";
 import { openBase64MasterKey } from "../../../../../packages/config/__tests__/helpers/master-key";
 import { MASTER_KEY, UNCONNECTED_DATABASE_URL } from "./environment";
 
+export { openBase64MasterKey };
+
 /** Point this worker's repository calls at its stack's database; call before the first one. */
 export async function connectRepositories(databaseUrl: string): Promise<void> {
   SERVER_CONFIG.DATABASE_URL = databaseUrl;

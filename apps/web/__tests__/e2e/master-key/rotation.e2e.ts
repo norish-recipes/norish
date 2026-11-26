@@ -5,12 +5,12 @@
 import { getDecryptedTokensByUserId } from "@norish/db/repositories/site-auth-tokens";
 import { readKeyFile } from "@norish/shared-server/master-key";
 
-import { openBase64MasterKey } from "../../../../../packages/config/__tests__/helpers/master-key";
 import { userIdOf } from "../harness/accounts";
 import { settingsCard, signedInContext, signIn } from "../harness/auth";
 import { MASTER_KEY } from "../harness/environment";
 import { waitForHydration } from "../harness/hydration";
 import { createRecipe } from "../harness/recipes";
+import { openBase64MasterKey } from "../harness/repositories";
 import { callTrpc } from "../harness/trpc";
 import { expect, MEMBER, OWNER, test } from "./fixture";
 
