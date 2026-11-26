@@ -1,7 +1,7 @@
 "use client";
 
 import { EmptyState } from "@/components/shared/empty-state";
-import { CpuChipIcon } from "@heroicons/react/24/outline";
+import { CpuChipIcon, ExclamationCircleIcon } from "@heroicons/react/24/outline";
 import { Spinner } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -37,15 +37,19 @@ export default function ModelListingEmptyState({
   }
 
   return (
-    <div className="text-danger px-2 py-2 text-xs">
-      {refusal.status
-        ? t("refused", {
-            provider: refusal.provider,
-            status: refusal.statusText
-              ? `${refusal.status} ${refusal.statusText}`
-              : `${refusal.status}`,
-          })
-        : t("unreachable", { provider: refusal.provider })}
-    </div>
+    <EmptyState
+      icon={ExclamationCircleIcon}
+      title={
+        refusal.status
+          ? t("refused", {
+              provider: refusal.provider,
+              status: refusal.statusText
+                ? `${refusal.status} ${refusal.statusText}`
+                : `${refusal.status}`,
+            })
+          : t("unreachable", { provider: refusal.provider })
+      }
+      variant="cell"
+    />
   );
 }
