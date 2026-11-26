@@ -7,6 +7,7 @@ import { parseIsoDuration } from "@norish/shared/lib/helpers";
 
 import {
   buildRecipeDTO,
+  carriedLists,
   parseNutritionValue,
   parseServings,
   saveBufferImage,
@@ -206,18 +207,21 @@ export async function parseRecipeKeeperRecipeToDTO(
   const protein = parseNutritionValue(recipe.nutrition.protein);
 
   return {
-    dto: {
-      ...dto,
-      id: recipeId,
-      notes: recipe.notes.join("\n") || undefined,
-      // A course that matches a Category is also one; a category is a label only.
-      categories: sortSourceCategories(recipe.courses, householdCategories).categories,
-      calories: calories != null ? Math.round(calories) : null,
-      fat: fat != null ? fat.toString() : null,
-      carbs: carbs != null ? carbs.toString() : null,
-      protein: protein != null ? protein.toString() : null,
-      images,
-    },
+    dto: carriedLists(
+      {
+        ...dto,
+        id: recipeId,
+        notes: recipe.notes.join("\n") || undefined,
+        // A course that matches a Category is also one; a category is a label only.
+        categories: sortSourceCategories(recipe.courses, householdCategories).categories,
+        calories: calories != null ? Math.round(calories) : null,
+        fat: fat != null ? fat.toString() : null,
+        carbs: carbs != null ? carbs.toString() : null,
+        protein: protein != null ? protein.toString() : null,
+        images,
+      },
+      true
+    ),
     importedRating: recipe.rating,
     importedFavorite: recipe.favorite || undefined,
     cookbooks: recipe.collections,

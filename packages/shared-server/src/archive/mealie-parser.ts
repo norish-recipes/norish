@@ -11,6 +11,7 @@ import { parseIngredientWithDefaults } from "@norish/shared/lib/helpers";
 
 import { saveImageBytes } from "../media/storage";
 import {
+  carriedLists,
   galleryOf,
   parseHumanDurationToMinutes,
   parseNutritionValue,
@@ -699,7 +700,7 @@ export async function parseMealieRecipeToDTO(
   }
 
   return withLineFoodTexts(
-    parsed.data,
+    carriedLists(parsed.data, true),
     lines.map((line) => line.foodText)
   );
 }

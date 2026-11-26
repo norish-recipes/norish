@@ -70,7 +70,7 @@ describe("Tandoor Parser", () => {
       const result = TandoorRecipeSchema.parse(recipe);
 
       expect(result.name).toBe("Minimal Recipe");
-      expect(result.keywords).toEqual([]);
+      expect(result.keywords).toBeUndefined();
       expect(result.steps).toEqual([]);
     });
 
@@ -122,7 +122,7 @@ describe("Tandoor Parser", () => {
 
       const result = TandoorRecipeSchema.parse(recipe);
 
-      expect(result.keywords).toEqual([]);
+      expect(result.keywords).toBeNull();
       expect(result.steps).toHaveLength(1);
       expect(result.steps[0].ingredients[0].note).toBeNull();
       expect(result.servings_text).toBeNull();
@@ -468,6 +468,20 @@ describe("Tandoor Parser", () => {
 
       expect(dto.steps).toHaveLength(1);
       expect(dto.steps![0].step).toBe("**Step Note** Do the thing");
+    });
+
+    it("carries no list the file has none of, so an overwrite keeps the recipe's own", async () => {
+      const { keywords: _none, ...unkeyworded } = mockRecipe;
+      const dto = await parseTandoorRecipeToDTO(
+        unkeyworded,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
+      );
+
+      expect(dto).not.toHaveProperty("categories");
+      expect(dto).not.toHaveProperty("tags");
+      expect(dto).not.toHaveProperty("cuisines");
     });
 
     it("extracts tags from keywords", async () => {
