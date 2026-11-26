@@ -21,7 +21,7 @@ import { announceListsChanged } from "@norish/shared-server/realtime/list-change
 import { ListEntryNameSchemas } from "@norish/shared/contracts/zod";
 
 import type { AuthedProcedureContext } from "../../middleware";
-import { authedProcedure } from "../../middleware";
+import { adminProcedure, authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
 import { assertRecipeAccess, notFoundError } from "../recipes/helpers";
 
@@ -40,7 +40,7 @@ function entryName(kind: ListKind, name: string): string {
 }
 
 /** Whether the caller may change an entry of their scope: built-in Categories never, other instance entries as an admin. */
-function mayChangeInstance(ctx: ListContext, kind: ListKind): boolean {
+function mayChangeInstance(ctx: Pick<ListContext, "isServerAdmin">, kind: ListKind): boolean {
   return kind === "cuisine" && ctx.isServerAdmin;
 }
 
@@ -191,10 +191,10 @@ const remove = authedProcedure
   });
 
 /** How many recipes in every household carry an instance entry, for an admin's delete to say. */
-const usage = authedProcedure
+const usage = adminProcedure
   .input(z.object({ kind: KindSchema, id: z.uuid() }))
-  .query(async ({ ctx, input }) => {
-    if (!mayChangeInstance(ctx, input.kind)) {
+  .query(async ({ input }) => {
+    if (!mayChangeInstance({ isServerAdmin: true }, input.kind)) {
       throw new TRPCError({ code: "FORBIDDEN", message: "This entry cannot be changed" });
     }
     if (!(await findOwnEntry(input.kind, null, input.id))) {

@@ -45,6 +45,8 @@ describe("the lists router", () => {
     member = asUser(stored);
     housemate = asUser(await helpers.createTestUser());
     admin = asUser(await helpers.createTestUser(), true);
+    // `lists.usage` asks the database, not the session, whether the caller is an admin.
+    await (await import("@norish/db/repositories/users")).setUserAsOwnerAndAdmin(admin.id);
     await helpers.joinTestHousehold(housemate.id, member.id);
     await serverConfig.deleteConfig("recipe_permission_policy");
     realtime.reset();
@@ -211,7 +213,7 @@ describe("the lists router", () => {
       recipeCount: 1,
     });
     await expect(mine.usage({ kind: "cuisine", id: italian.id })).rejects.toThrow(
-      "This entry cannot be changed"
+      "Server admin access required"
     );
 
     const { entry: soup } = await mine.add({ kind: "tag", name: "soup" });
