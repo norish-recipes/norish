@@ -34,7 +34,7 @@ export function ListFrame<T>({
   /** The list's heading over its first card; null keeps its room, so the cards stay put as it goes. */
   heading?: string | null;
   nothing?: Empty;
-  /** What closes the list, 16 pt under its last row. */
+  /** What closes the list, 16 pt under its last row, at the page's side inset. */
   footer?: ReactNode;
   data: readonly T[];
   keyExtractor: (row: T) => string;
@@ -89,8 +89,9 @@ export function ListFrame<T>({
         <SearchFilterRow {...search} />
         {above}
       </PageControls>
+      {/* A card takes the heading's room too, so it sits where the first card of rows does. */}
       <Gap>
-        {heading === undefined ? null : (
+        {heading === undefined && !nothing ? null : (
           <ListHeading testID={heading ? `${testID}-heading` : undefined} title={heading ?? ""} />
         )}
         {nothing ? <EmptyCard placement="screen" {...nothing} /> : null}
@@ -101,7 +102,13 @@ export function ListFrame<T>({
   return (
     <FlatList
       {...list}
-      ListFooterComponent={footer ? <Gap>{footer}</Gap> : undefined}
+      ListFooterComponent={
+        footer ? (
+          <Gap>
+            <View className="px-5">{footer}</View>
+          </Gap>
+        ) : undefined
+      }
       ListHeaderComponent={header}
       contentContainerClassName="pb-16"
       contentInsetAdjustmentBehavior="never"
