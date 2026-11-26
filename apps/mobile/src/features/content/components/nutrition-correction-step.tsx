@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { View } from "react-native";
-import { Card, CardRow } from "@/components/card";
+import { ChoiceCard } from "@/components/choice-card";
 import { Section } from "@/components/section";
-import { Sheet, SheetBody } from "@/components/sheet";
+import { FitSheet } from "@/components/sheet";
 import { SheetInput } from "@/components/sheet-input";
 import { SheetNote } from "@/components/sheet-note";
 import { ToggleChip } from "@/components/toggle-chip";
@@ -62,7 +62,7 @@ export function NutritionCorrectionStep({
   };
 
   return (
-    <Sheet
+    <FitSheet
       back
       confirm={{ label: text("common.actions.save"), disabled: !canSave, onPress: nutrition.save }}
       name="nutrition-correction"
@@ -81,20 +81,18 @@ export function NutritionCorrectionStep({
       title={t("correctTitle", { name })}
       onClose={onClose}
     >
-      <SheetBody>
-        <SheetNote>{t("correctIntro")}</SheetNote>
-        {facts.map((fact) => (
-          <FactEditor
-            key={fact}
-            draft={draft[fact]}
-            fact={fact}
-            now={now[fact]}
-            spoon={spoon}
-            onChange={(next) => set(fact, next)}
-          />
-        ))}
-      </SheetBody>
-    </Sheet>
+      <SheetNote>{t("correctIntro")}</SheetNote>
+      {facts.map((fact) => (
+        <FactEditor
+          key={fact}
+          draft={draft[fact]}
+          fact={fact}
+          now={now[fact]}
+          spoon={spoon}
+          onChange={(next) => set(fact, next)}
+        />
+      ))}
+    </FitSheet>
   );
 }
 
@@ -225,28 +223,27 @@ function DatasetFoodPicker({
         </SheetNote>
       ) : null}
       {!picked && options.length > 0 ? (
-        <Card>
-          {options.map((food, index) => (
-            <CardRow
-              key={food.id}
-              chevron={false}
-              first={index === 0}
-              hint={detail(food)}
-              label={food.name}
-              testID="nutrition-food-option"
-              onPress={() => {
-                setTerm(food.name);
-                onPick({
-                  key: food.id,
-                  name: food.name,
-                  kcal: food.kcal,
-                  pieceWeight: food.pieceWeight,
-                  density: food.density,
-                });
-              }}
-            />
-          ))}
-        </Card>
+        <ChoiceCard
+          options={options.map((food) => ({
+            id: food.id,
+            label: food.name,
+            hint: detail(food),
+            testID: "nutrition-food-option",
+          }))}
+          onPick={(id) => {
+            const food = options.find((each) => each.id === id);
+
+            if (!food) return;
+            setTerm(food.name);
+            onPick({
+              key: food.id,
+              name: food.name,
+              kcal: food.kcal,
+              pieceWeight: food.pieceWeight,
+              density: food.density,
+            });
+          }}
+        />
       ) : null}
     </View>
   );

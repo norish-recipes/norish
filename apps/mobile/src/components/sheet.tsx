@@ -1,4 +1,4 @@
-import type { ReactNode, Ref } from "react";
+import type { ComponentProps, ReactNode, Ref } from "react";
 import type {
   FlatListProps,
   KeyboardEvent,
@@ -118,6 +118,22 @@ export function SheetBody({
         {children}
       </ScrollView>
     </>
+  );
+}
+
+/** A fit sheet: the sheet and its body, as tall as its content. */
+export function FitSheet({
+  children,
+  contentClassName,
+  ...sheet
+}: Omit<ComponentProps<typeof Sheet>, "children"> & {
+  contentClassName?: string;
+  children?: ReactNode;
+}) {
+  return (
+    <Sheet {...sheet}>
+      <SheetBody contentClassName={contentClassName}>{children}</SheetBody>
+    </Sheet>
   );
 }
 

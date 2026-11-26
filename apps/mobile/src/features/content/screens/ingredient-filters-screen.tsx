@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View } from "react-native";
 import { Card, CardRow } from "@/components/card";
 import { Section } from "@/components/section";
-import { Sheet, SheetBody } from "@/components/sheet";
+import { FitSheet } from "@/components/sheet";
 import { Switch } from "@/components/switch";
 import { ToggleChip } from "@/components/toggle-chip";
 import { useText } from "@/lib/i18n/use-text";
@@ -46,7 +46,7 @@ export function IngredientFiltersScreen() {
   );
 
   return (
-    <Sheet
+    <FitSheet
       confirm={{ label: text("common.actions.apply"), onPress: () => land(working) }}
       name="ingredient-filters"
       secondary={[
@@ -58,48 +58,46 @@ export function IngredientFiltersScreen() {
       ]}
       title={text("common.filters.title")}
     >
-      <SheetBody>
-        <Section title={text("settings.ingredients.searchMatch")}>
-          <View className="flex-row flex-wrap gap-2">
-            {INGREDIENT_SEARCH_MATCHES.map((match) => (
-              <ToggleChip
-                key={match}
-                active={working.match === match}
-                label={text(`settings.ingredients.searchMatches.${match}`)}
-                testID={`ingredients-match-${match}`}
-                onPress={() => setWorking({ ...working, match })}
-              />
-            ))}
-          </View>
-        </Section>
-        <Section title={text("settings.ingredients.searchIn")}>
-          <View className="flex-row flex-wrap gap-2">
-            {INGREDIENT_SEARCH_FIELDS.map((field) => (
-              <ToggleChip
-                key={field}
-                active={working.fields.includes(field)}
-                label={text(`settings.ingredients.searchFields.${field}`)}
-                testID={`ingredients-field-${field}`}
-                onPress={() =>
-                  setWorking({
-                    ...working,
-                    fields: toggleIngredientSearchField(working.fields, field),
-                  })
-                }
-              />
-            ))}
-          </View>
-        </Section>
-        <Section title={text("settings.ingredients.layoutSection")}>
-          <Card>{toggle("tree", text("settings.ingredients.asTree"), true)}</Card>
-        </Section>
-        <Section title={text("settings.ingredients.showOnly")}>
-          <Card>
-            {toggle("flaggedOnly", text("settings.ingredients.flaggedOnly"), true)}
-            {toggle("standaloneOnly", text("settings.ingredients.standaloneOnly"), false)}
-          </Card>
-        </Section>
-      </SheetBody>
-    </Sheet>
+      <Section title={text("settings.ingredients.searchMatch")}>
+        <View className="flex-row flex-wrap gap-2">
+          {INGREDIENT_SEARCH_MATCHES.map((match) => (
+            <ToggleChip
+              key={match}
+              active={working.match === match}
+              label={text(`settings.ingredients.searchMatches.${match}`)}
+              testID={`ingredients-match-${match}`}
+              onPress={() => setWorking({ ...working, match })}
+            />
+          ))}
+        </View>
+      </Section>
+      <Section title={text("settings.ingredients.searchIn")}>
+        <View className="flex-row flex-wrap gap-2">
+          {INGREDIENT_SEARCH_FIELDS.map((field) => (
+            <ToggleChip
+              key={field}
+              active={working.fields.includes(field)}
+              label={text(`settings.ingredients.searchFields.${field}`)}
+              testID={`ingredients-field-${field}`}
+              onPress={() =>
+                setWorking({
+                  ...working,
+                  fields: toggleIngredientSearchField(working.fields, field),
+                })
+              }
+            />
+          ))}
+        </View>
+      </Section>
+      <Section title={text("settings.ingredients.layoutSection")}>
+        <Card>{toggle("tree", text("settings.ingredients.asTree"), true)}</Card>
+      </Section>
+      <Section title={text("settings.ingredients.showOnly")}>
+        <Card>
+          {toggle("flaggedOnly", text("settings.ingredients.flaggedOnly"), true)}
+          {toggle("standaloneOnly", text("settings.ingredients.standaloneOnly"), false)}
+        </Card>
+      </Section>
+    </FitSheet>
   );
 }

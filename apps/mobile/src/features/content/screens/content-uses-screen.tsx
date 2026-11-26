@@ -3,7 +3,7 @@ import { CardSlice } from "@/components/card-slice";
 import { CountCardSkeleton, CountRow } from "@/components/count-row";
 import { EmptyCard } from "@/components/empty-card";
 import { PillButton } from "@/components/pill-button";
-import { Sheet, SheetBody, SheetList } from "@/components/sheet";
+import { FitSheet, Sheet, SheetList } from "@/components/sheet";
 import { edgeAt } from "@/lib/card-edges";
 import { useText } from "@/lib/i18n/use-text";
 import { recipeRoute } from "@/lib/tab-routes";
@@ -29,33 +29,31 @@ export function ContentUsesScreen() {
 
   if (failed || !loaded || recipes.length === 0) {
     return (
-      <Sheet name="content-uses" title={title}>
-        <SheetBody>
-          {failed ? (
-            <EmptyCard
-              action={{
-                label: text("common.actions.retry"),
-                icon: "refresh-outline",
-                testID: "content-uses-retry",
-                onPress: retry,
-              }}
-              icon="alert-circle-outline"
-              placement="sheet"
-              testID="content-uses-failed"
-              title={text("settings.content.loadFailed")}
-            />
-          ) : !loaded ? (
-            <CountCardSkeleton rows={3} />
-          ) : (
-            <EmptyCard
-              icon="book-outline"
-              placement="sheet"
-              testID="content-uses-empty"
-              title={text("settings.content.recipes", { count: 0 })}
-            />
-          )}
-        </SheetBody>
-      </Sheet>
+      <FitSheet name="content-uses" title={title}>
+        {failed ? (
+          <EmptyCard
+            action={{
+              label: text("common.actions.retry"),
+              icon: "refresh-outline",
+              testID: "content-uses-retry",
+              onPress: retry,
+            }}
+            icon="alert-circle-outline"
+            placement="sheet"
+            testID="content-uses-failed"
+            title={text("settings.content.loadFailed")}
+          />
+        ) : !loaded ? (
+          <CountCardSkeleton rows={3} />
+        ) : (
+          <EmptyCard
+            icon="book-outline"
+            placement="sheet"
+            testID="content-uses-empty"
+            title={text("settings.content.recipes", { count: 0 })}
+          />
+        )}
+      </FitSheet>
     );
   }
 

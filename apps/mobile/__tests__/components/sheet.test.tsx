@@ -74,7 +74,7 @@ vi.mock("react-native-safe-area-context", () => ({
 vi.mock("@/lib/tab-bar-visibility", () => ({ useMarkSheetOpen: () => {} }));
 vi.mock("@/components/modal-header", () => ({ ModalHeader: () => null }));
 
-const { Sheet, SheetBody, SheetList, SheetScrollView, SHEET_BODY_TOP, FULL_SHEET_TOP } =
+const { FitSheet, Sheet, SheetBody, SheetList, SheetScrollView, SHEET_BODY_TOP, FULL_SHEET_TOP } =
   await import("@/components/sheet");
 // The native header: where the body starts under the sheet's top.
 const HEADER = SHEET_BODY_TOP - FULL_SHEET_TOP;
@@ -100,6 +100,21 @@ function fitSheet() {
     </Sheet>
   );
 }
+
+describe("FitSheet", () => {
+  it("is a sheet whose body is a fit body", () => {
+    render(
+      <FitSheet name="fit" title="Fit">
+        <span data-testid="content">content</span>
+      </FitSheet>
+    );
+
+    expect(screen.getByTestId("content").closest("[data-kind]")?.getAttribute("data-kind")).toBe(
+      "scroll"
+    );
+    expect(screen.getByTestId("fit-sheet")).toBeTruthy();
+  });
+});
 
 describe("Sheet", () => {
   it("lays a fit sheet's blocks 16 pt apart unless the body says otherwise", () => {

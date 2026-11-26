@@ -68,38 +68,42 @@ export function sheet() {
     children?: ReactNode;
   };
 
-  return {
-    Sheet: ({ name, title, back, confirm, secondary, onClose, children }: SheetProps) =>
-      createElement(
-        "section",
-        { "data-testid": `${name}-sheet`, "data-back": back ? "yes" : undefined },
-        createElement("h1", null, title),
-        back ? createElement("button", { "data-testid": "sheet-back", onClick: onClose }) : null,
-        confirm
-          ? createElement(
-              "button",
-              {
-                "data-testid": "sheet-confirm",
-                disabled: confirm.disabled,
-                onClick: () => void confirm.onPress?.(),
-              },
-              confirm.label
-            )
-          : null,
-        (secondary ?? []).map((action) =>
-          createElement(
+  const Sheet = ({ name, title, back, confirm, secondary, onClose, children }: SheetProps) =>
+    createElement(
+      "section",
+      { "data-testid": `${name}-sheet`, "data-back": back ? "yes" : undefined },
+      createElement("h1", null, title),
+      back ? createElement("button", { "data-testid": "sheet-back", onClick: onClose }) : null,
+      confirm
+        ? createElement(
             "button",
             {
-              key: action.label,
-              "data-testid": `sheet-secondary-${action.label}`,
-              disabled: action.disabled,
-              onClick: () => void action.onPress(),
+              "data-testid": "sheet-confirm",
+              disabled: confirm.disabled,
+              onClick: () => void confirm.onPress?.(),
             },
-            action.label
+            confirm.label
           )
-        ),
-        children
+        : null,
+      (secondary ?? []).map((action) =>
+        createElement(
+          "button",
+          {
+            key: action.label,
+            "data-testid": `sheet-secondary-${action.label}`,
+            disabled: action.disabled,
+            onClick: () => void action.onPress(),
+          },
+          action.label
+        )
       ),
+      children
+    );
+
+  return {
+    Sheet,
+    FitSheet: ({ children, ...props }: SheetProps) =>
+      createElement(Sheet, props, createElement("div", null, children)),
     SheetBody: ({ children }: Props) => createElement("div", null, children),
     SheetList: FlatListOf,
   };

@@ -4,7 +4,7 @@ import { AiChange } from "@/components/ai-change";
 import { Card, CardRow } from "@/components/card";
 import { destructiveAction } from "@/components/modal-header";
 import { PillButton } from "@/components/pill-button";
-import { Sheet, SheetBody } from "@/components/sheet";
+import { FitSheet } from "@/components/sheet";
 import { SheetFieldSkeleton, SheetInput } from "@/components/sheet-input";
 import { SheetNote } from "@/components/sheet-note";
 import { Switch } from "@/components/switch";
@@ -45,11 +45,9 @@ export function IngredientScreen() {
 
   if (!item || item.id !== id) {
     return (
-      <Sheet name="food" title={text("settings.ingredients.title")}>
-        <SheetBody>
-          <SheetFieldSkeleton />
-        </SheetBody>
-      </Sheet>
+      <FitSheet name="food" title={text("settings.ingredients.title")}>
+        <SheetFieldSkeleton />
+      </FitSheet>
     );
   }
 
@@ -129,7 +127,7 @@ function FoodSheet({ item }: { item: IngredientItem }) {
   const parentName = draft.parent ? ingredientDisplayName(draft.parent, locale) : undefined;
 
   return (
-    <Sheet
+    <FitSheet
       confirm={{
         label: text("common.actions.save"),
         disabled: !draft.dirty,
@@ -150,98 +148,96 @@ function FoodSheet({ item }: { item: IngredientItem }) {
       }
       title={displayName}
     >
-      <SheetBody>
-        <FoodIconField icons={draft.icons} item={item} onDraftChange={draft.setIcon}>
-          {item.canEdit ? (
-            <SheetInput
-              accessibilityLabel={t("rename")}
-              returnKeyType="done"
-              testID="food-name"
-              value={draft.name}
-              onChangeText={draft.setName}
-              onSubmitEditing={() => void draft.save()}
-            />
-          ) : (
-            <Text className="text-foreground text-lg font-medium">{item.name}</Text>
-          )}
-        </FoodIconField>
-        {displayName !== item.name ? (
-          <SheetNote>{t("shownAs", { name: displayName })}</SheetNote>
-        ) : null}
-        {unsure.map((change) => {
-          const copy = changeCopy(change, locale);
-
-          return (
-            <Card key={change.id}>
-              <AiChange
-                id={change.id}
-                note={t(copy.key, copy.values)}
-                testID="food-ai-change"
-                onKeep={change.canAct ? () => void aiChanges.keep(change) : undefined}
-                onUndo={change.canAct ? () => void aiChanges.undo(change) : undefined}
-              />
-            </Card>
-          );
-        })}
-        {item.flagged ? (
-          <SheetNote tone="problem" testID="food-flag">
-            {t(`flagReasons.${item.flagReason ?? "unknown"}`)}
-          </SheetNote>
-        ) : null}
-        <Card>
-          <CardRow
-            first
-            label={t("spellingsSection")}
-            testID="food-spellings"
-            value={String(draft.spellingCount)}
-            onPress={() => setStep("spellings")}
-          />
-          <CardRow
-            label={t("parentSection")}
-            testID="food-parent"
-            value={parentName ?? "-"}
-            onPress={item.canEdit ? () => draft.setRelocation({ kind: "parent" }) : undefined}
-          />
-          {draft.parent && item.canEdit ? (
-            <CardRow
-              label={t("clearParent")}
-              testID="food-clear-parent"
-              onPress={() => draft.setParent(null)}
-            />
-          ) : null}
-          <CardRow
-            label={text("settings.ingredients.nutrition.section")}
-            testID="food-nutrition"
-            value={
-              nutrition?.numbers
-                ? text("settings.ingredients.nutrition.summary", {
-                    value: Math.round(nutrition.numbers.value.kcal),
-                  })
-                : text("settings.ingredients.nutrition.summaryNone")
-            }
-            onPress={() => setStep("nutrition")}
-          />
-          {item.flagged && item.canEdit ? (
-            <CardRow label={t("markDistinct")}>
-              <Switch
-                accessibilityLabel={t("markDistinct")}
-                isSelected={false}
-                testID="food-keep-distinct"
-                onSelectedChange={() => void draft.markDistinct()}
-              />
-            </CardRow>
-          ) : null}
-        </Card>
+      <FoodIconField icons={draft.icons} item={item} onDraftChange={draft.setIcon}>
         {item.canEdit ? (
-          <PillButton
-            centred
-            icon="git-merge-outline"
-            label={t("mergeInto")}
-            testID="food-merge"
-            onPress={() => draft.setRelocation({ kind: "merge" })}
+          <SheetInput
+            accessibilityLabel={t("rename")}
+            returnKeyType="done"
+            testID="food-name"
+            value={draft.name}
+            onChangeText={draft.setName}
+            onSubmitEditing={() => void draft.save()}
+          />
+        ) : (
+          <Text className="text-foreground text-lg font-medium">{item.name}</Text>
+        )}
+      </FoodIconField>
+      {displayName !== item.name ? (
+        <SheetNote>{t("shownAs", { name: displayName })}</SheetNote>
+      ) : null}
+      {unsure.map((change) => {
+        const copy = changeCopy(change, locale);
+
+        return (
+          <Card key={change.id}>
+            <AiChange
+              id={change.id}
+              note={t(copy.key, copy.values)}
+              testID="food-ai-change"
+              onKeep={change.canAct ? () => void aiChanges.keep(change) : undefined}
+              onUndo={change.canAct ? () => void aiChanges.undo(change) : undefined}
+            />
+          </Card>
+        );
+      })}
+      {item.flagged ? (
+        <SheetNote tone="problem" testID="food-flag">
+          {t(`flagReasons.${item.flagReason ?? "unknown"}`)}
+        </SheetNote>
+      ) : null}
+      <Card>
+        <CardRow
+          first
+          label={t("spellingsSection")}
+          testID="food-spellings"
+          value={String(draft.spellingCount)}
+          onPress={() => setStep("spellings")}
+        />
+        <CardRow
+          label={t("parentSection")}
+          testID="food-parent"
+          value={parentName ?? "-"}
+          onPress={item.canEdit ? () => draft.setRelocation({ kind: "parent" }) : undefined}
+        />
+        {draft.parent && item.canEdit ? (
+          <CardRow
+            label={t("clearParent")}
+            testID="food-clear-parent"
+            onPress={() => draft.setParent(null)}
           />
         ) : null}
-      </SheetBody>
-    </Sheet>
+        <CardRow
+          label={text("settings.ingredients.nutrition.section")}
+          testID="food-nutrition"
+          value={
+            nutrition?.numbers
+              ? text("settings.ingredients.nutrition.summary", {
+                  value: Math.round(nutrition.numbers.value.kcal),
+                })
+              : text("settings.ingredients.nutrition.summaryNone")
+          }
+          onPress={() => setStep("nutrition")}
+        />
+        {item.flagged && item.canEdit ? (
+          <CardRow label={t("markDistinct")}>
+            <Switch
+              accessibilityLabel={t("markDistinct")}
+              isSelected={false}
+              testID="food-keep-distinct"
+              onSelectedChange={() => void draft.markDistinct()}
+            />
+          </CardRow>
+        ) : null}
+      </Card>
+      {item.canEdit ? (
+        <PillButton
+          centred
+          icon="git-merge-outline"
+          label={t("mergeInto")}
+          testID="food-merge"
+          onPress={() => draft.setRelocation({ kind: "merge" })}
+        />
+      ) : null}
+    </FitSheet>
   );
 }

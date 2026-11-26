@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Alert } from "react-native";
 import { Card, CardRow } from "@/components/card";
 import { destructiveAction } from "@/components/modal-header";
-import { Sheet, SheetBody } from "@/components/sheet";
-import { SheetFieldSkeleton, SheetInput } from "@/components/sheet-input";
+import { FitSheet } from "@/components/sheet";
+import { SheetFieldSkeleton } from "@/components/sheet-input";
 import { SheetNote } from "@/components/sheet-note";
 import { useCancelButton } from "@/hooks/use-cancel-button";
 import { useText } from "@/lib/i18n/use-text";
@@ -11,6 +11,8 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 
 import type { PickerKind } from "@norish/shared-react/lists";
 import { deleteProblemCopy, problemCopy, useContentEntry } from "@norish/shared-react/lists";
+
+import { EntrySheet } from "../components/entry-sheet";
 
 /** One entry of a list: rename it, merge it onto the entry its new name folds onto, delete it, or read it. */
 export function ContentEntryScreen() {
@@ -33,11 +35,9 @@ export function ContentEntryScreen() {
 
   if (!entry.entry) {
     return (
-      <Sheet name="content-entry" title={text(`settings.content.panel.editTitle.${kind}`)}>
-        <SheetBody>
-          <SheetFieldSkeleton />
-        </SheetBody>
-      </Sheet>
+      <FitSheet name="content-entry" title={text(`settings.content.panel.editTitle.${kind}`)}>
+        <SheetFieldSkeleton />
+      </FitSheet>
     );
   }
 
@@ -81,7 +81,25 @@ export function ContentEntryScreen() {
   };
 
   return (
-    <Sheet
+    <EntrySheet
+      before={
+        <>
+          {detail?.note ? (
+            <SheetNote locked={detail.note.locked}>
+              {text(`settings.content.${detail.note.key}`)}
+            </SheetNote>
+          ) : null}
+          {view?.target ? (
+            <SheetNote tone="accent">
+              {text("settings.content.panel.merge", {
+                target: view.target.name,
+                name,
+                count: view.moved,
+              })}
+            </SheetNote>
+          ) : null}
+        </>
+      }
       confirm={
         editable
           ? {
@@ -94,7 +112,20 @@ export function ContentEntryScreen() {
             }
           : undefined
       }
+      field={{
+        accessibilityLabel: text("settings.content.panel.name"),
+        canSubmit: entry.canSave,
+        editable,
+        maxLength: view?.max,
+        testID: "content-entry-name",
+        value: entry.name,
+        onChangeText: entry.setName,
+        onClear: editable ? () => entry.setName("") : undefined,
+        onSubmit: () => void save(),
+      }}
       name="content-entry"
+      offline={editable && entry.offline}
+      problem={problem}
       secondary={
         editable
           ? [
@@ -107,62 +138,23 @@ export function ContentEntryScreen() {
       }
       title={editable ? text(`settings.content.panel.editTitle.${kind}`) : name}
     >
-      <SheetBody>
-        <SheetInput
-          accessibilityLabel={text("settings.content.panel.name")}
-          editable={editable}
-          maxLength={view?.max}
-          returnKeyType="done"
-          testID="content-entry-name"
-          value={entry.name}
-          onChangeText={entry.setName}
-          onClear={editable ? () => entry.setName("") : undefined}
-          onSubmitEditing={() => {
-            if (entry.canSave) void save();
-          }}
+      {deleteProblem ? (
+        <SheetNote tone="problem">{text(`settings.content.${deleteProblem.key}`)}</SheetNote>
+      ) : null}
+      {entry.deleteState === "countFailed" ? (
+        <SheetNote tone="problem">{text("settings.content.delete.countFailed")}</SheetNote>
+      ) : null}
+      <Card>
+        <CardRow
+          first
+          label={text("settings.content.panel.usedBy")}
+          testID="content-entry-used"
+          value={text(`settings.content.${detail?.usedKey ?? "recipes"}`, {
+            count: entry.entry.recipeCount,
+          })}
+          onPress={() => router.push({ pathname: "/settings/content-uses", params: { kind, id } })}
         />
-        {detail?.note ? (
-          <SheetNote locked={detail.note.locked}>
-            {text(`settings.content.${detail.note.key}`)}
-          </SheetNote>
-        ) : null}
-        {view?.target ? (
-          <SheetNote tone="accent">
-            {text("settings.content.panel.merge", {
-              target: view.target.name,
-              name,
-              count: view.moved,
-            })}
-          </SheetNote>
-        ) : null}
-        {problem ? (
-          <SheetNote tone="problem">
-            {text(`settings.content.${problem.key}`, problem.values)}
-          </SheetNote>
-        ) : null}
-        {deleteProblem ? (
-          <SheetNote tone="problem">{text(`settings.content.${deleteProblem.key}`)}</SheetNote>
-        ) : null}
-        {entry.deleteState === "countFailed" ? (
-          <SheetNote tone="problem">{text("settings.content.delete.countFailed")}</SheetNote>
-        ) : null}
-        <Card>
-          <CardRow
-            first
-            label={text("settings.content.panel.usedBy")}
-            testID="content-entry-used"
-            value={text(`settings.content.${detail?.usedKey ?? "recipes"}`, {
-              count: entry.entry.recipeCount,
-            })}
-            onPress={() =>
-              router.push({ pathname: "/settings/content-uses", params: { kind, id } })
-            }
-          />
-        </Card>
-        {editable && entry.offline ? (
-          <SheetNote>{text("settings.content.offline")}</SheetNote>
-        ) : null}
-      </SheetBody>
-    </Sheet>
+      </Card>
+    </EntrySheet>
   );
 }

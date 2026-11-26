@@ -1,13 +1,11 @@
 import React, { useState } from "react";
 import { View } from "react-native";
-import { Card, CardRow } from "@/components/card";
+import { ChoiceCard } from "@/components/choice-card";
 import { PillButton } from "@/components/pill-button";
-import { Sheet, SheetBody } from "@/components/sheet";
+import { FitSheet } from "@/components/sheet";
 import { SheetInput } from "@/components/sheet-input";
 import { SheetNote } from "@/components/sheet-note";
-import { useTokenColor } from "@/hooks/use-token-color";
 import { useText } from "@/lib/i18n/use-text";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useIntl } from "react-intl";
 
 import type { IngredientPick, PickerOption, Relocation } from "@norish/shared-react/ingredients";
@@ -27,7 +25,6 @@ export function FoodPickerStep({
 }) {
   const text = useText();
   const { locale } = useIntl();
-  const accent = useTokenColor("accent-text");
   const [target, setTarget] = useState<PickerOption | null>(null);
   const picker = useIngredientPicker({
     excludeId: ingredient.id,
@@ -50,7 +47,7 @@ export function FoodPickerStep({
         : text("settings.ingredients.parentTitle", { name: ingredient.name });
 
   return (
-    <Sheet
+    <FitSheet
       back
       confirm={{
         label: text(
@@ -69,58 +66,52 @@ export function FoodPickerStep({
       title={title}
       onClose={onBack}
     >
-      <SheetBody>
-        <SheetNote>{question}</SheetNote>
-        <SheetInput
-          accessibilityLabel={title}
-          autoCapitalize="none"
-          placeholder={text("settings.ingredients.pickIngredient")}
-          testID="food-picker-input"
-          value={picker.term}
-          onChangeText={picker.type}
-          onClear={() => picker.type("")}
+      <SheetNote>{question}</SheetNote>
+      <SheetInput
+        accessibilityLabel={title}
+        autoCapitalize="none"
+        placeholder={text("settings.ingredients.pickIngredient")}
+        testID="food-picker-input"
+        value={picker.term}
+        onChangeText={picker.type}
+        onClear={() => picker.type("")}
+      />
+      {picker.hint ? (
+        <SheetNote>
+          {text(
+            picker.hint === "hint"
+              ? "settings.ingredients.pickerHint"
+              : picker.hint === "searching"
+                ? "settings.ingredients.pickerSearching"
+                : "settings.ingredients.pickerEmpty"
+          )}
+        </SheetNote>
+      ) : (
+        <ChoiceCard
+          options={picker.options.map((option) => ({
+            id: option.id,
+            label: option.name,
+            testID: "food-picker-option",
+          }))}
+          selected={picker.picked}
+          onPick={(id) => {
+            const option = picker.options.find((each) => each.id === id);
+
+            if (option) picker.pick(option);
+          }}
         />
-        {picker.hint ? (
-          <SheetNote>
-            {text(
-              picker.hint === "hint"
-                ? "settings.ingredients.pickerHint"
-                : picker.hint === "searching"
-                  ? "settings.ingredients.pickerSearching"
-                  : "settings.ingredients.pickerEmpty"
-            )}
-          </SheetNote>
-        ) : (
-          <Card>
-            {picker.options.map((option, index) => (
-              <CardRow
-                key={option.id}
-                chevron={false}
-                first={index === 0}
-                label={option.name}
-                selected={picker.picked === option.id}
-                testID="food-picker-option"
-                onPress={() => picker.pick(option)}
-              >
-                {picker.picked === option.id ? (
-                  <Ionicons color={accent} name="checkmark" size={20} />
-                ) : null}
-              </CardRow>
-            ))}
-          </Card>
-        )}
-        {relocation.kind === "move" ? (
-          <View>
-            <PillButton
-              centred
-              icon="add"
-              label={text("settings.ingredients.newIngredient")}
-              testID="food-picker-new"
-              onPress={() => onConfirm(relocation, { id: null })}
-            />
-          </View>
-        ) : null}
-      </SheetBody>
-    </Sheet>
+      )}
+      {relocation.kind === "move" ? (
+        <View>
+          <PillButton
+            centred
+            icon="add"
+            label={text("settings.ingredients.newIngredient")}
+            testID="food-picker-new"
+            onPress={() => onConfirm(relocation, { id: null })}
+          />
+        </View>
+      ) : null}
+    </FitSheet>
   );
 }

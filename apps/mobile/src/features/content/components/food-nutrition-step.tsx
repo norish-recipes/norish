@@ -2,7 +2,7 @@ import React from "react";
 import { View } from "react-native";
 import { Card, CardRow } from "@/components/card";
 import { EmptyCard } from "@/components/empty-card";
-import { Sheet, SheetBody } from "@/components/sheet";
+import { FitSheet } from "@/components/sheet";
 import { SheetNote } from "@/components/sheet-note";
 import { useText } from "@/lib/i18n/use-text";
 import { useIntl } from "react-intl";
@@ -45,79 +45,72 @@ export function FoodNutritionStep({
   const none = !facts?.numbers && !facts?.pieceWeight && !measure;
 
   return (
-    <Sheet
+    <FitSheet
       back
       confirm={{ label: t("correct"), onPress: () => onCorrect(false) }}
       name="food-nutrition"
       title={t("section")}
       onClose={onBack}
     >
-      <SheetBody>
-        {none ? (
-          <EmptyCard
-            icon="nutrition-outline"
-            placement="sheet"
-            testID="food-nutrition-none"
-            title={t("none")}
-          />
-        ) : (
-          <Card testID="food-nutrition-facts">
-            {facts?.numbers ? (
-              <>
-                {fact(
-                  t("calories"),
-                  t("kcal", { value: number(facts.numbers.value.kcal) }),
-                  facts.numbers,
-                  true
-                )}
-                {fact(
-                  t("fat"),
-                  t("grams", { value: number(facts.numbers.value.fat) }),
-                  null,
-                  false
-                )}
-                {fact(
-                  t("carbs"),
-                  t("grams", { value: number(facts.numbers.value.carbs) }),
-                  null,
-                  false
-                )}
-                {fact(
-                  t("protein"),
-                  t("grams", { value: number(facts.numbers.value.protein) }),
-                  null,
-                  false
-                )}
-              </>
-            ) : (
-              <CardRow first label={t("noNumbers")} />
-            )}
-            {facts?.pieceWeight ? (
-              <CardRow
-                hint={factSourceText(text, facts.pieceWeight)}
-                label={t("onePieceLabel")}
-                value={t("grams", { value: number(facts.pieceWeight.value) })}
-              />
-            ) : null}
-            {measure ? (
-              <CardRow
-                hint={facts?.density ? factSourceText(text, facts.density) : t("currentNone")}
-                label={t(`spoon.${spoonKey(measure)}`)}
-                testID="food-nutrition-spoon"
-                value={
-                  facts?.density
-                    ? t("grams", { value: number(spoonWeight(facts.density.value, measure)) })
-                    : t("spoonAsk")
-                }
-                onPress={facts?.density ? undefined : () => onCorrect(true)}
-              />
-            ) : null}
-          </Card>
-        )}
-        <View>
-          <SheetNote>{t("per100g")}</SheetNote>
-        </View>
-      </SheetBody>
-    </Sheet>
+      {none ? (
+        <EmptyCard
+          icon="nutrition-outline"
+          placement="sheet"
+          testID="food-nutrition-none"
+          title={t("none")}
+        />
+      ) : (
+        <Card testID="food-nutrition-facts">
+          {facts?.numbers ? (
+            <>
+              {fact(
+                t("calories"),
+                t("kcal", { value: number(facts.numbers.value.kcal) }),
+                facts.numbers,
+                true
+              )}
+              {fact(t("fat"), t("grams", { value: number(facts.numbers.value.fat) }), null, false)}
+              {fact(
+                t("carbs"),
+                t("grams", { value: number(facts.numbers.value.carbs) }),
+                null,
+                false
+              )}
+              {fact(
+                t("protein"),
+                t("grams", { value: number(facts.numbers.value.protein) }),
+                null,
+                false
+              )}
+            </>
+          ) : (
+            <CardRow first label={t("noNumbers")} />
+          )}
+          {facts?.pieceWeight ? (
+            <CardRow
+              hint={factSourceText(text, facts.pieceWeight)}
+              label={t("onePieceLabel")}
+              value={t("grams", { value: number(facts.pieceWeight.value) })}
+            />
+          ) : null}
+          {measure ? (
+            <CardRow
+              hint={facts?.density ? factSourceText(text, facts.density) : t("currentNone")}
+              label={t(`spoon.${spoonKey(measure)}`)}
+              testID="food-nutrition-spoon"
+              value={
+                facts?.density
+                  ? t("grams", { value: number(spoonWeight(facts.density.value, measure)) })
+                  : t("spoonAsk")
+              }
+              onPress={facts?.density ? undefined : () => onCorrect(true)}
+            />
+          ) : null}
+        </Card>
+      )}
+      <View>
+        <SheetNote>{t("per100g")}</SheetNote>
+      </View>
+    </FitSheet>
   );
 }

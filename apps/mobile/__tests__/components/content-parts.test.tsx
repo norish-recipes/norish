@@ -5,6 +5,28 @@ import { describe, expect, it, vi } from "vitest";
 
 import "../mocks/content-setup";
 
+vi.mock("@/components/card", () => ({
+  Card: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  CardRow: ({
+    label,
+    testID,
+    selected,
+    onPress,
+    children,
+  }: {
+    label: string;
+    testID: string;
+    selected?: boolean;
+    onPress: () => void;
+    children?: React.ReactNode;
+  }) => (
+    <button aria-selected={selected} data-testid={testID} onClick={onPress}>
+      {label}
+      {children}
+    </button>
+  ),
+}));
+vi.mock("@/components/checkmark", () => ({ Checkmark: () => <i data-testid="check" /> }));
 vi.mock("@/components/search-filter-row", () => ({
   SearchFilterRow: ({ testID }: { testID: string }) => <i data-testid={testID} />,
 }));
@@ -12,6 +34,7 @@ vi.mock("@/components/search-filter-row", () => ({
 const { CountRow } = await import("@/components/count-row");
 const { ListHeading } = await import("@/components/list-heading");
 const { SheetNote } = await import("@/components/sheet-note");
+const { ChoiceCard } = await import("@/components/choice-card");
 const { AiChange } = await import("@/components/ai-change");
 const { ListFrame } = await import("@/components/list-frame");
 const { sectionRows } = await import("@/components/section-rows");
@@ -159,5 +182,26 @@ describe("AiChange", () => {
     render(<AiChange id="b" note="Merged" testID="c" onUndo={onUndo} />);
     expect(screen.queryByTestId("c-keep-b")).toBeNull();
     expect(screen.queryByTestId("c-open-b")).toBeNull();
+  });
+});
+
+describe("ChoiceCard", () => {
+  it("checks the selected option and picks the one pressed", () => {
+    const onPick = vi.fn();
+
+    render(
+      <ChoiceCard
+        options={[
+          { id: "a", label: "A", testID: "a" },
+          { id: "b", label: "B", testID: "b" },
+        ]}
+        selected="b"
+        onPick={onPick}
+      />
+    );
+    expect(screen.getByTestId("b").querySelector("[data-testid=check]")).toBeTruthy();
+    expect(screen.getByTestId("a").querySelector("[data-testid=check]")).toBeNull();
+    fireEvent.click(screen.getByTestId("a"));
+    expect(onPick).toHaveBeenCalledWith("a");
   });
 });

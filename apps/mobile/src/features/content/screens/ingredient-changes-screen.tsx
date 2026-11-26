@@ -4,7 +4,7 @@ import { CardSlice } from "@/components/card-slice";
 import { EmptyCard } from "@/components/empty-card";
 import { Section } from "@/components/section";
 import { HeadingRow, sectionRows } from "@/components/section-rows";
-import { Sheet, SheetBody, SheetList } from "@/components/sheet";
+import { FitSheet, Sheet, SheetList } from "@/components/sheet";
 import { edgeAt } from "@/lib/card-edges";
 import { useText } from "@/lib/i18n/use-text";
 import { useRouter } from "expo-router";
@@ -67,16 +67,14 @@ export function IngredientChangesScreen() {
 
   if (changes.length === 0) {
     return (
-      <Sheet name="ingredient-changes" title={title}>
-        <SheetBody>
-          <EmptyCard
-            icon="sparkles-outline"
-            placement="sheet"
-            testID="ingredient-changes-empty"
-            title={text("settings.ingredients.changedByAI.empty")}
-          />
-        </SheetBody>
-      </Sheet>
+      <FitSheet name="ingredient-changes" title={title}>
+        <EmptyCard
+          icon="sparkles-outline"
+          placement="sheet"
+          testID="ingredient-changes-empty"
+          title={text("settings.ingredients.changedByAI.empty")}
+        />
+      </FitSheet>
     );
   }
 
