@@ -87,3 +87,5 @@ Re-review of the server round:
 1. Fixed (18d08aa76, e337703d9): one transaction advisory lock per kind and fold (`lockEntryFoldsTx`), taken by every write giving an entry a fold, after household rows and before list rows; an instance takeover locks only the households holding the fold (until settled), list rows by id, retries `40P01` and `23505` three times; a leave or join maps a fold the instance holds onto its entry. Each household that lost a twin hears `lists.changed` once on its own channel.
 2. Verified (aad58e96f): after a takeover, a save leaving the Cuisines alone keeps the re-pointed link; one sending the old id answers stale. Tags and Categories save by name, covered by the stale-name tests.
 9. Fixed (ccbc6fe29): the entry comments run two lines.
+Final re-review 3. Fixed (5298c8b5b): `lockFoldsTx` takes every kind's folds in one sorted call; recipe create and update, a leave, a join and the boot upgrade take theirs before any list row.
+Final re-review 4. Fixed (a5b0abc61): `entriesByFoldTx` holds every candidate fold before it reads what the list has.

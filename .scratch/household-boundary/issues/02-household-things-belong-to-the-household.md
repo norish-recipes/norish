@@ -79,3 +79,4 @@ Final review, server round:
 Re-review of the server round:
 
 3. Fixed (e9d677626, 3bfd382e8, 99b2b74d1): product and Pack Size writes carry the household's Stores in the statement; a food's rename, distinct mark and icon carry its checked household; setting a parent, deleting and merging take the tree lock before the checks; removing a spelling reads it again under its food's lock. Sweep: groceries, recurring, plans, Pantry, Stores, aisles and Store deletes already write by household or under a held lock; cookbooks and recipes are checked by the Permission Policy and left as they are (the cookbook delete test keeps a delete landing after a move).
+Final re-review 7. Fixed (6dfa9229c): a Pack Size or by-hand product write that finds no row of the household answers NOT_FOUND and saves no link.

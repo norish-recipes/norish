@@ -70,3 +70,6 @@ Client re-review:
 3. Fixed (9f3c77f99): a queued edit taking a pending one's place merges into it; fields it leaves out keep the earlier edit's, on the earlier version.
 4. Fixed (a2750da1e): after a stale answer the form rereads the recipe and takes its version and the lists the reader left alone (`rebaseRecipeForm`); from Save to its answer the form is inert (web) or untouchable with the keyboard down (mobile).
 5. Fixed (b271c79ca, 553164eb0): an empty Categories list clears, as Tags and Cuisines already did; a list's change ignores order.
+Final re-review 2. Fixed (ad7cb1047): `rebaseRecipeForm` rebases field by field against the form as opened (lines and steps included): untouched fields take the fresh value, changed ones keep the reader's; the row editors re-seed on the new version.
+Final re-review 5. Fixed (ae0ba156d): foreign archive parsers carry Tags and Categories only when the source has them, and never Cuisines (`carriedLists`); Norish archives carry all three.
+Final re-review 6. Confirmed and fixed (ff22764b6): the update schema takes null for the times; the editor now sends a cleared time as null, and a queued merge keeps it.

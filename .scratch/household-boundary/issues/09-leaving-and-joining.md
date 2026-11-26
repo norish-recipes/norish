@@ -90,3 +90,5 @@ Client re-review:
 6. Fixed (44c0d0741): a household change cancels an in-flight `households.get`, which reverts to the state just written.
 7. Fixed (a74613af5, e3ca2aa35): the widgets drop the former plan and photos on a change. Outside the query cache mobile holds expo-image's photo caches (now cleared with the reads); the Outbox, recent searches, timers and library filters are the account's own and stay.
 8. Fixed (fb1e6a720): cookbook, Store, grocery and calendar answers write the cache only in the household their write started in.
+Final re-review 1. Fixed (aa5071742): one rule (`isAccountScoped`) says which routers are the account's; the link sends them no household, Replay never parks them for one, Retry never stamps one.
+Final re-review 8. Fixed (f0d4962fb): the household the widgets' plan is for is kept in MMKV; a start whose household differs clears them, read or not.
