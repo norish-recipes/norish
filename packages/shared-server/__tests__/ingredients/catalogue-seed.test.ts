@@ -292,6 +292,44 @@ describe("the ingredient catalogue seed", () => {
         ingredientId: onion.ingredientId,
       });
       await expect(ingredientNamed("red onion")).resolves.toBeNull();
+
+      // The merged entry's new spelling joins the food it was merged into.
+      await applySeedFile(
+        excerpt.replace("nl: rode ui, rode uien", "nl: rode ui, rode uien, rooie ui")
+      );
+      await expect(resolve("rooie ui")).resolves.toMatchObject({
+        ingredientId: onion.ingredientId,
+      });
+    });
+
+    it("gives an entry it finds by name, not id, its spellings and parent, as one found by id", async () => {
+      const entry = (
+        offId: string,
+        name: string,
+        spellings: string[],
+        parentOffId: string | null = null
+      ) => ({
+        offId,
+        name,
+        nameFold: ingredientAliasFold(name),
+        parentOffId,
+        aliases: spellings.map((text) => ({ text, fold: ingredientAliasFold(text), locale: null })),
+        nutrition: null,
+      });
+      const greens = entry("en:greens", "Greens", ["greens"]);
+
+      await applySeedEntries([greens, entry("en:kale-old", "Kale", ["kale"])]);
+      const kale = (await resolve("kale")).ingredientId;
+      const { outcome } = await applySeedEntries([
+        greens,
+        entry("en:kale", "Kale", ["kale", "boerenkool"], "en:greens"),
+      ]);
+
+      expect(outcome).toMatchObject({ created: 0, absorbed: 1, removed: 0, parentsSet: 1 });
+      await expect(resolve("boerenkool")).resolves.toMatchObject({ ingredientId: kale });
+      expect((await findIngredientAncestors([kale])).get(kale)).toEqual([
+        (await resolve("greens")).ingredientId,
+      ]);
     });
 
     it("keeps a parent a person set, and a parent a person cleared", async () => {

@@ -97,7 +97,10 @@ export interface SeedEntry {
 export interface SeedOutcome {
   /** New Ingredients the seed minted. */
   created: number;
-  /** Entries whose name another entry's Ingredient already holds (merged there by a person). */
+  /**
+   * Entries found by the seeded Ingredient holding their name, not by id (merged there by a person,
+   * or listed under another id): their spellings, and their parent where no entry is that food, apply.
+   */
   absorbed: number;
   aliasesAdded: number;
   /**
@@ -217,24 +220,33 @@ export async function applyIngredientSeed(entries: readonly SeedEntry[]): Promis
       entries.map((entry) => entry.nameFold)
     );
 
-    // Which seeded Ingredient each entry is.
+    // Which seeded Ingredient each entry is, and the one entry whose parent and codes it takes.
     const ingredientOf = new Map<string, string>();
+    const decider = new Map<string, string>();
     const toCreate: SeedEntry[] = [];
 
     for (const entry of entries) {
       const known = byOffId.get(entry.offId);
 
-      if (known) {
-        ingredientOf.set(entry.offId, known);
-        continue;
-      }
-
+      if (!known) continue;
+      ingredientOf.set(entry.offId, known);
+      decider.set(known, entry.offId);
+    }
+    for (const entry of entries) {
+      if (ingredientOf.has(entry.offId)) continue;
       const holder =
         nameHolders.get(entry.nameFold)?.ingredientId ?? byName.get(entry.name.toLowerCase());
 
-      if (holder && byId.has(holder)) outcome.absorbed += 1;
-      else toCreate.push(entry);
+      if (!holder || !byId.has(holder)) {
+        toCreate.push(entry);
+        continue;
+      }
+      // Its spellings join the food; where an entry is that food by id, that entry's parent stands.
+      outcome.absorbed += 1;
+      ingredientOf.set(entry.offId, holder);
+      if (!decider.has(holder)) decider.set(holder, entry.offId);
     }
+    const decides = (entry: SeedEntry, id: string) => decider.get(id) === entry.offId;
 
     for (const part of chunks(toCreate)) {
       const created = await tx
@@ -253,6 +265,7 @@ export async function applyIngredientSeed(entries: readonly SeedEntry[]): Promis
 
       for (const row of created) {
         ingredientOf.set(row.offId!, row.id);
+        decider.set(row.id, row.offId!);
         byId.set(row.id, {
           ...row,
           name: "",
@@ -341,7 +354,7 @@ export async function applyIngredientSeed(entries: readonly SeedEntry[]): Promis
       const id = ingredientOf.get(entry.offId);
       const row = id ? byId.get(id) : undefined;
 
-      if (!id || !row || row.parentChosen) continue;
+      if (!id || !row || row.parentChosen || !decides(entry, id)) continue;
 
       const parentId = entry.parentOffId ? (ingredientOf.get(entry.parentOffId) ?? null) : null;
 
@@ -380,7 +393,8 @@ export async function applyIngredientSeed(entries: readonly SeedEntry[]): Promis
       const id = ingredientOf.get(entry.offId);
       const row = id ? byId.get(id) : undefined;
 
-      if (!id || !row || codesKey(row.nutritionCodes) === codesKey(entry.nutrition)) continue;
+      if (!id || !row || !decides(entry, id)) continue;
+      if (codesKey(row.nutritionCodes) === codesKey(entry.nutrition)) continue;
       row.nutritionCodes = entry.nutrition;
       codeUpdates.push({ id, codes: entry.nutrition });
     }
@@ -402,10 +416,13 @@ export async function applyIngredientSeed(entries: readonly SeedEntry[]): Promis
     }
     outcome.nutritionChanged = codeUpdates.length;
 
-    outcome.removed = await removeUnusedDropped(
-      tx,
-      entries.map((entry) => entry.offId)
-    );
+    // A food an entry found by name stands for that entry, whatever id it was seeded under.
+    const standsFor = [...ingredientOf.values()].flatMap((id) => byId.get(id)?.offId ?? []);
+
+    outcome.removed = await removeUnusedDropped(tx, [
+      ...entries.map((entry) => entry.offId),
+      ...standsFor,
+    ]);
 
     return outcome;
   });
