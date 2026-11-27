@@ -11,7 +11,7 @@ import type {
   RecipeShareSummaryDto,
   UpdateRecipeShareInputDto,
 } from "@norish/shared/contracts/dto/recipe-shares";
-import { decrypt, encrypt, hashToken, safeDecrypt } from "@norish/config/crypto";
+import { decrypt, encrypt, hashToken } from "@norish/config/crypto";
 import { policyAllows } from "@norish/config/zod/server-config";
 import { db } from "@norish/db/drizzle";
 import { users } from "@norish/db/schema/auth";
@@ -194,7 +194,7 @@ export async function getRecipeShareInventoryForAdmin(): Promise<AdminRecipeShar
         ...toRecipeShareSummary(RecipeShareSelectSchema.parse(share)),
         recipeName,
         ownerId,
-        ownerName: safeDecrypt(ownerName),
+        ownerName: ownerName ? decrypt(ownerName) : null,
         // The same rule as `accountCanViewRecipe`, read once for the whole list.
         makerMayView:
           makerHouseholdId !== null &&
