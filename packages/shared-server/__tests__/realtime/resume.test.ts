@@ -1,4 +1,7 @@
+import { randomBytes } from "node:crypto";
 import { describe, expect, it } from "vitest";
+
+import { openBase64MasterKey } from "@norish/config/testing";
 
 import { RealtimeLaggedError } from "../../src/realtime/hub";
 import {
@@ -110,6 +113,18 @@ describe("cursor codec", () => {
     "2..1-0",
   ])("decodes %j to cursor-invalid", (raw) => {
     expect(refusal(raw)).toBe("cursor-invalid");
+  });
+
+  it("refuses a cursor minted under another Master Key", () => {
+    const encoded = encodeCursor(cursor);
+
+    openBase64MasterKey(randomBytes(32).toString("base64"));
+    try {
+      expect(refusal(encoded)).toBe("identity-changed");
+    } finally {
+      openBase64MasterKey(process.env.MASTER_KEY!);
+    }
+    expect(decodeCursor(encoded, identity, channels)).toEqual(cursor);
   });
 });
 
