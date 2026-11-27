@@ -1,10 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 
-import {
-  MAX_BRING_ITEMS,
-  type BRING_FAILURE_REASONS,
-  type SendToBringResult,
-} from "@norish/shared/contracts/zod/bring";
+import type { BRING_FAILURE_REASONS, SendToBringResult } from "@norish/shared/contracts/zod/bring";
+import { MAX_BRING_ITEMS } from "@norish/shared/contracts/zod/bring";
 
 import { usePlatform } from "../platform/platform";
 import { useTRPC } from "../trpc";

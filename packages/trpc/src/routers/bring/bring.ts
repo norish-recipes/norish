@@ -1,7 +1,8 @@
 import { TRPCError } from "@trpc/server";
 
-import { valkeySecondaryStorage } from "@norish/auth/secondary-storage";
 import type { BringHandoffImage } from "@norish/shared-server/bring/handoff-store";
+import type { SendToBringResult } from "@norish/shared/contracts/zod/bring";
+import { valkeySecondaryStorage } from "@norish/auth/secondary-storage";
 import { getRecipeNameAndImage } from "@norish/db/repositories/recipes";
 import { checkImport, requestDeeplink } from "@norish/shared-server/bring/bring-client";
 import { formatBringLine } from "@norish/shared-server/bring/format-line";
@@ -13,7 +14,7 @@ import {
 import { handoffUrl, isPubliclyReachable } from "@norish/shared-server/bring/public-url";
 import { getGroceryListProvider } from "@norish/shared-server/config/server-config-loader";
 import { trpcLogger as log } from "@norish/shared-server/logger";
-import { SendToBringInputSchema, type SendToBringResult } from "@norish/shared/contracts/zod/bring";
+import { SendToBringInputSchema } from "@norish/shared/contracts/zod/bring";
 
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";

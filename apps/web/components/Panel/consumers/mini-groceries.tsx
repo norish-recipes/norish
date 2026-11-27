@@ -17,8 +17,8 @@ import { Button, Input, Spinner } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { ScaledFood } from "@norish/shared-react/groceries";
-import { useGroceryListProvider } from "@norish/shared-react/config";
 import type { EditedIngredient } from "@norish/shared/lib/grocery-lines";
+import { useGroceryListProvider } from "@norish/shared-react/config";
 import {
   useAddAtOnce,
   useGroceriesPantryAndCatalogueSubscriptions,
