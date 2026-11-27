@@ -15,6 +15,14 @@ export const RECIPE_PAGE_COLORS = ["dish", "theme"] as const;
 
 export type RecipePageColorMode = (typeof RECIPE_PAGE_COLORS)[number];
 
+/**
+ * The floating bars (bottom navigation, floating pills, the selection bar) stand on the opposite
+ * theme's ground (`contrast`, ADR-0020) or on the active theme's own raised surface (`match`).
+ */
+export const FLOATING_BAR_STYLES = ["contrast", "match"] as const;
+
+export type FloatingBarStyle = (typeof FLOATING_BAR_STYLES)[number];
+
 /** Today's meals on the dashboard: always, only when something is planned, or hidden. */
 export const TODAY_SECTION_VISIBILITIES = ["always", "planned", "hidden"] as const;
 
@@ -50,6 +58,7 @@ export const DevicePreferencesSchema = z.object({
   unitStyle: z.enum(UNIT_STYLES).catch("written"),
   hiddenItems: HiddenItemsSchema.catch([]),
   recipePageColor: z.enum(RECIPE_PAGE_COLORS).catch("dish"),
+  floatingBarStyle: z.enum(FLOATING_BAR_STYLES).catch("contrast"),
   todaySectionVisibility: z.enum(TODAY_SECTION_VISIBILITIES).catch("always"),
   recipeViewMode: z.enum(RECIPE_VIEW_MODES).catch("grid"),
 });

@@ -193,6 +193,14 @@
           "abbreviated": "Skróty"
         }
       },
+      "floatingBarStyle": {
+        "title": "Styl pływającego paska",
+        "description": "Jak wyglądają dolna nawigacja i inne pływające paski: w kontraście z motywem lub w kolorach samego motywu",
+        "options": {
+          "contrast": "Kontrastowy",
+          "match": "Zgodny z motywem"
+        }
+      },
       "afterPlanning": {
         "title": "Po zaplanowaniu przepisu",
         "description": "Co się dzieje, gdy planujesz przepis",

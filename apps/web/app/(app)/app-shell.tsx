@@ -2,6 +2,7 @@ import type { DehydratedState } from "@tanstack/react-query";
 import { ShellSubscriptions } from "@/app/(app)/shell-subscriptions";
 import { AuthProviders } from "@/app/providers/auth-providers";
 import { ArrivalScroll } from "@/components/arrival-scroll";
+import { FloatingBarStyleSync } from "@/components/floating-bar-style";
 import ClipboardImportPrompt from "@/components/imports/clipboard-import-prompt";
 import { Navbar } from "@/components/navbar/navbar";
 import { QuerySeedBoundary } from "@/components/query-seed-boundary";
@@ -68,6 +69,7 @@ export function AppShell({ children, seed }: { children: React.ReactNode; seed?:
             <ClipboardImportPrompt />
             <AIKeyRejectionPrompt />
             <ShellSubscriptions />
+            <FloatingBarStyleSync />
           </OfflineCacheController>
         </QuerySeedBoundary>
       </AuthProviders>

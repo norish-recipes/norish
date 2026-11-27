@@ -193,6 +193,14 @@
           "abbreviated": "Abgekürzt"
         }
       },
+      "floatingBarStyle": {
+        "title": "Stil der schwebenden Leisten",
+        "description": "Wie die untere Navigation und andere schwebende Leisten aussehen: im Kontrast zum Design oder in den eigenen Farben des Designs",
+        "options": {
+          "contrast": "Kontrastierend",
+          "match": "Passend zum Design"
+        }
+      },
       "afterPlanning": {
         "title": "Nach dem Planen eines Rezepts",
         "description": "Was passiert, wenn du ein Rezept planst",

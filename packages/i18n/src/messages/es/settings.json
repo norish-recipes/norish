@@ -193,6 +193,14 @@
           "abbreviated": "Abreviadas"
         }
       },
+      "floatingBarStyle": {
+        "title": "Estilo de la barra flotante",
+        "description": "Cómo se ven la navegación inferior y otras barras flotantes: en contraste con el tema o con los colores del propio tema",
+        "options": {
+          "contrast": "Contrastado",
+          "match": "Igual que el tema"
+        }
+      },
       "afterPlanning": {
         "title": "Después de planificar una receta",
         "description": "Qué ocurre al planificar una receta",

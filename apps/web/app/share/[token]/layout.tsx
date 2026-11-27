@@ -1,3 +1,4 @@
+import { FloatingBarStyleSync } from "@/components/floating-bar-style";
 import { QuerySeed } from "@/components/query-seed";
 import { readRequestProfile } from "@/lib/request-profile";
 
@@ -30,7 +31,10 @@ export default async function SharedRecipeLayout({
         return recipe;
       }}
     >
-      <DevicePreferencesForVisit>{children}</DevicePreferencesForVisit>
+      <DevicePreferencesForVisit>
+        <FloatingBarStyleSync />
+        {children}
+      </DevicePreferencesForVisit>
     </QuerySeed>
   );
 }

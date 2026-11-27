@@ -193,6 +193,14 @@
           "abbreviated": "Afgekort"
         }
       },
+      "floatingBarStyle": {
+        "title": "Stijl van de zwevende balk",
+        "description": "Hoe de onderste navigatie en andere zwevende balken eruitzien: in contrast met het thema of in de eigen kleuren van het thema",
+        "options": {
+          "contrast": "Contrasterend",
+          "match": "Past bij thema"
+        }
+      },
       "afterPlanning": {
         "title": "Na het plannen van een recept",
         "description": "Wat er gebeurt als je een recept plant",

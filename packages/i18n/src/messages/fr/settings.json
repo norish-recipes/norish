@@ -193,6 +193,14 @@
           "abbreviated": "Abrégées"
         }
       },
+      "floatingBarStyle": {
+        "title": "Style de la barre flottante",
+        "description": "Apparence de la navigation du bas et des autres barres flottantes : en contraste avec le thème ou aux couleurs du thème",
+        "options": {
+          "contrast": "Contrasté",
+          "match": "Assorti au thème"
+        }
+      },
       "afterPlanning": {
         "title": "Après avoir planifié une recette",
         "description": "Ce qui se passe quand vous planifiez une recette",

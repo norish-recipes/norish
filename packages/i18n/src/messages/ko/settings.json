@@ -193,6 +193,14 @@
           "abbreviated": "줄여서"
         }
       },
+      "floatingBarStyle": {
+        "title": "플로팅 바 스타일",
+        "description": "하단 내비게이션과 다른 플로팅 바의 모양: 테마와 대비되게 또는 테마 자체의 색상으로",
+        "options": {
+          "contrast": "대비",
+          "match": "테마와 동일"
+        }
+      },
       "afterPlanning": {
         "title": "레시피 계획 후",
         "description": "레시피를 계획할 때 일어나는 일",

@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/app/(app)/app-shell";
+import { FloatingBarStyleScript } from "@/components/floating-bar-style-script";
 import { readQuerySeed } from "@/components/query-seed";
 import { DESTINATION_HEADER, loginPath } from "@/lib/auth/login-redirect";
 import { readReaderToday } from "@/lib/reader-today-server";
@@ -34,15 +35,19 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const { id, email, name, image, version } = identity;
 
   return (
-    <AppShell
-      seed={{
-        deviceKind: kind,
-        reader: { id, email, name, image, version },
-        readerToday,
-        queries,
-      }}
-    >
-      {children}
-    </AppShell>
+    <>
+      {/* Ahead of the shell, so <html> carries the style before the bar's first frame. */}
+      <FloatingBarStyleScript style={deviceBlocks(preferences)[kind].floatingBarStyle} />
+      <AppShell
+        seed={{
+          deviceKind: kind,
+          reader: { id, email, name, image, version },
+          readerToday,
+          queries,
+        }}
+      >
+        {children}
+      </AppShell>
+    </>
   );
 }
