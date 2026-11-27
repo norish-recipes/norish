@@ -193,6 +193,14 @@
           "abbreviated": "Abbreviated"
         }
       },
+      "floatingBarStyle": {
+        "title": "Floating bar style",
+        "description": "How the bottom navigation and other floating bars look: in contrast to the theme, or in the theme's own colors",
+        "options": {
+          "contrast": "Contrasting",
+          "match": "Matches theme"
+        }
+      },
       "afterPlanning": {
         "title": "After planning a recipe",
         "description": "What happens when you plan a recipe",

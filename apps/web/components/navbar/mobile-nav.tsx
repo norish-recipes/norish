@@ -25,9 +25,11 @@ const TAB_ICONS: Record<string, typeof HomeIcon> = {
   [SETTINGS_HREF]: Cog6ToothIcon,
 };
 
-// Both floating pieces share one solid treatment on the chrome tokens — the
-// opposite theme's ground — so the bar contrasts with the cards scrolling
-// under it (ADR-0020).
+// Both floating pieces share one solid treatment on the chrome tokens. By
+// default those are the opposite theme's ground, so the bar contrasts with the
+// cards scrolling under it (ADR-0020); the reader's Floating Bar Style
+// `match` redefines the tokens in the active theme's own colours, so nothing
+// here changes with it.
 const barSurfaceClassName =
   "bg-chrome border-chrome-border rounded-full border shadow-[0_8px_28px_-10px_rgba(0,0,0,0.3)]";
 

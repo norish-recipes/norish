@@ -193,6 +193,14 @@
           "abbreviated": "Lyhennettyinä"
         }
       },
+      "floatingBarStyle": {
+        "title": "Kelluvan palkin tyyli",
+        "description": "Miltä alanavigointi ja muut kelluvat palkit näyttävät: teemaan nähden kontrastina tai teeman omilla väreillä",
+        "options": {
+          "contrast": "Kontrastinen",
+          "match": "Teeman mukainen"
+        }
+      },
       "afterPlanning": {
         "title": "Reseptin suunnittelun jälkeen",
         "description": "Mitä tapahtuu, kun suunnittelet reseptin",

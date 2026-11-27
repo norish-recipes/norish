@@ -193,6 +193,14 @@
           "abbreviated": "Forkortet"
         }
       },
+      "floatingBarStyle": {
+        "title": "Stil på den flytende linjen",
+        "description": "Hvordan den nederste navigasjonen og andre flytende linjer ser ut: i kontrast til temaet eller i temaets egne farger",
+        "options": {
+          "contrast": "Kontrasterende",
+          "match": "Som temaet"
+        }
+      },
       "afterPlanning": {
         "title": "Etter planlegging av en oppskrift",
         "description": "Hva som skjer når du planlegger en oppskrift",

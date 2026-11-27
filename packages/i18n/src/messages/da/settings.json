@@ -193,6 +193,14 @@
           "abbreviated": "Forkortet"
         }
       },
+      "floatingBarStyle": {
+        "title": "Stil på den flydende bjælke",
+        "description": "Hvordan den nederste navigation og andre flydende bjælker ser ud: i kontrast til temaet eller i temaets egne farver",
+        "options": {
+          "contrast": "Kontrasterende",
+          "match": "Som temaet"
+        }
+      },
       "afterPlanning": {
         "title": "Efter planlægning af en opskrift",
         "description": "Hvad der sker, når du planlægger en opskrift",

@@ -279,6 +279,74 @@ test("a hidden Today's meals never reaches the phone's dashboard markup, only th
   expect(await dashboardHasTodaysMeals(browser, "desktop")).toBe(true);
 });
 
+/**
+ * Who first put the Floating Bar Style on `<html>`, and whether the bar's chrome token resolves to
+ * the theme's own surface once loaded. The server's inline script runs while the page is parsed,
+ * ahead of the shell, so it is the setter when the first frame already has the style; the app's own
+ * sync runs only after hydration, from a bundle.
+ */
+async function floatingBarOnLoad(browser: Browser, kind: DeviceKind) {
+  const context = await browser.newContext({
+    baseURL: stack.baseURL,
+    storageState: { cookies: stack.ownerCookies, origins: [] },
+    userAgent: USER_AGENTS[kind],
+    // In the light theme `match` puts the bar on the card's own surface.
+    colorScheme: "light",
+  });
+
+  try {
+    const page = await context.newPage();
+
+    await page.addInitScript(() => {
+      const setAttribute = Element.prototype.setAttribute;
+      const record = window as unknown as { floatingBarSetBy?: string };
+
+      Element.prototype.setAttribute = function (name: string, value: string) {
+        if (name === "data-floating-bar" && record.floatingBarSetBy === undefined) {
+          const script = document.currentScript as HTMLScriptElement | null;
+
+          record.floatingBarSetBy = script && !script.src ? "inline script" : "app";
+        }
+
+        return setAttribute.call(this, name, value);
+      };
+    });
+    await page.goto("/");
+
+    return await page.evaluate(() => {
+      const root = document.documentElement;
+      const style = getComputedStyle(root);
+
+      return {
+        setBy: (window as unknown as { floatingBarSetBy?: string }).floatingBarSetBy ?? null,
+        attribute: root.getAttribute("data-floating-bar"),
+        onSurface:
+          style.getPropertyValue("--chrome").trim() ===
+          style.getPropertyValue("--untinted-surface").trim(),
+      };
+    });
+  } finally {
+    await context.close();
+  }
+}
+
+test("a phone set to match the theme has its bar in the theme's colours from the server's markup, only the phone", async ({
+  browser,
+}) => {
+  await seed("phone", { floatingBarStyle: "match" });
+
+  expect(await floatingBarOnLoad(browser, "phone")).toEqual({
+    setBy: "inline script",
+    attribute: "match",
+    onSurface: true,
+  });
+  expect(await floatingBarOnLoad(browser, "desktop")).toEqual({
+    setBy: null,
+    attribute: null,
+    onSurface: false,
+  });
+});
+
 test("Today's meals is in the dashboard markup by default", async ({ browser }) => {
   for (const kind of ["phone", "desktop"] as const) {
     expect(await dashboardHasTodaysMeals(browser, kind)).toBe(true);

@@ -334,6 +334,10 @@ _Avoid_: Device (suggests one particular handset that could be forgotten), Break
 A choice a reader makes about how Norish is shown to them, kept on their profile once for each Device Kind, so a cramped phone can hide what a desktop keeps and a new phone starts from the reader's phone choices. Because it lives on the profile, the first frame is drawn with it already applied, skeletons included, so nothing appears only to vanish when the choice arrives. It never changes what is stored for the household. A reader who is signed out has none: they see the defaults, and a switch they flip lasts only for that visit. A reader's language is not one: it follows the person to every device.
 _Avoid_: Display Preference, Local Setting (it is not kept on the device), Cookie Preference (names a storage mechanism)
 
+**Floating Bar Style**:
+A Device Preference for how the floating bars on the web app (the bottom navigation on a phone, the floating pills, the selection bar) take their colours: _contrast_, the default, stands them on the opposite theme's ground so they separate from the cards under them (ADR-0020), and _match_ stands them on the active theme's own raised surface. It changes colour only, never what a bar holds or where it sits.
+_Avoid_: Navbar theme, Bar colour (it is a choice of two styles, not a colour picker)
+
 **Skeleton**:
 The one stand-in a page shows until its data arrives, in that page's own shape. It draws only what every instance of the page has, as the reader's Device Preferences shape it, so content arriving may push it down but nothing drawn in it vanishes.
 _Avoid_: Loader, Preloader, Spinner (a progress sign, not the page's shape)

@@ -19,6 +19,7 @@ import {
   useProfileQuery,
 } from "@norish/shared-react/reader";
 import {
+  FLOATING_BAR_STYLES,
   RECIPE_PAGE_COLORS,
   TODAY_SECTION_VISIBILITIES,
   UNIT_STYLES,
@@ -49,6 +50,7 @@ export default function PreferencesCard() {
   const [hiddenItems, setHiddenItems] = useDevicePreference("hiddenItems");
   const [recipePageColor, setRecipePageColor] = useDevicePreference("recipePageColor");
   const [unitStyle, setUnitStyle] = useDevicePreference("unitStyle");
+  const [floatingBarStyle, setFloatingBarStyle] = useDevicePreference("floatingBarStyle");
   const deviceKind = useDeviceKind();
 
   const currentLocale = getLocalePreference(user) ?? defaultLocale;
@@ -202,6 +204,18 @@ export default function PreferencesCard() {
           options={RECIPE_PAGE_COLORS}
           value={recipePageColor}
           onChange={setRecipePageColor}
+        />
+      </SettingRow>
+      <SettingRow
+        description={t("floatingBarStyle.description")}
+        title={t("floatingBarStyle.title")}
+      >
+        <ChoiceSelect
+          label={t("floatingBarStyle.title")}
+          optionLabel={(option) => t(`floatingBarStyle.options.${option}`)}
+          options={FLOATING_BAR_STYLES}
+          value={floatingBarStyle}
+          onChange={setFloatingBarStyle}
         />
       </SettingRow>
       <SettingRow description={t("unitStyle.description")} title={t("unitStyle.title")}>

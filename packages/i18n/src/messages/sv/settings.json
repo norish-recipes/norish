@@ -193,6 +193,14 @@
           "abbreviated": "Förkortade"
         }
       },
+      "floatingBarStyle": {
+        "title": "Stil för det flytande fältet",
+        "description": "Hur den nedre navigeringen och andra flytande fält ser ut: i kontrast till temat eller i temats egna färger",
+        "options": {
+          "contrast": "Kontrasterande",
+          "match": "Som temat"
+        }
+      },
       "afterPlanning": {
         "title": "Efter att ett recept planerats",
         "description": "Vad som händer när du planerar ett recept",

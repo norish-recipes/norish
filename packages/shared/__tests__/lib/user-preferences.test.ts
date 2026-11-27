@@ -116,6 +116,8 @@ describe("user preferences", () => {
       write({ amountDisplay: "decimal", todaySectionVisibility: "planned", recipeViewMode: "list" })
     ).toBe(true);
     expect(write({ recipePageColor: "neon" })).toBe(false);
+    expect(write({ floatingBarStyle: "match" })).toBe(true);
+    expect(write({ floatingBarStyle: "neon" })).toBe(false);
     expect(write({ hiddenItems: ["timers", "fromANewerVersion"] })).toBe(true);
     expect(write({ hiddenItems: [""] })).toBe(false);
     expect(

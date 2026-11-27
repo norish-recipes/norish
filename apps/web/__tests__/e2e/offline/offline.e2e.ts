@@ -470,6 +470,11 @@ test("a link copied while the backend is down is offered, and Import is Queued",
 });
 
 test("the Pantry boots from a cold offline start, and Put on the list is Queued", async () => {
+  // Signing B in purged A's saved reads; A's Warm Set reads the Pantry again on its own time, and
+  // reads save on a throttle after it. Going offline before then finds no saved Pantry.
+  await expect
+    .poll(() => persistedReadsHold(page, SEEDED_PANTRY_FOOD), { timeout: 30_000 })
+    .toBe(true);
   await offline.transition("stopped");
 
   // An address never visited in this profile: the offline shell boots it.

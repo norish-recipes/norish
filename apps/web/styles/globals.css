@@ -296,6 +296,35 @@
   }
 }
 
+/* ---------------------------------------------------------------------------
+   Floating Bar Style: `match`.
+
+   The chrome tokens (tooling/tailwind/heroui-theme.css) default to the OPPOSITE theme's ground
+   (`contrast`, ADR-0020). The Floating Bar Style Device Preference sets
+   `data-floating-bar="match"` on <html> (lib/floating-bar-style.ts), and these blocks redefine
+   the same five tokens from the ACTIVE theme's own tokens, so every floating bar follows with no
+   per-component change. They are declared on <html> and resolved there, so a recipe page's dish
+   tint, which rebuilds --surface in its own scope, never reaches the bar.
+
+   Light: the card's own white, set apart from the cards by the border and the shadow the bar
+   already carries. Dark: surface-secondary, a step over the card. Text keeps the theme's
+   foreground and, on idle tabs, its muted: the same pairs as on the page. The light block also
+   matches a bare <html>, which is the light theme until the theme class is set. */
+@layer components {
+  :root[data-floating-bar="match"] {
+    --chrome: var(--untinted-surface);
+    --chrome-border: var(--untinted-surface-tertiary);
+    --chrome-foreground: var(--foreground);
+    --chrome-hover: var(--untinted-surface-secondary);
+    --chrome-muted: var(--muted);
+  }
+
+  :root[data-floating-bar="match"]:is(.dark, [data-theme="dark"]) {
+    --chrome: var(--untinted-surface-secondary);
+    --chrome-hover: var(--untinted-surface-tertiary);
+  }
+}
+
 /* View transitions. PageTransition classes a page `nav-forward`, or `nav-back` for a back link or a
    tab to the left (components/page-transition.tsx), and app/layout.tsx types the sign-in. */
 :root {

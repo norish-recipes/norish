@@ -26,7 +26,9 @@
     --border: oklch(89.5% 0.012 86);
     /* Floating chrome (the bottom nav, floating pills) stands on the OPPOSITE
        theme's ground so it contrasts with the cards around it: each block
-       carries the other block's default/muted/foreground/etc. values. */
+       carries the other block's default/muted/foreground/etc. values. This is
+       the `contrast` Floating Bar Style, the default; web's styles/globals.css
+       redefines these five tokens for `match`, the active theme's own colours. */
     --chrome: oklch(27.4% 0.008 80);
     --chrome-border: oklch(31% 0.008 80);
     --chrome-foreground: oklch(99.11% 0.0015 150.36);

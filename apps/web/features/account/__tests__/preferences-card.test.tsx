@@ -63,6 +63,11 @@ const recipePageColorMock = vi.hoisted(() => ({
   setMode: vi.fn(),
 }));
 
+const floatingBarStyleMock = vi.hoisted(() => ({
+  style: "contrast" as "contrast" | "match",
+  setStyle: vi.fn(),
+}));
+
 const deviceKindMock = vi.hoisted(() => ({ kind: "phone" as DeviceKind }));
 
 vi.mock("@norish/shared-react/reader", async () => ({
@@ -74,6 +79,7 @@ vi.mock("@norish/shared-react/reader", async () => ({
       todaySectionVisibility: todaysMealsMock.visibility,
       hiddenItems: hiddenItemsMock.hidden,
       recipePageColor: recipePageColorMock.mode,
+      floatingBarStyle: floatingBarStyleMock.style,
     }),
     {
       kind: () => deviceKindMock.kind,
@@ -83,6 +89,7 @@ vi.mock("@norish/shared-react/reader", async () => ({
           todaySectionVisibility: todaysMealsMock.setVisibility,
           hiddenItems: hiddenItemsMock.setHidden,
           recipePageColor: recipePageColorMock.setMode,
+          floatingBarStyle: floatingBarStyleMock.setStyle,
         };
 
         setters[key]?.(next);
@@ -372,6 +379,22 @@ describe("PreferencesCard", () => {
     fireEvent.change(control, { target: { value: "theme" } });
 
     expect(recipePageColorMock.setMode).toHaveBeenCalledWith("theme");
+  });
+
+  it("offers the floating bar style as a choice between contrast and matching the theme", () => {
+    floatingBarStyleMock.style = "contrast";
+
+    render(<PreferencesCard />);
+
+    const control = screen.getByRole("combobox", { name: /floatingBarStyle.title/i });
+    const options = within(control).getAllByRole("option") as HTMLOptionElement[];
+
+    expect(options.map((option) => option.value)).toEqual(["contrast", "match"]);
+    expect((control as HTMLSelectElement).value).toBe("contrast");
+
+    fireEvent.change(control, { target: { value: "match" } });
+
+    expect(floatingBarStyleMock.setStyle).toHaveBeenCalledWith("match");
   });
 
   it("reflects the stored today's-meals rule and writes a new one", () => {
