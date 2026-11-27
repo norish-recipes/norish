@@ -35,7 +35,7 @@ import {
   parseEditedIngredientLine,
 } from "@norish/shared/lib/grocery-lines";
 
-/** The add button's icon while the lines are on their way to Bring!. */
+/** The add button's icon while the lines are being made ready for Bring!. */
 function SendingIcon({ className }: SVGProps<SVGSVGElement>) {
   return <Spinner className={className} color="current" size="sm" />;
 }
@@ -49,7 +49,8 @@ type MiniGroceriesProps = {
   /**
    * Put the lines to buy on the list without showing the panel, then close:
    * what "Add ingredients to groceries" after planning does. The panel opens
-   * only where it has something to say, as when the Pantry cannot be read.
+   * only where it has something to say, as when the Pantry cannot be read, or
+   * where the list is Bring!, which opens from a press.
    */
   addAtOnce?: boolean;
 };
@@ -74,12 +75,8 @@ function AddAtOnce({
     originalServings,
     initialServings
   );
-  const { locale } = useUnitFormatter();
 
   useAddAtOnce({
-    recipeId,
-    servings: initialServings,
-    locale,
     lines: scaledIngredients,
     linesReady: !isLoading,
     onOpenChange,
@@ -343,7 +340,8 @@ function MiniGroceriesContent({
           <ActionButtonGroup>
             <ActionButton
               action="add"
-              // Bring! takes a moment to answer: the button says it is on its way until it opens.
+              // The lines are made ready for Bring! as they change: the button waits until they are,
+              // so its press can open Bring! at once.
               icon={isBring && isAdding ? SendingIcon : undefined}
               isDisabled={
                 selectedCount + inPantrySelectedCount === 0 || isAdding || isProviderLoading

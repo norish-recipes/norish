@@ -22,7 +22,6 @@ const state = vi.hoisted(() => ({
   lines: [] as GroceryIngredient[],
   create: undefined as unknown as ReturnType<typeof vi.fn>,
   keep: undefined as unknown as ReturnType<typeof vi.fn>,
-  send: undefined as unknown as ReturnType<typeof vi.fn>,
   bring: false,
   providerLoading: false,
 }));
@@ -37,7 +36,6 @@ vi.mock("../../config", async () => {
     useUnitsQuery: () => ({ units }),
   };
 });
-vi.mock("../use-send-to-bring", () => ({ useSendToBring: () => state.send }));
 vi.mock("../use-groceries-mutations", () => ({
   useGroceriesMutations: () => ({ createGroceriesFromData: state.create }),
 }));
@@ -85,7 +83,6 @@ describe("useLinesToBuy", () => {
   beforeEach(() => {
     state.create = vi.fn(async () => undefined);
     state.keep = vi.fn(async () => "kept");
-    state.send = vi.fn(async () => true);
     state.bring = false;
     state.providerLoading = false;
     state.lines = [line("l-oil", "olive oil", 2), line("l-chicken", "chicken breast", 500)];
@@ -235,79 +232,54 @@ describe("useLinesToBuy", () => {
     });
   });
 
-  describe("addLines where the list is Bring!", () => {
+  describe("where the list is Bring!", () => {
     beforeEach(() => {
       state.bring = true;
     });
 
-    it("sends the lines as edited here for the recipe and servings, and never to the built-in list", async () => {
-      const { result, adapter } = setup(
+    it("says so", () => {
+      const { result } = setup();
+
+      expect(result.current.isBring).toBe(true);
+    });
+
+    it("adds nothing to the built-in list, answers false, and says nothing", async () => {
+      const { result, adapter } = setup({}, { recipeId: "r1", servings: 4 });
+
+      let added: boolean | undefined;
+
+      await act(async () => {
+        added = await result.current.addLines(result.current.toBuy);
+      });
+
+      expect(added).toBe(false);
+      expect(state.create).not.toHaveBeenCalled();
+      expect(adapter.toast.show).not.toHaveBeenCalled();
+      expect(result.current.isAdding).toBe(false);
+    });
+
+    it("writes the lines for Bring! as edited here", () => {
+      const { result } = setup(
         { "l-chicken": { name: "chicken thighs", amount: 3, unit: "pcs" } },
         { recipeId: "r1", servings: 4 }
       );
 
-      let added: boolean | undefined;
-
-      await act(async () => {
-        added = await result.current.addLines(result.current.toBuy);
-      });
-
-      expect(added).toBe(true);
-      expect(state.send).toHaveBeenCalledWith(
-        [{ name: "chicken thighs", amount: 3, unit: "pcs" }],
-        { recipeId: "r1", servings: 4 }
-      );
-      expect(state.create).not.toHaveBeenCalled();
-      expect(adapter.toast.show).not.toHaveBeenCalled();
+      expect(result.current.toBringLines(result.current.toBuy)).toEqual([
+        { name: "chicken thighs", amount: 3, unit: "pcs" },
+      ]);
     });
 
-    it("still sends, with no recipe, when it is not told the source", async () => {
+    it("writes them without a source too", () => {
       const { result } = setup();
 
-      await act(async () => {
-        await result.current.addLines(result.current.toBuy);
-      });
-
-      expect(state.send).toHaveBeenCalledWith(
-        [{ name: "chicken breast", amount: 500, unit: "g" }],
-        { recipeId: undefined, servings: undefined }
-      );
-    });
-
-    it("sends once however often it is called", async () => {
-      const { result } = setup({}, { recipeId: "r1", servings: 2 });
-
-      await act(async () => {
-        await Promise.all([
-          result.current.addLines(result.current.toBuy),
-          result.current.addLines(result.current.toBuy),
-        ]);
-      });
-
-      expect(state.send).toHaveBeenCalledTimes(1);
-      expect(result.current.isAdding).toBe(true);
-    });
-
-    it("lets the person try again when Bring! did not take the lines", async () => {
-      state.send = vi.fn(async () => false);
-      const { result } = setup({}, { recipeId: "r1", servings: 2 });
-      let added: boolean | undefined;
-
-      await act(async () => {
-        added = await result.current.addLines(result.current.toBuy);
-      });
-      expect(added).toBe(false);
-      expect(result.current.isAdding).toBe(false);
-      await act(async () => {
-        await result.current.addLines(result.current.toBuy);
-      });
-
-      expect(state.send).toHaveBeenCalledTimes(2);
+      expect(result.current.toBringLines(result.current.toBuy)).toEqual([
+        { name: "chicken breast", amount: 500, unit: "g" },
+      ]);
     });
   });
 
-  describe("the units sent to Bring!", () => {
-    const sentLines = async (locale: string) => {
+  describe("the units written for Bring!", () => {
+    const bringLines = (locale: string) => {
       state.pantry = [];
       state.lines = [
         line("l-flour", "flour", 250, { unit: "gram" }),
@@ -317,21 +289,17 @@ describe("useLinesToBuy", () => {
       ];
       const { result } = setup({}, { recipeId: "r1", servings: 2, locale });
 
-      await act(async () => {
-        await result.current.addLines(result.current.toBuy);
-      });
-
-      return (
-        state.send.mock.calls[0]![0] as { amount: number; unit: string | null; name: string }[]
-      ).map((item) => [item.amount, item.unit, item.name]);
+      return result.current
+        .toBringLines(result.current.toBuy)
+        .map((item) => [item.amount, item.unit, item.name]);
     };
 
     beforeEach(() => {
       state.bring = true;
     });
 
-    it("writes units short, in the reader's language, not as the stored canonical id (en)", async () => {
-      expect(await sentLines("en")).toEqual([
+    it("writes units short, in the reader's language, not as the stored canonical id (en)", () => {
+      expect(bringLines("en")).toEqual([
         [250, "g", "flour"],
         [0.5, "l", "milk"],
         [3, null, "eggs"],
@@ -339,8 +307,8 @@ describe("useLinesToBuy", () => {
       ]);
     });
 
-    it("writes them in German for a German reader", async () => {
-      expect(await sentLines("de")).toEqual([
+    it("writes them in German for a German reader", () => {
+      expect(bringLines("de")).toEqual([
         [250, "g", "flour"],
         [0.5, "l", "milk"],
         [3, null, "eggs"],
@@ -348,7 +316,7 @@ describe("useLinesToBuy", () => {
       ]);
     });
 
-    it("leaves a unit it does not know as it is, and formats an edited unit the same way", async () => {
+    it("leaves a unit it does not know as it is, and formats an edited unit the same way", () => {
       state.pantry = [];
       const { result } = setup(
         {
@@ -358,18 +326,16 @@ describe("useLinesToBuy", () => {
         { recipeId: "r1", servings: 2, locale: "en" }
       );
 
-      await act(async () => {
-        await result.current.addLines([...result.current.toBuy, ...result.current.inPantry]);
-      });
-
-      expect((state.send.mock.calls[0]![0] as { unit: string }[]).map((item) => item.unit)).toEqual(
-        ["bottle-ish", "g"]
-      );
+      expect(
+        result.current
+          .toBringLines([...result.current.toBuy, ...result.current.inPantry])
+          .map((item) => item.unit)
+      ).toEqual(["bottle-ish", "g"]);
     });
   });
 
   describe("before the instance has said which list this is", () => {
-    it("adds nothing, to either list, and does not use up the one add", async () => {
+    it("adds nothing and does not use up the one add", async () => {
       state.providerLoading = true;
       const { result, rerender } = setup();
 
@@ -381,7 +347,6 @@ describe("useLinesToBuy", () => {
 
       expect(added).toBe(false);
       expect(state.create).not.toHaveBeenCalled();
-      expect(state.send).not.toHaveBeenCalled();
       expect(result.current.isAdding).toBe(false);
       expect(result.current.isProviderLoading).toBe(true);
 

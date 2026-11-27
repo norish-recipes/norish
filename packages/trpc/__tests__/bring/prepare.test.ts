@@ -1,8 +1,9 @@
 // @vitest-environment node
 /**
- * bring.send: the lines go to Bring! only when it is the instance's list, behind a page that
- * shows nothing but the lines, for a recipe the reader may view, and no more than 30 times in
- * ten minutes. Bring!'s own API is never called: its client is mocked.
+ * The bring router: a handoff is prepared only when Bring! is the instance's list, behind a page
+ * that shows nothing but the lines, for a recipe the reader may view, and no more than 30 times
+ * in ten minutes; only its owner changes or discards it. Bring!'s own API is never called: its
+ * client is mocked.
  */
 import { TRPCError } from "@trpc/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -27,6 +28,7 @@ const requestDeeplink = vi.hoisted(() => vi.fn());
 const checkImport = vi.hoisted(() => vi.fn());
 const createHandoff = vi.hoisted(() => vi.fn());
 const deleteHandoff = vi.hoisted(() => vi.fn());
+const updateHandoff = vi.hoisted(() => vi.fn());
 const addressesOf = vi.hoisted(() => vi.fn());
 
 vi.mock("@norish/config/env-config-server", async (importOriginal) => {
@@ -54,6 +56,7 @@ vi.mock("@norish/shared-server/bring/handoff-store", async (importOriginal) => (
   ...(await importOriginal<typeof import("@norish/shared-server/bring/handoff-store")>()),
   createHandoff,
   deleteHandoff,
+  updateHandoff,
 }));
 vi.mock("@norish/shared-server/private-addresses", () => ({
   addressesOf,
@@ -66,6 +69,7 @@ vi.mock("@norish/shared-server/logger", () => ({
 
 const RECIPE_ID = "123e4567-e89b-42d3-a456-426614174000";
 const DEEPLINK = "https://getbring.onelink.me/xyz";
+const TOKEN = "T".repeat(32);
 const user = createMockUser();
 const ctx = createMockAuthedContext(user, createMockHousehold());
 const caller = bringRouter.createCaller(createMockCallerContext(ctx));
@@ -81,27 +85,31 @@ beforeEach(() => {
   increment.mockReset().mockResolvedValue(1);
   assertRecipeAccess.mockReset().mockResolvedValue(undefined);
   getRecipeNameAndImage.mockReset().mockResolvedValue({ name: "Lasagne", image: null });
-  createHandoff.mockReset().mockResolvedValue("T".repeat(32));
+  createHandoff.mockReset().mockResolvedValue(TOKEN);
   deleteHandoff.mockReset().mockResolvedValue(undefined);
+  updateHandoff.mockReset().mockResolvedValue(true);
   requestDeeplink.mockReset().mockResolvedValue({ ok: true, deeplink: DEEPLINK });
   checkImport.mockReset().mockResolvedValue({ ok: true });
   addressesOf.mockReset().mockResolvedValue([{ address: "93.184.216.34", family: 4 }]);
 });
 
-describe("bring.send", () => {
-  it("stores the formatted lines and returns Bring!'s deeplink", async () => {
-    const result = await caller.send({ recipeId: RECIPE_ID, servings: 4, items });
+describe("bring.prepare", () => {
+  it("stores the formatted lines for the reader and returns the token and Bring!'s deeplink", async () => {
+    const result = await caller.prepare({ recipeId: RECIPE_ID, servings: 4, items });
 
-    expect(result).toEqual({ ok: true, deeplink: DEEPLINK });
+    expect(result).toEqual({ ok: true, token: TOKEN, deeplink: DEEPLINK });
     expect(assertRecipeAccess).toHaveBeenCalledWith(expect.anything(), RECIPE_ID, "view");
-    expect(createHandoff).toHaveBeenCalledWith({
-      title: "Lasagne",
-      servings: 4,
-      lines: ["200 g Mehl", "2.5 Eier"],
-      image: null,
-    });
+    expect(createHandoff).toHaveBeenCalledWith(
+      {
+        title: "Lasagne",
+        servings: 4,
+        lines: ["200 g Mehl", "2.5 Eier"],
+        image: null,
+      },
+      user.id
+    );
     expect(requestDeeplink).toHaveBeenCalledWith({
-      url: `https://norish.example.com/share/bring/${"T".repeat(32)}`,
+      url: `https://norish.example.com/share/bring/${TOKEN}`,
       servings: 4,
     });
   });
@@ -111,13 +119,13 @@ describe("bring.send", () => {
       name: "Lasagne",
       image: `/recipes/${RECIPE_ID}/gallery-1.jpg`,
     });
-    await caller.send({ recipeId: RECIPE_ID, items });
+    await caller.prepare({ recipeId: RECIPE_ID, items });
 
     getRecipeNameAndImage.mockResolvedValueOnce({
       name: "Lasagne",
       image: "https://cdn.example/lasagne.jpg",
     });
-    await caller.send({ recipeId: RECIPE_ID, items });
+    await caller.prepare({ recipeId: RECIPE_ID, items });
 
     expect(createHandoff.mock.calls.map(([handoff]) => handoff.image)).toEqual([
       { recipeId: RECIPE_ID, file: "gallery-1.jpg" },
@@ -126,8 +134,8 @@ describe("bring.send", () => {
   });
 
   it("uses the given title without a recipe, and Norish without either", async () => {
-    await caller.send({ title: "Weekend", items });
-    await caller.send({ items });
+    await caller.prepare({ title: "Weekend", items });
+    await caller.prepare({ items });
 
     expect(createHandoff.mock.calls.map(([handoff]) => handoff.title)).toEqual([
       "Weekend",
@@ -140,7 +148,7 @@ describe("bring.send", () => {
   it("passes on what Bring! said when it failed", async () => {
     requestDeeplink.mockResolvedValue({ ok: false, reason: "bring-unreachable" });
 
-    await expect(caller.send({ items })).resolves.toEqual({
+    await expect(caller.prepare({ items })).resolves.toEqual({
       ok: false,
       reason: "bring-unreachable",
     });
@@ -149,7 +157,7 @@ describe("bring.send", () => {
   it("makes no Bring call, and stores nothing, when the list is the built-in one", async () => {
     getGroceryListProvider.mockResolvedValue("builtin");
 
-    await expect(caller.send({ items })).resolves.toEqual({ ok: false, reason: "not-bring" });
+    await expect(caller.prepare({ items })).resolves.toEqual({ ok: false, reason: "not-bring" });
     expect(requestDeeplink).not.toHaveBeenCalled();
     expect(createHandoff).not.toHaveBeenCalled();
     expect(increment).not.toHaveBeenCalled();
@@ -158,15 +166,18 @@ describe("bring.send", () => {
   it("passes on what Bring! said when it failed, and takes its page down", async () => {
     requestDeeplink.mockResolvedValue({ ok: false, reason: "bring-rejected" });
 
-    await expect(caller.send({ items })).resolves.toEqual({ ok: false, reason: "bring-rejected" });
-    expect(deleteHandoff).toHaveBeenCalledWith("T".repeat(32));
+    await expect(caller.prepare({ items })).resolves.toEqual({
+      ok: false,
+      reason: "bring-rejected",
+    });
+    expect(deleteHandoff).toHaveBeenCalledWith(TOKEN, user.id);
   });
 
   it("has Bring! read the page before it asks for the link", async () => {
-    await caller.send({ servings: 2, items });
+    await caller.prepare({ servings: 2, items });
 
     expect(checkImport).toHaveBeenCalledWith({
-      url: `https://norish.example.com/share/bring/${"T".repeat(32)}`,
+      url: `https://norish.example.com/share/bring/${TOKEN}`,
       servings: 2,
     });
     expect(checkImport.mock.invocationCallOrder[0]).toBeLessThan(
@@ -177,17 +188,17 @@ describe("bring.send", () => {
   it("answers with the status Bring! got when it could not fetch the page, and takes it down", async () => {
     checkImport.mockResolvedValue({ ok: false, reason: "page-unreachable", status: 403 });
 
-    await expect(caller.send({ items })).resolves.toEqual({
+    await expect(caller.prepare({ items })).resolves.toEqual({
       ok: false,
       reason: "page-unreachable",
       status: 403,
     });
     expect(requestDeeplink).not.toHaveBeenCalled();
-    expect(deleteHandoff).toHaveBeenCalledWith("T".repeat(32));
+    expect(deleteHandoff).toHaveBeenCalledWith(TOKEN, user.id);
   });
 
   it("keeps the page up when Bring! took it", async () => {
-    await caller.send({ items });
+    await caller.prepare({ items });
 
     expect(deleteHandoff).not.toHaveBeenCalled();
   });
@@ -195,7 +206,7 @@ describe("bring.send", () => {
   it("refuses a recipe the reader may not view, before anything is stored or counted", async () => {
     assertRecipeAccess.mockRejectedValue(new TRPCError({ code: "FORBIDDEN" }));
 
-    await expect(caller.send({ recipeId: RECIPE_ID, items })).rejects.toMatchObject({
+    await expect(caller.prepare({ recipeId: RECIPE_ID, items })).rejects.toMatchObject({
       code: "FORBIDDEN",
     });
     expect(increment).not.toHaveBeenCalled();
@@ -208,7 +219,7 @@ describe("bring.send", () => {
     it("answers not-public for a plain http AUTH_URL", async () => {
       serverConfig.AUTH_URL = "http://norish.example.com";
 
-      await expect(caller.send({ items })).resolves.toEqual({ ok: false, reason: "not-public" });
+      await expect(caller.prepare({ items })).resolves.toEqual({ ok: false, reason: "not-public" });
       expect(createHandoff).not.toHaveBeenCalled();
       expect(requestDeeplink).not.toHaveBeenCalled();
     });
@@ -216,14 +227,14 @@ describe("bring.send", () => {
     it("answers not-public for an https AUTH_URL that resolves to a private address", async () => {
       addressesOf.mockResolvedValue([{ address: "10.0.0.5", family: 4 }]);
 
-      await expect(caller.send({ items })).resolves.toEqual({ ok: false, reason: "not-public" });
+      await expect(caller.prepare({ items })).resolves.toEqual({ ok: false, reason: "not-public" });
       expect(requestDeeplink).not.toHaveBeenCalled();
     });
 
     it("does not use up the quota when it refuses", async () => {
       serverConfig.AUTH_URL = "http://norish.example.com";
 
-      await caller.send({ items });
+      await caller.prepare({ items });
 
       expect(increment).not.toHaveBeenCalled();
     });
@@ -233,7 +244,10 @@ describe("bring.send", () => {
       Object.assign(serverConfig, { ALLOW_PRIVATE_ADDRESSES: true });
 
       try {
-        await expect(caller.send({ items })).resolves.toEqual({ ok: false, reason: "not-public" });
+        await expect(caller.prepare({ items })).resolves.toEqual({
+          ok: false,
+          reason: "not-public",
+        });
       } finally {
         Reflect.deleteProperty(serverConfig, "ALLOW_PRIVATE_ADDRESSES");
       }
@@ -243,25 +257,29 @@ describe("bring.send", () => {
       serverConfig.AUTH_URL = "http://localhost:3000";
       serverConfig.BRING_API_URL = "http://localhost:4010";
 
-      await expect(caller.send({ items })).resolves.toEqual({ ok: true, deeplink: DEEPLINK });
+      await expect(caller.prepare({ items })).resolves.toEqual({
+        ok: true,
+        token: TOKEN,
+        deeplink: DEEPLINK,
+      });
       expect(requestDeeplink).toHaveBeenCalledWith(
-        expect.objectContaining({ url: `http://localhost:3000/share/bring/${"T".repeat(32)}` })
+        expect.objectContaining({ url: `http://localhost:3000/share/bring/${TOKEN}` })
       );
     });
   });
 
   describe("the rate limit", () => {
-    it("counts per user in a ten-minute window and lets the 30th send through", async () => {
+    it("counts per user in a ten-minute window and lets the 30th through", async () => {
       increment.mockResolvedValue(30);
 
-      await expect(caller.send({ items })).resolves.toMatchObject({ ok: true });
+      await expect(caller.prepare({ items })).resolves.toMatchObject({ ok: true });
       expect(increment).toHaveBeenCalledWith(`bring-send-rate:${user.id}`, 600);
     });
 
-    it("refuses the 31st with rate-limited and sends nothing", async () => {
+    it("refuses the 31st with rate-limited and prepares nothing", async () => {
       increment.mockResolvedValue(31);
 
-      await expect(caller.send({ items })).resolves.toEqual({
+      await expect(caller.prepare({ items })).resolves.toEqual({
         ok: false,
         reason: "rate-limited",
       });
@@ -270,9 +288,9 @@ describe("bring.send", () => {
     });
   });
 
-  describe("an odd line never fails the send", () => {
+  describe("an odd line never fails the handoff", () => {
     it("sends an amount of 0, a negative amount and an odd one without the amount", async () => {
-      await caller.send({
+      await caller.prepare({
         items: [
           { name: "Null", amount: 0, unit: "g" },
           { name: "Minus", amount: -2 },
@@ -290,7 +308,9 @@ describe("bring.send", () => {
     });
 
     it("cuts an over-long unit and name instead of refusing them", async () => {
-      await caller.send({ items: [{ name: "n".repeat(500), amount: 1, unit: "u".repeat(100) }] });
+      await caller.prepare({
+        items: [{ name: "n".repeat(500), amount: 1, unit: "u".repeat(100) }],
+      });
 
       const [line] = createHandoff.mock.calls[0]?.[0].lines as string[];
 
@@ -299,13 +319,13 @@ describe("bring.send", () => {
     });
 
     it("ignores an item whose name is empty after trimming", async () => {
-      await caller.send({ items: [{ name: "   " }, { name: " Salz " }] });
+      await caller.prepare({ items: [{ name: "   " }, { name: " Salz " }] });
 
       expect(createHandoff.mock.calls[0]?.[0].lines).toEqual(["Salz"]);
     });
 
-    it("refuses a send with no usable item, before anything is stored or counted", async () => {
-      await expect(caller.send({ items: [{ name: " " }] })).rejects.toMatchObject({
+    it("refuses a list with no usable item, before anything is stored or counted", async () => {
+      await expect(caller.prepare({ items: [{ name: " " }] })).rejects.toMatchObject({
         code: "BAD_REQUEST",
       });
       expect(createHandoff).not.toHaveBeenCalled();
@@ -314,9 +334,77 @@ describe("bring.send", () => {
   });
 
   it("refuses an empty list and more than 150 lines", async () => {
-    await expect(caller.send({ items: [] })).rejects.toThrow();
+    await expect(caller.prepare({ items: [] })).rejects.toThrow();
     await expect(
-      caller.send({ items: Array.from({ length: 151 }, () => ({ name: "x" })) })
+      caller.prepare({ items: Array.from({ length: 151 }, () => ({ name: "x" })) })
     ).rejects.toThrow();
+  });
+});
+
+describe("bring.update", () => {
+  it("replaces the reader's handoff with the newly formatted lines, without calling Bring!", async () => {
+    await expect(
+      caller.update({ token: TOKEN, recipeId: RECIPE_ID, servings: 2, items })
+    ).resolves.toBe(true);
+
+    expect(updateHandoff).toHaveBeenCalledWith(TOKEN, user.id, {
+      title: "Lasagne",
+      servings: 2,
+      lines: ["200 g Mehl", "2.5 Eier"],
+      image: null,
+    });
+    expect(checkImport).not.toHaveBeenCalled();
+    expect(requestDeeplink).not.toHaveBeenCalled();
+    expect(createHandoff).not.toHaveBeenCalled();
+  });
+
+  it("is not counted against the rate limit", async () => {
+    increment.mockResolvedValue(31);
+
+    await expect(caller.update({ token: TOKEN, items })).resolves.toBe(true);
+    expect(increment).not.toHaveBeenCalled();
+  });
+
+  it("answers false when the handoff is gone or is someone else's", async () => {
+    updateHandoff.mockResolvedValue(false);
+
+    await expect(caller.update({ token: TOKEN, items })).resolves.toBe(false);
+  });
+
+  it("answers false, and changes nothing, when the list is no longer Bring!", async () => {
+    getGroceryListProvider.mockResolvedValue("builtin");
+
+    await expect(caller.update({ token: TOKEN, items })).resolves.toBe(false);
+    expect(updateHandoff).not.toHaveBeenCalled();
+  });
+
+  it("refuses a recipe the reader may not view, before anything is changed", async () => {
+    assertRecipeAccess.mockRejectedValue(new TRPCError({ code: "FORBIDDEN" }));
+
+    await expect(caller.update({ token: TOKEN, recipeId: RECIPE_ID, items })).rejects.toMatchObject(
+      { code: "FORBIDDEN" }
+    );
+    expect(assertRecipeAccess).toHaveBeenCalledWith(expect.anything(), RECIPE_ID, "view");
+    expect(getRecipeNameAndImage).not.toHaveBeenCalled();
+    expect(updateHandoff).not.toHaveBeenCalled();
+  });
+
+  it("refuses a token that prepare could not have returned", async () => {
+    await expect(caller.update({ token: "short", items })).rejects.toThrow();
+    expect(updateHandoff).not.toHaveBeenCalled();
+  });
+});
+
+describe("bring.discard", () => {
+  it("takes down the reader's handoff, and only for the reader", async () => {
+    await caller.discard({ token: TOKEN });
+
+    expect(deleteHandoff).toHaveBeenCalledWith(TOKEN, user.id);
+    expect(requestDeeplink).not.toHaveBeenCalled();
+  });
+
+  it("refuses a token that prepare could not have returned", async () => {
+    await expect(caller.discard({ token: "../other" })).rejects.toThrow();
+    expect(deleteHandoff).not.toHaveBeenCalled();
   });
 });

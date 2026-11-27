@@ -75,8 +75,8 @@ vi.mock("@norish/shared-react/config", async () => {
 });
 // The shared hooks reach the Pantry, the list and the platform through their own modules, so the
 // seams are mocked where they are read.
-vi.mock("../../../../../packages/shared-react/src/groceries/use-send-to-bring", () => ({
-  useSendToBring: () => async () => true,
+vi.mock("../../../../../packages/shared-react/src/groceries/use-bring-handoff", () => ({
+  useBringHandoff: () => ({ status: "idle", open: () => false }),
 }));
 vi.mock("../../../../../packages/shared-react/src/groceries/use-groceries-mutations", () => ({
   useGroceriesMutations: () => ({ createGroceriesFromData }),

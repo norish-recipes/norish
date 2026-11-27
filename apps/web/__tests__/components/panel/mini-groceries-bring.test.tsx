@@ -1,6 +1,7 @@
 /**
- * Adding a recipe to the shopping list while Bring! is the list: the panel says so, and what it
- * would have put on the built-in list is sent to Bring! for the recipe and servings it shows.
+ * Adding a recipe to the shopping list while Bring! is the list: the panel says so, keeps what it
+ * would have put on the built-in list ready in a Bring Handoff for the recipe and servings it
+ * shows, and its add button opens that handoff.
  */
 import type { ReactNode } from "react";
 import MiniGroceries from "@/components/Panel/consumers/mini-groceries";
@@ -12,8 +13,16 @@ import "@testing-library/jest-dom";
 import type { UnitsMap } from "@norish/config/zod/server-config";
 
 const createGroceriesFromData = vi.fn(async (_lines: { name: string }[]) => undefined);
-const sendToBring = vi.fn(async (..._args: unknown[]) => true);
 const provider = vi.hoisted(() => ({ isBring: true, isLoading: false }));
+const handoff = vi.hoisted(() => ({
+  status: "ready" as "idle" | "preparing" | "ready" | "failed",
+  open: vi.fn(() => true),
+  calls: [] as {
+    enabled: boolean;
+    items: { name: string }[];
+    context: { recipeId?: string; servings?: number };
+  }[],
+}));
 
 const INGREDIENTS = [
   {
@@ -50,8 +59,12 @@ vi.mock("@norish/shared-react/config", async () => {
     }),
   };
 });
-vi.mock("../../../../../packages/shared-react/src/groceries/use-send-to-bring", () => ({
-  useSendToBring: () => sendToBring,
+vi.mock("../../../../../packages/shared-react/src/groceries/use-bring-handoff", () => ({
+  useBringHandoff: (args: (typeof handoff.calls)[number]) => {
+    handoff.calls.push(args);
+
+    return { status: handoff.status, open: handoff.open };
+  },
 }));
 vi.mock("../../../../../packages/shared-react/src/groceries/use-groceries-mutations", () => ({
   useGroceriesMutations: () => ({ createGroceriesFromData }),
@@ -145,14 +158,17 @@ vi.mock("@/components/round-checkbox", () => ({
   isCheckboxEvent: (e: any) => e.target?.type === "checkbox",
 }));
 
-const sentNames = () =>
-  ((sendToBring.mock.calls[0]?.[0] ?? []) as { name: string }[]).map((line) => line.name);
+/** What the panel last asked the handoff to hold. */
+const held = () => handoff.calls.at(-1);
+const heldNames = () => held()?.items.map((line) => line.name);
 
 describe("MiniGroceries while Bring! is the shopping list", () => {
   beforeEach(() => {
     provider.isBring = true;
     provider.isLoading = false;
-    sendToBring.mockClear();
+    handoff.status = "ready";
+    handoff.open.mockReset().mockReturnValue(true);
+    handoff.calls = [];
     createGroceriesFromData.mockClear();
   });
 
@@ -172,18 +188,19 @@ describe("MiniGroceries while Bring! is the shopping list", () => {
 
     expect(screen.getByTestId("action-add")).toBeDisabled();
     expect(createGroceriesFromData).not.toHaveBeenCalled();
-    expect(sendToBring).not.toHaveBeenCalled();
+    expect(handoff.open).not.toHaveBeenCalled();
   });
 
-  it("keeps the built-in wording while the list is built in", () => {
+  it("keeps the built-in wording, and prepares no handoff, while the list is built in", () => {
     provider.isBring = false;
     render(<MiniGroceries open recipeId="r1" onOpenChange={() => undefined} />);
 
     expect(screen.getByRole("region", { name: "groceries.panel.addToGroceries" })).toBeVisible();
     expect(screen.getByTestId("action-add")).toHaveTextContent("common.actions.add");
+    expect(held()).toMatchObject({ enabled: false, items: [] });
   });
 
-  it("sends the ticked lines to Bring! for the recipe at the servings shown, and closes", async () => {
+  it("keeps the ticked lines ready for the recipe at the servings shown, and opens them on add", async () => {
     const onOpenChange = vi.fn();
 
     render(
@@ -197,17 +214,20 @@ describe("MiniGroceries while Bring! is the shopping list", () => {
     );
 
     fireEvent.click(screen.getByRole("checkbox", { name: "olive oil" }));
+
+    expect(held()).toMatchObject({ enabled: true, context: { recipeId: "r1", servings: 4 } });
+    expect(heldNames()).toEqual(["chicken breast"]);
+
     await act(async () => {
       fireEvent.click(screen.getByTestId("action-add"));
     });
 
-    expect(sentNames()).toEqual(["chicken breast"]);
-    expect(sendToBring.mock.calls[0]?.[1]).toEqual({ recipeId: "r1", servings: 4 });
+    expect(handoff.open).toHaveBeenCalledOnce();
     expect(createGroceriesFromData).not.toHaveBeenCalled();
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
-  it("sends the line as edited in the panel", async () => {
+  it("keeps the line as edited in the panel", () => {
     render(<MiniGroceries open recipeId="r1" onOpenChange={() => undefined} />);
 
     fireEvent.click(screen.getByText("chicken breast"));
@@ -215,16 +235,19 @@ describe("MiniGroceries while Bring! is the shopping list", () => {
 
     fireEvent.change(field, { target: { value: "700 g chicken thighs" } });
     fireEvent.keyDown(field, { key: "Enter" });
-    await act(async () => {
-      fireEvent.click(screen.getByTestId("action-add"));
-    });
 
-    expect(sentNames()).toContain("chicken thighs");
-    expect(createGroceriesFromData).not.toHaveBeenCalled();
+    expect(heldNames()).toContain("chicken thighs");
   });
 
-  it("stays open when Bring! did not take the lines", async () => {
-    sendToBring.mockResolvedValueOnce(false);
+  it("waits, showing it is busy, until the lines are ready for Bring!", () => {
+    handoff.status = "preparing";
+    render(<MiniGroceries open recipeId="r1" onOpenChange={() => undefined} />);
+
+    expect(screen.getByTestId("action-add")).toBeDisabled();
+  });
+
+  it("stays open when Bring! was not opened", async () => {
+    handoff.open.mockReturnValue(false);
     const onOpenChange = vi.fn();
 
     render(<MiniGroceries open recipeId="r1" onOpenChange={onOpenChange} />);
@@ -232,11 +255,11 @@ describe("MiniGroceries while Bring! is the shopping list", () => {
       fireEvent.click(screen.getByTestId("action-add"));
     });
 
-    expect(sendToBring).toHaveBeenCalledOnce();
+    expect(handoff.open).toHaveBeenCalledOnce();
     expect(onOpenChange).not.toHaveBeenCalledWith(false);
   });
 
-  it("sends at once, after planning, for the servings it was planned at", async () => {
+  it("opens the panel after planning instead of adding, for the reader's press to open Bring!", async () => {
     const onOpenChange = vi.fn();
 
     await act(async () => {
@@ -252,9 +275,9 @@ describe("MiniGroceries while Bring! is the shopping list", () => {
       );
     });
 
-    expect(sentNames()).toEqual(["olive oil", "chicken breast"]);
-    expect(sendToBring.mock.calls[0]?.[1]).toEqual({ recipeId: "r9", servings: 3 });
+    expect(handoff.open).not.toHaveBeenCalled();
     expect(createGroceriesFromData).not.toHaveBeenCalled();
-    expect(onOpenChange).toHaveBeenCalledWith(false);
+    expect(onOpenChange).toHaveBeenCalledWith(true);
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
   });
 });

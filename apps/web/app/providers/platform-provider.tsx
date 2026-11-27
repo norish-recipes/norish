@@ -31,6 +31,11 @@ if (typeof window !== "undefined") connectTimerStorage(browserStorage);
 
 let navigatedToLogin = false;
 
+/** Safari's own flag, set only in a web app started from an iPhone's or iPad's Home Screen. */
+function isIosHomeScreenApp(): boolean {
+  return (navigator as Navigator & { standalone?: boolean }).standalone === true;
+}
+
 /**
  * Sign-in once per page: a late 401 after a sign-out cannot replace its destination.
  * `logout=true` stops a lone OAuth provider's redirect, which could recreate a deleted Account.
@@ -113,12 +118,19 @@ export function WebPlatformProvider({
         context,
       }),
     storage: browserStorage,
-    // A browser opens a tab for a few seconds after a press, so a link that comes back from an
-    // async call usually still opens; one that blocks it says so with a null window. `noopener`
-    // would make every open answer null, so the tab's link back to this page is cut by hand,
-    // while the tab is still the blank one the browser creates first.
+    // Called from a press. An iPhone's Home Screen app has no tabs: a link opened in a new window
+    // shows in an in-app browser that never hands it to the app it belongs to, so the page itself
+    // goes there, and iOS opens the app. Elsewhere it is a new tab; a browser that blocks it says so
+    // with a null window. `noopener` would make every open answer null, so the tab's link back to
+    // this page is cut by hand, while the tab is still the blank one the browser creates first.
     openExternalUrl: (url) => {
       if (!isOpenableExternalUrl(url)) return false;
+
+      if (isIosHomeScreenApp()) {
+        window.location.assign(url);
+
+        return true;
+      }
 
       const opened = window.open(url, "_blank");
 

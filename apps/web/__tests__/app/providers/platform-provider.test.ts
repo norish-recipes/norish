@@ -166,6 +166,51 @@ describe("the web's external links", () => {
     open.mockRestore();
   });
 
+  describe("in an iPhone's Home Screen app", () => {
+    const originalLocation = window.location;
+    const homeScreenApp = (standalone: boolean) =>
+      Object.defineProperty(navigator, "standalone", { configurable: true, value: standalone });
+
+    afterEach(() => {
+      Reflect.deleteProperty(navigator, "standalone");
+      Object.defineProperty(window, "location", { configurable: true, value: originalLocation });
+    });
+
+    it("goes to the link from the page itself, which iOS hands to the app, and opens no window", () => {
+      const assign = vi.fn();
+      const open = vi.spyOn(window, "open");
+
+      homeScreenApp(true);
+      Object.defineProperty(window, "location", { configurable: true, value: { assign } });
+
+      expect(renderPlatform().openExternalUrl("https://getbring.onelink.me/abc")).toBe(true);
+
+      expect(assign).toHaveBeenCalledExactlyOnceWith("https://getbring.onelink.me/abc");
+      expect(open).not.toHaveBeenCalled();
+      open.mockRestore();
+    });
+
+    it("still goes nowhere that is not http or https", () => {
+      const assign = vi.fn();
+
+      homeScreenApp(true);
+      Object.defineProperty(window, "location", { configurable: true, value: { assign } });
+
+      expect(renderPlatform().openExternalUrl("javascript:alert(1)")).toBe(false);
+      expect(assign).not.toHaveBeenCalled();
+    });
+
+    it("opens a tab as usual where Safari says it is not a Home Screen app", () => {
+      const open = vi.spyOn(window, "open").mockReturnValue({ opener: null } as unknown as Window);
+
+      homeScreenApp(false);
+
+      expect(renderPlatform().openExternalUrl("https://getbring.onelink.me/abc")).toBe(true);
+      expect(open).toHaveBeenCalledOnce();
+      open.mockRestore();
+    });
+  });
+
   it("follows the instance's shopping list provider setting", () => {
     expect(renderPlatform().supportsExternalShoppingList).toBe(true);
   });

@@ -25,7 +25,8 @@ export const BringItemSchema = z.object({
 /** A scheme a deeplink may have: Bring!'s own is https, a test double may answer http. */
 const deeplinkSchema = z.url({ protocol: /^https?$/ });
 
-export const SendToBringInputSchema = z.object({
+/** What a handoff shows: the recipe or a title, the servings, and the lines picked. */
+export const BringListSchema = z.object({
   /** The server resolves the recipe name after checking the reader may view it. */
   recipeId: z.uuid().optional(),
   /** Used when there is no recipeId. */
@@ -33,6 +34,15 @@ export const SendToBringInputSchema = z.object({
   servings: z.number().positive().max(999).optional(),
   items: z.array(BringItemSchema).min(1).max(MAX_BRING_ITEMS),
 });
+
+/** A Bring Handoff's token, as `prepare` returned it. */
+const handoffTokenSchema = z.string().regex(/^[\w-]{32}$/);
+
+export const UpdateBringHandoffInputSchema = BringListSchema.extend({
+  token: handoffTokenSchema,
+});
+
+export const DiscardBringHandoffInputSchema = z.object({ token: handoffTokenSchema });
 
 export const BRING_FAILURE_REASONS = [
   "not-bring",
@@ -46,8 +56,9 @@ export const BRING_FAILURE_REASONS = [
 
 export const BringFailureReasonSchema = z.enum(BRING_FAILURE_REASONS);
 
-export const SendToBringResultSchema = z.discriminatedUnion("ok", [
-  z.object({ ok: z.literal(true), deeplink: deeplinkSchema }),
+/** A prepared handoff: the token that changes it, and the deeplink that imports it. */
+export const PrepareBringHandoffResultSchema = z.discriminatedUnion("ok", [
+  z.object({ ok: z.literal(true), token: handoffTokenSchema, deeplink: deeplinkSchema }),
   z.object({
     ok: z.literal(false),
     reason: BringFailureReasonSchema,
@@ -56,6 +67,7 @@ export const SendToBringResultSchema = z.discriminatedUnion("ok", [
 ]);
 
 export type BringItem = z.infer<typeof BringItemSchema>;
-export type SendToBringInput = z.infer<typeof SendToBringInputSchema>;
+export type BringList = z.infer<typeof BringListSchema>;
+export type UpdateBringHandoffInput = z.infer<typeof UpdateBringHandoffInputSchema>;
 export type BringFailureReason = z.infer<typeof BringFailureReasonSchema>;
-export type SendToBringResult = z.infer<typeof SendToBringResultSchema>;
+export type PrepareBringHandoffResult = z.infer<typeof PrepareBringHandoffResultSchema>;

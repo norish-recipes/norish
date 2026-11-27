@@ -22,9 +22,9 @@ Norish must be reachable from the internet over HTTPS. Bring! cannot take
 items directly, so Norish puts them on a temporary web page and Bring!'s
 servers fetch it. Set `AUTH_URL` to your public `https://` address.
 
-Before it opens Bring!, Norish has Bring! read that page once. If Bring!'s
-servers cannot fetch it, adding ingredients shows an error with the HTTP status
-your server answered them, and nothing is sent.
+Norish has Bring! read that page once when it makes the list ready. If Bring!'s
+servers cannot fetch it, you see an error with the HTTP status your server
+answered them, and nothing is sent.
 
 Addresses under `/share/bring/` must open from the internet without a login,
 VPN, IP allowlist or bot protection in front of Norish. If your reverse proxy
@@ -46,14 +46,25 @@ and unticked, as they do for the Norish grocery list. Bring! shows the items
 as a recipe named after yours. Units are written short, in your language, as
 the groceries show them: "250 g flour".
 
-The button shows that it is working while Norish prepares the items, then
-Bring! opens in a new tab. If your browser blocks that tab, a message with
-**Open Bring!** appears instead; it stays until you close it.
+Norish makes the list ready when the panel opens, and again after every change
+you make to the ticks, the servings or a line. The button shows a spinner while
+it does, and can be pressed once it stops. One press opens Bring! in a new tab.
+If your browser blocks that tab, a message with **Open Bring!** appears
+instead; it stays until you close it. If making the list ready failed, you see
+why, and pressing the button tries again.
+
+On an iPhone, open from the Home Screen as an app, Bring! opens in the Bring!
+app itself. That works only because the press opens it straight away, which is
+why the list is made ready beforehand and not after the press.
+
+If you close the panel without opening Bring!, Norish deletes the list at
+once. Once you have opened Bring!, it stays for an hour, in case Bring! reads it
+again, and is then deleted.
 
 ## What Bring! receives
 
 Bring! receives the recipe's name, its main photo, the servings and one line
-per ingredient, such as "200 g flour". Norish keeps these for one hour on a
+per ingredient, such as "200 g flour". Norish keeps these for up to one hour on a
 page whose address nobody can guess, and the photo at that address plus
 `/image`; then both expire and are deleted on their own. The page shows
 nothing else: no person, no household, no link to your recipe and no other
@@ -63,7 +74,8 @@ Bring! thereby also sees your instance's public address, and anyone who holds
 the temporary link can read that list and see that photo until it expires
 after an hour.
 
-You can send up to 30 lists in 10 minutes.
+You can make up to 30 lists ready in 10 minutes. Changing a list that is
+already ready does not count.
 
 ## What happens to the Norish grocery list
 

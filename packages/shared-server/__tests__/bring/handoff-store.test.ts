@@ -7,12 +7,26 @@ import {
   deleteHandoff,
   handoffImageFor,
   readHandoff,
+  updateHandoff,
 } from "@norish/shared-server/bring/handoff-store";
 
 const store = new Map<string, { value: string; ttl: number | null }>();
+/** Valkey's SET as the store uses it: EX sets a deadline, KEEPTTL keeps it, XX needs the key. */
 const fakeValkey = {
-  set: vi.fn(async (key: string, value: string, mode?: string, ttl?: number) => {
-    store.set(key, { value, ttl: mode === "EX" ? (ttl ?? null) : null });
+  set: vi.fn(async (key: string, value: string, ...options: (string | number)[]) => {
+    const existing = store.get(key);
+
+    if (options.includes("XX") && !existing) return null;
+
+    const ex = options.indexOf("EX");
+    const ttl =
+      ex >= 0
+        ? Number(options[ex + 1])
+        : options.includes("KEEPTTL")
+          ? (existing?.ttl ?? null)
+          : null;
+
+    store.set(key, { value, ttl });
 
     return "OK";
   }),
@@ -24,6 +38,11 @@ vi.mock("@norish/shared-server/valkey/client", () => ({
   getPublisherClient: async () => fakeValkey,
 }));
 
+const OWNER = "user-1";
+const OTHER = "user-2";
+const content = { title: "Pasta", servings: 4, lines: ["2 Eier"] };
+const keyOf = (token: string) => `norish:bring:handoff:${token}`;
+
 beforeEach(() => {
   store.clear();
   vi.clearAllMocks();
@@ -31,35 +50,35 @@ beforeEach(() => {
 
 describe("the Bring Handoff store", () => {
   it("keeps the lines under a 32-character url-safe token for an hour", async () => {
-    const token = await createHandoff({ title: "Pasta", servings: 4, lines: ["2 Eier"] });
+    const token = await createHandoff(content, OWNER);
 
     expect(token).toMatch(/^[A-Za-z0-9_-]{32}$/);
     expect(BRING_HANDOFF_TTL_SECONDS).toBe(3600);
-    expect(store.get(`norish:bring:handoff:${token}`)?.ttl).toBe(3600);
+    expect(store.get(keyOf(token))?.ttl).toBe(3600);
   });
 
-  it("stores the title, servings, lines, picture and creation time only", async () => {
-    const token = await createHandoff({ title: "Pasta", servings: 4, lines: ["2 Eier"] });
-    const stored = JSON.parse(store.get(`norish:bring:handoff:${token}`)?.value ?? "{}");
+  it("stores the title, servings, lines, picture, creation time and owner only", async () => {
+    const token = await createHandoff(content, OWNER);
+    const stored = JSON.parse(store.get(keyOf(token))?.value ?? "{}");
 
     expect(Object.keys(stored).sort()).toEqual([
       "createdAt",
       "image",
       "lines",
+      "ownerId",
       "servings",
       "title",
     ]);
     expect(stored.image).toBeNull();
+    expect(stored.ownerId).toBe(OWNER);
   });
 
   it("gives every handoff its own token", async () => {
-    const input = { title: "Pasta", servings: 1, lines: ["x"] };
-
-    expect(await createHandoff(input)).not.toBe(await createHandoff(input));
+    expect(await createHandoff(content, OWNER)).not.toBe(await createHandoff(content, OWNER));
   });
 
-  it("reads a handoff back, again and again", async () => {
-    const token = await createHandoff({ title: "Pasta", servings: 4, lines: ["2 Eier"] });
+  it("reads a handoff's page back, again and again, without its owner", async () => {
+    const token = await createHandoff(content, OWNER);
     const expected = {
       title: "Pasta",
       servings: 4,
@@ -68,27 +87,104 @@ describe("the Bring Handoff store", () => {
       createdAt: expect.any(Number),
     };
 
-    await expect(readHandoff(token)).resolves.toEqual(expected);
-    await expect(readHandoff(token)).resolves.toEqual(expected);
+    await expect(readHandoff(token)).resolves.toStrictEqual(expected);
+    await expect(readHandoff(token)).resolves.toStrictEqual(expected);
     expect(fakeValkey.del).not.toHaveBeenCalled();
   });
 
-  it("takes a handoff that was never handed over away at once", async () => {
-    const token = await createHandoff({ title: "Pasta", servings: 4, lines: ["2 Eier"] });
-
-    await deleteHandoff(token);
-
-    expect(fakeValkey.del).toHaveBeenCalledWith(`norish:bring:handoff:${token}`);
-    await expect(readHandoff(token)).resolves.toBeNull();
-  });
-
   it("answers null for an unknown token and for a record that is not a handoff", async () => {
-    store.set("norish:bring:handoff:junk", { value: "{not json", ttl: 1 });
-    store.set("norish:bring:handoff:odd", { value: JSON.stringify({ title: 1 }), ttl: 1 });
+    store.set(keyOf("junk"), { value: "{not json", ttl: 1 });
+    store.set(keyOf("odd"), { value: JSON.stringify({ title: 1 }), ttl: 1 });
 
     await expect(readHandoff("missing")).resolves.toBeNull();
     await expect(readHandoff("junk")).resolves.toBeNull();
     await expect(readHandoff("odd")).resolves.toBeNull();
+  });
+
+  it("answers null for a record stored without an owner", async () => {
+    store.set(keyOf("ownerless"), {
+      value: JSON.stringify({ ...content, image: null, createdAt: 1 }),
+      ttl: 1,
+    });
+
+    await expect(readHandoff("ownerless")).resolves.toBeNull();
+  });
+});
+
+describe("changing a handoff", () => {
+  it("replaces the owner's lines and keeps the creation time, the owner and the deadline", async () => {
+    const token = await createHandoff(content, OWNER);
+    const before = JSON.parse(store.get(keyOf(token))?.value ?? "{}");
+
+    store.set(keyOf(token), { ...store.get(keyOf(token))!, ttl: 1200 });
+
+    await expect(
+      updateHandoff(token, OWNER, { title: "Lasagne", servings: 2, lines: ["1 Ei", "Salz"] })
+    ).resolves.toBe(true);
+
+    expect(fakeValkey.set).toHaveBeenLastCalledWith(
+      keyOf(token),
+      expect.any(String),
+      "KEEPTTL",
+      "XX"
+    );
+    expect(store.get(keyOf(token))?.ttl).toBe(1200);
+    expect(JSON.parse(store.get(keyOf(token))?.value ?? "{}")).toMatchObject({
+      ownerId: OWNER,
+      createdAt: before.createdAt,
+    });
+    await expect(readHandoff(token)).resolves.toMatchObject({
+      title: "Lasagne",
+      servings: 2,
+      lines: ["1 Ei", "Salz"],
+      image: null,
+    });
+  });
+
+  it("answers false, and changes nothing, for someone else's handoff", async () => {
+    const token = await createHandoff(content, OWNER);
+
+    await expect(updateHandoff(token, OTHER, { ...content, lines: ["Salz"] })).resolves.toBe(false);
+    await expect(readHandoff(token)).resolves.toMatchObject({ lines: ["2 Eier"] });
+  });
+
+  it("answers false for a handoff that is gone, and does not bring it back", async () => {
+    await expect(updateHandoff("missing", OWNER, content)).resolves.toBe(false);
+    expect(store.has(keyOf("missing"))).toBe(false);
+  });
+
+  it("answers false when the handoff expires between the read and the write", async () => {
+    const token = await createHandoff(content, OWNER);
+
+    fakeValkey.set.mockImplementationOnce(async () => null);
+
+    await expect(updateHandoff(token, OWNER, content)).resolves.toBe(false);
+  });
+});
+
+describe("taking a handoff down", () => {
+  it("removes the owner's handoff at once", async () => {
+    const token = await createHandoff(content, OWNER);
+
+    await deleteHandoff(token, OWNER);
+
+    expect(fakeValkey.del).toHaveBeenCalledWith(keyOf(token));
+    await expect(readHandoff(token)).resolves.toBeNull();
+  });
+
+  it("leaves someone else's handoff alone", async () => {
+    const token = await createHandoff(content, OWNER);
+
+    await deleteHandoff(token, OTHER);
+
+    expect(fakeValkey.del).not.toHaveBeenCalled();
+    await expect(readHandoff(token)).resolves.not.toBeNull();
+  });
+
+  it("does nothing for an unknown token", async () => {
+    await deleteHandoff("missing", OWNER);
+
+    expect(fakeValkey.del).not.toHaveBeenCalled();
   });
 });
 
@@ -120,7 +216,7 @@ describe("a handoff's picture", () => {
 
   it("is stored and read back with the handoff", async () => {
     const image = { recipeId: RECIPE, file: "a.jpg" };
-    const token = await createHandoff({ title: "Pasta", servings: 4, lines: ["x"], image });
+    const token = await createHandoff({ title: "Pasta", servings: 4, lines: ["x"], image }, OWNER);
 
     await expect(readHandoff(token)).resolves.toMatchObject({ image });
   });

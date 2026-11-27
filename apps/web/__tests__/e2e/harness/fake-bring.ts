@@ -5,8 +5,11 @@
  * It answers Bring!'s two import endpoints. `GET /rest/bringrecipes/parser` and
  * `POST /rest/bringrecipes/deeplink` both fetch the page they were given at once and with no
  * cookie, as Bring!'s own servers do, so the request is the proof that the page needs no session.
+ * Opening a deeplink reads the page again, as the import does in the Bring! app, so what it got is
+ * the list as it was when the reader pressed.
  * `breakPages()` has the parser get a 404, which the real one reports as "not reachable" with the
- * status; `refuse()` makes the deeplink endpoint answer 403, a refusal of the page as such.
+ * status; `refuse()` makes the deeplink endpoint answer 403, a refusal of the page as such;
+ * `hold()` keeps the deeplink endpoint from answering until it is let go.
  */
 import { createServer } from "node:http";
 import type { IncomingMessage, Server, ServerResponse } from "node:http";
@@ -27,19 +30,30 @@ export interface BringRequest {
   pageHtml: string;
 }
 
+export interface BringOpen {
+  /** The deeplink's path. */
+  path: string;
+  /** The status the fake got fetching the deeplink's page with no cookie when it was opened. */
+  pageStatus: number;
+  /** The HTML it got. */
+  pageHtml: string;
+}
+
 export interface FakeBring {
   /** The address to give the server as `BRING_API_URL`. */
   url: string;
   /** Every deeplink request, in order. */
   requests: BringRequest[];
-  /** The paths of the deeplink pages that were opened, in order. */
-  opened: string[];
+  /** The deeplinks that were opened, in order, with the page each read then. */
+  opened: BringOpen[];
   /** The page URLs the recipe parser was asked to read, in order. */
   parsed: string[];
-  /** Have the deeplink endpoint answer 403 from now on, so the send ends in `bring-rejected`. */
+  /** Have the deeplink endpoint answer 403 from now on, so preparing ends in `bring-rejected`. */
   refuse: () => void;
   /** Have the recipe parser get a 404 from the instance, as when Bring!'s servers cannot reach the page. */
   breakPages: () => void;
+  /** Keep the deeplink endpoint from answering until the function it returns is called. */
+  hold: () => () => void;
   /** Answer as usual again, and forget what was recorded. */
   reset: () => void;
   start: () => Promise<void>;
@@ -58,10 +72,12 @@ function readBody(request: IncomingMessage): Promise<string> {
 
 export function createFakeBring(): FakeBring {
   const requests: BringRequest[] = [];
-  const opened: string[] = [];
+  const opened: BringOpen[] = [];
   const parsed: string[] = [];
   let refusing = false;
   let breaking = false;
+  let held: Promise<void> = Promise.resolve();
+  let release = () => {};
   let server: Server | null = null;
   let url = "";
 
@@ -75,6 +91,7 @@ export function createFakeBring(): FakeBring {
       const pageHtml = await page.text();
 
       requests.push({ body, pageStatus: page.status, pageHtml });
+      await held;
 
       if (refusing) {
         response.writeHead(403, { "content-type": "application/json" });
@@ -126,7 +143,10 @@ export function createFakeBring(): FakeBring {
     }
 
     if (request.method === "GET" && path.startsWith("/deeplink/")) {
-      opened.push(path);
+      const sent = requests[Number(path.slice("/deeplink/".length)) - 1];
+      const page = sent ? await fetch(sent.body.url) : null;
+
+      opened.push({ path, pageStatus: page?.status ?? 0, pageHtml: (await page?.text()) ?? "" });
       response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
       response.end("<!doctype html><title>Bring!</title><h1>Bring! (fake)</h1>");
 
@@ -149,7 +169,16 @@ export function createFakeBring(): FakeBring {
     breakPages: () => {
       breaking = true;
     },
+    hold: () => {
+      held = new Promise((resolve) => {
+        release = () => resolve();
+      });
+
+      return release;
+    },
     reset: () => {
+      release();
+      held = Promise.resolve();
       refusing = false;
       breaking = false;
       requests.length = 0;
