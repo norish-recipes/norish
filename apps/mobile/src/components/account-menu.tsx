@@ -7,7 +7,7 @@ import { useQueuedChanges } from "@/hooks/use-queued-changes";
 import { useMobileLocaleSettings } from "@/lib/i18n/mobile-i18n-context";
 import { useServerImage } from "@/lib/network/server-url";
 import { useAppearancePreference } from "@/lib/preferences/appearance-preference-context";
-import { Button, Divider, Host, Label, Menu, Picker, RNHostView, Section } from "@expo/ui/swift-ui";
+import { Button, Divider, Host, Menu, Picker, RNHostView, Section, Text } from "@expo/ui/swift-ui";
 import { accessibilityLabel, pickerStyle, tag } from "@expo/ui/swift-ui/modifiers";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
@@ -98,14 +98,33 @@ export function AccountMenu() {
               label={options.find((option) => option.code === locale)?.name ?? ""}
               systemImage="globe"
             >
-              {options.map((option) => (
-                <Button
-                  key={option.code}
-                  label={option.name}
-                  systemImage={option.code === locale ? "checkmark" : undefined}
-                  onPress={() => setLocale(option.code)}
-                />
-              ))}
+              <Picker
+                modifiers={[pickerStyle("inline")]}
+                selection={locale}
+                onSelectionChange={setLocale}
+              >
+                {options.map((option) => (
+                  <Text key={option.code} modifiers={[tag(option.code)]}>
+                    {option.name}
+                  </Text>
+                ))}
+              </Picker>
+            </Menu>
+            <Menu
+              label={intl.formatMessage({ id: "navbar.theme.title" })}
+              systemImage={THEMES.find((theme) => theme.mode === mode)?.icon}
+            >
+              <Picker
+                modifiers={[pickerStyle("inline")]}
+                selection={mode}
+                onSelectionChange={setMode}
+              >
+                {THEMES.map((theme) => (
+                  <Text key={theme.mode} modifiers={[tag(theme.mode)]}>
+                    {intl.formatMessage({ id: theme.label })}
+                  </Text>
+                ))}
+              </Picker>
             </Menu>
             <Button
               label={intl.formatMessage({ id: "navbar.accountMenu.allSettings" })}
@@ -113,23 +132,6 @@ export function AccountMenu() {
               onPress={() => router.navigate("/settings")}
             />
           </Section>
-          <Divider />
-          <Picker
-            label={intl.formatMessage({ id: "navbar.theme.title" })}
-            modifiers={[pickerStyle("inline")]}
-            selection={mode}
-            systemImage="circle.lefthalf.filled"
-            onSelectionChange={setMode}
-          >
-            {THEMES.map((theme) => (
-              <Label
-                key={theme.mode}
-                modifiers={[tag(theme.mode)]}
-                systemImage={theme.icon}
-                title={intl.formatMessage({ id: theme.label })}
-              />
-            ))}
-          </Picker>
           <Divider />
           <DestructiveMenuButton
             label={intl.formatMessage({ id: "navbar.userMenu.logout" })}
