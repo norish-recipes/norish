@@ -13,8 +13,10 @@ import { ingredientAliases, ingredients } from "@norish/db/schema";
 
 import {
   attachTestEntry,
+  createTestIngredient,
   createTestRecipe,
   createTestUser,
+  firstSpellingId,
   getTestDb,
   insertTestRecipeLine,
   mintTestFood,
@@ -64,7 +66,12 @@ describe("the typing suggestions", () => {
     return recipe;
   }
 
-  const food = (text: string) => mintTestFood(text);
+  const food = (text: string, as = ownerId) => mintTestFood(testHouseholdOf(as), text);
+  const seededFood = async (name: string) => {
+    const { id } = (await createTestIngredient({ name }))!;
+
+    return { ingredientId: id, aliasId: (await firstSpellingId(id))! };
+  };
   const ask = async (text: string, as = ownerId) => await listLibrarySuggestions(viewer(as), text);
   const names = async (text: string, as = ownerId) =>
     (await ask(text, as)).ingredients.map((each) => each.name);
@@ -161,7 +168,7 @@ describe("the typing suggestions", () => {
         false
       );
 
-      const hidden = await food("Hidden leek");
+      const hidden = await food("Hidden leek", strangerId);
       const shared = await food("Leek stock");
 
       await recipeNaming(strangerId, [hidden]);
@@ -228,9 +235,10 @@ describe("the typing suggestions", () => {
           false
         );
 
-        const poultry = await food("Poultry");
-        const thighs = await food("Chicken thighs");
-        const chicken = await food("Chicken");
+        // Seeded, so both households' recipes may name the same foods.
+        const poultry = await seededFood("Poultry");
+        const thighs = await seededFood("Chicken thighs");
+        const chicken = await seededFood("Chicken");
 
         await kindOf(poultry, chicken);
         await kindOf(chicken, thighs);

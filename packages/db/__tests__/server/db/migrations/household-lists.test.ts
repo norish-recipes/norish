@@ -1,10 +1,6 @@
 // @vitest-environment node
-/**
- * Migration 0092 and the 0.28 boot upgrade on lists of earlier releases: shared Tag and Category
- * rows split per household (the oldest recipe's household keeps the id), rows folding alike merge,
- * built-ins and Cuisines become instance entries, allergies become names; a second run changes
- * nothing, and every stored fold is `entryFold` of its name.
- */
+/** Migration 0092 and the 0.28 boot upgrade on earlier releases' lists: shared Tag and Category
+ * rows split per household and fold-alike rows merge; a rerun changes nothing. */
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
@@ -71,7 +67,12 @@ describe("Tags, Cuisines and Categories become household lists", () => {
     unused: randomUUID(),
     peanuts: randomUUID(),
   };
-  const category = { drinks: randomUUID(), unused: randomUUID() };
+  const category = {
+    drinks: randomUUID(),
+    unused: randomUUID(),
+    breakfastBang: randomUUID(),
+    breakfastAccented: randomUUID(),
+  };
   const cuisine = randomUUID();
   let households: { ann: string; bob: string };
 
@@ -173,10 +174,16 @@ describe("Tags, Cuisines and Categories become household lists", () => {
         tag.cafeAccented,
       ]
     );
-    await q(`INSERT INTO categories (id, name) VALUES ($1, 'Drinks'), ($2, 'Unused')`, [
-      category.drinks,
-      category.unused,
-    ]);
+    await q(
+      `INSERT INTO categories (id, name) VALUES
+       ($1, 'Drinks'), ($2, 'Unused'), ($3, 'Breakfast!'), ($4, 'Bréakfast')`,
+      [category.drinks, category.unused, category.breakfastBang, category.breakfastAccented]
+    );
+    await q(
+      `INSERT INTO recipe_categories (recipe_id, category_id, "order") VALUES
+       ($1, $3, 1), ($2, $4, 1), ($2, (SELECT id FROM categories WHERE name = 'Breakfast'), 2)`,
+      [recipe.annOld, recipe.bob, category.breakfastBang, category.breakfastAccented]
+    );
     await q(
       `INSERT INTO recipe_categories (recipe_id, category_id, "order")
        SELECT r, c.id, 0 FROM unnest($1::uuid[]) r, categories c WHERE c.name IN ('Dinner', 'Drinks')`,
@@ -303,6 +310,30 @@ describe("Tags, Cuisines and Categories become household lists", () => {
     ).toEqual([cuisine, cuisine]);
   });
 
+  it("merges a household Category folding like a built-in into the built-in", async () => {
+    const categories = await listRows("categories");
+    const breakfast = categories.find((row) => row.name === "Breakfast")!;
+
+    expect(categories.filter((row) => row.name_fold === "breakfast")).toEqual([
+      expect.objectContaining({ id: breakfast.id, household_id: null }),
+    ]);
+    expect(
+      (await links("recipe_categories", "category_id", "categories")).filter(
+        (row) => row.entity_id === breakfast.id
+      )
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ recipe_id: recipe.annOld }),
+        expect.objectContaining({ recipe_id: recipe.bob }),
+      ])
+    );
+    expect(
+      (await links("recipe_categories", "category_id", "categories")).filter(
+        (row) => row.entity_id === breakfast.id
+      )
+    ).toHaveLength(2);
+  });
+
   it("stores entryFold of every name, in SQL and at boot alike", async () => {
     const rows = (
       await q("SELECT name, name_fold FROM cuisines WHERE name = ANY($1)", [AWKWARD_NAMES])
@@ -319,5 +350,5 @@ describe("Tags, Cuisines and Categories become household lists", () => {
     await upgrade();
 
     expect(await snapshot()).toEqual(first);
-  });
+  }, 30_000);
 });

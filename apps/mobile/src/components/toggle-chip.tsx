@@ -1,9 +1,9 @@
 import type { ComponentProps } from "react";
 import React from "react";
 import { Text } from "react-native";
+import { Ionicons } from "@/components/icon";
 import { PressableScale } from "@/components/pressable-scale";
 import { useTokenColor } from "@/hooks/use-token-color";
-import Ionicons from "@expo/vector-icons/Ionicons";
 
 /** The kit's chip, such as a filter or a Category: sand, accent while it applies. */
 export function ToggleChip({

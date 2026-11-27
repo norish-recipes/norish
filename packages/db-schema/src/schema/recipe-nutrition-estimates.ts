@@ -21,6 +21,8 @@ export interface EstimatedLineRow {
   protein: number;
   /** The other nutrients the model estimated for this line, per serving. */
   extras?: StoredNutrients;
+  /** Added up from shares whose keys met after a move: counted once, not per line of its key. */
+  combined?: boolean;
 }
 
 export const recipeNutritionEstimates = pgTable("recipe_nutrition_estimates", {

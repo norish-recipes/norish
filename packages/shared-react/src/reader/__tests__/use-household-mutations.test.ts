@@ -137,7 +137,7 @@ describe("useHouseholdMutations", () => {
       ["expired", "expired"],
       ["already-member", "alreadyMember"],
       ["shared", "shared"],
-      ["holds-things", "holdsThings"],
+      ["busy", "busy"],
     ] as const)("tells the reader the %s refusal in their language", async (refusal, copy) => {
       const result = render(createMockHouseholdData(null, "current-user"));
 

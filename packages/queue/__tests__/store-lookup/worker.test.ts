@@ -44,6 +44,7 @@ const match = {
   storeId: STORE,
   ingredientId: "ingredient-kaas",
   name: "kaas",
+  groceryId: "grocery-kaas",
 };
 
 /** A job as the processor sees it, keeping whatever progress it writes. */

@@ -249,10 +249,7 @@ describe("archive import loop favourite extra", () => {
     zip.file("recipe.melarecipe", "{}");
     const zipBytes = Buffer.from(await zip.generateAsync({ type: "uint8array" }));
 
-    await parser.importArchive(
-      { userId: "user-1", householdId: "household-1", memberIds: ["user-1"] },
-      zipBytes
-    );
+    await parser.importArchive({ userId: "user-1", householdId: "household-1" }, zipBytes);
 
     expect(mockAddFavorite).toHaveBeenCalledTimes(1);
   });

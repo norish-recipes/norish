@@ -402,7 +402,10 @@ describe("the Library union", () => {
       await deleteRecipeById(baseRecipeId);
 
       const names = ["onion", "salt"];
-      const resolved = await resolveIngredients(names, { userId: ownerId });
+      const resolved = await resolveIngredients(names, {
+        userId: ownerId,
+        householdId: testHouseholdOf(ownerId),
+      });
 
       await getTestDb()
         .insert(pantryIngredients)
@@ -494,7 +497,10 @@ describe("the Library union", () => {
 
       await joinTestHousehold(housemate.id, ownerId);
       const names = ["onion", "red onion", "olive oil", "butter", "salt", "garlic", "black garlic"];
-      const resolved = await resolveIngredients(names, { userId: ownerId });
+      const resolved = await resolveIngredients(names, {
+        userId: ownerId,
+        householdId: testHouseholdOf(ownerId),
+      });
       const food = Object.fromEntries(names.map((name, i) => [name, resolved[i]!]));
       const db = getTestDb();
 
@@ -581,7 +587,10 @@ describe("the Library union", () => {
     async function seedFoods() {
       await deleteRecipeById(baseRecipeId);
 
-      const resolved = await resolveIngredients([...FOODS], { userId: ownerId });
+      const resolved = await resolveIngredients([...FOODS], {
+        userId: ownerId,
+        householdId: testHouseholdOf(ownerId),
+      });
       const food = Object.fromEntries(FOODS.map((name, i) => [name, resolved[i]!]));
       const db = getTestDb();
 

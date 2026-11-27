@@ -262,6 +262,7 @@
       "syncing": "{count, plural, =0 {Syncing} one {Syncing # change} other {Syncing # changes}}",
       "syncNow": "Sync now",
       "retryAll": "Retry all",
+      "otherHousehold": "Some changes were made for another household. “Retry all” sends them to the one you are in now.",
       "discardAll": "Discard all",
       "discardConfirmBody": "{count, plural, one {Permanently discard # queued change? It won't be sent.} other {Permanently discard # queued changes? They won't be sent.}}",
       "discardConfirm": "Discard",
@@ -318,7 +319,7 @@
       "expired": "That join code has expired. Ask for a new one.",
       "alreadyMember": "You are already in this household.",
       "shared": "Leave your household first to join another one.",
-      "holdsThings": "Your household has recipes, groceries or plans of its own, so it cannot join another household yet."
+      "busy": "That household was changing just then. Try again."
     }
   },
   "photos": {

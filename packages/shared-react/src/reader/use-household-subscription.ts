@@ -1,6 +1,6 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { HouseholdAdminSettingsDto } from "@norish/shared/contracts/dto/household";
 import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
@@ -34,6 +34,9 @@ export function useHouseholdSubscription() {
       trpc.recipes.get.pathKey(),
     ],
   };
+
+  // Every household write names this read's household; a screen that shows none still needs it.
+  useQuery(trpc.households.get.queryOptions());
 
   // onCreated user-scoped: the reader's household after joining, leaving or being removed
   useRealtimeSubscription<Payload<"created">>(trpc.households.onCreated, {
@@ -103,9 +106,18 @@ export function useHouseholdSubscription() {
     },
   });
 
-  // A member's recipes and cookbooks come and go with them.
+  // A member's recipes and cookbooks come and go with them; a joiner's household of one brings its
+  // lists, catalogue, Stores and Pantry too.
   const rereadReaderScope = () => {
-    for (const key of readerScopedKeys(trpc)) void queryClient.invalidateQueries({ queryKey: key });
+    for (const key of [
+      ...readerScopedKeys(trpc),
+      trpc.lists.pathKey(),
+      trpc.ingredients.pathKey(),
+      trpc.stores.pathKey(),
+      trpc.pantry.pathKey(),
+    ]) {
+      void queryClient.invalidateQueries({ queryKey: key });
+    }
   };
 
   const removeMember = (payload: { userId: string }) => {

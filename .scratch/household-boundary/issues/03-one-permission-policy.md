@@ -79,3 +79,17 @@
   6. fixed: that refusal answers 503 SERVICE_UNAVAILABLE, which Replay retries; other conflicts stay 409 and park.
   7. fixed: confirmed; a paste import cleans up only on its final failure, and the paste, URL and image workers remove only the media of recipes they never stored. The archive import has no such clean-up.
   - rejected: row ids in any letter case; an expired draft claim; device image caches; the read-to-publish instant; announcements after a failed epoch bump; moved to ticket 04: the resume epoch on account deletion.
+- Share-link moderation restored (Mike, 2026-11-25): the admin card lists every account's links (recipe, owner, status, created, expires) and revokes, reactivates and deletes them through `shareListAdmin`/`share{Revoke,Reactivate,Delete}Admin`, on `adminProcedure` only; events go to `recipeAudience` read at publish.
+  - A link whose maker may no longer view its recipe is listed with an "Inactive" chip in place of Active (`makerMayView: false`) and can still be revoked or deleted.
+  - Unchanged from ticket 03: such a link stays inactive on the public page, out of the maker's inventory, and every non-admin share procedure still needs ownership plus edit access.
+
+Final review, server round:
+
+- Fixed (63987c33a): `ratingFailed` is user-scoped, told only to the account that rated.
+- Fixed (bee32dd45): `getRecipePermissionPolicy` in `repositories/server-config.ts` is the one reader (each level stored, else its default); auth and the config loader re-export it.
+
+Re-review of the server round:
+
+6. Fixed (4ce57fb99, 00b80afbd): `withinView` narrows edit and delete to view; the reader applies it, the schema's refine and the admin card use it.
+- E2E `household-library` first run: passed. It now runs under view Everyone (each household and the admin see the others' recipes and cookbooks) and Household (none do) (d5de1ecc6).
+- Full E2E fix (846fd6a45): the print spec borrowed the seeded recipe's photo, which the own-folder media rule (ca97e87ad) rightly refuses; it now places a photo in the print recipe's own folder.

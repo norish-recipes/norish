@@ -99,6 +99,9 @@ const trpc = {
     shareListMine: {
       queryKey: () => [["recipes", "shareListMine"], { type: "query" }],
     },
+    shareListAdmin: {
+      queryKey: () => [["recipes", "shareListAdmin"], { type: "query" }],
+    },
     shareGet: {
       pathKey: () => [["recipes", "shareGet"]],
       queryKey: ({ id }: { id: string }) => [
@@ -122,6 +125,9 @@ const trpc = {
     shareRevoke: shareWrite("shareRevoke"),
     shareReactivate: shareWrite("shareReactivate"),
     shareDelete: shareWrite("shareDelete"),
+    shareRevokeAdmin: shareWrite("shareRevokeAdmin"),
+    shareReactivateAdmin: shareWrite("shareReactivateAdmin"),
+    shareDeleteAdmin: shareWrite("shareDeleteAdmin"),
   },
 };
 
@@ -187,6 +193,31 @@ describe("recipe share hooks", () => {
         )
       ).toHaveLength(3)
     );
+  });
+
+  it("moderates any account's share through the admin procedures, then rereads the admin list", async () => {
+    const queryClient = createTestQueryClient();
+    const adminKey = trpc.recipes.shareListAdmin.queryKey();
+    const { result } = renderHook(() => recipes.useAdminRecipeShareMutations(), {
+      wrapper: createTestWrapper(queryClient, fakePlatformAdapter()),
+    });
+    const share = createMockShare();
+
+    for (const action of [
+      result.current.revokeShare,
+      result.current.reactivateShare,
+      result.current.deleteShare,
+    ]) {
+      queryClient.setQueryData(adminKey, [share]);
+      expect(await act(() => action(share.id, share.version))).toBe(true);
+      expect(queryClient.getQueryState(adminKey)?.isInvalidated).toBe(true);
+    }
+
+    expect(sentShareWrites).toEqual([
+      ["shareRevokeAdmin", { id: share.id, version: share.version }],
+      ["shareReactivateAdmin", { id: share.id, version: share.version }],
+      ["shareDeleteAdmin", { id: share.id, version: share.version }],
+    ]);
   });
 
   it("resolves each share action once its request settled, and tells the reader one failed", async () => {

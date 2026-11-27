@@ -26,6 +26,7 @@ const mocks = vi.hoisted(() => ({
   publishCalendarItemEvent: vi.fn(),
   removeJobs: vi.fn(),
   sweepPendingUploadsOf: vi.fn(),
+  deleteUnusedIngredientIcons: vi.fn(),
 }));
 
 vi.mock("@norish/auth/auth", () => ({
@@ -72,6 +73,9 @@ vi.mock("@norish/shared-server/realtime/calendar-items", () => ({
 vi.mock("@norish/shared-server/realtime/audience", () => ({
   policyAudience: async (householdId: string) => ({ viewPolicy: "everyone", householdId }),
 }));
+vi.mock("@norish/shared-server/ingredients/icon-drafts", () => ({
+  deleteUnusedIngredientIcons: mocks.deleteUnusedIngredientIcons,
+}));
 vi.mock("@norish/shared-server/logger", () => ({
   authLogger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
@@ -98,6 +102,7 @@ const DELETION: AccountDeletion = {
   memberIds: ["member"],
   recipeIds: ["recipe-1"],
   cookbookIds: ["cookbook-1"],
+  iconFiles: ["0123456789abcdef0123456789abcdef.webp"],
   notes: [NOTE],
 };
 
@@ -156,6 +161,7 @@ describe("deleteUserAccount", () => {
       'sweepUserAvatars ["gone"]',
       'deleteRecipeImagesDir ["recipe-1"]',
       'sweepCookbookImages ["cookbook-1"]',
+      'deleteUnusedIngredientIcons [["0123456789abcdef0123456789abcdef.webp"]]',
     ]);
   });
 

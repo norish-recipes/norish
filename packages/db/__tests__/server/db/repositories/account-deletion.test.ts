@@ -4,6 +4,7 @@
 import { eq, inArray, sql } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
+import { resetDbConnection } from "@norish/db/drizzle";
 import { isRetryableConflict } from "@norish/db/repositories/constraint-violation";
 import { addRecipeToCookbook, createCookbook } from "@norish/db/repositories/cookbooks";
 import { addFavorite } from "@norish/db/repositories/favorites";
@@ -24,7 +25,11 @@ import {
   groceries,
   households,
   householdUsers,
+  ingredientAIChanges,
+  ingredientAliases,
+  ingredientJunkPile,
   ingredientNutritionCorrections,
+  ingredients,
   ingredientStorePreferences,
   pantryIngredients,
   plannedItems,
@@ -60,8 +65,9 @@ import {
   householdIdOf,
   insertTestRecipeLine,
   joinTestHousehold,
+  rowsOutsideTheirOwnersHousehold,
 } from "../../../helpers/db-test-helpers";
-import { lockWaits, raceBehind, waitFor } from "../../../helpers/lock-race";
+import { backendPid, lockWaits, raceBehind, waitFor } from "../../../helpers/lock-race";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 const DAY = "2031-05-06";
@@ -611,6 +617,59 @@ describe("deleting an account", () => {
       expect(await ownRows(w.stranger)).toMatchObject({ user: 1, recipes: 1, cookbooks: 1 });
     });
 
+    it("takes the household's own catalogue along, and names the icon files to sweep, the seed's kept", async () => {
+      const w = await world();
+      const db = getTestDb();
+      const seeded = (await createTestIngredient({ name: `ui ${w.admin}` }))!;
+      const [own] = await db
+        .insert(ingredients)
+        .values({ householdId: w.household, name: "zelfgemaakt", icon: "own-icon.webp" })
+        .returning();
+
+      await db.insert(ingredientAliases).values([
+        {
+          householdId: w.household,
+          text: "zelfgemaakt",
+          fold: "zelfgemaakt",
+          ingredientId: own!.id,
+        },
+        { householdId: w.household, text: "uitje", fold: "uitje", ingredientId: seeded.id },
+      ]);
+      await db
+        .insert(ingredientJunkPile)
+        .values({ householdId: w.household, fold: "snufje", reason: "person" });
+      await db.insert(ingredientAIChanges).values({
+        householdId: w.household,
+        kind: "plain-name",
+        ingredientId: own!.id,
+        sure: true,
+        undo: { kind: "plain-name", formerName: "Zelfgemaakt", name: "zelfgemaakt" },
+      });
+
+      await deleteAccount(w.deleted);
+      const deletion = await deleteAccount(w.admin);
+      const left = async (
+        table:
+          | typeof ingredients
+          | typeof ingredientAliases
+          | typeof ingredientJunkPile
+          | typeof ingredientAIChanges
+      ) => (await db.select().from(table).where(eq(table.householdId, w.household))).length;
+
+      expect(deletion).toMatchObject({ householdErased: true, iconFiles: ["own-icon.webp"] });
+      for (const table of [
+        ingredients,
+        ingredientAliases,
+        ingredientJunkPile,
+        ingredientAIChanges,
+      ]) {
+        expect(await left(table)).toBe(0);
+      }
+      expect(await db.select().from(ingredients).where(eq(ingredients.id, seeded.id))).toHaveLength(
+        1
+      );
+    });
+
     it("turns another household's plan entry for its recipe into a note as its household goes", async () => {
       const w = await world();
 
@@ -650,18 +709,7 @@ describe("deleting an account", () => {
           expect.objectContaining({ householdId: household.id, userId: household.adminUserId })
         );
       }
-      for (const table of [recipes, cookbooks]) {
-        const strays = await db
-          .select({ id: table.id })
-          .from(table)
-          .leftJoin(
-            householdUsers,
-            sql`${householdUsers.userId} = ${table.userId} AND ${householdUsers.householdId} = ${table.householdId}`
-          )
-          .where(sql`${householdUsers.userId} IS NULL`);
-
-        expect(strays).toEqual([]);
-      }
+      expect(await rowsOutsideTheirOwnersHousehold()).toEqual([]);
     }
 
     it("a join queued behind the last member's deletion is refused, the household gone", async () => {
@@ -820,7 +868,7 @@ describe("deleting an account", () => {
       const pid = new Promise<number>((resolve) => (held = resolve));
       const done = getTestDb().transaction(async (tx) => {
         await lock(tx);
-        held((await tx.execute<{ pid: number }>(sql`SELECT pg_backend_pid() AS pid`)).rows[0]!.pid);
+        held(await backendPid(tx));
         await gate;
       });
 
@@ -842,45 +890,72 @@ describe("deleting an account", () => {
     const lockRecipe = (recipeId: string) => (tx: TestTransaction) =>
       tx.select().from(recipes).where(eq(recipes.id, recipeId)).for("update");
 
-    it("a grocery added while the deletion holds the household is refused for a retry", async () => {
-      const m = await memberWithGrocery();
-      const adminsLine = await addTestGrocery(m.admin, { name: "kaas" });
-      const recipeHold = await holdUntilReleased(lockRecipe(m.recipe.id));
-      const lineHold = await holdUntilReleased((tx) =>
-        tx.select().from(groceries).where(eq(groceries.id, adminsLine.id)).for("update")
+    /** Runs `test` with the repository pool's deadlock check far later than any test takes. */
+    async function withRepositoryDeadlockTimeout(test: () => Promise<void>) {
+      const { rows } = await getTestDb().execute<{ name: string }>(
+        sql`SELECT current_database() AS name`
       );
-      const runs: Promise<unknown>[] = [];
+      const database = sql.identifier(rows[0]!.name);
 
+      await getTestDb().execute(sql`ALTER DATABASE ${database} SET deadlock_timeout = '1min'`);
+      await resetDbConnection();
       try {
-        // The deletion holds the household and waits on the recipe; the grocery's shift holds the
-        // deleted member's line and waits on the admin's.
-        runs.push(deleteAccount(m.deleted));
-        runs[0]!.catch(() => undefined);
-        const deleter = await waitFor(() => waiterOn(recipeHold.pid), "the deletion to wait");
-
-        runs.push(addTestGrocery(m.admin, { name: "brood" }));
-        runs[1]!.catch(() => undefined);
-        const adder = await waitFor(() => waiterOn(lineHold.pid, [deleter]), "the grocery");
-
-        await recipeHold.release();
-        await waitFor(() => blockedBy(deleter, adder), "the deletion to wait on the line");
-        // Postgres checks a wait for a deadlock once, deadlock_timeout in: the deletion's finds
-        // none, so the grocery's wait on the household closes the cycle and its check finds it.
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await test();
       } finally {
-        await recipeHold.release();
-        await lineHold.release();
+        await getTestDb().execute(sql`ALTER DATABASE ${database} RESET deadlock_timeout`);
+        await resetDbConnection();
       }
-      const settled = await Promise.allSettled(runs);
+    }
 
-      expect(settled[0]).toEqual({
-        status: "fulfilled",
-        value: expect.objectContaining({ recipeIds: [m.recipe.id] }),
-      });
-      expect(settled[1]?.status).toBe("rejected");
-      expect(isRetryableConflict((settled[1] as PromiseRejectedResult).reason)).toBe(true);
-      expect(await getTestDb().select().from(users).where(eq(users.id, m.deleted))).toEqual([]);
-    });
+    it(
+      "a grocery added while the deletion holds the household is refused for a retry",
+      () =>
+        withRepositoryDeadlockTimeout(async () => {
+          const m = await memberWithGrocery();
+          const adminsLine = await addTestGrocery(m.admin, { name: "kaas" });
+          const recipeHold = await holdUntilReleased(lockRecipe(m.recipe.id));
+          const lineHold = await holdUntilReleased((tx) =>
+            tx.select().from(groceries).where(eq(groceries.id, adminsLine.id)).for("update")
+          );
+          const runs: Promise<unknown>[] = [];
+
+          try {
+            // The deletion holds the household and waits on the recipe; the grocery's shift holds the
+            // deleted member's line and waits on the admin's.
+            runs.push(deleteAccount(m.deleted));
+            runs[0]!.catch(() => undefined);
+            const deleter = await waitFor(() => waiterOn(recipeHold.pid), "the deletion to wait");
+
+            // Only the grocery checks for a deadlock within the test: closing the cycle, it is the victim.
+            runs.push(
+              getTestDb().transaction(async (tx) => {
+                await tx.execute(sql`SET LOCAL deadlock_timeout = '1ms'`);
+
+                return await addTestGrocery(m.admin, { name: "brood" }, tx);
+              })
+            );
+            runs[1]!.catch(() => undefined);
+            const adder = await waitFor(() => waiterOn(lineHold.pid, [deleter]), "the grocery");
+
+            await recipeHold.release();
+            await waitFor(() => blockedBy(deleter, adder), "the deletion to wait on the line");
+            await lineHold.release();
+          } finally {
+            await recipeHold.release();
+            await lineHold.release();
+          }
+          const settled = await Promise.allSettled(runs);
+
+          expect(settled[0]).toEqual({
+            status: "fulfilled",
+            value: expect.objectContaining({ recipeIds: [m.recipe.id] }),
+          });
+          expect(settled[1]?.status).toBe("rejected");
+          expect(isRetryableConflict((settled[1] as PromiseRejectedResult).reason)).toBe(true);
+          expect(await getTestDb().select().from(users).where(eq(users.id, m.deleted))).toEqual([]);
+        }),
+      15_000
+    );
 
     it("a deletion that is the deadlock's victim tries again and erases the account", async () => {
       const m = await memberWithGrocery();
@@ -893,8 +968,7 @@ describe("deleting an account", () => {
         await getTestDb().transaction(async (tx) => {
           await tx.execute(sql`SET LOCAL deadlock_timeout = '10s'`);
           await tx.select().from(groceries).where(eq(groceries.id, m.grocery.id)).for("update");
-          const holder = (await tx.execute<{ pid: number }>(sql`SELECT pg_backend_pid() AS pid`))
-            .rows[0]!.pid;
+          const holder = await backendPid(tx);
 
           deletion = deleteAccount(m.deleted);
           deletion.catch(() => undefined);
@@ -931,6 +1005,7 @@ describe("deleting an account", () => {
     await deleteAccount(user);
 
     expect(await deleteAccount(user)).toEqual({
+      iconFiles: [],
       householdId: null,
       householdErased: false,
       successorId: null,

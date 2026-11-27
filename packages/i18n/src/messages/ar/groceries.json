@@ -16,7 +16,6 @@
   },
   "empty": {
     "title": "قائمة مشترياتك بانتظارك",
-    "description": "أضف أغراضًا باستخدام زر \"إضافة غرض\" في الأعلى لتبدأ.",
     "manual": "أغراض مضافة يدويًا"
   },
   "item": {
@@ -54,7 +53,6 @@
     },
     "confirmDelete": "هل أنت متأكد من حذف {storeName}؟",
     "noStoresYet": "لا توجد متاجر بعد",
-    "createStoreHint": "أنشئ متجرًا لتنظيم مشترياتك",
     "hasItems": "في هذا المتجر {count} غرض.",
     "hasItemsPlural": "في هذا المتجر {count} أغراض.",
     "whatToDo": "ماذا تريد أن تفعل بها؟",
@@ -153,6 +151,7 @@
     "cannotSearchHint": "لم يستطع Norish استخراج صفحة بحث من رابط متجر {store}. صحّحه من إدارة المتاجر لتظهر الأسعار.",
     "packAmount": "الكمية في العبوة",
     "packUnit": "الوحدة",
+    "noUnit": "بدون وحدة",
     "productPage": "صفحة المنتج",
     "invalidUrl": "أدخل عنوان موقع، مثل https://www.dirk.nl/…",
     "invalidPack": "أدخل الكمية والوحدة معًا، أو اتركهما فارغتين",
@@ -185,7 +184,6 @@
     "viewByStore": "حسب المتجر",
     "viewByRecipe": "حسب الوصفة",
     "listSettings": "إعدادات القائمة",
-    "emptyHint": "أضف العناصر بالزر أدناه.",
     "addTitle": "إضافة مشتريات",
     "editTitle": "تعديل عنصر",
     "store": "المتجر",

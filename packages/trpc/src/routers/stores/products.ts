@@ -59,7 +59,7 @@ const linkFor = authedProcedure
   .input(StoreProductLinkLookupSchema)
   .query(async ({ ctx, input }): Promise<ResolvedProductLink | null> => {
     await assertStoreAccess(ctx, input.storeId);
-    const ingredient = await findIngredientFor(input.name);
+    const ingredient = await findIngredientFor(ctx.householdId, input.name);
 
     return ingredient ? resolveProductLink(input.storeId, ingredient.ingredientId) : null;
   });
@@ -84,6 +84,17 @@ const createProduct = authedProcedure
     return product;
   });
 
+/** A by-hand edit that changed no row: the product left the household, or a page wrote it and only
+ * a by-hand price is a person's to change. */
+function unchangedProduct(existing: { isManual: boolean }) {
+  return existing.isManual
+    ? new TRPCError({ code: "NOT_FOUND", message: "Product not found" })
+    : new TRPCError({
+        code: "PRECONDITION_FAILED",
+        message: "Only a by-hand product can be edited",
+      });
+}
+
 const updateProduct = authedProcedure
   .input(StoreProductManualUpdateSchema)
   .mutation(async ({ ctx, input }) => {
@@ -91,16 +102,9 @@ const updateProduct = authedProcedure
 
     if (!existing) throw new TRPCError({ code: "NOT_FOUND", message: "Product not found" });
 
-    const product = await updateManualProduct(input);
+    const product = await updateManualProduct(ctx.householdId, input);
 
-    if (!product) {
-      // A product read from a page keeps what the page said; only a by-hand
-      // price is a person's to change.
-      throw new TRPCError({
-        code: "PRECONDITION_FAILED",
-        message: "Only a by-hand product can be edited",
-      });
-    }
+    if (!product) throw unchangedProduct(existing);
     void stores.publish("productUpdated", { product }, { householdId: ctx.householdId });
 
     return product;
@@ -126,7 +130,7 @@ const searchShop = authedProcedure
     // What the lookup's Decision said about these products, kept with the
     // Miss for this name (ADR-0035): the offered list is ordered by it, most
     // likely first. One indexed row, no request.
-    const ingredient = await findIngredientFor(input.term);
+    const ingredient = await findIngredientFor(ctx.householdId, input.term);
     const link = ingredient
       ? await resolveProductLink(input.storeId, ingredient.ingredientId)
       : null;
@@ -209,7 +213,7 @@ async function writeManualProduct(
   if (existing.storeId !== storeId) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Product not found in this store" });
   }
-  const updated = await updateManualProduct({
+  const updated = await updateManualProduct(householdId, {
     id: existing.id,
     name: choice.name,
     price: choice.price,
@@ -221,12 +225,7 @@ async function writeManualProduct(
     dealWords: choice.dealWords,
   });
 
-  if (!updated) {
-    throw new TRPCError({
-      code: "PRECONDITION_FAILED",
-      message: "Only a by-hand product can be edited",
-    });
-  }
+  if (!updated) throw unchangedProduct(existing);
 
   return updated;
 }
@@ -286,16 +285,16 @@ const chooseProduct = authedProcedure
     // A Pack Size the shopper set is the last word for whichever product the
     // choice resolved to; cleared, the product reads its own size words again.
     if (storeProductId && input.pack !== undefined) {
-      const product = await setPackSizeByHand(storeProductId, input.pack);
+      const product = await setPackSizeByHand(ctx.householdId, storeProductId, input.pack);
 
-      if (product)
-        void stores.publish("productUpdated", { product }, { householdId: ctx.householdId });
+      if (!product) throw new TRPCError({ code: "NOT_FOUND", message: "Product not found" });
+      void stores.publish("productUpdated", { product }, { householdId: ctx.householdId });
     }
 
     // The choice is about the food the grocery names, so every spelling of it
     // at this Store is priced by it (ADR-0037).
     const ingredient = await writeResolved(
-      () => resolveIngredient(input.name, { userId: ctx.user.id }),
+      () => resolveIngredient(input.name, { userId: ctx.user.id, householdId: ctx.householdId }),
       async (resolved) => {
         if (resolved) await upsertProductLink(input.storeId, resolved.ingredientId, storeProductId);
 

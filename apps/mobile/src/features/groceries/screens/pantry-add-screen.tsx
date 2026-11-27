@@ -1,7 +1,8 @@
 import type { SheetSearchInput } from "@/components/sheet-search-field";
 import React, { useState } from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
 import Animated from "react-native-reanimated";
+import { EmptyCard } from "@/components/empty-card";
 import { IngredientIconSlots } from "@/components/ingredient-icon";
 import { SectionLabel } from "@/components/section-label";
 import { Sheet, SheetList } from "@/components/sheet";
@@ -72,14 +73,17 @@ export function PantryAddScreen() {
                 <FoodRowsSkeleton rows={3} testID="pantry-add-searching" />
               </Animated.View>
             ) : typed === "" ? undefined : (
-              <Text className="text-muted px-5 py-6 text-center" testID="pantry-add-none">
-                {intl.formatMessage({ id: "common.status.noResults" })}
-              </Text>
+              <EmptyCard
+                icon="search-outline"
+                placement="sheet"
+                testID="pantry-add-none"
+                title={intl.formatMessage({ id: "common.status.noResults" })}
+              />
             )
           }
           ListFooterComponent={more ? <ShowMore onPress={() => setShowAll(true)} /> : undefined}
           ListHeaderComponent={
-            <View className="px-5 pb-3">
+            <View className="pb-3">
               <SheetSearchField
                 fieldRef={fieldRef}
                 label={label}
@@ -98,7 +102,6 @@ export function PantryAddScreen() {
             </View>
           }
           data={rows}
-          inset={false}
           keyExtractor={(row) => row.key}
           renderItem={({ item }) => (
             <Animated.View entering={typed === "" ? undefined : SPRING_FADE_IN}>

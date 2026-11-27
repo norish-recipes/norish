@@ -1,8 +1,8 @@
 // @vitest-environment node
 /**
- * The Ingredients page's procedures: a member edits their household's Ingredients, an admin the seeded ones.
- * The catalogue repository and the policy are mocked; what is pinned here is
- * who may do what to whose Ingredient, and that a refused edit writes nothing.
+ * The Ingredients page's procedures: any member edits their household's Ingredients, an admin the
+ * seeded ones (ADR-0042). The catalogue repository is mocked as it answers: another household's row
+ * is not found. What is pinned here is who may do what, and that a refused edit writes nothing.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -19,6 +19,7 @@ import { TX } from "../mocks/drizzle";
 import { ingredients as ingredientsRealtime } from "../mocks/realtime/ingredients";
 
 const catalogue = vi.hoisted(() => ({
+  addSpellingUnlessKnown: vi.fn(),
   keepIngredientDistinct: vi.fn(),
   deleteCatalogueAlias: vi.fn(),
   deleteCatalogueIngredient: vi.fn(),
@@ -35,6 +36,7 @@ const relocation = vi.hoisted(() => ({
   closesCycle: vi.fn(async () => false),
   countAliasesOf: vi.fn(),
   findIngredientAncestors: vi.fn(),
+  fitsInCatalogueOf: vi.fn(async () => true),
   insertCatalogueIngredient: vi.fn(),
   lockIngredientNamed: vi.fn(async () => null),
   lockFoods: vi.fn(async () => true),
@@ -42,12 +44,13 @@ const relocation = vi.hoisted(() => ({
   lockTree: vi.fn(),
   mergeCatalogueIngredients: vi.fn(),
   moveCatalogueAlias: vi.fn(),
-  setCatalogueIngredientParent: vi.fn(),
+  setCatalogueIngredientParent: vi.fn(async () => true),
   writeGroceryParts: vi.fn(),
 }));
 // What a deleted food named, resolved again: nothing, here.
 const cleanup = vi.hoisted(() => ({
   findRowsNamingFood: vi.fn(async () => ({ lines: [], groceries: [], recurring: [] })),
+  findLineHouseholds: vi.fn(async () => new Map()),
   repointLines: vi.fn(),
 }));
 const aliases = vi.hoisted(() => ({
@@ -99,6 +102,11 @@ vi.mock("@norish/db/repositories/ingredient-cleanup", () => cleanup);
 vi.mock("@norish/db/repositories/ingredient-aliases", () => aliases);
 vi.mock("@norish/db/repositories/ingredient-junk-pile", () => junkPile);
 vi.mock("@norish/db/repositories/ingredient-icons", () => iconsRepo);
+// Every id asked about is the household's or the seed's here; the boundary is the repository's own test.
+vi.mock("@norish/db/repositories/ingredient-nutrition", async (original) => ({
+  ...(await original<typeof import("@norish/db/repositories/ingredient-nutrition")>()),
+  findIdsInCatalogue: vi.fn(async (_householdId: string, ids: readonly string[]) => new Set(ids)),
+}));
 vi.mock("@norish/shared-server/media/ingredient-icon", async (original) => ({
   ...(await original<typeof import("@norish/shared-server/media/ingredient-icon")>()),
   ...iconFiles,
@@ -123,6 +131,12 @@ const UIEN = "33333333-3333-4333-8333-333333333333";
 const ME = "test-user-id";
 const HOUSEMATE = "household-member-id";
 const STRANGER = "someone-elsewhere";
+const HOME = "test-household-id";
+const ELSEWHERE = "household-elsewhere";
+
+/** The household a member's rows are in; null for the seed. */
+const householdOfOwner = (ownerId: string | null) =>
+  ownerId === null ? null : ownerId === STRANGER ? ELSEWHERE : HOME;
 
 function callerFor(options: { admin?: boolean } = {}) {
   const ctx = createMockAuthedContext(
@@ -133,14 +147,15 @@ function callerFor(options: { admin?: boolean } = {}) {
   return ingredientsRouter.createCaller(createMockCallerContext(ctx));
 }
 
+/** The Ingredient and its alias as the household-scoped reads answer them: another household's is not found. */
 function ownedBy(ownerId: string | null) {
-  catalogue.findCatalogueIngredientOwner.mockResolvedValue({ ownerId });
-  catalogue.findCatalogueAliasOwner.mockResolvedValue({
-    ownerId,
-    ingredientId: ONION,
-    text: "ui",
-    fold: "ui",
-  });
+  const householdId = householdOfOwner(ownerId);
+  const found = householdId === ELSEWHERE ? null : { householdId };
+
+  catalogue.findCatalogueIngredientOwner.mockResolvedValue(found);
+  catalogue.findCatalogueAliasOwner.mockResolvedValue(
+    found && { ...found, ownerId, ingredientId: ONION, text: "ui", fold: "ui" }
+  );
 }
 
 beforeEach(() => {
@@ -151,11 +166,11 @@ beforeEach(() => {
   relocation.insertCatalogueIngredient.mockResolvedValue(UIEN);
   catalogue.renameCatalogueIngredient.mockResolvedValue({ id: ONION });
   catalogue.keepIngredientDistinct.mockResolvedValue({ id: ONION });
-  catalogue.insertCatalogueAlias.mockResolvedValue({ id: ALIAS, text: "Onion", ownerId: ME });
+  catalogue.insertCatalogueAlias.mockResolvedValue({ id: ALIAS, text: "Onion", householdId: HOME });
 });
 
 describe("the edit policy", () => {
-  // [owner, may the member edit?]
+  // [owner, may the member edit?]: another household's row is not found at all.
   const matrix: Array<[string, boolean]> = [
     [ME, true],
     [HOUSEMATE, true],
@@ -169,9 +184,14 @@ describe("the edit policy", () => {
 
     if (allowed) {
       await expect(rename).resolves.toEqual({ success: true });
-      expect(catalogue.renameCatalogueIngredient).toHaveBeenCalledWith(TX, ONION, "Onion");
+      expect(catalogue.renameCatalogueIngredient).toHaveBeenCalledWith(
+        TX,
+        ONION,
+        "Onion",
+        householdOfOwner(owner)
+      );
     } else {
-      await expect(rename).rejects.toMatchObject({ code: "FORBIDDEN" });
+      await expect(rename).rejects.toMatchObject({ code: "NOT_FOUND" });
       expect(catalogue.renameCatalogueIngredient).not.toHaveBeenCalled();
     }
   });
@@ -189,7 +209,7 @@ describe("the edit policy", () => {
           expect.objectContaining({ event: "changed", payload: { ingredientIds: [ONION] } }),
         ]);
       } else {
-        await expect(mark).rejects.toMatchObject({ code: "FORBIDDEN" });
+        await expect(mark).rejects.toMatchObject({ code: "NOT_FOUND" });
         expect(ingredientsRealtime.published).toHaveLength(0);
       }
     }
@@ -207,7 +227,7 @@ describe("the edit policy", () => {
         expect.objectContaining({ event: "changed", payload: { ingredientIds: [ONION] } }),
       ]);
     } else {
-      await expect(remove).rejects.toMatchObject({ code: "FORBIDDEN" });
+      await expect(remove).rejects.toMatchObject({ code: "NOT_FOUND" });
       expect(catalogue.deleteCatalogueIngredient).not.toHaveBeenCalled();
     }
   });
@@ -223,7 +243,7 @@ describe("the edit policy", () => {
         expect.objectContaining({ event: "changed", payload: { ingredientIds: [ONION] } }),
       ]);
     } else {
-      await expect(remove).rejects.toMatchObject({ code: "FORBIDDEN" });
+      await expect(remove).rejects.toMatchObject({ code: "NOT_FOUND" });
       expect(catalogue.deleteCatalogueAlias).not.toHaveBeenCalled();
     }
   });
@@ -235,7 +255,7 @@ describe("the edit policy", () => {
     await expect(
       callerFor().saveDraft({ ingredientId: ONION, add: [], remove: [ALIAS], junk: [ALIAS] })
     ).resolves.toEqual({ success: true });
-    expect(junkPile.addToJunkPile).toHaveBeenCalledWith(TX, ["ui"], { reason: "person" });
+    expect(junkPile.addToJunkPile).toHaveBeenCalledWith(TX, HOME, ["ui"], { reason: "person" });
 
     junkPile.addToJunkPile.mockClear();
     await callerFor().saveDraft({ ingredientId: ONION, add: [], remove: [ALIAS] });
@@ -261,9 +281,9 @@ describe("the edit policy", () => {
 
     await expect(
       callerFor({ admin: true }).markDistinct({ ingredientId: ONION })
-    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
     await expect(callerFor({ admin: true }).removeAlias({ aliasId: ALIAS })).rejects.toMatchObject({
-      code: "FORBIDDEN",
+      code: "NOT_FOUND",
     });
   });
 
@@ -282,7 +302,7 @@ describe("the edit policy", () => {
           expect.objectContaining({ event: "changed", payload: { ingredientIds: [ONION, UIEN] } }),
         ]);
       } else {
-        await expect(set).rejects.toMatchObject({ code: "FORBIDDEN" });
+        await expect(set).rejects.toMatchObject({ code: "NOT_FOUND" });
         expect(relocation.setCatalogueIngredientParent).not.toHaveBeenCalled();
       }
     }
@@ -297,7 +317,7 @@ describe("the edit policy", () => {
       await expect(move).resolves.toEqual({ success: true });
       expect(relocation.moveCatalogueAlias).toHaveBeenCalledWith(TX, ALIAS, UIEN);
     } else {
-      await expect(move).rejects.toMatchObject({ code: "FORBIDDEN" });
+      await expect(move).rejects.toMatchObject({ code: "NOT_FOUND" });
       expect(relocation.moveCatalogueAlias).not.toHaveBeenCalled();
     }
   });
@@ -308,6 +328,7 @@ describe("the edit policy", () => {
     await callerFor().moveAlias({ aliasId: ALIAS, targetId: null });
 
     expect(relocation.insertCatalogueIngredient).toHaveBeenCalledWith(TX, {
+      householdId: HOME,
       name: "ui",
       ownerId: ME,
     });
@@ -318,25 +339,25 @@ describe("the edit policy", () => {
     ["the source", STRANGER, ME],
     ["the target", ME, STRANGER],
   ])(
-    "refuses a merge when the member may not edit %s",
+    "refuses a merge with another household's food as %s, which is not found",
     async (_which, sourceOwner, targetOwner) => {
       catalogue.findCatalogueIngredientOwner.mockImplementation(
-        async (_tx: unknown, id: string) => ({
-          ownerId: id === UIEN ? sourceOwner : targetOwner,
-        })
+        async (_tx: unknown, _household: string, id: string) => {
+          const householdId = householdOfOwner(id === UIEN ? sourceOwner : targetOwner);
+
+          return householdId === ELSEWHERE ? null : { householdId };
+        }
       );
 
       await expect(callerFor().merge({ sourceId: UIEN, targetId: ONION })).rejects.toMatchObject({
-        code: "FORBIDDEN",
+        code: "NOT_FOUND",
       });
       expect(relocation.mergeCatalogueIngredients).not.toHaveBeenCalled();
     }
   );
 
-  it("merges where the member may edit both, and tells every client", async () => {
-    catalogue.findCatalogueIngredientOwner.mockImplementation(async (_tx: unknown, id: string) => ({
-      ownerId: id === UIEN ? HOUSEMATE : ME,
-    }));
+  it("merges two of the household's foods, and tells the household", async () => {
+    catalogue.findCatalogueIngredientOwner.mockImplementation(async () => ({ householdId: HOME }));
 
     await expect(callerFor().merge({ sourceId: UIEN, targetId: ONION })).resolves.toEqual({
       success: true,
@@ -347,7 +368,18 @@ describe("the edit policy", () => {
     ]);
   });
 
-  it("leaves a merge of seeded Ingredients to administrators", async () => {
+  it("refuses a merge of a seeded food into a household's, and leaves seeded ones to administrators", async () => {
+    catalogue.findCatalogueIngredientOwner.mockImplementation(
+      async (_tx: unknown, _household: string, id: string) => ({
+        householdId: id === UIEN ? null : HOME,
+      })
+    );
+    relocation.fitsInCatalogueOf.mockResolvedValueOnce(false);
+    await expect(
+      callerFor({ admin: true }).merge({ sourceId: UIEN, targetId: ONION })
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    expect(relocation.mergeCatalogueIngredients).not.toHaveBeenCalled();
+
     ownedBy(null);
 
     await expect(callerFor().merge({ sourceId: UIEN, targetId: ONION })).rejects.toMatchObject({
@@ -358,16 +390,25 @@ describe("the edit policy", () => {
     ).resolves.toEqual({ success: true });
   });
 
-  it("lets anyone add an alias, to a seeded Ingredient too", async () => {
+  it("lets anyone add an alias to a seeded Ingredient, as their household's", async () => {
     ownedBy(null);
-    catalogue.insertCatalogueAlias.mockResolvedValue({ id: ALIAS, text: "ajuin", ownerId: ME });
+    catalogue.insertCatalogueAlias.mockResolvedValue({
+      id: ALIAS,
+      text: "ajuin",
+      householdId: HOME,
+    });
 
     await expect(callerFor().addAlias({ ingredientId: ONION, text: "ajuin" })).resolves.toEqual({
       success: true,
     });
     expect(catalogue.insertCatalogueAlias).toHaveBeenCalledWith(
       TX,
-      expect.objectContaining({ ingredientId: ONION, text: "ajuin", ownerId: ME })
+      expect.objectContaining({
+        householdId: HOME,
+        ingredientId: ONION,
+        text: "ajuin",
+        householdId: HOME,
+      })
     );
     expect(ingredientsRealtime.published).toEqual([
       expect.objectContaining({ event: "changed", payload: { ingredientIds: [ONION] } }),
@@ -379,9 +420,9 @@ describe("the edit policy", () => {
 
     await callerFor().rename({ ingredientId: ONION, name: "Yellow onion" });
 
-    expect(catalogue.insertCatalogueAlias).toHaveBeenCalledWith(
+    expect(catalogue.addSpellingUnlessKnown).toHaveBeenCalledWith(
       TX,
-      expect.objectContaining({ ingredientId: ONION, text: "Yellow onion", ownerId: ME })
+      expect.objectContaining({ householdId: HOME, ingredientId: ONION, text: "Yellow onion" })
     );
   });
 });
@@ -396,7 +437,6 @@ describe("AI Changes", () => {
     expect(aiChanges.listAIChangesFor).toHaveBeenCalledWith({
       userId: ME,
       householdId: "test-household-id",
-      memberIds: [ME, HOUSEMATE],
       isServerAdmin: false,
     });
   });
@@ -473,7 +513,7 @@ describe("the tree of kinds", () => {
         name: "red onion",
         flagged: false,
         flagReason: null,
-        ownerId: ME,
+        householdId: HOME,
         version: 1,
         parent: { id: ONION, name: "onion" },
         kinds: 2,
@@ -574,11 +614,11 @@ describe("the list", () => {
         name: "onion",
         flagged: false,
         flagReason: null,
-        ownerId: ME,
+        householdId: HOME,
         version: 2,
         parent: null,
         kinds: 0,
-        aliases: [{ id: ALIAS, text: "onion", ownerId: ME }],
+        aliases: [{ id: ALIAS, text: "onion", householdId: HOME }],
       },
     ]);
 
@@ -602,12 +642,12 @@ describe("the list", () => {
         name: "onion",
         flagged: true,
         flagReason: "ai-unsure",
-        ownerId: STRANGER,
+        householdId: ELSEWHERE,
         version: 1,
         parent: null,
         aliases: [
-          { id: ALIAS, text: "onions", ownerId: HOUSEMATE },
-          { id: "seeded-alias", text: "ui", ownerId: null, locale: "nl", seeded: true },
+          { id: ALIAS, text: "onions", householdId: HOME },
+          { id: "seeded-alias", text: "ui", householdId: null, locale: "nl", seeded: true },
         ],
       },
     ]);
@@ -657,8 +697,8 @@ describe("the list", () => {
 
   it("lists every spelling of one Ingredient on request", async () => {
     catalogue.listCatalogueAliasesOf.mockResolvedValue([
-      { id: ALIAS, text: "onions", ownerId: HOUSEMATE },
-      { id: "seeded-alias", text: "ui", ownerId: null, locale: "nl", seeded: true },
+      { id: ALIAS, text: "onions", householdId: HOME },
+      { id: "seeded-alias", text: "ui", householdId: null, locale: "nl", seeded: true },
     ]);
 
     await expect(callerFor().spellings({ ingredientId: ONION })).resolves.toEqual([
@@ -676,7 +716,7 @@ describe("Ingredient names", () => {
 
     await expect(callerFor().names({ ids: [ONION, UIEN] })).resolves.toEqual({ [ONION]: onion });
     expect(aliases.findIngredientDisplayNames).toHaveBeenCalledTimes(1);
-    expect(aliases.findIngredientDisplayNames).toHaveBeenCalledWith([ONION, UIEN]);
+    expect(aliases.findIngredientDisplayNames).toHaveBeenCalledWith(HOME, [ONION, UIEN]);
   });
 });
 
@@ -695,8 +735,8 @@ describe("Ingredient Icons", () => {
   it("answers which icon each food shows, borrowed from its parent where it has none", async () => {
     iconsRepo.findIconLineage.mockResolvedValue(
       new Map([
-        [ONION, { id: ONION, parentId: null, offId: null, icon: FILE, ownerId: ME }],
-        [UIEN, { id: UIEN, parentId: ONION, offId: null, icon: null, ownerId: ME }],
+        [ONION, { id: ONION, parentId: null, offId: null, icon: FILE, householdId: HOME }],
+        [UIEN, { id: UIEN, parentId: ONION, offId: null, icon: null, householdId: HOME }],
       ])
     );
 
@@ -707,7 +747,7 @@ describe("Ingredient Icons", () => {
     });
   });
 
-  // [owner, may the member set the icon?]
+  // [owner, may the member set the icon?]; another household's food is not found at all.
   const matrix: Array<[string | null, boolean]> = [
     [ME, true],
     [HOUSEMATE, true],
@@ -715,6 +755,7 @@ describe("Ingredient Icons", () => {
     // A seeded food is an administrator's.
     [null, false],
   ];
+  const refusalFor = (owner: string | null) => (owner === null ? "FORBIDDEN" : "NOT_FOUND");
 
   it.each(matrix)(
     "uploading an icon for a food owned by %s is allowed: %s",
@@ -727,7 +768,7 @@ describe("Ingredient Icons", () => {
         await expect(upload).resolves.toEqual({ file: FILE, address: `/ingredient-icons/${FILE}` });
         expect(iconFiles.storeIngredientIcon).toHaveBeenCalledWith(Buffer.from([1, 2, 3]));
       } else {
-        await expect(upload).rejects.toMatchObject({ code: "FORBIDDEN" });
+        await expect(upload).rejects.toMatchObject({ code: refusalFor(owner) });
         expect(iconFiles.storeIngredientIcon).not.toHaveBeenCalled();
       }
     }
@@ -742,12 +783,14 @@ describe("Ingredient Icons", () => {
 
       if (allowed) {
         await expect(save).resolves.toEqual({ success: true });
-        expect(iconsRepo.setIngredientIcon).toHaveBeenCalledWith(TX, ONION, FILE);
+        expect(iconsRepo.setIngredientIcon).toHaveBeenCalledWith(TX, ONION, FILE, {
+          householdId: householdOfOwner(owner),
+        });
         expect(ingredientsRealtime.published).toEqual([
           expect.objectContaining({ event: "changed", payload: { ingredientIds: [ONION] } }),
         ]);
       } else {
-        await expect(save).rejects.toMatchObject({ code: "FORBIDDEN" });
+        await expect(save).rejects.toMatchObject({ code: refusalFor(owner) });
         expect(iconsRepo.setIngredientIcon).not.toHaveBeenCalled();
       }
     }
@@ -765,7 +808,9 @@ describe("Ingredient Icons", () => {
       remove: [],
       icon: null,
     });
-    expect(iconsRepo.setIngredientIcon).toHaveBeenCalledWith(TX, ONION, null);
+    expect(iconsRepo.setIngredientIcon).toHaveBeenCalledWith(TX, ONION, null, {
+      householdId: null,
+    });
   });
 
   it("refuses a draft icon no upload stored", async () => {
@@ -797,8 +842,14 @@ describe("Ingredient Icons", () => {
     ownedBy(ME);
     iconsRepo.findIconLineage.mockResolvedValue(
       new Map([
-        [UIEN, { id: UIEN, name: "uien", parentId: ONION, offId: null, icon: null, ownerId: ME }],
-        [ONION, { id: ONION, name: "onion", parentId: null, offId: null, icon: null, ownerId: ME }],
+        [
+          UIEN,
+          { id: UIEN, name: "uien", parentId: ONION, offId: null, icon: null, householdId: HOME },
+        ],
+        [
+          ONION,
+          { id: ONION, name: "onion", parentId: null, offId: null, icon: null, householdId: HOME },
+        ],
       ])
     );
     aliases.findLocaleNames.mockResolvedValueOnce(new Map([[UIEN, { en: "onions" }]]));
@@ -836,7 +887,7 @@ describe("Ingredient Icons", () => {
       if (allowed) {
         await expect(generate).resolves.toMatchObject({ file: FILE });
       } else {
-        await expect(generate).rejects.toMatchObject({ code: "FORBIDDEN" });
+        await expect(generate).rejects.toMatchObject({ code: refusalFor(owner) });
         expect(drawer.drawIngredientIcon).not.toHaveBeenCalled();
       }
     }

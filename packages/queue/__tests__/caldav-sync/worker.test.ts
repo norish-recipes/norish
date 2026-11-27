@@ -95,17 +95,16 @@ describe("the CalDAV sync worker", () => {
       eventTitle: "Soep",
       date: entry.date,
       slot: entry.slot,
-      operation: "sync",
       caldavServerUrl: "https://dav.example/",
     };
 
     return {
       entry,
-      run: () =>
+      run: (operation: "sync" | "delete" = "sync") =>
         captured.processor!({
           id: "job-1",
           attemptsMade: 0,
-          data,
+          data: { ...data, operation },
           updateProgress: vi.fn(),
           log: vi.fn(async () => 0),
         }),
@@ -160,6 +159,21 @@ describe("the CalDAV sync worker", () => {
     expect(handlers.syncPlannedItem).toHaveBeenCalledOnce();
     expect(handlers.deletePlannedItem).toHaveBeenCalledWith(member, entry.id);
     expect(await statuses.getCaldavSyncStatusByItemId(member, entry.id)).toBeNull();
+  });
+
+  it("keeps an entry on the calendar when its adder rejoined before the leave's removal ran", async () => {
+    const { entry, run } = await syncJob();
+
+    await run();
+    await households.moveToHouseholdOfOne(household, member);
+    await households.joinHousehold(member, { householdId: household });
+    // The removal the leave queued runs now, with the entry the account's plan again.
+    await run("delete");
+
+    expect(handlers.deletePlannedItem).not.toHaveBeenCalled();
+    expect(await statuses.getCaldavSyncStatusByItemId(member, entry.id)).toMatchObject({
+      syncStatus: "synced",
+    });
   });
 
   it("takes off an event it wrote while its adder left, keeping no status", async () => {

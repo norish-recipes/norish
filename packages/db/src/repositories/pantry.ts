@@ -16,7 +16,8 @@ import {
 } from "@norish/db/schema";
 import { PantryIngredientSelectSchema, PantrySuggestionSchema } from "@norish/shared/contracts/zod";
 
-import { householdRow } from "./household-rows";
+import { assertOwnReferences, householdRow, ownRowIds } from "./household-rows";
+import { inCatalogue } from "./household-scope";
 import { findLocaleNames } from "./ingredient-aliases";
 import { coveredCte } from "./pantry-coverage";
 
@@ -25,15 +26,19 @@ const walkStart = alias(ingredients, "walk_start");
 const walkParent = alias(ingredients, "walk_parent");
 const PantryIngredientsSchema = z.array(PantryIngredientSelectSchema);
 
-/** Pantry rows as read, with each Ingredient's spelling in every language. */
+/** One household's Pantry rows as read, with each Ingredient's spelling in every language. */
 async function parsePantryIngredients(
-  rows: Array<{ ingredientId: string }>,
+  rows: Array<{ ingredientId: string; householdId: string }>,
   tx: Db = db
 ): Promise<PantryIngredientDto[]> {
-  const localeNames = await findLocaleNames(
-    rows.map((row) => row.ingredientId),
-    tx
-  );
+  const [first] = rows;
+  const localeNames = first
+    ? await findLocaleNames(
+        first.householdId,
+        rows.map((row) => row.ingredientId),
+        tx
+      )
+    : new Map();
   const parsed = PantryIngredientsSchema.safeParse(
     rows.map((row) => ({ ...row, localeNames: localeNames.get(row.ingredientId) ?? {} }))
   );
@@ -52,6 +57,7 @@ function selectPantry(tx: Db = db) {
   return tx
     .select({
       id: pantryIngredients.id,
+      householdId: pantryIngredients.householdId,
       userId: pantryIngredients.userId,
       ingredientId: pantryIngredients.ingredientId,
       version: pantryIngredients.version,
@@ -133,6 +139,15 @@ export async function addPantryIngredients(
   return await db.transaction(async (tx) => {
     const foods = [...new Set(items.map((item) => item.ingredientId))];
 
+    await assertOwnReferences(
+      owner.householdId,
+      {
+        ingredientIds: foods,
+        ingredientAliasIds: items.map((item) => item.ingredientAliasId),
+      },
+      tx
+    );
+
     for (const ingredientId of foods.sort((a, b) => a.localeCompare(b))) {
       await lockPantryFood(tx, ingredientId);
     }
@@ -178,14 +193,9 @@ async function findPantryIngredient(
 }
 
 /** The household a Pantry Ingredient belongs to, for the household guard. */
-export async function getPantryIngredientHouseholdId(id: string): Promise<string | null> {
-  const [row] = await db
-    .select({ householdId: pantryIngredients.householdId })
-    .from(pantryIngredients)
-    .where(eq(pantryIngredients.id, id))
-    .limit(1);
-
-  return row?.householdId ?? null;
+/** Whether the household's Pantry Ingredient exists; another household's is refused. */
+export async function ownPantryIngredientExists(householdId: string, id: string): Promise<boolean> {
+  return (await ownRowIds(pantryIngredients, householdId, [id])).size > 0;
 }
 
 /**
@@ -210,21 +220,31 @@ export async function deletePantryIngredient(id: string, householdId: string): P
  * only a row from before the catalogue lacks.
  */
 export async function findIngredientOwnSpelling(
+  householdId: string,
   ingredientId: string
 ): Promise<{ ingredientId: string; ingredientAliasId: string | null } | null> {
   const ownSpelling = qb
     .select({ id: ingredientAliases.id })
     .from(ingredientAliases)
-    .where(eq(ingredientAliases.ingredientId, ingredients.id))
+    .where(
+      and(
+        eq(ingredientAliases.ingredientId, ingredients.id),
+        inCatalogue(ingredientAliases.householdId, householdId)
+      )
+    )
     .orderBy(
       desc(sql`lower(${ingredientAliases.text}) = lower(${ingredients.name})`),
       asc(ingredientAliases.createdAt)
     )
-    .limit(1);
+    .limit(1)
+    .as("own_spelling");
   const [row] = await db
-    .select({ ingredientId: ingredients.id, ingredientAliasId: sql<string | null>`${ownSpelling}` })
+    .select({ ingredientId: ingredients.id, ingredientAliasId: ownSpelling.id })
     .from(ingredients)
-    .where(eq(ingredients.id, ingredientId));
+    .leftJoinLateral(ownSpelling, sql`true`)
+    .where(
+      and(eq(ingredients.id, ingredientId), inCatalogue(ingredients.householdId, householdId))
+    );
 
   return row ?? null;
 }
@@ -282,7 +302,10 @@ export async function listPantrySuggestions(householdId: string): Promise<Pantry
     .where(notInArray(used.ingredientId, db.select({ id: covered.coveredId }).from(covered)))
     .orderBy(desc(used.recipeCount), asc(sql`lower(${ingredients.name})`))
     .limit(SUGGESTION_LIMIT);
-  const localeNames = await findLocaleNames(rows.map((row) => row.ingredientId));
+  const localeNames = await findLocaleNames(
+    householdId,
+    rows.map((row) => row.ingredientId)
+  );
   const parsed = PantrySuggestionsSchema.safeParse(
     rows.map((row) => ({ ...row, localeNames: localeNames.get(row.ingredientId) ?? {} }))
   );

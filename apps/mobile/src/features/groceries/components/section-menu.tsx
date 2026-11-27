@@ -1,9 +1,9 @@
 import React from "react";
 import { View } from "react-native";
+import { Ionicons } from "@/components/icon";
 import { NativeMenu } from "@/components/native-menu";
 import { useTokenColor } from "@/hooks/use-token-color";
 import { useText } from "@/lib/i18n/use-text";
-import Ionicons from "@expo/vector-icons/Ionicons";
 
 export type SectionActions = {
   markAllDone?: () => void;

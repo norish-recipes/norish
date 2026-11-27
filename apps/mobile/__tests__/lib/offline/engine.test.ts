@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("react-native-mmkv", () => ({ createMMKV: () => ({ getString: () => undefined }) }));
 vi.mock("expo-constants", () => ({ default: { expoConfig: { version: "0.0.0-test" } } }));
 vi.mock("expo-file-system", () => ({}));
+vi.mock("expo-image", () => ({ Image: { clearMemoryCache: vi.fn(), clearDiskCache: vi.fn() } }));
 vi.mock("@/lib/auth/auth-client", () => ({}));
 vi.mock("@/lib/network/server-address", () => ({
   subscribeServerAddressChange: (listener: () => void) => serverAddressListeners.add(listener),

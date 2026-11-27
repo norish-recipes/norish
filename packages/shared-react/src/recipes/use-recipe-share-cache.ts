@@ -10,6 +10,7 @@ type RecipeShareCacheHelpers = {
   /** Null rereads every recipe's list, for an action whose recipe the caller does not know. */
   invalidateRecipeShares: (recipeId: string | null) => void;
   invalidateMyRecipeShares: () => void;
+  invalidateAdminRecipeShares: () => void;
   invalidateRecipeShare: (shareId: string) => void;
   removeRecipeShare: (shareId: string) => void;
 };
@@ -27,6 +28,9 @@ export function useRecipeShareCacheHelpers(): RecipeShareCacheHelpers {
     },
     invalidateMyRecipeShares: () => {
       void rereadAfterWrite(queryClient, trpc.recipes.shareListMine.queryKey());
+    },
+    invalidateAdminRecipeShares: () => {
+      void rereadAfterWrite(queryClient, trpc.recipes.shareListAdmin.queryKey());
     },
     invalidateRecipeShare: (shareId) => {
       void rereadAfterWrite(queryClient, trpc.recipes.shareGet.queryKey({ id: shareId }));

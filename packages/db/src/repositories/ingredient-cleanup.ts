@@ -1,5 +1,6 @@
 import type { SQL } from "drizzle-orm";
-import { and, asc, eq, inArray, isNull, ne, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, ne, notExists, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 
 import type { Db, DbTransaction } from "@norish/db/drizzle";
 import type { LineJoin } from "@norish/shared/lib/line-foods";
@@ -14,6 +15,8 @@ import {
   recurringGroceries,
 } from "@norish/db/schema";
 
+import { isAnyOf } from "./array-params";
+import { inCatalogue } from "./household-scope";
 import {
   findGroceryRows,
   ingredientIsListed,
@@ -27,9 +30,10 @@ import { writeRecipeLineFoodsTx } from "./ingredients";
  * a removed spelling or a deleted food named pointed at what their own text resolves to.
  */
 
-/** One spelling as the cleanup reads it. */
+/** One spelling as the cleanup reads it, with the household it is read in (the seed's: null). */
 export interface CleanupSpelling {
   id: string;
+  householdId: string | null;
   text: string;
   fold: string;
   seeded: boolean;
@@ -43,43 +47,54 @@ export async function listSpellingsForCleanup(): Promise<CleanupSpelling[]> {
   return await db
     .select({
       id: ingredientAliases.id,
+      householdId: ingredientAliases.householdId,
       text: ingredientAliases.text,
       fold: ingredientAliases.fold,
       seeded: ingredientAliases.seeded,
       ingredientId: ingredientAliases.ingredientId,
-      cleanable: sql<boolean>`(${and(
-        isNull(ingredients.offId),
-        eq(ingredients.parentChosen, false)
-      )})`,
+      cleanable: and(isNull(ingredients.offId), eq(ingredients.parentChosen, false))!.mapWith(
+        Boolean
+      ),
     })
     .from(ingredientAliases)
     .innerJoin(ingredients, eq(ingredients.id, ingredientAliases.ingredientId))
     .orderBy(asc(ingredientAliases.createdAt), asc(ingredientAliases.id));
 }
 
-/** Give a spelling another text and fold, where no other spelling has the fold; whether it did. */
+/**
+ * Give a spelling another text and fold, where its household's catalogue (the seed's, for a seeded
+ * spelling) has no other spelling of the fold: an automatic rewrite never shadows the seed's.
+ */
 export async function rewriteSpelling(
   id: string,
   { text, fold }: { text: string; fold: string }
 ): Promise<boolean> {
+  const self = alias(ingredientAliases, "self");
   const others = db
     .select({ id: ingredientAliases.id })
     .from(ingredientAliases)
-    .where(and(eq(ingredientAliases.fold, fold), ne(ingredientAliases.id, id)));
+    .innerJoin(self, eq(self.id, id))
+    .where(
+      and(
+        eq(ingredientAliases.fold, fold),
+        ne(ingredientAliases.id, id),
+        inCatalogue(ingredientAliases.householdId, self.householdId)
+      )
+    );
   const rewritten = await db
     .update(ingredientAliases)
     .set({ text, fold, version: sql`${ingredientAliases.version} + 1`, updatedAt: new Date() })
-    .where(and(eq(ingredientAliases.id, id), sql`not exists (${others})`))
+    .where(and(eq(ingredientAliases.id, id), notExists(others)))
     .returning({ id: ingredientAliases.id });
 
   return rewritten.length > 0;
 }
 
-/** A row a spelling named, with its own text and whose it is. */
+/** A row a spelling named, with its own text and the household it is read in. */
 export interface NamingRow {
   id: string;
   name: string | null;
-  ownerId: string | null;
+  householdId: string;
 }
 
 /** The rows that name something: the recipe lines, Groceries and recurring groceries. */
@@ -128,6 +143,18 @@ async function findNamingRows(
   return { lines, ...named };
 }
 
+/** The household each line's recipe is in now, read again after a move may have taken it. */
+export async function findLineHouseholds(lineIds: readonly string[]): Promise<Map<string, string>> {
+  if (lineIds.length === 0) return new Map();
+  const rows = await db
+    .select({ id: recipeIngredients.id, householdId: recipes.householdId })
+    .from(recipeIngredients)
+    .innerJoin(recipes, eq(recipes.id, recipeIngredients.recipeId))
+    .where(isAnyOf(recipeIngredients.id, lineIds, "uuid"));
+
+  return new Map(rows.map((row) => [row.id, row.householdId]));
+}
+
 /** Every recipe line naming a food, so the cleanup can read each line's own text again. */
 export async function findLinesNamingAFood(): Promise<NamingRows["lines"]> {
   return await findLines(db, undefined);
@@ -140,7 +167,7 @@ async function findLines(tx: Db, lineFoods: SQL | undefined): Promise<NamingRows
       name: recipeIngredients.name,
       amount: recipeIngredients.amount,
       unit: recipeIngredients.unit,
-      ownerId: recipes.userId,
+      householdId: recipes.householdId,
     })
     .from(recipeIngredientFoods)
     .innerJoin(
@@ -165,13 +192,19 @@ export async function repointLines(
   }
 }
 
-/** Every listed own Ingredient (no taxonomy entry, a recipe line names it), oldest first. */
-export async function listOwnFoods(): Promise<Array<{ id: string; name: string }>> {
-  return await db
-    .select({ id: ingredients.id, name: ingredients.name })
+/** Every household's listed own Ingredients (a recipe line names it), oldest first. */
+export async function listOwnFoods(): Promise<
+  Array<{ id: string; name: string; householdId: string }>
+> {
+  const rows = await db
+    .select({ id: ingredients.id, name: ingredients.name, householdId: ingredients.householdId })
     .from(ingredients)
     .where(and(isNull(ingredients.offId), ingredientIsListed()))
     .orderBy(asc(ingredients.createdAt), asc(ingredients.id));
+
+  return rows.flatMap(({ householdId, ...food }) =>
+    householdId ? [{ ...food, householdId }] : []
+  );
 }
 
 /** Rename an own food to the clean name its name reduces to, unless a person named it or the name is taken. */

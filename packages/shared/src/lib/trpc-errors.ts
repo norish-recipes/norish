@@ -71,3 +71,17 @@ export function httpStatusOf(error: unknown): number | null {
 
   return typeof data?.httpStatus === "number" ? data.httpStatus : null;
 }
+
+/** The header a household-scoped write names the household it was made for in. */
+export const HOUSEHOLD_HEADER = "x-household-id";
+
+/** The server refused a write made for another household than the caller is in now. */
+export function isOtherHouseholdError(error: unknown): boolean {
+  const { data, shape } =
+    (error as
+      | { data?: { otherHousehold?: unknown }; shape?: { data?: { otherHousehold?: unknown } } }
+      | null
+      | undefined) ?? {};
+
+  return data?.otherHousehold === true || shape?.data?.otherHousehold === true;
+}

@@ -14,8 +14,11 @@ import {
   recipeIngredients,
   recipes,
 } from "@norish/db/schema";
+import { groupBy } from "@norish/shared/lib/group-by";
 
 import type { RecipeListContext } from "./recipes";
+import { isAnyOf } from "./array-params";
+import { inCatalogue } from "./household-scope";
 import { lineageCte } from "./ingredient-kinds";
 import { isFirstLineFood } from "./ingredients";
 import { buildPolicyCondition } from "./recipes";
@@ -58,8 +61,8 @@ const CHUNK = 1000;
 
 /**
  * Replace every source food and rule with a table's, in one transaction: a
- * failure leaves the last good ones exactly as they were. Corrections live
- * elsewhere and are never touched.
+ * failure leaves the last good ones exactly as they were. A household's
+ * corrections are its own, and stay as they are.
  */
 export async function replaceNutritionSources(
   foods: readonly NutritionFoodRow[],
@@ -84,6 +87,22 @@ export interface NutritionNode {
   parentId: string | null;
   offId: string | null;
   nutritionCodes: NutritionCodes | null;
+}
+
+/** Which of `ids` are the household's or the seed's foods: what a reader may ask about by id. */
+export async function findIdsInCatalogue(
+  householdId: string,
+  ids: readonly string[]
+): Promise<Set<string>> {
+  const wanted = [...new Set(ids)];
+
+  if (wanted.length === 0) return new Set();
+  const rows = await db
+    .select({ id: ingredients.id })
+    .from(ingredients)
+    .where(and(inArray(ingredients.id, wanted), inCatalogue(ingredients.householdId, householdId)));
+
+  return new Set(rows.map((row) => row.id));
 }
 
 /** These Ingredients and every ancestor of each, by id. */
@@ -133,14 +152,21 @@ export async function findNutritionFoods(
 
   if (pairs.length === 0 && wantedNdbs.length === 0) return [];
 
+  const codesOf = groupBy(
+    pairs,
+    ([dataset]) => dataset,
+    ([, code]) => code
+  );
+
   return await db
     .select()
     .from(nutritionFoods)
     .where(
       or(
-        sql`(${nutritionFoods.dataset}, ${nutritionFoods.code}) in (
-          select * from unnest(${sql.param(pairs.map(([dataset]) => dataset))}::text[],
-                               ${sql.param(pairs.map(([, code]) => code))}::text[]))`,
+        // One array of codes per dataset, so the (dataset, code) key finds them.
+        ...[...codesOf].map(([dataset, codes]) =>
+          and(eq(nutritionFoods.dataset, dataset), isAnyOf(nutritionFoods.code, codes, "text"))
+        ),
         wantedNdbs.length > 0
           ? and(eq(nutritionFoods.dataset, "usda"), inArray(nutritionFoods.ndb, wantedNdbs))
           : undefined
@@ -175,6 +201,7 @@ export async function countIngredientLinesByUnit(
   viewer: RecipeListContext,
   ingredientId: string
 ): Promise<Array<{ unit: string | null; lines: number }>> {
+  if ((await findIdsInCatalogue(viewer.householdId, [ingredientId])).size === 0) return [];
   const visible = await buildPolicyCondition(viewer, recipes.householdId, "view");
   const rows = await db
     .select({ unit: recipeIngredients.unit, lines: sql<number>`count(*)::int` })
@@ -250,8 +277,8 @@ export async function findHouseholdCorrections(
 }
 
 /**
- * Write a member's correction to an Ingredient, replacing the household's
- * earlier one. False where the Ingredient is gone.
+ * Write a member's correction to an Ingredient of the household's catalogue, replacing the
+ * household's earlier one. False where the Ingredient is gone or another household's.
  */
 export async function saveNutritionCorrection(
   householdId: string,
@@ -262,7 +289,9 @@ export async function saveNutritionCorrection(
   const [exists] = await db
     .select({ id: ingredients.id })
     .from(ingredients)
-    .where(eq(ingredients.id, ingredientId));
+    .where(
+      and(eq(ingredients.id, ingredientId), inCatalogue(ingredients.householdId, householdId))
+    );
 
   if (!exists) return false;
 

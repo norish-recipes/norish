@@ -41,12 +41,8 @@
   },
   "empty": {
     "title": "Ditt bibliotek väntar",
-    "description": "Klistra in en receptlänk i sökfältet ovan så hämtar vi receptet.",
     "noResults": "Inga recept hittades",
-    "noResultsHint": "Prova att ändra eller rensa dina filter.",
-    "noCookbooks": "Inga kokböcker ännu",
-    "noCookbooksHint": "En kokbok är en samling recept med en titel. Skapa din första för att få ordning i biblioteket.",
-    "descriptionMobile": "Lägg till ditt första recept från en länk, text eller bilder."
+    "noCookbooks": "Inga kokböcker ännu"
   },
   "card": {
     "noImage": "Ingen bild tillgänglig",
@@ -67,6 +63,7 @@
     "addToGroceries": "Lägg till i inköpslistan",
     "ratingPrompt": "Vad tyckte du om det här receptet?",
     "notFound": "Receptet hittades inte",
+    "offline": "Det här receptet kräver en anslutning",
     "notFoundMessage": "Det här receptet finns inte, eller så har du inte behörighet att visa det.",
     "prep": "förberedelse",
     "total": "totalt",
@@ -442,7 +439,6 @@
     "singular": "Kokbok",
     "notFound": "Kokboken hittades inte",
     "notFoundHint": "Den kan ha tagits bort eller vara dold för dig.",
-    "emptyHint": "Lägg till recept via receptens snabbmeny.",
     "panelTitle": "Lägg till i kokbok",
     "newWithRecipe": "Ny kokbok med det här receptet",
     "noneEditable": "Det finns inga kokböcker du kan redigera ännu.",

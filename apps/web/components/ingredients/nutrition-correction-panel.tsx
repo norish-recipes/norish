@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import Panel, { PanelComboBoxPopover } from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
+import { Section } from "@/components/shared/section";
 import {
   ComboBox,
   Input,
@@ -14,115 +15,24 @@ import {
   ToggleButtonGroup,
 } from "@heroui/react";
 import { useFormatter, useTranslations } from "next-intl";
-import { useDebounceValue } from "usehooks-ts";
 
+import type { FactDraft, NutritionFactName, PickedFood } from "@norish/shared-react/ingredients";
 import type {
   IngredientNutrition,
   NutritionFact,
-  NutritionFoodRef,
-  Per100g,
 } from "@norish/shared/contracts/ingredient-nutrition";
 import type { SpoonMeasure } from "@norish/shared/lib/spoon-measure";
-import { useNutritionCorrection, useNutritionFoodsQuery } from "@norish/shared-react/ingredients";
-import { NUTRITION_CREDIT_NAMES } from "@norish/shared/contracts/ingredient-nutrition";
-import { densityFromSpoon, spoonWeight } from "@norish/shared/lib/spoon-measure";
+import {
+  LABEL_FIELDS,
+  spoonKey,
+  useDatasetFoodSearch,
+  useNutritionDraft,
+} from "@norish/shared-react/ingredients";
+import { spoonWeight } from "@norish/shared/lib/spoon-measure";
 
-import { factSource, spoonKey } from "./nutrition-copy";
+import { factSource } from "./nutrition-copy";
 
-/** How long typing pauses before the datasets are searched. */
-const SEARCH_DELAY_MS = 250;
-
-type Mode = "sources" | "food" | "label";
-
-type Fact = "numbers" | "pieceWeight" | "density";
-
-/** A dataset food as the picker offers it, with what it said of the food, to show before the server does. */
-interface PickedFood {
-  key: string;
-  name: string;
-  kcal?: number;
-  pieceWeight?: number | null;
-  density?: number | null;
-}
-
-/** The dataset food a pick names, as a fact credits it. */
-function foodRef(food: PickedFood): NutritionFoodRef {
-  const [dataset, ...code] = food.key.split(":");
-
-  return { dataset: dataset as NutritionFoodRef["dataset"], code: code.join(":"), name: food.name };
-}
-
-/**
- * One fact as the household will have it once the correction lands, for the
- * panel to show at once: a label's numbers are exact; a picked food brings
- * what the picker knew of it, and keeps the numbers it did not know until
- * the server says them. Left to the sources, the fact is the server's to
- * say: null here keeps what is shown.
- */
-function shownFact<T>(
-  draft: FactDraft,
-  typed: () => T,
-  fromFood: (food: PickedFood) => T | undefined,
-  before: NutritionFact<T> | null
-): NutritionFact<T> | null | undefined {
-  if (draft.mode === "label") {
-    return { value: typed(), source: { kind: "household" }, borrowedFrom: null };
-  }
-  if (draft.mode === "food" && draft.food) {
-    const value = fromFood(draft.food) ?? before?.value;
-
-    if (value === undefined) return undefined;
-
-    return {
-      value,
-      source: { kind: "household-food", food: foodRef(draft.food) },
-      borrowedFrom: null,
-    };
-  }
-
-  return undefined;
-}
-
-/** One fact of the draft: left to the sources, a dataset food, or what a label says. */
-interface FactDraft {
-  mode: Mode;
-  food: PickedFood | null;
-  /** The label's numbers as typed: calories, fat, carbohydrates, protein; or grams. */
-  typed: string[];
-}
-
-const LABEL_FIELDS: Record<Fact, readonly string[]> = {
-  numbers: ["calories", "fat", "carbs", "protein"],
-  pieceWeight: ["pieceGrams"],
-  density: ["spoonGrams"],
-};
-
-/** A number as a person types it: a comma or a point, nothing negative. */
-function typedNumber(text: string): number | null {
-  const value = Number(text.trim().replace(",", "."));
-
-  return text.trim() !== "" && Number.isFinite(value) && value >= 0 ? value : null;
-}
-
-/** The draft a fact starts from: the household's own correction where it has one, else the sources. */
-function draftOf<T>(fact: NutritionFact<T> | null, typed: (value: T) => string[]): FactDraft {
-  const empty = { mode: "sources" as const, food: null, typed: [] };
-
-  if (!fact || fact.borrowedFrom) return empty;
-  if (fact.source.kind === "household-food") {
-    const { food } = fact.source;
-
-    return {
-      mode: "food",
-      food: { key: `${food.dataset}:${food.code}`, name: food.name },
-      typed: [],
-    };
-  }
-  if (fact.source.kind === "household")
-    return { mode: "label", food: null, typed: typed(fact.value) };
-
-  return empty;
-}
+type Fact = NutritionFactName;
 
 /**
  * Correct an Ingredient's nutrition for the household (ADR-0039), fact by
@@ -156,132 +66,8 @@ export function NutritionCorrectionPanel({
   const t = useTranslations("settings.ingredients.nutrition");
   const tActions = useTranslations("common.actions");
   const format = useFormatter();
-  const correction = useNutritionCorrection(ingredientId);
-  // A density is typed as what the household's measure weighs; with none,
-  // a correction made before is shown per 100 ml.
-  const spoon = measure ?? "100ml";
-  // The panel is mounted afresh for each opening, so the draft starts from
-  // what the household has now.
-  const [own] = useState<Record<Fact, FactDraft>>(() => ({
-    numbers: draftOf(current?.numbers ?? null, (value) =>
-      [value.kcal, value.fat, value.carbs, value.protein].map(String)
-    ),
-    pieceWeight: draftOf(current?.pieceWeight ?? null, (value) => [String(value)]),
-    density: draftOf(current?.density ?? null, (value) => [
-      String(Math.round(spoonWeight(value, spoon) * 10) / 10),
-    ]),
-  }));
-  // Asked from the spoon row, the spoon's weight waits to be typed.
-  const [initial] = useState<Record<Fact, FactDraft>>(() =>
-    askSpoon && own.density.mode === "sources"
-      ? { ...own, density: { mode: "label", food: null, typed: [] } }
-      : own
-  );
-  const [draft, setDraft] = useState(initial);
-  const corrected = Object.values(own).some((fact) => fact.mode !== "sources");
-  // The spoon is asked about only where the household's recipes measure the
-  // food by volume, or where its own correction already says one.
-  const facts: readonly Fact[] =
-    measure || initial.density.mode !== "sources"
-      ? ["numbers", "pieceWeight", "density"]
-      : ["numbers", "pieceWeight"];
-
-  /**
-   * One fact as the procedure takes it: a dataset food, a label's numbers
-   * (`label` says what the typed values make), the sources (null), or
-   * undefined while the draft is not complete.
-   */
-  const factInput = <T,>(
-    fact: Fact,
-    label: (values: number[]) => T | undefined
-  ): { food: string } | T | null | undefined => {
-    const { mode, food, typed } = draft[fact];
-
-    if (mode === "food") return food ? { food: food.key } : undefined;
-    if (mode === "sources") return null;
-
-    const values = typed.map(typedNumber);
-
-    if (values.length !== LABEL_FIELDS[fact].length || values.some((value) => value === null)) {
-      return undefined;
-    }
-
-    return label(values.map((value) => value ?? 0));
-  };
-  const numbers = factInput("numbers", ([kcal = 0, fat = 0, carbs = 0, protein = 0]) => ({
-    kcal,
-    fat,
-    carbs,
-    protein,
-  }));
-  const pieceWeight = factInput("pieceWeight", ([grams = 0]) =>
-    grams > 0 ? { grams } : undefined
-  );
-  const density = factInput("density", ([grams = 0]) => {
-    if (!(grams > 0)) return undefined;
-    // Left as it was, a correction keeps the density it was stored with,
-    // whatever measure it was typed in then.
-    if (current?.density && draft.density.typed[0] === initial.density.typed[0]) {
-      return { gramsPerMl: current.density.value };
-    }
-
-    return { gramsPerMl: densityFromSpoon(grams, spoon) };
-  });
-  // Every fact must be complete; all three left to the sources is a removal.
-  const complete = numbers !== undefined && pieceWeight !== undefined && density !== undefined;
-  const nothing = complete && numbers === null && pieceWeight === null && density === null;
-
-  /** What the section shows the moment the correction is saved, before the server has it. */
-  const shownNutrition = (): IngredientNutrition | null => {
-    if (!numbers && !pieceWeight && !density) return null;
-    const next: IngredientNutrition = current ?? {
-      numbers: null,
-      pieceWeight: null,
-      density: null,
-    };
-    const shown = {
-      numbers: shownFact<Per100g>(
-        draft.numbers,
-        () => (numbers && "kcal" in numbers ? numbers : { kcal: 0, fat: 0, carbs: 0, protein: 0 }),
-        () => undefined,
-        current?.numbers ?? null
-      ),
-      pieceWeight: shownFact<number>(
-        draft.pieceWeight,
-        () => (pieceWeight && "grams" in pieceWeight ? pieceWeight.grams : 0),
-        (food) => food.pieceWeight ?? undefined,
-        current?.pieceWeight ?? null
-      ),
-      density: shownFact<number>(
-        draft.density,
-        () => (density && "gramsPerMl" in density ? density.gramsPerMl : 0),
-        (food) => food.density ?? undefined,
-        current?.density ?? null
-      ),
-    };
-
-    return {
-      numbers: shown.numbers === undefined ? next.numbers : shown.numbers,
-      pieceWeight: shown.pieceWeight === undefined ? next.pieceWeight : shown.pieceWeight,
-      density: shown.density === undefined ? next.density : shown.density,
-    };
-  };
-
-  /** The panel closes and the facts change at once; the server's word follows, and a refusal undoes it. */
-  const save = () => {
-    if (!complete) return;
-    onClose();
-    if (nothing) correction.remove();
-    else correction.correct({ numbers, pieceWeight, density }, shownNutrition());
-  };
-
-  const removeAll = () => {
-    onClose();
-    correction.remove();
-  };
-
-  const set = (fact: Fact, next: Partial<FactDraft>) =>
-    setDraft((previous) => ({ ...previous, [fact]: { ...previous[fact], ...next } }));
+  const { spoon, draft, facts, corrected, complete, nothing, overHundred, set, save, removeAll } =
+    useNutritionDraft({ ingredientId, current, measure, askSpoon, onClose });
 
   // What each fact is now, and where it came from, so the viewer sees what
   // the correction replaces; or that Norish has nothing for it yet.
@@ -307,20 +93,19 @@ export function NutritionCorrectionPanel({
         if (!isOpen) onClose();
       }}
     >
-      <Panel.Body>
-        <div className="flex flex-col gap-5 pb-2" data-testid="nutrition-correction">
-          <p className="text-muted text-sm">{t("correctIntro")}</p>
-          {facts.map((fact) => (
-            <FactEditor
-              key={fact}
-              draft={draft[fact]}
-              fact={fact}
-              now={now[fact]}
-              spoon={spoon}
-              onChange={(next) => set(fact, next)}
-            />
-          ))}
-        </div>
+      <Panel.Body data-testid="nutrition-correction" sections>
+        <p className="text-muted text-sm">{t("correctIntro")}</p>
+        {facts.map((fact) => (
+          <FactEditor
+            key={fact}
+            draft={draft[fact]}
+            fact={fact}
+            now={now[fact]}
+            overHundred={overHundred.includes(fact)}
+            spoon={spoon}
+            onChange={(next) => set(fact, next)}
+          />
+        ))}
       </Panel.Body>
       <Panel.Footer>
         <ActionButtonGroup
@@ -355,6 +140,7 @@ function FactEditor({
   fact,
   draft,
   now,
+  overHundred,
   spoon,
   onChange,
 }: {
@@ -362,6 +148,8 @@ function FactEditor({
   draft: FactDraft;
   /** What the fact is now and where it came from, in a line. */
   now: string;
+  /** The label has a mass per 100 g above 100 g. */
+  overHundred: boolean;
   /** The measure a density is typed in. */
   spoon: SpoonMeasure;
   onChange: (next: Partial<FactDraft>) => void;
@@ -370,15 +158,14 @@ function FactEditor({
   const fields = LABEL_FIELDS[fact];
 
   return (
-    <section className="flex flex-col gap-2" data-testid={`nutrition-correction-${fact}`}>
-      <div className="flex flex-col gap-0.5">
-        <h3 className="text-muted text-xs font-semibold tracking-wide uppercase">
-          {fact === "density" ? t(`spoon.${spoonKey(spoon)}`) : t(`facts.${fact}`)}
-        </h3>
-        <p className="text-muted text-xs" data-testid={`nutrition-correction-${fact}-now`}>
-          {now}
-        </p>
-      </div>
+    <Section
+      data-testid={`nutrition-correction-${fact}`}
+      placement="panel"
+      title={fact === "density" ? t(`spoon.${spoonKey(spoon)}`) : t(`facts.${fact}`)}
+    >
+      <p className="text-muted text-xs" data-testid={`nutrition-correction-${fact}-now`}>
+        {now}
+      </p>
       <ToggleButtonGroup
         disallowEmptySelection
         fullWidth
@@ -439,7 +226,12 @@ function FactEditor({
           ))}
         </div>
       ) : null}
-    </section>
+      {overHundred ? (
+        <p className="text-danger text-xs" data-testid={`nutrition-correction-${fact}-over`}>
+          {t("overHundred")}
+        </p>
+      ) : null}
+    </Section>
   );
 }
 
@@ -463,39 +255,24 @@ function DatasetFoodPicker({
   const format = useFormatter();
   // Inside a Panel the options must portal into it, or vaul swallows every tap (#511).
   const [term, setTerm] = useState(picked?.name ?? "");
-  const [search] = useDebounceValue(term.trim(), SEARCH_DELAY_MS);
-
-  // A search reads from two letters on.
-  const { foods, isFetching } = useNutritionFoodsQuery(search.length >= 2 ? search : null);
-  const options = foods
-    .filter((food) =>
-      fact === "pieceWeight"
-        ? food.pieceWeight !== null
-        : fact === "density"
-          ? food.density !== null
-          : true
-    )
-    .map((food) => ({
-      id: `${food.dataset}:${food.code}`,
-      name: food.name,
-      kcal: food.kcal,
-      pieceWeight: food.pieceWeight,
-      density: food.density,
-      detail: [
-        NUTRITION_CREDIT_NAMES[food.dataset],
-        fact === "numbers"
-          ? t("kcal", { value: format.number(food.kcal, { maximumFractionDigits: 0 }) })
-          : fact === "pieceWeight"
-            ? t("grams", {
-                value: format.number(food.pieceWeight ?? 0, { maximumFractionDigits: 0 }),
-              })
-            : t(`spoonGrams.${spoonKey(spoon)}`, {
-                value: format.number(spoonWeight(food.density ?? 0, spoon), {
-                  maximumFractionDigits: 1,
-                }),
+  const { options: found, hint } = useDatasetFoodSearch(fact, term);
+  const options = found.map((food) => ({
+    ...food,
+    detail: [
+      food.dataset,
+      fact === "numbers"
+        ? t("kcal", { value: format.number(food.kcal, { maximumFractionDigits: 0 }) })
+        : fact === "pieceWeight"
+          ? t("grams", {
+              value: format.number(food.pieceWeight ?? 0, { maximumFractionDigits: 0 }),
+            })
+          : t(`spoonGrams.${spoonKey(spoon)}`, {
+              value: format.number(spoonWeight(food.density ?? 0, spoon), {
+                maximumFractionDigits: 1,
               }),
-      ].join(" · "),
-    }));
+            }),
+    ].join(" · "),
+  }));
 
   return (
     <ComboBox
@@ -534,9 +311,9 @@ function DatasetFoodPicker({
         <ListBox
           renderEmptyState={() => (
             <p className="text-muted px-3 py-2 text-sm">
-              {term.trim().length < 2
+              {hint === "hint"
                 ? t("foodHint")
-                : isFetching || search !== term.trim()
+                : hint === "searching"
                   ? t("searchingFoods")
                   : t("noFoods")}
             </p>

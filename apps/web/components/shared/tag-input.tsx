@@ -16,9 +16,8 @@ interface TagInputProps {
 }
 
 /**
- * Free-typed names kept as chips, split on spaces, with the household's Tags as suggestions: for
- * what is a plain name, such as the account's allergies. The recipe editor picks from its list
- * with `TagPicker` instead, which creates an entry only through its "Create" row.
+ * Free-typed names kept as chips, with the household's Tags as suggestions, for plain names such
+ * as allergies. The recipe editor uses `TagPicker`, which creates an entry only through "Create".
  */
 export default function TagInput({ value, onChange, placeholder, className = "" }: TagInputProps) {
   const t = useTranslations("common.tagInput");

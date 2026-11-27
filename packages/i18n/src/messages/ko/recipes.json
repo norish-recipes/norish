@@ -41,12 +41,8 @@
   },
   "empty": {
     "title": "아직 레시피가 없어요",
-    "description": "위의 검색 필드에 레시피 URL을 붙여넣어 보세요.",
     "noResults": "레시피를 찾을 수 없습니다.",
-    "noResultsHint": "필터를 조정하거나 지워보세요.",
-    "noCookbooks": "아직 요리책이 없습니다",
-    "noCookbooksHint": "요리책은 제목이 있는 레시피 모음입니다. 첫 요리책을 만들어 라이브러리를 정리해 보세요.",
-    "descriptionMobile": "링크, 텍스트 또는 사진으로 첫 레시피를 추가하세요."
+    "noCookbooks": "아직 요리책이 없습니다"
   },
   "card": {
     "noImage": "이미지가 없습니다.",
@@ -67,6 +63,7 @@
     "addToGroceries": "장보기에 추가",
     "ratingPrompt": "이 레시피에 대해 어떻게 생각하시나요?",
     "notFound": "레시피를 찾을 수 없음",
+    "offline": "이 레시피를 보려면 연결이 필요합니다",
     "notFoundMessage": "이 레시피는 존재하지 않거나 볼 수 있는 권한이 없습니다.",
     "prep": "준비",
     "total": "총",
@@ -442,7 +439,6 @@
     "singular": "요리책",
     "notFound": "요리책을 찾을 수 없습니다",
     "notFoundHint": "삭제되었거나 접근 권한이 없을 수 있습니다.",
-    "emptyHint": "레시피의 빠른 작업 메뉴에서 레시피를 추가하세요.",
     "panelTitle": "요리책에 추가",
     "newWithRecipe": "이 레시피로 새 요리책 만들기",
     "noneEditable": "편집할 수 있는 요리책이 아직 없습니다.",

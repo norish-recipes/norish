@@ -4,8 +4,10 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import type { ListEntryRow, ListKind, ListScope } from "@norish/db/repositories/list-entries";
+import { listRecipesCarryingEntry } from "@norish/db/repositories/entry-recipes";
 import {
   addEntry,
+  countEntryRecipes,
   deleteEntry,
   findOwnEntry,
   LIST_KINDS,
@@ -16,11 +18,15 @@ import {
 } from "@norish/db/repositories/list-entries";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { config } from "@norish/shared-server/realtime/config";
-import { announceListsChanged } from "@norish/shared-server/realtime/list-changes";
+import {
+  announceListsChanged,
+  announceTakenOverLists,
+} from "@norish/shared-server/realtime/list-changes";
+import { RecipeNameCursorSchema } from "@norish/shared/contracts/list-queries";
 import { ListEntryNameSchemas } from "@norish/shared/contracts/zod";
 
 import type { AuthedProcedureContext } from "../../middleware";
-import { authedProcedure } from "../../middleware";
+import { adminProcedure, authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
 import { assertRecipeAccess, notFoundError } from "../recipes/helpers";
 
@@ -39,12 +45,17 @@ function entryName(kind: ListKind, name: string): string {
 }
 
 /** Whether the caller may change an entry of their scope: built-in Categories never, other instance entries as an admin. */
-function mayChangeInstance(ctx: ListContext, kind: ListKind): boolean {
+function mayChangeInstance(ctx: Pick<ListContext, "isServerAdmin">, kind: ListKind): boolean {
   return kind === "cuisine" && ctx.isServerAdmin;
 }
 
 /** An entry as the caller's list shows it, with whether they may rename, merge or delete it. */
-function withEditable(ctx: ListContext, kind: ListKind, household: string, entry: ListEntryRow) {
+function withEditable<E extends ListEntryRow>(
+  ctx: ListContext,
+  kind: ListKind,
+  household: string,
+  entry: E
+) {
   const editable = entry.instance ? mayChangeInstance(ctx, kind) : household === ctx.householdId;
 
   return { ...entry, editable };
@@ -75,10 +86,12 @@ async function changeableScope(ctx: ListContext, kind: ListKind, id: string): Pr
   throw new TRPCError({ code: "NOT_FOUND", message: "Not found" });
 }
 
-/** A household list change reaches its recipes' readers; an instance entry's reaches everyone. */
-async function announce(kind: ListKind, scope: ListScope) {
+/** A household list change reaches its recipes' readers; an instance entry's reaches everyone,
+ * and each household whose entries it took over. */
+async function announce(kind: ListKind, scope: ListScope, households: readonly string[] = []) {
   if (scope === null) void config.publish("changed", {}, undefined);
   else await announceListsChanged(scope, [kind]);
+  announceTakenOverLists(households, [kind]);
 }
 
 /** The household's entries plus the instance's, with how many of its recipes carry each; with
@@ -114,7 +127,7 @@ const add = authedProcedure
     if (!added) throw new TRPCError({ code: "BAD_REQUEST", message: "Names nothing" });
 
     log.info({ userId: ctx.user.id, kind: input.kind, created: added.created }, "List entry added");
-    if (added.created) await announce(input.kind, scope);
+    if (added.created) await announce(input.kind, scope, added.households);
 
     return {
       entry: withEditable(ctx, input.kind, scope ?? ctx.householdId, added.entry),
@@ -140,7 +153,7 @@ const rename = authedProcedure
     const { entry, merged } = renamed.value;
 
     log.info({ userId: ctx.user.id, kind: input.kind, merged }, "List entry renamed");
-    await announce(input.kind, scope);
+    await announce(input.kind, scope, renamed.value.households);
 
     return {
       stale: false,
@@ -184,4 +197,33 @@ const remove = authedProcedure
     return { stale: false, ...deleted.value };
   });
 
-export const listsProcedures = router({ list, add, rename, merge, delete: remove });
+/** How many recipes in every household carry an instance entry, for an admin's delete to say. */
+const usage = adminProcedure
+  .input(z.object({ kind: KindSchema, id: z.uuid() }))
+  .query(async ({ input }) => {
+    if (!mayChangeInstance({ isServerAdmin: true }, input.kind)) {
+      throw new TRPCError({ code: "FORBIDDEN", message: "This entry cannot be changed" });
+    }
+    if (!(await findOwnEntry(input.kind, null, input.id))) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Not found" });
+    }
+
+    return { recipeCount: await countEntryRecipes(input.kind, input.id) };
+  });
+
+/** A page of the household's recipes carrying an entry of its list or the instance's, for "Used by". */
+const uses = authedProcedure
+  .input(z.object({ kind: KindSchema, id: z.uuid(), cursor: RecipeNameCursorSchema.nullish() }))
+  .query(async ({ ctx, input }) => {
+    const known =
+      (await findOwnEntry(input.kind, ctx.householdId, input.id)) ??
+      (await findOwnEntry(input.kind, null, input.id));
+
+    if (!known) throw new TRPCError({ code: "NOT_FOUND", message: "Not found" });
+
+    return await listRecipesCarryingEntry(input.kind, input.id, ctx.householdId, {
+      cursor: input.cursor,
+    });
+  });
+
+export const listsProcedures = router({ list, add, rename, merge, delete: remove, usage, uses });

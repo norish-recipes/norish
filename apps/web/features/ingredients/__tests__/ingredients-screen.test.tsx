@@ -121,11 +121,27 @@ function serve() {
     "ingredients.kinds",
     async (input) => kinds[(input as { parentId: string }).parentId] ?? []
   );
-  readAnswers.set("ingredients.uses", async () => {
+  // `uses` as the three reads answer it: groceries and Pantry, the counts, a page of recipes.
+  const held = async () => {
     await usesHeld;
 
-    return uses;
+    return uses as { recipes: unknown[]; groceries: unknown[]; pantry: boolean; counts: object };
+  };
+
+  readAnswers.set("ingredients.uses", async () => {
+    const { groceries, pantry } = await held();
+
+    return { groceries, pantry };
   });
+  readAnswers.set("ingredients.countUses", async () => {
+    const { recipes, counts } = await held();
+
+    return { recipes: recipes.length, ...counts };
+  });
+  readAnswers.set("ingredients.recipes", async () => ({
+    recipes: (await held()).recipes,
+    nextCursor: null,
+  }));
   for (const [name, write] of Object.entries(mutations)) {
     writeAnswers.set(`ingredients.${name}`, (input) =>
       (write as (input: unknown) => Promise<unknown>)(input)
@@ -282,7 +298,13 @@ vi.mock("@/components/Panel/Panel", () => {
       </div>
     ) : null;
 
-  Panel.Body = ({ children }: { children?: ReactNode }) => <div>{children}</div>;
+  Panel.Body = ({
+    children,
+    "data-testid": testId,
+  }: {
+    children?: ReactNode;
+    "data-testid"?: string;
+  }) => <div data-testid={testId}>{children}</div>;
   Panel.Footer = ({ children }: { children?: ReactNode }) => <div>{children}</div>;
 
   return { default: Panel, PanelPortal: ({ children }: { children: ReactNode }) => children };
@@ -440,7 +462,6 @@ describe("IngredientsScreen", () => {
       recipes: [],
       groceries: [],
       pantry: false,
-      elsewhere: 0,
       counts: { recipeLines: 0, groceries: 0, pantry: 0 },
     };
     usesHeld = null;
@@ -708,7 +729,6 @@ describe("IngredientsScreen", () => {
       recipes: [{ id: "r1", name: "Saté" }],
       groceries: [{ name: "onions", done: true, recurring: false }],
       pantry: true,
-      elsewhere: 2,
       counts: { recipeLines: 3, groceries: 0, pantry: 1 },
     };
     await renderScreen();
@@ -741,7 +761,6 @@ describe("IngredientsScreen", () => {
     );
     expect(where).toHaveTextContent("onions · done");
     expect(where).toHaveTextContent("pantry");
-    expect(where).toHaveTextContent("elsewhere");
   });
 
   it("offers the plain Delete on a food AI says is not a food, its lines keeping their text", async () => {
@@ -749,7 +768,6 @@ describe("IngredientsScreen", () => {
       recipes: [],
       groceries: [],
       pantry: true,
-      elsewhere: 0,
       counts: { recipeLines: 2, groceries: 0, pantry: 1 },
     };
     items = [{ ...onion, name: "melted", flagReason: "ai-junk" }, salt];
@@ -823,7 +841,7 @@ describe("IngredientsScreen", () => {
     const opened = await open("onion");
 
     expect([reads("ingredients.get"), reads("ingredients.spellings")]).toEqual([0, 0]);
-    expect(reads("ingredients.uses")).toBe(0);
+    expect([reads("ingredients.uses"), reads("ingredients.countUses")]).toEqual([0, 0]);
 
     await showSpellings(opened);
     expect(reads("ingredients.spellings")).toBe(1);
@@ -832,7 +850,7 @@ describe("IngredientsScreen", () => {
       fireEvent.click(within(opened).getByTestId("ingredient-delete"));
     });
     await settle();
-    expect(reads("ingredients.uses")).toBe(1);
+    expect(reads("ingredients.countUses")).toBe(1);
 
     // The list drops the open food: only now is it read on its own.
     items = [salt];
@@ -883,7 +901,6 @@ describe("IngredientsScreen", () => {
         recipes: [],
         groceries: [],
         pantry: false,
-        elsewhere: 0,
         counts: { recipeLines: 0, groceries: 0, pantry: 0 },
       };
       answer();
@@ -1571,10 +1588,10 @@ describe("IngredientsScreen", () => {
     expect(screen.getByTestId("catalogue-export")).toHaveAttribute("href", "/export/ingredients");
   });
 
-  it("says when nothing is flagged", async () => {
+  it("says nothing matches when no ingredient is listed", async () => {
     items = [];
     await renderScreen();
 
-    expect(screen.getByTestId("ingredients-empty")).toHaveTextContent("empty");
+    expect(screen.getByTestId("ingredients-empty")).toHaveTextContent("noMatch");
   });
 });

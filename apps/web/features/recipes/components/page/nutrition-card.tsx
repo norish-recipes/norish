@@ -46,13 +46,14 @@ export function useNutritionSectionVisible(): boolean {
   const recipe = usePageRecipe();
   const enrichment = usePageEnrichment();
   const { showNutrition } = useHiddenItemVisibility();
-  const workedOut = useWorkedOutNutrition(recipe ?? null);
+  const { nutrition: workedOut, isLoading } = useWorkedOutNutrition(recipe ?? null);
 
   if (!recipe || !showNutrition) return false;
 
   return (
     getNutritionData(recipe, 1).hasData ||
     workedOut?.perServing != null ||
+    isLoading ||
     enrichment.isBusy("nutrition-estimation")
   );
 }
@@ -77,8 +78,9 @@ export default function NutritionCard() {
   const enrichment = usePageEnrichment();
   const isEstimatingNutrition = enrichment.isBusy("nutrition-estimation");
   const t = useTranslations("recipes.nutrition");
+  const tStatus = useTranslations("common.status");
   const isVisible = useNutritionSectionVisible();
-  const workedOut = useWorkedOutNutrition(recipe ?? null);
+  const { nutrition: workedOut, isLoading } = useWorkedOutNutrition(recipe ?? null);
   // Independent portion state - defaults to 1 (per serving)
   const [portions, setPortions] = useState(1);
 
@@ -128,6 +130,10 @@ export default function NutritionCard() {
               ))}
             </div>
           </div>
+        ) : isLoading ? (
+          <p className="text-muted text-sm" data-testid="nutrition-loading">
+            {tStatus("loading")}
+          </p>
         ) : shown ? (
           <>
             <NutritionBody

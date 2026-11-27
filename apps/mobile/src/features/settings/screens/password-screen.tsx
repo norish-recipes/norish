@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Text, View } from "react-native";
+import { OfflineCapsule } from "@/components/offline-capsule";
 import { Sheet, SheetBody } from "@/components/sheet";
 import { Switch } from "@/components/switch";
 import { useAuthClient } from "@/lib/auth/use-auth-client";
@@ -10,7 +11,6 @@ import { useConnectivity } from "@norish/shared-react/offline/react";
 import { usePlatform } from "@norish/shared-react/platform";
 import { passwordChecks } from "@norish/shared/lib/auth/password";
 
-import { OfflineCapsule } from "../components/offline-capsule";
 import { SettingsField } from "../components/settings-form";
 import { refusalOf } from "../utils/refusal-of";
 import { DROPPED, settingsWrite, tellWentThroughLate } from "../utils/settings-write";
@@ -92,7 +92,7 @@ export function PasswordScreen() {
       name="settings-password"
       title={text("settings.user.signInMethods.changePassword")}
     >
-      <SheetBody contentClassName="gap-4">
+      <SheetBody>
         <OfflineCapsule />
         <SettingsField
           error={wrongPassword ? text("settings.user.signInMethods.errors.wrongPassword") : null}

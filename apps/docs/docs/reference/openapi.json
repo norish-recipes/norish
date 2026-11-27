@@ -915,6 +915,9 @@
                                       "type": "number",
                                       "minimum": 0
                                     }
+                                  },
+                                  "combined": {
+                                    "type": "boolean"
                                   }
                                 },
                                 "required": [
@@ -2092,6 +2095,9 @@
                                               "type": "number",
                                               "minimum": 0
                                             }
+                                          },
+                                          "combined": {
+                                            "type": "boolean"
                                           }
                                         },
                                         "required": [

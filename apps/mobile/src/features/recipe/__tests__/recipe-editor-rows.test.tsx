@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
 import type { ReactNode } from "react";
 import React, { StrictMode } from "react";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render as renderScreen, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { FullRecipeDTO } from "@norish/shared/contracts";
+import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
 
 import { resolveDrop } from "../../../components/drag-list/resolve-drop";
 
@@ -72,7 +73,11 @@ vi.mock("react-native", () => ({
   ),
   Alert: { alert: vi.fn() },
   ActionSheetIOS: { showActionSheetWithOptions: vi.fn() },
-  Keyboard: { isVisible: () => false, addListener: () => ({ remove: () => {} }) },
+  Keyboard: {
+    isVisible: () => false,
+    addListener: () => ({ remove: () => {} }),
+    dismiss: () => {},
+  },
   KeyboardAvoidingView: ({ children }: Props) => children,
 }));
 vi.mock("react-native-safe-area-context", () => ({
@@ -166,6 +171,14 @@ vi.mock("../hooks/use-editor-uploads", () => ({
     removeStepImage: () => {},
   }),
 }));
+// A stale answer rereads the recipe; these saves are taken, so none is read.
+vi.mock("@norish/shared-react/trpc", () => ({
+  useTRPC: () => ({
+    recipes: {
+      get: { queryOptions: ({ id }: { id: string }) => ({ queryKey: ["recipes.get", id] }) },
+    },
+  }),
+}));
 vi.mock("@norish/shared-react/config", () => ({
   useIngredientsSubscription: () => undefined,
   useUnitsQuery: () => ({ units: {}, isLoading: false }),
@@ -192,6 +205,9 @@ vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
 }));
 
 const { RecipeEditorScreen } = await import("../screens/recipe-editor-screen");
+// The editor tells a refused save through the platform's wording.
+const render = (ui: React.ReactElement) =>
+  renderScreen(ui, { wrapper: createTestWrapper(createTestQueryClient()) });
 const { StepRows } = await import("../components/editor/step-rows");
 
 const at = new Date("2026-05-01T10:00:00.000Z");

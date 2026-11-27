@@ -1,6 +1,6 @@
 /**
- * AI checks the spellings people, merges and imports added to seeded foods (ADR-0037; ingredient-
- * cleanup ticket 46); each removal or move an AI Change.
+ * AI checks the spellings added to seeded foods (ADR-0037), each household's inside its own
+ * catalogue (ADR-0042); each removal or move is an AI Change.
  */
 import { withTransaction } from "@norish/db/drizzle";
 import { listNamesAIReadOnto } from "@norish/db/repositories/ingredient-ai-changes";
@@ -42,17 +42,25 @@ export type SpellingCheckOutcome =
       unchanged: Unchanged[];
     };
 
-/** Ask AI which of the spellings added to a food name it, and take off or move the others. */
-export async function checkSpellingsOf(ingredientId: string): Promise<SpellingCheckOutcome> {
+/** Ask AI which of the household's spellings on a food name it, and take off or move the others. */
+export async function checkSpellingsOf(
+  householdId: string,
+  ingredientId: string
+): Promise<SpellingCheckOutcome> {
   const food = await findCatalogueIngredient(ingredientId);
 
-  if (!food) return { outcome: "skipped", reason: "not-found" };
+  if (!food || (food.householdId !== null && food.householdId !== householdId)) {
+    return { outcome: "skipped", reason: "not-found" };
+  }
   // The food's name and the names AI read when it merged or moved a spelling here need no check.
   const read = new Set(
     [food.name, ...(await listNamesAIReadOnto(ingredientId))].map(ingredientAliasFold)
   );
-  const spellings = (await listCatalogueAliasesOf(ingredientId)).filter(
-    (alias) => !alias.seeded && !read.has(ingredientAliasFold(alias.text))
+  const spellings = (await listCatalogueAliasesOf(householdId, ingredientId)).filter(
+    (alias) =>
+      alias.householdId === householdId &&
+      !alias.seeded &&
+      !read.has(ingredientAliasFold(alias.text))
   );
 
   if (spellings.length === 0) return { outcome: "skipped", reason: "none" };
@@ -94,7 +102,7 @@ export async function checkSpellingsOf(ingredientId: string): Promise<SpellingCh
     }
     const named =
       verdict.kind === "other-food" && verdict.otherFood
-        ? await findFoodNamed(verdict.otherFood, ingredientId)
+        ? await findFoodNamed(householdId, verdict.otherFood, ingredientId)
         : ({ kind: "not-found" } as const);
 
     // The second question about AI's name got no answer: the spelling stays.

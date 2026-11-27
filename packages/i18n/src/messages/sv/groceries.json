@@ -16,7 +16,6 @@
   },
   "empty": {
     "title": "Din inköpslista väntar",
-    "description": "Lägg till varor med knappen ”Lägg till vara” ovan för att komma igång.",
     "manual": "Manuellt tillagda varor"
   },
   "item": {
@@ -54,7 +53,6 @@
     },
     "confirmDelete": "Vill du ta bort {storeName}?",
     "noStoresYet": "Inga butiker ännu",
-    "createStoreHint": "Skapa en butik för att ordna dina inköp",
     "hasItems": "Den här butiken har {count} vara.",
     "hasItemsPlural": "Den här butiken har {count} varor.",
     "whatToDo": "Vad vill du göra med dem?",
@@ -153,6 +151,7 @@
     "cannotSearchHint": "Norish kunde inte hitta en söksida i butikslänken för {store}. Rätta länken under Hantera butiker för att få priser.",
     "packAmount": "Mängd per förpackning",
     "packUnit": "Enhet",
+    "noUnit": "Ingen enhet",
     "productPage": "Produktsida",
     "invalidUrl": "Ange en webbadress, till exempel https://www.dirk.nl/…",
     "invalidPack": "Ange både mängd och enhet, eller lämna båda tomma",
@@ -185,7 +184,6 @@
     "viewByStore": "Efter butik",
     "viewByRecipe": "Efter recept",
     "listSettings": "Listinställningar",
-    "emptyHint": "Lägg till varor med knappen nedan.",
     "addTitle": "Lägg till varor",
     "editTitle": "Redigera vara",
     "store": "Butik",

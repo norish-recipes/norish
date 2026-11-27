@@ -61,6 +61,7 @@ export function useIngredientCache() {
     refreshLists: () =>
       Promise.all([
         queryClient.invalidateQueries({ queryKey: trpc.ingredients.list.pathKey() }),
+        queryClient.invalidateQueries({ queryKey: trpc.ingredients.count.pathKey() }),
         queryClient.invalidateQueries({ queryKey: trpc.ingredients.kinds.pathKey() }),
         queryClient.invalidateQueries({ queryKey: trpc.ingredients.aiChanges.pathKey() }),
         queryClient.invalidateQueries({ queryKey: trpc.ingredients.nutritionFor.pathKey() }),

@@ -10,7 +10,6 @@ import {
   eq,
   exists,
   gt,
-  isNull,
   notInArray,
   or,
   sql,
@@ -30,6 +29,7 @@ import type {
   SortOrder,
 } from "@norish/shared/contracts";
 import type { IngredientSearch } from "@norish/shared/lib/ingredient-search";
+import type { LineReadings } from "@norish/shared/lib/line-foods";
 import { db } from "@norish/db/drizzle";
 import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
 import { entryFold } from "@norish/shared/lib/fold-name";
@@ -52,10 +52,11 @@ import {
   tags as tagsTable,
 } from "../schema";
 import { cookbookTitleMatch, listCookbooksByIds } from "./cookbooks";
+import { inCatalogue, inScope } from "./household-scope";
 import { findLocaleNames } from "./ingredient-aliases";
 import { matchingSearch, nameStartsWith } from "./ingredient-catalogue";
 import { kindWalkSql, lineNamesKindSql } from "./ingredient-kinds";
-import { inScope, recipeCarriesFoldsSql } from "./list-entries";
+import { recipeCarriesFoldsSql } from "./list-entries";
 import { pantryCoverageSql } from "./pantry-coverage";
 import { recipeIngredientMatches, recipeSearchMatches } from "./recipe-matches";
 import { PRIMARY_IMAGE_SQL } from "./recipe-primary-image";
@@ -79,6 +80,8 @@ export type LibraryListParams = {
   categories?: RecipeCategory[];
   favoritesOnly?: boolean;
   pantryOnly?: boolean;
+  /** With `pantryOnly`, the lines read through the reader's catalogue (`lineReadingsOf`). */
+  lineReadings?: LineReadings;
   type?: LibraryTypeFilter;
   /** An explicit sort orders a search too; only `none` still ranks. */
   sortBeatsRank?: boolean;
@@ -197,7 +200,9 @@ export async function listLibrary(
 
   const branches: LibraryBranch[] = [];
   // Recipes with something at home, most complete first (#679).
-  const pantryCoverage = pantryOnly ? pantryCoverageSql(ctx.householdId) : undefined;
+  const pantryCoverage = pantryOnly
+    ? pantryCoverageSql(ctx.householdId, params.lineReadings)
+    : undefined;
 
   if (includeRecipes) {
     const conditions: SQL[] = [];
@@ -451,7 +456,7 @@ export async function listLibrarySuggestions(
 
   const visible = (await buildPolicyCondition(ctx, recipes.householdId, "view")) ?? sql`true`;
   const [foods, tagNames, categoryNames] = await Promise.all([
-    matchedFoods(visible, search, except.ingredientIds),
+    matchedFoods(ctx.householdId, visible, search, except.ingredientIds),
     namesOnVisible(
       TAG_NAMES,
       ctx.householdId,
@@ -464,7 +469,10 @@ export async function listLibrarySuggestions(
     ),
     namesOnVisible(CATEGORY_NAMES, ctx.householdId, visible),
   ]);
-  const localeNames = await findLocaleNames(foods.map((food) => food.id));
+  const localeNames = await findLocaleNames(
+    ctx.householdId,
+    foods.map((food) => food.id)
+  );
 
   return {
     ingredients: foods.map((food) => ({ ...food, localeNames: localeNames.get(food.id) ?? {} })),
@@ -475,13 +483,19 @@ export async function listLibrarySuggestions(
 
 /** The text-matched Ingredients with the distinct visible recipes narrowing to each returns (the
  * recipes naming it or a kind of it), most first. The walk down the kinds starts at the matches. */
-async function matchedFoods(visible: SQL, search: IngredientSearch, except: string[]) {
+async function matchedFoods(
+  householdId: string,
+  visible: SQL,
+  search: IngredientSearch,
+  except: string[]
+) {
   const roots = qb
     .select({ id: ingredients.id })
     .from(ingredients)
     .where(
       and(
-        matchingSearch(search, undefined, true),
+        inCatalogue(ingredients.householdId, householdId),
+        matchingSearch(search, householdId, undefined, true),
         except.length ? notInArray(ingredients.id, except) : undefined
       )
     );
@@ -581,7 +595,7 @@ async function namesOnVisible(
     .innerJoin(carried.table, eq(carried.nameFold, entity.nameFold))
     .innerJoin(link.table, eq(link.entityId, carried.id))
     .innerJoin(recipes, eq(recipes.id, link.recipeId))
-    .where(and(or(eq(entity.householdId, householdId), isNull(entity.householdId)), where))
+    .where(and(inScope(entity.householdId, householdId, { offered: true }), where))
     .groupBy(entity.nameFold)
     .orderBy(desc(sql`count(distinct ${recipes.id})`), asc(entity.nameFold))
     .$dynamic();

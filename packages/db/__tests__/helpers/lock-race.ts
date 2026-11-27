@@ -5,6 +5,11 @@ import { getTestDb } from "./db-test-helpers";
 
 type TestTransaction = Parameters<Parameters<ReturnType<typeof getTestDb>["transaction"]>[0]>[0];
 
+/** The backend running `tx`, as `lockWaits` names it. */
+export async function backendPid(tx: TestTransaction): Promise<number> {
+  return (await tx.execute<{ pid: number }>(sql`SELECT pg_backend_pid() AS pid`)).rows[0]!.pid;
+}
+
 /** Backends of this suite's database waiting on a lock, each with the backends it waits on. */
 export async function lockWaits(): Promise<Map<number, number[]>> {
   const { rows } = await getTestDb().execute<{ pid: number; blockers: number[] }>(
@@ -44,9 +49,7 @@ export async function raceBehind(
     await getTestDb().transaction(async (tx) => {
       await hold(tx);
 
-      const [holder] = (await tx.execute<{ pid: number }>(sql`SELECT pg_backend_pid() AS pid`))
-        .rows;
-      const queue = [holder!.pid];
+      const queue = [await backendPid(tx)];
 
       for (const [index, op] of ops.entries()) {
         let settled = false;

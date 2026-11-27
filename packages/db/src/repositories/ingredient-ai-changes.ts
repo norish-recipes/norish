@@ -1,9 +1,25 @@
-import { and, asc, desc, eq, gt, inArray, isNotNull, isNull, or, sql } from "drizzle-orm";
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  exists,
+  gt,
+  inArray,
+  isNotNull,
+  isNull,
+  not,
+  notExists,
+  or,
+  sql,
+} from "drizzle-orm";
 import { alias, QueryBuilder } from "drizzle-orm/pg-core";
 
 import type { Db, DbTransaction } from "@norish/db/drizzle";
 import type { AIChangeUndo, ChangedSpelling, DeletedFood } from "@norish/db/schema";
 import type { FlagReason } from "@norish/shared/contracts/ingredient-catalogue";
+import type { FoodTargets } from "@norish/shared/lib/recipe-nutrition";
 import { db } from "@norish/db/drizzle";
 import {
   groceries,
@@ -13,17 +29,29 @@ import {
   pantryIngredients,
   recipeIngredientFoods,
   recipeIngredients,
+  recipes,
   recurringGroceries,
   users,
 } from "@norish/db/schema";
 
+import type { CatalogueReader } from "./household-scope";
+import { isAnyOf, pickedByKey } from "./array-params";
+import { editableBy, inCatalogue } from "./household-scope";
 import { findGroceryRows, nameIsFree, rowsNaming } from "./ingredient-catalogue";
 import { repointLines } from "./ingredient-cleanup";
 
 /**
  * AI Changes (ADR-0037, amended 2026-10-17): written in the transaction that made them, kept or
- * undone by a person. The edit policy is checked in `@norish/shared-server/ingredients`.
+ * undone by a person. Each is the household's whose catalogue AI changed (ADR-0042); the rights are
+ * checked in `@norish/shared-server/ingredients`.
  */
+
+/** Who reads AI Changes: those of every household they edit the catalogue of (`editableHouseholds`). */
+type AIChangeReader = CatalogueReader;
+
+function readBy(reader: AIChangeReader) {
+  return editableBy(ingredientAIChanges.householdId, reader);
+}
 
 /**
  * One AI Change as Changed by AI lists it: the food it is listed under and the one it names. A
@@ -31,10 +59,12 @@ import { repointLines } from "./ingredient-cleanup";
  */
 export interface StoredAIChange {
   id: string;
+  /** The household whose catalogue AI changed; null for the seed's. */
+  householdId: string | null;
   sure: boolean;
   kept: boolean;
   createdAt: Date;
-  ingredient: { id: string; name: string; ownerId: string | null } | null;
+  ingredient: { id: string; name: string; householdId: string | null } | null;
   target: { id: string; name: string } | null;
   /** The parent a change to no parent took away. */
   dropped: { id: string; name: string } | null;
@@ -45,6 +75,8 @@ export interface StoredAIChange {
 export async function recordAIChange(
   tx: Db,
   change: {
+    /** The household whose catalogue AI changed. */
+    householdId: string;
     ingredientId?: string | null;
     targetId?: string | null;
     sure: boolean;
@@ -55,6 +87,7 @@ export async function recordAIChange(
     .insert(ingredientAIChanges)
     .values({
       kind: change.undo.kind,
+      householdId: change.householdId,
       ingredientId: change.ingredientId ?? null,
       targetId: change.targetId ?? null,
       sure: change.sure,
@@ -79,31 +112,39 @@ const open = and(
   isNull(ingredientAIChanges.undoneAt)
 );
 
-/** Whether an open change is listed under the food. */
-function hasOpenChange(ingredientId: string) {
-  return sql`exists (select 1 from ${ingredientAIChanges} where ${and(
-    eq(ingredientAIChanges.ingredientId, ingredientId),
-    open
-  )})`;
+/** The open changes listed under the food, for `exists` and `notExists`. */
+function openChangesOf(ingredientId: string | AnyPgColumn) {
+  return qb
+    .select({ id: ingredientAIChanges.id })
+    .from(ingredientAIChanges)
+    .where(and(eq(ingredientAIChanges.ingredientId, ingredientId), open));
 }
 
 /** Whether AI's parent answer about a food is still open, in a query over `ingredients`. */
-export const parentIsOpenAnswer = sql<boolean>`exists (select 1 from ${ingredientAIChanges} where ${and(
-  eq(ingredientAIChanges.ingredientId, ingredients.id),
-  eq(ingredientAIChanges.kind, "parent"),
-  open
-)})`;
+export const parentIsOpenAnswer = exists(
+  qb
+    .select({ id: ingredientAIChanges.id })
+    .from(ingredientAIChanges)
+    .where(
+      and(
+        eq(ingredientAIChanges.ingredientId, ingredients.id),
+        eq(ingredientAIChanges.kind, "parent"),
+        open
+      )
+    )
+).mapWith(Boolean);
 
 function selectChanges(tx: Db = db) {
   return tx
     .select({
       id: ingredientAIChanges.id,
+      householdId: ingredientAIChanges.householdId,
       sure: ingredientAIChanges.sure,
       keptAt: ingredientAIChanges.keptAt,
       createdAt: ingredientAIChanges.createdAt,
       ingredientId: ingredients.id,
       ingredientName: ingredients.name,
-      ingredientOwnerId: ingredients.ownerId,
+      ingredientHouseholdId: ingredients.householdId,
       targetId: targets.id,
       targetName: targets.name,
       droppedId: dropped.id,
@@ -112,13 +153,20 @@ function selectChanges(tx: Db = db) {
     })
     .from(ingredientAIChanges)
     .leftJoin(ingredients, eq(ingredients.id, ingredientAIChanges.ingredientId))
-    .leftJoin(targets, eq(targets.id, ingredientAIChanges.targetId))
+    .leftJoin(
+      targets,
+      and(
+        eq(targets.id, ingredientAIChanges.targetId),
+        inCatalogue(targets.householdId, ingredientAIChanges.householdId)
+      )
+    )
     .leftJoin(
       dropped,
       and(
         eq(ingredientAIChanges.kind, "parent"),
         isNull(ingredientAIChanges.targetId),
-        sql`${dropped.id} = (${ingredientAIChanges.undo} ->> 'formerParentId')::uuid`
+        eq(dropped.id, sql`(${ingredientAIChanges.undo} ->> 'formerParentId')::uuid`),
+        inCatalogue(dropped.householdId, ingredientAIChanges.householdId)
       )
     );
 }
@@ -128,12 +176,13 @@ type ChangeRow = Awaited<ReturnType<typeof selectChanges>>[number];
 function toStoredChange(row: ChangeRow): StoredAIChange {
   return {
     id: row.id,
+    householdId: row.householdId,
     sure: row.sure,
     kept: row.keptAt !== null,
     createdAt: row.createdAt,
     ingredient:
       row.ingredientId && row.ingredientName !== null
-        ? { id: row.ingredientId, name: row.ingredientName, ownerId: row.ingredientOwnerId }
+        ? { id: row.ingredientId, name: row.ingredientName, householdId: row.ingredientHouseholdId }
         : null,
     target: row.targetId && row.targetName ? { id: row.targetId, name: row.targetName } : null,
     dropped: row.droppedId && row.droppedName ? { id: row.droppedId, name: row.droppedName } : null,
@@ -142,18 +191,21 @@ function toStoredChange(row: ChangeRow): StoredAIChange {
 }
 
 /**
- * Open changes first, longest waiting first; then the last month's others, newest first, those
- * made before `clearedAt` left out.
+ * The reader's changes: open ones first, longest waiting first; then the last month's others,
+ * newest first, those made before `clearedAt` left out.
  */
-export async function listAIChanges(clearedAt?: Date): Promise<StoredAIChange[]> {
+export async function listAIChanges(
+  reader: AIChangeReader,
+  clearedAt?: Date
+): Promise<StoredAIChange[]> {
   const settled = and(
     sql`${ingredientAIChanges.createdAt} > now() - ${LISTED_FOR}`,
     clearedAt ? gt(ingredientAIChanges.createdAt, clearedAt) : undefined
   );
   const rows = await selectChanges()
-    .where(and(isNull(ingredientAIChanges.undoneAt), or(open, settled)))
+    .where(and(readBy(reader), isNull(ingredientAIChanges.undoneAt), or(open, settled)))
     .orderBy(
-      desc(sql`${open}`),
+      desc(open!),
       sql`case when ${open} then ${ingredientAIChanges.createdAt} end asc`,
       desc(ingredientAIChanges.createdAt),
       asc(ingredientAIChanges.id)
@@ -172,7 +224,7 @@ export async function sweepAIChanges(): Promise<number> {
     .where(
       and(
         isNull(ingredientAIChanges.undoneAt),
-        sql`not ${open}`,
+        not(open!),
         sql`${ingredientAIChanges.createdAt} <= now() - ${LISTED_FOR}`
       )
     )
@@ -181,13 +233,114 @@ export async function sweepAIChanges(): Promise<number> {
   return swept.length;
 }
 
-/** One change, locked for a Keep or an Undo; null where it is gone or already undone. */
-export async function lockAIChange(tx: DbTransaction, id: string): Promise<StoredAIChange | null> {
+/** One of the reader's changes, locked for a Keep or an Undo; null where it is gone, undone or not theirs. */
+export async function lockAIChange(
+  tx: DbTransaction,
+  reader: AIChangeReader,
+  id: string
+): Promise<StoredAIChange | null> {
   const [row] = await selectChanges(tx)
-    .where(and(eq(ingredientAIChanges.id, id), isNull(ingredientAIChanges.undoneAt)))
+    .where(
+      and(eq(ingredientAIChanges.id, id), readBy(reader), isNull(ingredientAIChanges.undoneAt))
+    )
     .for("update", { of: ingredientAIChanges });
 
   return row ? toStoredChange(row) : null;
+}
+
+/** The foods, spellings and rows a change's Undo reads, moves or points back. */
+function namedByUndo({ undo, ingredient, target }: StoredAIChange) {
+  const foods = [ingredient?.id ?? null, target?.id ?? null];
+  const spellings: string[] = [];
+  const moved: string[] = [];
+  const rows: string[] = [];
+
+  switch (undo.kind) {
+    case "merge":
+      foods.push(undo.parentId);
+      moved.push(...undo.aliasIds);
+      break;
+    case "parent":
+      foods.push(undo.formerParentId);
+      break;
+    case "plain-name":
+      break;
+    case "not-a-food":
+      foods.push(undo.food.parentId);
+      rows.push(
+        ...undo.food.lineFoods.map((food) => food.lineId),
+        ...[...undo.food.groceries, ...undo.food.recurring].map((row) => row.id)
+      );
+      break;
+    case "spelling":
+      moved.push(undo.spelling.id);
+      for (const line of undo.lines) {
+        rows.push(line.id);
+        spellings.push(...line.aliasIds);
+      }
+      rows.push(...undo.groceries, ...undo.recurring, ...Object.keys(undo.left ?? {}));
+      spellings.push(...Object.values(undo.left ?? {}).flat());
+      break;
+  }
+
+  return { foods: foods.filter((id) => id !== null), spellings, moved, rows };
+}
+
+/** Whether Undo of the reader's change stays in the reader's catalogue: every food, spelling and
+ * row it touches is the household's (or the seed's, for an admin); a row gone is nothing to touch. */
+export async function undoStaysIn(
+  tx: Db,
+  reader: AIChangeReader,
+  change: StoredAIChange
+): Promise<boolean> {
+  if (change.undo.stranded) return false;
+  const { foods, spellings, moved, rows } = namedByUndo(change);
+  const editable = editableBy(ingredientAliases.householdId, reader);
+  const own = (householdId: AnyPgColumn) => eq(householdId, reader.householdId);
+  const seen = (householdId: AnyPgColumn) => inCatalogue(householdId, reader.householdId);
+  const outside: Array<() => Promise<unknown[]>> = [
+    () =>
+      tx
+        .select({ id: ingredients.id })
+        .from(ingredients)
+        .where(and(isAnyOf(ingredients.id, foods, "uuid"), not(seen(ingredients.householdId))))
+        .limit(1),
+    () =>
+      tx
+        .select({ id: ingredientAliases.id })
+        .from(ingredientAliases)
+        .where(
+          or(
+            and(
+              isAnyOf(ingredientAliases.id, spellings, "uuid"),
+              not(seen(ingredientAliases.householdId))
+            ),
+            and(isAnyOf(ingredientAliases.id, moved, "uuid"), not(editable))
+          )
+        )
+        .limit(1),
+    () =>
+      tx
+        .select({ id: recipeIngredients.id })
+        .from(recipeIngredients)
+        .innerJoin(recipes, eq(recipes.id, recipeIngredients.recipeId))
+        .where(and(isAnyOf(recipeIngredients.id, rows, "uuid"), not(own(recipes.householdId))))
+        .limit(1),
+    ...[groceries, recurringGroceries].map(
+      (table) => () =>
+        tx
+          .select({ id: table.id })
+          .from(table)
+          .where(and(isAnyOf(table.id, rows, "uuid"), not(own(table.householdId))))
+          .limit(1)
+    ),
+  ];
+
+  for (const query of outside) {
+    if ((await query()).length > 0) return false;
+  }
+
+  return true;
 }
 
 /** Mark a change kept or undone. */
@@ -265,9 +418,103 @@ export async function moveMergedAIChanges(
     .where(
       and(
         eq(ingredientAIChanges.kind, "parent"),
-        sql`${ingredientAIChanges.undo} ->> 'formerParentId' = ${sourceId}`
+        eq(sql`${ingredientAIChanges.undo} ->> 'formerParentId'`, sourceId)
       )
     );
+}
+
+/** Every food, spelling and row id an Undo names, as migration 0093 reads them. */
+function undoIds(undo: AIChangeUndo): string[] {
+  switch (undo.kind) {
+    case "merge":
+      return [undo.parentId ?? "", ...undo.aliasIds];
+    case "parent":
+      return [undo.formerParentId ?? ""];
+    case "plain-name":
+      return [];
+    case "not-a-food": {
+      const { food } = undo;
+
+      return [
+        food.ingredientId,
+        food.parentId ?? "",
+        ...food.aliases.map((one) => one.id),
+        ...food.lineFoods.flatMap((one) => [one.lineId, one.aliasId]),
+        ...[...food.groceries, ...food.recurring].flatMap((one) => [one.id, one.aliasId ?? ""]),
+      ];
+    }
+    case "spelling":
+      return [
+        undo.spelling.id,
+        ...undo.lines.flatMap((line) => [line.id, ...line.aliasIds]),
+        ...undo.groceries,
+        ...undo.recurring,
+        ...Object.entries(undo.left ?? {}).flat(2),
+      ];
+  }
+}
+
+/** A join's AI Changes on the joiner's foods merging into `targets`: each follows its target, and
+ * one whose Undo can no longer apply is stranded. Runs before the merges. */
+export async function followJoinTargetsTx(
+  tx: DbTransaction,
+  householdId: string,
+  targets: FoodTargets,
+  gone: ReadonlySet<string>
+): Promise<string[]> {
+  const changes = await tx
+    .select({
+      id: ingredientAIChanges.id,
+      kind: ingredientAIChanges.kind,
+      ingredientId: ingredientAIChanges.ingredientId,
+      undo: ingredientAIChanges.undo,
+    })
+    .from(ingredientAIChanges)
+    .where(eq(ingredientAIChanges.householdId, householdId));
+  const moved = changes.filter(
+    (change) => change.kind !== "merge" && targets.has(change.ingredientId ?? "")
+  );
+  const stranded = changes.filter(
+    (change) => moved.includes(change) || undoIds(change.undo).some((id) => gone.has(id))
+  );
+
+  if (moved.length > 0) {
+    await tx
+      .update(ingredientAIChanges)
+      .set({
+        ingredientId: sql`${pickedByKey(
+          ingredientAIChanges.ingredientId,
+          [...targets.keys()],
+          "uuid",
+          [...targets.values()]
+        )}::uuid`,
+      })
+      .where(
+        isAnyOf(
+          ingredientAIChanges.id,
+          moved.map((one) => one.id),
+          "uuid"
+        )
+      );
+  }
+  if (stranded.length === 0) return [];
+  await tx
+    .update(ingredientAIChanges)
+    .set({
+      sure: true,
+      undo: sql`${ingredientAIChanges.undo} || ${JSON.stringify({ stranded: true })}::jsonb`,
+    })
+    .where(
+      isAnyOf(
+        ingredientAIChanges.id,
+        stranded.map((one) => one.id),
+        "uuid"
+      )
+    );
+
+  return stranded.flatMap((one) =>
+    one.ingredientId ? [targets.get(one.ingredientId) ?? one.ingredientId] : []
+  );
 }
 
 /** Whether a person undid a merge of any of these spellings into `intoId`. */
@@ -284,11 +531,8 @@ export async function wasMergeUndone(
       and(
         eq(ingredientAIChanges.ingredientId, intoId),
         eq(ingredientAIChanges.kind, "merge"),
-        sql`${ingredientAIChanges.undoneAt} is not null`,
-        sql`${ingredientAIChanges.undo} -> 'aliasIds' ?| ${sql`array[${sql.join(
-          aliasIds.map((id) => sql`${id}`),
-          sql`, `
-        )}]::text[]`}`
+        isNotNull(ingredientAIChanges.undoneAt),
+        sql`${ingredientAIChanges.undo} -> 'aliasIds' ?| ${sql.param([...aliasIds])}::text[]`
       )
     )
     .limit(1);
@@ -357,15 +601,15 @@ async function hasParentChange(
 }
 
 /**
- * Flag the food while it has an open change or AI just doubted it (`unsure`, for `reason`); clear
- * it otherwise.
+ * Flag a household's food while it has an open change or AI just doubted it (`unsure`, for
+ * `reason`); clear it otherwise. AI never flags a seeded food: every household reads it.
  */
 export async function refreshAIFlag(
   tx: Db,
   ingredientId: string,
   { unsure, reason = "ai-unsure" }: { unsure: boolean; reason?: FlagReason }
 ): Promise<void> {
-  const flagged = sql`(${unsure} or ${hasOpenChange(ingredientId)})`;
+  const flagged = unsure ? sql`true` : exists(openChangesOf(ingredientId));
 
   await tx
     .update(ingredients)
@@ -374,15 +618,15 @@ export async function refreshAIFlag(
       flagReason: sql`case when ${flagged} then ${unsure ? reason : "ai-unsure"} end`,
       version: sql`${ingredients.version} + 1`,
     })
-    .where(eq(ingredients.id, ingredientId));
+    .where(and(eq(ingredients.id, ingredientId), isNotNull(ingredients.householdId)));
 }
 
-/** Flag the food an unsure change joined. */
+/** Flag the household's food an unsure change joined; a seeded one stays as it is. */
 export async function flagUnderOpenChange(tx: Db, ingredientId: string): Promise<void> {
   await tx
     .update(ingredients)
     .set({ flagged: true, flagReason: "ai-unsure", version: sql`${ingredients.version} + 1` })
-    .where(eq(ingredients.id, ingredientId));
+    .where(and(eq(ingredients.id, ingredientId), isNotNull(ingredients.householdId)));
 }
 
 /** What earlier releases flagged a food for that is no flag now: AI waiting, off or failing. */
@@ -390,10 +634,7 @@ const RETIRED_FLAG_REASONS = ["ai-queued", "ai-off", "ai-unavailable", "ai-key-r
 
 /** Lift every flag for a retired reason; a food under an open change keeps AI's doubt. How many. */
 export async function clearRetiredFlags(tx: Db): Promise<number> {
-  const doubted = sql`exists (select 1 from ${ingredientAIChanges} where ${and(
-    eq(ingredientAIChanges.ingredientId, ingredients.id),
-    open
-  )})`;
+  const doubted = exists(openChangesOf(ingredients.id));
   const cleared = await tx
     .update(ingredients)
     .set({
@@ -407,16 +648,26 @@ export async function clearRetiredFlags(tx: Db): Promise<number> {
   return cleared.length;
 }
 
-/** Clear AI's doubt once no open change is left; a flag for another reason is not AI's to clear. */
-export async function clearAIFlagUnlessOpen(tx: Db, ingredientId: string): Promise<void> {
+/**
+ * Clear AI's doubt on a household's food once no open change is left; a flag for another reason,
+ * or on a seeded food, is not AI's to clear.
+ */
+export async function clearAIFlagUnlessOpen(
+  tx: Db,
+  ingredientIds: string | readonly string[]
+): Promise<void> {
+  const ids = typeof ingredientIds === "string" ? [ingredientIds] : ingredientIds;
+
+  if (ids.length === 0) return;
   await tx
     .update(ingredients)
     .set({ flagged: false, flagReason: null, version: sql`${ingredients.version} + 1` })
     .where(
       and(
-        eq(ingredients.id, ingredientId),
+        isAnyOf(ingredients.id, ids, "uuid"),
+        isNotNull(ingredients.householdId),
         eq(ingredients.flagReason, "ai-unsure"),
-        sql`not ${hasOpenChange(ingredientId)}`
+        notExists(openChangesOf(ingredients.id))
       )
     );
 }
@@ -491,7 +742,7 @@ export async function wasDeletionUndone(tx: Db, ingredientId: string): Promise<b
       and(
         eq(ingredientAIChanges.kind, "not-a-food"),
         isNotNull(ingredientAIChanges.undoneAt),
-        sql`${ingredientAIChanges.undo} -> 'food' ->> 'ingredientId' = ${ingredientId}`
+        eq(sql`${ingredientAIChanges.undo} -> 'food' ->> 'ingredientId'`, ingredientId)
       )
     )
     .limit(1);
@@ -560,33 +811,51 @@ export async function readDeletedFood(
   };
 }
 
-/** The row's id where it is still there, so a restore never points at one deleted since. */
-function stillThere(table: typeof users | typeof ingredients, id: string | null) {
-  return id === null
-    ? null
-    : sql`${qb.select({ id: table.id }).from(table).where(eq(table.id, id))}`;
+/** The row's id where it is still there, held until commit, so a restore never names one deleted. */
+async function stillThere(
+  tx: DbTransaction,
+  table: typeof users | typeof ingredients,
+  id: string | null
+): Promise<string | null> {
+  if (id === null) return null;
+  const [row] = await tx
+    .select({ id: table.id })
+    .from(table)
+    .where(eq(table.id, id))
+    .for("key share");
+
+  return row?.id ?? null;
 }
 
 /**
  * Mint a deleted food again under its ids, with the spellings still free, pointing back the rows
  * that named it and name nothing now; false where no spelling is free, throws where the name is taken.
  */
-export async function restoreDeletedFood(tx: DbTransaction, food: DeletedFood): Promise<boolean> {
+export async function restoreDeletedFood(
+  tx: DbTransaction,
+  householdId: string,
+  food: DeletedFood
+): Promise<boolean> {
   await tx.insert(ingredients).values({
     id: food.ingredientId,
+    householdId,
     name: food.name,
-    ownerId: stillThere(users, food.ownerId),
-    parentId: stillThere(ingredients, food.parentId),
+    ownerId: await stillThere(tx, users, food.ownerId),
+    parentId: await stillThere(tx, ingredients, food.parentId),
   });
+  const aliases: Array<typeof ingredientAliases.$inferInsert> = [];
+
+  for (const spelling of food.aliases) {
+    aliases.push({
+      ...spelling,
+      householdId,
+      ingredientId: food.ingredientId,
+      ownerId: await stillThere(tx, users, spelling.ownerId),
+    });
+  }
   const restored = await tx
     .insert(ingredientAliases)
-    .values(
-      food.aliases.map((spelling) => ({
-        ...spelling,
-        ingredientId: food.ingredientId,
-        ownerId: stillThere(users, spelling.ownerId),
-      }))
-    )
+    .values(aliases)
     .onConflictDoNothing()
     .returning({ id: ingredientAliases.id });
   const back = new Set(restored.map((row) => row.id));
@@ -606,7 +875,9 @@ export async function restoreDeletedFood(tx: DbTransaction, food: DeletedFood): 
             ),
           })
           .from(recipeIngredients)
-          .where(eq(recipeIngredients.id, lineId))
+          .innerJoin(recipes, eq(recipes.id, recipeIngredients.recipeId))
+          // A line whose recipe left the household since keeps what it names now.
+          .where(and(eq(recipeIngredients.id, lineId), eq(recipes.householdId, householdId)))
       )
       .onConflictDoNothing();
   }
@@ -651,20 +922,26 @@ async function pointBack(
   }
 }
 
-/** A spelling as Undo of its removal or move would put it back, with its food and whether seeded. */
+/** A spelling as Undo of its removal or move would put it back, with its food and household. */
 export async function readChangedSpelling(
   tx: DbTransaction,
   aliasId: string
-): Promise<(ChangedSpelling["spelling"] & { ingredientId: string; seeded: boolean }) | null> {
+): Promise<
+  | (ChangedSpelling["spelling"] & {
+      ingredientId: string;
+      householdId: string | null;
+    })
+  | null
+> {
   const [row] = await tx
     .select({
       id: ingredientAliases.id,
+      householdId: ingredientAliases.householdId,
       text: ingredientAliases.text,
       fold: ingredientAliases.fold,
       locale: ingredientAliases.locale,
       ownerId: ingredientAliases.ownerId,
       ingredientId: ingredientAliases.ingredientId,
-      seeded: ingredientAliases.seeded,
     })
     .from(ingredientAliases)
     .where(eq(ingredientAliases.id, aliasId));
@@ -750,7 +1027,7 @@ export async function wasSpellingUndone(tx: Db, aliasId: string): Promise<boolea
       and(
         eq(ingredientAIChanges.kind, "spelling"),
         isNotNull(ingredientAIChanges.undoneAt),
-        sql`${ingredientAIChanges.undo} -> 'spelling' ->> 'id' = ${aliasId}`
+        eq(sql`${ingredientAIChanges.undo} -> 'spelling' ->> 'id'`, aliasId)
       )
     )
     .limit(1);
@@ -762,7 +1039,12 @@ export async function wasSpellingUndone(tx: Db, aliasId: string): Promise<boolea
  * The own food holding `fold` that was minted after `since` and nobody decided about: what reading
  * a removed spelling's rows again minted from its text.
  */
-export async function findMintHolding(tx: Db, fold: string, since: Date): Promise<string | null> {
+export async function findMintHolding(
+  tx: Db,
+  householdId: string,
+  fold: string,
+  since: Date
+): Promise<string | null> {
   const [row] = await tx
     .select({ id: ingredients.id })
     .from(ingredientAliases)
@@ -770,7 +1052,8 @@ export async function findMintHolding(tx: Db, fold: string, since: Date): Promis
     .where(
       and(
         eq(ingredientAliases.fold, fold),
-        isNull(ingredients.offId),
+        eq(ingredientAliases.householdId, householdId),
+        eq(ingredients.householdId, householdId),
         gt(ingredients.createdAt, since),
         eq(ingredients.nameChosen, false),
         eq(ingredients.parentChosen, false),
@@ -787,13 +1070,19 @@ export async function findMintHolding(tx: Db, fold: string, since: Date): Promis
  */
 export async function restoreSpelling(
   tx: DbTransaction,
+  householdId: string,
   ingredientId: string,
   undo: ChangedSpelling
 ): Promise<boolean> {
   const { spelling, left = {} } = undo;
   const [restored] = await tx
     .insert(ingredientAliases)
-    .values({ ...spelling, ingredientId, ownerId: stillThere(users, spelling.ownerId) })
+    .values({
+      ...spelling,
+      householdId,
+      ingredientId,
+      ownerId: await stillThere(tx, users, spelling.ownerId),
+    })
     .onConflictDoNothing()
     .returning({ id: ingredientAliases.id });
   // The text back on the food under another id (a mint merged back) is restored too.
@@ -805,6 +1094,7 @@ export async function restoreSpelling(
         .where(
           and(
             eq(ingredientAliases.fold, spelling.fold),
+            eq(ingredientAliases.householdId, householdId),
             eq(ingredientAliases.ingredientId, ingredientId)
           )
         );

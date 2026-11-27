@@ -47,9 +47,8 @@ function SortableTagItem({ tag, removal, onActivate }: SortableTagItemProps) {
   };
 
   return (
-    // A Tag on the recipe is a chip that names a thing, and it is active:
-    // filled in the accent colour, like a selected filter chip. The name is the drag handle and
-    // does what `onActivate` says; the cross, when there is one, is what removes it.
+    // A Tag on the recipe is an active chip, filled like a selected filter chip. The name is the
+    // drag handle and does what `onActivate` says; the cross, when there is one, removes it.
     <span
       ref={setNodeRef}
       className="bg-accent text-accent-foreground inline-flex items-center gap-1 rounded-full py-1.5 pr-1.5 pl-3 text-xs font-medium"

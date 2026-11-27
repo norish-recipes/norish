@@ -2,10 +2,11 @@ import type { IngredientRef } from "@norish/db/repositories/ingredient-aliases";
 import { mintIngredientWithAliases } from "@norish/db/repositories/ingredient-aliases";
 import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
-/** A plain, ownerless food with its name as its one spelling; its alias and Ingredient. */
-export async function mintFood(name: string): Promise<IngredientRef> {
+/** A plain food of the household, added by no one, its name its one spelling; its alias and Ingredient. */
+export async function mintFood(householdId: string, name: string): Promise<IngredientRef> {
   const fold = ingredientAliasFold(name);
-  const aliases = await mintIngredientWithAliases({
+  const { aliases } = await mintIngredientWithAliases({
+    householdId,
     name,
     aliases: [{ text: name, fold }],
     ownerId: null,

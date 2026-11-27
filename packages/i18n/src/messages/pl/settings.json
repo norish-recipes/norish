@@ -8,7 +8,7 @@
     "household": "Gospodarstwo domowe",
     "caldav": "CalDAV",
     "admin": "Administrator",
-    "ingredients": "Składniki"
+    "content": "Zawartość"
   },
   "user": {
     "signInMethods": {
@@ -255,6 +255,7 @@
       "leaveModal": {
         "title": "Opuść gospodarstwo domowe",
         "confirmMessage": "Czy na pewno chcesz opuścić {name}?",
+        "goesAndStays": "Twoje przepisy i książki kucharskie idą z tobą, razem z tagami i składnikami. Zakupy, spiżarnia, plan posiłków i sklepy zostają w gospodarstwie.",
         "adminWarning": "Jesteś administratorem. Przed opuszczeniem musisz przekazać uprawnienia administratora.",
         "confirmButton": "Opuść gospodarstwo domowe"
       }
@@ -272,7 +273,7 @@
       "kickModal": {
         "title": "Usuń użytkownika",
         "confirmMessage": "Czy na pewno chcesz usunąć {name} z gospodarstwa domowego?",
-        "warning": "Utraci dostęp do wszystkich współdzielonych przepisów, list zakupów i wpisów w kalendarzu.",
+        "warning": "Przepisy i książki kucharskie tej osoby idą z nią, razem z tagami i składnikami. Zakupy, spiżarnia, plan posiłków i sklepy zostają w gospodarstwie.",
         "confirmButton": "Usuń użytkownika"
       },
       "transferModal": {
@@ -298,7 +299,7 @@
     },
     "join": {
       "title": "Dołącz do gospodarstwa domowego",
-      "description": "Wpisz kod dołączenia, aby dołączyć do istniejącego gospodarstwa domowego.",
+      "description": "Wpisz kod dołączenia, aby dołączyć do istniejącego gospodarstwa domowego. Twoje gospodarstwo zostanie z nim połączone: przepisy, zakupy, spiżarnia, plan posiłków i sklepy przejdą razem z tobą.",
       "codeLabel": "Kod dołączenia",
       "codePlaceholder": "6-cyfrowy kod",
       "submitButton": "Dołącz do gospodarstwa domowego"
@@ -388,7 +389,9 @@
   },
   "ingredients": {
     "title": "Składniki",
-    "description": "Katalog składników, z którego Norish korzysta, by określać wartości odżywcze, ikony składników i tłumaczenia.",
+    "sheetTitle": "Składnik",
+    "loadFailed": "Nie udało się wczytać tego składnika",
+    "loadOffline": "Ten składnik wymaga połączenia",
     "search": "Szukaj składników",
     "searchMatch": "Dopasowanie",
     "searchIn": "Szukaj w",
@@ -412,7 +415,6 @@
       "seed-ambiguous": "Katalog zna kilka składników, którymi to może być.",
       "ai-junk": "AI uznała, że to nie jest składnik, tylko np. przybór kuchenny lub fragment wiersza przepisu."
     },
-    "empty": "Nie znaleziono składników",
     "emptyFlagged": "Nic nie jest oznaczone",
     "rename": "Zmień nazwę",
     "delete": "Usuń",
@@ -424,8 +426,8 @@
       "pantry": "{count, plural, one {# pozycja spiżarni zostanie usunięta} few {# pozycje spiżarni zostaną usunięte} many {# pozycji spiżarni zostanie usuniętych} other {# pozycji spiżarni zostanie usunięte}}"
     },
     "markDistinct": "Oznacz jako odrębny",
-    "summary": "{spellings, plural, one {# tłumaczenie} few {# tłumaczenia} other {# tłumaczeń}}{kinds, plural, =0 {} one {, # rodzaj} few {, # rodzaje} many {, # rodzajów} other {, # rodzaju}}{parent, select, none {} other {, nadrzędny: {parent}}}",
-    "addAlias": "Dodaj tłumaczenie",
+    "summary": "{spellings, plural, one {# pisownia} few {# pisownie} other {# pisowni}}{kinds, plural, =0 {} one {, # rodzaj} few {, # rodzaje} many {, # rodzajów} other {, # rodzaju}}{parent, select, none {} other {, nadrzędny: {parent}}}",
+    "addAlias": "Dodaj pisownię",
     "removeAlias": "Usuń {alias}",
     "mergeInto": "Scal z…",
     "merge": "Scal",
@@ -445,15 +447,17 @@
     "clearParent": "Usuń nadrzędny",
     "nameSection": "Nazwa",
     "parentSection": "Nadrzędny",
-    "spellingsSection": "Tłumaczenia",
+    "spellingsSection": "Pisownie",
     "shownAs": "Wyświetlane dla Ciebie jako {name}",
     "changeParent": "Zmień nadrzędny…",
-    "spellingsCount": "{count, plural, one {# tłumaczenie} few {# tłumaczenia} other {# tłumaczeń}}",
+    "spellingsCount": "{count, plural, one {# pisownia} few {# pisownie} other {# pisowni}}",
     "dataSources": {
       "title": "Źródła danych",
       "notice": "Katalog składników opiera się na taksonomii składników <off>Open Food Facts</off>, dostępnej na licencji <odbl>Open Database License (ODbL)</odbl>. Katalog, który Norish na jej podstawie buduje, jest udostępniany na tej samej licencji.",
       "nutritionNotice": "Wartości odżywcze na 100 g pochodzą z <ciqual>CIQUAL 2025</ciqual> i CALNUT (ANSES), <usda>USDA FoodData Central</usda> oraz <cofid>CoFID</cofid>, połączonych kodami, które Open Food Facts nadaje każdemu składnikowi. Poprawki gospodarstwa to jego własne wartości, nie wartości z baz.",
-      "download": "Pobierz katalog składników (JSON)"
+      "download": "Pobierz katalog składników (JSON)",
+      "downloadOffline": "Katalog możesz pobrać, gdy jesteś online.",
+      "downloadFailed": "Nie udało się pobrać katalogu."
     },
     "nutrition": {
       "section": "Wartości odżywcze",
@@ -505,6 +509,7 @@
           "hundredMl": "100 ml waży (g)"
         }
       },
+      "overHundred": "Tłuszcz, węglowodany i białko nie mogą przekraczać 100 g na 100 g.",
       "searchFood": "Szukaj w bazach (po angielsku), np. milk semi-skimmed",
       "foodHint": "Wpisz kilka słów z nazwy",
       "searchingFoods": "Szukanie…",
@@ -552,7 +557,6 @@
       "done": "kupione",
       "repeats": "powtarza się",
       "pantry": "W spiżarni",
-      "elsewhere": "{count, plural, one {Jeszcze # użycie} few {Jeszcze # użycia} many {Jeszcze # użyć} other {Jeszcze # użycia}} w przepisach lub listach, których nie możesz otworzyć",
       "none": "Nic już tego nie używa"
     },
     "keepAlias": "Zachowaj {alias}",
@@ -569,6 +573,7 @@
     "changedByAI": {
       "title": "Zmienione przez AI",
       "open": "{count, plural, =0 {Zmienione przez AI} other {Zmienione przez AI · # do sprawdzenia}}",
+      "openCompact": "{count, plural, =0 {Zmienione przez AI} other {# do sprawdzenia}}",
       "unsure": "Niepewne",
       "sure": "Zmienione",
       "empty": "AI niczego nie zmieniła w ostatnim miesiącu.",
@@ -583,7 +588,8 @@
       "plainName": "Zmieniono nazwę z {from}",
       "notAFood": "Usunięto, bo to nie jest składnik. Wiersze przepisu i zakupy zachowują swój tekst.",
       "spellingRemoved": "Usunięto tłumaczenie {from}",
-      "spellingMoved": "Przeniesiono tłumaczenie {from} do {of}"
+      "spellingMoved": "Przeniesiono tłumaczenie {from} do {of}",
+      "toCheck": "{count, plural, other {# do sprawdzenia}}"
     },
     "icon": {
       "change": "Zmień ikonę",
@@ -592,9 +598,40 @@
       "failed": "Z tego zdjęcia nie udało się zrobić ikony.",
       "generate": "Wygeneruj z AI",
       "generateFailed": "Nie udało się wygenerować ikony."
-    }
+    },
+    "keepDistinct": "Zachowaj osobno",
+    "offline": "Możesz zmienić ten składnik, gdy będziesz online."
   },
   "admin": {
+    "shareLinks": {
+      "title": "Moderacja udostępniania przepisów",
+      "description": "Przeglądaj publiczne linki do przepisów w całej instancji i moderuj ich cykl życia.",
+      "empty": "Nie znaleziono linków do udostępniania.",
+      "inactive": "Nieaktywny",
+      "table": {
+        "recipe": "PRZEPIS",
+        "owner": "WŁAŚCICIEL",
+        "status": "STATUS",
+        "created": "UTWORZONO",
+        "expires": "WYGASA",
+        "actions": "AKCJE"
+      },
+      "revokeModal": {
+        "title": "Odwołaj link",
+        "message": "Ten link do {recipeName} przestanie działać do momentu reaktywacji.",
+        "confirm": "Odwołaj"
+      },
+      "reactivateModal": {
+        "title": "Reaktywuj link",
+        "message": "Ten link do {recipeName} znowu stanie się aktywny.",
+        "confirm": "Reaktywuj"
+      },
+      "deleteModal": {
+        "title": "Usuń link",
+        "message": "Usunąć ten link do {recipeName}? Tej operacji nie można cofnąć.",
+        "confirm": "Usuń link"
+      }
+    },
     "general": {
       "title": "Ogólne",
       "allowRegistration": "Zezwalaj na rejestrację nowych użytkowników",
@@ -819,10 +856,6 @@
       "prompts": {
         "title": "Prompty",
         "subtitle": "Dostosuj instrukcje AI do przetwarzania przepisów"
-      },
-      "cuisines": {
-        "title": "Kuchnie",
-        "subtitle": "Słownik, z którego wybierają przepisy i AI"
       },
       "bulkEnrichment": {
         "title": "Masowe wzbogacanie",
@@ -1268,17 +1301,6 @@
       },
       "pagination": "Strona {current} z {total}"
     },
-    "cuisineVocabulary": {
-      "description": "Kuchnie to wyselekcjonowany słownik, który należy do Ciebie. Nazwy są pokazywane dokładnie tak, jak je tu zapiszesz, we wszystkich językach.",
-      "namePlaceholder": "Nazwa kuchni",
-      "addLabel": "Dodaj kuchnię",
-      "renameLabel": "Zmień nazwę {name}",
-      "deleteLabel": "Usuń {name}",
-      "deleteConfirm": "Usunąć „{name}”? Przepisy, które jej używają, ją stracą.",
-      "empty": "Brak kuchni.",
-      "duplicate": "Kuchnia o tej nazwie już istnieje.",
-      "saveFailed": "Nie udało się zapisać tej kuchni."
-    },
     "toasts": {
       "localesSaved": "Zapisano ustawienia językowe",
       "localesError": "Nie udało się zapisać ustawień językowych",
@@ -1311,5 +1333,103 @@
     "changePhoto": "Zmień zdjęcie",
     "accountGroup": "Twoje konto",
     "phonesGroup": "Na telefonach"
+  },
+  "content": {
+    "ariaLabel": "Zawartość",
+    "listPicker": "Lista",
+    "lists": {
+      "tags": "Tagi",
+      "cuisines": "Kuchnie",
+      "categories": "Kategorie",
+      "ingredients": "Składniki"
+    },
+    "search": {
+      "tags": "Szukaj tagów",
+      "cuisines": "Szukaj kuchni",
+      "categories": "Szukaj kategorii"
+    },
+    "show": "Pokaż",
+    "all": "Wszystkie",
+    "unused": "Nieużywane",
+    "recipes": "{count, plural, =0 {Nieużywane} one {# przepis} few {# przepisy} other {# przepisów}}",
+    "sections": {
+      "ownCuisines": "Twoje kuchnie",
+      "ownCategories": "Twoje kategorie",
+      "server": "Z Twojego serwera",
+      "builtIn": "Wbudowane"
+    },
+    "help": {
+      "server": "Administrator Twojego serwera zarządza nimi dla każdego gospodarstwa",
+      "serverAdmin": "Każde gospodarstwo na tym serwerze dostaje je w ofercie. Jako administrator zarządzasz nimi.",
+      "builtIn": "Wbudowane kategorie są takie same na każdym serwerze i nie można ich zmienić"
+    },
+    "readOnly": "Tylko do odczytu",
+    "empty": {
+      "tags": "Jeszcze brak tagów",
+      "cuisines": "Jeszcze brak kuchni",
+      "categories": "Jeszcze brak kategorii"
+    },
+    "nothingUnused": "Nic nie jest nieużywane",
+    "noMatch": "Nic nie pasuje",
+    "loadFailed": "Nie udało się wczytać tej listy",
+    "listOffline": "Ta lista wymaga połączenia",
+    "offline": "Tę listę możesz zmienić, gdy jesteś online.",
+    "panel": {
+      "addTitle": {
+        "tag": "Dodaj tag",
+        "cuisine": "Dodaj kuchnię",
+        "category": "Dodaj kategorię",
+        "ingredient": "Dodaj składnik"
+      },
+      "editTitle": {
+        "tag": "Edytuj tag",
+        "cuisine": "Edytuj kuchnię",
+        "category": "Edytuj kategorię"
+      },
+      "server": "Serwer",
+      "name": "Nazwa",
+      "usedBy": "Używane w",
+      "usedByOwn": "{count, plural, =0 {Nieużywane w Twoich przepisach} one {# z Twoich przepisów} few {# z Twoich przepisów} other {# z Twoich przepisów}}",
+      "already": {
+        "tag": "Już jest tagiem",
+        "cuisine": "Już jest kuchnią",
+        "category": "Już jest kategorią",
+        "ingredient": "Już jest składnikiem"
+      },
+      "addTo": "Dodaj do",
+      "toHousehold": "Twoje gospodarstwo",
+      "toServer": "Każde gospodarstwo na tym serwerze",
+      "serverReadOnly": "Administrator Twojego serwera zarządza tą kuchnią dla każdego gospodarstwa.",
+      "serverEditable": "Każde gospodarstwo na tym serwerze dostaje tę kuchnię w ofercie.",
+      "merge": "„{target}” już istnieje. Po scaleniu {count, plural, =0 {{name} zniknie} one {# przepis z {name} trafi do niego} few {# przepisy z {name} trafią do niego} other {# przepisów z {name} trafi do niego}}.",
+      "mergeAction": "Scal",
+      "tooLong": "Nazwa może mieć najwyżej {max} znaków.",
+      "failed": "Nie udało się zapisać. Spróbuj ponownie.",
+      "stale": "Nie zapisano: najpierw zmieniono to gdzie indziej"
+    },
+    "delete": {
+      "title": "Usunąć „{name}”?",
+      "body": "{count, plural, =0 {Żaden przepis tego nie używa.} one {Zniknie z # przepisu. Przepis zostaje.} few {Zniknie z # przepisów. Przepisy zostają.} other {Zniknie z # przepisów. Przepisy zostają.}}",
+      "bodyServer": "{count, plural, =0 {Żaden przepis tego nie używa.} one {Zniknie z # przepisu w każdym gospodarstwie na tym serwerze. Przepis zostaje.} few {Zniknie z # przepisów w każdym gospodarstwie na tym serwerze. Przepisy zostają.} other {Zniknie z # przepisów w każdym gospodarstwie na tym serwerze. Przepisy zostają.}}",
+      "countFailed": "Nie udało się policzyć przepisów, które tego używają. Spróbuj ponownie.",
+      "failed": "Nie udało się usunąć. Spróbuj ponownie.",
+      "action": {
+        "tag": "Usuń tag",
+        "cuisine": "Usuń kuchnię",
+        "category": "Usuń kategorię"
+      }
+    },
+    "countCell": "{count, plural, =0 {Nieużywane} other {#}}",
+    "count": {
+      "tag": "{count, plural, one {# tag} few {# tagi} many {# tagów} other {# tagu}}",
+      "ingredient": "{count, plural, one {# składnik} few {# składniki} many {# składników} other {# składnika}}"
+    },
+    "countUnused": {
+      "tag": "{count, plural, one {# nieużywany tag} few {# nieużywane tagi} many {# nieużywanych tagów} other {# nieużywanego tagu}}"
+    },
+    "menu": {
+      "rename": "Zmień nazwę",
+      "showRecipes": "Pokaż przepisy"
+    }
   }
 }

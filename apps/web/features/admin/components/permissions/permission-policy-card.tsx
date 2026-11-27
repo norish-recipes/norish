@@ -9,7 +9,7 @@ import { ShieldCheckIcon } from "@heroicons/react/24/outline";
 import { useTranslations } from "next-intl";
 
 import type { PermissionLevel, RecipePermissionPolicy } from "@norish/config/zod/server-config";
-import { isWiderLevel, ServerConfigKeys } from "@norish/config/zod/server-config";
+import { ServerConfigKeys, withinView } from "@norish/config/zod/server-config";
 import { useAdminConfig, usePermissionPolicyMutations } from "@norish/shared-react/admin";
 
 import type { PermissionLevelLabels } from "./permission-level-select";
@@ -23,11 +23,7 @@ function withLevel(
   action: PolicyAction,
   level: PermissionLevel
 ): RecipePermissionPolicy {
-  const next = { ...policy, [action]: level };
-  const atMostView = (value: PermissionLevel) =>
-    isWiderLevel(value, next.view) ? next.view : value;
-
-  return { ...next, edit: atMostView(next.edit), delete: atMostView(next.delete) };
+  return withinView({ ...policy, [action]: level });
 }
 
 /** Who outside a household may view, edit or delete its recipes and cookbooks; each select saves. */

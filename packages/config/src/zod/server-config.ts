@@ -862,13 +862,23 @@ export const DEFAULT_JOB_RETENTION: JobRetentionConfig = {
 // ============================================================================
 
 /** Who outside a recipe's household may act on it: Everyone, or the Household alone (ADR-0041). */
-export const PermissionLevelSchema = z.enum(["everyone", "household"]);
+const PermissionLevelSchema = z.enum(["everyone", "household"]);
 
 export type PermissionLevel = z.infer<typeof PermissionLevelSchema>;
 
 /** Whether `level` reaches further than `than`. */
-export function isWiderLevel(level: PermissionLevel, than: PermissionLevel): boolean {
+function isWiderLevel(level: PermissionLevel, than: PermissionLevel): boolean {
   return level === "everyone" && than === "household";
+}
+
+type PolicyLevels = { view: PermissionLevel; edit: PermissionLevel; delete: PermissionLevel };
+
+/** `policy` with edit and delete narrowed to view where they reach further, as 0091 left them. */
+export function withinView<P extends PolicyLevels>(policy: P): P {
+  const narrowed = (level: PermissionLevel) =>
+    isWiderLevel(level, policy.view) ? policy.view : level;
+
+  return { ...policy, edit: narrowed(policy.edit), delete: narrowed(policy.delete) };
 }
 
 /** View, edit and delete; nobody may edit or delete what they cannot view. */
@@ -879,8 +889,11 @@ export const RecipePermissionPolicySchema = z
     delete: PermissionLevelSchema.default("household"),
   })
   .refine(
-    (policy) =>
-      !isWiderLevel(policy.edit, policy.view) && !isWiderLevel(policy.delete, policy.view),
+    (policy) => {
+      const kept = withinView(policy);
+
+      return kept.edit === policy.edit && kept.delete === policy.delete;
+    },
     { message: "Edit and delete cannot reach further than view" }
   );
 

@@ -73,7 +73,7 @@ Options under **Automatic for new ingredients** are off by default.
 Use **Clean up catalogue** for existing ingredients. **Recipe foods** reviews
 unreviewed ingredients from recipes. **Whole catalogue** includes previously
 reviewed ingredients and can revisit changes you undid. For built-in entries,
-it reviews only added translations.
+it reviews only added spellings.
 
 ![Clean up catalogue](/img/screenshots/admin-clean-up-catalogue.png)
 
@@ -82,21 +82,21 @@ keeps existing values.
 
 ![Fill gaps](/img/screenshots/admin-fill-gaps.png)
 
-Track or cancel either run in [Job queues](./admin-settings.md#job-queues).
+Track or cancel either run in [Job queues](/configuration/admin-settings#job-queues).
 
 ### Tag strategy
 
 **Tag strategy** decides which tags auto-tagging may use:
 
-| Strategy                       | Behaviour                                          |
-| ------------------------------ | -------------------------------------------------- |
-| **Predefined tags only**       | Only the built-in tag list                         |
-| **Predefined + existing tags** | Also tags already used by recipes on this instance |
-| **AI can create new tags**     | Creates new tags when needed                       |
+| Strategy                       | Behaviour                                |
+| ------------------------------ | ---------------------------------------- |
+| **Predefined tags only**       | Only the built-in tag list               |
+| **Predefined + existing tags** | Also tags in the recipe household's list |
+| **AI can create new tags**     | Creates new tags when needed             |
 
 ### Cuisine strategy
 
-**Cuisine strategy** decides whether [provenance](../recipes/creating-and-editing.md#recipe-origin) may
+**Cuisine strategy** decides whether [provenance](/recipes/creating-and-editing#recipe-origin) may
 add to your cuisine list:
 
 | Strategy                    | Behaviour                                           |
@@ -104,8 +104,7 @@ add to your cuisine list:
 | **Only existing cuisines**  | Pick from the list, anything else is discarded      |
 | **AI can add new cuisines** | Pick from the list, or add an entry that is missing |
 
-Manage the list in **AI & processing** under **Cuisines**. Renaming or deleting
-a cuisine updates recipes that use it. The default is **Only existing cuisines**.
+Manage cuisines in **Settings** under **Content**. The default is **Only existing cuisines**.
 
 ### Image generation
 
@@ -123,7 +122,7 @@ image model.
 
 Matching providers share the endpoint and API key.
 
-The image provider also draws [ingredient icons](../groceries/ingredients.md#change-an-icon).
+The image provider also draws [ingredient icons](/groceries/ingredients#change-an-icon).
 
 ### Decision Model
 
@@ -142,13 +141,13 @@ use it with or without a general AI provider.
 
 Import triage always runs when the Decision Model is enabled. If the model
 fails or is unsure, Norish uses the AI provider when available. Open the
-[job details](./admin-settings.md#job-queues) to see which models ran.
+[job details](/configuration/admin-settings#job-queues) to see which models ran.
 
 ### Enriching existing recipes
 
 In **AI & processing**, open **Bulk enrichment** and select **Enrich** to run
 every enabled enrichment on existing recipes. Check progress in
-[Job queues](./admin-settings.md#job-queues).
+[Job queues](/configuration/admin-settings#job-queues).
 
 ![Bulk enrichment image count](/img/screenshots/bulk-enrichment-image-count.png)
 

@@ -240,11 +240,11 @@ export function seeder({ trpc, query }) {
     // A grocery as another member adds it, filed under the Store named `store`; answers its id.
     async createGrocery({ name, store }) {
       const storeId = store ? await storeIdOf(store) : null;
-      const [created] = await trpc("groceries.create", [
+      const { ids } = await trpc("groceries.create", [
         { name, unit: null, amount: null, ...(storeId && { storeId }) },
       ]);
 
-      return created.id;
+      return ids[0];
     },
     // Where the grocery `name` stands: now, or once it matches `want` (`done`, `store` as a Store's
     // name or null, `repeats`), throwing after `within` ms (15 s) with where it is instead.

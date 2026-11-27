@@ -41,12 +41,8 @@
   },
   "empty": {
     "title": "Biblioteket ditt venter",
-    "description": "Lim inn en oppskrift-URL i søkefeltet ovenfor, og la magien skje.",
     "noResults": "Ingen oppskrifter funnet",
-    "noResultsHint": "Prøv å justere eller tømme filtrene.",
-    "noCookbooks": "Ingen kokebøker ennå",
-    "noCookbooksHint": "En kokebok er et navngitt sett med oppskrifter. Lag din første for å få orden i biblioteket.",
-    "descriptionMobile": "Legg til din første oppskrift fra en lenke, tekst eller bilder."
+    "noCookbooks": "Ingen kokebøker ennå"
   },
   "card": {
     "noImage": "Ingen bilde tilgjengelig",
@@ -67,6 +63,7 @@
     "addToGroceries": "Legg til i handleliste",
     "ratingPrompt": "Hva synes du om denne oppskriften?",
     "notFound": "Oppskrift ikke funnet",
+    "offline": "Denne oppskriften krever en tilkobling",
     "notFoundMessage": "Denne oppskriften eksisterer ikke, eller du har ikke tilgang til å se den.",
     "prep": "forberedelse",
     "total": "totalt",
@@ -442,7 +439,6 @@
     "singular": "Kokebok",
     "notFound": "Fant ikke kokeboken",
     "notFoundHint": "Den kan være slettet, eller den er ikke synlig for deg.",
-    "emptyHint": "Legg til oppskrifter fra hurtigmenyen på en oppskrift.",
     "panelTitle": "Legg til i kokebok",
     "newWithRecipe": "Ny kokebok med denne oppskriften",
     "noneEditable": "Det finnes ingen kokebøker du kan redigere ennå.",

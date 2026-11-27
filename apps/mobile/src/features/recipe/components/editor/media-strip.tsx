@@ -3,10 +3,10 @@ import type { SetStateAction } from "react";
 import React from "react";
 import { Image, Pressable, ScrollView, Text, View } from "react-native";
 import { GlassCloseButton, GlassSurface } from "@/components/glass";
+import { Ionicons } from "@/components/icon";
 import { Loader } from "@/components/loader";
 import { ServerImage } from "@/components/server-image";
 import { usePhotoSourceSheet } from "@/hooks/use-photo-source-sheet";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 

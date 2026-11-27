@@ -4,6 +4,7 @@ import { AccessibilityInfo, Platform } from "react-native";
 import { publishSignedOut } from "@/lib/auth/auth-session-sync";
 import { ServerAddressContext } from "@/lib/network/server-address";
 import { offlineEngine } from "@/lib/offline/engine";
+import { spokenLabel } from "@/lib/spoken-label";
 import { storage } from "@/lib/storage/mmkv";
 import { useRouter } from "expo-router";
 import { useToast } from "heroui-native";
@@ -69,9 +70,7 @@ export function MobilePlatformProvider({
       duration: content.actionLabel ? 8000 : 4000,
       component: (props) => <AppToast {...props} {...content} />,
     });
-    AccessibilityInfo.announceForAccessibility(
-      content.body ? `${content.title}, ${content.body}` : content.title
-    );
+    AccessibilityInfo.announceForAccessibility(spokenLabel(content.title, content.body));
   };
 
   const adapter: PlatformAdapter = {

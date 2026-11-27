@@ -41,12 +41,8 @@
   },
   "empty": {
     "title": "Sua biblioteca espera por você",
-    "description": "Cole uma URL de receita no campo de busca acima e veja a mágica acontecer.",
     "noResults": "Nenhuma receita encontrada",
-    "noResultsHint": "Tente ajustar ou limpar seus filtros.",
-    "noCookbooks": "Nenhum livro de receitas ainda",
-    "noCookbooksHint": "Um livro de receitas é um conjunto de receitas com título. Crie o primeiro para organizar sua biblioteca.",
-    "descriptionMobile": "Adicione sua primeira receita a partir de um link, texto ou fotos."
+    "noCookbooks": "Nenhum livro de receitas ainda"
   },
   "card": {
     "noImage": "Nenhuma imagem disponível",
@@ -67,6 +63,7 @@
     "addToGroceries": "Adicionar à lista de compras",
     "ratingPrompt": "O que você achou desta receita?",
     "notFound": "Receita não encontrada",
+    "offline": "Esta receita precisa de conexão",
     "notFoundMessage": "Esta receita não existe ou você não tem permissão para visualizá-la.",
     "prep": "preparo",
     "total": "total",
@@ -442,7 +439,6 @@
     "singular": "Livro de receitas",
     "notFound": "Livro de receitas não encontrado",
     "notFoundHint": "Ele pode ter sido excluído ou não estar visível para você.",
-    "emptyHint": "Adicione receitas pelo menu de ações rápidas de uma receita.",
     "panelTitle": "Adicionar a um livro de receitas",
     "newWithRecipe": "Novo livro com esta receita",
     "noneEditable": "Ainda não há livros de receitas que você possa editar.",

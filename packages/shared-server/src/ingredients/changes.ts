@@ -1,27 +1,35 @@
 /**
  * Where catalogue edits announce the Ingredients they changed, so every client refetches: realtime
- * in production, a publisher tests swap in by `publishIngredientChangesTo`.
+ * in production, a publisher tests swap in by `publishIngredientChangesTo`. A household's foods
+ * are announced to that household, the seed's to everyone (ADR-0042).
  */
 import { AsyncLocalStorage } from "node:async_hooks";
 
 import { createLogger } from "@norish/shared-server/logger";
 import { ingredients as ingredientsRealtime } from "@norish/shared-server/realtime/ingredients";
+import { groupBy } from "@norish/shared/lib/group-by";
 
 const log = createLogger("ingredients");
 
 export interface IngredientChangePublisher {
-  /** Announce that these Ingredients changed. Never rejects: the edit has been written by now. */
-  changed(ingredientIds: readonly string[]): Promise<void>;
+  /**
+   * Announce that these Ingredients changed, to the household whose catalogue changed, or to
+   * everyone (null) for the seed's. Never rejects: the edit has been written by now.
+   */
+  changed(ingredientIds: readonly string[], householdId: string | null): Promise<void>;
 }
 
-/** Tells every client over realtime; a failure to tell is logged, never an error for an edit that went through. */
+/** Tells the clients over realtime; a failure to tell is logged, never an error for an edit that went through. */
 export const realtimeIngredientChanges: IngredientChangePublisher = {
-  async changed(ingredientIds) {
+  async changed(ingredientIds, householdId) {
     try {
+      // The policy scope is the household channel or every one, which is what this event needs.
       await ingredientsRealtime.publish(
         "changed",
         { ingredientIds: [...ingredientIds] },
-        undefined
+        householdId === null
+          ? { viewPolicy: "everyone", householdId: "" }
+          : { viewPolicy: "household", householdId }
       );
     } catch (error) {
       log.warn({ err: error, ingredientIds }, "Could not announce an Ingredient change");
@@ -31,14 +39,17 @@ export const realtimeIngredientChanges: IngredientChangePublisher = {
 
 let publisher: IngredientChangePublisher = realtimeIngredientChanges;
 
+/** The changes held back, each with its audience (null: everyone), per async call tree. */
+type HeldChanges = Array<{ ingredientIds: readonly string[]; householdId: string | null }>;
+
 /**
  * The changes held back per async call tree, on `globalThis` under a `Symbol.for` key so two
  * bundled copies of this module share them.
  */
 const HELD_KEY = Symbol.for("norish:ingredient-changes-held");
-const g = globalThis as { [HELD_KEY]?: AsyncLocalStorage<Set<string>> };
-const held: AsyncLocalStorage<Set<string>> =
-  g[HELD_KEY] ?? (g[HELD_KEY] = new AsyncLocalStorage<Set<string>>());
+const g = globalThis as { [HELD_KEY]?: AsyncLocalStorage<HeldChanges> };
+const held: AsyncLocalStorage<HeldChanges> =
+  g[HELD_KEY] ?? (g[HELD_KEY] = new AsyncLocalStorage<HeldChanges>());
 
 /** The publisher edits announce through: inside `announcingTogether`, one that holds the changes back. */
 export function ingredientChanges(): IngredientChangePublisher {
@@ -47,23 +58,27 @@ export function ingredientChanges(): IngredientChangePublisher {
   if (!batch) return publisher;
 
   return {
-    async changed(ingredientIds) {
-      for (const id of ingredientIds) batch.add(id);
+    async changed(ingredientIds, householdId) {
+      batch.push({ ingredientIds, householdId });
     },
   };
 }
 
 /**
- * Run many edits as one: what each announces is held and announced once at the end, so an AI round
- * over a thousand foods is one refetch. Other requests announce as ever.
+ * Run many edits as one: what each announces is held and announced once per audience at the end,
+ * so an AI round over a thousand foods is one refetch. Other requests announce as ever.
  */
 export async function announcingTogether<T>(run: () => Promise<T>): Promise<T> {
-  const batch = new Set<string>();
+  const batch: HeldChanges = [];
 
   try {
     return await held.run(batch, run);
   } finally {
-    if (batch.size > 0) await publisher.changed([...batch]);
+    for (const [householdId, held] of groupBy(batch, (change) => change.householdId)) {
+      const ids = new Set(held.flatMap((change) => change.ingredientIds));
+
+      if (ids.size > 0) await publisher.changed([...ids], householdId);
+    }
   }
 }
 

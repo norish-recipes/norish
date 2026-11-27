@@ -9,8 +9,10 @@
  * they share; this module owns the two replacement groups.
  */
 
+import type { SQLWrapper } from "drizzle-orm";
 import { and, eq, inArray, sql } from "drizzle-orm";
 
+import type { DbTransaction } from "@norish/db/drizzle";
 import type { EstimatedLineRow } from "@norish/db/schema";
 import type { RecipeCategory } from "@norish/shared/contracts";
 import type {
@@ -18,16 +20,20 @@ import type {
   ProvenanceGroupInput,
   RecipeEnrichmentWriteMode,
 } from "@norish/shared/lib/recipe-enrichment";
+import type { FoodTargets } from "@norish/shared/lib/recipe-nutrition";
 import { db } from "@norish/db/drizzle";
 import {
+  ingredientAliases,
   recipeCuisines,
   recipeImages,
+  recipeIngredientFoods,
   recipeIngredients,
   recipeNutritionEstimates,
   recipes,
   stepIngredients,
   steps,
 } from "@norish/db/schema";
+import { groupBy } from "@norish/shared/lib/group-by";
 import {
   fillProvenanceGaps,
   hasSubstantiveCategories,
@@ -36,8 +42,11 @@ import {
   normalizeNutritionGroup,
   normalizeProvenanceGroup,
 } from "@norish/shared/lib/recipe-enrichment";
+import { rekeyedShares } from "@norish/shared/lib/recipe-nutrition";
 
+import { isAnyOf, pickedByKey } from "./array-params";
 import { attachCategoriesToRecipeByInputTx, recipeHasCategoriesTx } from "./categories";
+import { lockRecipeHouseholdsTx } from "./household-rows";
 import { replaceRecipeEntryIdsTx } from "./list-entries";
 
 /**
@@ -83,6 +92,7 @@ export async function replaceRecipeCategories(
   const validated = validateCategories(categories);
 
   return await db.transaction(async (tx) => {
+    await lockRecipeHouseholdsTx(tx, { recipeIds: [recipeId] });
     const [locked] = await tx
       .select({ id: recipes.id })
       .from(recipes)
@@ -145,28 +155,96 @@ export async function replaceRecipeNutrition(
  * Store the language model's estimate of the lines a recipe's worked-out
  * nutrition leaves out (ADR-0039): one per-serving share per line, under
  * the line's key, replacing any earlier estimate. Never the recipe's own
- * Nutrition Information. False where the recipe is gone.
+ * Nutrition Information. False where the recipe is gone. `readFoods` is each
+ * line's foods as the estimate read them: a share (of its `lineId`) is keyed by
+ * the foods its line names at the save, should a move or merge have re-pointed it.
  */
 export async function saveRecipeNutritionEstimate(
   recipeId: string,
-  estimate: { lines: EstimatedLineRow[] }
+  estimate: { lines: Array<EstimatedLineRow & { lineId?: string }> },
+  readFoods: ReadonlyMap<string, readonly (string | null)[]> = new Map()
 ): Promise<boolean> {
-  const [recipe] = await db
-    .select({ id: recipes.id })
-    .from(recipes)
-    .where(eq(recipes.id, recipeId));
+  return await db.transaction(async (tx) => {
+    // Held so no move re-points the lines between the read below and the commit.
+    if (!(await lockRecipeHouseholdsTx(tx, { recipeIds: [recipeId] })).has(recipeId)) return false;
+    const now = await tx
+      .select({
+        lineId: recipeIngredientFoods.recipeIngredientId,
+        ingredientId: ingredientAliases.ingredientId,
+      })
+      .from(recipeIngredientFoods)
+      .innerJoin(
+        ingredientAliases,
+        eq(ingredientAliases.id, recipeIngredientFoods.ingredientAliasId)
+      )
+      .where(isAnyOf(recipeIngredientFoods.recipeIngredientId, [...readFoods.keys()], "uuid"))
+      .orderBy(recipeIngredientFoods.recipeIngredientId, recipeIngredientFoods.position);
+    // Per line: one food read on two lines may be two foods now.
+    const foodsOf = new Map<string, Map<string, string>>();
 
-  if (!recipe) return false;
+    for (const [lineId, held] of groupBy(now, (row) => row.lineId)) {
+      const foods = new Map<string, string>();
 
-  await db
-    .insert(recipeNutritionEstimates)
-    .values({ recipeId, ...estimate, createdAt: new Date() })
-    .onConflictDoUpdate({
-      target: recipeNutritionEstimates.recipeId,
-      set: { ...estimate, createdAt: new Date() },
-    });
+      readFoods.get(lineId)?.forEach((was, position) => {
+        const is = held[position]?.ingredientId;
 
-  return true;
+        if (was && is && was !== is) foods.set(was, is);
+      });
+      foodsOf.set(lineId, foods);
+    }
+    const keyed = rekeyedShares(
+      estimate.lines,
+      (share) => foodsOf.get(share.lineId ?? "") ?? new Map()
+    );
+    const lines = (keyed ?? estimate.lines).map(({ lineId: _lineId, ...share }) => share);
+
+    await tx
+      .insert(recipeNutritionEstimates)
+      .values({ recipeId, lines, createdAt: new Date() })
+      .onConflictDoUpdate({
+        target: recipeNutritionEstimates.recipeId,
+        set: { lines, createdAt: new Date() },
+      });
+
+    return true;
+  });
+}
+
+/**
+ * Key the stored shares of `recipeIds`' recipes again after their lines' foods were re-pointed, so
+ * each share is still found (ADR-0039); one write for all of them.
+ */
+export async function rekeyNutritionSharesTx(
+  tx: DbTransaction,
+  recipeIds: SQLWrapper,
+  foods: FoodTargets
+): Promise<void> {
+  if (foods.size === 0) return;
+  const stored = await tx
+    .select({ recipeId: recipeNutritionEstimates.recipeId, lines: recipeNutritionEstimates.lines })
+    .from(recipeNutritionEstimates)
+    .where(inArray(recipeNutritionEstimates.recipeId, recipeIds))
+    .for("update");
+  const changed = stored.flatMap(({ recipeId, lines }) => {
+    const rekeyed = rekeyedShares(lines, foods);
+
+    return rekeyed ? [{ recipeId, lines: JSON.stringify(rekeyed) }] : [];
+  });
+
+  if (changed.length === 0) return;
+  const ids = changed.map((row) => row.recipeId);
+
+  await tx
+    .update(recipeNutritionEstimates)
+    .set({
+      lines: sql`${pickedByKey(
+        recipeNutritionEstimates.recipeId,
+        ids,
+        "uuid",
+        changed.map((row) => row.lines)
+      )}::jsonb`,
+    })
+    .where(isAnyOf(recipeNutritionEstimates.recipeId, ids, "uuid"));
 }
 
 /** Drop a recipe's stored estimate: every line counts now. Whether there was one. */
@@ -454,6 +532,7 @@ export async function replaceRecipeProvenance(
   const group = normalizeProvenanceGroup(provenance);
 
   return await db.transaction(async (tx) => {
+    await lockRecipeHouseholdsTx(tx, { recipeIds: [recipeId] });
     const updated = await tx
       .update(recipes)
       .set({ ...group, updatedAt: new Date(), version: sql`${recipes.version} + 1` })
@@ -481,6 +560,7 @@ async function fillProvenanceGapsFromClaim(
   cuisineIds: readonly string[]
 ): Promise<boolean> {
   return await db.transaction(async (tx) => {
+    await lockRecipeHouseholdsTx(tx, { recipeIds: [recipeId] });
     const [stored] = await tx
       .select({
         originCountry: recipes.originCountry,

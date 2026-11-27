@@ -3,6 +3,7 @@ import { expect } from "@playwright/test";
 
 import type { LineResolution } from "@norish/db/repositories/ingredients";
 import type { FullRecipeDTO, FullRecipeInsertDTO } from "@norish/shared/contracts";
+import { getHouseholdIdForUser } from "@norish/db/repositories/households";
 import { createRecipeWithRefs } from "@norish/db/repositories/recipes";
 import { lineNamesNoFood } from "@norish/shared/lib/ingredient-text";
 
@@ -83,10 +84,12 @@ export async function seedRecipe(
 ): Promise<string> {
   const { id = randomUUID(), ...payload } = extra;
   const resolutions = new Map<string, LineResolution | null>();
+  const householdId = await getHouseholdIdForUser(userId);
 
+  if (!householdId) throw new Error(`${userId} has no household`);
   for (const line of lines) {
     if (!lineNamesNoFood({ text: line, amount: null })) {
-      resolutions.set(line, { foods: [await mintFood(line)], joined: null });
+      resolutions.set(line, { foods: [await mintFood(householdId, line)], joined: null });
     }
   }
 

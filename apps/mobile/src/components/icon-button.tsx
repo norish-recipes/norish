@@ -1,8 +1,8 @@
 import type { ComponentProps } from "react";
 import React from "react";
 import { Pressable } from "react-native";
+import { Ionicons } from "@/components/icon";
 import { useTokenColor } from "@/hooks/use-token-color";
-import Ionicons from "@expo/vector-icons/Ionicons";
 
 const TONE_TOKEN = { default: "foreground", accent: "accent-text", danger: "danger" } as const;
 

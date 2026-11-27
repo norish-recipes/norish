@@ -4,16 +4,60 @@
 
 **Blocked by:** 05, 07, 10, 14
 
-**Status:** ready-for-agent
+**Status:** done
 
 **Canvas:** https://claude.ai/artifact/PXzHGxBxCU4MmwF8scvixz#page-816ab097d43b, the iPhone boards: `project/CtPage.dc.html` (base) with the `Ct*` frames.
 
-- [ ] **The Settings row:** a Content row in `apps/mobile/src/features/settings/screens/settings-screen.tsx`, with routes under `apps/mobile/src/app/settings/`.
-- [ ] **Tags, Cuisines and Categories tabs:** list, search, counts, "unused" filter, Add, rename or merge, and delete with a count confirmation. Instance entries are read-only for members and editable by admins, with built-ins fixed. Shared logic lives in `packages/shared-react`, not copied per app.
-- [ ] **Ingredients tab:**
+- [x] **The Settings row:** a Content row in `apps/mobile/src/features/settings/screens/settings-screen.tsx`, with routes under `apps/mobile/src/app/settings/`.
+- [x] **Tags, Cuisines and Categories tabs:** list, search, counts, "unused" filter, Add, rename or merge, and delete with a count confirmation. Instance entries are read-only for members and editable by admins, with built-ins fixed. Shared logic lives in `packages/shared-react`, not copied per app.
+- [x] **Ingredients tab:**
   - search and filters;
   - the food panel: name, spellings, parent, icon upload or generate, keep distinct, merge, delete and nutrition correction;
   - flags and Changed by AI;
   - Add.
-- [ ] **Copy** in all locales.
-- [ ] **Device check** on the iOS simulator through the device tools: add, merge and delete a Tag; edit a food's parent and icon.
+- [x] **Copy** in all locales.
+- [ ] **Device check** on the iOS simulator through the device tools: add, merge and delete a Tag; edit a food's parent and icon. (Runs in the device session.)
+
+## Comments
+
+- Routes under `settings/`: `content` (tabs; `?list=` opens one), sheets `content-add`, `content-entry`, `content-uses` (`kind`, `id`), `ingredient` (`id`), `ingredient-add`, `ingredient-filters`, `ingredient-changes`; the Content row sits under Household. Spellings, Parent and Merge pickers, Nutrition and its correction are pages inside the food sheet (Back, title, plus), so one draft holds them.
+- Shared mobile components: `CountRow` (a name with count, tag, lock mark; card slices), `ListHeading` (section title with its (i) help), `SheetNote` (plain note text, lock or tone), `SearchFilterRow` (search with the filter menu or button); `PillButton` gained `centred` for "Merge into…". Existing `Segmented`, `Card`, `EmptyCard` and the `Sheet` kit are reused. All of it lives in `features/settings` (features never import each other).
+- Moved to `packages/shared-react/src/ingredients`: `useIngredientDraft` (the food panel's draft, relocation and save, which now resolves whether it went through), `useIngredientPicker`, `useNutritionDraft`, `useDatasetFoodSearch`, `useIngredientTree`, the filters model plus `useIngredientFiltersStore` (zustand, new), `changeCopy`, `aiChangesView`, nutrition source copy. Web uses all of it (its panel keeps only the Pantry switch, which needs `groceries`); `IngredientIconField` takes the icon view from the draft; `upload` takes a Blob.
+- Differs from the boards: no count beside tabs or foods (the catalogue has none, as on web); the food sheet has no Pantry row; Keep distinct shows only on a flagged food (there is no stored "distinct" state to show as off) and its switch fires `markDistinct`; Spellings are worded "translations" as on web; "Used by" is the row label, not "Recipes"; the filters are a sheet, not a menu, on Ingredients; a tapped recipe in Used by dismisses Settings and opens it in the tabs; credits and catalogue export are not on mobile.
+- Device check walk: Settings > Content; add a Tag, rename it onto another (Merge), delete it (alert count); a server cuisine as member (lock, read-only sheet) and as admin (edit, delete count of every household); Ingredients: search, filters sheet, tree fold, a flagged food, Changed by AI; a food: icon upload and generate, parent, spellings (move, remove, junk alert), nutrition correction, merge, delete; empty, unused, nothing-matches and offline states; dark mode; Dynamic Type on the tabs (four labels in one row).
+- Not done: no simulator run (Tags long-press menu of the board, `CtTagsMenu`, is not built: rows open the sheet on a tap, whose trash deletes); the typed-routes file `.expo/types/router.d.ts` (gitignored) was extended by hand for the new routes so `tsc` passes locally, and regenerates on `expo start`.
+- Sheet bodies: `SheetBody` now gaps its blocks 16 pt by default (`gap-4` dropped from every caller that passed it); the sheet kit on the canvas draws 12 pt where the app uses 16 pt.
+- Structure round: the Content files moved to `features/content` (Settings keeps its row; `OfflineCapsule` is shared in `components/`). One `PageControls` rhythm and one `ListFrame` for both lists, `sectionRows`/`HeadingRow` for headed lists, `CountRow` owns depth, fold, trailing and its skeleton, one `AiChange` row, `FitSheet`, `EntrySheet`, `ChoiceCard`, one field skeleton, one descriptor per list, one shared test setup (`content-setup`).
+- Shared in `shared-react`: `useIngredientList` (tree mode), `useAIChangeCounts`, `DELETE_TOUCHES`, `CONTENT_LISTS`/`ENTRY_KINDS`/`isContentList`; web and mobile both use them.
+- Left on purpose: web keeps its own Ingredients filters (`useState` in the screen, panel a child, applied in a transition, which a zustand store would make synchronous). `SheetNote`'s `px-2` already matches the sheet's `FieldError`, `SectionLabel` and password row, so it is unchanged.
+- Findings round: Tags are headed by their count; the food sheet writes nothing offline (Save, delete, merge, icon, Keep distinct, Keep/Undo, move, nutrition); failed loads show Retry (Ingredients list, entry sheet); a food's sheet opens its recipes on the Used by screen (`kind=ingredient`, `useFoodRecipes`); the entry long-press menu (Show recipes, Rename, Delete) is built on `NativeMenu` for editable rows; Changed by AI is a title with a "to check" tag, Undo all a body pill; `Segmented` has tab semantics, a leaf row no fold button; kind-named Delete, count-only cells, "Keep distinct", plain Merge note, `kind` validated.
+- Sheets that grow or swap after first layout (`content-add`, `content-entry`, `ingredient`, `ingredient-add`) now use `GROWING_SHEET_OPTIONS`, the fixed 0.62 height `api-key-new` already used, so steps stay inside one route. Not done: no Ingredients count heading (the catalogue list has no total), no Pantry row (board `CtFood` draws none), the food sheet's Delete stays "Delete".
+- Device check must look at: food sheet and entry sheet open with the skeleton and then content, notes and the Spellings, picker and nutrition steps, none clipped, with the keyboard up and down; long-press on a Tag row (lift, Show recipes, Rename, Delete opening the alert); VoiceOver reads tabs as tabs and a leaf row without a button; offline, the food sheet is off with its note.
+
+### Ingredients count
+- Added `ingredients.count` (the foods the list shows with no search or filter, the household plus the seed); `useIngredientCount` in `shared-react/lists`, also in `useContentCounts`; refreshed with the list and by the Ingredients realtime keys (3735bc643, 97eab36c8).
+- The Ingredients list is headed "N ingredients" (7661f6ff5, 2d5e97f84). Under a search or filter the heading is off: the total is of the whole list and a filtered total is not counted (Tags count what matches). Not run on a simulator.
+- Findings round 2: one delete flow (`useEntryDelete` + `useDeleteEntry`) for the sheet's trash and the row menu, which now opens the alert over the list (a failed count toasts and asks nothing); menu order Rename, Show recipes, Delete; the food sheet and Changed by AI show a failed load with Retry (a gone food closes the sheet); Changed by AI is off offline with the note, as is the move picker; the Tags heading counts All/Unused, not the search; `?list=` drives the tab; `Segmented` has tab semantics only with `tabsLabel` (Content tabs, groceries List/Pantry), else radio group; shared `ChipRow` and `Stack`; comments cut to two lines.
+- Device check must look at: the spellings rows (name, chevron, minus; a spelling has no count, the catalogue holds none), long-press Delete over the list with Cancel leaving the list, VoiceOver on Content tabs vs the library lenses and view toggle (radios).
+- Left: per-spelling counts (needs a catalogue query); the relocation write rule stays in `food-picker-step.tsx` (web's relocation panel has no offline gate); library lenses and grid/list toggle kept as radios (they filter or style one list).
+
+Gatekeeper, 2026-11-26: closed at b3f58639a after three fix rounds and an independent gate run (seven gates and the Content E2E spec, all exit 0). Open for the device session: the device check above, and whether a fit sheet can resize in this stack (the Content sheets hold a fixed 0.62 height meanwhile, against the board's "fits its content"; Mike decides with screenshots). Open for Mike: the per-spelling count on `CtSpellings` (needs a new catalogue query), credits and catalogue export on mobile.
+
+### Device-check fixes, 2026-11-26
+- Rows: a long-press row's `NativeMenu` fills the row (it shrank to count + chevron, hiding the name); `CountRow` is 50 pt (the Settings row), speaks one label from its non-empty parts (`spokenLabel`), and keeps `trailing` beside its button. Device check: Tag and household Cuisine rows show the name; the long-press lift is the whole row; VoiceOver reads "basil" with no stray comma.
+- Fields: a Tag's field had `maxLength={Infinity}` (no typing); now no bound. `SheetInput` keeps one tree as its clear button comes, so the first character keeps the keyboard. Device check: type into a Tag's sheet, the Add sheet and the move picker.
+- Sheets fit their content again (`FIT_SHEET_OPTIONS`; `api-key-new` keeps the fixed one, now `FIXED_SHEET_OPTIONS`). Device check: entry, add, food and ingredient-add sheets resize with a note, a step or the keyboard, nothing clipped.
+- Spellings: one card; the minus works (it was inside the row's button); Return and the header plus add a typed spelling. Return in an entry sheet saves a rename but never runs a Merge. Copy says Spellings (web too) and the food sheet's offline note names the ingredient.
+- Nutrition: label fields stay titled; a mass above 100 g per 100 g is refused in the shared draft, with one message on both apps. Content tabs are a `tabbar` of buttons on iOS (`tablist`/`tab` carry no trait there). Device check: VoiceOver says "tab, 1 of 4".
+- Spacing: ingredient names sit at one inset in tree and search (the fold slot is the leading inset, icon slots kept); `ListFrame` keeps the heading's room when it hides; `EmptyCard placement="screen"` has no top margin, what is above owns the gap. `useTabScroll` takes the window's top inset (a screen's read 0 on its first frame). Device check: Groceries switch on first open, empty cards on library, groceries, pantry, search, Content.
+
+### Data sources and catalogue export, 2026-11-26
+- The Ingredients tab closes its list with `DataSources` (`ListFrame`'s `footer`, which owns the gap): the same `settings.ingredients.dataSources` notices, each tag a link opened in the in-app browser (`expo-web-browser`), from `DATA_SOURCE_LINKS` in shared-react, which web's card uses too.
+- A "Download the ingredient catalogue (JSON)" row fetches `CATALOGUE_EXPORT_PATH` with the session cookie, writes it to the cache (`expo-file-system`) and opens React Native's `Share`. Offline the row is off with a note (`downloadOffline`); a refusal alerts `downloadFailed`.
+- Device check: the credits sit under the last ingredient row with the list's 16 pt gap and the link colour reads in light and dark; a tap opens the in-app browser, not Safari. The download row opens the share sheet with a `.json` file (Save to Files works) and is dimmed with its note in airplane mode.
+
+### Second device-check fixes, 2026-11-26
+- A recipe page's gate hands its pieces the recipe it drew (`LoadedPageRecipe`, web's shared page too), so a piece that renders before the gate after a household change keeps it one frame instead of throwing; the calendar resets its opening offset and scroll when its reads empty.
+- `ListFrame` keeps the tabs, search and filter in every state, seats every state's card in the heading's room (where the first row card sits) and the footer at the page inset; an offline failed read says the list or food needs a connection; the food sheet is titled "Ingredient".
+- `Segmented` pads each segment 8 pt and shrinks an overflowing label to 80 %; icons come from `@/components/icon` (`material-icon`), hidden from accessibility unless labelled.
+- Third device check: remove a member with a recipe (and cook mode) open, then open the Calendar; Content empty, failed and offline cards against the first row; Data sources inset; "Ingredients" tab label clear of its thumb; VoiceOver on Settings rows and the Content tabs (the agent-device tree shows the track as "Other", not its tab bar trait, so only VoiceOver or Accessibility Inspector can prove "tab, 1 of 4").

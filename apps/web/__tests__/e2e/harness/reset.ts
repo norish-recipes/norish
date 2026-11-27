@@ -2,8 +2,8 @@ import { withTransaction } from "@norish/db/drizzle";
 import { deleteGroceryByIds, listGroceriesByHousehold } from "@norish/db/repositories/groceries";
 import { getHouseholdIdForUser } from "@norish/db/repositories/households";
 import { deleteCatalogueIngredient } from "@norish/db/repositories/ingredient-catalogue";
+import { listIconCatalogue } from "@norish/db/repositories/ingredient-icons";
 import { lockTree } from "@norish/db/repositories/ingredient-relocation";
-import { listCatalogueForExport } from "@norish/db/repositories/ingredient-seed";
 import { deleteRecipeById, getAllRecipesForEnrichment } from "@norish/db/repositories/recipes";
 import {
   deleteRecurringGroceryByIds,
@@ -47,7 +47,7 @@ export async function deleteIngredients(ids: readonly string[]): Promise<void> {
   });
 }
 
-/** Delete every Ingredient on the server. */
+/** Delete every Ingredient on the server, the seed's and every household's. */
 export async function deleteEveryIngredient(): Promise<void> {
-  await deleteIngredients((await listCatalogueForExport()).ingredients.map(({ id }) => id));
+  await deleteIngredients([...(await listIconCatalogue()).keys()]);
 }

@@ -13,14 +13,25 @@ vi.mock("@expo/vector-icons/Ionicons", () => ({ default: () => null }));
 vi.mock("react-intl", () => ({
   useIntl: () => ({ formatMessage: ({ id }: { id: string }) => id }),
 }));
-vi.mock("heroui-native", () => {
+const mounts = vi.hoisted(() => ({ count: 0 }));
+
+vi.mock("heroui-native", async () => {
+  const { useEffect } = await import("react");
   const Slot = ({ children }: { children?: ReactNode }) => <>{children}</>;
+  // Counts mounts, as a remounted field drops the keyboard.
+  const Field = () => {
+    useEffect(() => {
+      mounts.count += 1;
+    }, []);
+
+    return null;
+  };
 
   return {
-    Input: () => null,
+    Input: Field,
     TextArea: () => null,
     useThemeColor: () => ["gray"],
-    InputGroup: Object.assign(Slot, { Prefix: Slot, Suffix: Slot, Input: () => null }),
+    InputGroup: Object.assign(Slot, { Prefix: Slot, Suffix: Slot, Input: Field }),
   };
 });
 
@@ -40,5 +51,15 @@ describe("SheetInput clear", () => {
     render(<SheetInput testID="field" value="" onClear={vi.fn()} />);
 
     expect(screen.queryByTestId("field-clear")).toBeNull();
+  });
+
+  it("keeps the one field mounted as the clear circle comes and goes", () => {
+    mounts.count = 0;
+    const { rerender } = render(<SheetInput testID="field" value="" onClear={vi.fn()} />);
+
+    rerender(<SheetInput testID="field" value="s" onClear={vi.fn()} />);
+    rerender(<SheetInput testID="field" value="" onClear={vi.fn()} />);
+
+    expect(mounts.count).toBe(1);
   });
 });

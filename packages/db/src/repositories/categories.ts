@@ -42,21 +42,26 @@ export async function recipeHasCategoriesTx(tx: DbTransaction, recipeId: string)
   return row !== undefined;
 }
 
-/**
- * Replaces a recipe's Categories with `names`, in that order, from its household's list. Imports
- * and AI map a name to a built-in through its aliases; an editor's save (`createEntries` false)
- * attaches only the entries it names, by fold, in the household's list or the instance's.
- */
+/** Replaces a recipe's Categories with `names`, in order, from its household's list. An editor's
+ * save (`createEntries` false) attaches only entries it names; imports and AI map aliases too. */
 export async function attachCategoriesToRecipeByInputTx(
   tx: DbTransaction,
   recipeId: string,
   names: readonly string[],
   options: EntryWriteOptions = {}
-): Promise<void> {
-  const resolved =
-    options.createEntries === false
-      ? names
-      : names.map((name) => resolveCategoryName(name, BUILT_IN_ALIASES, []));
+): Promise<number> {
+  return replaceRecipeEntriesByNameTx(
+    tx,
+    "category",
+    recipeId,
+    categoryNamesToWrite(names, options),
+    options
+  );
+}
 
-  await replaceRecipeEntriesByNameTx(tx, "category", recipeId, resolved, options);
+/** The Categories {@link attachCategoriesToRecipeByInputTx} writes for `names`. */
+export function categoryNamesToWrite(names: readonly string[], options: EntryWriteOptions = {}) {
+  return options.createEntries === false
+    ? names
+    : names.map((name) => resolveCategoryName(name, BUILT_IN_ALIASES, []));
 }

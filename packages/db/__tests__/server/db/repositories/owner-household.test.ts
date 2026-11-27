@@ -18,7 +18,12 @@ import {
 } from "@norish/db/repositories/households";
 import { cookbooks, households, householdUsers, recipes } from "@norish/db/schema";
 
-import { createTestRecipe, createTestUser, getTestDb } from "../../../helpers/db-test-helpers";
+import {
+  createTestRecipe,
+  createTestUser,
+  getTestDb,
+  rowsOutsideTheirOwnersHousehold,
+} from "../../../helpers/db-test-helpers";
 import { raceBehind } from "../../../helpers/lock-race";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
@@ -41,18 +46,7 @@ describe("a recipe's household follows its Owner", () => {
 
   /** Every recipe and cookbook on the server is in its Owner's household now. */
   async function expectInvariant() {
-    for (const table of [recipes, cookbooks]) {
-      const strays = await getTestDb()
-        .select({ id: table.id })
-        .from(table)
-        .leftJoin(
-          householdUsers,
-          sql`${householdUsers.userId} = ${table.userId} AND ${householdUsers.householdId} = ${table.householdId}`
-        )
-        .where(sql`${householdUsers.userId} IS NULL`);
-
-      expect(strays).toEqual([]);
-    }
+    expect(await rowsOutsideTheirOwnersHousehold()).toEqual([]);
   }
 
   async function householdsOf(recipeId: string, cookbookId: string) {
@@ -115,19 +109,18 @@ describe("a recipe's household follows its Owner", () => {
     await expectInvariant();
   });
 
-  it("stays put when a claim renames a household of one, and a join that holds things is refused", async () => {
+  it("stays put when a claim renames a household of one, and moves along when it joins", async () => {
     const owner = await createTestUser();
     const host = await createTestUser();
     const own = await householdOf(owner.id);
+    const target = await householdOf(host.id);
     const recipe = await createTestRecipe(owner.id);
     const cookbook = await createCookbook({ userId: owner.id, title: "Mine" });
 
     expect(await renameHouseholdOfOne(owner.id, "Claimed")).toBe(own);
-    // Until ticket 09 merges, a household of one holding recipes and cookbooks cannot join.
-    expect(await joinHousehold(owner.id, { householdId: await householdOf(host.id) })).toEqual({
-      refused: "holds-things",
-    });
     expect(await householdsOf(recipe.id, cookbook.id)).toEqual([own, own]);
+    expect(await joinHousehold(owner.id, { householdId: target })).toHaveProperty("joined");
+    expect(await householdsOf(recipe.id, cookbook.id)).toEqual([target, target]);
     await expectInvariant();
   });
 
@@ -365,7 +358,7 @@ describe("a recipe's household follows its Owner", () => {
       await expectInvariant();
     });
 
-    it("settles a cookbook insert queued before a join", async () => {
+    it("settles a cookbook insert queued before a join, which takes it along", async () => {
       const joiner = await createTestUser();
       const own = await householdOf(joiner.id);
       const target = await householdOf((await createTestUser()).id);
@@ -377,8 +370,14 @@ describe("a recipe's household follows its Owner", () => {
 
       expect(settled).toEqual([
         fulfilled(expect.objectContaining({ householdId: own })),
-        fulfilled({ refused: "holds-things" }),
+        fulfilled(expect.objectContaining({ leftHouseholdId: own })),
       ]);
+      const made = await getTestDb()
+        .select({ householdId: cookbooks.householdId })
+        .from(cookbooks)
+        .where(eq(cookbooks.userId, joiner.id));
+
+      expect(made).toEqual([{ householdId: target }]);
       await expectInvariant();
     });
 

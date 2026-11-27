@@ -4,11 +4,8 @@ import type { PickerKind } from "./entry-matching";
 import { useHousehold } from "../reader";
 import { useTRPC } from "../trpc";
 
-/**
- * The list a picker offers: the household's entries plus the instance's. With `recipeId` (one
- * being edited), that recipe's household's, as another household's recipe takes its entries.
- * `loaded` is false until the list has been read; `failed` when the first read failed.
- */
+/** The list a picker offers: the household's entries plus the instance's, or with `recipeId` that
+ * recipe's household's. `loaded` is false until read; `failed` when the first read failed. */
 export function useListEntries(kind: PickerKind, recipeId?: string) {
   const trpc = useTRPC();
   const { data, isError, refetch } = useQuery({

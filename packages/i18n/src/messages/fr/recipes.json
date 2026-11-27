@@ -41,12 +41,8 @@
   },
   "empty": {
     "title": "Votre bibliothèque vous attend",
-    "description": "Collez une URL de recette dans le champ de recherche ci-dessus et laissez opérer la magie.",
     "noResults": "Aucune recette trouvée",
-    "noResultsHint": "Essayez d’ajuster ou de réinitialiser vos filtres.",
-    "noCookbooks": "Aucun livre de cuisine pour l’instant",
-    "noCookbooksHint": "Un livre de cuisine est un ensemble de recettes intitulé. Créez le premier pour organiser votre bibliothèque.",
-    "descriptionMobile": "Ajoutez votre première recette depuis un lien, un texte ou des photos."
+    "noCookbooks": "Aucun livre de cuisine pour l’instant"
   },
   "card": {
     "noImage": "Aucune image disponible",
@@ -67,6 +63,7 @@
     "addToGroceries": "Ajouter aux courses",
     "ratingPrompt": "Qu'avez-vous pensé de cette recette ?",
     "notFound": "Recette introuvable",
+    "offline": "Cette recette nécessite une connexion",
     "notFoundMessage": "Cette recette n'existe pas ou vous n'avez pas la permission de la consulter.",
     "prep": "préparation",
     "total": "total",
@@ -442,7 +439,6 @@
     "singular": "Livre de cuisine",
     "notFound": "Livre de cuisine introuvable",
     "notFoundHint": "Il a peut-être été supprimé, ou il ne vous est pas visible.",
-    "emptyHint": "Ajoutez des recettes depuis le menu d’actions rapides d’une recette.",
     "panelTitle": "Ajouter à un livre de cuisine",
     "newWithRecipe": "Nouveau livre avec cette recette",
     "noneEditable": "Il n’y a pas encore de livre de cuisine que vous puissiez modifier.",

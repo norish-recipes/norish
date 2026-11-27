@@ -205,6 +205,7 @@ describe("store writes made offline, replayed", () => {
   const link = createOutboxLink({
     store,
     owner: () => OWNER,
+    household: () => "h1",
     replayHeaderValue: "test-outbox",
     wholeEdits: new Set(["recipes.update"]),
   })({} as never);
@@ -255,6 +256,7 @@ describe("store writes made offline, replayed", () => {
     runReplayPass({
       store,
       ownerId: OWNER,
+      householdId: "h1",
       submit: (entry: OutboxEntry) => replayOutboxEntry(client, entry, "test-outbox"),
     });
 
@@ -440,6 +442,7 @@ describe("store writes made offline, replayed", () => {
     const timed = createOutboxLink({
       store,
       owner: () => OWNER,
+      household: () => "h1",
       replayHeaderValue: "test-outbox",
       timedWrites: new Set(["stores.update", "stores.reorder"]),
     })({} as never);

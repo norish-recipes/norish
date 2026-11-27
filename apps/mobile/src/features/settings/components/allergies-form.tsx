@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { LabelWithHint } from "@/components/hint-button";
+import { Ionicons } from "@/components/icon";
 import { useTokenColor } from "@/hooks/use-token-color";
 import { useText } from "@/lib/i18n/use-text";
 import { isOfflineNow } from "@/lib/offline/offline-now";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { Skeleton, useThemeColor } from "heroui-native";
 
 import { useTagsQuery } from "@norish/shared-react/config";

@@ -262,6 +262,7 @@
       "syncing": "{count, plural, =0 {Synchroniseren} one {# wijziging synchroniseren} other {# wijzigingen synchroniseren}}",
       "syncNow": "Nu synchroniseren",
       "retryAll": "Alles opnieuw proberen",
+      "otherHousehold": "Sommige wijzigingen zijn gemaakt voor een ander huishouden. „Alles opnieuw proberen” stuurt ze naar het huishouden waar je nu in zit.",
       "discardAll": "Alles verwerpen",
       "discardConfirmBody": "{count, plural, one {# wijziging in de wachtrij definitief verwerpen? Deze wordt niet verzonden.} other {# wijzigingen in de wachtrij definitief verwerpen? Ze worden niet verzonden.}}",
       "discardConfirm": "Verwerpen",
@@ -318,7 +319,7 @@
       "expired": "Die join code is verlopen. Vraag om een nieuwe.",
       "alreadyMember": "Je zit al in dit huishouden.",
       "shared": "Verlaat eerst je huishouden om bij een ander te komen.",
-      "holdsThings": "Je huishouden heeft eigen recepten, boodschappen of plannen, dus het kan nog niet bij een ander huishouden."
+      "busy": "Dat huishouden was net iets aan het wijzigen. Probeer het opnieuw."
     }
   },
   "photos": {

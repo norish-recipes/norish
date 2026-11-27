@@ -12,9 +12,9 @@ import {
   addPantryIngredients,
   deletePantryIngredient,
   findPantryIngredientInHousehold,
-  getPantryIngredientHouseholdId,
   listPantryIngredientsByHousehold,
   listPantrySuggestions,
+  ownPantryIngredientExists,
 } from "@norish/db/repositories/pantry";
 import { ingredients, pantryIngredients, recipes } from "@norish/db/schema";
 
@@ -36,7 +36,10 @@ const SALT = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 
 /** Add what a member typed, resolved first as the procedure does. */
 async function add(id: string, input: { userId: string; name: string }) {
-  const [resolved] = await resolveIngredients([input.name], { userId: input.userId });
+  const [resolved] = await resolveIngredients([input.name], {
+    userId: input.userId,
+    householdId: testHouseholdOf(input.userId),
+  });
   const [added] = await addPantryIngredients(
     [{ id, ingredientAliasId: resolved!.aliasId, ingredientId: resolved!.ingredientId }],
     { userId: input.userId, householdId: testHouseholdOf(input.userId) }
@@ -75,7 +78,7 @@ describe("pantry ingredients", () => {
       userId,
       name: "Olive Oil",
     });
-    await expect(getPantryIngredientHouseholdId(OLIVE)).resolves.toBe(testHouseholdOf(userId));
+    await expect(ownPantryIngredientExists(testHouseholdOf(userId), OLIVE)).resolves.toBe(true);
 
     // The name is the Ingredient's, not the row's own.
     const [row] = await getTestDb()
@@ -87,7 +90,10 @@ describe("pantry ingredients", () => {
   });
 
   it("takes the Ingredient a recipe already has, rather than a second one", async () => {
-    const [known] = await resolveIngredients(["Olive Oil"], { userId });
+    const [known] = await resolveIngredients(["Olive Oil"], {
+      userId,
+      householdId: testHouseholdOf(userId),
+    });
     const { item } = await add(OLIVE, {
       userId,
       name: "olive oil",
@@ -160,7 +166,10 @@ describe("pantry ingredients", () => {
   });
 
   it("puts several Ingredients in together, or none", async () => {
-    const [olive] = await resolveIngredients(["olive oil"], { userId });
+    const [olive] = await resolveIngredients(["olive oil"], {
+      userId,
+      householdId: testHouseholdOf(userId),
+    });
 
     await expect(
       addPantryIngredients(
@@ -217,7 +226,7 @@ describe("pantry ingredients", () => {
 
     await expect(deletePantryIngredient(OLIVE, testHouseholdOf(userId))).resolves.toBe(true);
     await expect(deletePantryIngredient(OLIVE, testHouseholdOf(userId))).resolves.toBe(false);
-    await expect(getPantryIngredientHouseholdId(OLIVE)).resolves.toBeNull();
+    await expect(ownPantryIngredientExists(testHouseholdOf(userId), OLIVE)).resolves.toBe(false);
     await expect(listPantryIngredientsByHousehold(testHouseholdOf(userId))).resolves.toEqual([]);
   });
 
@@ -259,7 +268,7 @@ describe("pantry ingredients", () => {
       const foods = lines.filter((line) => !line.startsWith("#"));
       const resolved = await resolveLineFoods(
         foods.map((line) => line.replace(/\(id:.*\)$/, "").replace(/[[\]]/g, "")),
-        { userId: ownerId }
+        { userId: ownerId, householdId: testHouseholdOf(ownerId) }
       );
 
       for (const [order, name] of lines.entries()) {
@@ -305,7 +314,7 @@ describe("pantry ingredients", () => {
     });
 
     it("counts every food a line names", async () => {
-      await resolveIngredients(["zout", "peper"], { userId });
+      await resolveIngredients(["zout", "peper"], { userId, householdId: testHouseholdOf(userId) });
       await recipe(userId, ["zout en peper"]);
 
       expect(await offered(userId)).toEqual([
@@ -329,7 +338,10 @@ describe("pantry ingredients", () => {
       await add(OLIVE, { userId, name: "olive oil" });
 
       const { item: red } = await add(SALT, { userId, name: "red onion" });
-      const [onion] = await resolveIngredients(["onion"], { userId });
+      const [onion] = await resolveIngredients(["onion"], {
+        userId,
+        householdId: testHouseholdOf(userId),
+      });
 
       await getTestDb()
         .update(ingredients)

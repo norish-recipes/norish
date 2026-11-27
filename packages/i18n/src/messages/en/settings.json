@@ -8,7 +8,7 @@
     "household": "Household",
     "caldav": "CalDAV",
     "admin": "Admin",
-    "ingredients": "Ingredients"
+    "content": "Content"
   },
   "user": {
     "signInMethods": {
@@ -255,6 +255,7 @@
       "leaveModal": {
         "title": "Leave household",
         "confirmMessage": "Are you sure you want to leave {name}?",
+        "goesAndStays": "Your recipes and cookbooks go with you, with their tags and ingredients. The groceries, pantry, meal plan and stores stay with the household.",
         "adminWarning": "You are the admin. You must transfer admin privileges before leaving.",
         "confirmButton": "Leave household"
       }
@@ -272,7 +273,7 @@
       "kickModal": {
         "title": "Kick user",
         "confirmMessage": "Are you sure you want to kick {name} from the household?",
-        "warning": "They will lose access to all shared recipes, groceries, and calendar entries.",
+        "warning": "Their recipes and cookbooks go with them, with their tags and ingredients. The groceries, pantry, meal plan and stores stay with the household.",
         "confirmButton": "Kick user"
       },
       "transferModal": {
@@ -298,7 +299,7 @@
     },
     "join": {
       "title": "Join household",
-      "description": "Enter a join code to join an existing household.",
+      "description": "Enter a join code to join an existing household. Your household is merged into it: your recipes, groceries, pantry, meal plan and stores come along.",
       "codeLabel": "Join code",
       "codePlaceholder": "6-digit code",
       "submitButton": "Join household"
@@ -388,7 +389,9 @@
   },
   "ingredients": {
     "title": "Ingredients",
-    "description": "The ingredient catalogue Norish uses to determine macros, ingredient icons and translations.",
+    "sheetTitle": "Ingredient",
+    "loadFailed": "Could not load this ingredient",
+    "loadOffline": "This ingredient needs a connection",
     "search": "Search ingredients",
     "searchMatch": "Match",
     "searchIn": "Search in",
@@ -412,7 +415,6 @@
       "seed-ambiguous": "The catalogue lists several foods this could be.",
       "ai-junk": "AI thought this is not a food, like a kitchen tool or a fragment of a recipe line."
     },
-    "empty": "No ingredients found",
     "emptyFlagged": "Nothing is flagged",
     "rename": "Rename",
     "delete": "Delete",
@@ -424,8 +426,8 @@
       "pantry": "{count, plural, one {# pantry item is removed} other {# pantry items are removed}}"
     },
     "markDistinct": "Mark distinct",
-    "summary": "{spellings, plural, one {# translation} other {# translations}}{kinds, plural, =0 {} one {, # kind} other {, # kinds}}{parent, select, none {} other {, parent: {parent}}}",
-    "addAlias": "Add a translation",
+    "summary": "{spellings, plural, one {# spelling} other {# spellings}}{kinds, plural, =0 {} one {, # kind} other {, # kinds}}{parent, select, none {} other {, parent: {parent}}}",
+    "addAlias": "Add a spelling",
     "removeAlias": "Remove {alias}",
     "mergeInto": "Merge into…",
     "merge": "Merge",
@@ -445,15 +447,17 @@
     "clearParent": "Remove parent",
     "nameSection": "Name",
     "parentSection": "Parent",
-    "spellingsSection": "Translations",
+    "spellingsSection": "Spellings",
     "shownAs": "Shown to you as {name}",
     "changeParent": "Change parent…",
-    "spellingsCount": "{count, plural, one {# translation} other {# translations}}",
+    "spellingsCount": "{count, plural, one {# spelling} other {# spellings}}",
     "dataSources": {
       "title": "Data sources",
       "notice": "The ingredient catalogue is seeded from the <off>Open Food Facts</off> ingredients taxonomy, available under the <odbl>Open Database License (ODbL)</odbl>. The catalogue Norish builds from it is offered under the same licence.",
       "nutritionNotice": "Nutrition per 100 g comes from <ciqual>CIQUAL 2025</ciqual> and CALNUT (ANSES), <usda>USDA FoodData Central</usda> and <cofid>CoFID</cofid>, joined through the codes Open Food Facts gives each food. A household's corrections are its own numbers, not the datasets'.",
-      "download": "Download the ingredient catalogue (JSON)"
+      "download": "Download the ingredient catalogue (JSON)",
+      "downloadOffline": "You can download the catalogue when you are online.",
+      "downloadFailed": "The catalogue could not be downloaded."
     },
     "nutrition": {
       "section": "Nutrition",
@@ -505,6 +509,7 @@
           "hundredMl": "100 ml weighs (g)"
         }
       },
+      "overHundred": "Fat, carbohydrates and protein can be no more than 100 g per 100 g.",
       "searchFood": "Search the datasets, such as milk semi-skimmed",
       "foodHint": "Type a few words of the food's name",
       "searchingFoods": "Searching…",
@@ -552,7 +557,6 @@
       "done": "done",
       "repeats": "repeats",
       "pantry": "Kept in the pantry",
-      "elsewhere": "{count, plural, one {# more use} other {# more uses}} in recipes or lists you can't open",
       "none": "Nothing uses it any more"
     },
     "keepAlias": "Keep {alias}",
@@ -569,6 +573,7 @@
     "changedByAI": {
       "title": "Changed by AI",
       "open": "{count, plural, =0 {Changed by AI} other {Changed by AI · # to check}}",
+      "openCompact": "{count, plural, =0 {Changed by AI} other {# to check}}",
       "unsure": "Not sure",
       "sure": "Changed",
       "empty": "AI changed nothing in the last month.",
@@ -583,7 +588,8 @@
       "plainName": "Renamed from {from}",
       "notAFood": "Deleted as not a food. Its recipe lines and groceries keep their text.",
       "spellingRemoved": "Removed the translation {from}",
-      "spellingMoved": "Moved the translation {from} to {of}"
+      "spellingMoved": "Moved the translation {from} to {of}",
+      "toCheck": "{count, plural, other {# to check}}"
     },
     "icon": {
       "change": "Change the icon",
@@ -592,9 +598,40 @@
       "failed": "That picture could not be made into an icon.",
       "generate": "Generate with AI",
       "generateFailed": "The icon could not be generated."
-    }
+    },
+    "keepDistinct": "Keep distinct",
+    "offline": "You can change this ingredient when you are online."
   },
   "admin": {
+    "shareLinks": {
+      "title": "Recipe share moderation",
+      "description": "Review public recipe links across the instance and moderate their lifecycle.",
+      "empty": "No share links found.",
+      "inactive": "Inactive",
+      "table": {
+        "recipe": "RECIPE",
+        "owner": "OWNER",
+        "status": "STATUS",
+        "created": "CREATED",
+        "expires": "EXPIRES",
+        "actions": "ACTIONS"
+      },
+      "revokeModal": {
+        "title": "Revoke link",
+        "message": "This link for {recipeName} will stop working until it is reactivated.",
+        "confirm": "Revoke"
+      },
+      "reactivateModal": {
+        "title": "Reactivate link",
+        "message": "This link for {recipeName} will become active again.",
+        "confirm": "Reactivate"
+      },
+      "deleteModal": {
+        "title": "Delete link",
+        "message": "Delete this share link for {recipeName}? This cannot be undone.",
+        "confirm": "Delete link"
+      }
+    },
     "general": {
       "title": "General",
       "allowRegistration": "Allow new user registration",
@@ -819,10 +856,6 @@
       "prompts": {
         "title": "Prompts",
         "subtitle": "Customize AI instructions for recipe processing"
-      },
-      "cuisines": {
-        "title": "Cuisines",
-        "subtitle": "The vocabulary recipes and AI pick from"
       },
       "bulkEnrichment": {
         "title": "Bulk enrichment",
@@ -1268,17 +1301,6 @@
       },
       "pagination": "Page {current} of {total}"
     },
-    "cuisineVocabulary": {
-      "description": "Cuisines are a curated vocabulary you own. Names are shown exactly as written here, in every language.",
-      "namePlaceholder": "Cuisine name",
-      "addLabel": "Add a cuisine",
-      "renameLabel": "Rename {name}",
-      "deleteLabel": "Delete {name}",
-      "deleteConfirm": "Delete \"{name}\"? Recipes using it will lose it.",
-      "empty": "No Cuisines yet.",
-      "duplicate": "A Cuisine with that name already exists.",
-      "saveFailed": "Could not save that Cuisine."
-    },
     "toasts": {
       "localesSaved": "Language settings saved",
       "localesError": "Failed to save language settings",
@@ -1311,5 +1333,103 @@
     "changePhoto": "Change photo",
     "accountGroup": "Your account",
     "phonesGroup": "On phones"
+  },
+  "content": {
+    "ariaLabel": "Content",
+    "listPicker": "List",
+    "lists": {
+      "tags": "Tags",
+      "cuisines": "Cuisines",
+      "categories": "Categories",
+      "ingredients": "Ingredients"
+    },
+    "search": {
+      "tags": "Search tags",
+      "cuisines": "Search cuisines",
+      "categories": "Search categories"
+    },
+    "show": "Show",
+    "all": "All",
+    "unused": "Unused",
+    "recipes": "{count, plural, =0 {Not used} one {# recipe} other {# recipes}}",
+    "sections": {
+      "ownCuisines": "Your cuisines",
+      "ownCategories": "Your categories",
+      "server": "From your server",
+      "builtIn": "Built in"
+    },
+    "help": {
+      "server": "Your server admin keeps these for every household",
+      "serverAdmin": "Every household on this server is offered these. As an admin you keep them.",
+      "builtIn": "Built-in categories are the same on every server and can't be changed"
+    },
+    "readOnly": "Read only",
+    "empty": {
+      "tags": "No tags yet",
+      "cuisines": "No cuisines yet",
+      "categories": "No categories yet"
+    },
+    "nothingUnused": "Nothing is unused",
+    "noMatch": "Nothing matches",
+    "loadFailed": "Could not load this list",
+    "listOffline": "This list needs a connection",
+    "offline": "You can change this list when you are online.",
+    "panel": {
+      "addTitle": {
+        "tag": "Add tag",
+        "cuisine": "Add cuisine",
+        "category": "Add category",
+        "ingredient": "Add ingredient"
+      },
+      "editTitle": {
+        "tag": "Edit tag",
+        "cuisine": "Edit cuisine",
+        "category": "Edit category"
+      },
+      "server": "Server",
+      "name": "Name",
+      "usedBy": "Used by",
+      "usedByOwn": "{count, plural, =0 {Not used by your recipes} one {# of your recipes} other {# of your recipes}}",
+      "already": {
+        "tag": "Already a tag",
+        "cuisine": "Already a cuisine",
+        "category": "Already a category",
+        "ingredient": "Already an ingredient"
+      },
+      "addTo": "Add to",
+      "toHousehold": "Your household",
+      "toServer": "Every household on this server",
+      "serverReadOnly": "Your server admin keeps this cuisine for every household.",
+      "serverEditable": "Every household on this server is offered this cuisine.",
+      "merge": "“{target}” already exists. Merging {count, plural, =0 {removes {name}} one {moves {name}'s # recipe onto it} other {moves {name}'s # recipes onto it}}.",
+      "mergeAction": "Merge",
+      "tooLong": "Names can have at most {max} characters.",
+      "failed": "Could not save that. Try again.",
+      "stale": "Not saved: it changed elsewhere first"
+    },
+    "delete": {
+      "title": "Delete “{name}”?",
+      "body": "{count, plural, =0 {No recipe uses it.} one {It comes off # recipe. The recipe stays.} other {It comes off # recipes. The recipes stay.}}",
+      "bodyServer": "{count, plural, =0 {No recipe uses it.} one {It comes off # recipe in every household on this server. The recipe stays.} other {It comes off # recipes in every household on this server. The recipes stay.}}",
+      "countFailed": "Could not count the recipes that use it. Try again.",
+      "failed": "Could not delete that. Try again.",
+      "action": {
+        "tag": "Delete tag",
+        "cuisine": "Delete cuisine",
+        "category": "Delete category"
+      }
+    },
+    "countCell": "{count, plural, =0 {Not used} other {#}}",
+    "count": {
+      "tag": "{count, plural, one {# tag} other {# tags}}",
+      "ingredient": "{count, plural, one {# ingredient} other {# ingredients}}"
+    },
+    "countUnused": {
+      "tag": "{count, plural, one {# unused tag} other {# unused tags}}"
+    },
+    "menu": {
+      "rename": "Rename",
+      "showRecipes": "Show recipes"
+    }
   }
 }

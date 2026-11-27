@@ -36,8 +36,11 @@ export async function giveItsPlainName(ingredientId: string): Promise<PlainNameO
     if (row.nameSettled) return { outcome: "skipped", reason: "settled" };
     if (!row.askable) return { outcome: "skipped", reason: "decided" };
   }
+  // A seeded food is the admins': AI names only a household's own.
+  if (!row.householdId) return { outcome: "skipped", reason: "decided" };
+  const { householdId } = row;
 
-  const spellings = await listCatalogueAliasesOf(ingredientId);
+  const spellings = await listCatalogueAliasesOf(householdId, ingredientId);
   const read = await readPlainName(
     row.name,
     spellings.map((spelling) => spelling.text)
@@ -53,13 +56,15 @@ export async function giveItsPlainName(ingredientId: string): Promise<PlainNameO
     (/\p{Ll}/u.test(row.name) ? foldName(plain) === foldName(row.name) : plain === row.name);
 
   if (settled) {
-    if (await settleIngredientName(ingredientId)) await ingredientChanges().changed([ingredientId]);
+    if (await settleIngredientName(ingredientId)) {
+      await ingredientChanges().changed([ingredientId], householdId);
+    }
 
     return { outcome: "plain" };
   }
 
   // Looked up as AI's names are; the name itself finding a food makes it that food, parent or not.
-  const [found] = await findFood([plain], { except: ingredientId, among: "listed" });
+  const [found] = await findFood(householdId, [plain], { except: ingredientId, among: "listed" });
   const holder = found?.find(isExact);
 
   if (holder) {

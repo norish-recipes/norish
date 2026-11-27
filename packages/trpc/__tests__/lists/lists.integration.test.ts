@@ -1,9 +1,6 @@
 // @vitest-environment node
-/**
- * The household lists through their router with the real repositories (ADR-0043): a member
- * changes the household's entries, an admin the instance's Cuisines, nobody the built-in
- * Categories, and another household nothing; an editable recipe's list is its household's.
- */
+/** The household lists through their router (ADR-0043): a member changes the household's entries,
+ * an admin the instance's Cuisines, nobody the built-in Categories, and another household nothing. */
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { User } from "@norish/shared/contracts";
@@ -45,6 +42,8 @@ describe("the lists router", () => {
     member = asUser(stored);
     housemate = asUser(await helpers.createTestUser());
     admin = asUser(await helpers.createTestUser(), true);
+    // `lists.usage` asks the database, not the session, whether the caller is an admin.
+    await (await import("@norish/db/repositories/users")).setUserAsOwnerAndAdmin(admin.id);
     await helpers.joinTestHousehold(housemate.id, member.id);
     await serverConfig.deleteConfig("recipe_permission_policy");
     realtime.reset();
@@ -53,6 +52,9 @@ describe("the lists router", () => {
   afterAll(async () => {
     await testBase.teardown();
   });
+
+  const asStranger = (row: { id: string; name: string | null }) =>
+    ({ ...row, isServerAdmin: false }) as User;
 
   async function as(user: User) {
     const household = await households.getHouseholdForUser(user.id);
@@ -190,6 +192,102 @@ describe("the lists router", () => {
     expect(
       await theirs.rename({ kind: "cuisine", id: basque.id, version: 1, name: "Basque Country" })
     ).toMatchObject({ entry: { name: "Basque Country", editable: true } });
+  });
+
+  it("tells each household whose Cuisine an admin's instance entry took over", async () => {
+    const stranger = asStranger(await helpers.createTestUser());
+    const mine = await as(member);
+    const theirs = await as(stranger);
+
+    const { entry: ours } = await mine.add({ kind: "cuisine", name: "Moravian" });
+    const { entry: strangers } = await theirs.add({ kind: "cuisine", name: "moravian!" });
+
+    realtime.reset();
+    const { entry } = await (
+      await as(admin)
+    ).add({ kind: "cuisine", name: "Moravian", instance: true });
+
+    expect(entry.instance).toBe(true);
+    // Each on its own household's channel once, never a broadcast per household.
+    const { buildChannel } = await import("@norish/shared-server/realtime/channel");
+
+    expect(realtime.published.map(({ event, channel }) => [event, channel]).sort()).toEqual(
+      [member.id, stranger.id]
+        .map((id) => [
+          "changed",
+          buildChannel({
+            namespace: "lists",
+            scope: "household",
+            id: helpers.testHouseholdOf(id),
+            event: "changed",
+          }),
+        ])
+        .sort()
+    );
+    for (const gone of [ours, strangers]) {
+      expect((await mine.list({ kind: "cuisine" })).some((e) => e.id === gone.id)).toBe(false);
+    }
+    expect((await theirs.list({ kind: "cuisine" })).filter((e) => e.name === "Moravian")).toEqual([
+      expect.objectContaining({ id: entry.id, instance: true }),
+    ]);
+  });
+
+  it("tells an admin how many recipes in every household carry an instance Cuisine, and nobody else", async () => {
+    const mine = await as(member);
+    const theirs = await as(admin);
+    const italian = (await mine.list({ kind: "cuisine" })).find((e) => e.name === "Italian")!;
+    const own = await helpers.createTestRecipe(member.id, { name: "Soup" });
+    const other = await helpers.createTestRecipe(admin.id, { name: "Pasta" });
+
+    const { replaceRecipeEntryIdsTx } = await import("@norish/db/repositories/list-entries");
+    const db = helpers.getTestDb();
+
+    for (const recipe of [own, other]) {
+      await db.transaction((tx) => replaceRecipeEntryIdsTx(tx, "cuisine", recipe.id, [italian.id]));
+    }
+
+    expect(await theirs.usage({ kind: "cuisine", id: italian.id })).toEqual({ recipeCount: 2 });
+    expect((await mine.list({ kind: "cuisine" })).find((e) => e.id === italian.id)).toMatchObject({
+      recipeCount: 1,
+    });
+    await expect(mine.usage({ kind: "cuisine", id: italian.id })).rejects.toThrow(
+      "Server admin access required"
+    );
+
+    const { entry: soup } = await mine.add({ kind: "tag", name: "soup" });
+
+    await expect(theirs.usage({ kind: "tag", id: soup.id })).rejects.toThrow(
+      "This entry cannot be changed"
+    );
+  });
+
+  it("lists the household's recipes carrying an entry, and answers not found for another household's", async () => {
+    const mine = await as(member);
+    const theirs = await as(admin);
+    const recipe = await helpers.createTestRecipe(member.id, { name: "Soup" });
+    const { entry: soja } = await mine.add({ kind: "tag", name: "soja" });
+    const italian = (await mine.list({ kind: "cuisine" })).find((e) => e.name === "Italian")!;
+    const { replaceRecipeEntryIdsTx } = await import("@norish/db/repositories/list-entries");
+    const db = helpers.getTestDb();
+
+    await db.transaction(async (tx) => {
+      await replaceRecipeEntryIdsTx(tx, "tag", recipe.id, [soja.id]);
+      await replaceRecipeEntryIdsTx(tx, "cuisine", recipe.id, [italian.id]);
+    });
+
+    expect(await mine.uses({ kind: "tag", id: soja.id })).toEqual({
+      recipes: [{ id: recipe.id, name: "Soup" }],
+      nextCursor: null,
+    });
+    expect(await mine.uses({ kind: "cuisine", id: italian.id })).toEqual({
+      recipes: [{ id: recipe.id, name: "Soup" }],
+      nextCursor: null,
+    });
+    expect(await theirs.uses({ kind: "cuisine", id: italian.id })).toEqual({
+      recipes: [],
+      nextCursor: null,
+    });
+    await expect(theirs.uses({ kind: "tag", id: soja.id })).rejects.toThrow("Not found");
   });
 
   it("reads and adds to an editable recipe's household list, and only then", async () => {

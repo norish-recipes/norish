@@ -19,7 +19,14 @@ import { SettingsRow } from "../components/settings-row";
 import { versionLine } from "../utils/version-line";
 
 type SettingsPath =
-  "profile" | "preferences" | "allergies" | "household" | "tokens" | "api-keys" | "share-links";
+  | "profile"
+  | "preferences"
+  | "allergies"
+  | "household"
+  | "content"
+  | "tokens"
+  | "api-keys"
+  | "share-links";
 
 const SUPPORT_URL = "https://github.com/norish-recipes/norish/issues";
 
@@ -77,6 +84,13 @@ export function SettingsScreen() {
           title={text("settings.tabs.household")}
           value={household?.name}
           onPress={open("household")}
+        />
+        <SettingsRow
+          accessory="chevron"
+          icon="pricetag-outline"
+          testID="settings-root-content"
+          title={text("settings.tabs.content")}
+          onPress={open("content")}
         />
       </SettingsGroup>
       <SettingsGroup title={text("settings.mobile.connections")}>

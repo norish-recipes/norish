@@ -121,6 +121,10 @@ vi.mock("../../trpc", () => ({
     favorites: { pathKey: () => [["favorites"]] },
     ratings: { pathKey: () => [["ratings"]] },
     groceries: { pathKey: () => [["groceries"]] },
+    lists: { pathKey: () => [["lists"]] },
+    ingredients: { pathKey: () => [["ingredients"]] },
+    stores: { pathKey: () => [["stores"]] },
+    pantry: { pathKey: () => [["pantry"]] },
     config: { tags: { queryKey: () => [["config", "tags"], { type: "query" }] } },
     user: {
       get: {
@@ -175,6 +179,14 @@ describe("useHouseholdSubscription", () => {
 
       // The hook should call useSubscription for each event type
       expect(useSubscription).toHaveBeenCalled();
+    });
+
+    it("reads the household on a screen that shows none, so a write can name it", async () => {
+      renderHook(() => useHouseholdSubscription(), { wrapper: readerWrapper(queryClient) });
+
+      await waitFor(() =>
+        expect(queryClient.getQueryData(householdQueryKey)).toEqual(createMockHouseholdData())
+      );
     });
   });
 
@@ -320,7 +332,7 @@ describe("useHouseholdSubscription", () => {
   });
 
   describe("a membership change", () => {
-    it("rereads the recipes and cookbooks a member joining or leaving brings or takes", () => {
+    it("rereads what a member joining or leaving brings or takes", () => {
       queryClient.setQueryData(householdQueryKey, createMockHouseholdData(null, "user-1"));
       const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
 
@@ -333,9 +345,10 @@ describe("useHouseholdSubscription", () => {
           );
         });
 
-        expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: [["recipes"]] });
-        expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: [["calendar"]] });
-        expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: [["groceries"]] });
+        for (const key of ["recipes", "calendar", "groceries", "lists", "ingredients", "pantry"]) {
+          expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: [[key]] });
+        }
+        expect(invalidateSpy).not.toHaveBeenCalledWith();
       }
     });
 

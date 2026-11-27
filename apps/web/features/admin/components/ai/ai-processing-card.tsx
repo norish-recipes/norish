@@ -10,7 +10,6 @@ import { AccordionSection } from "../accordion-section";
 import IngredientCatalogueForm from "../catalogue/ingredient-catalogue-form";
 import AIConfigForm from "./ai-config-form";
 import BulkEnrichmentForm from "./bulk-enrichment-form";
-import CuisineVocabularyForm from "./cuisine-vocabulary-form";
 import DecisionModelForm from "./decision-model-form";
 import ImageGenerationForm from "./image-generation-form";
 import PromptsForm from "./prompts-form";
@@ -50,13 +49,6 @@ export default function AIProcessingCard() {
         </AccordionSection>
         <AccordionSection id="prompts" subtitle={t("prompts.subtitle")} title={t("prompts.title")}>
           {(onDirtyChange) => <PromptsForm onDirtyChange={onDirtyChange} />}
-        </AccordionSection>
-        <AccordionSection
-          id="cuisines"
-          subtitle={t("cuisines.subtitle")}
-          title={t("cuisines.title")}
-        >
-          <CuisineVocabularyForm />
         </AccordionSection>
         <AccordionSection
           id="bulkEnrichment"

@@ -8,7 +8,7 @@
     "household": "Foyer",
     "caldav": "CalDAV",
     "admin": "Admin",
-    "ingredients": "Ingrédients"
+    "content": "Contenu"
   },
   "user": {
     "signInMethods": {
@@ -255,6 +255,7 @@
       "leaveModal": {
         "title": "Quitter le foyer",
         "confirmMessage": "Êtes-vous sûr de vouloir quitter {name} ?",
+        "goesAndStays": "Vos recettes et livres de recettes partent avec vous, avec leurs tags et ingrédients. Les courses, le garde-manger, le planning des repas et les magasins restent au foyer.",
         "adminWarning": "Vous êtes l’admin. Vous devez transférer vos privilèges admin avant de partir.",
         "confirmButton": "Quitter le foyer"
       }
@@ -272,7 +273,7 @@
       "kickModal": {
         "title": "Expulser un utilisateur",
         "confirmMessage": "Voulez-vous vraiment expulser {name} du foyer ?",
-        "warning": "Il perdra l’accès à toutes les recettes, courses et entrées de calendrier partagées.",
+        "warning": "Ses recettes et livres de recettes partent avec lui, avec leurs tags et ingrédients. Les courses, le garde-manger, le planning des repas et les magasins restent au foyer.",
         "confirmButton": "Expulser l’utilisateur"
       },
       "transferModal": {
@@ -298,7 +299,7 @@
     },
     "join": {
       "title": "Rejoindre un foyer",
-      "description": "Entrez un code pour rejoindre un foyer existant.",
+      "description": "Entrez un code pour rejoindre un foyer existant. Votre foyer y est fusionné : vos recettes, courses, garde-manger, planning des repas et magasins vous suivent.",
       "codeLabel": "Code d’invitation",
       "codePlaceholder": "Code à 6 chiffres",
       "submitButton": "Rejoindre le foyer"
@@ -388,7 +389,9 @@
   },
   "ingredients": {
     "title": "Ingrédients",
-    "description": "Le catalogue d'ingrédients qu'utilise Norish pour déterminer les valeurs nutritionnelles, les icônes d'ingrédients et les traductions.",
+    "sheetTitle": "Ingrédient",
+    "loadFailed": "Impossible de charger cet ingrédient",
+    "loadOffline": "Cet ingrédient nécessite une connexion",
     "search": "Rechercher des ingrédients",
     "searchMatch": "Correspondance",
     "searchIn": "Chercher dans",
@@ -412,7 +415,6 @@
       "seed-ambiguous": "Le catalogue connaît plusieurs ingrédients que cela pourrait être.",
       "ai-junk": "L'IA a pensé que ce n'est pas un aliment, comme un ustensile de cuisine ou un fragment de ligne de recette."
     },
-    "empty": "Aucun ingrédient trouvé",
     "emptyFlagged": "Rien n'est signalé",
     "rename": "Renommer",
     "delete": "Supprimer",
@@ -424,8 +426,8 @@
       "pantry": "{count, plural, one {# article du garde-manger est retiré} other {# articles du garde-manger sont retirés}}"
     },
     "markDistinct": "Marquer comme distinct",
-    "summary": "{spellings, plural, one {# traduction} other {# traductions}}{kinds, plural, =0 {} one {, # sorte} other {, # sortes}}{parent, select, none {} other {, parent: {parent}}}",
-    "addAlias": "Ajouter une traduction",
+    "summary": "{spellings, plural, one {# orthographe} other {# orthographes}}{kinds, plural, =0 {} one {, # sorte} other {, # sortes}}{parent, select, none {} other {, parent: {parent}}}",
+    "addAlias": "Ajouter une orthographe",
     "removeAlias": "Supprimer {alias}",
     "mergeInto": "Fusionner avec…",
     "merge": "Fusionner",
@@ -445,15 +447,17 @@
     "clearParent": "Retirer le parent",
     "nameSection": "Nom",
     "parentSection": "Parent",
-    "spellingsSection": "Traductions",
+    "spellingsSection": "Orthographes",
     "shownAs": "Affiché pour vous comme {name}",
     "changeParent": "Changer le parent…",
-    "spellingsCount": "{count, plural, one {# traduction} other {# traductions}}",
+    "spellingsCount": "{count, plural, one {# orthographe} other {# orthographes}}",
     "dataSources": {
       "title": "Sources de données",
       "notice": "Le catalogue d’ingrédients est alimenté par la taxonomie des ingrédients d’<off>Open Food Facts</off>, disponible sous la <odbl>Open Database License (ODbL)</odbl>. Le catalogue que Norish en tire est proposé sous la même licence.",
       "nutritionNotice": "Les valeurs nutritionnelles pour 100 g proviennent de <ciqual>CIQUAL 2025</ciqual> et CALNUT (ANSES), de <usda>USDA FoodData Central</usda> et de <cofid>CoFID</cofid>, reliées par les codes qu'Open Food Facts donne à chaque ingrédient. Les corrections d'un foyer sont ses propres valeurs, pas celles des bases.",
-      "download": "Télécharger le catalogue d'ingrédients (JSON)"
+      "download": "Télécharger le catalogue d'ingrédients (JSON)",
+      "downloadOffline": "Vous pouvez télécharger le catalogue une fois en ligne.",
+      "downloadFailed": "Le catalogue n'a pas pu être téléchargé."
     },
     "nutrition": {
       "section": "Valeurs nutritionnelles",
@@ -505,6 +509,7 @@
           "hundredMl": "100 ml pèsent (g)"
         }
       },
+      "overHundred": "Les lipides, les glucides et les protéines ne peuvent pas dépasser 100 g pour 100 g.",
       "searchFood": "Chercher dans les bases (en anglais), par exemple milk semi-skimmed",
       "foodHint": "Tapez quelques mots du nom",
       "searchingFoods": "Recherche…",
@@ -552,7 +557,6 @@
       "done": "fait",
       "repeats": "se répète",
       "pantry": "Dans le garde-manger",
-      "elsewhere": "{count, plural, one {# autre utilisation} other {# autres utilisations}} dans des recettes ou listes que vous ne pouvez pas ouvrir",
       "none": "Plus rien ne l'utilise"
     },
     "keepAlias": "Garder {alias}",
@@ -569,6 +573,7 @@
     "changedByAI": {
       "title": "Modifié par l'IA",
       "open": "{count, plural, =0 {Modifié par l'IA} other {Modifié par l'IA · # à vérifier}}",
+      "openCompact": "{count, plural, =0 {Modifié par l'IA} other {# à vérifier}}",
       "unsure": "Pas sûr",
       "sure": "Modifié",
       "empty": "L'IA n'a rien modifié au cours du dernier mois.",
@@ -583,7 +588,8 @@
       "plainName": "Renommé depuis {from}",
       "notAFood": "Supprimé, car ce n'est pas un aliment. Ses lignes de recette et ses courses gardent leur texte.",
       "spellingRemoved": "Traduction {from} retirée",
-      "spellingMoved": "Traduction {from} déplacée vers {of}"
+      "spellingMoved": "Traduction {from} déplacée vers {of}",
+      "toCheck": "{count, plural, other {# à vérifier}}"
     },
     "icon": {
       "change": "Changer l’icône",
@@ -592,9 +598,40 @@
       "failed": "Impossible de faire une icône de cette image.",
       "generate": "Générer avec l’IA",
       "generateFailed": "L’icône n’a pas pu être générée."
-    }
+    },
+    "keepDistinct": "Garder distinct",
+    "offline": "Vous pourrez modifier cet ingrédient une fois en ligne."
   },
   "admin": {
+    "shareLinks": {
+      "title": "Modération du partage de recettes",
+      "description": "Consultez les liens publics de recettes sur toute l'instance et modérez leur cycle de vie.",
+      "empty": "Aucun lien de partage trouvé.",
+      "inactive": "Inactif",
+      "table": {
+        "recipe": "RECETTE",
+        "owner": "PROPRIÉTAIRE",
+        "status": "STATUT",
+        "created": "CRÉÉ",
+        "expires": "EXPIRE",
+        "actions": "ACTIONS"
+      },
+      "revokeModal": {
+        "title": "Révoquer le lien",
+        "message": "Ce lien pour {recipeName} cessera de fonctionner jusqu'à ce qu'il soit réactivé.",
+        "confirm": "Révoquer"
+      },
+      "reactivateModal": {
+        "title": "Réactiver le lien",
+        "message": "Ce lien pour {recipeName} redeviendra actif.",
+        "confirm": "Réactiver"
+      },
+      "deleteModal": {
+        "title": "Supprimer le lien",
+        "message": "Supprimer ce lien de partage pour {recipeName} ? Cette action est irréversible.",
+        "confirm": "Supprimer le lien"
+      }
+    },
     "general": {
       "title": "Général",
       "allowRegistration": "Autoriser l'inscription de nouveaux utilisateurs",
@@ -819,10 +856,6 @@
       "prompts": {
         "title": "Prompts",
         "subtitle": "Personnalisez les instructions IA pour le traitement des recettes"
-      },
-      "cuisines": {
-        "title": "Cuisines",
-        "subtitle": "Le vocabulaire dans lequel les recettes et l'IA puisent"
       },
       "bulkEnrichment": {
         "title": "Enrichissement en masse",
@@ -1268,17 +1301,6 @@
       },
       "pagination": "Page {current} sur {total}"
     },
-    "cuisineVocabulary": {
-      "description": "Les cuisines forment un vocabulaire organisé qui vous appartient. Les noms s'affichent exactement comme écrits ici, dans toutes les langues.",
-      "namePlaceholder": "Nom de la cuisine",
-      "addLabel": "Ajouter une cuisine",
-      "renameLabel": "Renommer {name}",
-      "deleteLabel": "Supprimer {name}",
-      "deleteConfirm": "Supprimer « {name} » ? Les recettes qui l'utilisent la perdront.",
-      "empty": "Aucune cuisine pour le moment.",
-      "duplicate": "Une cuisine porte déjà ce nom.",
-      "saveFailed": "Impossible d'enregistrer cette cuisine."
-    },
     "toasts": {
       "localesSaved": "Paramètres de langue enregistrés",
       "localesError": "Échec de l'enregistrement des paramètres de langue",
@@ -1311,5 +1333,103 @@
     "changePhoto": "Changer la photo",
     "accountGroup": "Votre compte",
     "phonesGroup": "Sur téléphone"
+  },
+  "content": {
+    "ariaLabel": "Contenu",
+    "listPicker": "Liste",
+    "lists": {
+      "tags": "Tags",
+      "cuisines": "Cuisines",
+      "categories": "Catégories",
+      "ingredients": "Ingrédients"
+    },
+    "search": {
+      "tags": "Rechercher des tags",
+      "cuisines": "Rechercher des cuisines",
+      "categories": "Rechercher des catégories"
+    },
+    "show": "Afficher",
+    "all": "Tout",
+    "unused": "Inutilisé",
+    "recipes": "{count, plural, =0 {Non utilisé} one {# recette} other {# recettes}}",
+    "sections": {
+      "ownCuisines": "Vos cuisines",
+      "ownCategories": "Vos catégories",
+      "server": "De votre serveur",
+      "builtIn": "Intégré"
+    },
+    "help": {
+      "server": "L’administrateur de votre serveur les gère pour chaque foyer",
+      "serverAdmin": "Chaque foyer de ce serveur se voit proposer celles-ci. En tant qu’administrateur, vous les gérez.",
+      "builtIn": "Les catégories intégrées sont les mêmes sur chaque serveur et ne peuvent pas être modifiées"
+    },
+    "readOnly": "Lecture seule",
+    "empty": {
+      "tags": "Aucun tag pour l’instant",
+      "cuisines": "Aucune cuisine pour l’instant",
+      "categories": "Aucune catégorie pour l’instant"
+    },
+    "nothingUnused": "Rien d’inutilisé",
+    "noMatch": "Aucun résultat",
+    "loadFailed": "Impossible de charger cette liste",
+    "listOffline": "Cette liste nécessite une connexion",
+    "offline": "Vous pouvez modifier cette liste une fois en ligne.",
+    "panel": {
+      "addTitle": {
+        "tag": "Ajouter un tag",
+        "cuisine": "Ajouter une cuisine",
+        "category": "Ajouter une catégorie",
+        "ingredient": "Ajouter un ingrédient"
+      },
+      "editTitle": {
+        "tag": "Modifier le tag",
+        "cuisine": "Modifier la cuisine",
+        "category": "Modifier la catégorie"
+      },
+      "server": "Serveur",
+      "name": "Nom",
+      "usedBy": "Utilisé par",
+      "usedByOwn": "{count, plural, =0 {Non utilisé dans vos recettes} one {# de vos recettes} other {# de vos recettes}}",
+      "already": {
+        "tag": "Déjà un tag",
+        "cuisine": "Déjà une cuisine",
+        "category": "Déjà une catégorie",
+        "ingredient": "Déjà un ingrédient"
+      },
+      "addTo": "Ajouter à",
+      "toHousehold": "Votre foyer",
+      "toServer": "Chaque foyer de ce serveur",
+      "serverReadOnly": "L’administrateur de votre serveur gère cette cuisine pour chaque foyer.",
+      "serverEditable": "Chaque foyer de ce serveur se voit proposer cette cuisine.",
+      "merge": "« {target} » existe déjà. La fusion {count, plural, =0 {supprime {name}} one {déplace # recette de {name} vers lui} other {déplace # recettes de {name} vers lui}}.",
+      "mergeAction": "Fusionner",
+      "tooLong": "Un nom peut avoir {max} caractères au maximum.",
+      "failed": "Impossible d’enregistrer. Réessayez.",
+      "stale": "Non enregistré : modifié ailleurs entre-temps"
+    },
+    "delete": {
+      "title": "Supprimer « {name} » ?",
+      "body": "{count, plural, =0 {Aucune recette ne l’utilise.} one {Il est retiré de # recette. La recette reste.} other {Il est retiré de # recettes. Les recettes restent.}}",
+      "bodyServer": "{count, plural, =0 {Aucune recette ne l’utilise.} one {Il est retiré de # recette de chaque foyer de ce serveur. La recette reste.} other {Il est retiré de # recettes de chaque foyer de ce serveur. Les recettes restent.}}",
+      "countFailed": "Impossible de compter les recettes qui l’utilisent. Réessayez.",
+      "failed": "Impossible de supprimer. Réessayez.",
+      "action": {
+        "tag": "Effacer le tag",
+        "cuisine": "Effacer la cuisine",
+        "category": "Effacer la catégorie"
+      }
+    },
+    "countCell": "{count, plural, =0 {Non utilisé} other {#}}",
+    "count": {
+      "tag": "{count, plural, one {# tag} other {# tags}}",
+      "ingredient": "{count, plural, one {# ingrédient} other {# ingrédients}}"
+    },
+    "countUnused": {
+      "tag": "{count, plural, one {# tag inutilisé} other {# tags inutilisés}}"
+    },
+    "menu": {
+      "rename": "Renommer",
+      "showRecipes": "Afficher les recettes"
+    }
   }
 }

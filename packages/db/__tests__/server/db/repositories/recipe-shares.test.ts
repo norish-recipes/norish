@@ -9,13 +9,14 @@ import {
   createRecipeShare,
   deleteRecipeShare,
   getActiveRecipeShareByToken,
-  getAllRecipeShares,
   getPublicRecipeView,
   getRecipeShareById,
   getRecipeShareByToken,
   getRecipeShareInventoryByUserId,
+  getRecipeShareInventoryForAdmin,
   getRecipeSharesByUserId,
   getRecipeShareUrl,
+  reactivateRecipeShare,
   revokeRecipeShare,
   updateRecipeShare,
 } from "@norish/db/repositories/recipe-shares";
@@ -30,6 +31,7 @@ import {
   createTestRecipeStep,
   createTestUser,
   getTestDb,
+  joinTestHousehold,
 } from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
@@ -187,10 +189,6 @@ describe("recipe share repository", () => {
     expect(revoked.value?.status).toBe("revoked");
     expect(revoked.value?.revokedAt).not.toBeNull();
 
-    const allShares = await getAllRecipeShares();
-
-    expect(allShares).toHaveLength(1);
-
     const removed = await deleteRecipeShare(created.id, revoked.value!.version);
 
     expect(removed.stale).toBe(false);
@@ -333,5 +331,74 @@ describe("recipe share repository", () => {
 
     await setView("everyone");
     expect((await getActiveRecipeShareByToken(token))?.id).toBe(created.id);
+  });
+
+  it("lists every household's links for an admin, inactive ones marked, and revokes across households", async () => {
+    await setConfig(
+      ServerConfigKeys.RECIPE_PERMISSION_POLICY,
+      { view: "everyone", edit: "household", delete: "household" },
+      null,
+      false
+    );
+    // The admin and the test user are household A; Bob is household B.
+    const admin = (await createTestUser({ name: "Admin", isServerAdmin: true })).id;
+    const bob = (await createTestUser({ name: "Bob" })).id;
+
+    await joinTestHousehold(admin, testUserId);
+    const stew = await createTestRecipe(bob, { name: "Stew" });
+    const bobs = await createRecipeShare(bob, { recipeId: stew.id, expiresIn: "forever" });
+    const crossed = await createRecipeShare(testUserId, {
+      recipeId: stew.id,
+      expiresIn: "forever",
+    });
+
+    await setConfig(
+      ServerConfigKeys.RECIPE_PERMISSION_POLICY,
+      { view: "household", edit: "household", delete: "household" },
+      null,
+      false
+    );
+    const listed = await getRecipeShareInventoryForAdmin();
+
+    expect(Object.keys(listed[0]!).sort()).toEqual([
+      "createdAt",
+      "expiresAt",
+      "hasLink",
+      "id",
+      "lastAccessedAt",
+      "makerMayView",
+      "ownerId",
+      "ownerName",
+      "recipeId",
+      "recipeName",
+      "revokedAt",
+      "status",
+      "updatedAt",
+      "userId",
+      "version",
+    ]);
+    expect(listed.map((s) => [s.id, s.recipeName, s.ownerName, s.status, s.makerMayView])).toEqual([
+      [crossed.id, "Stew", "Test User", "active", false],
+      [bobs.id, "Stew", "Bob", "active", true],
+    ]);
+    // The maker's own view and the public page still treat the crossed link as inactive.
+    expect(await getRecipeShareInventoryByUserId(testUserId)).toEqual([]);
+    expect(await getActiveRecipeShareByToken(crossed.url.replace("/share/", ""))).toBeNull();
+
+    const revoked = await revokeRecipeShare(bobs.id, bobs.version);
+
+    expect(revoked.value?.status).toBe("revoked");
+    expect((await getRecipeShareInventoryForAdmin()).find((s) => s.id === bobs.id)?.status).toBe(
+      "revoked"
+    );
+    expect(await getActiveRecipeShareByToken(bobs.url.replace("/share/", ""))).toBeNull();
+
+    // An admin reactivating the crossed link leaves it inactive on the public page.
+    const crossedToken = crossed.url.replace("/share/", "");
+    const off = await revokeRecipeShare(crossed.id, crossed.version);
+    const on = await reactivateRecipeShare(crossed.id, off.value!.version);
+
+    expect(on.value?.status).toBe("active");
+    expect(await getActiveRecipeShareByToken(crossedToken)).toBeNull();
   });
 });

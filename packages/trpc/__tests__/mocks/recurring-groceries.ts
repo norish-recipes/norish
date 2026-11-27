@@ -11,7 +11,7 @@ export const detachRecurringGrocery = vi.fn();
 export const checkRecurringGrocery = vi.fn();
 export const deleteRecurringGroceryById = vi.fn();
 export const getRecurringGroceryById = vi.fn();
-export const getRecurringGroceryHouseholdId = vi.fn();
+export const ownRecurringGroceryExists = vi.fn();
 
 export function resetRecurringGroceriesMocks() {
   listRecurringGroceriesByHousehold.mockReset();
@@ -22,5 +22,5 @@ export function resetRecurringGroceriesMocks() {
   checkRecurringGrocery.mockReset();
   deleteRecurringGroceryById.mockReset();
   getRecurringGroceryById.mockReset();
-  getRecurringGroceryHouseholdId.mockReset();
+  ownRecurringGroceryExists.mockReset();
 }

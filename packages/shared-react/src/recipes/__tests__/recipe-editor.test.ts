@@ -9,6 +9,7 @@ import {
   editorStepsOf,
   initialRecipeForm,
   isRecipeFormDirty,
+  rebaseRecipeForm,
   recipeFormPayload,
   validateRecipeForm,
 } from "../recipe-editor";
@@ -200,7 +201,7 @@ describe("the editor's rows round-trip a stored recipe", () => {
     });
     expect(payload.notes).toBe("Thighs stay juicier.");
     expect(payload.fat).toBe("9");
-    expect(payload.prepMinutes).toBeUndefined();
+    expect(payload.prepMinutes).toBeNull();
   });
 
   it("keeps each reference on its line when a cleared row is still in the form", () => {
@@ -393,5 +394,109 @@ describe("validation and detection", () => {
 
     expect(detectFormSystem([], {})).toBeNull();
     expect(detectFormSystem(cups, {})).toBe("us");
+  });
+});
+
+describe("what an edit's save sends of its lists", () => {
+  const opened = seededForm();
+  const sent = (form: RecipeFormState) =>
+    recipeFormPayload({ ...form, servings: form.servings! }, opened);
+
+  it("leaves out the Tags, Cuisines and Categories the reader did not change", () => {
+    const payload = sent({ ...opened, name: "Renamed" });
+
+    expect(payload).toMatchObject({ name: "Renamed" });
+    expect(payload).not.toHaveProperty("tags");
+    expect(payload).not.toHaveProperty("cuisines");
+    expect(payload).not.toHaveProperty("categories");
+  });
+
+  it("sends a list the reader changed, whole", () => {
+    const payload = sent({
+      ...opened,
+      tags: [...opened.tags, "spicy"],
+      provenance: { ...opened.provenance, cuisineIds: ["c1"] },
+    });
+
+    expect(payload.tags).toEqual([{ name: "quick" }, { name: "spicy" }]);
+    expect(payload.cuisines).toEqual(["c1"]);
+    expect(payload).not.toHaveProperty("categories");
+  });
+
+  it("counts the same entries in another order as no change, and an emptied list as one", () => {
+    const two = { ...opened, tags: ["quick", "spicy"] };
+    const reordered = recipeFormPayload({ ...two, tags: ["spicy", "quick"], servings: 2 }, two);
+    const emptied = recipeFormPayload({ ...two, tags: [], categories: [], servings: 2 }, two);
+
+    expect(reordered).not.toHaveProperty("tags");
+    expect(emptied).toMatchObject({ tags: [], categories: [] });
+  });
+
+  it("leaves out a field the reader did not change, and sends one they cleared as null", () => {
+    const payload = sent({ ...opened, name: "Renamed" });
+    const untouched = ["description", "notes", "url", "prepMinutes", "cookMinutes"] as const;
+
+    for (const key of [...untouched, "totalMinutes", "calories", "fat", "originCountry"]) {
+      expect(payload).not.toHaveProperty(key);
+    }
+    expect(sent({ ...opened, cookMinutes: null, notes: "" })).toMatchObject({
+      cookMinutes: null,
+      notes: null,
+    });
+  });
+
+  it("sends every list for a new recipe", () => {
+    expect(valid(opened)).toMatchObject({ tags: [{ name: "quick" }], categories: ["Dinner"] });
+  });
+});
+
+describe("a time cleared in the editor", () => {
+  it("is sent as null, so the stored one is cleared", () => {
+    const cleared = { ...seededForm(), prepMinutes: null, cookMinutes: null, totalMinutes: null };
+
+    expect(valid(cleared)).toMatchObject({
+      prepMinutes: null,
+      cookMinutes: null,
+      totalMinutes: null,
+    });
+  });
+});
+
+describe("a draft kept after a stale answer", () => {
+  const opened = seededForm();
+  const fresh: FullRecipeDTO = {
+    ...stored,
+    version: stored.version + 1,
+    tags: [{ name: "fresh" }],
+    categories: ["Lunch"],
+  };
+
+  it("keeps what the reader typed and changed, and takes the fresh lists they left alone", () => {
+    const draft = { ...opened, name: "Typed", categories: ["Breakfast"] };
+    const rebased = rebaseRecipeForm(draft, opened, fresh, labeller);
+
+    expect(rebased).toMatchObject({ name: "Typed", categories: ["Breakfast"], tags: ["fresh"] });
+    expect(rebaseRecipeForm(opened, opened, fresh, labeller)).toMatchObject({
+      tags: ["fresh"],
+      categories: ["Lunch"],
+    });
+  });
+
+  it("keeps the reader's lines with the steps they edited, so no reference moves", () => {
+    const draft = {
+      ...opened,
+      steps: opened.steps.map((step, idx) => (idx === 1 ? { ...step, step: "Typed." } : step)),
+    };
+    const swapped = { 0: 2, 2: 0 } as Record<number, number>;
+    const reordered: FullRecipeDTO = {
+      ...fresh,
+      recipeIngredients: stored.recipeIngredients.map((ing) =>
+        ing.systemUsed === "metric" ? { ...ing, order: swapped[ing.order] ?? ing.order } : ing
+      ),
+    };
+    const rebased = rebaseRecipeForm(draft, opened, reordered, labeller);
+
+    expect(rebased.ingredients).toEqual(opened.ingredients);
+    expect(rebased.steps).toEqual(draft.steps);
   });
 });

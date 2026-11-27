@@ -11,12 +11,11 @@ import {
   applyIngredientSeed,
   listSeededIngredientIds,
 } from "@norish/db/repositories/ingredient-seed";
-import { ingredientAliases } from "@norish/db/schema";
 import { listIngredients, setParent } from "@norish/shared-server/ingredients/catalogue";
 import { resolveIngredients } from "@norish/shared-server/ingredients/resolver";
 
 import {
-  getTestDb,
+  addTestSpelling,
   nameInATestRecipe,
   testHouseholdOf,
 } from "../../../db/__tests__/helpers/db-test-helpers";
@@ -39,7 +38,6 @@ describe("a mint's parent from the words of its text", () => {
     actor = {
       userId: user.id,
       householdId: testHouseholdOf(user.id),
-      memberIds: [user.id],
       isServerAdmin: true,
     };
     await applyIngredientSeed([
@@ -71,7 +69,7 @@ describe("a mint's parent from the words of its text", () => {
   });
 
   async function mintOne(text: string) {
-    const [resolved] = await resolveIngredients([text], { userId: actor.userId }, "upgrade");
+    const [resolved] = await resolveIngredients([text], actor, "upgrade");
     const page = await listIngredients(actor, { id: resolved!.ingredientId });
 
     return page.items[0]!;
@@ -103,7 +101,7 @@ describe("a mint's parent from the words of its text", () => {
   });
 
   it("files nothing where the text ends in no listed spelling, nor in one only a hidden food has", async () => {
-    await resolveIngredients(["saffron"], { userId: actor.userId }, "upgrade");
+    await resolveIngredients(["saffron"], actor, "upgrade");
 
     expect(await mintOne("dragon fruit")).toMatchObject({ flagged: true, parent: null });
     expect(await mintOne("ground saffron")).toMatchObject({ flagged: true, parent: null });
@@ -118,7 +116,7 @@ describe("a mint's parent from the words of its text", () => {
       parent: { id: seeded.get("en:chicken") },
     });
     // Each was the whole of the words read, so none is a guess to confirm.
-    expect(await listAIChanges()).toHaveLength(0);
+    expect(await listAIChanges(actor)).toHaveLength(0);
   });
 
   it("reads a name up to a note, so the parent before it is sure", async () => {
@@ -137,12 +135,12 @@ describe("a mint's parent from the words of its text", () => {
     ] as const) {
       expect(await mintOne(text)).toMatchObject({ parent: { id: seeded.get(offId) } });
     }
-    expect(await listAIChanges()).toHaveLength(0);
+    expect(await listAIChanges(actor)).toHaveLength(0);
   });
 
   it("files under a listed own food its words name where no seeded food is found", async () => {
     const own = async (text: string) => {
-      const [food] = await resolveIngredients([text], { userId: actor.userId }, "upgrade");
+      const [food] = await resolveIngredients([text], actor, "upgrade");
 
       await nameInATestRecipe(actor.userId, food!.aliasId, text);
 
@@ -184,13 +182,13 @@ describe("a mint's parent from the words of its text", () => {
     ] as const) {
       expect(await mintOne(text)).toMatchObject({ parent: { id: seeded.get(offId) } });
     }
-    expect(await listAIChanges()).toHaveLength(0);
+    expect(await listAIChanges(actor)).toHaveLength(0);
 
     // A product named after a food is no form of it: no parent, for AI to file.
     for (const text of ["onion powder", "chili flakes", "curry leaves", "salam blaadjes"]) {
       expect(await mintOne(text)).toMatchObject({ flagged: true, parent: null });
     }
-    expect(await listAIChanges()).toHaveLength(0);
+    expect(await listAIChanges(actor)).toHaveLength(0);
   });
 
   it("never files under a cut alone, though another language spells a food with it", async () => {
@@ -228,7 +226,7 @@ describe("a mint's parent from the words of its text", () => {
       parent: { id: seeded.get("en:chicken-thigh") },
     });
     // The singular is the food its words end with: nothing to confirm.
-    expect(await listAIChanges()).toHaveLength(0);
+    expect(await listAIChanges(actor)).toHaveLength(0);
   });
 
   it("takes a plural alone as the food itself, and reads one only where the food is named", async () => {
@@ -252,9 +250,7 @@ describe("a mint's parent from the words of its text", () => {
   });
 
   it("reads a spelling a seeded food gained after the seed as the food's", async () => {
-    await getTestDb()
-      .insert(ingredientAliases)
-      .values({ text: "look", fold: "look", ingredientId: seeded.get("en:garlic")! });
+    await addTestSpelling(seeded.get("en:garlic")!, "look");
 
     expect(await mintOne("verse look")).toMatchObject({
       parent: { id: seeded.get("en:garlic") },
@@ -284,7 +280,7 @@ describe("a mint's parent from the words of its text", () => {
       parent: { id: seeded.get("en:oil") },
     });
     expect(await mintOne("rode ui")).toMatchObject({ parent: { id: seeded.get("en:onion") } });
-    expect(await listAIChanges()).toHaveLength(0);
+    expect(await listAIChanges(actor)).toHaveLength(0);
   });
 
   it("is a guess a person overrides: another parent clears the flag", async () => {

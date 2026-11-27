@@ -4,6 +4,7 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { SliceHairline, sliceRowClass } from "@/components/slice-row";
 import { Tick } from "@/components/tick";
+import { spokenLabel } from "@/lib/spoken-label";
 import { Skeleton } from "heroui-native";
 
 /** A row's shell while its content loads: the picture, the name and the tick, in the row's own layout. */
@@ -57,7 +58,7 @@ export function PickRow({
 
   return onToggle ? (
     <Pressable
-      accessibilityLabel={subtitle ? `${title}, ${subtitle}` : title}
+      accessibilityLabel={spokenLabel(title, subtitle)}
       accessibilityRole="checkbox"
       accessibilityState={{ checked: selected }}
       className={className}

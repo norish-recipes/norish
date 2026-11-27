@@ -96,6 +96,14 @@ export function withLineFoodTexts(
   };
 }
 
+/** The DTO without each list its source does not carry, so an overwrite keeps the recipe's own;
+ * no foreign format carries Cuisines. */
+export function carriedLists(dto: FullRecipeInsertDTO, carries: boolean): FullRecipeInsertDTO {
+  const { tags, categories, cuisines: _cuisines, ...rest } = dto;
+
+  return carries ? { ...rest, tags, categories } : rest;
+}
+
 /**
  * Split text by newlines and filter out empty lines
  */

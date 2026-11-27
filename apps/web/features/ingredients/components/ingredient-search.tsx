@@ -2,8 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useEffect, useEffectEvent, useState } from "react";
-import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
-import { InputGroup, TextField } from "@heroui/react";
+import { SearchField } from "@/components/shared/search-field";
 import { useTranslations } from "next-intl";
 import { useDebounceValue } from "usehooks-ts";
 
@@ -32,19 +31,14 @@ export function IngredientSearch({
   }, [search]);
 
   return (
-    <TextField aria-label={t("search")} className="min-w-0 flex-1" value={text} onChange={setText}>
-      <InputGroup variant="secondary">
-        <InputGroup.Prefix className="pl-3">
-          <MagnifyingGlassIcon
-            aria-hidden
-            className={`size-5 ${busy ? "text-accent animate-pulse" : "text-muted"}`}
-            data-fetching={busy}
-            data-testid="ingredients-searching"
-          />
-        </InputGroup.Prefix>
-        <InputGroup.Input data-testid="ingredients-search" placeholder={t("search")} />
-        {suffix ? <InputGroup.Suffix className="pr-1">{suffix}</InputGroup.Suffix> : null}
-      </InputGroup>
-    </TextField>
+    <SearchField
+      busy={busy}
+      data-testid="ingredients-search"
+      iconTestId="ingredients-searching"
+      label={t("search")}
+      suffix={suffix}
+      value={text}
+      onChange={setText}
+    />
   );
 }

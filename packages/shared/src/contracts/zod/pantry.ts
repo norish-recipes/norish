@@ -50,7 +50,8 @@ export const PantryIngredientSelectSchema = createSelectSchema(pantryIngredients
  */
 export const PantryIngredientAddSchema = z.union([
   z.object({ id: clientMintedId, name: PantryIngredientNameSchema }),
-  z.object({ id: clientMintedId, ingredientId: z.uuid() }),
+  // Picked off a recipe line, the line too: another household's food is read as the line reads.
+  z.object({ id: clientMintedId, ingredientId: z.uuid(), recipeIngredientId: z.uuid().optional() }),
 ]);
 
 /**

@@ -262,6 +262,7 @@
       "syncing": "{count, plural, =0 {동기화 중} other {변경 사항 #개 동기화 중}}",
       "syncNow": "지금 동기화",
       "retryAll": "모두 다시 시도",
+      "otherHousehold": "일부 변경 사항은 다른 가구를 위해 만들어졌습니다. '모두 다시 시도'를 누르면 지금 속한 가구로 보냅니다.",
       "discardAll": "모두 삭제",
       "discardConfirmBody": "{count, plural, other {대기 중인 변경 사항 #개를 영구적으로 삭제할까요? 전송되지 않습니다.}}",
       "discardConfirm": "삭제",
@@ -318,7 +319,7 @@
       "expired": "참여 코드가 만료되었습니다. 새 코드를 요청하세요.",
       "alreadyMember": "이미 이 가구에 속해 있습니다.",
       "shared": "다른 가구에 참여하려면 먼저 현재 가구를 떠나세요.",
-      "holdsThings": "가구에 자체 레시피, 장보기 또는 계획이 있어 아직 다른 가구에 참여할 수 없습니다."
+      "busy": "그 가구가 방금 변경되고 있었습니다. 다시 시도하세요."
     }
   },
   "photos": {

@@ -53,6 +53,16 @@ describe("Mela Parser", () => {
     expect(dto.tags!.map((tag) => tag.name)).toEqual(["Drinks", "Supper", "Holiday"]);
   });
 
+  it("carries no list the file has none of, so an overwrite keeps the recipe's own", async () => {
+    const dto = await parseMelaRecipeToDTO({ title: "Soup", ingredients: "water" }, RECIPE_ID, [
+      ...BUILT_IN_CATEGORIES,
+    ]);
+
+    expect(dto).not.toHaveProperty("categories");
+    expect(dto).not.toHaveProperty("tags");
+    expect(dto).not.toHaveProperty("cuisines");
+  });
+
   it("keeps a long step ending in a colon as a step", async () => {
     const step = "Whisk the eggs with the sugar, then fold in the following:";
     const dto = await parseMelaRecipeToDTO(

@@ -5,14 +5,12 @@
  * where each came from, through every step of the lookup order, the tree,
  * the lenders that never lend and the household's own corrections.
  */
-import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { SeedEntry } from "@norish/db/repositories/ingredient-seed";
 import type { NutritionCodes } from "@norish/db/schema";
 import type { SourceTable } from "@norish/shared-server/ingredients/nutrition/source-table";
-import { ServerConfigKeys } from "@norish/config/zod/server-config";
-import { getRecipeFull } from "@norish/db";
+import { createRecipeWithRefs, getRecipeFull } from "@norish/db";
 import {
   saveNutritionCorrection,
   saveNutritionEstimate,
@@ -25,7 +23,6 @@ import {
   clearRecipeNutritionEstimate,
   saveRecipeNutritionEstimate,
 } from "@norish/db/repositories/recipe-enrichment";
-import { ingredients, serverConfig } from "@norish/db/schema";
 import { setParent } from "@norish/shared-server/ingredients/catalogue";
 import {
   applySourceTable,
@@ -51,13 +48,16 @@ import {
   readRecipeNutrition,
   workOutRecipeNutrition,
 } from "@norish/shared-server/ingredients/nutrition/recipe-nutrition";
+import { withResolvedIngredients } from "@norish/shared-server/ingredients/recipe-lines";
 import { buildCatalogueExport } from "@norish/shared-server/ingredients/seed/catalogue-export";
 import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
 import {
+  addTestSpelling,
+  clearTestSeedState,
   createTestUser,
-  getTestDb,
   joinTestHousehold,
+  mintTestFood,
   testHouseholdOf,
 } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
@@ -198,9 +198,7 @@ describe("Ingredient Nutrition", () => {
     await joinTestHousehold(second!.id, first.id);
     householdA = [first.id, second!.id];
     householdB = [stranger!.id];
-    await getTestDb()
-      .delete(serverConfig)
-      .where(eq(serverConfig.key, ServerConfigKeys.INGREDIENT_SEED_STATE));
+    await clearTestSeedState();
     await applySourceTable(TABLE);
     await applyIngredientSeed(ENTRIES);
 
@@ -340,7 +338,6 @@ describe("Ingredient Nutrition", () => {
         {
           userId: householdA[0]!,
           householdId: testHouseholdOf(householdA[0]!),
-          memberIds: householdA,
           isServerAdmin: true,
         },
         id("en:red-onion"),
@@ -609,6 +606,72 @@ describe("Ingredient Nutrition", () => {
         }),
       ]);
       await expect(searchDatasetFoods("milk banana")).resolves.toEqual([]);
+    });
+  });
+
+  describe("another household's recipe", () => {
+    /** A's recipe of two "ui" for two: A's own food without numbers; B spells the seeded onion so. */
+    async function theirOnions(calories: number | null = null) {
+      const author = householdA[0]!;
+      const made = crypto.randomUUID();
+
+      await mintTestFood(testHouseholdOf(author), "ui");
+      await addTestSpelling(id("en:onion"), "ui", { householdId: testHouseholdOf(householdB[0]!) });
+      await createRecipeWithRefs(
+        made,
+        author,
+        await withResolvedIngredients(
+          {
+            name: "Onions",
+            servings: 2,
+            calories,
+            systemUsed: "metric",
+            recipeIngredients: [
+              { ingredientId: null, ingredientName: "ui", amount: 2, unit: null, order: 0 },
+            ],
+          },
+          { userId: author, householdId: testHouseholdOf(author) }
+        )
+      );
+
+      return (await getRecipeFull(made))!;
+    }
+
+    it("is worked out from the reader's food and their correction, the recipe left as it is", async () => {
+      const recipe = await theirOnions();
+
+      await correctNutrition(
+        { userId: householdB[0]!, householdId: testHouseholdOf(householdB[0]!) },
+        id("en:onion"),
+        {
+          numbers: { food: "ciqual:19041" },
+          pieceWeight: null,
+          density: null,
+        }
+      );
+
+      // Two seeded onions are 300 g, over two servings, at B's 47.7 kcal per 100 g.
+      const theirs = await readRecipeNutrition(recipe, {
+        householdId: testHouseholdOf(householdB[0]!),
+      });
+
+      expect(theirs.source).toBe("worked-out");
+      expect(theirs.perServing?.calories).toBeCloseTo(71.55);
+      // Its own household reads its own food, which has no numbers.
+      await expect(
+        readRecipeNutrition(recipe, { householdId: testHouseholdOf(householdA[0]!) })
+      ).resolves.toMatchObject({ source: "none" });
+      expect((await getRecipeFull(recipe.id))!.recipeIngredients[0]!.ingredientId).toBe(
+        recipe.recipeIngredients[0]!.ingredientId
+      );
+    });
+
+    it("answers with the recipe's own Nutrition Information where it has some", async () => {
+      const recipe = await theirOnions(320);
+
+      await expect(
+        readRecipeNutrition(recipe, { householdId: testHouseholdOf(householdB[0]!) })
+      ).resolves.toMatchObject({ source: "supplied", perServing: { calories: 320 } });
     });
   });
 
@@ -911,11 +974,8 @@ describe("Ingredient Nutrition", () => {
     });
 
     it("lists the listed foods with a gap the options cover, never a grocery food", async () => {
-      const [grocery] = await getTestDb()
-        .insert(ingredients)
-        .values({ name: "tuna in a tin", ownerId: householdA[0]! })
-        .returning({ id: ingredients.id });
-      const ids = [id("en:onion"), id("en:red-onion"), grocery!.id];
+      const grocery = await mintTestFood(testHouseholdOf(householdA[0]!), "tuna in a tin");
+      const ids = [id("en:onion"), id("en:red-onion"), grocery.ingredientId];
 
       await expect(listFoodsWithGaps(ids, { nutrition: true, conversions: true })).resolves.toEqual(
         [{ id: id("en:red-onion"), name: "red onion" }]
@@ -929,9 +989,7 @@ describe("Ingredient Nutrition", () => {
     });
 
     it("counts Fill gaps over every listed food, seeded ones included, never a grocery food", async () => {
-      await getTestDb()
-        .insert(ingredients)
-        .values({ name: "tuna in a tin", ownerId: householdA[0]! });
+      await mintTestFood(testHouseholdOf(householdA[0]!), "tuna in a tin");
       await saveNutritionEstimate(id("en:pickled-red-onion"), numbers(40));
       const set = {
         icons: { "en:onion": "0123456789abcdef0123456789abcdef.webp" },
@@ -975,7 +1033,10 @@ describe("Ingredient Nutrition", () => {
         }
       );
 
-      const catalogue = await buildCatalogueExport(new Date("2026-10-01T00:00:00Z"));
+      const catalogue = await buildCatalogueExport(
+        testHouseholdOf(householdA[0]!),
+        new Date("2026-10-01T00:00:00Z")
+      );
       const onion = catalogue.ingredients.find((ingredient) => ingredient.id === id("en:onion"));
       const red = catalogue.ingredients.find((ingredient) => ingredient.id === id("en:red-onion"));
 

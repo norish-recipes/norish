@@ -1,9 +1,9 @@
 import type { ComponentProps } from "react";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
+import { Ionicons } from "@/components/icon";
 import { Pill } from "@/components/pill";
 import { SheetInput } from "@/components/sheet-input";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { Input, TextField, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 

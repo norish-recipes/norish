@@ -11,6 +11,7 @@ function entry(overrides: Partial<NewOutboxEntry> = {}): NewOutboxEntry {
   return {
     id: "e",
     ownerId: "u1",
+    householdId: "h1",
     path: "groceries.create",
     input: { id: "g1", name: "Milk" },
     entityId: "g1",

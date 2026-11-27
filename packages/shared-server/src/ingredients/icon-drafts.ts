@@ -59,7 +59,10 @@ export async function foodToDraw(ingredientId: string): Promise<FoodToDraw | nul
   }
   if (chain.length === 0) return null;
 
-  const names = await findLocaleNames(chain.map((node) => node.id));
+  const names = await findLocaleNames(
+    chain[0]!.householdId,
+    chain.map((node) => node.id)
+  );
   const nameOf = (node: IconNode) => names.get(node.id)?.en ?? node.name;
 
   return { name: nameOf(chain[0]!), kindOf: chain.slice(1).map(nameOf) };
@@ -93,6 +96,24 @@ export async function drawDraftIcon(ingredientId: string): Promise<DraftIcon> {
 
 /** How long an icon no Ingredient points at is kept: long enough for an open draft to be saved. */
 export const DRAFT_ICON_GRACE_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Remove these own icon files where no Ingredient points at them any more, at once: an erased
+ * household's, which another household's copy or the seed may still show. How many went.
+ */
+export async function deleteUnusedIngredientIcons(files: readonly string[]): Promise<number> {
+  if (files.length === 0) return 0;
+  const referenced = await listIngredientIconFiles();
+  let deleted = 0;
+
+  for (const file of files) {
+    if (!ICON_FILE_PATTERN.test(file) || referenced.has(file)) continue;
+    await fs.rm(path.join(ownIconsDir(), file), { force: true });
+    deleted += 1;
+  }
+
+  return deleted;
+}
 
 /**
  * Remove the own icon files no Ingredient points at: a draft nobody saved,

@@ -2,10 +2,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { db } from "@norish/db/drizzle";
-import {
-  getPlannedItemHouseholdId,
-  listPlannedItemsBySlot,
-} from "@norish/db/repositories/planned-items";
+import { listPlannedItemsBySlot } from "@norish/db/repositories/planned-items";
 
 vi.mock("@norish/db/drizzle", () => ({
   db: {
@@ -48,22 +45,6 @@ describe("planned items repository", () => {
       const result = await listPlannedItemsBySlot(householdId, date, slot);
 
       expect(result).toEqual([]);
-    });
-  });
-
-  describe("getPlannedItemHouseholdId", () => {
-    it("returns the household for the household guard", async () => {
-      dbMock.select.mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            limit: vi.fn().mockResolvedValue([{ householdId: "household-1" }]),
-          }),
-        }),
-      } as any);
-
-      const result = await getPlannedItemHouseholdId("item-1");
-
-      expect(result).toBe("household-1");
     });
   });
 });

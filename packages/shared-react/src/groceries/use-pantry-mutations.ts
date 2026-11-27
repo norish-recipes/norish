@@ -63,7 +63,9 @@ export function usePantryMutations(): PantryMutationsResult {
     const id = createClientId();
     const picked = typeof food === "string" ? null : food;
     const name = typeof food === "string" ? food.trim() : food.name;
-    const payload = picked ? { id, ingredientId: picked.ingredientId } : { id, name };
+    const payload = picked
+      ? { id, ingredientId: picked.ingredientId, recipeIngredientId: picked.recipeIngredientId }
+      : { id, name };
     const insertOptimistic = () =>
       queryClient.setQueryData<PantryData>(pantryKey, (prev) =>
         mergePantryAdded(prev ?? [], {

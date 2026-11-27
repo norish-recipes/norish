@@ -16,7 +16,7 @@ import {
 } from "@norish/shared/contracts/zod";
 
 import type { IngredientRef } from "./ingredient-aliases";
-import { assertOwnReferences, householdRow, householdRows } from "./household-rows";
+import { assertOwnReferences, householdRow, householdRows, ownRowIds } from "./household-rows";
 import { buildPolicyCondition } from "./recipes";
 
 /** A grocery as its household reads it: its recipe line only while the household may view that
@@ -43,6 +43,22 @@ async function readerColumns(householdId: string, executor: Db = db) {
       string | null
     >`CASE WHEN EXISTS (${inView}) THEN ${groceries.recipeIngredientId} END`,
   };
+}
+
+/**
+ * The food a Store's grocery names now: what a lookup queued for that grocery files its answer under
+ * when it runs. Null where it names none, or is gone from the Store.
+ */
+export async function findStoreGroceryFood(
+  storeId: string,
+  groceryId: string
+): Promise<string | null> {
+  const [row] = await db
+    .select({ ingredientId: groceries.ingredientId })
+    .from(groceries)
+    .where(and(eq(groceries.id, groceryId), eq(groceries.storeId, storeId)));
+
+  return row?.ingredientId ?? null;
 }
 
 /** The grocery last added under this name on the household's list. */
@@ -194,6 +210,8 @@ export async function createGroceries(
       {
         storeIds: prepared.map((item) => item.storeId),
         recurringGroceryIds: prepared.map((item) => item.recurringGroceryId),
+        ingredientIds: prepared.map((item) => item.ingredientId),
+        ingredientAliasIds: prepared.map((item) => item.ingredientAliasId),
       },
       trx
     );
@@ -270,6 +288,8 @@ export async function updateGroceries(
       {
         storeIds: parsed.data.map((g) => g.storeId),
         recurringGroceryIds: parsed.data.map((g) => g.recurringGroceryId),
+        ingredientIds: parsed.data.map((g) => g.ingredientId),
+        ingredientAliasIds: parsed.data.map((g) => g.ingredientAliasId),
       },
       trx
     );
@@ -344,15 +364,12 @@ export async function deleteDoneGroceriesBefore(beforeDate: string): Promise<num
 }
 
 /** The household each grocery belongs to, by id, for the household guard. */
-export async function getGroceryHouseholdIds(groceryIds: string[]): Promise<Map<string, string>> {
-  if (groceryIds.length === 0) return new Map();
-
-  const rows = await db
-    .select({ id: groceries.id, householdId: groceries.householdId })
-    .from(groceries)
-    .where(inArray(groceries.id, groceryIds));
-
-  return new Map(rows.map((r) => [r.id, r.householdId]));
+/** The household's groceries among these that still exist; another household's is refused. */
+export async function ownGroceryIds(
+  householdId: string,
+  groceryIds: string[]
+): Promise<Set<string>> {
+  return ownRowIds(groceries, householdId, groceryIds);
 }
 
 /**

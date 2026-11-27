@@ -26,6 +26,11 @@ const mocks = vi.hoisted(() => ({
   noteProductUnreadable: vi.fn(),
   publish: vi.fn(async () => undefined),
   decideProduct: vi.fn(),
+  findStoreGroceryFood: vi.fn(),
+}));
+
+vi.mock("@norish/db/repositories/groceries", () => ({
+  findStoreGroceryFood: mocks.findStoreGroceryFood,
 }));
 
 vi.mock("@norish/db/repositories/stores", () => ({
@@ -51,6 +56,7 @@ const STORE = "11111111-1111-4111-8111-111111111111";
 const HOUSEHOLD = "household-1";
 /** The Ingredient the grocery "oude kaas" resolved to. */
 const KAAS = "22222222-2222-4222-8222-222222222222";
+const GROCERY = "44444444-4444-4444-8444-444444444444";
 /** What the Decision said when it linked, when it ranked without linking, and when it was not asked. */
 const SURE = {
   pick: "Oude kaas 500 g · 930 g · 7.99 EUR",
@@ -110,6 +116,7 @@ describe("matchGroceryName", () => {
     for (const mock of Object.values(mocks)) mock.mockReset();
     mocks.getStoreById.mockResolvedValue({ id: STORE, searchAddress: SEARCH_ADDRESS });
     mocks.getStoreHouseholdId.mockResolvedValue(HOUSEHOLD);
+    mocks.findStoreGroceryFood.mockResolvedValue(KAAS);
     mocks.resolveProductLink.mockResolvedValue({
       storeId: STORE,
       ingredientId: KAAS,
@@ -124,6 +131,47 @@ describe("matchGroceryName", () => {
     mocks.decideProduct.mockResolvedValue(OFF);
   });
 
+  it("files the answer under the food the Store's grocery names when the job runs", async () => {
+    const KIP = "33333333-3333-4333-8333-333333333333";
+
+    useShop({
+      candidates: [candidate("Oude kaas")],
+      product: { name: "Oude kaas", price: 7.99, currency: "EUR", size: "930 g" },
+    });
+    mocks.findStoreGroceryFood.mockResolvedValue(KIP);
+    mocks.resolveProductLink.mockResolvedValue(null);
+
+    await matchGroceryName({
+      storeId: STORE,
+      ingredientId: KAAS,
+      groceryId: GROCERY,
+      name: "oude kaas",
+    });
+
+    expect(mocks.findStoreGroceryFood).toHaveBeenCalledWith(STORE, GROCERY);
+    expect(mocks.clearPendingLink).toHaveBeenCalledWith(STORE, KAAS);
+    expect(mocks.linkIfUnanswered).toHaveBeenCalledWith(STORE, KIP, "product-1");
+    expect(mocks.linkIfUnanswered).not.toHaveBeenCalledWith(STORE, KAAS, expect.anything());
+  });
+
+  it("asks nothing once no grocery of the Store names a food by that name", async () => {
+    const visited = useShop({ candidates: [candidate("Oude kaas")] });
+
+    mocks.findStoreGroceryFood.mockResolvedValue(null);
+
+    await expect(
+      matchGroceryName({
+        storeId: STORE,
+        ingredientId: KAAS,
+        groceryId: GROCERY,
+        name: "oude kaas",
+      })
+    ).resolves.toEqual({ matched: false });
+    expect(visited).toEqual([]);
+    expect(mocks.clearPendingLink).toHaveBeenCalledWith(STORE, KAAS);
+    expect(mocks.linkIfUnanswered).not.toHaveBeenCalled();
+  });
+
   it("searches the shop with the grocery's own name", async () => {
     const visited = useShop({
       candidates: [candidate("Oude kaas")],
@@ -133,6 +181,7 @@ describe("matchGroceryName", () => {
     await matchGroceryName({
       storeId: STORE,
       ingredientId: KAAS,
+      groceryId: GROCERY,
       name: "oude kaas",
     });
 
@@ -151,7 +200,12 @@ describe("matchGroceryName", () => {
     mocks.getStoreHouseholdId.mockResolvedValueOnce(HOUSEHOLD).mockResolvedValue(null);
 
     await expect(
-      matchGroceryName({ storeId: STORE, ingredientId: KAAS, name: "oude kaas" })
+      matchGroceryName({
+        storeId: STORE,
+        ingredientId: KAAS,
+        groceryId: GROCERY,
+        name: "oude kaas",
+      })
     ).resolves.toEqual({ matched: false });
   });
 
@@ -164,6 +218,7 @@ describe("matchGroceryName", () => {
     const result = await matchGroceryName({
       storeId: STORE,
       ingredientId: KAAS,
+      groceryId: GROCERY,
       name: "oude kaas",
     });
 
@@ -188,6 +243,7 @@ describe("matchGroceryName", () => {
     await matchGroceryName({
       storeId: STORE,
       ingredientId: KAAS,
+      groceryId: GROCERY,
       name: "oude kaas",
     });
 
@@ -205,6 +261,7 @@ describe("matchGroceryName", () => {
     await matchGroceryName({
       storeId: STORE,
       ingredientId: KAAS,
+      groceryId: GROCERY,
       name: "oude kaas",
     });
 
@@ -224,6 +281,7 @@ describe("matchGroceryName", () => {
     await matchGroceryName({
       storeId: STORE,
       ingredientId: KAAS,
+      groceryId: GROCERY,
       name: "oude kaas",
     });
 
@@ -248,6 +306,7 @@ describe("matchGroceryName", () => {
     await matchGroceryName({
       storeId: STORE,
       ingredientId: KAAS,
+      groceryId: GROCERY,
       name: "oude kaas",
     });
 
@@ -272,6 +331,7 @@ describe("matchGroceryName", () => {
     await matchGroceryName({
       storeId: STORE,
       ingredientId: KAAS,
+      groceryId: GROCERY,
       name: "oude kaas",
     });
     expect(mocks.upsertReadProduct).toHaveBeenCalledWith(
@@ -289,6 +349,7 @@ describe("matchGroceryName", () => {
     await matchGroceryName({
       storeId: STORE,
       ingredientId: KAAS,
+      groceryId: GROCERY,
       name: "oude kaas",
     });
     expect(mocks.upsertReadProduct).toHaveBeenCalledWith(
@@ -302,6 +363,7 @@ describe("matchGroceryName", () => {
     const result = await matchGroceryName({
       storeId: STORE,
       ingredientId: KAAS,
+      groceryId: GROCERY,
       name: "oude kaas",
     });
 
@@ -325,6 +387,7 @@ describe("matchGroceryName", () => {
       await matchGroceryName({
         storeId: STORE,
         ingredientId: KAAS,
+        groceryId: GROCERY,
         name: "oude kaas",
       });
 
@@ -348,6 +411,7 @@ describe("matchGroceryName", () => {
       const result = await matchGroceryName({
         storeId: STORE,
         ingredientId: KAAS,
+        groceryId: GROCERY,
         name: "oude kaas",
       });
 
@@ -382,6 +446,7 @@ describe("matchGroceryName", () => {
       const result = await matchGroceryName({
         storeId: STORE,
         ingredientId: KAAS,
+        groceryId: GROCERY,
         name: "oude kaas",
       });
 
@@ -410,6 +475,7 @@ describe("matchGroceryName", () => {
         matchGroceryName({
           storeId: STORE,
           ingredientId: KAAS,
+          groceryId: GROCERY,
           name: "oude kaas",
         })
       ).resolves.toEqual({ matched: false });
@@ -422,6 +488,7 @@ describe("matchGroceryName", () => {
       await matchGroceryName({
         storeId: STORE,
         ingredientId: KAAS,
+        groceryId: GROCERY,
         name: "oude kaas",
       });
 
@@ -464,6 +531,7 @@ describe("matchGroceryName", () => {
       await matchGroceryName({
         storeId: STORE,
         ingredientId: KAAS,
+        groceryId: GROCERY,
         name: "oude kaas",
         ...listeners,
       });
@@ -499,6 +567,7 @@ describe("matchGroceryName", () => {
       await matchGroceryName({
         storeId: STORE,
         ingredientId: KAAS,
+        groceryId: GROCERY,
         name: "oude kaas",
         ...listeners,
       });
@@ -531,6 +600,7 @@ describe("matchGroceryName", () => {
       await matchGroceryName({
         storeId: STORE,
         ingredientId: KAAS,
+        groceryId: GROCERY,
         name: "oude kaas",
         ...listeners,
       });
@@ -550,6 +620,7 @@ describe("matchGroceryName", () => {
       await matchGroceryName({
         storeId: STORE,
         ingredientId: KAAS,
+        groceryId: GROCERY,
         name: "oude kaas",
         ...listeners,
       });
@@ -573,6 +644,7 @@ describe("matchGroceryName", () => {
       await matchGroceryName({
         storeId: STORE,
         ingredientId: KAAS,
+        groceryId: GROCERY,
         name: "oude kaas",
         ...listeners,
       });
@@ -592,6 +664,7 @@ describe("matchGroceryName", () => {
     const result = await matchGroceryName({
       storeId: STORE,
       ingredientId: KAAS,
+      groceryId: GROCERY,
       name: "oude kaas",
     });
 
@@ -614,6 +687,7 @@ describe("matchGroceryName", () => {
     const result = await matchGroceryName({
       storeId: STORE,
       ingredientId: KAAS,
+      groceryId: GROCERY,
       name: "oude kaas",
     });
 
@@ -639,6 +713,7 @@ describe("matchGroceryName", () => {
     const result = await matchGroceryName({
       storeId: STORE,
       ingredientId: KAAS,
+      groceryId: GROCERY,
       name: "oude kaas",
     });
 
@@ -656,6 +731,7 @@ describe("matchGroceryName", () => {
     await matchGroceryName({
       storeId: STORE,
       ingredientId: KAAS,
+      groceryId: GROCERY,
       name: "oude kaas",
     });
 
@@ -680,6 +756,7 @@ describe("matchGroceryName", () => {
     const result = await matchGroceryName({
       storeId: STORE,
       ingredientId: KAAS,
+      groceryId: GROCERY,
       name: "oude kaas",
     });
 
@@ -703,6 +780,7 @@ describe("matchGroceryName", () => {
     const result = await matchGroceryName({
       storeId: STORE,
       ingredientId: KAAS,
+      groceryId: GROCERY,
       name: "oude kaas",
     });
 
@@ -720,6 +798,7 @@ describe("matchGroceryName", () => {
     await matchGroceryName({
       storeId: STORE,
       ingredientId: KAAS,
+      groceryId: GROCERY,
       name: "oude kaas",
     });
 
@@ -744,6 +823,7 @@ describe("matchGroceryName", () => {
       matchGroceryName({
         storeId: STORE,
         ingredientId: KAAS,
+        groceryId: GROCERY,
         name: "oude kaas",
       })
     ).resolves.toEqual({ matched: true });
@@ -756,6 +836,7 @@ describe("matchGroceryName", () => {
     await matchGroceryName({
       storeId: STORE,
       ingredientId: KAAS,
+      groceryId: GROCERY,
       name: "oude kaas",
     });
 
@@ -769,7 +850,12 @@ describe("matchGroceryName", () => {
     mocks.getStoreHouseholdId.mockResolvedValue("household-now");
     useShop({ candidates: [candidate("Oude kaas 500 g", "a"), candidate("Oude kaas 1 kg", "b")] });
 
-    await matchGroceryName({ storeId: STORE, ingredientId: KAAS, name: "oude kaas" });
+    await matchGroceryName({
+      storeId: STORE,
+      ingredientId: KAAS,
+      groceryId: GROCERY,
+      name: "oude kaas",
+    });
 
     expect(mocks.getStoreById).toHaveBeenCalledWith(STORE, "household-now");
     expect(mocks.publish).toHaveBeenCalledWith("linkUpdated", expect.anything(), {
@@ -781,7 +867,12 @@ describe("matchGroceryName", () => {
     mocks.getStoreHouseholdId.mockResolvedValue(null);
     const visited = useShop({ candidates: [candidate("Oude kaas")] });
 
-    await matchGroceryName({ storeId: STORE, ingredientId: KAAS, name: "oude kaas" });
+    await matchGroceryName({
+      storeId: STORE,
+      ingredientId: KAAS,
+      groceryId: GROCERY,
+      name: "oude kaas",
+    });
 
     expect(visited).toEqual([]);
     expect(mocks.clearPendingLink).toHaveBeenCalledWith(STORE, KAAS);
@@ -796,6 +887,7 @@ describe("matchGroceryName", () => {
     await matchGroceryName({
       storeId: STORE,
       ingredientId: KAAS,
+      groceryId: GROCERY,
       name: "oude kaas",
     });
 

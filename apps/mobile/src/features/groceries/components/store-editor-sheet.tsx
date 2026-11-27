@@ -1,10 +1,10 @@
 import React from "react";
 import { Text, View } from "react-native";
 import { LabelWithHint } from "@/components/hint-button";
+import { Ionicons } from "@/components/icon";
 import { Sheet } from "@/components/sheet";
 import { SheetInput } from "@/components/sheet-input";
 import { useText } from "@/lib/i18n/use-text";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { TextField, useThemeColor } from "heroui-native";
 
 import type { EditingStore } from "@norish/shared-react/groceries";

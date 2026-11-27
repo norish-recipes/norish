@@ -16,11 +16,11 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
+import { Ionicons } from "@/components/icon";
 import { PressableScale } from "@/components/pressable-scale";
 import { useTokenColor } from "@/hooks/use-token-color";
 import { lightImpact, mediumImpact } from "@/lib/haptics";
 import { closeOpenRow, useOpenRow } from "@/lib/open-row";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
@@ -72,12 +72,14 @@ const LEAVE_EASE = Easing.out(Easing.cubic);
 // The push off screen eases in and out, so the red visibly sweeps right to left as it fills.
 const SLIDE_EASE = Easing.inOut(Easing.cubic);
 const HOLD_MS = 120;
+
 export const RESTORE_MS = 250;
 const SLIDE_MS = 520;
 // The capsule's fade and the row's close start once the fill has settled.
 const AFTER_SLIDE_MS = SLIDE_MS + 80;
 const CIRCLE_EXIT_MS = 200;
 const COLLAPSE_MS = 350;
+
 // ponytail: the removal is async, so the card stays hidden this long; a failed delete brings it back after it.
 export const HIDDEN_MS = 1000;
 

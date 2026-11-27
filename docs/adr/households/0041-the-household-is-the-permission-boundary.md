@@ -11,7 +11,7 @@ A server's households need not know each other, and on a public or hosted instan
 
 **One Permission Policy governs what crosses it:** who outside a household may view, edit and delete its recipes and cookbooks, each Everyone or Household. Nothing else a household keeps is ever offered, matched or changed outside it, whatever the policy. That covers its Tags, Cuisines, Categories and Ingredients (ADR-0042, ADR-0043), and its stores, groceries, pantry and meal plan.
 
-A server administrator is an ordinary member under the policy. Their rights are over the instance: its settings, its accounts and the entries the instance itself ships.
+A server administrator is an ordinary member under the policy. Their rights are over the instance: its settings, its accounts and the entries the instance itself ships. Share-link moderation, the job monitor and admin-started bulk AI enrichment reach across households.
 
 Recipes and cookbooks belong to their Owner, as in a personal-sharing app. They leave with the Owner and are erased with the Owner's account. Everything else is the household's and stays.
 

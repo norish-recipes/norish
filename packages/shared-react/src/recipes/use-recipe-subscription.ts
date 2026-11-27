@@ -1,5 +1,7 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
+
 import type { EventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { RecipesRealtime } from "@norish/shared/contracts/realtime/recipes";
 
@@ -25,14 +27,17 @@ export function useRecipeSubscription(
   callbacks: RecipeSubscriptionCallbacks = {}
 ) {
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const { queryKey, setRecipeData, invalidate } = useRecipeQuery(recipeId);
 
   useKeepsCurrent(recipeId ? [queryKey] : []);
 
   const common = { enabled: !!recipeId, liveQueryKeys: [queryKey] };
   const write = (recipe: Payload<"updated">["recipe"]) => {
-    if (recipe.id === recipeId)
-      setRecipeData((cached) => (olderThanHeld(recipe.version, cached?.version) ? cached : recipe));
+    if (recipe.id !== recipeId) return;
+    setRecipeData((cached) => (olderThanHeld(recipe.version, cached?.version) ? cached : recipe));
+    // Its lines may read differently now.
+    void queryClient.invalidateQueries({ queryKey: trpc.recipes.lineReadings.pathKey() });
   };
 
   useRealtimeSubscription<Payload<"updated">>(trpc.recipes.onUpdated, {

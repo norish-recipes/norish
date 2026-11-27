@@ -77,6 +77,8 @@ interface RecoveryTransport {
   transport: OutboxMutationClient;
   /** Whether the live session still belongs to the Outbox owner about to Replay. */
   verifySession: (ownerId: string) => Promise<"match" | "mismatch" | "unverifiable">;
+  /** The household the server has the session in, read fresh; null when it can't be read. */
+  currentHousehold: () => Promise<string | null>;
   refetchActiveQueries: () => Promise<unknown>;
   topUp: () => Promise<unknown>;
 }
@@ -93,7 +95,8 @@ export interface OfflineEngine {
   /** Recovery over the applied owner's Outbox: sync now is `recover()`. */
   createRecovery(deps: RecoveryTransport): Recovery;
   createWarmSet(trpc: TRPCOptionsProxy<AppRouter>): WarmSet;
-  /** Retry: un-park an owner's Parked and Conflicted entries, then `recover()`. */
+  /** Retry: un-park an owner's Parked and Conflicted entries, then `recover()`; one made for
+   * another household is sent to the current one. */
   requeueParked(ownerId: string): Promise<void>;
   /** Discard an owner's whole queue; resolves with how many entries went. */
   discardAll(ownerId: string): Promise<number>;
@@ -122,6 +125,7 @@ export function createOfflineEngine(options: OfflineEngineOptions): OfflineEngin
     outboxLink: createOutboxLink<AppRouter>({
       store: outbox,
       owner: cache.owner,
+      household: cache.household,
       replayHeaderValue,
       wholeEdits: new Set(["recipes.update"]),
       timedWrites: new Set(SCOPED_WRITES),
@@ -129,12 +133,13 @@ export function createOfflineEngine(options: OfflineEngineOptions): OfflineEngin
       onConflict: () => recovery?.reportConflict(),
     }),
     probe: (probeOptions) => probeBackendReachable(probeUrl(), probeOptions),
-    createRecovery: ({ transport, verifySession, refetchActiveQueries, topUp }) =>
+    createRecovery: ({ transport, verifySession, currentHousehold, refetchActiveQueries, topUp }) =>
       (recovery = createRecovery({
         store: outbox,
         owner: cache.owner,
         submit: (entry) => replayOutboxEntry(transport, entry, replayHeaderValue),
         verifySession,
+        currentHousehold,
         refetchActiveQueries,
         topUp,
         locks,
@@ -149,7 +154,7 @@ export function createOfflineEngine(options: OfflineEngineOptions): OfflineEngin
         calendarRanges: options.calendarRanges,
         warmImages: options.warmImages,
       }),
-    requeueParked: (ownerId) => requeueParkedEntries(ownerId, outbox),
+    requeueParked: (ownerId) => requeueParkedEntries(ownerId, outbox, cache.household()),
     discardAll: (ownerId) => discardAllEntries(ownerId, outbox),
     unsyncedChanges: async () => {
       const owner = cache.owner();

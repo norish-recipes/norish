@@ -262,6 +262,7 @@
       "syncing": "{count, plural, =0 {Sincronizando} one {Sincronizando # cambio} other {Sincronizando # cambios}}",
       "syncNow": "Sincronizar ahora",
       "retryAll": "Reintentar todo",
+      "otherHousehold": "Algunos cambios se hicieron para otro hogar. «Reintentar todo» los envía al hogar en el que estás ahora.",
       "discardAll": "Descartar todo",
       "discardConfirmBody": "{count, plural, one {¿Descartar definitivamente # cambio en cola? No se enviará.} other {¿Descartar definitivamente # cambios en cola? No se enviarán.}}",
       "discardConfirm": "Descartar",
@@ -318,7 +319,7 @@
       "expired": "Ese código de unión ha caducado. Pide uno nuevo.",
       "alreadyMember": "Ya estás en este hogar.",
       "shared": "Sal primero de tu hogar para unirte a otro.",
-      "holdsThings": "Tu hogar tiene sus propias recetas, compras o planes, así que todavía no puede unirse a otro hogar."
+      "busy": "Ese hogar se estaba modificando en ese momento. Inténtalo de nuevo."
     }
   },
   "photos": {

@@ -5,13 +5,15 @@ import { useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type {
+  AdminRecipeShareInventoryDto,
   RecipeShareInventoryDto,
   RecipeShareSummaryDto,
 } from "@norish/shared/contracts/dto/recipe-shares";
 
 import type { ReadStatus } from "../trpc/read-status";
+import { useRealtimeSubscription } from "../realtime";
 import { useTRPC } from "../trpc";
-import { readStatus } from "../trpc/read-status";
+import { readStatus, rereadAfterWrite } from "../trpc/read-status";
 
 type RecipeSharesQueryResult = {
   shares: RecipeShareSummaryDto[];
@@ -31,6 +33,7 @@ type ShareInventoryQueryResult<TShare> = ReadStatus & {
 };
 
 type MyRecipeSharesQueryResult = ShareInventoryQueryResult<RecipeShareInventoryDto>;
+type AdminRecipeSharesQueryResult = ShareInventoryQueryResult<AdminRecipeShareInventoryDto>;
 
 export function useRecipeSharesQuery(recipeId: string | null): RecipeSharesQueryResult {
   const trpc = useTRPC();
@@ -70,6 +73,12 @@ export function useMyRecipeSharesQuery(): MyRecipeSharesQueryResult {
   const queryKey = trpc.recipes.shareListMine.queryKey();
   const query = useQuery(trpc.recipes.shareListMine.queryOptions());
 
+  // Told on the maker's own channel, so a link the maker may no longer view still rereads.
+  useRealtimeSubscription(trpc.recipes.onMyShareEvent, {
+    onEvent: () => void rereadAfterWrite(queryClient, queryKey),
+    liveQueryKeys: [queryKey],
+  });
+
   const invalidate = useCallback(() => {
     queryClient.invalidateQueries({ queryKey });
   }, [queryClient, queryKey]);
@@ -79,5 +88,19 @@ export function useMyRecipeSharesQuery(): MyRecipeSharesQueryResult {
     ...readStatus(query),
     queryKey,
     invalidate,
+  };
+}
+
+export function useAdminRecipeSharesQuery(): AdminRecipeSharesQueryResult {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const queryKey = trpc.recipes.shareListAdmin.queryKey();
+  const query = useQuery(trpc.recipes.shareListAdmin.queryOptions());
+
+  return {
+    shares: query.data ?? [],
+    ...readStatus(query),
+    queryKey,
+    invalidate: () => void queryClient.invalidateQueries({ queryKey }),
   };
 }

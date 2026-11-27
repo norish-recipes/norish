@@ -358,7 +358,8 @@ describe("Recipe Enrichment repository", () => {
           {
             originCountry: "IT",
             provenanceNote: "Would be stored.",
-            cuisineIds: ["00000000-0000-0000-0000-000000000000"],
+            // Not an id at all, so the Cuisine write fails (a gone id is dropped).
+            cuisineIds: ["not-a-cuisine-id"],
           },
           "replace"
         )
@@ -531,7 +532,8 @@ describe("Recipe Enrichment repository", () => {
         {
           originCountry: "IT",
           provenanceNote: "Would be stored.",
-          cuisineIds: ["00000000-0000-0000-0000-000000000000"],
+          // Not an id at all, so the Cuisine write fails (a gone id is dropped).
+          cuisineIds: ["not-a-cuisine-id"],
         },
         "gap-fill"
       );

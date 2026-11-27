@@ -24,8 +24,14 @@ function Prefetch({ ingredientId }: { ingredientId: string }) {
 }
 
 /** `useIngredientIcons` for a page's foods, then each icon's picture pulled into the image cache so rows draw it at once. */
-export function PrefetchIngredientIcons({ ids }: { ids: readonly (string | null | undefined)[] }) {
-  useIngredientIcons(ids);
+export function PrefetchIngredientIcons({
+  ids,
+  recipeId,
+}: {
+  ids: readonly (string | null | undefined)[];
+  recipeId?: string;
+}) {
+  useIngredientIcons(ids, recipeId);
 
   return iconIds(ids).map((id) => <Prefetch key={id} ingredientId={id} />);
 }

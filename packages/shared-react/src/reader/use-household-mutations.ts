@@ -16,7 +16,7 @@ const JOIN_REFUSAL_COPY: Record<JoinRefusal, string> = {
   expired: "common.household.joinRefused.expired",
   "already-member": "common.household.joinRefused.alreadyMember",
   shared: "common.household.joinRefused.shared",
-  "holds-things": "common.household.joinRefused.holdsThings",
+  busy: "common.household.joinRefused.busy",
 };
 
 /** Each action resolves whether its request went through: false when it failed. */

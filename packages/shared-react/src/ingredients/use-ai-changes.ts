@@ -14,6 +14,28 @@ export function isOpenChange(change: AIChange): boolean {
   return !change.sure && !change.kept;
 }
 
+/** What Changed by AI shows: the open changes, the rest, and what Keep all and Undo all answer. */
+export function aiChangesView(changes: AIChange[]) {
+  const unsure = changes.filter(isOpenChange);
+  // Keep all and Undo all answer the open changes the viewer may act on.
+  const actionable = unsure.filter((change) => change.canAct);
+
+  return {
+    unsure,
+    rest: changes.filter((change) => !isOpenChange(change)),
+    actionable,
+    answerAll: actionable.length > 1,
+  };
+}
+
+/** How many changes there are, and how many of them still wait to be kept or undone. */
+export function useAIChangeCounts() {
+  return useAIChangesQuery((changes) => ({
+    total: changes.length,
+    unsure: changes.filter(isOpenChange).length,
+  }));
+}
+
 const markKept = (ids: ReadonlySet<string>) => (list: AIChange[]) =>
   list.map((it) => (ids.has(it.id) ? { ...it, kept: true } : it));
 const drop = (ids: ReadonlySet<string>) => (list: AIChange[]) =>
@@ -25,6 +47,14 @@ export function useAIChangesQuery<T>(select: (changes: AIChange[]) => T): T {
   const { data } = useQuery({ ...trpc.ingredients.aiChanges.queryOptions(), select });
 
   return data ?? select(NO_CHANGES);
+}
+
+/** Whether the changes could not be read, with nothing held to show; `retry` reads them again. */
+export function useAIChangesRead() {
+  const trpc = useTRPC();
+  const { data, isError, refetch } = useQuery(trpc.ingredients.aiChanges.queryOptions());
+
+  return { failed: isError && data === undefined, retry: () => void refetch() };
 }
 
 /**

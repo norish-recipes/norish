@@ -150,72 +150,70 @@ export default function EditGroceryPanel({
   return (
     <>
       <Panel open={open} title={t("editTitle")} onOpenChange={handlePanelOpenChange}>
-        <Panel.Body>
-          <div className="space-y-3">
-            <Input
-              className="h-12 text-base font-medium"
-              placeholder={t("editPlaceholder")}
-              style={{
-                fontSize: "16px",
-              }}
-              value={itemName}
-              variant="secondary"
-              onChange={(e) => setItemName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleSubmit();
-                }
-              }}
-            />
+        <Panel.Body sections>
+          <Input
+            className="h-12 text-base font-medium"
+            placeholder={t("editPlaceholder")}
+            style={{
+              fontSize: "16px",
+            }}
+            value={itemName}
+            variant="secondary"
+            onChange={(e) => setItemName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleSubmit();
+              }
+            }}
+          />
 
-            {/* How often it comes back, right under what it is */}
-            <GroceryRecurrenceControl
-              confirmedPattern={confirmedPattern}
-              detectedPattern={detectedPattern}
+          {/* How often it comes back, right under what it is */}
+          <GroceryRecurrenceControl
+            confirmedPattern={confirmedPattern}
+            detectedPattern={detectedPattern}
+            itemName={itemName}
+            onConfirmDetected={handleConfirmPattern}
+            onEdit={() => setRecurrencePanelOpen(true)}
+            onRemove={handleRemovePattern}
+          />
+
+          {/* Store selection */}
+          <StoreSelector
+            showWhenEmpty
+            label={t("selectStore")}
+            selectedStoreId={selectedStoreId}
+            stores={stores}
+            onSelectionChange={handleStoreChange}
+          />
+
+          {/* Where in that shop this is found: only for a Store with aisles, once there is a name */}
+          {price.store && aisle.aisles.length > 0 && price.groceryName !== "" && (
+            <AisleSelector
+              aisles={aisle.aisles}
+              selectedAisleId={aisle.aisleId}
+              onSelectionChange={aisle.setAisleId}
+            />
+          )}
+
+          {/* Which of that shop's products this is */}
+          {price.store && (
+            <GroceryProductField
+              // A different Store is a different question: the field starts
+              // over rather than carrying the last shop's answers into it.
+              key={price.store.id}
+              choice={price.choice}
+              groceryName={price.groceryName}
               itemName={itemName}
-              onConfirmDetected={handleConfirmPattern}
-              onEdit={() => setRecurrencePanelOpen(true)}
-              onRemove={handleRemovePattern}
+              linkPending={price.linkPending}
+              linkedProduct={price.linkedProduct}
+              purchaseAmount={purchaseAmount}
+              store={price.store}
+              onChoice={price.setChoice}
+              onPurchaseAmount={setPurchaseAmount}
+              onValidityChange={setProductValid}
             />
-
-            {/* Store selection */}
-            <StoreSelector
-              showWhenEmpty
-              label={t("selectStore")}
-              selectedStoreId={selectedStoreId}
-              stores={stores}
-              onSelectionChange={handleStoreChange}
-            />
-
-            {/* Where in that shop this is found: only for a Store with aisles, once there is a name */}
-            {price.store && aisle.aisles.length > 0 && price.groceryName !== "" && (
-              <AisleSelector
-                aisles={aisle.aisles}
-                selectedAisleId={aisle.aisleId}
-                onSelectionChange={aisle.setAisleId}
-              />
-            )}
-
-            {/* Which of that shop's products this is */}
-            {price.store && (
-              <GroceryProductField
-                // A different Store is a different question: the field starts
-                // over rather than carrying the last shop's answers into it.
-                key={price.store.id}
-                choice={price.choice}
-                groceryName={price.groceryName}
-                itemName={itemName}
-                linkPending={price.linkPending}
-                linkedProduct={price.linkedProduct}
-                purchaseAmount={purchaseAmount}
-                store={price.store}
-                onChoice={price.setChoice}
-                onPurchaseAmount={setPurchaseAmount}
-                onValidityChange={setProductValid}
-              />
-            )}
-          </div>
+          )}
         </Panel.Body>
         <Panel.Footer>
           <ActionButtonGroup

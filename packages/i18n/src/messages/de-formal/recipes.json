@@ -41,12 +41,8 @@
   },
   "empty": {
     "title": "Ihre Bibliothek wartet",
-    "description": "Fügen Sie eine Rezept-URL in das Suchfeld oben ein und schauen Sie, wie die Magie passiert.",
     "noResults": "Keine Rezepte gefunden",
-    "noResultsHint": "Versuchen Sie, Ihre Filter anzupassen oder zu löschen.",
-    "noCookbooks": "Noch keine Kochbücher",
-    "noCookbooksHint": "Ein Kochbuch ist eine benannte Sammlung von Rezepten. Erstellen Sie Ihr erstes, um Ihre Bibliothek zu ordnen.",
-    "descriptionMobile": "Fügen Sie Ihr erstes Rezept über einen Link, Text oder Fotos hinzu."
+    "noCookbooks": "Noch keine Kochbücher"
   },
   "card": {
     "noImage": "Kein Bild verfügbar",
@@ -67,6 +63,7 @@
     "addToGroceries": "Zur Einkaufsliste hinzufügen",
     "ratingPrompt": "Was halten Sie von diesem Rezept?",
     "notFound": "Rezept nicht gefunden",
+    "offline": "Dieses Rezept benötigt eine Verbindung",
     "notFoundMessage": "Dieses Rezept existiert nicht oder Sie haben keine Berechtigung, es anzuzeigen.",
     "prep": "Vorbereitung",
     "total": "gesamt",
@@ -442,7 +439,6 @@
     "singular": "Kochbuch",
     "notFound": "Kochbuch nicht gefunden",
     "notFoundHint": "Es wurde möglicherweise gelöscht oder ist für Sie nicht sichtbar.",
-    "emptyHint": "Fügen Sie Rezepte über das Aktionsmenü eines Rezepts hinzu.",
     "panelTitle": "Zu Kochbuch hinzufügen",
     "newWithRecipe": "Neues Kochbuch mit diesem Rezept",
     "noneEditable": "Es gibt keine Kochbücher, die Sie bearbeiten können.",

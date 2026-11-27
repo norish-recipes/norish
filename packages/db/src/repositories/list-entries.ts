@@ -1,7 +1,6 @@
 /** Tags, Cuisines and Categories as household lists (ADR-0043): a row is its household's (null for
  * the instance), unique on its fold there; a recipe carries its household's and the instance's. */
 import type { SQL } from "drizzle-orm";
-import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import {
   and,
   count,
@@ -12,6 +11,7 @@ import {
   isNull,
   like,
   ne,
+  not,
   notExists,
   or,
   sql,
@@ -24,6 +24,7 @@ import { dbLogger } from "@norish/db/logger";
 import {
   categories,
   cuisines,
+  households,
   recipeCategories,
   recipeCuisines,
   recipes,
@@ -32,12 +33,17 @@ import {
 } from "@norish/db/schema";
 import { LIST_NAME_MAX } from "@norish/shared/contracts/zod/list-entry";
 import { entryFold } from "@norish/shared/lib/fold-name";
+import { groupBy } from "@norish/shared/lib/group-by";
 import { stripHtmlTags } from "@norish/shared/lib/helpers";
 
 import type { MutationOutcome } from "./mutation-outcomes";
+import { arrayParam, isAnyOf } from "./array-params";
 import { isConstraintViolation } from "./constraint-violation";
-import { ForeignHouseholdReferenceError } from "./household-rows";
+import { ForeignHouseholdReferenceError, lockRecipeHouseholdsTx } from "./household-rows";
+import { inScope, isInstanceRow } from "./household-scope";
+import { lockUntilSettled } from "./lock-until-settled";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
+import { defaultOf } from "./raw-sql";
 
 export type ListKind = "tag" | "cuisine" | "category";
 
@@ -79,7 +85,7 @@ export interface ListEntryRow {
 }
 
 /** An entry with the count of the household's recipes carrying it. */
-interface ListEntry extends ListEntryRow {
+export interface ListEntry extends ListEntryRow {
   recipeCount: number;
 }
 
@@ -93,35 +99,13 @@ export function entryName(name: string): { name: string; fold: string } | null {
   return cleaned ? { name: cleaned, fold: entryFold(cleaned) } : null;
 }
 
-/**
- * The rows of a scope, by their `household_id`: a household's own, or the instance's for null; with
- * `offered`, the instance's too, as a household's list offers them. The household may be a subquery.
- */
-export function inScope(
-  householdId: AnyPgColumn,
-  scope: ListScope | SQL,
-  { offered = false }: { offered?: boolean } = {}
-): SQL {
-  if (scope === null) return isNull(householdId);
-
-  const own = eq(householdId, scope);
-
-  return offered ? or(own, isNull(householdId))! : own;
-}
-
 /** The columns of an entry as its list shows it. */
 const rowColumns = (table: ListTable) => ({
   id: table.id,
   name: table.name,
-  instance: isNull(table.householdId).mapWith(Boolean),
+  instance: isInstanceRow(table.householdId),
   version: table.version,
 });
-
-/** One row to select constants from: the builder has no select without `from`. */
-const ONE_ROW = sql`(values (1)) as ${sql.identifier("one_row")}`;
-
-/** `column`'s own default: an insert-from-select names every column. */
-const defaultOf = (column: AnyPgColumn) => sql`${column.default}`.as(column.name);
 
 /** A list's order: by name, then id. */
 const byName = (table: ListTable) => [sql`lower(${table.name})`, table.id];
@@ -136,6 +120,42 @@ const asEntryRow = ({ id, name, instance, version }: ListEntryRow): ListEntryRow
   instance,
   version,
 });
+
+/** Holds each kind's `folds` until the commit: every write giving an entry a fold takes it, after the
+ * household rows and before list rows, so a fold is never the instance's and a household's. */
+async function lockFoldsTx(
+  tx: DbTransaction,
+  folds: Partial<Record<ListKind, readonly string[]>>
+): Promise<void> {
+  const keys = [
+    ...new Set(LIST_KINDS.flatMap((kind) => (folds[kind] ?? []).map((fold) => `${kind}:${fold}`))),
+  ];
+  const key = sql`fold_key.key`;
+
+  if (keys.length === 0) return;
+  // Taken in the key's order, so two writes of several folds cannot deadlock on them.
+  await tx
+    .select({ held: sql`pg_advisory_xact_lock(hashtextextended(${key}, 0))` })
+    .from(sql`unnest(${arrayParam(keys, "text")}) as fold_key(key)`)
+    .orderBy(key);
+}
+
+/** {@link lockFoldsTx} for one kind. */
+export const lockEntryFoldsTx = (tx: DbTransaction, kind: ListKind, folds: readonly string[]) =>
+  lockFoldsTx(tx, { [kind]: folds });
+
+/** {@link lockFoldsTx} for the folds of each kind's `names`: a write of several lists takes them in
+ * this one call, before any list's rows. */
+export const lockEntryNamesTx = (
+  tx: DbTransaction,
+  names: Partial<Record<ListKind, readonly string[]>>
+) =>
+  lockFoldsTx(
+    tx,
+    Object.fromEntries(
+      LIST_KINDS.map((kind) => [kind, (names[kind] ?? []).flatMap((n) => entryName(n)?.fold ?? [])])
+    )
+  );
 
 /** A row 0092 could not fold exactly: keyed by " <id>", which no fold can be. */
 const PENDING_FOLD_PREFIX = " ";
@@ -173,6 +193,42 @@ export async function findFoldedTwinTx(
   return row;
 }
 
+/** Each household entry of `kind` folding like an instance entry, with that entry, by id. */
+function householdTwinPairs(tx: DbTransaction, kind: ListKind) {
+  const { table } = KINDS[kind];
+  const instance = alias(table, "instance");
+
+  return tx
+    .select({ id: table.id, instanceId: instance.id, fold: table.nameFold })
+    .from(table)
+    .innerJoin(instance, and(isNull(instance.householdId), eq(instance.nameFold, table.nameFold)))
+    .where(isNotNull(table.householdId))
+    .orderBy(table.id);
+}
+
+/** The folds {@link takeOverHouseholdTwinsTx} locks, for a caller to take with its own in one call. */
+export async function householdTwinFoldsTx(tx: DbTransaction, kind: ListKind) {
+  return (await householdTwinPairs(tx, kind)).map((pair) => pair.fold);
+}
+
+/** Merges each household entry of `kind` folding like an instance entry into it; answers how many
+ * went. Only data from before 0.28 holds such a pair. */
+export async function takeOverHouseholdTwinsTx(tx: DbTransaction, kind: ListKind): Promise<number> {
+  await lockEntryFoldsTx(tx, kind, await householdTwinFoldsTx(tx, kind));
+  const pairs = await householdTwinPairs(tx, kind);
+
+  for (const [instanceId, twins] of groupBy(pairs, (pair) => pair.instanceId)) {
+    await mergeEntryTx(
+      tx,
+      kind,
+      twins.map((twin) => twin.id),
+      instanceId
+    );
+  }
+
+  return pairs.length;
+}
+
 /** Writes `fold` as the entry's key. */
 export async function setEntryFoldTx(tx: DbTransaction, kind: ListKind, id: string, fold: string) {
   const { table } = KINDS[kind];
@@ -204,14 +260,17 @@ export async function listEntryNames(kind: ListKind, householdId: string): Promi
 export async function listEntries(kind: ListKind, householdId: string): Promise<ListEntry[]> {
   const { table, link, entity } = KINDS[kind];
 
-  // A link joins only through a recipe of the household, so `count` sees just those.
+  // The join qualifies the columns, so the count correlates on the outer entry.
+  const carriers = qb
+    .select({ n: sql<number>`count(*)::int` })
+    .from(link)
+    .innerJoin(recipes, eq(recipes.id, link.recipeId))
+    .where(and(eq(entity, table.id), eq(recipes.householdId, householdId)));
+
   return await db
-    .select({ ...rowColumns(table), recipeCount: count(recipes.id) })
+    .select({ ...rowColumns(table), recipeCount: sql<number>`${carriers}` })
     .from(table)
-    .leftJoin(link, eq(entity, table.id))
-    .leftJoin(recipes, and(eq(recipes.id, link.recipeId), eq(recipes.householdId, householdId)))
     .where(inScope(table.householdId, householdId, { offered: true }))
-    .groupBy(table.id)
     .orderBy(...byName(table));
 }
 
@@ -246,6 +305,11 @@ export async function entriesByFoldTx(
 
   const found = new Map<string, ListEntryRow>();
 
+  // Every fold is held before what the list has is read, so none goes and comes back unlocked.
+  if (create) {
+    await holdHouseholdTx(tx, householdId);
+    await lockEntryFoldsTx(tx, kind, [...wanted.keys()]);
+  }
   for (let attempt = 0; attempt < ATTACH_ATTEMPTS && found.size < wanted.size; attempt += 1) {
     const missing = [...wanted.keys()].filter((fold) => !found.has(fold));
     const rows = await tx
@@ -297,71 +361,120 @@ export interface EntryWriteOptions {
   createEntries?: boolean;
 }
 
-/** Replaces a recipe's entries with `names`, in order, from the recipe's household's list. */
+/** Replaces a recipe's entries with `names`, in order, from the recipe's household's list;
+ * answers how many names it found no entry for. */
 export async function replaceRecipeEntriesByNameTx(
   tx: DbTransaction,
   kind: ListKind,
   recipeId: string,
   names: readonly string[],
   { createEntries = true }: EntryWriteOptions = {}
-): Promise<void> {
-  const householdId = await recipeHouseholdId(recipeId, tx);
+): Promise<number> {
+  const householdId = await lockedRecipeHouseholdTx(tx, recipeId);
 
-  if (!householdId) return;
+  if (!householdId) return 0;
 
   const entries = await entriesByFoldTx(tx, kind, householdId, names, { create: createEntries });
   const ids = names.flatMap((name) => entries.get(entryName(name)?.fold ?? "")?.id ?? []);
 
-  await writeRecipeLinksTx(tx, kind, recipeId, ids);
+  await writeRecipeLinksTx(tx, kind, householdId, recipeId, ids);
+
+  return names.length - ids.length;
 }
 
-/** Replaces a recipe's entries with `ids`, in order: each the recipe's household's, the instance's
- * or one it carries already, else ForeignHouseholdReferenceError. */
+/** The recipe's household, held so no move takes the recipe elsewhere before the commit. */
+async function lockedRecipeHouseholdTx(tx: DbTransaction, recipeId: string) {
+  return (await lockRecipeHouseholdsTx(tx, { recipeIds: [recipeId] })).get(recipeId) ?? null;
+}
+
+/** Replaces a recipe's entries with `ids`: its household's and the instance's stay; another's takes
+ * its fold's entry there (instance first), else ForeignHouseholdReferenceError; a gone id is counted. */
 export async function replaceRecipeEntryIdsTx(
   tx: DbTransaction,
   kind: ListKind,
   recipeId: string,
   ids: readonly string[]
-): Promise<void> {
-  const { table, link, entity } = KINDS[kind];
+): Promise<number> {
+  const { table } = KINDS[kind];
+  const householdId = await lockedRecipeHouseholdTx(tx, recipeId);
   const unique = [...new Set(ids)];
 
-  if (unique.length > 0) {
-    const recipeHousehold = tx
-      .select({ householdId: recipes.householdId })
-      .from(recipes)
-      .where(eq(recipes.id, recipeId));
-    // At most one link per recipe and entry, so the join adds no rows; only the entries are held.
-    const allowed = await tx
-      .select({ id: table.id })
-      .from(table)
-      .leftJoin(link, and(eq(link.recipeId, recipeId), eq(entity, table.id)))
-      .where(
-        and(
-          inArray(table.id, unique),
-          or(
-            inScope(table.householdId, sql`(${recipeHousehold})`, { offered: true }),
-            isNotNull(link.recipeId)
+  if (!householdId) return 0;
+  const named = await tx
+    .select({ id: table.id, householdId: table.householdId, nameFold: table.nameFold })
+    .from(table)
+    .where(isAnyOf(table.id, unique, "uuid"));
+  const seen = (row: { householdId: string | null }) =>
+    row.householdId === householdId || row.householdId === null;
+  const staleFolds = named.filter((row) => !seen(row)).map((row) => row.nameFold);
+  const homes =
+    staleFolds.length === 0
+      ? []
+      : await tx
+          .select({ id: table.id, householdId: table.householdId, nameFold: table.nameFold })
+          .from(table)
+          .where(
+            and(
+              inScope(table.householdId, householdId, { offered: true }),
+              isAnyOf(table.nameFold, staleFolds, "text")
+            )
           )
-        )
-      )
-      .for("key share", { of: table });
+          .for("key share");
+  const homeOf = new Map<string, string>();
 
-    if (allowed.length !== unique.length) throw new ForeignHouseholdReferenceError();
+  // An instance entry wins over a household's own of the same fold, as in `entriesByFoldTx`.
+  for (const row of homes) {
+    if (!homeOf.has(row.nameFold) || row.householdId === null) homeOf.set(row.nameFold, row.id);
   }
+  const byId = new Map(named.map((row) => [row.id, row]));
 
-  await writeRecipeLinksTx(tx, kind, recipeId, unique);
+  await writeRecipeLinksTx(
+    tx,
+    kind,
+    householdId,
+    recipeId,
+    unique.flatMap((id) => {
+      const row = byId.get(id);
+
+      if (!row) return [];
+      if (seen(row)) return [id];
+      const home = homeOf.get(row.nameFold);
+
+      if (!home) throw new ForeignHouseholdReferenceError();
+
+      return [home];
+    })
+  );
+
+  return unique.filter((id) => !byId.has(id)).length;
 }
 
-/** Links `recipeId` to `ids` in order, the first at `from`, keeping a link already there. */
+/** Inserts `links`, keeping a link already there; each entry must be `householdId`'s (the recipes'
+ * household, held by the caller) or the instance's, else ForeignHouseholdReferenceError. */
 async function insertLinksTx(
   tx: DbTransaction,
   kind: ListKind,
+  householdId: string,
   links: readonly { recipeId: string; id: string; order: number }[]
 ): Promise<void> {
-  const { link, linkRow } = KINDS[kind];
+  const { table, link, linkRow } = KINDS[kind];
 
   if (links.length === 0) return;
+  const [outside] = await tx
+    .select({ count: count() })
+    .from(table)
+    .where(
+      and(
+        isAnyOf(
+          table.id,
+          links.map((row) => row.id),
+          "uuid"
+        ),
+        not(inScope(table.householdId, householdId, { offered: true }))
+      )
+    );
+
+  if (outside?.count) throw new ForeignHouseholdReferenceError();
 
   await tx
     .insert(link)
@@ -376,13 +489,14 @@ const linksOf = (recipeId: string, ids: readonly string[], from = 0) =>
 async function writeRecipeLinksTx(
   tx: DbTransaction,
   kind: ListKind,
+  householdId: string,
   recipeId: string,
   ids: readonly string[]
 ): Promise<void> {
   const { link } = KINDS[kind];
 
   await tx.delete(link).where(eq(link.recipeId, recipeId));
-  await insertLinksTx(tx, kind, linksOf(recipeId, [...new Set(ids)]));
+  await insertLinksTx(tx, kind, householdId, linksOf(recipeId, [...new Set(ids)]));
 }
 
 /** A recipe's entry names, in order. */
@@ -410,9 +524,9 @@ export async function appendRecipeEntriesTx(
   recipeId: string,
   names: readonly string[]
 ): Promise<{ added: string[]; all: string[] }> {
+  const householdId = await lockedRecipeHouseholdTx(tx, recipeId);
   const existing = await recipeEntryNames(kind, recipeId, tx);
   const has = new Set(existing.map(entryFold));
-  const householdId = await recipeHouseholdId(recipeId, tx);
   const fresh = names.flatMap((name) => entryName(name) ?? []).filter((e) => !has.has(e.fold));
 
   if (!householdId || fresh.length === 0) return { added: [], all: existing };
@@ -431,6 +545,7 @@ export async function appendRecipeEntriesTx(
   await insertLinksTx(
     tx,
     kind,
+    householdId,
     linksOf(
       recipeId,
       added.map((entry) => entry.id),
@@ -444,31 +559,148 @@ export async function appendRecipeEntriesTx(
   };
 }
 
-type AddEntryResult = { entry: ListEntryRow; created: boolean };
+/** `households`: those whose entries of the name an instance entry took over. */
+type AddEntryResult = { entry: ListEntryRow; created: boolean; households: string[] };
 
-/** The scope's entry folded as `fold`, else the instance's; locked for a change when `lock`. */
+/** The instance's entry folded as `fold`, else the scope's. */
 async function foldedEntry(
   connection: Db,
   kind: ListKind,
   scope: ListScope,
-  fold: string,
-  lock = false
+  fold: string
 ): Promise<ListEntryRow | undefined> {
   const { table } = KINDS[kind];
-  const query = connection
+  const [row] = await connection
     .select(rowColumns(table))
     .from(table)
     .where(and(inScope(table.householdId, scope, { offered: true }), eq(table.nameFold, fold)))
     .orderBy(instanceFirst(table))
-    .limit(1)
-    .$dynamic();
-  const [row] = await (lock ? query.for("update") : query);
+    .limit(1);
 
   return row;
 }
 
+/** The household's row, held so no join or leave moves its lists before the commit. */
+async function holdHouseholdTx(tx: DbTransaction, householdId: string): Promise<void> {
+  await tx
+    .select({ id: households.id })
+    .from(households)
+    .where(eq(households.id, householdId))
+    .for("key share");
+}
+
+/** An entry as a takeover or rename locks it. */
+type LockedEntry = ListEntryRow & { householdId: string | null; nameFold: string };
+
+const lockedColumns = (table: ListTable) => ({
+  ...rowColumns(table),
+  householdId: table.householdId,
+  nameFold: table.nameFold,
+});
+
+/**
+ * Before an instance entry takes `fold`: the households holding it (until settled), their recipes
+ * carrying it, the fold, then every entry of the fold and `also`, by id; answers those entries.
+ */
+async function lockTakeoverTx(
+  tx: DbTransaction,
+  kind: ListKind,
+  fold: string,
+  also: string | null = null
+): Promise<LockedEntry[]> {
+  const { table, link, entity } = KINDS[kind];
+  const twin = and(isNotNull(table.householdId), eq(table.nameFold, fold));
+  const holders = async () =>
+    (await tx.selectDistinct({ id: table.householdId }).from(table).where(twin)).flatMap(
+      (row) => row.id ?? []
+    );
+  const lockHolders = () =>
+    lockUntilSettled(
+      holders,
+      (ids) =>
+        tx
+          .select({ id: households.id })
+          .from(households)
+          .where(isAnyOf(households.id, ids, "uuid"))
+          .orderBy(households.id)
+          .for("key share"),
+      (id) => id
+    );
+
+  const lockRecipes = () =>
+    tx
+      .select({ id: recipes.id })
+      .from(recipes)
+      .where(
+        inArray(
+          recipes.id,
+          qb
+            .select({ id: link.recipeId })
+            .from(link)
+            .innerJoin(table, eq(table.id, entity))
+            .where(twin)
+        )
+      )
+      .orderBy(recipes.id)
+      .for("key share");
+
+  // Households and recipes before the fold, as a recipe write takes its row first; one that took
+  // the fold before the fold lock landed is locked after it.
+  await lockHolders();
+  await lockRecipes();
+  await lockEntryFoldsTx(tx, kind, [fold]);
+  await lockHolders();
+  await lockRecipes();
+
+  return await tx
+    .select(lockedColumns(table))
+    .from(table)
+    .where(
+      also === null ? eq(table.nameFold, fold) : or(eq(table.nameFold, fold), eq(table.id, also))
+    )
+    .orderBy(table.id)
+    .for("update");
+}
+
+/** The households' `twins` merge into the instance entry `entry`; answers it and their households. */
+async function takeOverTwinsTx(
+  tx: DbTransaction,
+  kind: ListKind,
+  entry: ListEntryRow,
+  twins: readonly LockedEntry[]
+): Promise<{ entry: ListEntryRow; households: string[] }> {
+  if (twins.length === 0) return { entry, households: [] };
+  const merged = await mergeEntryTx(
+    tx,
+    kind,
+    twins.map((twin) => twin.id),
+    entry.id
+  );
+
+  return {
+    entry: merged ?? entry,
+    households: [...new Set(twins.flatMap((twin) => twin.householdId ?? []))],
+  };
+}
+
+/** How often a takeover or rename runs again after a deadlock or a name made meanwhile. */
+const CONFLICT_ATTEMPTS = 3;
+
+async function retryingConflicts<T>(run: () => Promise<T>): Promise<T> {
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      return await run();
+    } catch (error) {
+      const retryable =
+        isConstraintViolation(error, "23505") || isConstraintViolation(error, "40P01");
+
+      if (attempt >= CONFLICT_ATTEMPTS || !retryable) throw error;
+    }
+  }
+}
+
 /** Adds `name` to the scope's list. A name it has, the instance's included, answers that entry,
- * also when a concurrent add made it. */
+ * also when a concurrent add made it; an instance entry takes over the households' of its name. */
 export async function addEntry(
   kind: ListKind,
   scope: ListScope,
@@ -478,47 +710,58 @@ export async function addEntry(
   const entry = entryName(name);
 
   if (!entry) return null;
+  if (scope === null) return await addInstanceEntry(kind, entry);
 
-  const instance = alias(table, "instance");
-  // One statement: an instance entry committed meanwhile is answered, never shadowed.
-  const [created] = await db
-    .insert(table)
-    .select(
-      qb
-        .select({
-          id: defaultOf(table.id),
-          householdId: sql<string | null>`${scope}::uuid`.as(table.householdId.name),
-          name: sql<string>`${entry.name}`.as(table.name.name),
-          nameFold: sql<string>`${entry.fold}`.as(table.nameFold.name),
-          createdAt: defaultOf(table.createdAt),
-          version: defaultOf(table.version),
-        })
-        .from(ONE_ROW)
-        .where(
-          notExists(
-            qb
-              .select({ id: instance.id })
-              .from(instance)
-              .where(and(isNull(instance.householdId), eq(instance.nameFold, entry.fold)))
-          )
-        )
-    )
-    .onConflictDoNothing()
-    .returning(rowColumns(table));
+  return await db.transaction(async (tx) => {
+    await holdHouseholdTx(tx, scope);
+    await lockEntryFoldsTx(tx, kind, [entry.fold]);
+    const existing = await foldedEntry(tx, kind, scope, entry.fold);
 
-  if (created) return { entry: created, created: true };
+    if (existing) return { entry: existing, created: false, households: [] };
+    const [created] = await tx
+      .insert(table)
+      .values({ householdId: scope, name: entry.name, nameFold: entry.fold })
+      .onConflictDoNothing()
+      .returning(rowColumns(table));
 
-  const existing = await foldedEntry(db, kind, scope, entry.fold);
+    if (created) return { entry: created, created: true, households: [] };
+    // Only a write that skipped the fold lock gets here.
+    const made = await foldedEntry(tx, kind, scope, entry.fold);
 
-  return existing ? { entry: existing, created: false } : null;
+    return made ? { entry: made, created: false, households: [] } : null;
+  });
 }
 
-/** Moves every recipe from `sourceId` onto `targetId` without duplicates, removes the source and
+async function addInstanceEntry(
+  kind: ListKind,
+  entry: { name: string; fold: string }
+): Promise<AddEntryResult | null> {
+  const { table } = KINDS[kind];
+
+  return await retryingConflicts(() =>
+    db.transaction(async (tx) => {
+      const locked = await lockTakeoverTx(tx, kind, entry.fold);
+      const existing = locked.find((row) => row.householdId === null);
+
+      if (existing) return { entry: asEntryRow(existing), created: false, households: [] };
+      const [created] = await tx
+        .insert(table)
+        .values({ householdId: null, name: entry.name, nameFold: entry.fold })
+        .returning(rowColumns(table));
+
+      return created
+        ? { created: true, ...(await takeOverTwinsTx(tx, kind, created, locked)) }
+        : null;
+    })
+  );
+}
+
+/** Moves every recipe from `sourceIds` onto `targetId` without duplicates, removes the sources and
  * answers the target, its version bumped. */
 export async function mergeEntryTx(
   tx: DbTransaction,
   kind: ListKind,
-  sourceId: string,
+  sourceIds: readonly string[],
   targetId: string
 ): Promise<ListEntryRow | undefined> {
   const { table, link, entity, linkRow } = KINDS[kind];
@@ -534,11 +777,11 @@ export async function mergeEntryTx(
           version: defaultOf(link.version),
         })
         .from(link)
-        .where(eq(entity, sourceId))
+        .where(isAnyOf(entity, sourceIds, "uuid"))
     )
     .onConflictDoNothing();
-  await tx.delete(link).where(eq(entity, sourceId));
-  await tx.delete(table).where(eq(table.id, sourceId));
+  await tx.delete(link).where(isAnyOf(entity, sourceIds, "uuid"));
+  await tx.delete(table).where(isAnyOf(table.id, sourceIds, "uuid"));
 
   const [target] = await tx
     .update(table)
@@ -547,6 +790,205 @@ export async function mergeEntryTx(
     .returning(rowColumns(table));
 
   return target;
+}
+
+/** Gives `householdId` an entry of each fold of `ids` (a leaver's carried or a joiner's entries,
+ * folds held): the instance's, else its own, else a copy; its recipes carrying `ids` carry that. */
+async function takeEntriesOfFoldsTx(
+  tx: DbTransaction,
+  kind: ListKind,
+  householdId: string,
+  ids: readonly string[]
+): Promise<void> {
+  const { table, link, entity, linkRow } = KINDS[kind];
+  const foreign = alias(table, "foreign_entry");
+  const home = alias(table, "home_entry");
+  const instance = alias(table, "instance_entry");
+
+  if (ids.length === 0) return;
+  // The entries those folds land on are held against a delete until the move commits.
+  await tx
+    .select({ id: table.id })
+    .from(table)
+    .where(
+      and(
+        inScope(table.householdId, householdId, { offered: true }),
+        inArray(
+          table.nameFold,
+          qb
+            .select({ fold: foreign.nameFold })
+            .from(foreign)
+            .where(isAnyOf(foreign.id, ids, "uuid"))
+        )
+      )
+    )
+    .for("key share");
+  await tx
+    .insert(table)
+    .select(
+      qb
+        .selectDistinctOn([foreign.nameFold], {
+          id: defaultOf(table.id),
+          householdId: sql<string>`${householdId}::uuid`.as(table.householdId.name),
+          name: foreign.name,
+          nameFold: foreign.nameFold,
+          createdAt: defaultOf(table.createdAt),
+          version: defaultOf(table.version),
+        })
+        .from(foreign)
+        .where(
+          and(
+            isAnyOf(foreign.id, ids, "uuid"),
+            notExists(
+              qb
+                .select({ id: instance.id })
+                .from(instance)
+                .where(and(isNull(instance.householdId), eq(instance.nameFold, foreign.nameFold)))
+            )
+          )
+        )
+        .orderBy(foreign.nameFold, foreign.id)
+    )
+    .onConflictDoNothing();
+
+  const householdRecipes = qb
+    .select({ id: recipes.id })
+    .from(recipes)
+    .where(eq(recipes.householdId, householdId));
+
+  await tx
+    .insert(link)
+    .select(
+      qb
+        .select({
+          ...linkRow(link.recipeId, home.id, link.order),
+          createdAt: defaultOf(link.createdAt),
+          version: defaultOf(link.version),
+        })
+        .from(link)
+        .innerJoin(foreign, eq(foreign.id, entity))
+        .innerJoin(
+          home,
+          and(
+            inScope(home.householdId, householdId, { offered: true }),
+            eq(home.nameFold, foreign.nameFold)
+          )
+        )
+        .where(and(isAnyOf(entity, ids, "uuid"), inArray(link.recipeId, householdRecipes)))
+    )
+    .onConflictDoNothing();
+  await tx
+    .delete(link)
+    .where(and(isAnyOf(entity, ids, "uuid"), inArray(link.recipeId, householdRecipes)));
+}
+
+/** Each kind's folds as `read` answers them, one kind after another. */
+async function foldsByKind(
+  read: (list: (typeof KINDS)[ListKind], kind: ListKind) => Promise<readonly { fold: string }[]>
+) {
+  const folds: Partial<Record<ListKind, string[]>> = {};
+
+  for (const kind of LIST_KINDS)
+    folds[kind] = (await read(KINDS[kind], kind)).map((row) => row.fold);
+
+  return folds;
+}
+
+/** After a leave (ADR-0043): no recipe of the household carries another household's entry; each
+ * becomes the household's own of its fold. The carried entries are held against a change meanwhile. */
+export async function carryRecipeEntriesTx(tx: DbTransaction, householdId: string): Promise<void> {
+  const carried = (kind: ListKind) => {
+    const { table, link, entity } = KINDS[kind];
+
+    return () =>
+      tx
+        .select({ id: table.id, fold: table.nameFold })
+        .from(table)
+        .where(
+          and(
+            isNotNull(table.householdId),
+            ne(table.householdId, householdId),
+            inArray(
+              table.id,
+              qb
+                .select({ id: entity })
+                .from(link)
+                .innerJoin(recipes, eq(recipes.id, link.recipeId))
+                .where(eq(recipes.householdId, householdId))
+            )
+          )
+        );
+  };
+
+  // Every kind's folds in one call before any entry is locked.
+  await lockFoldsTx(tx, await foldsByKind((_list, kind) => carried(kind)()));
+  const foreign = new Map<ListKind, { id: string; fold: string }[]>();
+
+  for (const kind of LIST_KINDS) {
+    const { table } = KINDS[kind];
+    const foreignEntries = await lockUntilSettled(
+      carried(kind),
+      (rows) =>
+        tx
+          .select({ id: table.id })
+          .from(table)
+          .where(
+            isAnyOf(
+              table.id,
+              rows.map((row) => row.id),
+              "uuid"
+            )
+          )
+          .orderBy(table.id)
+          .for("share"),
+      (row) => row.id
+    );
+
+    foreign.set(kind, foreignEntries);
+  }
+  // An entry renamed before the lock landed; the folds already held are taken again at no wait.
+  await lockFoldsTx(tx, await foldsByKind(async (_list, kind) => foreign.get(kind) ?? []));
+  for (const kind of LIST_KINDS) {
+    await takeEntriesOfFoldsTx(
+      tx,
+      kind,
+      householdId,
+      (foreign.get(kind) ?? []).map((row) => row.id)
+    );
+  }
+}
+
+/** A household of one's lists join `into` (ADR-0043), after its recipes moved: each entry becomes
+ * `into`'s of its fold, its own where it has one, and the joiner's go. */
+export async function mergeHouseholdEntriesTx(
+  tx: DbTransaction,
+  from: string,
+  into: string
+): Promise<void> {
+  // The joiner's household is held, so its folds cannot change before their lock.
+  await lockFoldsTx(
+    tx,
+    await foldsByKind(({ table }) =>
+      tx.select({ fold: table.nameFold }).from(table).where(eq(table.householdId, from))
+    )
+  );
+  for (const kind of LIST_KINDS) {
+    const { table } = KINDS[kind];
+    const joinerEntries = await tx
+      .select({ id: table.id })
+      .from(table)
+      .where(eq(table.householdId, from))
+      .orderBy(table.id)
+      .for("update");
+
+    await takeEntriesOfFoldsTx(
+      tx,
+      kind,
+      into,
+      joinerEntries.map((row) => row.id)
+    );
+    await tx.delete(table).where(eq(table.householdId, from));
+  }
 }
 
 /** An entry as a change names it: the version the caller last read. */
@@ -564,10 +1006,36 @@ async function lockOwnEntryTx(tx: DbTransaction, kind: ListKind, scope: ListScop
   return row;
 }
 
-type RenameEntryResult = { entry: ListEntryRow; merged: boolean };
+/** The household's entry `id` and the entries its list has of `fold`, by id, after the fold. */
+async function lockHouseholdRenameTx(
+  tx: DbTransaction,
+  kind: ListKind,
+  householdId: string,
+  fold: string,
+  id: string
+): Promise<LockedEntry[]> {
+  const { table } = KINDS[kind];
+
+  await holdHouseholdTx(tx, householdId);
+  await lockEntryFoldsTx(tx, kind, [fold]);
+
+  return await tx
+    .select(lockedColumns(table))
+    .from(table)
+    .where(
+      and(
+        inScope(table.householdId, householdId, { offered: true }),
+        or(eq(table.id, id), eq(table.nameFold, fold))
+      )
+    )
+    .orderBy(table.id)
+    .for("update");
+}
+
+type RenameEntryResult = { entry: ListEntryRow; merged: boolean; households: string[] };
 
 /** Renames the scope's entry, stale when changed since `version`; a name the list has (the
- * instance's included) merges the entry onto that one. */
+ * instance's first) merges onto it. An instance entry renamed takes the households' of its name. */
 export async function renameEntry(
   kind: ListKind,
   scope: ListScope,
@@ -579,37 +1047,43 @@ export async function renameEntry(
 
   if (!entry) return null;
 
-  for (let attempt = 0; ; attempt += 1) {
-    try {
-      return await db.transaction(async (tx) => {
-        const own = await lockOwnEntryTx(tx, kind, scope, id);
+  return await retryingConflicts(() =>
+    db.transaction(async (tx) => {
+      const locked =
+        scope === null
+          ? await lockTakeoverTx(tx, kind, entry.fold, id)
+          : await lockHouseholdRenameTx(tx, kind, scope, entry.fold, id);
+      const own = locked.find((row) => row.id === id && row.householdId === scope);
 
-        if (!own) return null;
-        if (own.version !== version) return staleOutcome<RenameEntryResult>();
+      if (!own) return null;
+      if (own.version !== version) return staleOutcome<RenameEntryResult>();
+      const others = locked.filter((row) => row.id !== id && row.nameFold === entry.fold);
+      const twins = scope === null ? others.filter((row) => row.householdId !== null) : [];
+      const target =
+        own.nameFold === entry.fold
+          ? undefined
+          : (others.find((row) => row.householdId === null) ??
+            (scope === null ? undefined : others[0]));
 
-        if (own.nameFold !== entry.fold) {
-          const target = await foldedEntry(tx, kind, scope, entry.fold, true);
+      if (target) {
+        const merged = await mergeEntryTx(tx, kind, [id], target.id);
 
-          if (target) {
-            const merged = await mergeEntryTx(tx, kind, id, target.id);
+        return merged
+          ? appliedOutcome({ merged: true, ...(await takeOverTwinsTx(tx, kind, merged, twins)) })
+          : null;
+      }
 
-            return merged ? appliedOutcome({ entry: merged, merged: true }) : null;
-          }
-        }
+      const [renamed] = await tx
+        .update(table)
+        .set({ name: entry.name, nameFold: entry.fold, version: sql`${table.version} + 1` })
+        .where(eq(table.id, id))
+        .returning(rowColumns(table));
 
-        const [renamed] = await tx
-          .update(table)
-          .set({ name: entry.name, nameFold: entry.fold, version: sql`${table.version} + 1` })
-          .where(eq(table.id, id))
-          .returning(rowColumns(table));
-
-        return renamed ? appliedOutcome({ entry: renamed, merged: false }) : null;
-      });
-    } catch (error) {
-      // An entry of that name made meanwhile: the next attempt merges onto it.
-      if (attempt > 0 || !isConstraintViolation(error, "23505")) throw error;
-    }
-  }
+      return renamed
+        ? appliedOutcome({ merged: false, ...(await takeOverTwinsTx(tx, kind, renamed, twins)) })
+        : null;
+    })
+  );
 }
 
 /** Merges the scope's `source` into `target` (its own or an instance entry), stale when either
@@ -648,7 +1122,7 @@ export async function mergeEntries(
       return staleOutcome<ListEntryRow>();
     }
 
-    const merged = await mergeEntryTx(tx, kind, source.id, target.id);
+    const merged = await mergeEntryTx(tx, kind, [source.id], target.id);
 
     return merged ? appliedOutcome(merged) : null;
   });
@@ -678,6 +1152,21 @@ export async function deleteEntry(
 
     return appliedOutcome({ detached: detached.length });
   });
+}
+
+/** The table that links recipes to the entries of a kind, with its recipe and entry columns. */
+export function entryLinkOf(kind: ListKind) {
+  const { link, entity } = KINDS[kind];
+
+  return { link, recipeId: link.recipeId, entityId: entity };
+}
+
+/** How many recipes, in every household, carry the entry: what deleting an instance entry detaches. */
+export async function countEntryRecipes(kind: ListKind, id: string): Promise<number> {
+  const { link, entity } = KINDS[kind];
+  const [row] = await db.select({ n: count() }).from(link).where(eq(entity, id));
+
+  return row?.n ?? 0;
 }
 
 /** The scope's entry `id`, or null when it is no entry of the scope. */

@@ -41,6 +41,8 @@ export type GroceryCreateData = {
   unit?: string | null;
   isDone?: boolean;
   recipeIngredientId?: string | null;
+  /** The line's food a chip left untouched is, read through the line by the server. */
+  lineFoodId?: string | null;
 };
 
 export type GroceriesMutationsResult = {
@@ -131,6 +133,8 @@ export type PantryQueryResult = {
 export type PickedFood = {
   ingredientId: string;
   name: string;
+  /** The recipe line it was picked off, which the server reads the food through (ADR-0042). */
+  recipeIngredientId?: string;
   localeNames?: LocaleNames;
   ancestorIds?: string[];
 };

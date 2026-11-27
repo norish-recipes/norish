@@ -234,7 +234,7 @@ function PageRecipeHeader({ showCalories }: { showCalories: boolean }) {
   const recipe = useLoadedPageRecipe();
   const servings = usePageServings();
   const { allergies, allergySet } = useActiveAllergies();
-  const workedOut = useWorkedOutNutrition(recipe);
+  const { nutrition: workedOut } = useWorkedOutNutrition(recipe);
 
   return (
     <RecipeHeaderMobile

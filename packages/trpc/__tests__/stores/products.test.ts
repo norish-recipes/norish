@@ -17,7 +17,6 @@ import {
   createMockUser,
 } from "../calendar/test-utils";
 import { findIngredientFor, resolveIngredient } from "../mocks/ingredient-resolver";
-import { assertHouseholdAccess } from "../mocks/permissions";
 import { stores } from "../mocks/realtime/stores";
 
 const storeProductsRepository = vi.hoisted(() => ({
@@ -33,7 +32,7 @@ const storeProductsRepository = vi.hoisted(() => ({
 
 const storesRepository = vi.hoisted(() => ({
   getStoreById: vi.fn(),
-  getStoreHouseholdId: vi.fn(),
+  ownStoreExists: vi.fn(),
 }));
 
 vi.mock("@norish/db/repositories/store-products", () => storeProductsRepository);
@@ -67,8 +66,7 @@ describe("chooseProduct", () => {
   };
 
   beforeEach(() => {
-    storesRepository.getStoreHouseholdId.mockResolvedValue(ctx.householdId);
-    assertHouseholdAccess.mockReturnValue(undefined);
+    storesRepository.ownStoreExists.mockResolvedValue(true);
     storeProductsRepository.resolveProductLink.mockResolvedValue(null);
   });
 
@@ -93,7 +91,10 @@ describe("chooseProduct", () => {
 
     await caller.chooseProduct({ storeId: STORE, name: "Uien", choice: { kind: "none" } });
 
-    expect(resolveIngredient).toHaveBeenCalledWith("Uien", { userId: ctx.user.id });
+    expect(resolveIngredient).toHaveBeenCalledWith("Uien", {
+      userId: ctx.user.id,
+      householdId: ctx.householdId,
+    });
     expect(storeProductsRepository.upsertProductLink).toHaveBeenCalledWith(
       STORE,
       "ingredient:onion",
@@ -207,7 +208,7 @@ describe("chooseProduct", () => {
 
     await caller.chooseProduct({ storeId: STORE, name: "oude kaas", choice: manualChoice });
 
-    expect(storeProductsRepository.updateManualProduct).toHaveBeenCalledWith({
+    expect(storeProductsRepository.updateManualProduct).toHaveBeenCalledWith(ctx.householdId, {
       id: MANUAL_ID,
       name: "Oude kaas",
       price: 6.5,
@@ -242,6 +243,7 @@ describe("chooseProduct", () => {
     });
 
     expect(storeProductsRepository.setPackSizeByHand).toHaveBeenCalledExactlyOnceWith(
+      ctx.householdId,
       PRODUCT,
       pack
     );
@@ -255,6 +257,56 @@ describe("chooseProduct", () => {
       "ingredient:oude kaas",
       PRODUCT
     );
+  });
+
+  it("answers NOT_FOUND, saving no link, when the Pack Size finds no product of the household", async () => {
+    const PRODUCT = "33333333-3333-4333-8333-333333333333";
+
+    storeProductsRepository.getStoreProductById.mockResolvedValue({
+      id: PRODUCT,
+      storeId: STORE,
+      isManual: false,
+    });
+    storeProductsRepository.setPackSizeByHand.mockResolvedValue(null);
+    storeProductsRepository.upsertProductLink.mockClear();
+
+    await expect(
+      caller.chooseProduct({
+        storeId: STORE,
+        name: "oude kaas",
+        choice: { kind: "product", storeProductId: PRODUCT },
+        pack: { quantity: 500, unit: "gram", byWeight: false },
+      })
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+    expect(storeProductsRepository.upsertProductLink).not.toHaveBeenCalled();
+  });
+
+  it("answers NOT_FOUND, saving no link, when the by-hand product it corrects is gone", async () => {
+    storeProductsRepository.getStoreProductById.mockResolvedValue({
+      id: MANUAL_ID,
+      storeId: STORE,
+      isManual: true,
+    });
+    storeProductsRepository.updateManualProduct.mockResolvedValue(null);
+    storeProductsRepository.upsertProductLink.mockClear();
+
+    await expect(
+      caller.chooseProduct({ storeId: STORE, name: "oude kaas", choice: manualChoice })
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+    expect(storeProductsRepository.upsertProductLink).not.toHaveBeenCalled();
+  });
+
+  it("answers NOT_FOUND to an edit of a by-hand product that is gone", async () => {
+    storeProductsRepository.getStoreProductById.mockResolvedValue({
+      id: MANUAL_ID,
+      storeId: STORE,
+      isManual: true,
+    });
+    storeProductsRepository.updateManualProduct.mockResolvedValue(null);
+
+    await expect(
+      caller.updateProduct({ id: MANUAL_ID, name: "Oude kaas", price: 6.5, currency: "EUR" })
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
   });
 
   it("leaves the Pack Size alone where the field was left alone", async () => {
@@ -422,12 +474,11 @@ describe("searchShop", () => {
   ];
 
   beforeEach(() => {
-    storesRepository.getStoreHouseholdId.mockResolvedValue(ctx.householdId);
+    storesRepository.ownStoreExists.mockResolvedValue(true);
     storesRepository.getStoreById.mockResolvedValue({
       id: STORE,
       searchAddress: "https://www.dirk.nl/zoeken/producten/{query}",
     });
-    assertHouseholdAccess.mockReturnValue(undefined);
     lookup.searchStore.mockResolvedValue({ candidates: offered, answered: true });
     storeProductsRepository.resolveProductLink.mockResolvedValue(null);
   });
@@ -436,7 +487,7 @@ describe("searchShop", () => {
     const result = await caller.searchShop({ storeId: STORE, term: "oude kaas" });
 
     expect(result).toEqual({ candidates: offered, answered: true });
-    expect(findIngredientFor).toHaveBeenCalledWith("oude kaas");
+    expect(findIngredientFor).toHaveBeenCalledWith(ctx.householdId, "oude kaas");
     expect(storeProductsRepository.resolveProductLink).toHaveBeenCalledWith(
       STORE,
       "ingredient:oude kaas"

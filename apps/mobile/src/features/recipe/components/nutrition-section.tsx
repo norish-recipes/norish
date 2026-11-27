@@ -2,13 +2,13 @@ import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 import { AnimatedNumber } from "@/components/animated-number";
+import { Ionicons } from "@/components/icon";
 import { Stepper } from "@/components/stepper";
 import { useTokenColor } from "@/hooks/use-token-color";
 import { EASE_OUT } from "@/lib/motion/ease";
 import { timedTo } from "@/lib/motion/timed";
 import { plainText } from "@/lib/plain-text";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { useThemeColor } from "heroui-native";
+import { Skeleton, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import { useHiddenItemVisibility } from "@norish/shared-react/reader";
@@ -172,7 +172,7 @@ export function NutritionSection() {
   const recipe = useLoadedPageRecipe();
   const enrichment = usePageEnrichment();
   const { showNutrition } = useHiddenItemVisibility();
-  const workedOut = useWorkedOutNutrition(recipe);
+  const { nutrition: workedOut, isLoading } = useWorkedOutNutrition(recipe);
   const [portions, setPortions] = useState(1);
   const [listOpen, setListOpen] = useState(false);
   const [muted] = useThemeColor(["muted"] as const);
@@ -195,7 +195,7 @@ export function NutritionSection() {
       : null);
   const estimating = enrichment.isBusy("nutrition-estimation");
 
-  if (!showNutrition || (!shown && !estimating)) return null;
+  if (!showNutrition || (!shown && !estimating && !isLoading)) return null;
 
   const leftOut = !stored ? (workedOut?.leftOut ?? []) : [];
   const step = (next: number) => setPortions(Math.max(1, portions + next));
@@ -219,10 +219,12 @@ export function NutritionSection() {
       testID="recipe-nutrition"
       title={intl.formatMessage({ id: "recipes.nutrition.title" })}
     >
-      {estimating || !shown ? (
+      {estimating ? (
         <Text className="text-muted py-6 text-center text-sm">
           {intl.formatMessage({ id: "recipes.actions.estimatingNutrition" })}
         </Text>
+      ) : !shown ? (
+        <Skeleton className="h-24 w-full rounded-2xl" testID="recipe-nutrition-loading" />
       ) : (
         <>
           {shown.calories != null ? <CalorieBar calories={shown.calories * portions} /> : null}

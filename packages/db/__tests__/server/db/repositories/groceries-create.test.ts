@@ -12,12 +12,14 @@ import {
   createGroceries,
   deleteGroceryByIds,
   findNewestGroceryNamed,
+  findStoreGroceryFood,
   listGroceriesByHousehold,
   lockGroceryList,
   markAllDoneInStore,
   reorderGroceriesInStore,
   updateGroceries,
 } from "@norish/db/repositories/groceries";
+import { insertSeededIngredient } from "@norish/db/repositories/ingredient-seed";
 import { createStore } from "@norish/db/repositories/stores";
 import { groceries } from "@norish/db/schema";
 
@@ -72,6 +74,26 @@ describe("what a create shifts", () => {
       storeId,
       ...overrides,
     },
+  });
+
+  it("finds the food a Store's grocery names, though a newer one of its name names another", async () => {
+    const seeded = (name: string) =>
+      insertSeededIngredient({ name, offId: `en:${name}` }, [
+        { text: name, fold: name, locale: null },
+      ]);
+    const [kaas, kip] = [await seeded("kaas"), await seeded("kip")];
+    const older = line(" oude kaas ", { ingredientId: kaas });
+    const newer = line("oude kaas", { ingredientId: kip });
+    const brie = line("brie");
+
+    await createGroceries([older], householdId);
+    await createGroceries([newer], householdId);
+    await createGroceries([brie], householdId);
+
+    await expect(findStoreGroceryFood(storeId, older.id)).resolves.toBe(kaas);
+    await expect(findStoreGroceryFood(storeId, newer.id)).resolves.toBe(kip);
+    await expect(findStoreGroceryFood(storeId, brie.id)).resolves.toBeNull();
+    await expect(findStoreGroceryFood(crypto.randomUUID(), older.id)).resolves.toBeNull();
   });
 
   it("hands back every active sibling in the Store, shifted down at the version it had", async () => {

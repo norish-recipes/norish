@@ -5,8 +5,9 @@
 import type { NutritionEstimateValues } from "@norish/db/repositories/ingredient-nutrition";
 import {
   findCatalogueIngredientNames,
-  findIngredientIdsAmong,
-  listListedIngredientIds,
+  findIngredientHouseholds,
+  findListedIngredientIds,
+  listListedFoodsOfEveryCatalogue,
 } from "@norish/db/repositories/ingredient-catalogue";
 import {
   findNutritionLineage,
@@ -49,7 +50,7 @@ export async function listFoodsWithGaps(
   ingredientIds: readonly string[],
   asked: FillAsked
 ): Promise<Array<{ id: string; name: string }>> {
-  const listed = [...(await findIngredientIdsAmong(ingredientIds, "listed"))];
+  const listed = [...(await findListedIngredientIds(ingredientIds))];
   const gaps = await findNutritionGaps(listed);
   const names = await findCatalogueIngredientNames(listed);
 
@@ -70,11 +71,14 @@ function foodsWithGap(
   });
 }
 
-/** What each of Fill gaps' boxes would fill: the listed foods, seeded ones included, with that gap. */
+/**
+ * What each of Fill gaps' boxes would fill: the seed's foods, then each household's listed own foods,
+ * with that gap.
+ */
 export async function listFillGapsFoods(
   set: IconSet = shippedIconSet()
 ): Promise<Record<"nutrition" | "conversions" | "icons", IconFood[]>> {
-  const listed = await listListedIngredientIds();
+  const listed = await listListedFoodsOfEveryCatalogue();
   // Over the whole catalogue these are heavy, so both boxes share one read of them.
   const [gaps, names, icons] = await Promise.all([
     findNutritionGaps(listed),
@@ -129,7 +133,9 @@ export async function fillNutritionGaps(
   if (!(await saveNutritionEstimate(ingredientId, values))) {
     return { outcome: "skipped", reason: "not-found" };
   }
-  await ingredientChanges().changed([ingredientId]);
+  const householdId = (await findIngredientHouseholds([ingredientId])).get(ingredientId);
+
+  if (householdId !== undefined) await ingredientChanges().changed([ingredientId], householdId);
 
   return {
     outcome: "filled",

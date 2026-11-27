@@ -163,7 +163,7 @@ async function zipBytes(files: Record<string, string>) {
 
 async function importFiles(files: Record<string, string>) {
   const result = await importArchive(
-    { userId: "user-1", householdId: "household-1", memberIds: ["user-1"] },
+    { userId: "user-1", householdId: "household-1" },
     await zipBytes(files)
   );
 

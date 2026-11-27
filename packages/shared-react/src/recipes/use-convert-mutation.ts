@@ -5,10 +5,15 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import type { FullRecipeDTO, MeasurementSystem, RecipeConversion } from "@norish/shared/contracts";
 
-import { shouldPreserveOptimisticUpdate } from "../offline/optimistic-updates";
+import type { HouseholdMark } from "../offline/optimistic-updates";
+import {
+  markHousehold,
+  mayRestore,
+  shouldPreserveOptimisticUpdate,
+} from "../offline/optimistic-updates";
 import { useTRPC } from "../trpc";
 
-type ConvertMutationContext = {
+type ConvertMutationContext = HouseholdMark & {
   detailQueryKey: QueryKey;
   previousRecipe: FullRecipeDTO | null | undefined;
   didSwitchLocally: boolean;
@@ -73,6 +78,7 @@ export function useConvertMutation(
           detailQueryKey,
           previousRecipe,
           didSwitchLocally,
+          ...markHousehold(queryClient),
         } satisfies ConvertMutationContext;
       },
       onError: (error, _variables, context) => {
@@ -80,7 +86,10 @@ export function useConvertMutation(
           return;
         }
 
-        const previous = context?.didSwitchLocally ? context.previousRecipe : null;
+        const previous =
+          mayRestore(queryClient, context) && context.didSwitchLocally
+            ? context.previousRecipe
+            : null;
 
         // Only its own switch is undone; another version is left for the reread.
         if (previous)

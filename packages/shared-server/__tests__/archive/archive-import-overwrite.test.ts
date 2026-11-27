@@ -183,7 +183,7 @@ describe("archive importer overwrite behavior", () => {
     const zipBytes = Buffer.from(await zip.generateAsync({ type: "uint8array" }));
 
     const result = await parser.importArchive(
-      { userId: "user-1", householdId: "household-1", memberIds: ["user-1"] },
+      { userId: "user-1", householdId: "household-1" },
       zipBytes
     );
 
@@ -217,10 +217,7 @@ describe("archive importer overwrite behavior", () => {
     zip.file("recipe.melarecipe", JSON.stringify({ title: "Updated Soup" }));
     const zipBytes = Buffer.from(await zip.generateAsync({ type: "uint8array" }));
 
-    await parser.importArchive(
-      { userId: "user-1", householdId: "household-1", memberIds: ["user-1"] },
-      zipBytes
-    );
+    await parser.importArchive({ userId: "user-1", householdId: "household-1" }, zipBytes);
 
     const parserRecipeId = mockParseMelaRecipeToDTO.mock.calls[0]?.[1];
 
@@ -249,10 +246,7 @@ describe("archive importer overwrite behavior", () => {
     zip.file("recipe.paprikarecipe", "dummy");
     const zipBytes = Buffer.from(await zip.generateAsync({ type: "uint8array" }));
 
-    await parser.importArchive(
-      { userId: "user-1", householdId: "household-1", memberIds: ["user-1"] },
-      zipBytes
-    );
+    await parser.importArchive({ userId: "user-1", householdId: "household-1" }, zipBytes);
 
     expect(mockRateRecipe).toHaveBeenCalledWith("user-1", "new-recipe-id", 5);
   });
@@ -274,10 +268,7 @@ describe("archive importer overwrite behavior", () => {
     zip.file("recipe.paprikarecipe", "dummy");
     const zipBytes = Buffer.from(await zip.generateAsync({ type: "uint8array" }));
 
-    await parser.importArchive(
-      { userId: "user-1", householdId: "household-1", memberIds: ["user-1"] },
-      zipBytes
-    );
+    await parser.importArchive({ userId: "user-1", householdId: "household-1" }, zipBytes);
 
     expect(mockRateRecipe).not.toHaveBeenCalled();
   });

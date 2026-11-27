@@ -7,18 +7,12 @@ import { ArrowUpTrayIcon, SparklesIcon, TrashIcon } from "@heroicons/react/16/so
 import { Dropdown, Label, Spinner } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import type { IngredientItem, StoredIcon } from "@norish/shared-react/ingredients";
+import type { IconDraft, IngredientItem } from "@norish/shared-react/ingredients";
 import { useIngredientIconMutations } from "@norish/shared-react/ingredients";
 import { useHiddenItemVisibility, usePermissions } from "@norish/shared-react/reader";
 import { ICON_PICTURE_MIME_TYPES } from "@norish/shared/contracts";
 
 import { IngredientIcon } from "./ingredient-icon";
-
-/**
- * The icon as the panel's draft holds it: unchanged (undefined), a stored
- * file to make the food's own, or the food's own removed (null).
- */
-export type IconDraft = StoredIcon | null | undefined;
 
 /**
  * The food's Ingredient Icon at the head of its panel. One the viewer may
@@ -30,11 +24,12 @@ export type IconDraft = StoredIcon | null | undefined;
  */
 export function IngredientIconField({
   item,
-  draft,
+  icons: view,
   onDraftChange,
 }: {
   item: IngredientItem;
-  draft: IconDraft;
+  /** What the icon shows and may do, from the food's draft. */
+  icons: { shown: string | null; hasOwn: boolean; remove: () => void };
   onDraftChange: (draft: IconDraft) => void;
 }) {
   const t = useTranslations("settings.ingredients.icon");
@@ -45,9 +40,7 @@ export function IngredientIconField({
 
   if (!showIngredientIcons) return null;
 
-  // A removed own icon shows the placeholder until Save brings back what it falls back to.
-  const shown = draft === undefined ? (item.icon ?? null) : (draft?.address ?? null);
-  const hasOwn = draft === undefined ? Boolean(item.ownIcon) : draft !== null;
+  const { shown, hasOwn } = view;
   const pending = icons.isPending;
   const icon = (
     <span className="relative block">
@@ -125,7 +118,7 @@ export function IngredientIconField({
                   id="remove"
                   textValue={t("remove")}
                   variant="danger"
-                  onAction={() => onDraftChange(item.ownIcon ? null : undefined)}
+                  onAction={view.remove}
                 >
                   <TrashIcon className="size-4" />
                   <Label>{t("remove")}</Label>

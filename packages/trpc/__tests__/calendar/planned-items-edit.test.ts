@@ -3,13 +3,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { plannedItemsProcedures } from "@norish/trpc/routers/calendar/planned-items";
 
-import { assertHouseholdAccess } from "../mocks/permissions";
 import {
   editPlannedItem,
   getPlannedItemById,
-  getPlannedItemHouseholdId,
   getPlannedItemWithRecipeById,
   listPlannedItemsWithRecipeBySlot,
+  ownPlannedItemExists,
 } from "../mocks/planned-items";
 import { calendar } from "../mocks/realtime/calendar";
 import {
@@ -65,9 +64,8 @@ describe("calendar.editItem", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    getPlannedItemHouseholdId.mockResolvedValue(stored.householdId);
+    ownPlannedItemExists.mockResolvedValue(true);
     getPlannedItemById.mockResolvedValue(stored);
-    assertHouseholdAccess.mockReturnValue(undefined);
     listPlannedItemsWithRecipeBySlot.mockResolvedValue([]);
     editPlannedItem.mockImplementation(async (_household, _id, change: object) => ({
       applied: true,
@@ -156,16 +154,5 @@ describe("calendar.editItem", () => {
   it("refuses a day that is not a date key, writing nothing", async () => {
     await expect(edit({ date: "tomorrow" })).rejects.toThrow();
     expect(editPlannedItem).not.toHaveBeenCalled();
-  });
-
-  it("refuses a member outside the item's household", async () => {
-    assertHouseholdAccess.mockImplementation(() => {
-      throw new Error("Access denied");
-    });
-
-    await expect(edit({ title: "Leek soup" })).rejects.toThrow("Access denied");
-    expect(assertHouseholdAccess).toHaveBeenCalledWith(ctx.householdId, stored.householdId);
-    expect(editPlannedItem).not.toHaveBeenCalled();
-    expect(calendar.publish).not.toHaveBeenCalled();
   });
 });

@@ -262,6 +262,7 @@
       "syncing": "{count, plural, =0 {Wird synchronisiert} one {# Änderung wird synchronisiert} other {# Änderungen werden synchronisiert}}",
       "syncNow": "Jetzt synchronisieren",
       "retryAll": "Alle erneut versuchen",
+      "otherHousehold": "Einige Änderungen wurden für einen anderen Haushalt gemacht. „Alle erneut versuchen“ schickt sie an den Haushalt, in dem Sie jetzt sind.",
       "discardAll": "Alle verwerfen",
       "discardConfirmBody": "{count, plural, one {# ausstehende Änderung endgültig verwerfen? Sie wird nicht gesendet.} other {# ausstehende Änderungen endgültig verwerfen? Sie werden nicht gesendet.}}",
       "discardConfirm": "Verwerfen",
@@ -318,7 +319,7 @@
       "expired": "Dieser Beitrittscode ist abgelaufen. Bitten Sie um einen neuen.",
       "alreadyMember": "Sie sind bereits in diesem Haushalt.",
       "shared": "Verlassen Sie zuerst Ihren Haushalt, um einem anderen beizutreten.",
-      "holdsThings": "Ihr Haushalt hat eigene Rezepte, Einkäufe oder Pläne und kann deshalb noch keinem anderen Haushalt beitreten."
+      "busy": "Dieser Haushalt wurde gerade geändert. Versuchen Sie es erneut."
     }
   },
   "photos": {

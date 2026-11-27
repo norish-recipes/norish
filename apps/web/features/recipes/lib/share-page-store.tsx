@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { createContext, use } from "react";
 import { createStore } from "zustand";
 
 import type { MeasurementSystem, PublicRecipeViewDTO } from "@norish/shared/contracts";
@@ -42,10 +43,25 @@ export function SharePageProvider({ token, children }: { token: string; children
 /** One slice of the shared recipe page's store; renders when that slice changes. */
 export const useSharePageStore = sharePage.usePageStore;
 
-/** The shared recipe, for the pieces drawn once it has loaded. */
+const SharedRecipeContext = createContext<PublicRecipeViewDTO | null>(null);
+
+/** Wraps what the page draws once its recipe is read, so a piece rendering before the page sees
+ * the recipe leave the cache keeps this one for that frame. */
+export function SharedRecipeLoaded({
+  recipe,
+  children,
+}: {
+  recipe: PublicRecipeViewDTO;
+  children: ReactNode;
+}) {
+  return <SharedRecipeContext value={recipe}>{children}</SharedRecipeContext>;
+}
+
+/** The shared recipe, for the pieces drawn inside `SharedRecipeLoaded`. */
 export function useSharedRecipe(): PublicRecipeViewDTO {
   const token = useSharePageStore((state) => state.token);
-  const { recipe } = useSharedRecipeQuery(token);
+  const held = use(SharedRecipeContext);
+  const recipe = useSharedRecipeQuery(token).recipe ?? held;
 
   if (!recipe) throw new Error("Shared recipe not loaded");
 

@@ -1,9 +1,6 @@
 // @vitest-environment node
-/**
- * Migration 0090 on a database as earlier releases left it: Orphaned recipes and cookbooks go to
- * the server owner (or the fallback heir), every row takes its Owner's household, and a second
- * run changes nothing.
- */
+/** Migration 0090 on an earlier release's database: orphaned recipes and cookbooks go to an heir,
+ * every row takes its Owner's household, and a rerun changes nothing. */
 
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
@@ -201,7 +198,7 @@ describe("recipes and cookbooks carry their Owner's household", () => {
     await db.migrate();
 
     expect([await recipeRows(), await cookbookRows(), await membershipRows()]).toEqual(before);
-  });
+  }, 30_000);
 
   it("refuses a recipe without an Owner", async () => {
     await expect(

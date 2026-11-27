@@ -30,7 +30,7 @@ vi.mock("@/components/sheet", async () => {
     SheetBody: ({ children }: { children: ReactNode }) => children,
   };
 });
-vi.mock("../components/offline-capsule", () => ({ OfflineCapsule: () => null }));
+vi.mock("@/components/offline-capsule", () => ({ OfflineCapsule: () => null }));
 vi.mock("@/components/hint-button", () => ({ LabelWithHint: () => null }));
 vi.mock("@/components/pill-button", () => ({ PillButton: () => null }));
 vi.mock("@/components/sheet-input", () => ({ SheetInput: () => null }));

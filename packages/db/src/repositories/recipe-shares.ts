@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import { and, desc, eq, sql } from "drizzle-orm";
 
 import type {
+  AdminRecipeShareInventoryDto,
   CreateRecipeShareInputDto,
   PublicRecipeViewDTO,
   RecipeShareCreatedDto,
@@ -10,11 +11,15 @@ import type {
   RecipeShareSummaryDto,
   UpdateRecipeShareInputDto,
 } from "@norish/shared/contracts/dto/recipe-shares";
-import { decrypt, encrypt, hashToken } from "@norish/config/crypto";
+import { decrypt, encrypt, hashToken, safeDecrypt } from "@norish/config/crypto";
+import { policyAllows } from "@norish/config/zod/server-config";
 import { db } from "@norish/db/drizzle";
+import { users } from "@norish/db/schema/auth";
+import { householdUsers } from "@norish/db/schema/household-users";
 import { recipeShares } from "@norish/db/schema/recipe-shares";
 import { recipes } from "@norish/db/schema/recipes";
 import {
+  AdminRecipeShareInventorySchema,
   CreateRecipeShareInputSchema,
   RecipeShareCreatedSchema,
   RecipeShareInventorySchema,
@@ -32,6 +37,7 @@ import {
   toRecipeShareSummary,
 } from "./recipe-share-helpers";
 import { accountCanViewRecipe, accountViewCondition, getRecipeFull } from "./recipes";
+import { getRecipePermissionPolicy } from "./server-config";
 
 type ActiveShareOptions = {
   touchLastAccessedAt?: boolean;
@@ -138,12 +144,6 @@ export async function getRecipeSharesByUserId(
   return rows.map((row) => toRecipeShareSummary(RecipeShareSelectSchema.parse(row)));
 }
 
-export async function getAllRecipeShares(): Promise<RecipeShareSummaryDto[]> {
-  const rows = await db.select().from(recipeShares).orderBy(desc(recipeShares.createdAt));
-
-  return rows.map((row) => toRecipeShareSummary(RecipeShareSelectSchema.parse(row)));
-}
-
 export async function getRecipeShareInventoryByUserId(
   userId: string
 ): Promise<RecipeShareInventoryDto[]> {
@@ -165,6 +165,41 @@ export async function getRecipeShareInventoryByUserId(
       ...toRecipeShareSummary(RecipeShareSelectSchema.parse(share)),
       recipeName,
     })
+  );
+}
+
+/** Every account's share links, for admin moderation across households. */
+export async function getRecipeShareInventoryForAdmin(): Promise<AdminRecipeShareInventoryDto[]> {
+  const [policy, rows] = await Promise.all([
+    getRecipePermissionPolicy(),
+    db
+      .select({
+        share: recipeShares,
+        recipeName: recipes.name,
+        recipeHouseholdId: recipes.householdId,
+        ownerId: users.id,
+        ownerName: users.name,
+        makerHouseholdId: householdUsers.householdId,
+      })
+      .from(recipeShares)
+      .innerJoin(recipes, eq(recipeShares.recipeId, recipes.id))
+      .innerJoin(users, eq(recipeShares.userId, users.id))
+      .leftJoin(householdUsers, eq(householdUsers.userId, recipeShares.userId))
+      .orderBy(desc(recipeShares.createdAt)),
+  ]);
+
+  return rows.map(
+    ({ share, recipeName, recipeHouseholdId, ownerId, ownerName, makerHouseholdId }) =>
+      AdminRecipeShareInventorySchema.parse({
+        ...toRecipeShareSummary(RecipeShareSelectSchema.parse(share)),
+        recipeName,
+        ownerId,
+        ownerName: safeDecrypt(ownerName),
+        // The same rule as `accountCanViewRecipe`, read once for the whole list.
+        makerMayView:
+          makerHouseholdId !== null &&
+          policyAllows(policy, "view", makerHouseholdId, recipeHouseholdId),
+      })
   );
 }
 

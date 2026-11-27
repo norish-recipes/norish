@@ -7,10 +7,10 @@ import Animated, {
   useSharedValue,
   withDelay,
 } from "react-native-reanimated";
+import { Ionicons } from "@/components/icon";
 import { popAfter } from "@/lib/motion/pop-on-change";
 import { settleTo } from "@/lib/motion/settle-to";
 import { liveTap, starMotion } from "@/lib/motion/star-motion";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 
 const STAR_SIZE = 34;

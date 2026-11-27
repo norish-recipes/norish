@@ -1,8 +1,8 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
+import { Ionicons } from "@/components/icon";
 import { UserAvatar } from "@/components/user-avatar";
 import { useServerImage } from "@/lib/network/server-url";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 
 /** The Reader's avatar, name and email as the Profile row at the top of Settings. */

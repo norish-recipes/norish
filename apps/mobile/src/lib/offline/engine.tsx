@@ -9,6 +9,7 @@ import { getAuthClient } from "@/lib/auth/auth-client";
 import { getServerAddress, subscribeServerAddressChange } from "@/lib/network/server-address";
 import { followSearchOwner } from "@/lib/search-session";
 import { focusManager } from "@tanstack/react-query";
+import { Image } from "expo-image";
 import { addNetworkStateListener } from "expo-network";
 
 import { createOfflineEngine, HEALTH_PROBE_PATH } from "@norish/shared-react/offline";
@@ -34,7 +35,13 @@ const LAUNCHED_AT = Date.now();
 
 export const offlineEngine = withSavedShares(
   createOfflineEngine({
-    storage: createMmkvStorage({ mmkv: createMMKV({ id: "norish-offline" }), files: uploadFiles }),
+    storage: {
+      ...createMmkvStorage({ mmkv: createMMKV({ id: "norish-offline" }), files: uploadFiles }),
+      // Recipe photos stay in expo-image's caches by URL, outside the query cache.
+      clearPersonalCaches: async () => {
+        await Promise.allSettled([Image.clearMemoryCache(), Image.clearDiskCache()]);
+      },
+    },
     replayHeaderValue: OUTBOX_REPLAY_HEADER_VALUE,
     probeUrl: () => `${getServerAddress()}${HEALTH_PROBE_PATH}`,
     buster: APP_VERSION,

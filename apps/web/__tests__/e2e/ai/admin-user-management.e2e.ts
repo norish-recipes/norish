@@ -53,7 +53,8 @@ test("lists every account with the role it holds", async () => {
   const row = userRow(table, guest.email);
 
   await expect(row).toContainText(guest.name);
-  await expect(row).toContainText("No household");
+  // Every account has a household; a new one is alone in the one sign-up made it.
+  await expect(row).toContainText("My household");
   await expect(row).not.toContainText("Admin");
   await expect(row.getByRole("button", { name: "Make admin" })).toBeEnabled();
 });

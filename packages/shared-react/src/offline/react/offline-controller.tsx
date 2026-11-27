@@ -8,7 +8,8 @@ import type { ConnectionStatus } from "../../trpc/trpc-provider";
 import type { OfflineEngine } from "../engine";
 import type { ConnectivityValue } from "./connectivity";
 import { usePlatform } from "../../platform";
-import { useTRPCClient } from "../../trpc";
+import { useTRPC, useTRPCClient } from "../../trpc";
+import { householdIdOf } from "../household";
 import { sessionVerdict } from "../recovery";
 import { RecoveryProvider } from "./recovery-context";
 import { useOfflineController } from "./use-offline-controller";
@@ -37,6 +38,7 @@ export function OfflineController({
 }) {
   const queryClient = useQueryClient();
   const { toast } = usePlatform();
+  const trpc = useTRPC();
   const transport = useTRPCClient();
   const warmSet = useWarmSet(engine);
 
@@ -46,10 +48,15 @@ export function OfflineController({
         transport,
         verifySession: async (ownerId) =>
           sessionVerdict(await getSessionUserId().catch(() => null), ownerId),
+        // Through the cache, so an answer naming another household also empties the former's reads.
+        currentHousehold: () =>
+          queryClient
+            .query({ ...trpc.households.get.queryOptions(), staleTime: 0 })
+            .then(householdIdOf),
         refetchActiveQueries: () => queryClient.refetchQueries({ type: "active" }),
         topUp: warmSet.topUp,
       }),
-    [engine, getSessionUserId, queryClient, transport, warmSet]
+    [engine, getSessionUserId, queryClient, transport, trpc, warmSet]
   );
 
   // Refused as stale: what is on show refetches the server's state, and the user hears it once.

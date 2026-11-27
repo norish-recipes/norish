@@ -5,11 +5,11 @@ import { Pressable, Text, View } from "react-native";
 import { ItemSlice } from "@/components/card-slice";
 import { DragGrip } from "@/components/drag-list/drag-grip";
 import { DragList } from "@/components/drag-list/drag-list";
+import { Ionicons } from "@/components/icon";
 import { IconButton } from "@/components/icon-button";
 import { FULL_SHEET_TOP, SHEET_SCROLL_END } from "@/components/sheet";
 import { useFocusedFieldInView } from "@/hooks/use-focused-field-in-view";
 import { useText } from "@/lib/i18n/use-text";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { Input, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 

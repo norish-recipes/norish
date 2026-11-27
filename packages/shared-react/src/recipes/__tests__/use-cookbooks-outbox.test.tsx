@@ -9,6 +9,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { AppRouter } from "@norish/trpc/client";
 import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
 
+import { householdQueryKey } from "../../offline/household";
 import { createOutboxLink } from "../../offline/outbox-link";
 import { createOutboxStore } from "../../offline/outbox-store";
 import { runReplayPass } from "../../offline/replay";
@@ -34,6 +35,7 @@ describe("a cookbook created Offline", () => {
           createOutboxLink<AppRouter>({
             store,
             owner: () => "reader-1",
+            household: () => "h1",
             replayHeaderValue: "test-outbox",
           }),
           // The server cannot be reached.
@@ -68,6 +70,7 @@ describe("a cookbook created Offline", () => {
     await runReplayPass({
       store,
       ownerId: "reader-1",
+      householdId: "h1",
       submit: (entry) => replayOutboxEntry(client, entry, "test-outbox"),
     });
 
@@ -76,5 +79,62 @@ describe("a cookbook created Offline", () => {
       expect.anything()
     );
     expect(await store.size("reader-1")).toBe(0);
+  });
+});
+
+describe("a cookbook create answered after a change of household", () => {
+  const inHousehold = (id: string) => ({ household: { id }, currentUserId: "reader-1" });
+  type Answer = (observer: {
+    next: (value: unknown) => void;
+    error: (error: unknown) => void;
+    complete: () => void;
+  }) => void;
+  const stored: Answer = (observer) => {
+    observer.next({ result: { data: null } });
+    observer.complete();
+  };
+  const queued: Answer = (observer) => observer.error(new TypeError("Failed to fetch"));
+
+  it.each([
+    ["stored", stored],
+    ["queued", queued],
+  ])("seeds nothing into the new household's reads once %s", async (_outcome, answer) => {
+    const queryClient = createTestQueryClient();
+    const store = createOutboxStore(createMemoryStorage().outbox);
+    let respond: (() => void) | null = null;
+    const trpc = createTRPCOptionsProxy<AppRouter>({
+      client: createTRPCClient<AppRouter>({
+        links: [
+          createOutboxLink<AppRouter>({
+            store,
+            owner: () => "reader-1",
+            household: () => "h1",
+            replayHeaderValue: "test-outbox",
+          }),
+          () => () => observable((observer) => void (respond = () => answer(observer))),
+        ],
+      }),
+      queryClient,
+    });
+
+    proxy.current = trpc;
+    queryClient.setQueryData(householdQueryKey(), inHousehold("h1"));
+    const { result } = renderHook(() => useCookbooksMutations(), {
+      wrapper: createTestWrapper(queryClient),
+    });
+    let created: Promise<string | undefined> | undefined;
+
+    act(() => {
+      created = result.current.createCookbook({ title: "Soups", recipeIds: [] });
+    });
+    await vi.waitFor(() => expect(respond).not.toBeNull());
+    // The account moved: the new household is read, the former household's reads emptied.
+    act(() => queryClient.setQueryData(householdQueryKey(), inHousehold("h2")));
+    await act(async () => {
+      respond?.();
+      await created;
+    });
+
+    expect(queryClient.getQueriesData({ queryKey: trpc.cookbooks.get.pathKey() })).toEqual([]);
   });
 });

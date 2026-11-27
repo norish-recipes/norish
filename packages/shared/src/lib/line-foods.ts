@@ -8,6 +8,44 @@ export type LineWithFoods = Partial<
   Pick<RecipeIngredientsDto, "id" | "ingredientId" | "ingredientName" | "joined" | "foods">
 >;
 
+/**
+ * A line naming a food outside the reader's catalogue, as the reader uses it (ADR-0042): its text's
+ * foods in their own catalogue, none where it names none there.
+ */
+export interface LineReading {
+  ingredientId: string | null;
+  joined: LineJoin | null;
+  foods: Array<{ ingredientId: string; name: string }>;
+}
+
+/**
+ * Each such line's reading, by line id; a line inside the catalogue has none. Undefined is readings
+ * not loaded yet, and nothing is used until they are; `{}` reads every line as stored.
+ */
+export type LineReadings = Readonly<Record<string, LineReading>>;
+
+/**
+ * The lines as the reader uses them: each one with a reading takes its foods, the rest as stored;
+ * undefined while the readings have not loaded.
+ */
+export function linesAsRead<L extends LineWithFoods>(
+  lines: readonly L[],
+  readings: LineReadings
+): L[];
+export function linesAsRead<L extends LineWithFoods>(
+  lines: readonly L[],
+  readings: LineReadings | undefined
+): L[] | undefined;
+export function linesAsRead<L extends LineWithFoods>(
+  lines: readonly L[],
+  readings: LineReadings | undefined
+): L[] | undefined {
+  return (
+    readings &&
+    lines.map((line) => (line.id && readings[line.id] ? { ...line, ...readings[line.id] } : line))
+  );
+}
+
 /** A line as one of the foods it is bought and counted by. */
 export type FoodToBuy<L extends LineWithFoods> = L & {
   /** The line it comes from. */

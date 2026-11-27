@@ -7,25 +7,32 @@ import { SettingsCard } from "@/components/settings/settings-card";
 import { SkeletonRows } from "@/components/settings/settings-skeleton";
 import { ActionButton, IconActionButton } from "@/components/shared/action-button";
 import ConfirmModal from "@/components/shared/confirm-modal";
+import { EmptyState } from "@/components/shared/empty-state";
 import { PauseIcon, PlayIcon } from "@heroicons/react/16/solid";
 import { LinkIcon } from "@heroicons/react/24/outline";
-import { Table } from "@heroui/react";
+import { Chip, Table } from "@heroui/react";
 import { useFormatter, useTranslations } from "next-intl";
 
-import type { RecipeShareInventoryDto } from "@norish/shared/contracts/dto/recipe-shares";
-import { shareLinkActions, useRecipeShareMutations } from "@norish/shared-react/recipes";
+import type { ShareLinkMutations } from "@norish/shared-react/recipes";
+import type {
+  AdminRecipeShareInventoryDto,
+  RecipeShareInventoryDto,
+} from "@norish/shared/contracts/dto/recipe-shares";
+import { shareLinkActions } from "@norish/shared-react/recipes";
 
-type ShareRow = RecipeShareInventoryDto;
+type ShareRow = RecipeShareInventoryDto | AdminRecipeShareInventoryDto;
 type ConfirmAction = {
   share: ShareRow;
   type: "revoke" | "reactivate" | "delete";
 } | null;
 type Props = {
-  namespace: "settings.user.shareLinks";
+  namespace: "settings.user.shareLinks" | "settings.admin.shareLinks";
   shares: ShareRow[];
   isLoading: boolean;
+  mutations: ShareLinkMutations;
+  showOwner?: boolean;
 };
-type ColumnKey = "recipe" | "status" | "created" | "expires" | "actions";
+type ColumnKey = "recipe" | "owner" | "status" | "created" | "expires" | "actions";
 /** toLocaleString's fields, in the locale and zone next-intl gives server and browser alike. */
 const DATE_AND_TIME = {
   year: "numeric",
@@ -41,14 +48,23 @@ const CONFIRM_BUTTONS = {
   reactivate: { action: "apply", icon: PlayIcon, variant: "primary" },
   delete: { action: "delete", variant: "danger" },
 } as const;
-export default function ShareLinksTableCard({ namespace, shares, isLoading }: Props) {
+function hasOwnerFields(share: ShareRow): share is AdminRecipeShareInventoryDto {
+  return "ownerId" in share;
+}
+export default function ShareLinksTableCard({
+  namespace,
+  shares,
+  isLoading,
+  mutations,
+  showOwner = false,
+}: Props) {
   const t = useTranslations(namespace);
   const tActions = useTranslations("common.actions");
   const format = useFormatter();
   const formatDate = (date: Date | null) =>
     date ? format.dateTime(new Date(date), DATE_AND_TIME) : "-";
   const { revokeShare, reactivateShare, deleteShare, isRevoking, isReactivating, isDeleting } =
-    useRecipeShareMutations(null);
+    mutations;
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
   const handleConfirm = () => {
     if (!confirmAction) return;
@@ -68,6 +84,14 @@ export default function ShareLinksTableCard({ namespace, shares, isLoading }: Pr
       key: "recipe",
       label: t("table.recipe"),
     },
+    ...(showOwner
+      ? [
+          {
+            key: "owner" as const,
+            label: t("table.owner"),
+          },
+        ]
+      : []),
     {
       key: "status",
       label: t("table.status"),
@@ -89,8 +113,17 @@ export default function ShareLinksTableCard({ namespace, shares, isLoading }: Pr
     switch (columnKey) {
       case "recipe":
         return share.recipeName;
+      case "owner":
+        return hasOwnerFields(share) ? (share.ownerName ?? share.ownerId) : "-";
       case "status":
-        return <RecipeShareStatusChip status={share.status} />;
+        // An active link whose maker may no longer view the recipe does not open.
+        return hasOwnerFields(share) && share.status === "active" && !share.makerMayView ? (
+          <Chip size="sm" variant="soft">
+            {t("inactive")}
+          </Chip>
+        ) : (
+          <RecipeShareStatusChip status={share.status} />
+        );
       case "created":
         return formatDate(share.createdAt);
       case "expires":
@@ -146,14 +179,17 @@ export default function ShareLinksTableCard({ namespace, shares, isLoading }: Pr
       <SettingsCard
         badges={<NewFeatureChip showOnVersion="0.18.0" />}
         description={t("description")}
+        empty={
+          !isLoading && shares.length === 0 ? (
+            <EmptyState icon={LinkIcon} title={t("empty")} variant="row" />
+          ) : undefined
+        }
         icon={LinkIcon}
         title={t("title")}
       >
         {isLoading ? (
           // The tab skeleton's row for this card.
           <SkeletonRows count={1} />
-        ) : shares.length === 0 ? (
-          <p className="text-muted text-base">{t("empty")}</p>
         ) : (
           <Table>
             <Table.ScrollContainer>

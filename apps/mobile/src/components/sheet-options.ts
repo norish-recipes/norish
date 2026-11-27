@@ -32,10 +32,18 @@ export const SEARCH_SHEET_OPTIONS = {
   sheetAllowedDetents: [0.5, 1],
 } as const satisfies NativeStackNavigationOptions;
 
-/** A sheet as tall as its content, which does not resize. */
+/** A sheet as tall as its content, resizing as its content grows or swaps; no detents. */
 export const FIT_SHEET_OPTIONS = {
   ...FORM_SHEET,
   sheetGrabberVisible: false,
   sheetAllowedDetents: "fitToContents",
   contentStyle: { backgroundColor: "transparent" },
+} as const satisfies NativeStackNavigationOptions;
+
+/** One fixed height that does not drag, for the new API key's form and the key that replaces it. */
+export const FIXED_SHEET_OPTIONS = {
+  ...SHEET_OPTIONS,
+  sheetGrabberVisible: false,
+  sheetAllowedDetents: [0.62],
+  sheetExpandsWhenScrolledToEdge: false,
 } as const satisfies NativeStackNavigationOptions;

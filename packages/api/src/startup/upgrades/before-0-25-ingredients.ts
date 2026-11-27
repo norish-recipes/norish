@@ -13,6 +13,7 @@ import { resolveAgain } from "@norish/shared-server/ingredients/resolve-again";
 import { resolveIngredient, resolveIngredients } from "@norish/shared-server/ingredients/resolver";
 import { readIngredientSeedState } from "@norish/shared-server/ingredients/seed/catalogue-seed";
 import { createLogger } from "@norish/shared-server/logger";
+import { groupBy } from "@norish/shared/lib/group-by";
 import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
 const BATCH_SIZE = 500;
@@ -63,15 +64,14 @@ async function resolveAll<R extends { id: string }>(
   }
 }
 
-/** A Pantry Ingredient names the food its old Ingredient's name resolves to. */
+/** A Pantry Ingredient names the food its old Ingredient's name resolves to in its household. */
 async function upgradePantry(): Promise<number> {
   const pantry = await listPantryIngredientsWithoutSpelling();
 
-  for (const ownerId of new Set(pantry.map((row) => row.ownerId))) {
-    const owned = pantry.filter((row) => row.ownerId === ownerId);
+  for (const [householdId, owned] of groupBy(pantry, (row) => row.householdId)) {
     const foods = await resolveIngredients(
       owned.map((row) => row.name),
-      { userId: ownerId },
+      { householdId, userId: null },
       "upgrade"
     );
 
@@ -105,17 +105,16 @@ async function upgradeParkedLinks(): Promise<number> {
 
   for (const parked of await listParkedLinks()) {
     const name = parked.link.normalized_name;
-    const { householdId, ownerId } = parked;
+    const { householdId } = parked;
 
-    if (!householdId || !ownerId) {
+    if (!householdId) {
       log.info({ id: parked.id, kind: parked.kind }, "Dropped a parked link whose Store is gone");
     }
-    const ingredientId =
-      householdId && ownerId
-        ? (groceryFoods.get(keyOf(householdId, name)) ??
-          (await resolveIngredient(name, { userId: ownerId }, "upgrade"))?.ingredientId ??
-          null)
-        : null;
+    const ingredientId = householdId
+      ? (groceryFoods.get(keyOf(householdId, name)) ??
+        (await resolveIngredient(name, { householdId, userId: null }, "upgrade"))?.ingredientId ??
+        null)
+      : null;
 
     const outcome = await unparkLink(parked, ingredientId);
 

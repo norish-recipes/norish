@@ -2,6 +2,7 @@
 
 import type { SetStateAction } from "react";
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 import type { FullRecipeDTO, MeasurementSystem, RecipeCategory } from "@norish/shared/contracts";
 
@@ -15,18 +16,22 @@ import {
   useListEntries,
   useListRecipeId,
 } from "../lists";
+import { usePlatform } from "../platform";
 import { useHydrated } from "../platform/use-hydrated";
 import { useDevicePreference } from "../reader";
+import { useTRPC } from "../trpc";
 import {
   detectFormSystem,
   editorIngredientsOf,
   editorStepsOf,
   initialRecipeForm,
   isRecipeFormDirty,
+  rebaseRecipeForm,
   recipeFormPayload,
   validateRecipeForm,
 } from "./recipe-editor";
 import { remapStepRefs } from "./recipe-editor-rows";
+import { RecipeChangedElsewhereError } from "./use-recipes-mutations";
 
 interface UseRecipeEditorFormOptions {
   mode: RecipeEditorMode;
@@ -38,7 +43,10 @@ interface UseRecipeEditorFormOptions {
 /** The recipe editor's form: its fields, the lines and steps seeded once the units load, the
  * detected system of a new recipe, the Categories offered, validation and the save payload. */
 export function useRecipeEditorForm({ mode, initialData, locale }: UseRecipeEditorFormOptions) {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const { units, isLoading: isLoadingUnits } = useUnitsQuery();
+  const { toast } = usePlatform();
   // The list of the recipe's own household, which is another's when its edit policy allows.
   const listRecipeId = useListRecipeId(mode === "edit" ? initialData : undefined);
   const { entries: categoryEntries } = useListEntries("category", listRecipeId);
@@ -47,6 +55,12 @@ export function useRecipeEditorForm({ mode, initialData, locale }: UseRecipeEdit
   // False on the server and while hydrating, so the browser's first render matches the server's.
   const isHydrated = useHydrated();
   const [form, setForm] = useState<RecipeFormState>(() => initialRecipeForm(initialData));
+  // The form as it opened, which an edit's save compares its lists with, and the version it sends:
+  // both move to the fresh recipe after a stale answer.
+  const [opened, setOpened] = useState(form);
+  const [version, setVersion] = useState(initialData?.version);
+  // From Save to its answer the form takes no input, so nothing typed meanwhile is lost.
+  const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<RecipeFormErrors & { submit?: string }>({});
   const [initializedRecipeId, setInitializedRecipeId] = useState<string | null>(null);
   const [detectedSystem, setDetectedSystem] = useState<MeasurementSystem | null>(null);
@@ -79,11 +93,13 @@ export function useRecipeEditorForm({ mode, initialData, locale }: UseRecipeEdit
     !isLoadingUnits &&
     initializedRecipeId !== initialData.id
   ) {
-    setForm((prev) => ({
-      ...prev,
+    const seeded = {
       ingredients: editorIngredientsOf(initialData, labeller),
       steps: editorStepsOf(initialData),
-    }));
+    };
+
+    setForm((prev) => ({ ...prev, ...seeded }));
+    setOpened((prev) => ({ ...prev, ...seeded }));
     setInitializedRecipeId(initialData.id);
   }
 
@@ -164,16 +180,45 @@ export function useRecipeEditorForm({ mode, initialData, locale }: UseRecipeEdit
   /** Validates and, when the form may be saved, hands back what to send. A save waits for an
    * entry being created, or it would leave that entry out. */
   const submit = () => {
-    if (isCreatingEntry) return null;
+    if (isCreatingEntry || isSaving) return null;
 
     const found = validateRecipeForm(form);
 
     setErrors(found);
     if (Object.keys(found).length > 0 || form.servings === null) return null;
+    setIsSaving(true);
 
-    return recipeFormPayload({ ...form, servings: form.servings });
+    return recipeFormPayload(
+      { ...form, servings: form.servings },
+      mode === "edit" ? opened : undefined
+    );
   };
-  const failSubmit = (message: string) => setErrors({ submit: message });
+  /** Reads the recipe as it is now and puts the draft on it, as the next save's base. */
+  const rebase = async (id: string) => {
+    const fresh = await queryClient
+      .query({ ...trpc.recipes.get.queryOptions({ id }), staleTime: 0 })
+      .catch(() => null);
+
+    if (!fresh) return;
+    setVersion(fresh.version);
+    setForm((prev) => rebaseRecipeForm(prev, opened, fresh, labeller));
+    setOpened(rebaseRecipeForm(opened, opened, fresh, labeller));
+  };
+  /** A save not taken leaves the draft as it is and says why; a stale one rebases it. */
+  const failSave = (error: unknown) => {
+    setIsSaving(false);
+    if (error instanceof RecipeChangedElsewhereError && mode === "edit" && initialData) {
+      void rebase(initialData.id);
+    }
+    setErrors({
+      submit:
+        error instanceof RecipeChangedElsewhereError
+          ? toast.translate("common.changedElsewhere.title")
+          : error instanceof Error
+            ? error.message
+            : String(error),
+    });
+  };
 
   return {
     form,
@@ -182,7 +227,10 @@ export function useRecipeEditorForm({ mode, initialData, locale }: UseRecipeEdit
     isCreatingEntry,
     errors,
     submit,
-    failSubmit,
+    failSave,
+    /** The version an edit's save is sent at. */
+    version,
+    isSaving,
     isReady,
     hasUnsavedChanges,
     detectedSystem,

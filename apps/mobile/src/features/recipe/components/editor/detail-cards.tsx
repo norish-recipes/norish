@@ -2,10 +2,10 @@ import type { ComponentProps } from "react";
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { HintButton } from "@/components/hint-button";
+import { Ionicons } from "@/components/icon";
 import { ServingsStepper } from "@/components/servings-stepper";
 import { ToggleChip } from "@/components/toggle-chip";
 import { useText } from "@/lib/i18n/use-text";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 

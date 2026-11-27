@@ -154,7 +154,15 @@ describe("processNutritionEstimationJob", () => {
     expect(mocks.estimateGap).toHaveBeenCalledWith(
       "Fried rice",
       2,
-      [{ key: "key-oil", ingredientName: "oil for frying", amount: null, unit: null }],
+      [
+        {
+          key: "key-oil",
+          lineId: "oil",
+          ingredientName: "oil for frying",
+          amount: null,
+          unit: null,
+        },
+      ],
       [
         expect.objectContaining({
           text: "200 gram rice",
@@ -165,7 +173,15 @@ describe("processNutritionEstimationJob", () => {
         }),
       ]
     );
-    expect(mocks.saveRecipeNutritionEstimate).toHaveBeenCalledWith("recipe-1", { lines: SHARES });
+    // With the foods each line named when read, so the save keys them by the foods it finds then.
+    expect(mocks.saveRecipeNutritionEstimate).toHaveBeenCalledWith(
+      "recipe-1",
+      { lines: SHARES },
+      new Map([
+        ["rice", ["i-rice"]],
+        ["oil", ["i-oil"]],
+      ])
+    );
     expect(mocks.replaceRecipeNutrition).not.toHaveBeenCalled();
     // The share is the recipe's news: open pages are sent the recipe again.
     expect(mocks.publishRecipeUpdated).toHaveBeenCalled();
@@ -201,7 +217,15 @@ describe("processNutritionEstimationJob", () => {
     expect(mocks.estimateGap).toHaveBeenCalledWith(
       "Fried rice",
       2,
-      [{ key: "key-kaas", ingredientName: "kaas", amount: 100, unit: "gram" }],
+      [
+        {
+          key: "key-kaas",
+          lineId: "sandwich",
+          ingredientName: "kaas",
+          amount: 100,
+          unit: "gram",
+        },
+      ],
       [expect.objectContaining({ text: "100 gram ham" })]
     );
   });

@@ -34,7 +34,7 @@ export default function DangerZoneCard() {
             {t("deleteModal.confirmButton")}
           </ActionButton>
         }
-        headerClassName="text-danger"
+        danger
         isOpen={showAccountDeleteModal}
         title={t("deleteModal.title")}
         onOpenChange={setShowAccountDeleteModal}

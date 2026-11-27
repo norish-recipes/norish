@@ -1,6 +1,8 @@
 import type { PantryAdded } from "@norish/db/repositories/pantry";
+import { findRecipeLineAliases } from "@norish/db/repositories/ingredient-aliases";
 import { addPantryIngredients, findIngredientOwnSpelling } from "@norish/db/repositories/pantry";
 
+import { chipFood, readLines } from "./line-readings";
 import { resolveIngredients, typedParts, writeResolved } from "./resolver";
 
 /**
@@ -12,13 +14,13 @@ export async function addToPantry(
   input: { userId: string; householdId: string; name: string }
 ): Promise<PantryAdded[]> {
   const typed: { id?: string; name: string } = { id, name: input.name };
-  const [parts = [typed]] = await typedParts([typed], { alternatives: "each" });
+  const [parts = [typed]] = await typedParts(input.householdId, [typed], { alternatives: "each" });
 
   return await writeResolved(
     () =>
       resolveIngredients(
         parts.map((part) => part.name),
-        { userId: input.userId }
+        { userId: input.userId, householdId: input.householdId }
       ),
     (foods) =>
       addPantryIngredients(
@@ -42,13 +44,31 @@ export async function addToPantry(
 
 /**
  * Put a food a member picked in the Pantry as picked, under its own spelling; none where the
- * Ingredient is gone (merged away or deleted since it was picked).
+ * Ingredient is gone (merged away or deleted since it was picked). Picked off a recipe line read
+ * through the household's catalogue (ADR-0042), it is the line's food there (`chipFood`), else the
+ * line's own text resolved there; another household's food is never kept.
  */
 export async function addPickedToPantry(
   id: string,
-  input: { userId: string; householdId: string; ingredientId: string }
+  input: { userId: string; householdId: string; ingredientId: string; recipeIngredientId?: string }
 ): Promise<PantryAdded[]> {
-  const spelling = await findIngredientOwnSpelling(input.ingredientId);
+  const lineIds = input.recipeIngredientId ? [input.recipeIngredientId] : [];
+  const [read, stored] = await Promise.all([
+    readLines(input.householdId, { of: "lines", ids: lineIds }),
+    findRecipeLineAliases(lineIds, input.householdId),
+  ]);
+  const line = read.get(lineIds[0] ?? "");
+  const chip = line && chipFood(line, stored.get(lineIds[0] ?? "")?.foods, input.ingredientId);
+
+  if (line && chip) {
+    return chip.food
+      ? await addPantryIngredients(
+          [{ id, ingredientAliasId: chip.food.aliasId, ingredientId: chip.food.ingredientId }],
+          input
+        )
+      : await addToPantry(id, { ...input, name: line.meaning });
+  }
+  const spelling = await findIngredientOwnSpelling(input.householdId, input.ingredientId);
 
   return spelling ? await addPantryIngredients([{ id, ...spelling }], input) : [];
 }

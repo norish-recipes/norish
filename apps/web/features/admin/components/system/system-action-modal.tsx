@@ -48,7 +48,6 @@ export default function SystemActionModal({
           {copy.confirmLabel}
         </ActionButton>
       }
-      headerClassName="flex items-center gap-2"
       isCancelDisabled={isPending}
       isOpen={isOpen}
       title={
@@ -60,7 +59,7 @@ export default function SystemActionModal({
       onOpenChange={onClose}
     >
       <p>{copy.message}</p>
-      <Note className="mt-2" status="warning" title={t("importantTitle")}>
+      <Note status="warning" title={t("importantTitle")}>
         <ul className="list-inside list-disc space-y-1">
           {copy.warnings.map((warning) => (
             <li key={warning}>{warning}</li>

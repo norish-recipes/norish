@@ -53,6 +53,7 @@ const KIND_COUNT = 7;
 function recipe(overrides: Record<string, unknown> = {}) {
   return {
     id: "recipe-1",
+    householdId: "household-1",
     name: "Test",
     recipeIngredients: [{ ingredientName: "flour" }],
     steps: [{ step: "Mix the flour in.", systemUsed: "metric", order: 0 }],
@@ -600,6 +601,24 @@ describe("manual enrollment", () => {
     expect(results).toEqual([
       { kind: "allergy-detection", status: "skipped", reason: "no-household-allergies" },
     ]);
+  });
+
+  it("asks about the recipe's household's allergies, not the requester's", async () => {
+    getRecipeFull.mockResolvedValue(recipe({ householdId: "recipe-household" }));
+    getHouseholdAllergyNames.mockImplementation(async (household: string) =>
+      household === "recipe-household" ? [] : ["Milk"]
+    );
+    expect(await enrichRecipe(context, { origin: "manual", kind: "allergy-detection" })).toEqual([
+      { kind: "allergy-detection", status: "skipped", reason: "no-household-allergies" },
+    ]);
+
+    getRecipeFull.mockResolvedValue(recipe({ householdId: "household-with-milk" }));
+    getHouseholdAllergyNames.mockImplementation(async (household: string) =>
+      household === context.householdId ? [] : ["Milk"]
+    );
+    expect(
+      (await enrichRecipe(context, { origin: "manual", kind: "allergy-detection" }))[0]?.status
+    ).toBe("queued");
   });
 
   it("returns failed-to-queue immediately when the producer throws", async () => {

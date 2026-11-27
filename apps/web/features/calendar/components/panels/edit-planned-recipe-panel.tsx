@@ -18,6 +18,7 @@ import { isRecipeItem, isRecipeOutOfView } from "@norish/shared-react/calendar/t
 import { Slot } from "@norish/shared/contracts";
 
 const SLOTS: Slot[] = ["Breakfast", "Lunch", "Dinner", "Snack"];
+
 type EditPlannedRecipePanelProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -35,6 +36,7 @@ export function EditPlannedRecipePanel({ open, onOpenChange, item }: EditPlanned
   const tSlots = useTranslations("common.slots");
   const tActions = useTranslations("common.actions");
   const tTimeline = useTranslations("calendar.timeline");
+
   if (seededFrom.open !== open || seededFrom.date !== date || seededFrom.slot !== slot) {
     setSeededFrom({ open, date, slot });
     if (open) {
@@ -45,6 +47,7 @@ export function EditPlannedRecipePanel({ open, onOpenChange, item }: EditPlanned
   const handleSave = () => {
     const newDateStr = selectedDate.toString();
     const locationChanged = newDateStr !== date || selectedSlot !== slot;
+
     if (locationChanged) {
       moveItem(itemId, newDateStr, selectedSlot, 0);
     }
@@ -62,9 +65,10 @@ export function EditPlannedRecipePanel({ open, onOpenChange, item }: EditPlanned
       setSelectedSlot(value.toString() as Slot);
     }
   };
+
   return (
     <Panel open={open} title={t("title")} onOpenChange={onOpenChange}>
-      <Panel.Body className="gap-5">
+      <Panel.Body sections>
         {recipeId ? (
           <Link
             className="focus-visible:ring-accent group flex items-center gap-3 rounded-xl p-2 outline-none focus-visible:ring-2"

@@ -16,7 +16,6 @@
   },
   "empty": {
     "title": "Je boodschappenlijst wacht op je",
-    "description": "Voeg items toe met de knop \"Item toevoegen\" hierboven om te beginnen.",
     "manual": "Handmatige items"
   },
   "item": {
@@ -54,7 +53,6 @@
     },
     "confirmDelete": "Weet je zeker dat je {storeName} wilt verwijderen?",
     "noStoresYet": "Nog geen winkels",
-    "createStoreHint": "Maak een winkel aan om je boodschappen te organiseren",
     "hasItems": "Deze winkel heeft {count} boodschap.",
     "hasItemsPlural": "Deze winkel heeft {count} boodschappen.",
     "whatToDo": "Wat wil je ermee doen?",
@@ -153,6 +151,7 @@
     "cannotSearchHint": "Norish kon geen zoekpagina uit de winkellink van {store} lezen. Pas hem aan bij Winkels beheren en de prijzen volgen.",
     "packAmount": "Hoeveelheid per verpakking",
     "packUnit": "Eenheid",
+    "noUnit": "Geen eenheid",
     "productPage": "Productpagina",
     "invalidUrl": "Voer een webadres in, zoals https://www.dirk.nl/…",
     "invalidPack": "Vul een hoeveelheid én een eenheid in, of geen van beide",
@@ -185,7 +184,6 @@
     "viewByStore": "Per winkel",
     "viewByRecipe": "Per recept",
     "listSettings": "Lijstinstellingen",
-    "emptyHint": "Voeg items toe met de knop hieronder.",
     "addTitle": "Boodschappen toevoegen",
     "editTitle": "Boodschap bewerken",
     "store": "Winkel",

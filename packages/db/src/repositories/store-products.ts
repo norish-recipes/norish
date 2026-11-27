@@ -361,7 +361,18 @@ export async function createManualProduct(
   return parseProduct(row);
 }
 
+/** A product of one of the household's Stores, in the write itself. */
+const householdProduct = (householdId: string, id: string) =>
+  and(
+    eq(storeProducts.id, id),
+    inArray(
+      storeProducts.storeId,
+      db.select({ id: stores.id }).from(stores).where(eq(stores.householdId, householdId))
+    )
+  );
+
 export async function updateManualProduct(
+  householdId: string,
   input: StoreProductManualUpdateInput
 ): Promise<StoreProductDto | null> {
   const [row] = await db
@@ -382,7 +393,7 @@ export async function updateManualProduct(
       updatedAt: new Date(),
       version: sql`${storeProducts.version} + 1`,
     })
-    .where(and(eq(storeProducts.id, input.id), eq(storeProducts.isManual, true)))
+    .where(and(householdProduct(householdId, input.id), eq(storeProducts.isManual, true)))
     .returning();
 
   return row ? parseProduct(row) : null;
@@ -394,13 +405,14 @@ export async function updateManualProduct(
  * back to what its own size words say, and readings may fill it in again.
  */
 export async function setPackSizeByHand(
+  householdId: string,
   id: string,
   pack: PackSizeDto | null
 ): Promise<StoreProductDto | null> {
   const [existing] = await db
     .select({ size: storeProducts.size })
     .from(storeProducts)
-    .where(eq(storeProducts.id, id));
+    .where(householdProduct(householdId, id));
 
   if (!existing) return null;
   const columns = pack ? packColumns(pack) : packColumns(readPackSize(existing.size));
@@ -412,7 +424,7 @@ export async function setPackSizeByHand(
       updatedAt: new Date(),
       version: sql`${storeProducts.version} + 1`,
     })
-    .where(eq(storeProducts.id, id))
+    .where(householdProduct(householdId, id))
     .returning();
 
   return row ? parseProduct(row) : null;

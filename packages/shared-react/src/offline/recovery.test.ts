@@ -10,6 +10,7 @@ function entry(overrides: Partial<NewOutboxEntry> = {}): NewOutboxEntry {
   return {
     id: "e",
     ownerId: "u1",
+    householdId: "h1",
     path: "groceries.create",
     input: { id: "g1" },
     entityId: "g1",
@@ -50,12 +51,33 @@ describe("Recovery", () => {
       owner: () => "u1",
       submit,
       verifySession: async () => "match",
+      currentHousehold: async () => "h1",
       refetchActiveQueries,
       topUp,
       wait: async () => {},
       ...overrides,
     });
   }
+
+  it("never sends an entry made for a household the server no longer has the account in", async () => {
+    await store.enqueue(entry({ id: "a" }));
+    const currentHousehold = vi.fn(async () => "h2");
+
+    await recovery({ currentHousehold }).recover();
+
+    expect(currentHousehold).toHaveBeenCalledTimes(1);
+    expect(submit).not.toHaveBeenCalled();
+    expect((await store.forOwner("u1", "parked")).map((e) => e.id)).toEqual(["a"]);
+  });
+
+  it("sends nothing while the server's household for the session can't be read", async () => {
+    await store.enqueue(entry({ id: "a" }));
+
+    await recovery({ currentHousehold: async () => null }).recover();
+
+    expect(submit).not.toHaveBeenCalled();
+    expect(await store.forOwner("u1", "pending")).toHaveLength(1);
+  });
 
   it("replays to a terminal batch, refetches active queries, then tops up", async () => {
     await store.enqueue(entry());

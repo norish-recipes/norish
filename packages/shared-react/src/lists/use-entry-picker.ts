@@ -47,13 +47,8 @@ export function useEntryCreatePending() {
   );
 }
 
-/**
- * What a Tag, Cuisine or Category picker shows for typed text: the entries it matches first, and
- * a "Create 'x'" row only where the loaded list has no entry of that name. Creating needs the
- * server, so offline the row is offered but not taken. It makes the entry (`lists.add`) and then
- * selects what the server answers, through the latest `onSelect`; a second call while one is
- * under way does nothing. A create that never answers fails after the send timeout. A failed create stays said until the reader picks or tries again.
- */
+/** What a Tag, Cuisine or Category picker shows for typed text: matching entries, and a "Create 'x'"
+ * row only where the list has none of that name. Creating needs the server, so offline it is not taken. */
 export function useEntryPicker({
   kind,
   recipeId,
@@ -135,7 +130,7 @@ export function useEntryPicker({
     // The list shows it at once, so a repeated Enter finds it instead of offering it again.
     queryClient.setQueryData(trpc.lists.list.queryKey({ kind, recipeId }), (current) =>
       current && !current.some((known) => known.id === added.entry.id)
-        ? [...current, added.entry]
+        ? [...current, { ...added.entry, recipeCount: 0 }]
         : current
     );
 

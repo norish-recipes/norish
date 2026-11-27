@@ -9,6 +9,8 @@ const state = vi.hoisted(() => ({
   linked: [] as unknown[],
   linkedAskedFor: [] as string[][],
   linkedLoading: false,
+  readings: {} as Record<string, unknown> | undefined,
+  readingsAskedFor: [] as string[][],
 }));
 
 vi.mock("../use-recipe-ingredients", () => ({
@@ -23,6 +25,14 @@ vi.mock("../use-linked-recipe-ingredients", () => ({
     state.linkedAskedFor.push(ids);
 
     return { ingredients: state.linked, isLoading: state.linkedLoading };
+  },
+}));
+
+vi.mock("../use-line-readings", () => ({
+  useLineReadings: (ids: string[]) => {
+    state.readingsAskedFor.push(ids);
+
+    return state.readings;
   },
 }));
 
@@ -43,6 +53,8 @@ describe("useRecipeFoodsToBuy", () => {
     state.linked = [];
     state.linkedAskedFor = [];
     state.linkedLoading = false;
+    state.readings = {};
+    state.readingsAskedFor = [];
   });
 
   it("scales the amounts to the servings picked", () => {
@@ -123,6 +135,34 @@ describe("useRecipeFoodsToBuy", () => {
         { ingredientName: "suiker", amount: 2, lineId: "l-bake" },
         { ingredientName: "boter", amount: 2, lineId: "l-fry" },
       ]);
+    });
+  });
+
+  describe("a line naming a food outside the reader's catalogue", () => {
+    it("is bought as the reader's food, the recipe and its linked recipes read so", () => {
+      state.lines = [line("l-ui", "ui", 1), line("i-sauce", "[Sauce](id:recipe-1)", null)];
+      state.readings = {
+        "l-ui": {
+          ingredientId: "mine-ui",
+          joined: null,
+          foods: [{ ingredientId: "mine-ui", name: "ui" }],
+        },
+      };
+      const { result } = renderHook(() => useRecipeFoodsToBuy("r1", 2, 2));
+
+      expect(state.readingsAskedFor.at(-1)).toEqual(["r1", "recipe-1"]);
+      expect(result.current.scaledIngredients[0]).toMatchObject({
+        lineId: "l-ui",
+        ingredientId: "mine-ui",
+        ingredientName: "ui",
+      });
+    });
+
+    it("is loading until the readings answer", () => {
+      state.readings = undefined;
+      const { result } = renderHook(() => useRecipeFoodsToBuy("r1", 2, 2));
+
+      expect(result.current.isLoading).toBe(true);
     });
   });
 });

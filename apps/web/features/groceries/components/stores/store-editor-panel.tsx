@@ -109,10 +109,13 @@ export function StoreEditorPanel({
         )}
       </Panel.Body>
       <Panel.Footer>
-        <ActionButtonGroup>
-          <ActionButton action="cancel" onPress={onCancel}>
-            {tActions("cancel")}
-          </ActionButton>
+        <ActionButtonGroup
+          start={
+            <ActionButton action="cancel" onPress={onCancel}>
+              {tActions("cancel")}
+            </ActionButton>
+          }
+        >
           <ActionButton
             action={editing?.id ? "save" : "create"}
             isDisabled={!editing || !canSaveStore(editing)}

@@ -70,8 +70,14 @@ async function processCaldavSyncJob(job: Job<CaldavSyncJobData>): Promise<void> 
   // Read now, not when queued: the account may have left the entry's household since.
   const place = await findPlannedItemPlace(itemId, userId);
 
-  if (operation === "delete" || place !== "current") {
+  if (place !== "current") {
     await takeOffCalendar(job, userId, itemId, place);
+
+    return;
+  }
+  // Only a leave removes an entry that still exists: the account is back in its household.
+  if (operation === "delete") {
+    log.info({ userId, itemId }, "CalDAV removal skipped: the entry is the account's plan again");
 
     return;
   }

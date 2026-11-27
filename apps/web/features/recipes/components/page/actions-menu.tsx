@@ -153,9 +153,8 @@ export default function ActionsMenu({ id, buttonClassName, onPrint }: Props) {
       iconClassName: isActive ? "text-success" : "text-muted",
     });
   }
-  // Manual Recipe Enrichment: shown on AI enablement and edit permission alone.
-  // The administrator's automatic switches decide what runs on creation, not
-  // whether an editor may ask for it.
+  // Manual Recipe Enrichment needs AI enabled and edit permission; the automatic switches only
+  // decide what runs on creation.
   if (isAIEnabled && canEdit) {
     // Every kind renders the same way, so the states read consistently
     // and a quiet automatic failure is still discoverable here.

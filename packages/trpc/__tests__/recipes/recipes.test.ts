@@ -60,9 +60,17 @@ vi.mock("@norish/db/repositories/list-entries", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@norish/db/repositories/list-entries")>()),
   recipeHouseholdId: vi.fn(async () => "household-now"),
 }));
+// The household a new recipe's lines resolve in: its Owner's.
+vi.mock("@norish/db/repositories/households", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/db/repositories/households")>()),
+  getHouseholdIdForUser: vi.fn(async () => "household-now"),
+}));
 vi.mock("@norish/shared-server/config/server-config-loader", () => import("../mocks/config"));
 
 const readRecipeNutrition = vi.hoisted(() => vi.fn());
+const lineReadingsOf = vi.hoisted(() => vi.fn());
+
+vi.mock("@norish/shared-server/ingredients/line-readings", () => ({ lineReadingsOf }));
 
 vi.mock("@norish/shared-server/ingredients/nutrition/recipe-nutrition", () => ({
   readRecipeNutrition,
@@ -176,6 +184,29 @@ describe("recipes procedures", () => {
       await expect(createCaller().getEditable({ id: missingRecipeId })).rejects.toMatchObject({
         code: "NOT_FOUND",
       });
+    });
+  });
+
+  describe("lineReadings", () => {
+    const shown = "77777777-7777-4777-8777-777777777777";
+    const hidden = "66666666-6666-4666-8666-666666666666";
+
+    it("reads only the recipes the reader may view, in the reader's household", async () => {
+      policy.view = "household";
+      getRecipeHouseholdIds.mockResolvedValue(
+        new Map([
+          [shown, ctx.householdId],
+          [hidden, "other-household"],
+        ])
+      );
+      lineReadingsOf.mockResolvedValue({});
+
+      await expect(
+        recipesRouter
+          .createCaller({ ...ctx, connectionId: null, operationId: null })
+          .lineReadings({ recipeIds: [shown, hidden] })
+      ).resolves.toEqual({});
+      expect(lineReadingsOf).toHaveBeenCalledWith(ctx.householdId, { of: "recipes", ids: [shown] });
     });
   });
 

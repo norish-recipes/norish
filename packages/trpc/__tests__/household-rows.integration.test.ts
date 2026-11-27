@@ -15,6 +15,8 @@ vi.mock("@norish/shared-server/realtime/pantry", () => import("./mocks/realtime/
 vi.mock("@norish/shared-server/realtime/calendar", () => import("./mocks/realtime/calendar"));
 
 const DAY = "2027-03-01";
+// Another household's row answers exactly like a missing one.
+const NOT_FOUND = { code: "NOT_FOUND", message: "Not found" };
 
 describe("household rows through their routers", () => {
   const testBase = new RepositoryTestBase("test_household_rows_routers");
@@ -101,10 +103,10 @@ describe("household rows through their routers", () => {
     expect(await theirs.list()).toEqual([]);
     await expect(
       theirs.update({ id: store.id, version: store.version, name: "Mine now" })
-    ).rejects.toThrow("FORBIDDEN");
+    ).rejects.toMatchObject(NOT_FOUND);
     await expect(
       theirs.delete({ storeId: store.id, version: store.version, grocerySnapshot: [] })
-    ).rejects.toThrow("FORBIDDEN");
+    ).rejects.toMatchObject(NOT_FOUND);
     // A reorder names Stores by id alone; another household's are left as they are.
     await expect(
       theirs.reorder({ stores: [{ id: store.id, version: store.version }] })
@@ -126,10 +128,10 @@ describe("household rows through their routers", () => {
     expect((await theirs.list()).groceries).toEqual([]);
     await expect(
       theirs.toggle({ groceries: [{ id: grocery.id, version: grocery.version }], isDone: true })
-    ).rejects.toThrow("FORBIDDEN");
+    ).rejects.toMatchObject(NOT_FOUND);
     await expect(
       theirs.delete({ groceries: [{ id: grocery.id, version: grocery.version }] })
-    ).rejects.toThrow("FORBIDDEN");
+    ).rejects.toMatchObject(NOT_FOUND);
     await mine.toggle({ groceries: [{ id: grocery.id, version: grocery.version }], isDone: true });
     expect((await mine.list()).groceries.map((row) => row.isDone)).toEqual([true]);
   });
@@ -147,21 +149,21 @@ describe("household rows through their routers", () => {
         recurringGroceryId: recurringGrocery.id,
         version: recurringGrocery.version,
       })
-    ).rejects.toThrow("FORBIDDEN");
+    ).rejects.toMatchObject(NOT_FOUND);
     expect((await mine.list()).recurringGroceries.map((row) => row.id)).toEqual([
       recurringGrocery.id,
     ]);
   });
 
   it("pantry: a housemate's item is the household's, another household cannot remove it", async () => {
-    const food = await helpers.mintTestFood("olijfolie");
+    const food = await helpers.mintTestFood(helpers.testHouseholdOf(admin.id), "olijfolie");
     const item = await helpers.addTestPantryIngredient(housemate.id, food);
     const mine = await as(routers.pantry, admin);
     const theirs = await as(routers.pantry, stranger);
 
     expect((await mine.list()).map((row) => row.id)).toEqual([item.id]);
     expect(await theirs.list()).toEqual([]);
-    await expect(theirs.remove({ id: item.id })).rejects.toThrow("FORBIDDEN");
+    await expect(theirs.remove({ id: item.id })).rejects.toMatchObject(NOT_FOUND);
     await expect(mine.remove({ id: item.id })).resolves.toBe(item.id);
     expect(await mine.list()).toEqual([]);
   });
@@ -181,13 +183,209 @@ describe("household rows through their routers", () => {
 
     expect((await mine.listItems(range)).map((row) => row.id)).toEqual([entry.id]);
     expect(await theirs.listItems(range)).toEqual([]);
-    await expect(theirs.deleteItem({ itemId: entry.id, version: entry.version })).rejects.toThrow(
-      "FORBIDDEN"
-    );
+    await expect(
+      theirs.deleteItem({ itemId: entry.id, version: entry.version })
+    ).rejects.toMatchObject(NOT_FOUND);
     await expect(mine.deleteItem({ itemId: entry.id, version: entry.version })).resolves.toEqual({
       success: true,
       stale: false,
     });
+  });
+
+  it("another household's ids answer like missing rows on every write that names them", async () => {
+    const store = await housemateStore();
+    const aisle = await helpers.createTestAisle(store.id, "Zuivel");
+    const grocery = await helpers.addTestGrocery(housemate.id, { name: "melk" });
+    const food = await helpers.mintTestFood(helpers.testHouseholdOf(admin.id), "olijfolie");
+    const item = await helpers.addTestPantryIngredient(housemate.id, food);
+    const entry = await repositories.planned.createPlannedItem({
+      householdId: helpers.testHouseholdOf(admin.id),
+      userId: housemate.id,
+      date: DAY,
+      slot: "Dinner",
+      itemType: "note",
+      title: "Soep",
+    });
+    const strangerStore = await repositories.stores.createStore(crypto.randomUUID(), {
+      householdId: helpers.testHouseholdOf(stranger.id),
+      userId: stranger.id,
+      name: "Eigen",
+    });
+    const strangerGrocery = await helpers.addTestGrocery(stranger.id, { name: "kaas" });
+    const groceriesOf = await as(routers.groceries, stranger);
+    const storesOf = await as(routers.stores, stranger);
+    const named = [{ id: grocery.id, version: grocery.version }];
+
+    for (const isDone of [true, false]) {
+      await expect(groceriesOf.toggle({ groceries: named, isDone })).rejects.toMatchObject(
+        NOT_FOUND
+      );
+    }
+    await expect(
+      groceriesOf.assignToStore({ groceryId: grocery.id, version: grocery.version, storeId: null })
+    ).rejects.toMatchObject(NOT_FOUND);
+    await expect(
+      groceriesOf.assignToStore({
+        groceryId: strangerGrocery.id,
+        version: strangerGrocery.version,
+        storeId: store.id,
+      })
+    ).rejects.toMatchObject(NOT_FOUND);
+    await expect(
+      storesOf.fileGroceryName({ storeId: store.id, name: "melk", aisleId: aisle.id })
+    ).rejects.toMatchObject(NOT_FOUND);
+    await expect(
+      storesOf.fileGroceryName({ storeId: strangerStore.id, name: "melk", aisleId: aisle.id })
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(
+      (await as(routers.pantry, stranger)).remove({ id: item.id })
+    ).rejects.toMatchObject(NOT_FOUND);
+    const calendarOf = await as(routers.calendar, stranger);
+
+    await expect(
+      calendarOf.moveItem({
+        itemId: entry.id,
+        version: entry.version,
+        targetDate: DAY,
+        targetSlot: "Lunch",
+      })
+    ).rejects.toMatchObject(NOT_FOUND);
+    await expect(
+      calendarOf.editItem({ itemId: entry.id, version: entry.version, title: "Mine" })
+    ).rejects.toMatchObject(NOT_FOUND);
+    await expect(
+      calendarOf.deleteItem({ itemId: entry.id, version: entry.version })
+    ).rejects.toMatchObject(NOT_FOUND);
+    await expect(
+      groceriesOf.update({ groceryId: grocery.id, raw: "2 melk", version: grocery.version })
+    ).rejects.toMatchObject(NOT_FOUND);
+    await expect(groceriesOf.delete({ groceries: named })).rejects.toMatchObject(NOT_FOUND);
+    await expect(
+      groceriesOf.reorderInStore({ updates: [{ ...named[0]!, sortOrder: 0 }] })
+    ).rejects.toMatchObject(NOT_FOUND);
+
+    const mine = await as(routers.groceries, admin);
+
+    expect((await mine.list()).groceries.map((row) => [row.id, row.isDone, row.storeId])).toEqual([
+      [grocery.id, false, null],
+    ]);
+    expect((await (await as(routers.pantry, admin)).list()).map((row) => row.id)).toEqual([
+      item.id,
+    ]);
+    expect(
+      (await (await as(routers.calendar, admin)).listItems({ startISO: DAY, endISO: DAY })).map(
+        (row) => [row.id, row.slot]
+      )
+    ).toEqual([[entry.id, "Dinner"]]);
+  });
+
+  it("plan: a household moves, edits and deletes a housemate's entry", async () => {
+    const mine = await as(routers.calendar, admin);
+    const { id } = await mine.createItem({
+      id: crypto.randomUUID(),
+      date: DAY,
+      slot: "Dinner",
+      itemType: "note",
+      title: "Soep",
+    });
+    const range = { startISO: DAY, endISO: "2027-03-02" };
+    const read = async () => (await mine.listItems(range)).find((row) => row.id === id)!;
+
+    await expect(
+      (await as(routers.calendar, housemate)).moveItem({
+        itemId: id,
+        version: (await read()).version,
+        targetDate: "2027-03-02",
+        targetSlot: "Lunch",
+      })
+    ).resolves.toMatchObject({ success: true, stale: false });
+    expect(await read()).toMatchObject({ date: "2027-03-02", slot: "Lunch" });
+    await expect(
+      mine.editItem({ itemId: id, version: (await read()).version, title: "Linzensoep" })
+    ).resolves.toMatchObject({ stale: false });
+    expect((await read()).title).toBe("Linzensoep");
+    await expect(mine.deleteItem({ itemId: id, version: (await read()).version })).resolves.toEqual(
+      { success: true, stale: false }
+    );
+    expect(await mine.listItems(range)).toEqual([]);
+  });
+
+  it("groceries: one toggle ticks several of the household's lines, and unticks them", async () => {
+    const lines = [
+      await helpers.addTestGrocery(admin.id, { name: "melk" }),
+      await helpers.addTestGrocery(housemate.id, { name: "brood" }),
+    ];
+    const mine = await as(routers.groceries, admin);
+    const done = async () =>
+      (await mine.list()).groceries.map((row) => [row.id, row.isDone]).sort();
+
+    await mine.toggle({
+      groceries: lines.map(({ id, version }) => ({ id, version })),
+      isDone: true,
+    });
+    expect(await done()).toEqual(lines.map(({ id }) => [id, true]).sort());
+    const ticked = (await mine.list()).groceries;
+
+    await mine.toggle({
+      groceries: ticked.map(({ id, version }) => ({ id, version })),
+      isDone: false,
+    });
+    expect(await done()).toEqual(lines.map(({ id }) => [id, false]).sort());
+  });
+
+  it("plan: a reorder within a slot and a delete renumber the slot", async () => {
+    const mine = await as(routers.calendar, admin);
+    const ids: string[] = [];
+
+    for (const title of ["Soep", "Brood", "Salade"]) {
+      ids.push(
+        (
+          await mine.createItem({
+            id: crypto.randomUUID(),
+            date: DAY,
+            slot: "Dinner",
+            itemType: "note",
+            title,
+          })
+        ).id
+      );
+    }
+    const slot = async () =>
+      (await mine.listItems({ startISO: DAY, endISO: DAY }))
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map((row) => [row.title, row.sortOrder]);
+    const versionOf = async (id: string) =>
+      (await mine.listItems({ startISO: DAY, endISO: DAY })).find((row) => row.id === id)!.version;
+
+    await expect(
+      mine.moveItem({
+        itemId: ids[2]!,
+        version: await versionOf(ids[2]!),
+        targetDate: DAY,
+        targetSlot: "Dinner",
+        targetIndex: 0,
+      })
+    ).resolves.toMatchObject({ success: true, moved: true, stale: false });
+    expect(await slot()).toEqual([
+      ["Salade", 0],
+      ["Soep", 1],
+      ["Brood", 2],
+    ]);
+    // A drop where it already is moves nothing.
+    await expect(
+      mine.moveItem({
+        itemId: ids[2]!,
+        version: await versionOf(ids[2]!),
+        targetDate: DAY,
+        targetSlot: "Dinner",
+        targetIndex: 0,
+      })
+    ).resolves.toEqual({ success: true, moved: false, stale: false });
+    await mine.deleteItem({ itemId: ids[0]!, version: await versionOf(ids[0]!) });
+    expect(await slot()).toEqual([
+      ["Salade", 0],
+      ["Brood", 1],
+    ]);
   });
 
   it("a member who has left writes into their new household, never the old one", async () => {
@@ -203,7 +401,7 @@ describe("household rows through their routers", () => {
     expect(await left.list()).toEqual([]);
     await expect(
       left.update({ id: store.id, version: store.version, name: "Taken" })
-    ).rejects.toThrow("FORBIDDEN");
+    ).rejects.toMatchObject(NOT_FOUND);
     await left.create({ id: crypto.randomUUID(), name: "Eigen" });
     expect((await (await as(routers.stores, admin)).list()).map((row) => row.name)).toEqual([
       "Markt",

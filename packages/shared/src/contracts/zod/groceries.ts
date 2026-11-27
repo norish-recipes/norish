@@ -91,6 +91,8 @@ export const GroceryCreateSchema = z.object({
   amount: z.coerce.number().nullable(),
   isDone: z.boolean().default(false),
   recipeIngredientId: z.uuid().nullable().optional(),
+  /** The line's food an untouched chip is, which the server reads through the line; none if edited. */
+  lineFoodId: z.uuid().nullable().optional(),
   recurringGroceryId: z.uuid().nullable().optional(),
   storeId: z.uuid().nullable().optional(),
 });

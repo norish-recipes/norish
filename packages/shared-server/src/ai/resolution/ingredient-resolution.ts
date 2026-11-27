@@ -72,6 +72,8 @@ function failed(error: unknown): Unanswered {
 
 /** How a question is asked. */
 export interface AskOptions {
+  /** The household whose catalogue, with the seed, the answer is looked up in (ADR-0042). */
+  householdId: string;
   /** The Ingredient the question is about, never its own answer. */
   excludeId: string;
   /**
@@ -99,10 +101,8 @@ export async function askWhatFoodThisIs(text: string, options: AskOptions): Prom
  * The reading, looked up: a food the names find is the one, else it is its own under `parentOf`,
  * unless the names find a food other than that parent. Flagged unless AI was sure.
  */
-async function readThenLookUp(
-  text: string,
-  { excludeId, filedUnder, trace }: AskOptions
-): Promise<AIResolution> {
+async function readThenLookUp(text: string, options: AskOptions): Promise<AIResolution> {
+  const { householdId, excludeId, filedUnder, trace } = options;
   const reading = await askReading(text, filedUnder?.name ?? null).catch((error: unknown) => {
     aiLogger.warn({ err: error, feature: "ingredient-resolution", text }, "Reading a name failed");
 
@@ -120,6 +120,7 @@ async function readThenLookUp(
     for (const food of reading.foods) {
       const found = await findNamed(
         { name: food.written, readAs: food },
+        householdId,
         excludeId,
         namesOf(food),
         trace
@@ -141,7 +142,13 @@ async function readThenLookUp(
     otherNames: food.otherNames,
   });
 
-  const found = await findNamed({ name: text, readAs: food }, excludeId, namesOf(food), trace);
+  const found = await findNamed(
+    { name: text, readAs: food },
+    householdId,
+    excludeId,
+    namesOf(food),
+    trace
+  );
 
   const same = (ingredientId: string): AIResolution => ({
     kind: "same",
@@ -151,7 +158,7 @@ async function readThenLookUp(
 
   // The English name finding a food exactly, or an other name that spells one of AI's parents
   // (plurals included, read whole), says the name is that food, its parent or not.
-  const rules = await currentRules();
+  const rules = await currentRules(householdId);
   const parents = [...food.nativeParents, ...food.parents];
   const parentNamed = food.otherNames.some((name) =>
     parents.some((parent) => sameFood(name, parent, rules, wholeFoodKey))
@@ -161,7 +168,7 @@ async function readThenLookUp(
     return same(found.food.ingredientId);
   }
   const category = found.food ? null : food.category;
-  const parent = await parentOf(parents, category, found.food, { excludeId, filedUnder, trace });
+  const parent = await parentOf(parents, category, found.food, options);
 
   // A food only AI's other names (or a slip) find is never the parent AI gave: filed under it.
   if (found.food && parent?.food?.id !== found.food.ingredientId) {
@@ -186,7 +193,7 @@ async function parentOf(
   parents: readonly string[],
   category: string | null,
   named: IngredientRef | null,
-  { excludeId, filedUnder, trace }: AskOptions
+  { householdId, excludeId, filedUnder, trace }: AskOptions
 ): Promise<{ food: { id: string; name: string } | null; sure: boolean } | null> {
   const current = filedUnder && ` ${foldName(filedUnder.name)}`;
 
@@ -194,7 +201,7 @@ async function parentOf(
     return { food: filedUnder, sure: true };
   }
   if (parents.length > 0) {
-    const byParent = await findFood(parents, { except: excludeId, among: "listed" });
+    const byParent = await findFood(householdId, parents, { except: excludeId, among: "listed" });
     const findsNamed = byParent.findIndex((foods) =>
       foods.some((one) => one.ingredientId === named?.ingredientId)
     );
@@ -203,7 +210,12 @@ async function parentOf(
       findsNamed >= 0 ? findsNamed : byParent.findIndex((foods) => foods.length > 0)
     );
     const parent = parents[at]!;
-    const found = await pickAmong({ name: parent, readAs: NOTHING_READ }, [byParent[at]!], trace);
+    const found = await pickAmong(
+      householdId,
+      { name: parent, readAs: NOTHING_READ },
+      [byParent[at]!],
+      trace
+    );
 
     if (found.food || !category) {
       return {
@@ -213,21 +225,22 @@ async function parentOf(
     }
   }
   if (!category) return null;
-  const filed = await findByName(category, excludeId, trace, "seeded");
+  const filed = await findByName(householdId, category, excludeId, trace, "seeded");
 
   return { food: filed.food && { id: filed.food.ingredientId, name: category }, sure: filed.sure };
 }
 
 /**
- * The listed food other than `excludeId` a name AI gave finds, as any AI name is looked up
- * (`findNamed`); "unanswered" where the second question got no answer.
+ * The household's listed food other than `excludeId` a name AI gave finds, as any AI name is
+ * looked up (`findNamed`); "unanswered" where the second question got no answer.
  */
 export async function findFoodNamed(
+  householdId: string,
   name: string,
   excludeId: string
 ): Promise<{ kind: "found"; food: IngredientRef } | { kind: "not-found" | "unanswered" }> {
   try {
-    const { food } = await findByName(name, excludeId, noTrace());
+    const { food } = await findByName(householdId, name, excludeId, noTrace());
 
     return food ? { kind: "found", food } : { kind: "not-found" };
   } catch (error) {
@@ -237,8 +250,14 @@ export async function findFoodNamed(
 }
 
 /** `findNamed` for a name AI gave alone, with no reading of its own (a category). */
-function findByName(name: string, excludeId: string, trace: ReviewTrace, among?: "seeded") {
-  return findNamed({ name, readAs: NOTHING_READ }, excludeId, [name], trace, among);
+function findByName(
+  householdId: string,
+  name: string,
+  excludeId: string,
+  trace: ReviewTrace,
+  among?: "seeded"
+) {
+  return findNamed({ name, readAs: NOTHING_READ }, householdId, excludeId, [name], trace, among);
 }
 
 /** A read food's names to look up: its English name and the other names a shop sells it under. */
@@ -271,16 +290,23 @@ type Candidate = IngredientCandidate & { matched: string };
  */
 async function findNamed(
   asked: Asked,
+  householdId: string,
   excludeId: string,
   names: readonly string[],
   trace: ReviewTrace,
   among: "listed" | "seeded" = "listed"
 ): Promise<Found> {
-  return await pickAmong(asked, await findFood(names, { except: excludeId, among }), trace);
+  return await pickAmong(
+    householdId,
+    asked,
+    await findFood(householdId, names, { except: excludeId, among }),
+    trace
+  );
 }
 
 /** The food among what each name found: an exact spelling wins, else several or slips are asked about. */
 async function pickAmong(
+  householdId: string,
   asked: Asked,
   byName: Awaited<ReturnType<typeof findFood>>,
   trace: ReviewTrace
@@ -296,7 +322,7 @@ async function pickAmong(
   if (ranked.length > (exact.length > 0 ? 1 : 0)) {
     const matched = new Map(ranked.map((one) => [one.ingredientId, one.matched]));
     const ids = [...matched.keys()];
-    const candidates = (await findIngredientCandidatesByIds(ids)).map((candidate) => ({
+    const candidates = (await findIngredientCandidatesByIds(householdId, ids)).map((candidate) => ({
       ...candidate,
       matched: matched.get(candidate.id) ?? candidate.name,
     }));

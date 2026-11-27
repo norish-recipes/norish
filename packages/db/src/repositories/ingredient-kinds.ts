@@ -63,7 +63,7 @@ export function lineNamesKindSql(lineId: AnyPgColumn, ids: readonly string[]): S
 export function lineageCte(ids: readonly string[]) {
   return qb.$with("lineage", { lineageId: sql<string>`lineage_id`.as("lineage_id") }).as(
     sql`with recursive walk(id, depth) as (
-      select ${ingredients.id}, 0 from ${ingredients} where ${inArray(ingredients.id, [...ids])}
+      select ${ingredients.id}, 0 from ${ingredients} where ${ingredients.id} = any(${sql.param([...ids])}::uuid[])
       union
       select ${lineageParent.id}, walk.depth + 1 from walk
       join ${ingredients} as ${lineageChild} on ${lineageChild.id} = walk.id

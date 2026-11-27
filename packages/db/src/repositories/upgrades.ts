@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, isNotNull, isNull, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, isNotNull, isNull, ne, or, sql } from "drizzle-orm";
 
 import type { IngredientRef } from "@norish/db/repositories/ingredient-aliases";
 import type { NamingRow, NamingRows } from "@norish/db/repositories/ingredient-cleanup";
@@ -9,7 +9,6 @@ import {
   aisleLinks,
   aisles,
   groceries,
-  households,
   ingredients,
   ingredientStorePreferences,
   pantryIngredients,
@@ -26,13 +25,16 @@ import {
 } from "@norish/db/schema";
 import { entryFold } from "@norish/shared/lib/fold-name";
 
-import { rowActor } from "./household-rows";
+import { assertOwnReferences } from "./household-rows";
 import {
   findFoldedTwinTx,
+  householdTwinFoldsTx,
   LIST_KINDS,
   listPendingFoldEntries,
+  lockEntryFoldsTx,
   mergeEntryTx,
   setEntryFoldTx,
+  takeOverHouseholdTwinsTx,
 } from "./list-entries";
 
 /** What the boot upgrades from older releases (startup/upgrades) read and write. */
@@ -88,7 +90,7 @@ export async function listLinesWithoutFood(
       name: recipeIngredients.name,
       amount: recipeIngredients.amount,
       unit: recipeIngredients.unit,
-      ownerId: recipes.userId,
+      householdId: recipes.householdId,
     })
     .from(recipeIngredients)
     .innerJoin(recipes, eq(recipes.id, recipeIngredients.recipeId))
@@ -112,7 +114,7 @@ export async function listGroceriesWithoutFood(
   afterId: string | null
 ): Promise<NamingRow[]> {
   return await db
-    .select({ id: groceries.id, name: groceries.name, ownerId: rowActor(groceries) })
+    .select({ id: groceries.id, name: groceries.name, householdId: groceries.householdId })
     .from(groceries)
     .where(
       and(
@@ -133,7 +135,7 @@ export async function listRecurringGroceriesWithoutFood(
     .select({
       id: recurringGroceries.id,
       name: recurringGroceries.name,
-      ownerId: rowActor(recurringGroceries),
+      householdId: recurringGroceries.householdId,
     })
     .from(recurringGroceries)
     .where(
@@ -146,15 +148,15 @@ export async function listRecurringGroceriesWithoutFood(
     .limit(limit);
 }
 
-/** Pantry Ingredients from before 0.25, with their old Ingredient's name and who resolves it. */
+/** Pantry Ingredients from before 0.25, with their old Ingredient's name and their household. */
 export async function listPantryIngredientsWithoutSpelling(): Promise<
-  Array<{ id: string; name: string; ownerId: string }>
+  Array<{ id: string; name: string; householdId: string }>
 > {
   return await db
     .select({
       id: pantryIngredients.id,
       name: ingredients.name,
-      ownerId: rowActor(pantryIngredients),
+      householdId: pantryIngredients.householdId,
     })
     .from(pantryIngredients)
     .innerJoin(ingredients, eq(ingredients.id, pantryIngredients.ingredientId))
@@ -181,12 +183,17 @@ export async function setPantryIngredientFood(id: string, food: IngredientRef): 
         and(
           eq(pantryIngredients.householdId, row.householdId),
           eq(pantryIngredients.ingredientId, food.ingredientId),
-          sql`${pantryIngredients.id} <> ${id}`
+          ne(pantryIngredients.id, id)
         )
       );
 
     if (held) await tx.delete(pantryIngredients).where(eq(pantryIngredients.id, id));
     else {
+      await assertOwnReferences(
+        row.householdId,
+        { ingredientIds: [food.ingredientId], ingredientAliasIds: [food.aliasId] },
+        tx
+      );
       await tx
         .update(pantryIngredients)
         .set({ ingredientAliasId: food.aliasId, ingredientId: food.ingredientId })
@@ -227,10 +234,8 @@ export interface ParkedLink {
   id: string;
   kind: "aisle" | "product" | "preference";
   link: ParkedLinkRow;
-  /** Its Store's household; null where the Store went. */
+  /** Its Store's household, which resolves its name; null where the Store went. */
   householdId: string | null;
-  /** Who resolves its name: its Store's adder, else that household's admin. */
-  ownerId: string | null;
   /** The account a preference names, null where it is gone: then it was added by no one. */
   addedBy: string | null;
 }
@@ -243,18 +248,16 @@ export async function listParkedLinks(): Promise<ParkedLink[]> {
       kind: parkedNameKeyedLinks.kind,
       link: parkedNameKeyedLinks.link,
       householdId: stores.householdId,
-      ownerId: sql<string | null>`coalesce(${stores.userId}, ${households.adminUserId})`,
       addedBy: users.id,
     })
     .from(parkedNameKeyedLinks)
-    .leftJoin(stores, sql`${stores.id} = (${parkedNameKeyedLinks.link}->>'store_id')::uuid`)
-    .leftJoin(households, eq(households.id, stores.householdId))
-    .leftJoin(users, sql`${users.id} = ${parkedNameKeyedLinks.link}->>'user_id'`)
+    .leftJoin(stores, eq(stores.id, sql`(${parkedNameKeyedLinks.link}->>'store_id')::uuid`))
+    .leftJoin(users, eq(users.id, sql`${parkedNameKeyedLinks.link}->>'user_id'`))
     .orderBy(desc(sql`${parkedNameKeyedLinks.link}->>'updated_at'`));
 }
 
 /** What became of a parked link: put back, dropped, or dropped because its aisle or product went. */
-export type Unparked = "restored" | "dropped" | "target-gone";
+type Unparked = "restored" | "dropped" | "target-gone";
 
 /**
  * Put a parked link back keyed by its food, unless its Store (or member) holds a newer one for that
@@ -322,10 +325,8 @@ export async function unparkLink(
   });
 }
 
-/**
- * Folds the Tag, Cuisine and Category names migration 0092 could not fold exactly. Two entries of
- * one list folding alike merge: the older keeps its id, the other's recipes move onto it.
- */
+/** Folds the Tag, Cuisine and Category names migration 0092 could not fold exactly: fold-alike
+ * entries of one list merge, then a household entry folding like an instance entry merges into it. */
 export async function foldPendingListEntries(): Promise<number> {
   let folded = 0;
 
@@ -333,19 +334,25 @@ export async function foldPendingListEntries(): Promise<number> {
     folded += await db.transaction(async (tx) => {
       const pending = await listPendingFoldEntries(kind, tx);
 
+      // The twins' folds with the pending ones, in one call: none is taken out of order later.
+      await lockEntryFoldsTx(tx, kind, [
+        ...pending.map((entry) => entryFold(entry.name)),
+        ...(await householdTwinFoldsTx(tx, kind)),
+      ]);
+
       for (const entry of pending) {
         const fold = entryFold(entry.name);
         const twin = await findFoldedTwinTx(tx, kind, entry.householdId, fold, entry.id);
 
         if (twin?.older) {
-          await mergeEntryTx(tx, kind, entry.id, twin.id);
+          await mergeEntryTx(tx, kind, [entry.id], twin.id);
           continue;
         }
-        if (twin) await mergeEntryTx(tx, kind, twin.id, entry.id);
+        if (twin) await mergeEntryTx(tx, kind, [twin.id], entry.id);
         await setEntryFoldTx(tx, kind, entry.id, fold);
       }
 
-      return pending.length;
+      return pending.length + (await takeOverHouseholdTwinsTx(tx, kind));
     });
   }
 

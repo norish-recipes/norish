@@ -2,6 +2,7 @@ import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import {
   boolean,
+  check,
   index,
   jsonb,
   pgTable,
@@ -12,6 +13,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { users } from "./auth";
+import { households } from "./households";
 import { mutableRowColumns, versionColumn } from "./shared";
 
 /**
@@ -69,13 +71,19 @@ export interface NutritionCodes {
  *
  * `unusedSince` is when the nightly sweep first found nothing naming an own Ingredient; only
  * the sweep sets and clears it, and deletes the food after 90 days.
+ *
+ * `householdId` is the household whose catalogue the food is in, null for the seed (ADR-0042): a
+ * name is unique within a household and among the seed, and only the seed has an `offId`.
+ * `addedByHand` marks a food a person added on the Ingredients page, which no sweep or AI deletes.
  */
 export const ingredients = pgTable(
   "ingredients",
   {
     id: uuid("id").defaultRandom().primaryKey(),
+    householdId: uuid("household_id").references(() => households.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     ownerId: text("owner_id").references(() => users.id, { onDelete: "set null" }),
+    addedByHand: boolean("added_by_hand").notNull().default(false),
     flagged: boolean("flagged").notNull().default(false),
     flagReason: text("flag_reason"),
     keptDistinct: boolean("kept_distinct").notNull().default(false),
@@ -93,27 +101,39 @@ export const ingredients = pgTable(
     ...versionColumn,
   },
   (t) => [
-    uniqueIndex("uqidx_ingredients_name_lower").on(sql`lower(${t.name})`),
+    uniqueIndex("uqidx_ingredients_household_name_lower")
+      .on(t.householdId, sql`lower(${t.name})`)
+      .where(sql`${t.householdId} is not null`),
+    uniqueIndex("uqidx_ingredients_seed_name_lower")
+      .on(sql`lower(${t.name})`)
+      .where(sql`${t.householdId} is null`),
     index("idx_ingredients_created_at").on(t.createdAt),
     index("idx_ingredients_parent_id").on(t.parentId),
     uniqueIndex("uqidx_ingredients_off_id").on(t.offId),
+    check(
+      "ck_ingredients_seed_has_off_id",
+      sql`(${t.householdId} is null) = (${t.offId} is not null)`
+    ),
   ]
 );
 
 /**
  * Ingredient Aliases: every spelling, plural, preparation-bearing variant and
  * translation of an Ingredient ever seen. The fold is the one grocery folding
- * of the text and is unique, so one spelling means one food instance-wide.
+ * of the text and is unique within a household and among the seed; a household's
+ * spelling beats the seed's of the same fold for that household (ADR-0042).
  * Merging Ingredients moves aliases; what points at an alias moves only when
  * the alias is removed, to another spelling of the same food.
  *
- * `ownerId` is whoever added the alias, null for the seed; `seeded` marks an
- * alias the catalogue seed wrote, which a refresh of the seed may rewrite.
+ * `householdId` is the household it belongs to, null for the seed's; a household's spelling may
+ * sit on a seeded food. `ownerId` is whoever added it; `seeded` marks an alias the seed wrote,
+ * which a refresh of the seed may rewrite.
  */
 export const ingredientAliases = pgTable(
   "ingredient_aliases",
   {
     id: uuid("id").defaultRandom().primaryKey(),
+    householdId: uuid("household_id").references(() => households.id, { onDelete: "cascade" }),
     text: text("text").notNull(),
     fold: text("fold").notNull(),
     locale: text("locale"),
@@ -125,7 +145,12 @@ export const ingredientAliases = pgTable(
     ...mutableRowColumns,
   },
   (t) => [
-    uniqueIndex("uqidx_ingredient_aliases_fold").on(t.fold),
+    uniqueIndex("uqidx_ingredient_aliases_household_fold")
+      .on(t.householdId, t.fold)
+      .where(sql`${t.householdId} is not null`),
+    uniqueIndex("uqidx_ingredient_aliases_seed_fold")
+      .on(t.fold)
+      .where(sql`${t.householdId} is null`),
     index("idx_ingredient_aliases_ingredient_id").on(t.ingredientId),
   ]
 );

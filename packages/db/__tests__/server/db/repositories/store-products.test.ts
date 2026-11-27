@@ -23,7 +23,7 @@ import { deleteStore } from "@norish/db/repositories/stores";
 import { groceries, storeProductLinks, storeProducts, stores } from "@norish/db/schema";
 
 import { resolveIngredients } from "../../../../../shared-server/src/ingredients/resolver";
-import { getTestDb, testHouseholdOf } from "../../../helpers/db-test-helpers";
+import { createTestUser, getTestDb, testHouseholdOf } from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 const PAGE = "https://www.dirk.nl/boodschappen/zuivel-kaas/kaas-stuk/oude-kaas/97752";
@@ -62,7 +62,10 @@ describe("store products, product links and misses", () => {
 
   /** The Ingredient a grocery name resolves to, as every link writer resolves it. */
   async function ingredient(name: string) {
-    const [resolved] = await resolveIngredients([name], { userId });
+    const [resolved] = await resolveIngredients([name], {
+      userId,
+      householdId: testHouseholdOf(userId),
+    });
 
     return resolved!.ingredientId;
   }
@@ -151,7 +154,9 @@ describe("store products, product links and misses", () => {
     it("is never overwritten by a reading once set by hand, and reads itself again once cleared", async () => {
       const read = await upsertReadProduct(reading({ pack: grams(930) }));
 
-      await expect(setPackSizeByHand(read.id, grams(1000))).resolves.toMatchObject({
+      await expect(
+        setPackSizeByHand(testHouseholdOf(userId), read.id, grams(1000))
+      ).resolves.toMatchObject({
         packQuantity: 1000,
         packByHand: true,
       });
@@ -162,7 +167,9 @@ describe("store products, product links and misses", () => {
       expect(refreshed).toMatchObject({ price: 8.49, packQuantity: 1000, packByHand: true });
 
       // Cleared, the product says what its own size words say.
-      await expect(setPackSizeByHand(read.id, null)).resolves.toMatchObject({
+      await expect(
+        setPackSizeByHand(testHouseholdOf(userId), read.id, null)
+      ).resolves.toMatchObject({
         packQuantity: 930,
         packUnit: "gram",
         packByHand: false,
@@ -181,7 +188,7 @@ describe("store products, product links and misses", () => {
 
       expect(manual).toMatchObject({ packQuantity: 500, packUnit: "gram", packByHand: true });
       await expect(
-        updateManualProduct({
+        updateManualProduct(testHouseholdOf(userId), {
           id: manual.id,
           pack: { quantity: 250, unit: "gram", byWeight: false },
         })
@@ -341,15 +348,40 @@ describe("store products, product links and misses", () => {
         currency: "EUR",
       });
 
-      const updated = await updateManualProduct({ id: manual.id, price: 5.5, name: "Boerenkaas" });
+      const updated = await updateManualProduct(testHouseholdOf(userId), {
+        id: manual.id,
+        price: 5.5,
+        name: "Boerenkaas",
+      });
 
       expect(updated).toMatchObject({ price: 5.5, name: "Boerenkaas", pageUrl: null });
+    });
+
+    it("writes only a product of the household's Stores, whatever the caller read before", async () => {
+      const manual = await createManualProduct({
+        id: crypto.randomUUID(),
+        storeId,
+        name: "Kaas van de markt",
+        price: 5,
+        currency: "EUR",
+      });
+      const elsewhere = testHouseholdOf((await createTestUser()).id);
+
+      await expect(updateManualProduct(elsewhere, { id: manual.id, price: 1 })).resolves.toBeNull();
+      await expect(
+        setPackSizeByHand(elsewhere, manual.id, { quantity: 1, unit: "gram", byWeight: false })
+      ).resolves.toBeNull();
+      expect(
+        await getTestDb().select().from(storeProducts).where(eq(storeProducts.id, manual.id))
+      ).toEqual([expect.objectContaining({ price: "5.00", packQuantity: null })]);
     });
 
     it("refuses to edit a product that was read from a page", async () => {
       const read = await upsertReadProduct(reading());
 
-      await expect(updateManualProduct({ id: read.id, price: 1 })).resolves.toBeNull();
+      await expect(
+        updateManualProduct(testHouseholdOf(userId), { id: read.id, price: 1 })
+      ).resolves.toBeNull();
     });
   });
 

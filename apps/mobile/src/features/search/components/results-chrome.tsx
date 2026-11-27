@@ -1,8 +1,8 @@
 import React from "react";
 import { ScrollView, Text, View } from "react-native";
+import { Ionicons } from "@/components/icon";
 import { NativeMenu } from "@/components/native-menu";
 import { useTokenColor } from "@/hooks/use-token-color";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useIntl } from "react-intl";
 
 import type { SortOrder } from "@norish/shared/contracts";

@@ -6,20 +6,22 @@
  * decision about the food. Both follow `edit` on the food the change was
  * about, and a person looking after a food keeps what AI was unsure of.
  */
-import { eq, sql } from "drizzle-orm";
+import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { CatalogueActor } from "@norish/shared-server/ingredients/catalogue";
-import { withTransaction } from "@norish/db/drizzle";
 import {
   listAIChanges,
+  recordAIChange,
   sweepAIChanges,
   takeOpenParentChanges,
 } from "@norish/db/repositories/ingredient-ai-changes";
 import { findIngredientByAliasId } from "@norish/db/repositories/ingredient-aliases";
+import { setIngredientIcon } from "@norish/db/repositories/ingredient-icons";
+import { listJunkFolds } from "@norish/db/repositories/ingredient-junk-pile";
 import { findIngredientAncestors, lockTree } from "@norish/db/repositories/ingredient-relocation";
+import { insertSeededIngredient } from "@norish/db/repositories/ingredient-seed";
 import { markAIChangesCleared } from "@norish/db/repositories/users";
-import { ingredientAIChanges, ingredients } from "@norish/db/schema";
 import { isAIEnabled } from "@norish/shared-server/config/server-config-loader";
 import {
   deleteByAI,
@@ -40,12 +42,18 @@ import {
 import { resolveIngredients } from "@norish/shared-server/ingredients/resolver";
 
 import {
+  backdateTestAIChanges,
   createTestRecipe,
   createTestUser,
   getRecipeIngredients,
-  getTestDb,
+  inRepositoryTransaction,
   insertTestRecipeLine,
+  joinTestHousehold,
+  listTestAIChanges,
   nameInATestRecipe,
+  readTestIngredient,
+  readTestSeedSpelling,
+  setTestIngredients,
   testHouseholdOf,
 } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
@@ -70,7 +78,6 @@ describe("keeping and undoing AI Changes", () => {
     actor = {
       userId: user.id,
       householdId: testHouseholdOf(user.id),
-      memberIds: [user.id],
       isServerAdmin: false,
     };
     // Every mint here is the words' alone: AI is off, so each is flagged.
@@ -83,7 +90,10 @@ describe("keeping and undoing AI Changes", () => {
 
   /** A food a recipe line names, so AI may change it. */
   async function mint(text: string, userId = actor.userId) {
-    const [resolved] = await resolveIngredients([text], { userId });
+    const [resolved] = await resolveIngredients([text], {
+      userId,
+      householdId: testHouseholdOf(userId),
+    });
 
     await nameInATestRecipe(userId, resolved!.aliasId, text);
 
@@ -91,7 +101,7 @@ describe("keeping and undoing AI Changes", () => {
   }
 
   async function onlyChange() {
-    const [change, ...rest] = await listAIChanges();
+    const [change, ...rest] = await listAIChanges(actor);
 
     expect(rest).toEqual([]);
 
@@ -129,7 +139,7 @@ describe("keeping and undoing AI Changes", () => {
       flagged: false,
     });
     // Undone, it is no longer listed: it stays only as AI's memory.
-    expect(await listAIChanges()).toEqual([]);
+    expect(await listAIChanges(actor)).toEqual([]);
   });
 
   it("undoes a parent: the parent the food had before AI comes back", async () => {
@@ -138,10 +148,7 @@ describe("keeping and undoing AI Changes", () => {
     const red = await mint("red onion");
 
     // The words filed it under vegetable, as the seed's recheck would; AI moved it.
-    await getTestDb()
-      .update(ingredients)
-      .set({ parentId: vegetable.ingredientId })
-      .where(eq(ingredients.id, red.ingredientId));
+    await setTestIngredients(red.ingredientId, { parentId: vegetable.ingredientId });
     await parentByAI(red.ingredientId, onion.ingredientId, false);
     await expect(parentOf(red.ingredientId)).resolves.toBe(onion.ingredientId);
 
@@ -182,12 +189,10 @@ describe("keeping and undoing AI Changes", () => {
     ).resolves.toBe("applied");
     await undoAIChange(actor, (await onlyChange()).id);
 
-    const [row] = await getTestDb()
-      .select({ name: ingredients.name, nameSettled: ingredients.nameSettled })
-      .from(ingredients)
-      .where(eq(ingredients.id, tonijn.ingredientId));
-
-    expect(row).toEqual({ name: "GR TONIJN UIT BLIK", nameSettled: true });
+    expect(await readTestIngredient(tonijn.ingredientId)).toMatchObject({
+      name: "GR TONIJN UIT BLIK",
+      nameSettled: true,
+    });
   });
 
   it("leaves a parent a person set since: Undo only remembers", async () => {
@@ -198,10 +203,7 @@ describe("keeping and undoing AI Changes", () => {
     await parentByAI(red.ingredientId, onion.ingredientId, false);
     const change = await onlyChange();
 
-    await getTestDb()
-      .update(ingredients)
-      .set({ parentId: allium.ingredientId })
-      .where(eq(ingredients.id, red.ingredientId));
+    await setTestIngredients(red.ingredientId, { parentId: allium.ingredientId });
     await undoAIChange(actor, change.id);
 
     await expect(parentOf(red.ingredientId)).resolves.toBe(allium.ingredientId);
@@ -219,13 +221,13 @@ describe("keeping and undoing AI Changes", () => {
     await parentByAI(red.ingredientId, allium.ingredientId, false);
     await mergeByAI(uien.ingredientId, onion.ingredientId, false);
     await mergeByAI(red.ingredientId, onion.ingredientId, false);
-    const [first, second] = await listAIChanges();
+    const [first, second] = await listAIChanges(actor);
 
     await keepAIChange(actor, first!.id);
     await expect(findIngredientByAliasId(onion.aliasId)).resolves.toMatchObject({ flagged: true });
     await keepAIChange(actor, second!.id);
     await expect(findIngredientByAliasId(onion.aliasId)).resolves.toMatchObject({ flagged: false });
-    expect((await listAIChanges()).map((change) => change.kept)).toEqual([true, true]);
+    expect((await listAIChanges(actor)).map((change) => change.kept)).toEqual([true, true]);
   });
 
   it("keeps what AI was unsure of when a person looks after the food themselves", async () => {
@@ -235,33 +237,35 @@ describe("keeping and undoing AI Changes", () => {
     await parentByAI(red.ingredientId, onion.ingredientId, false);
     await markDistinct(actor, red.ingredientId);
 
-    expect(await listAIChanges()).toMatchObject([{ kept: true }]);
+    expect(await listAIChanges(actor)).toMatchObject([{ kept: true }]);
   });
 
-  it("follows edit on the food the change was about, a merge's included", async () => {
+  it("lists a change only to the household whose catalogue AI changed, a merge into the seed's included", async () => {
     // Merged into a seeded food, which only an administrator may edit.
-    const [seeded] = await getTestDb()
-      .insert(ingredients)
-      .values({ name: "leek", offId: "en:leek" })
-      .returning({ id: ingredients.id });
+    const seeded = {
+      id: await insertSeededIngredient({ name: "leek", offId: "en:leek" }, [
+        { text: "leek", fold: "leek", locale: "en" },
+      ]),
+    };
     const prei = await mint("prei");
     const stranger = await createTestUser();
     const strangers = {
       userId: stranger.id,
       householdId: testHouseholdOf(stranger.id),
-      memberIds: [stranger.id],
       isServerAdmin: false,
     };
 
-    await mergeByAI(prei.ingredientId, seeded!.id, false);
+    await mergeByAI(prei.ingredientId, seeded.id, false);
     const change = await onlyChange();
 
-    expect(await listAIChangesFor(strangers)).toMatchObject([{ canAct: false }]);
+    // Another household neither sees it nor reaches it by its id.
+    expect(await listAIChangesFor(strangers)).toEqual([]);
+    expect(await listAIChangesFor({ ...strangers, isServerAdmin: true })).toEqual([]);
     await expect(undoAIChange(strangers, change.id)).rejects.toMatchObject({
-      refusal: "forbidden",
+      refusal: "not-found",
     });
     await expect(keepAIChange(strangers, change.id)).rejects.toMatchObject({
-      refusal: "forbidden",
+      refusal: "not-found",
     });
     expect(await listAIChangesFor(actor)).toMatchObject([
       { kind: "merge", from: "prei", ingredient: { name: "leek" }, canAct: true },
@@ -270,7 +274,29 @@ describe("keeping and undoing AI Changes", () => {
     await expect(findIngredientByAliasId(prei.aliasId)).resolves.toMatchObject({ name: "prei" });
   });
 
-  it("lets only who may edit a food AI deleted as not a food bring it back with its lines", async () => {
+  it("changes nothing on a seeded food a household's food is merged into, by AI or an admin", async () => {
+    const seeded = await insertSeededIngredient({ name: "leek", offId: "en:leek" }, [
+      { text: "leek", fold: "leek", locale: "en" },
+    ]);
+    const before = await readTestIngredient(seeded);
+    const prei = await mint("prei");
+    const stokprei = await mint("stokprei");
+
+    await inRepositoryTransaction((tx) => setIngredientIcon(tx, prei.ingredientId, "prei.webp"));
+    await inRepositoryTransaction((tx) =>
+      setIngredientIcon(tx, stokprei.ingredientId, "stokprei.webp")
+    );
+    await expect(mergeByAI(prei.ingredientId, seeded, false)).resolves.toBe("applied");
+    await keepAIChange(actor, (await onlyChange()).id);
+    await mergeIngredients({ ...actor, isServerAdmin: true }, stokprei.ingredientId, seeded);
+
+    await expect(readTestIngredient(seeded)).resolves.toEqual(before);
+    // The household's spellings and lines now name the seeded food, as the household's spellings.
+    await expect(findIngredientByAliasId(prei.aliasId)).resolves.toMatchObject({ id: seeded });
+    await expect(findIngredientByAliasId(stokprei.aliasId)).resolves.toMatchObject({ id: seeded });
+  });
+
+  it("lets only the food's household bring back a food AI deleted as not a food, with its lines", async () => {
     const melted = await mint("melted");
     const recipe = await createTestRecipe(actor.userId, { name: "snickers ice cream bars" });
 
@@ -281,20 +307,162 @@ describe("keeping and undoing AI Changes", () => {
     const strangers = {
       userId: stranger.id,
       householdId: testHouseholdOf(stranger.id),
-      memberIds: [stranger.id],
       isServerAdmin: false,
     };
 
-    expect(await listAIChangesFor(strangers)).toMatchObject([
-      { kind: "not-a-food", ingredient: null, from: "melted", canAct: false },
+    expect(await listAIChangesFor(strangers)).toEqual([]);
+    expect(await listAIChangesFor(actor)).toMatchObject([
+      { kind: "not-a-food", ingredient: null, from: "melted", canAct: true },
     ]);
     await expect(undoAIChange(strangers, change.id)).rejects.toMatchObject({
-      refusal: "forbidden",
+      refusal: "not-found",
     });
     await undoAIChange(actor, change.id);
     expect(await getRecipeIngredients(recipe.id)).toMatchObject([
       { name: "melted", ingredientId: melted.ingredientId },
     ]);
+  });
+
+  it("refuses an Undo that would point another household's line at the food, changing nothing", async () => {
+    const stranger = await createTestUser();
+    const theirs = await createTestRecipe(stranger.id, { name: "fudge" });
+    const theirLine = await insertTestRecipeLine({ recipeId: theirs.id, name: "melted" });
+    const food = { ingredientId: randomUUID(), aliasId: randomUUID() };
+    const changeId = await inRepositoryTransaction((tx) =>
+      recordAIChange(tx, {
+        householdId: actor.householdId,
+        sure: true,
+        undo: {
+          kind: "not-a-food",
+          food: {
+            ingredientId: food.ingredientId,
+            name: "melted",
+            ownerId: actor.userId,
+            parentId: null,
+            aliases: [
+              { id: food.aliasId, text: "melted", fold: "melted", locale: null, ownerId: null },
+            ],
+            lineFoods: [{ lineId: theirLine.id, position: 0, aliasId: food.aliasId }],
+            groceries: [],
+            recurring: [],
+          },
+        },
+      })
+    );
+
+    await expect(undoAIChange(actor, changeId)).rejects.toMatchObject({ refusal: "forbidden" });
+    await expect(readTestIngredient(food.ingredientId)).resolves.toBeNull();
+    expect(await getRecipeIngredients(theirs.id)).toMatchObject([
+      { name: "melted", ingredientId: null },
+    ]);
+  });
+
+  it("leaves a change on a food since taken into the seed to an administrator", async () => {
+    const tonijn = await mint("GR TONIJN UIT BLIK");
+    const red = await mint("red onion");
+    const onion = await mint("onion");
+
+    await renameByAI(tonijn.ingredientId, "GR TONIJN UIT BLIK", "tonijn uit blik");
+    await parentByAI(red.ingredientId, onion.ingredientId, false);
+    await setTestIngredients(tonijn.ingredientId, { householdId: null, offId: "en:tuna" });
+    await setTestIngredients(red.ingredientId, { householdId: null, offId: "en:red-onion" });
+    const before = [
+      await readTestIngredient(tonijn.ingredientId),
+      await readTestIngredient(red.ingredientId),
+    ];
+    const changes = await listAIChanges(actor);
+
+    expect((await listAIChangesFor(actor)).map((change) => change.canAct)).toEqual([false, false]);
+    for (const change of changes) {
+      await expect(undoAIChange(actor, change.id)).rejects.toMatchObject({ refusal: "forbidden" });
+      await expect(keepAIChange(actor, change.id)).rejects.toMatchObject({ refusal: "forbidden" });
+    }
+    await expect(
+      Promise.all([readTestIngredient(tonijn.ingredientId), readTestIngredient(red.ingredientId)])
+    ).resolves.toEqual(before);
+
+    const admin = { ...actor, isServerAdmin: true };
+
+    expect((await listAIChangesFor(admin)).map((change) => change.canAct)).toEqual([true, true]);
+    for (const change of changes) await undoAIChange(admin, change.id);
+    await expect(readTestIngredient(tonijn.ingredientId)).resolves.toMatchObject({
+      name: "GR TONIJN UIT BLIK",
+    });
+  });
+
+  it("refuses a member's Undo that would move a seeded spelling back", async () => {
+    const leek = await insertSeededIngredient({ name: "leek", offId: "en:leek" }, [
+      { text: "leek", fold: "leek", locale: "en" },
+      { text: "poireau", fold: "poireau", locale: "fr" },
+    ]);
+    const prei = await mint("prei");
+    const poireau = (await readTestSeedSpelling("poireau"))!;
+    const changeId = await inRepositoryTransaction((tx) =>
+      recordAIChange(tx, {
+        householdId: actor.householdId,
+        ingredientId: prei.ingredientId,
+        targetId: leek,
+        sure: true,
+        undo: {
+          kind: "spelling",
+          spelling: {
+            id: poireau.id,
+            text: "poireau",
+            fold: "poireau",
+            locale: "fr",
+            ownerId: null,
+          },
+          lines: [],
+          groceries: [],
+          recurring: [],
+        },
+      })
+    );
+
+    await expect(undoAIChange(actor, changeId)).rejects.toMatchObject({ refusal: "forbidden" });
+    await expect(findIngredientByAliasId(poireau.id)).resolves.toMatchObject({ id: leek });
+  });
+
+  it("keeps a spelling change on a seeded food without marking the seed's food distinct", async () => {
+    const leek = await insertSeededIngredient({ name: "leek", offId: "en:leek" }, [
+      { text: "leek", fold: "leek", locale: "en" },
+    ]);
+    const before = await readTestIngredient(leek);
+    const changeId = await inRepositoryTransaction((tx) =>
+      recordAIChange(tx, {
+        householdId: actor.householdId,
+        ingredientId: leek,
+        sure: false,
+        undo: {
+          kind: "spelling",
+          spelling: { id: randomUUID(), text: "prei", fold: "prei", locale: "nl", ownerId: null },
+          lines: [],
+          groceries: [],
+          recurring: [],
+        },
+      })
+    );
+
+    expect(await listAIChangesFor(actor)).toMatchObject([{ id: changeId, canAct: true }]);
+    await keepAIChange(actor, changeId);
+    await expect(readTestIngredient(leek)).resolves.toEqual(before);
+    await expect(markDistinct(actor, leek)).rejects.toMatchObject({ refusal: "forbidden" });
+  });
+
+  it("never offers or acts on a stranded change", async () => {
+    const red = await mint("red onion");
+    const changeId = await inRepositoryTransaction((tx) =>
+      recordAIChange(tx, {
+        householdId: actor.householdId,
+        ingredientId: red.ingredientId,
+        sure: false,
+        undo: { kind: "parent", formerParentId: null, stranded: true },
+      })
+    );
+
+    expect(await listAIChangesFor(actor)).toMatchObject([{ id: changeId, canAct: false }]);
+    await expect(undoAIChange(actor, changeId)).rejects.toMatchObject({ refusal: "forbidden" });
+    await expect(keepAIChange(actor, changeId)).rejects.toMatchObject({ refusal: "forbidden" });
   });
 
   it("refuses a change already undone", async () => {
@@ -308,12 +476,11 @@ describe("keeping and undoing AI Changes", () => {
     await expect(undoAIChange(actor, change.id)).rejects.toMatchObject({ refusal: "not-found" });
   });
 
-  it("settles many at once: one gone is skipped, one refused is thrown after the rest", async () => {
+  it("settles many at once: one gone or another household's is skipped, the rest settle", async () => {
     const stranger = await createTestUser();
     const strangers = {
       userId: stranger.id,
       householdId: testHouseholdOf(stranger.id),
-      memberIds: [stranger.id],
       isServerAdmin: false,
     };
     const onion = await mint("onion");
@@ -323,23 +490,22 @@ describe("keeping and undoing AI Changes", () => {
 
     await mergeByAI(uien.ingredientId, onion.ingredientId, false);
     await mergeByAI(prei.ingredientId, leek.ingredientId, false);
-    const [mine, theirs] = await listAIChanges();
+    const [mine] = await listAIChanges(actor);
+    const [theirs] = await listAIChanges(strangers);
 
-    await expect(
-      settleAIChanges(strangers, [mine!.id, theirs!.id, theirs!.id], "undo")
-    ).rejects.toMatchObject({ refusal: "forbidden" });
-    // Theirs is undone despite the refusal before it; its repeat, gone by then, was skipped.
-    expect((await listAIChanges()).map((change) => change.id)).toEqual([mine!.id]);
+    // Theirs is undone; mine, out of their reach, and theirs again, gone by then, were skipped.
+    await settleAIChanges(strangers, [mine!.id, theirs!.id, theirs!.id], "undo");
+    expect(await listAIChanges(strangers)).toEqual([]);
+    expect((await listAIChanges(actor)).map((change) => change.id)).toEqual([mine!.id]);
     await settleAIChanges(actor, [mine!.id], "keep");
-    expect(await listAIChanges()).toMatchObject([{ id: mine!.id, kept: true }]);
+    expect(await listAIChanges(actor)).toMatchObject([{ id: mine!.id, kept: true }]);
   });
 
   it("stops listing to who cleared Changed by AI what was settled by then, never an open one", async () => {
-    const stranger = await createTestUser();
-    const strangers = {
-      userId: stranger.id,
-      householdId: testHouseholdOf(stranger.id),
-      memberIds: [stranger.id],
+    const member = await createTestUser();
+    const members = {
+      userId: member.id,
+      householdId: await joinTestHousehold(member.id, actor.userId),
       isServerAdmin: false,
     };
     const onion = await mint("onion");
@@ -358,17 +524,14 @@ describe("keeping and undoing AI Changes", () => {
       { kind: "merge", from: "prei" },
     ]);
     // Cleared for the person who cleared it alone.
-    expect(await listAIChangesFor(strangers)).toHaveLength(3);
+    expect(await listAIChangesFor(members)).toHaveLength(3);
   });
 
   it("leaves a flag a sure change never raised when that change is undone", async () => {
     const tonijn = await mint("GR TONIJN UIT BLIK");
 
     // AI was unsure the food is one of its own, then gave it its Plain Name.
-    await getTestDb()
-      .update(ingredients)
-      .set({ flagged: true, flagReason: "ai-unsure" })
-      .where(eq(ingredients.id, tonijn.ingredientId));
+    await setTestIngredients(tonijn.ingredientId, { flagged: true, flagReason: "ai-unsure" });
     await renameByAI(tonijn.ingredientId, "GR TONIJN UIT BLIK", "tonijn uit blik");
     await undoAIChange(actor, (await onlyChange()).id);
 
@@ -385,12 +548,10 @@ describe("keeping and undoing AI Changes", () => {
     await mergeByAI(uien.ingredientId, onion.ingredientId, false);
     await keepAIChange(actor, (await onlyChange()).id);
 
-    const [row] = await getTestDb()
-      .select({ flagged: ingredients.flagged, keptDistinct: ingredients.keptDistinct })
-      .from(ingredients)
-      .where(eq(ingredients.id, onion.ingredientId));
-
-    expect(row).toEqual({ flagged: false, keptDistinct: false });
+    expect(await readTestIngredient(onion.ingredientId)).toMatchObject({
+      flagged: false,
+      keptDistinct: false,
+    });
   });
 
   it("follows a parent merged away to the food it joined, and goes with a parent deleted", async () => {
@@ -404,7 +565,7 @@ describe("keeping and undoing AI Changes", () => {
     expect(await listAIChangesFor(actor)).toMatchObject([{ target: { name: "allium" } }]);
 
     await deleteIngredient(admin, allium.ingredientId);
-    expect(await listAIChanges()).toEqual([]);
+    expect(await listAIChanges(actor)).toEqual([]);
   });
 
   it("lets a Keep or an Undo wait for an answer about the same food rather than deadlock", async () => {
@@ -414,13 +575,13 @@ describe("keeping and undoing AI Changes", () => {
     await parentByAI(red.ingredientId, onion.ingredientId, false);
     const change = await onlyChange();
     // Two idle connections, so the two transactions below really run at once.
-    const warm = () => withTransaction((tx) => tx.execute(sql`select 1`));
+    const warm = () => inRepositoryTransaction((tx) => listJunkFolds(actor.householdId, tx));
 
     await Promise.all([warm(), warm()]);
 
     let undoing: Promise<unknown> = Promise.resolve();
     // A newer answer about the food holds the tree, then replaces its open parent change.
-    const answer = withTransaction(async (tx) => {
+    const answer = inRepositoryTransaction(async (tx) => {
       await lockTree(tx);
       undoing = undoAIChange(actor, change.id).catch((error: unknown) => error);
       await new Promise((resolve) => setTimeout(resolve, 300));
@@ -451,7 +612,7 @@ describe("keeping and undoing AI Changes", () => {
       flagged: false,
     });
     await expect(parentOf(uien.ingredientId)).resolves.toBeNull();
-    expect(await listAIChanges()).toEqual([]);
+    expect(await listAIChanges(actor)).toEqual([]);
   });
 
   it("sweeps the handled changes older than a month, keeping the undone and the open ones", async () => {
@@ -475,16 +636,15 @@ describe("keeping and undoing AI Changes", () => {
       (await listAIChangesFor(actor)).find((it) => it.kind === "plain-name")!.id
     );
     // A month and a day ago, all but the newest.
-    await getTestDb()
-      .update(ingredientAIChanges)
-      .set({ createdAt: sql`now() - interval '31 days'` });
+    await backdateTestAIChanges(31);
     await renameByAI(shallot.ingredientId, "shallot", "sjalot");
 
     await expect(sweepAIChanges()).resolves.toBe(2);
 
-    const left = await getTestDb()
-      .select({ ingredientId: ingredientAIChanges.ingredientId, kind: ingredientAIChanges.kind })
-      .from(ingredientAIChanges);
+    const left = (await listTestAIChanges()).map(({ ingredientId, kind }) => ({
+      ingredientId,
+      kind,
+    }));
 
     // The open parent, the undone name AI remembers, and this month's name.
     expect(left).toEqual(

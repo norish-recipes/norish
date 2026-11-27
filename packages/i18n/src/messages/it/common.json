@@ -262,6 +262,7 @@
       "syncing": "{count, plural, =0 {Sincronizzazione} one {Sincronizzazione di # modifica} other {Sincronizzazione di # modifiche}}",
       "syncNow": "Sincronizza ora",
       "retryAll": "Riprova tutto",
+      "otherHousehold": "Alcune modifiche sono state fatte per un'altra famiglia. «Riprova tutto» le invia alla famiglia di cui fai parte ora.",
       "discardAll": "Scarta tutto",
       "discardConfirmBody": "{count, plural, one {Scartare definitivamente # modifica in coda? Non verrà inviata.} other {Scartare definitivamente # modifiche in coda? Non verranno inviate.}}",
       "discardConfirm": "Scarta",
@@ -318,7 +319,7 @@
       "expired": "Questo codice di invito è scaduto. Chiedine uno nuovo.",
       "alreadyMember": "Fai già parte di questa famiglia.",
       "shared": "Lascia prima la tua famiglia per unirti a un'altra.",
-      "holdsThings": "La tua famiglia ha ricette, spesa o piani propri, quindi non può ancora unirsi a un'altra famiglia."
+      "busy": "Quella famiglia era in fase di modifica. Riprova."
     }
   },
   "photos": {

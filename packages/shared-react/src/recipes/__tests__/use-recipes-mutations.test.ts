@@ -11,7 +11,7 @@ import {
 import type { InfiniteRecipeData } from "../library-cache";
 import { createOutboxStore } from "../../offline/outbox-store";
 import { createMemoryStorage } from "../../offline/testing/memory-storage";
-import { useRecipesMutations } from "../use-recipes-mutations";
+import { RecipeChangedElsewhereError, useRecipesMutations } from "../use-recipes-mutations";
 
 const server = vi.hoisted(() => ({
   create: vi.fn(),
@@ -148,6 +148,26 @@ describe("useRecipesMutations", () => {
         expect.objectContaining({ id, name: "Metric recipe" }),
         expect.anything()
       );
+    });
+
+    it.each([
+      ["stored", () => server.create.mockResolvedValue("x"), "onSaved"],
+      [
+        "queued while offline",
+        () => server.create.mockRejectedValue(new TypeError("Failed to fetch")),
+        "onSaved",
+      ],
+      ["refused", () => server.create.mockRejectedValue(new Error("Busy")), "onFailed"],
+    ] as const)("tells the caller a create %s", async (_, answer, told) => {
+      answer();
+      const after = { onSaved: vi.fn(), onFailed: vi.fn() };
+      const result = render();
+
+      act(() => result.current.createRecipe(recipe(crypto.randomUUID(), "Soup"), after));
+      await settled();
+
+      expect(after[told]).toHaveBeenCalledOnce();
+      expect(after[told === "onSaved" ? "onFailed" : "onSaved"]).not.toHaveBeenCalled();
     });
 
     it("gives the new card the gallery's first image", async () => {
@@ -389,6 +409,22 @@ describe("useRecipesMutations", () => {
       expect(onFailed).not.toHaveBeenCalled();
     });
 
+    it("tells the caller a save refused as stale was not saved", async () => {
+      queryClient.setQueryData<FullRecipeDTO>(detailKey("recipe-1"), detail);
+      server.update.mockResolvedValue({ stale: true, version: null });
+      const onSaved = vi.fn();
+      const onFailed = vi.fn();
+      const result = render();
+
+      act(() =>
+        result.current.updateRecipe("recipe-1", { name: "Mine", version: 1 }, { onSaved, onFailed })
+      );
+      await settled();
+
+      expect(onFailed).toHaveBeenCalledWith(expect.any(RecipeChangedElsewhereError));
+      expect(onSaved).not.toHaveBeenCalled();
+    });
+
     it("keeps a second edit when the first fails, and sends the second at its own base", async () => {
       const first = Promise.withResolvers<never>();
 
@@ -429,6 +465,7 @@ describe("useRecipesMutations", () => {
             await outbox.enqueue({
               id: "first",
               ownerId: "u1",
+              householdId: "h1",
               path: "recipes.update",
               input,
               entityId: null,

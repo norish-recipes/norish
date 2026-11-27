@@ -8,7 +8,12 @@ import {
   ActionButtonGroup,
   IconActionButton,
 } from "@/components/shared/action-button";
-import ConfirmModal from "@/components/shared/confirm-modal";
+import ConfirmModal, {
+  ModalFooter,
+  ModalFrame,
+  ModalTitle,
+} from "@/components/shared/confirm-modal";
+import { EmptyState } from "@/components/shared/empty-state";
 import { usePending } from "@/hooks/use-pending";
 import { ClipboardDocumentIcon, PauseIcon, PlayIcon } from "@heroicons/react/16/solid";
 import { ArrowTopRightOnSquareIcon, KeyIcon } from "@heroicons/react/24/outline";
@@ -62,6 +67,7 @@ export default function ApiKeyCard() {
     setShowDeleteModal(false);
     setKeyToDelete(null);
   };
+
   return (
     <>
       <SettingsCard
@@ -155,57 +161,50 @@ export default function ApiKeyCard() {
           </div>
         )}
 
-        {apiKeys.length === 0 && <p className="text-muted py-4 text-base">{t("noKeys")}</p>}
+        {apiKeys.length === 0 && <EmptyState icon={KeyIcon} title={t("noKeys")} variant="row" />}
       </SettingsCard>
 
-      <Modal.Backdrop
-        className="z-[1099]"
+      <ModalFrame
         isDismissable={false}
         isOpen={showTokenModal}
         onOpenChange={(open) => {
           if (!open) dismissKey();
         }}
       >
-        <Modal.Container className="z-[1100]">
-          <Modal.Dialog>
-            <>
-              <Modal.Header>{t("generatedModal.title")}</Modal.Header>
-              <Modal.Body>
-                <p className="text-warning mb-4 text-base">{t("generatedModal.warning")}</p>
-                <div className="flex gap-2">
-                  <Input
-                    variant="secondary"
-                    readOnly
-                    className="font-mono text-xs"
-                    value={generatedKey || ""}
-                  />
-                  <IconActionButton
-                    action="duplicate"
-                    icon={ClipboardDocumentIcon}
-                    label={t("generatedModal.copyButton")}
-                    variant="primary"
-                    onPress={handleCopyKey}
-                  />
-                </div>
-                <p className="text-muted mt-2 text-xs">
-                  {t.rich("generatedModal.hint", {
-                    code: (chunks) => (
-                      <code className="bg-surface-secondary rounded px-1">{chunks}</code>
-                    ),
-                  })}
-                </p>
-              </Modal.Body>
-              <Modal.Footer>
-                <ActionButtonGroup>
-                  <ActionButton action="done" onPress={dismissKey}>
-                    {t("generatedModal.confirmButton")}
-                  </ActionButton>
-                </ActionButtonGroup>
-              </Modal.Footer>
-            </>
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
+        <>
+          <ModalTitle>{t("generatedModal.title")}</ModalTitle>
+          <Modal.Body>
+            <p className="text-warning mb-4 text-base">{t("generatedModal.warning")}</p>
+            <div className="flex gap-2">
+              <Input
+                variant="secondary"
+                readOnly
+                className="font-mono text-xs"
+                value={generatedKey || ""}
+              />
+              <IconActionButton
+                action="duplicate"
+                icon={ClipboardDocumentIcon}
+                label={t("generatedModal.copyButton")}
+                variant="primary"
+                onPress={handleCopyKey}
+              />
+            </div>
+            <p className="text-muted mt-2 text-xs">
+              {t.rich("generatedModal.hint", {
+                code: (chunks) => (
+                  <code className="bg-surface-secondary rounded px-1">{chunks}</code>
+                ),
+              })}
+            </p>
+          </Modal.Body>
+          <ModalFooter>
+            <ActionButton action="done" onPress={dismissKey}>
+              {t("generatedModal.confirmButton")}
+            </ActionButton>
+          </ModalFooter>
+        </>
+      </ModalFrame>
       <ConfirmModal
         confirm={
           <ActionButton

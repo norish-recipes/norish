@@ -5,6 +5,7 @@ import { useState } from "react";
 import { SettingsCard } from "@/components/settings/settings-card";
 import { ActionButton } from "@/components/shared/action-button";
 import { ChipButton } from "@/components/shared/chip-button";
+import { EmptyState } from "@/components/shared/empty-state";
 import {
   ArrowPathIcon,
   ChevronLeftIcon,
@@ -13,6 +14,7 @@ import {
   InformationCircleIcon,
   XMarkIcon,
 } from "@heroicons/react/16/solid";
+import { CalendarDaysIcon } from "@heroicons/react/24/outline";
 import { Button, Chip, Pagination, Popover, Table } from "@heroui/react";
 import { useFormatter, useNow, useTranslations } from "next-intl";
 
@@ -169,13 +171,17 @@ export default function CaldavSyncStatusCard() {
             </Table.Header>
             <Table.Body
               renderEmptyState={() => (
-                <div className="text-muted px-4 py-8 text-center text-sm">
-                  {isLoading
-                    ? tStatus("loading")
-                    : syncStatusFilter
-                      ? t("emptyFiltered")
-                      : t("emptyDefault")}
-                </div>
+                <EmptyState
+                  icon={CalendarDaysIcon}
+                  title={
+                    isLoading
+                      ? tStatus("loading")
+                      : syncStatusFilter
+                        ? t("emptyFiltered")
+                        : t("emptyDefault")
+                  }
+                  variant="cell"
+                />
               )}
             >
               {syncStatuses.map((status) => (

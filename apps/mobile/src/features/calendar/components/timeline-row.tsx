@@ -5,8 +5,9 @@ import { Pressable, Text, useWindowDimensions, View } from "react-native";
 import { CardSlice, ItemSlice } from "@/components/card-slice";
 import { DayTitle, formatDay } from "@/components/day-card";
 import { DragPressable, useIsCarried, useIsLifted } from "@/components/drag-list/drag-list";
+import { Ionicons } from "@/components/icon";
 import { PlannedThumb } from "@/components/planned-thumb";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { spokenLabel } from "@/lib/spoken-label";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
@@ -117,7 +118,7 @@ export function PlannedItemRow({ row, onOpen }: { row: TimelineItem; onOpen: () 
   const slice = (
     <ItemSlice edge={edge} separated={false}>
       <DragPressable
-        accessibilityLabel={subtitle ? `${title}, ${subtitle}` : title}
+        accessibilityLabel={spokenLabel(title, subtitle)}
         accessibilityRole="button"
         className="justify-start px-4"
         style={size}

@@ -1,9 +1,29 @@
+import type { QueryClient } from "@tanstack/react-query";
+
 import { isQueuedOutboxSignal } from "@norish/shared/lib/trpc-errors";
+
+import { currentHousehold } from "./household";
 
 export function shouldPreserveOptimisticUpdate(error: unknown): boolean {
   // Preserve only on the Queued signal: backend unreachable AND the Outbox
   // write actually persisted (a marked admission failure rolls back, ADR-0009).
   return isQueuedOutboxSignal(error);
+}
+
+/** Kept beside an optimistic write's snapshot: the household it was taken in. */
+export type HouseholdMark = { readonly household: string | null };
+
+export const markHousehold = (queryClient: QueryClient): HouseholdMark => ({
+  household: currentHousehold(queryClient),
+});
+
+/** A snapshot or answer from before a change of household would put the former household's
+ * rows into the new one's reads. */
+export function mayRestore<T extends HouseholdMark>(
+  queryClient: QueryClient,
+  mark: T | undefined
+): mark is T {
+  return !!mark && mark.household === currentHousehold(queryClient);
 }
 
 /**

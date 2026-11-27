@@ -11,6 +11,7 @@ import { isUrl } from "@norish/shared/lib/helpers";
 import {
   base64ToBuffer,
   buildRecipeDTO,
+  carriedLists,
   parseHumanDurationToMinutes,
   parseServings,
   saveBufferImage,
@@ -30,7 +31,7 @@ export const PaprikaRecipeSchema = z.object({
   ingredients: z.string().optional().nullable(),
   directions: z.string().optional().nullable(),
   notes: z.string().optional().nullable(), // ignored
-  categories: z.array(z.string()).optional().default([]),
+  categories: z.array(z.string()).optional(),
   rating: z.number().optional().nullable(), // ignored (user-specific)
   prep_time: z.string().optional().nullable(),
   cook_time: z.string().optional().nullable(),
@@ -94,7 +95,7 @@ export async function parsePaprikaRecipeToDTO(
     .map((value) => value?.trim())
     .find((value) => value && isUrl(value));
 
-  const { categories } = sortSourceCategories(validated.categories, householdCategories);
+  const { categories } = sortSourceCategories(validated.categories ?? [], householdCategories);
 
   const caloriesRaw = parsePaprikaNutritionValue(validated.nutritional_info, ["calories"]);
   const carbsRaw = parsePaprikaNutritionValue(validated.nutritional_info, [
@@ -118,15 +119,18 @@ export async function parsePaprikaRecipeToDTO(
     categories: validated.categories,
   });
 
-  return {
-    ...dto,
-    id: recipeId,
-    categories,
-    calories: caloriesRaw != null ? Math.round(caloriesRaw) : null,
-    carbs: carbsRaw != null ? carbsRaw.toString() : null,
-    protein: proteinRaw != null ? proteinRaw.toString() : null,
-    fat: fatRaw != null ? fatRaw.toString() : null,
-  };
+  return carriedLists(
+    {
+      ...dto,
+      id: recipeId,
+      categories,
+      calories: caloriesRaw != null ? Math.round(caloriesRaw) : null,
+      carbs: carbsRaw != null ? carbsRaw.toString() : null,
+      protein: proteinRaw != null ? proteinRaw.toString() : null,
+      fat: fatRaw != null ? fatRaw.toString() : null,
+    },
+    validated.categories !== undefined
+  );
 }
 
 /**

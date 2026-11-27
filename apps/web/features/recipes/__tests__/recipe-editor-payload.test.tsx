@@ -1,9 +1,11 @@
+import { readAnswers, sentReads } from "@/__tests__/helpers/trpc-fake";
 import { RecipeEditorScreen } from "@/features/recipes/recipe-editor-screen";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { FullRecipeDTO } from "@norish/shared/contracts";
 import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
+import { RecipeChangedElsewhereError } from "@norish/shared-react/recipes";
 
 const mocks = vi.hoisted(() => ({ createRecipe: vi.fn(), updateRecipe: vi.fn(), push: vi.fn() }));
 
@@ -174,9 +176,12 @@ const stored: FullRecipeDTO = {
 beforeEach(() => {
   mocks.updateRecipe.mockReset();
   mocks.push.mockReset();
+  readAnswers.clear();
+  sentReads.mockClear();
 });
 
 describe("RecipeEditorScreen save of an untouched recipe", () => {
+  // Its untouched clearable fields and lists are left out, so a change made meanwhile elsewhere stays.
   it("sends exactly what it was given, active system only", async () => {
     render(<RecipeEditorScreen initialData={stored} mode="edit" />, {
       wrapper: createTestWrapper(createTestQueryClient()),
@@ -189,25 +194,8 @@ describe("RecipeEditorScreen save of an untouched recipe", () => {
       stored.id,
       {
         name: "Hoisin chicken",
-        description: "Sticky and quick.",
-        notes: "Thighs stay juicier.",
-        url: "https://example.com/hoisin",
         servings: 4,
-        prepMinutes: 15,
-        cookMinutes: 15,
-        totalMinutes: 30,
-        calories: 238,
-        fat: "9",
-        carbs: "14.5",
-        protein: "24",
-        originCountry: "CN",
-        originCountryName: "China",
-        originRegion: "Guangdong",
-        provenanceNote: "Cantonese roots.",
-        cuisines: ["cuisine-1"],
         systemUsed: "metric",
-        tags: [{ name: "quick" }, { name: "chicken" }],
-        categories: ["Dinner"],
         recipeIngredients: [
           {
             id: "ing-1",
@@ -306,5 +294,31 @@ describe("RecipeEditorScreen save that fails", () => {
     saveChanges();
 
     await waitFor(() => expect(mocks.push).toHaveBeenCalledWith(`/recipes/${stored.id}`));
+  });
+
+  it("takes no input while the save is in flight", async () => {
+    mocks.updateRecipe.mockImplementation(() => {});
+    saveChanges();
+
+    await waitFor(() => expect(mocks.updateRecipe).toHaveBeenCalledTimes(1));
+    expect(document.querySelector("form")).toHaveAttribute("inert");
+    fireEvent.click(screen.getByRole("button", { name: "saveChanges", hidden: true }));
+    expect(mocks.updateRecipe).toHaveBeenCalledTimes(1);
+  });
+
+  it("saves again at the fresh recipe's version after a stale answer", async () => {
+    readAnswers.set("recipes.get", async () => ({ ...stored, version: 9 }));
+    mocks.updateRecipe.mockImplementationOnce((_id, _input, after) =>
+      after.onFailed(new RecipeChangedElsewhereError())
+    );
+    saveChanges();
+
+    expect(await screen.findByText("common.changedElsewhere.title")).toBeTruthy();
+    await waitFor(() => expect(document.querySelector("form")).not.toHaveAttribute("inert"));
+    await waitFor(() => expect(sentReads).toHaveBeenCalledWith("recipes.get", { id: stored.id }));
+    fireEvent.click(screen.getByRole("button", { name: "saveChanges" }));
+
+    await waitFor(() => expect(mocks.updateRecipe).toHaveBeenCalledTimes(2));
+    expect(mocks.updateRecipe.mock.calls[1]?.[1]).toMatchObject({ version: 9 });
   });
 });

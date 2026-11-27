@@ -262,6 +262,7 @@
       "syncing": "{count, plural, =0 {Synkroniserar} one {Synkroniserar # ändring} other {Synkroniserar # ändringar}}",
       "syncNow": "Synkronisera nu",
       "retryAll": "Försök med alla igen",
+      "otherHousehold": "Några ändringar gjordes för ett annat hushåll. ”Försök med alla igen” skickar dem till hushållet du är med i nu.",
       "discardAll": "Kasta alla",
       "discardConfirmBody": "{count, plural, one {Kasta # köad ändring permanent? Den kommer inte att skickas.} other {Kasta # köade ändringar permanent? De kommer inte att skickas.}}",
       "discardConfirm": "Kasta",
@@ -318,7 +319,7 @@
       "expired": "Den koden har gått ut. Be om en ny.",
       "alreadyMember": "Du är redan med i det här hushållet.",
       "shared": "Lämna ditt hushåll först för att gå med i ett annat.",
-      "holdsThings": "Ditt hushåll har egna recept, inköp eller planer och kan därför inte gå med i ett annat hushåll än."
+      "busy": "Det hushållet ändrades just då. Försök igen."
     }
   },
   "photos": {

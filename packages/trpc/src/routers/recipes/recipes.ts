@@ -4,7 +4,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import type { EntryWriteOptions } from "@norish/db/repositories/list-entries";
-import type { FullRecipeDTO } from "@norish/shared/contracts";
+import type { LineReadings } from "@norish/shared/lib/line-foods";
 import type { RecipeEnrichmentSkipReason } from "@norish/shared/lib/recipe-enrichment";
 import { isAIEnabled as checkAIEnabled } from "@norish/auth/permissions";
 import {
@@ -26,7 +26,6 @@ import {
   RecipeUpdateInputSchema,
   searchRecipesByName,
   setActiveSystemForRecipe,
-  updateRecipeCategories,
   writeConvertedCopy,
 } from "@norish/db";
 import { listCategoryNamesForHousehold } from "@norish/db/repositories/categories";
@@ -42,9 +41,11 @@ import { getRecipeEnrichmentStatus } from "@norish/queue/enrichment/status";
 import { readStepProgress } from "@norish/queue/job-steps";
 import { getQueues } from "@norish/queue/registry";
 import { isVideoParsingEnabled } from "@norish/shared-server/config/server-config-loader";
+import { lineReadingsOf } from "@norish/shared-server/ingredients/line-readings";
 import { readRecipeNutrition } from "@norish/shared-server/ingredients/nutrition/recipe-nutrition";
 import {
   createResolvedRecipe,
+  lineHousehold,
   updateResolvedRecipe,
   withResolvedIngredients,
 } from "@norish/shared-server/ingredients/recipe-lines";
@@ -59,11 +60,7 @@ import { recipes } from "@norish/shared-server/realtime/recipes";
 import { convertRecipeMeasurements } from "@norish/shared-server/recipes/measurement-conversion";
 import { selectWeightedRandomRecipe } from "@norish/shared-server/recipes/randomizer";
 import { FilterMode, SortOrder } from "@norish/shared/contracts";
-import {
-  FullRecipeSchema,
-  recipeCategorySchema,
-  RecipeListResultSchema,
-} from "@norish/shared/contracts/zod";
+import { FullRecipeSchema, RecipeListResultSchema } from "@norish/shared/contracts/zod";
 import { addBasePath } from "@norish/shared/lib/base-path";
 import { isVideoUrl } from "@norish/shared/lib/helpers";
 import { ENRICHMENT_KINDS } from "@norish/shared/lib/recipe-enrichment";
@@ -207,6 +204,18 @@ export const nutritionProcedure = authedProcedure
     }
 
     return await readRecipeNutrition(recipe, { householdId: ctx.householdId });
+  });
+
+/**
+ * How the reader uses these recipes' lines that name a food outside their catalogue (ADR-0042):
+ * the pantry, the list and the nutrition read them so. A recipe out of view reads nothing.
+ */
+const lineReadingsProcedure = authedProcedure
+  .input(z.object({ recipeIds: z.array(z.uuid()).max(50) }))
+  .query(async ({ ctx, input }): Promise<LineReadings> => {
+    const viewable = [...(await recipeAccess(ctx, input.recipeIds, "view")).keys()];
+
+    return await lineReadingsOf(ctx.householdId, { of: "recipes", ids: viewable });
   });
 
 export const getEditableProcedure = authedProcedure
@@ -389,42 +398,6 @@ export const updateRecipeProcedure = authedProcedure
     }
 
     return applyRecipeUpdate(ctx, input, { createEntries: true });
-  });
-
-const updateCategories = authedProcedure
-  .input(
-    z.object({
-      recipeId: z.uuid(),
-      version: z.number().int().positive(),
-      categories: z.array(recipeCategorySchema),
-    })
-  )
-  .mutation(async ({ ctx, input }) => {
-    await assertRecipeAccess(ctx, input.recipeId, "edit");
-
-    const result = await updateRecipeCategories(input.recipeId, input.categories, input.version);
-
-    if (result.stale) {
-      log.info(
-        { userId: ctx.user.id, recipeId: input.recipeId, version: input.version },
-        "Ignoring stale recipe category update"
-      );
-
-      return { success: true, stale: true };
-    }
-
-    const updated = await getRecipeFull(input.recipeId);
-
-    if (updated) {
-      void recipes.publish(
-        "updated",
-        { recipe: updated },
-        await policyAudience(updated.householdId)
-      );
-      await announceListsChanged(updated.householdId, ["category"]);
-    }
-
-    return { success: true };
   });
 
 /**
@@ -754,8 +727,11 @@ const convertMeasurements = authedProcedure
         }));
 
         const result = await writeResolved(
-          () =>
-            withResolvedIngredients({ recipeIngredients: ingredients }, { userId: ctx.user.id }),
+          async () =>
+            withResolvedIngredients(
+              { recipeIngredients: ingredients },
+              { userId: ctx.user.id, householdId: await lineHousehold(ctx.user.id, recipe.id) }
+            ),
           (resolved) =>
             writeConvertedCopy(
               recipe.id,
@@ -1004,6 +980,7 @@ export const recipesProcedures = router({
   list: listProcedure,
   get: getProcedure,
   nutrition: nutritionProcedure,
+  lineReadings: lineReadingsProcedure,
   getEditable: getEditableProcedure,
   create,
   update,
@@ -1016,6 +993,5 @@ export const recipesProcedures = router({
   requestEnrichment,
   enrichmentStatus,
   autocomplete,
-  updateCategories,
   getRandomRecipe,
 });

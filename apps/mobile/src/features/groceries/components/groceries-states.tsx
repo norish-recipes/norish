@@ -11,11 +11,10 @@ export function GroceriesEmpty() {
 
   return (
     <EmptyCard
-      description={intl.formatMessage({ id: "groceries.mobile.emptyHint" })}
       icon="cart-outline"
+      placement="screen"
       testID="groceries-empty"
       title={intl.formatMessage({ id: "groceries.empty.title" })}
-      tone="shop"
     />
   );
 }

@@ -13,6 +13,8 @@ export interface OutboxSummary {
   pending: number;
   parked: number;
   conflicted: number;
+  /** Parked as made for another household: Retry sends them to the current one. */
+  otherHousehold: number;
 }
 
 function summarize(entries: OutboxEntry[]): OutboxSummary {
@@ -22,6 +24,7 @@ function summarize(entries: OutboxEntry[]): OutboxSummary {
     pending: entries.filter((entry) => entry.status === "pending").length,
     parked: entries.filter((entry) => entry.status === "parked").length,
     conflicted: entries.filter((entry) => entry.status === "conflicted").length,
+    otherHousehold: entries.filter((entry) => entry.parkedReason === "other-household").length,
   };
 }
 

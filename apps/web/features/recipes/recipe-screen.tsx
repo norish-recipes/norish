@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { OfflineUnavailable } from "@/app/~offline/offline-unavailable";
+import { ErrorView } from "@/components/shared/error-view";
 import { NotFoundView } from "@/components/shared/not-found-view";
 import { ScreenWakeLock } from "@/features/recipes/components/page/page-wake-lock";
 import RecipePageDesktop from "@/features/recipes/components/page/recipe-page-desktop";
@@ -16,6 +18,7 @@ import type { LibraryTypeFilter } from "@norish/shared/contracts";
 import { useIngredientsSubscription } from "@norish/shared-react/config";
 import { useIngredientIcons } from "@norish/shared-react/ingredients";
 import {
+  LoadedPageRecipe,
   RecipePageProvider,
   useAutoConversion,
   useCookbooksSubscription,
@@ -23,7 +26,6 @@ import {
   useRecipeQuery,
   useRecipeShareSubscription,
 } from "@norish/shared-react/recipes";
-import { isNotFoundError } from "@norish/shared-react/trpc";
 
 /** What the page draws kept current, cooking mode included; mounted once for the page. */
 function RecipeSubscriptions({ recipeId }: { recipeId: string }) {
@@ -38,44 +40,45 @@ function RecipeSubscriptions({ recipeId }: { recipeId: string }) {
 }
 
 function RecipePageContent({ recipeId, libraryType }: RecipeScreenProps) {
-  const { recipe, isLoading, error } = useRecipeQuery(recipeId);
+  const { recipe, state, retry } = useRecipeQuery(recipeId);
   const t = useTranslations("recipes.detail");
   const [printOpen, setPrintOpen] = useState(false);
 
   useAutoConversion();
   // Every surface of the page names the recipe's foods: its lines, cooking mode, the steps' chips.
-  useIngredientIcons(recipe?.recipeIngredients.map((line) => line.ingredientId) ?? []);
+  useIngredientIcons(recipe?.recipeIngredients.map((line) => line.ingredientId) ?? [], recipeId);
 
-  // Still loading — show skeleton while data fetches
-  if (isLoading) {
-    return <RecipeSkeleton />;
-  }
-
-  // Recipe not found or no access - show 404
-  if (!recipe && isNotFoundError(error)) {
+  // Not found and no access read alike.
+  if (state === "not-found") {
     return <NotFoundView message={t("notFoundMessage")} title={t("notFound")} />;
   }
+
+  if (state === "offline") return <OfflineUnavailable />;
+
+  if (state === "failed") return <ErrorView onRetry={retry} />;
 
   if (!recipe) {
     return <RecipeSkeleton />;
   }
 
   return (
-    <RecipePageTint dishColor={recipe.dishColor}>
-      {/* Desktop layout - smooth fade in */}
-      <div key={`${recipe?.id}-desktop`} className="fade-in hidden md:block">
-        <RecipePageDesktop libraryType={libraryType} onPrint={() => setPrintOpen(true)} />
-      </div>
+    <LoadedPageRecipe recipe={recipe}>
+      <RecipePageTint dishColor={recipe.dishColor}>
+        {/* Desktop layout - smooth fade in */}
+        <div key={`${recipe?.id}-desktop`} className="fade-in hidden md:block">
+          <RecipePageDesktop libraryType={libraryType} onPrint={() => setPrintOpen(true)} />
+        </div>
 
-      {/* Mobile layout - full width, smooth fade in */}
-      <div
-        key={`${recipe?.id}-mobile`}
-        className="fade-in -mx-4 -mt-10 flex w-[calc(100%+2rem)] flex-col md:hidden"
-      >
-        <RecipePageMobile libraryType={libraryType} onPrint={() => setPrintOpen(true)} />
-      </div>
-      <RecipePrint open={printOpen} onOpenChange={setPrintOpen} />
-    </RecipePageTint>
+        {/* Mobile layout - full width, smooth fade in */}
+        <div
+          key={`${recipe?.id}-mobile`}
+          className="fade-in -mx-4 -mt-10 flex w-[calc(100%+2rem)] flex-col md:hidden"
+        >
+          <RecipePageMobile libraryType={libraryType} onPrint={() => setPrintOpen(true)} />
+        </div>
+        <RecipePrint open={printOpen} onOpenChange={setPrintOpen} />
+      </RecipePageTint>
+    </LoadedPageRecipe>
   );
 }
 

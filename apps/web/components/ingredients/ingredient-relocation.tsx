@@ -7,12 +7,9 @@ import { PlusIcon } from "@heroicons/react/16/solid";
 import { Button } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import type { IngredientPick } from "./ingredient-picker";
-import { IngredientPicker } from "./ingredient-picker";
+import type { IngredientPick, Relocation } from "@norish/shared-react/ingredients";
 
-/** What a panel is asking the viewer to pick a target for: a merge, a parent, or a spelling's move. */
-export type Relocation =
-  { kind: "merge" } | { kind: "parent" } | { kind: "move"; aliasId: string; text: string };
+import { IngredientPicker } from "./ingredient-picker";
 
 /**
  * The panel an Ingredient's panel opens over itself for an edit that names
@@ -101,10 +98,13 @@ export function IngredientRelocationPanel({
         ) : null}
       </Panel.Body>
       <Panel.Footer>
-        <ActionButtonGroup>
-          <ActionButton action="cancel" onPress={close}>
-            {tActions("cancel")}
-          </ActionButton>
+        <ActionButtonGroup
+          start={
+            <ActionButton action="cancel" onPress={close}>
+              {tActions("cancel")}
+            </ActionButton>
+          }
+        >
           <ActionButton
             action="apply"
             data-testid="ingredient-relocation-confirm"

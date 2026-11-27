@@ -1,0 +1,201 @@
+// @vitest-environment jsdom
+import type { ReactNode } from "react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import "../../../../__tests__/mocks/content-setup";
+
+const held = vi.hoisted(() => ({
+  router: { back: vi.fn(), replace: vi.fn(), push: vi.fn() },
+  apply: vi.fn(),
+  changes: [] as unknown[],
+  read: { failed: false } as { failed: boolean },
+  retry: vi.fn(),
+  offline: false,
+  mutations: { keep: vi.fn(), undo: vi.fn(), keepAll: vi.fn(), undoAll: vi.fn(), clear: vi.fn() },
+  add: {} as Record<string, unknown>,
+  doAdd: vi.fn(),
+}));
+
+vi.mock("expo-router", () => ({ useRouter: () => held.router }));
+vi.mock("@norish/shared-react/offline/react", () => ({
+  useConnectivity: () => ({ isOffline: held.offline }),
+}));
+vi.mock("@/components/ingredient-icon", () => ({
+  IngredientIcon: () => null,
+  IngredientIconSlots: ({ children }: { children: ReactNode }) => children,
+}));
+vi.mock("@norish/shared-react/ingredients", async (importActual) => {
+  const actual = await importActual<typeof import("@norish/shared-react/ingredients")>();
+
+  return {
+    ...actual,
+    useIngredientFiltersStore: (select: (state: unknown) => unknown) =>
+      select({ filters: actual.DEFAULT_INGREDIENT_FILTERS, apply: held.apply }),
+    useAIChangesQuery: () => held.changes,
+    useAIChangesRead: () => ({ ...held.read, retry: held.retry }),
+    useAIChangeMutations: () => held.mutations,
+    useIngredientIcons: () => undefined,
+    useIngredientAdd: () => ({
+      typed: "sesame paste",
+      setTyped: vi.fn(),
+      matches: [],
+      tooLong: false,
+      failed: false,
+      offline: false,
+      canAdd: true,
+      add: held.doAdd,
+      ...held.add,
+    }),
+  };
+});
+
+const { IngredientFiltersScreen } = await import("../screens/ingredient-filters-screen");
+const { IngredientChangesScreen } = await import("../screens/ingredient-changes-screen");
+const { IngredientAddScreen } = await import("../screens/ingredient-add-screen");
+const { DEFAULT_INGREDIENT_FILTERS } = await import("@norish/shared-react/ingredients");
+
+const change = (id: string, over: Record<string, unknown> = {}) => ({
+  id,
+  kind: "plain-name",
+  sure: false,
+  kept: false,
+  createdAt: new Date(0),
+  ingredient: { id: `f-${id}`, name: `Food ${id}` },
+  target: null,
+  dropped: null,
+  from: "Old",
+  canAct: true,
+  ...over,
+});
+
+describe("IngredientFiltersScreen", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("lands what was chosen with Apply, and the defaults with Reset", () => {
+    render(<IngredientFiltersScreen />);
+    fireEvent.click(screen.getByTestId("ingredients-flaggedOnly"));
+    fireEvent.click(screen.getByTestId("ingredients-match-exact"));
+    fireEvent.click(screen.getByTestId("sheet-confirm"));
+    expect(held.apply).toHaveBeenCalledWith({
+      ...DEFAULT_INGREDIENT_FILTERS,
+      flaggedOnly: true,
+      match: "exact",
+    });
+    expect(held.router.back).toHaveBeenCalled();
+    fireEvent.click(screen.getByTestId("sheet-secondary-common.actions.reset"));
+    expect(held.apply).toHaveBeenLastCalledWith(DEFAULT_INGREDIENT_FILTERS);
+  });
+});
+
+describe("IngredientChangesScreen", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    held.changes = [change("a"), change("b"), change("c", { kept: true })];
+    held.read = { failed: false };
+    held.offline = false;
+  });
+
+  it("says a failed load failed, not that AI changed nothing, and Retry reads it again", () => {
+    held.changes = [];
+    held.read = { failed: true };
+    render(<IngredientChangesScreen />);
+    expect(screen.queryByTestId("ingredient-changes-empty")).toBeNull();
+    fireEvent.click(screen.getByTestId("ingredient-changes-retry"));
+    expect(held.retry).toHaveBeenCalled();
+  });
+
+  it("offline, turns Keep, Undo, Keep all, Undo all and Clear off and says why", () => {
+    held.offline = true;
+    render(<IngredientChangesScreen />);
+    for (const id of [
+      "ingredient-change-keep-a",
+      "ingredient-change-undo-a",
+      "ingredient-changes-undo-all",
+      "sheet-confirm",
+      "sheet-secondary-settings.ingredients.changedByAI.clear",
+    ])
+      expect((screen.getByTestId(id) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText("settings.content.offline")).toBeTruthy();
+  });
+
+  it("says AI changed nothing", () => {
+    held.changes = [];
+    render(<IngredientChangesScreen />);
+    expect(screen.getByTestId("ingredient-changes-empty")).toBeTruthy();
+  });
+
+  it("keeps or undoes one change, and opens the food it is listed under", () => {
+    render(<IngredientChangesScreen />);
+    fireEvent.click(screen.getByTestId("ingredient-change-keep-a"));
+    expect(held.mutations.keep).toHaveBeenCalledWith(held.changes[0]);
+    fireEvent.click(screen.getByTestId("ingredient-change-undo-b"));
+    expect(held.mutations.undo).toHaveBeenCalledWith(held.changes[1]);
+    // A settled change has no Keep.
+    expect(screen.queryByTestId("ingredient-change-keep-c")).toBeNull();
+    fireEvent.click(screen.getByTestId("ingredient-change-open-a"));
+    expect(held.router.push).toHaveBeenCalledWith({
+      pathname: "/settings/ingredient",
+      params: { id: "f-a" },
+    });
+  });
+
+  it("keeps or undoes every open change at once, and Clear stops listing the settled", () => {
+    render(<IngredientChangesScreen />);
+    fireEvent.click(screen.getByTestId("sheet-confirm"));
+    expect(held.mutations.keepAll).toHaveBeenCalledWith([held.changes[0], held.changes[1]]);
+    fireEvent.click(screen.getByTestId("ingredient-changes-undo-all"));
+    expect(held.mutations.undoAll).toHaveBeenCalled();
+    fireEvent.click(screen.getByTestId("sheet-secondary-settings.ingredients.changedByAI.clear"));
+    expect(held.mutations.clear).toHaveBeenCalled();
+    expect(held.router.back).not.toHaveBeenCalled();
+  });
+
+  it("keeps one secondary action in the header, Clear; Undo all is a pill in the body", () => {
+    render(<IngredientChangesScreen />);
+    expect(
+      screen.queryByTestId("sheet-secondary-settings.ingredients.changedByAI.undoAll")
+    ).toBeNull();
+    expect(screen.getAllByTestId(/^sheet-secondary-/)).toHaveLength(1);
+    expect(
+      screen
+        .getByTestId("ingredient-changes-list")
+        .contains(screen.getByTestId("ingredient-changes-undo-all"))
+    ).toBe(true);
+  });
+
+  it("has no Undo all with fewer than two open changes to answer", () => {
+    held.changes = [change("a"), change("c", { kept: true })];
+    render(<IngredientChangesScreen />);
+    expect(screen.queryByTestId("ingredient-changes-undo-all")).toBeNull();
+  });
+
+  it("closes on Clear when nothing is left to check", () => {
+    held.changes = [change("c", { kept: true })];
+    render(<IngredientChangesScreen />);
+    fireEvent.click(screen.getByTestId("sheet-secondary-settings.ingredients.changedByAI.clear"));
+    expect(held.router.back).toHaveBeenCalled();
+  });
+});
+
+describe("IngredientAddScreen", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("adds the name and opens the food it answers", async () => {
+    held.doAdd.mockResolvedValue({ ingredient: { id: "n1" }, created: true });
+    render(<IngredientAddScreen />);
+    await act(async () => fireEvent.click(screen.getByTestId("sheet-confirm")));
+    expect(held.router.replace).toHaveBeenCalledWith({
+      pathname: "/settings/ingredient",
+      params: { id: "n1" },
+    });
+  });
+
+  it("offers no Add for a name the catalogue has, and says a name is too long or failed", () => {
+    held.add = { canAdd: false, tooLong: true, failed: true };
+    render(<IngredientAddScreen />);
+    expect((screen.getByTestId("sheet-confirm") as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText(/panel.tooLong/)).toBeTruthy();
+    expect(screen.getByText("settings.content.panel.failed")).toBeTruthy();
+  });
+});

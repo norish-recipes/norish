@@ -1,4 +1,10 @@
-import { dehydrate, hydrate, QueryClient, QueryObserver } from "@tanstack/react-query";
+import {
+  dehydrate,
+  hydrate,
+  MutationObserver,
+  QueryClient,
+  QueryObserver,
+} from "@tanstack/react-query";
 import { createTRPCClient, TRPCClientError } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -14,6 +20,7 @@ import {
   OWNER_WRITE_WAIT_MS,
   PERSIST_THROTTLE_MS,
 } from "./cache-manager";
+import { householdAtStart } from "./household";
 import { readLastWarmedAt, writeLastWarmedAt } from "./last-warmed";
 import { createQueryStore } from "./persister";
 import { createMemoryStorage } from "./testing/memory-storage";
@@ -136,6 +143,136 @@ describe("createCacheManager", () => {
 
     expect(manager.owner()).toBe("u1");
     expect(await persisted(storage, "u1")).toHaveLength(1);
+  });
+
+  describe("when the account's household changes", () => {
+    const keys = createTRPCOptionsProxy<AppRouter>({
+      client: createTRPCClient<AppRouter>({ links: [] }),
+      queryClient: () => new QueryClient(),
+    });
+    const householdKey = keys.households.get.queryKey();
+    const profileKey = keys.user.get.queryKey();
+    const recipeKey = keys.recipes.get.queryKey({ id: "r1" });
+    const inHousehold = (id: string) => ({ household: { id }, currentUserId: "u1" });
+    const storedKeys = async () =>
+      (await persisted(storage, "u1")).map((query) => JSON.stringify(query.queryKey)).sort();
+
+    it("empties the former household's reads, held and stored, and keeps the account's own", async () => {
+      useFakeTimers();
+      const manager = createManager();
+      const client = manager.queryClient;
+
+      await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+      client.setQueryData(householdKey, inHousehold("h1"));
+      client.setQueryData(profileKey, { name: "Me" } as never);
+      client.setQueryData(recipeKey, { id: "r1" } as never);
+      await vi.advanceTimersByTimeAsync(SAVED_MS);
+      expect(await storedKeys()).toHaveLength(3);
+
+      client.setQueryData(householdKey, inHousehold("h2"));
+      await vi.advanceTimersByTimeAsync(SAVED_MS);
+
+      expect(client.getQueryData(recipeKey)).toBeUndefined();
+      expect(client.getQueryData(profileKey)).toEqual({ name: "Me" });
+      expect(await storedKeys()).toEqual(
+        [householdKey, profileKey].map((key) => JSON.stringify(key)).sort()
+      );
+    });
+
+    it("reads again what is on screen", async () => {
+      useFakeTimers();
+      const manager = createManager();
+      const client = manager.queryClient;
+      const queryFn = vi.fn(async () => "h2-recipe");
+
+      await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+      client.setQueryData(householdKey, inHousehold("h1"));
+      client.setQueryData(["shown"], "h1-recipe");
+      const observer = new QueryObserver(client, {
+        queryKey: ["shown"],
+        queryFn,
+        staleTime: Infinity,
+      });
+      const stop = observer.subscribe(() => undefined);
+
+      client.setQueryData(householdKey, inHousehold("h2"));
+      await vi.advanceTimersByTimeAsync(SAVED_MS);
+
+      expect(queryFn).toHaveBeenCalledTimes(1);
+      expect(client.getQueryData(["shown"])).toBe("h2-recipe");
+      stop();
+    });
+
+    it("empties a restored copy read for another household than the one read since", async () => {
+      useFakeTimers();
+      await seedOwnerCache(storage, "u1", householdKey, inHousehold("h1"));
+      await seedOwnerCache(storage, "u1", recipeKey, { id: "r1" });
+      storage.lastOwner.set("u1");
+      const manager = createManager();
+
+      await vi.advanceTimersByTimeAsync(10);
+      manager.queryClient.setQueryData(householdKey, inHousehold("h2"));
+      await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+      await vi.advanceTimersByTimeAsync(SAVED_MS);
+
+      expect(manager.queryClient.getQueryData(recipeKey)).toBeUndefined();
+      expect(manager.queryClient.getQueryData(householdKey)).toEqual(inHousehold("h2"));
+      expect(await storedKeys()).toEqual([JSON.stringify(householdKey)]);
+    });
+
+    it("lets no household read sent before the change answer after it", async () => {
+      useFakeTimers();
+      const manager = createManager();
+      const client = manager.queryClient;
+      let answer = (_value: unknown) => {};
+
+      await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+      client.setQueryData(householdKey, inHousehold("h1"));
+      const older = client
+        .fetchQuery({
+          queryKey: householdKey,
+          queryFn: () => new Promise((resolve) => (answer = resolve)),
+          staleTime: 0,
+        })
+        .catch(() => null);
+
+      client.setQueryData(householdKey, inHousehold("h2"));
+      answer(inHousehold("h1"));
+      await older;
+      await vi.advanceTimersByTimeAsync(SAVED_MS);
+
+      expect(client.getQueryData(householdKey)).toEqual(inHousehold("h2"));
+      expect(manager.household()).toBe("h2");
+    });
+
+    it("notes the household a write starts in, as its mutation starts", async () => {
+      const manager = createManager();
+      const client = manager.queryClient;
+      const input = { id: "g1" };
+
+      client.setQueryData(householdKey, inHousehold("h1"));
+      const observer = new MutationObserver(client, { mutationFn: async () => null });
+
+      await observer.mutate(input);
+      client.setQueryData(householdKey, inHousehold("h2"));
+
+      expect(householdAtStart(input, () => "h2")).toBe("h1");
+    });
+
+    it("keeps everything while the household stays the same", async () => {
+      useFakeTimers();
+      const manager = createManager();
+      const client = manager.queryClient;
+
+      await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+      client.setQueryData(householdKey, inHousehold("h1"));
+      client.setQueryData(recipeKey, { id: "r1" } as never);
+      client.setQueryData(householdKey, inHousehold("h1"));
+      await vi.advanceTimersByTimeAsync(SAVED_MS);
+
+      expect(client.getQueryData(recipeKey)).toEqual({ id: "r1" });
+      expect(manager.household()).toBe("h1");
+    });
   });
 
   it("saves a burst of changes inside one interval at its end, each read once", async () => {
@@ -391,6 +528,7 @@ describe("createCacheManager", () => {
     const seq = await storage.outbox.add({
       id: "e1",
       ownerId: "u1",
+      householdId: "h1",
       path: "recipes.create",
       input: { id: "r1" },
       entityId: "r1",
@@ -465,6 +603,27 @@ describe("createCacheManager", () => {
     expect(stored.map((query) => query.queryKey)).toContainEqual(kept);
     expect(JSON.stringify(stored)).not.toContain("secret");
     expect(JSON.stringify(stored)).not.toContain("checked");
+  });
+
+  it("never persists the admin share list, which holds other households' links", async () => {
+    const manager = createManager();
+    const trpc = createTRPCOptionsProxy<AppRouter>({
+      client: createTRPCClient<AppRouter>({ links: [] }),
+      queryClient: manager.queryClient,
+    });
+    const kept = trpc.recipes.shareListMine.queryKey();
+
+    await manager.reconcileIdentity({ sessionUserId: "u1", isOffline: false });
+    manager.queryClient.setQueryData(trpc.recipes.shareListAdmin.queryKey(), [
+      { recipeName: "Other household's soup" },
+    ]);
+    manager.queryClient.setQueryData(kept, []);
+    await manager.flush();
+
+    const stored = await persisted(storage, "u1");
+
+    expect(stored.map((query) => query.queryKey)).toContainEqual(kept);
+    expect(JSON.stringify(stored)).not.toContain("Other household's soup");
   });
 
   it("never persists Search's text-keyed reads, and keeps the Library's and Discover as before", async () => {
@@ -605,6 +764,7 @@ describe("createCacheManager", () => {
     await storage.outbox.add({
       id: "e",
       ownerId: "u1",
+      householdId: "h1",
       path: "groceries.create",
       input: {},
       entityId: null,

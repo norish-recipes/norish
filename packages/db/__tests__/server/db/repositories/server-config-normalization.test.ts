@@ -9,9 +9,14 @@ import type {
   TimerKeywordsConfig,
 } from "@norish/config/zod/server-config";
 import { decrypt, encrypt } from "@norish/config/crypto";
-import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import {
+  DEFAULT_RECIPE_PERMISSION_POLICY,
+  ServerConfigKeys,
+} from "@norish/config/zod/server-config";
+import {
+  deleteConfig,
   getConfig,
+  getRecipePermissionPolicy,
   normalizeAndBackfillConfig,
   setConfig,
 } from "@norish/db/repositories/server-config";
@@ -233,5 +238,33 @@ describe("server config normalization", () => {
     await expect(
       getConfig<PageRenderersConfig>(ServerConfigKeys.PAGE_RENDERERS, true)
     ).resolves.toEqual({ ...beta, chromium: { enabled: false, endpoint: "" } });
+  });
+
+  it("reads the Permission Policy level by level, each missing one its default", async () => {
+    await deleteConfig(ServerConfigKeys.RECIPE_PERMISSION_POLICY);
+    expect(await getRecipePermissionPolicy()).toEqual(DEFAULT_RECIPE_PERMISSION_POLICY);
+
+    await getTestDb()
+      .insert(serverConfig)
+      .values({ key: ServerConfigKeys.RECIPE_PERMISSION_POLICY, value: { edit: "everyone" } });
+    expect(await getRecipePermissionPolicy()).toEqual({
+      ...DEFAULT_RECIPE_PERMISSION_POLICY,
+      edit: "everyone",
+    });
+  });
+
+  it("reads edit and delete no wider than view, as migration 0091 and the setter keep them", async () => {
+    await deleteConfig(ServerConfigKeys.RECIPE_PERMISSION_POLICY);
+    await getTestDb()
+      .insert(serverConfig)
+      .values({
+        key: ServerConfigKeys.RECIPE_PERMISSION_POLICY,
+        value: { view: "household", edit: "everyone", delete: "everyone" },
+      });
+    expect(await getRecipePermissionPolicy()).toEqual({
+      view: "household",
+      edit: "household",
+      delete: "household",
+    });
   });
 });

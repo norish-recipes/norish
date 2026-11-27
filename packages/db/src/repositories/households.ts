@@ -1,6 +1,5 @@
 import { randomInt } from "node:crypto";
 import { setTimeout as sleep } from "node:timers/promises";
-import type { AnyPgColumn, PgTable } from "drizzle-orm/pg-core";
 import { and, eq, inArray, sql } from "drizzle-orm";
 
 import type { DbTransaction } from "@norish/db/drizzle";
@@ -12,22 +11,11 @@ import type {
 import type { JoinRefusal } from "@norish/shared/lib/join-refusals";
 import { db } from "@norish/db/drizzle";
 import {
-  categories,
   cookbooks,
-  cuisines,
-  groceries,
   households,
   householdUsers,
-  ingredientAliases,
-  ingredientNutritionCorrections,
-  ingredients,
-  ingredientStorePreferences,
-  pantryIngredients,
   plannedItems,
   recipes,
-  recurringGroceries,
-  stores,
-  tags,
   users,
 } from "@norish/db/schema";
 import {
@@ -37,7 +25,11 @@ import {
 } from "@norish/shared/contracts/zod/household";
 
 import type { MutationOutcome } from "./mutation-outcomes";
-import { isRetryableConflict } from "./constraint-violation";
+import { isConstraintViolation, isRetryableConflict } from "./constraint-violation";
+import { carryRecipeFoodsTx } from "./household-catalogue";
+import { mergeHouseholdTx } from "./household-merge";
+import { listHouseholdIconFiles } from "./ingredient-icons";
+import { carryRecipeEntriesTx } from "./list-entries";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 import { turnPlannedRecipesIntoNotes } from "./planned-items";
 import { getUsersByIds } from "./users";
@@ -185,13 +177,20 @@ export const MOVED_ATTEMPTS = 3;
 const DEADLOCK_ATTEMPTS = 3;
 const DEADLOCK_BACKOFF_MS = 50;
 
-/** One transaction of a locked membership write, run afresh while Postgres picks it as a deadlock's victim. */
-async function lockedTransaction<T>(work: (tx: DbTransaction) => Promise<T>): Promise<T> {
+/** Runs a locked membership write afresh when Postgres picks it as a deadlock victim or a merge
+ * met a name a housemate gave a food meanwhile (`retryUnique`), which no row lock covers. */
+async function lockedTransaction<T>(
+  work: (tx: DbTransaction) => Promise<T>,
+  { retryUnique = false }: { retryUnique?: boolean } = {}
+): Promise<T> {
   for (let attempt = 1; ; attempt++) {
     try {
       return await db.transaction(work);
     } catch (error) {
-      if (attempt >= DEADLOCK_ATTEMPTS || !isRetryableConflict(error)) throw error;
+      const retryable =
+        isRetryableConflict(error) || (retryUnique && isConstraintViolation(error, "23505"));
+
+      if (attempt >= DEADLOCK_ATTEMPTS || !retryable) throw error;
       // Retried at once, it can take the household back before the winner and deadlock again.
       await sleep(DEADLOCK_BACKOFF_MS * attempt);
     }
@@ -201,10 +200,11 @@ async function lockedTransaction<T>(work: (tx: DbTransaction) => Promise<T>): Pr
 /** Runs `work` in a fresh transaction while it finds the account MOVED, then gives `givenUp`. */
 async function retryWhileMoved<T, G>(
   givenUp: G,
-  work: (tx: DbTransaction) => Promise<T | typeof MOVED>
+  work: (tx: DbTransaction) => Promise<T | typeof MOVED>,
+  options?: { retryUnique?: boolean }
 ): Promise<T | G> {
   for (let attempt = 0; attempt < MOVED_ATTEMPTS; attempt++) {
-    const result = await lockedTransaction(work);
+    const result = await lockedTransaction(work, options);
 
     if (result !== MOVED) return result;
   }
@@ -234,7 +234,7 @@ async function memberIdsIn(tx: DbTransaction, householdId: string): Promise<stri
   return rows.map((row) => row.userId);
 }
 
-export type MovedOutcome = MutationOutcome<{ household: HouseholdDto; memberIds: string[] }>;
+type MovedOutcome = MutationOutcome<{ household: HouseholdDto; memberIds: string[] }>;
 
 /**
  * Takes a member out of a household and into a new household of one, in one transaction
@@ -280,115 +280,94 @@ export async function moveToHouseholdOfOne(
       return staleOutcome();
     }
 
-    return appliedOutcome({ household: await insertHouseholdOfOne(tx, userId), memberIds });
+    const ofOne = await insertHouseholdOfOne(tx, userId);
+
+    // The triggers moved the recipes and cookbooks; what they carry of the old household follows.
+    await carryRecipeEntriesTx(tx, ofOne.id);
+    await carryRecipeFoodsTx(tx, ofOne.id);
+
+    return appliedOutcome({ household: ofOne, memberIds });
   });
 }
 
-/** What a household of one holds, under its member's id or its own, which joining cannot merge yet. */
-const HELD_BY_MEMBER: ReadonlyArray<readonly [PgTable, AnyPgColumn]> = [
-  [recipes, recipes.userId],
-  [cookbooks, cookbooks.userId],
-  [ingredients, ingredients.ownerId],
-  [ingredientAliases, ingredientAliases.ownerId],
-];
-
-const HELD_BY_HOUSEHOLD: ReadonlyArray<readonly [PgTable, AnyPgColumn]> = [
-  [stores, stores.householdId],
-  [ingredientStorePreferences, ingredientStorePreferences.householdId],
-  [groceries, groceries.householdId],
-  [recurringGroceries, recurringGroceries.householdId],
-  [pantryIngredients, pantryIngredients.householdId],
-  [plannedItems, plannedItems.householdId],
-  [ingredientNutritionCorrections, ingredientNutritionCorrections.householdId],
-  [tags, tags.householdId],
-  [categories, categories.householdId],
-  [cuisines, cuisines.householdId],
-];
-
-async function holdsAnything(
-  tx: DbTransaction,
-  userId: string,
-  householdId: string
-): Promise<boolean> {
-  const held = [
-    ...HELD_BY_MEMBER.map(([table, column]) => [table, eq(column, userId)] as const),
-    ...HELD_BY_HOUSEHOLD.map(([table, column]) => [table, eq(column, householdId)] as const),
-  ];
-
-  for (const [table, where] of held) {
-    const rows = await tx
-      .select({ one: sql`1` })
-      .from(table)
-      .where(where)
-      .limit(1);
-
-    if (rows.length > 0) return true;
-  }
-
-  return false;
-}
-
-export type JoinHouseholdOutcome =
+type JoinHouseholdOutcome =
   | { joined: HouseholdUserDto; leftHouseholdId: string; memberIds: string[] }
   | { refused: JoinRefusal };
 
-/**
- * Moves an account into another household, deleting the household of one it leaves;
- * with `name`, only while the household still carries it (case aside). Refused from a
- * shared household (leave first) and, until merging lands (ticket 09), from a household
- * of one that holds anything. `memberIds` are the members it joined.
- */
+/** Moves an account into another household, merging the household of one it leaves into it; with
+ * `name`, only while the household still carries it. Refused from a shared household. */
 export async function joinHousehold(
   userId: string,
   target: { householdId: string; name?: string } | { joinCode: string }
 ): Promise<JoinHouseholdOutcome> {
-  return await retryWhileMoved({ refused: "shared" } as const, async (tx) => {
-    const current = await householdIdIn(tx, userId);
+  try {
+    return await joinOnce(userId, target);
+  } catch (error) {
+    // Renamed into the joiner's way on every attempt: refused, nothing changed.
+    if (isConstraintViolation(error, "23505")) return { refused: "busy" };
+    throw error;
+  }
+}
 
-    if (!current) throw new Error("Account has no household");
+async function joinOnce(
+  userId: string,
+  target: { householdId: string; name?: string } | { joinCode: string }
+): Promise<JoinHouseholdOutcome> {
+  return await retryWhileMoved(
+    { refused: "shared" } as const,
+    async (tx) => {
+      const current = await householdIdIn(tx, userId);
 
-    const householdId =
-      "householdId" in target ? target.householdId : await householdIdForCode(tx, target.joinCode);
+      if (!current) throw new Error("Account has no household");
 
-    if (!householdId) return { refused: "gone" };
-    if (current === householdId) return { refused: "already-member" };
+      const householdId =
+        "householdId" in target
+          ? target.householdId
+          : await householdIdForCode(tx, target.joinCode);
 
-    const locked = await lockHouseholds(tx, [current, householdId]);
-    const household = locked.find((h) => h.id === householdId);
+      if (!householdId) return { refused: "gone" };
+      if (current === householdId) return { refused: "already-member" };
 
-    if (!household) return { refused: "gone" };
-    // Read again under the lock, so a code rotated or expired, or a rename, admits nobody.
-    if ("name" in target && target.name !== undefined) {
-      const [named] = await tx
-        .select({ id: households.id })
-        .from(households)
-        .where(and(eq(households.id, householdId), householdNamed(target.name)));
+      const locked = await lockHouseholds(tx, [current, householdId]);
+      const household = locked.find((h) => h.id === householdId);
 
-      if (!named) return { refused: "gone" };
-    }
-    if ("joinCode" in target) {
-      if (household.joinCode !== target.joinCode) return { refused: "gone" };
-      if (household.joinCodeExpiresAt && household.joinCodeExpiresAt < new Date()) {
-        return { refused: "expired" };
+      if (!household) return { refused: "gone" };
+      // Read again under the lock, so a code rotated or expired, or a rename, admits nobody.
+      if ("name" in target && target.name !== undefined) {
+        const [named] = await tx
+          .select({ id: households.id })
+          .from(households)
+          .where(and(eq(households.id, householdId), householdNamed(target.name)));
+
+        if (!named) return { refused: "gone" };
       }
-    }
-    // Every move of this account locks its household first, so this read is now stable.
-    if ((await householdIdIn(tx, userId)) !== current) return MOVED;
-    if ((await memberIdsIn(tx, current)).length > 1) return { refused: "shared" };
-    if (await holdsAnything(tx, userId, current)) return { refused: "holds-things" };
+      if ("joinCode" in target) {
+        if (household.joinCode !== target.joinCode) return { refused: "gone" };
+        if (household.joinCodeExpiresAt && household.joinCodeExpiresAt < new Date()) {
+          return { refused: "expired" };
+        }
+      }
+      // Every move of this account locks its household first, so this read is now stable.
+      if ((await householdIdIn(tx, userId)) !== current) return MOVED;
+      if ((await memberIdsIn(tx, current)).length > 1) return { refused: "shared" };
 
-    const memberIds = await memberIdsIn(tx, householdId);
+      const memberIds = await memberIdsIn(tx, householdId);
 
-    await tx.delete(households).where(eq(households.id, current));
+      await tx.delete(householdUsers).where(eq(householdUsers.userId, userId));
+      const [row] = await tx.insert(householdUsers).values({ householdId, userId }).returning();
 
-    const [row] = await tx.insert(householdUsers).values({ householdId, userId }).returning();
+      // The triggers moved the recipes and cookbooks; the rest goes before the emptied household.
+      await mergeHouseholdTx(tx, current, householdId);
+      await tx.delete(households).where(eq(households.id, current));
 
-    return {
-      joined: HouseholdUserSelectBaseSchema.parse(row),
-      leftHouseholdId: current,
-      memberIds,
-    };
-  });
+      return {
+        joined: HouseholdUserSelectBaseSchema.parse(row),
+        leftHouseholdId: current,
+        memberIds,
+      };
+    },
+    { retryUnique: true }
+  );
 }
 
 async function householdIdForCode(tx: DbTransaction, code: string): Promise<string | null> {
@@ -554,6 +533,8 @@ export interface AccountDeletion {
   /** The erased recipes and cookbooks, whose files are swept after the commit. */
   recipeIds: string[];
   cookbookIds: string[];
+  /** The icon files an erased household's own foods showed, swept after the commit where unused. */
+  iconFiles: string[];
   /** The plan entries for those recipes that became notes, in households that stay. */
   notes: Array<typeof plannedItems.$inferSelect>;
 }
@@ -583,6 +564,7 @@ export async function deleteAccount(userId: string): Promise<AccountDeletion> {
     ).map((row) => row.id);
     // An erased household's own plan goes with it, so only the others' entries become notes.
     const notes = await turnPlannedRecipesIntoNotes(tx, recipeIds, erased);
+    const iconFiles = erased ? await listHouseholdIconFiles(tx, erased) : [];
 
     if (erased) {
       await tx.delete(households).where(eq(households.id, erased));
@@ -606,6 +588,7 @@ export async function deleteAccount(userId: string): Promise<AccountDeletion> {
       memberIds: others,
       recipeIds,
       cookbookIds,
+      iconFiles,
       notes,
     };
   });

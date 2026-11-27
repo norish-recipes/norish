@@ -51,7 +51,7 @@ vi.mock("@norish/shared-react/reader", () => ({
   useSiteAuthTokenMutations: () => ({ createToken: pending }),
 }));
 vi.mock("../components/choice-row", () => ({ ChoiceRow: () => null }));
-vi.mock("../components/offline-capsule", () => ({ OfflineCapsule: () => null }));
+vi.mock("@/components/offline-capsule", () => ({ OfflineCapsule: () => null }));
 vi.mock("../components/settings-form", () => ({ SettingsField: () => null }));
 vi.mock("../components/settings-group", () => ({
   SettingsGroup: ({ children }: { children?: ReactNode }) => children,

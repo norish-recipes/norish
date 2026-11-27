@@ -8,7 +8,7 @@
     "household": "Husstand",
     "caldav": "CalDAV",
     "admin": "Admin",
-    "ingredients": "Ingredienser"
+    "content": "Innhold"
   },
   "user": {
     "signInMethods": {
@@ -255,6 +255,7 @@
       "leaveModal": {
         "title": "Forlat husstand",
         "confirmMessage": "Er du sikker på at du vil forlate {name}?",
+        "goesAndStays": "Oppskriftene og kokebøkene dine blir med deg, med tagger og ingredienser. Handlelisten, spiskammeret, måltidsplanen og butikkene blir igjen i husstanden.",
         "adminWarning": "Du er administrator. Du må overføre administratorrettigheter før du forlater.",
         "confirmButton": "Forlat husstand"
       }
@@ -272,7 +273,7 @@
       "kickModal": {
         "title": "Fjern bruker",
         "confirmMessage": "Er du sikker på at du vil fjerne {name} fra husstanden?",
-        "warning": "De mister tilgang til alle delte oppskrifter, handlelister og kalenderhendelser.",
+        "warning": "Oppskriftene og kokebøkene deres blir med dem, med tagger og ingredienser. Handlelisten, spiskammeret, måltidsplanen og butikkene blir igjen i husstanden.",
         "confirmButton": "Fjern bruker"
       },
       "transferModal": {
@@ -298,7 +299,7 @@
     },
     "join": {
       "title": "Bli med i husstand",
-      "description": "Skriv inn en invitasjonskode for å bli med i en eksisterende husstand.",
+      "description": "Skriv inn en invitasjonskode for å bli med i en eksisterende husstand. Husstanden din slås sammen med den: oppskrifter, handleliste, spiskammer, måltidsplan og butikker blir med.",
       "codeLabel": "Invitasjonskode",
       "codePlaceholder": "6-sifret kode",
       "submitButton": "Bli med i husstand"
@@ -388,7 +389,9 @@
   },
   "ingredients": {
     "title": "Ingredienser",
-    "description": "Ingredienskatalogen Norish bruker til å bestemme næringsinnhold, ingrediensikoner og oversettelser.",
+    "sheetTitle": "Ingrediens",
+    "loadFailed": "Kunne ikke laste denne ingrediensen",
+    "loadOffline": "Denne ingrediensen krever en tilkobling",
     "search": "Søk i ingredienser",
     "searchMatch": "Treff",
     "searchIn": "Søk i",
@@ -412,7 +415,6 @@
       "seed-ambiguous": "Katalogen kjenner flere ingredienser dette kan være.",
       "ai-junk": "AI trodde dette ikke er en ingrediens, som et kjøkkenredskap eller en bit av en oppskriftslinje."
     },
-    "empty": "Fant ingen ingredienser",
     "emptyFlagged": "Ingenting er markert",
     "rename": "Gi nytt navn",
     "delete": "Slett",
@@ -424,8 +426,8 @@
       "pantry": "{count, plural, one {# vare i spiskammeret fjernes} other {# varer i spiskammeret fjernes}}"
     },
     "markDistinct": "Marker som egen",
-    "summary": "{spellings, plural, one {# oversettelse} other {# oversettelser}}{kinds, plural, =0 {} one {, # type} other {, # typer}}{parent, select, none {} other {, overordnet: {parent}}}",
-    "addAlias": "Legg til en oversettelse",
+    "summary": "{spellings, plural, one {# skrivemåte} other {# skrivemåter}}{kinds, plural, =0 {} one {, # type} other {, # typer}}{parent, select, none {} other {, overordnet: {parent}}}",
+    "addAlias": "Legg til en skrivemåte",
     "removeAlias": "Fjern {alias}",
     "mergeInto": "Slå sammen med…",
     "merge": "Slå sammen",
@@ -445,15 +447,17 @@
     "clearParent": "Fjern overordnet",
     "nameSection": "Navn",
     "parentSection": "Overordnet",
-    "spellingsSection": "Oversettelser",
+    "spellingsSection": "Skrivemåter",
     "shownAs": "Vises for deg som {name}",
     "changeParent": "Bytt overordnet…",
-    "spellingsCount": "{count, plural, one {# oversettelse} other {# oversettelser}}",
+    "spellingsCount": "{count, plural, one {# skrivemåte} other {# skrivemåter}}",
     "dataSources": {
       "title": "Datakilder",
       "notice": "Ingredienskatalogen bygger på ingredienstaksonomien fra <off>Open Food Facts</off>, tilgjengelig under <odbl>Open Database License (ODbL)</odbl>. Katalogen Norish bygger ut fra den, tilbys under samme lisens.",
       "nutritionNotice": "Næringsinnholdet per 100 g kommer fra <ciqual>CIQUAL 2025</ciqual> og CALNUT (ANSES), <usda>USDA FoodData Central</usda> og <cofid>CoFID</cofid>, koblet via kodene Open Food Facts gir hver ingrediens. En husstands rettelser er dens egne verdier, ikke datasettenes.",
-      "download": "Last ned ingredienskatalogen (JSON)"
+      "download": "Last ned ingredienskatalogen (JSON)",
+      "downloadOffline": "Du kan laste ned katalogen når du er på nett.",
+      "downloadFailed": "Katalogen kunne ikke lastes ned."
     },
     "nutrition": {
       "section": "Næringsinnhold",
@@ -505,6 +509,7 @@
           "hundredMl": "100 ml veier (g)"
         }
       },
+      "overHundred": "Fett, karbohydrater og protein kan ikke være mer enn 100 g per 100 g.",
       "searchFood": "Søk i datasettene (på engelsk), for eksempel milk semi-skimmed",
       "foodHint": "Skriv noen ord av navnet",
       "searchingFoods": "Søker…",
@@ -552,7 +557,6 @@
       "done": "kjøpt",
       "repeats": "gjentas",
       "pantry": "I spiskammeret",
-      "elsewhere": "{count, plural, one {# bruk til} other {# bruk til}} i oppskrifter eller lister du ikke kan åpne",
       "none": "Ingenting bruker den lenger"
     },
     "keepAlias": "Behold {alias}",
@@ -569,6 +573,7 @@
     "changedByAI": {
       "title": "Endret av AI",
       "open": "{count, plural, =0 {Endret av AI} other {Endret av AI · # å sjekke}}",
+      "openCompact": "{count, plural, =0 {Endret av AI} other {# å sjekke}}",
       "unsure": "Ikke sikker",
       "sure": "Endret",
       "empty": "AI har ikke endret noe den siste måneden.",
@@ -583,7 +588,8 @@
       "plainName": "Fikk nytt navn, var {from}",
       "notAFood": "Slettet, siden det ikke er en ingrediens. Oppskriftslinjene og innkjøpene beholder teksten sin.",
       "spellingRemoved": "Oversettelsen {from} fjernet",
-      "spellingMoved": "Oversettelsen {from} flyttet til {of}"
+      "spellingMoved": "Oversettelsen {from} flyttet til {of}",
+      "toCheck": "{count, plural, other {# å sjekke}}"
     },
     "icon": {
       "change": "Endre ikonet",
@@ -592,9 +598,40 @@
       "failed": "Bildet kunne ikke gjøres om til et ikon.",
       "generate": "Generer med AI",
       "generateFailed": "Ikonet kunne ikke genereres."
-    }
+    },
+    "keepDistinct": "Hold atskilt",
+    "offline": "Du kan endre denne ingrediensen når du er tilkoblet."
   },
   "admin": {
+    "shareLinks": {
+      "title": "Moderering av oppskriftdeling",
+      "description": "Bla gjennom offentlige oppskriftlenker på tvers av instansen og moderer livssyklusen deres.",
+      "empty": "Ingen delelenker funnet.",
+      "inactive": "Inaktiv",
+      "table": {
+        "recipe": "OPPSKRIFT",
+        "owner": "EIER",
+        "status": "STATUS",
+        "created": "OPPRETTET",
+        "expires": "UTLØPER",
+        "actions": "HANDLINGER"
+      },
+      "revokeModal": {
+        "title": "Tilbakekall lenke",
+        "message": "Denne lenken til {recipeName} slutter å virke inntil den gjenaktiveres.",
+        "confirm": "Tilbakekall"
+      },
+      "reactivateModal": {
+        "title": "Gjenaktiver lenke",
+        "message": "Denne lenken til {recipeName} blir aktiv igjen.",
+        "confirm": "Gjenaktiver"
+      },
+      "deleteModal": {
+        "title": "Slett lenke",
+        "message": "Slett denne delelenken til {recipeName}? Dette kan ikke angres.",
+        "confirm": "Slett lenke"
+      }
+    },
     "general": {
       "title": "Generelt",
       "allowRegistration": "Tillat ny brukerregistrering",
@@ -819,10 +856,6 @@
       "prompts": {
         "title": "Prompt-tekster",
         "subtitle": "Tilpass AI-instruksjoner for oppskriftbehandling"
-      },
-      "cuisines": {
-        "title": "Kjøkken",
-        "subtitle": "Ordlisten oppskrifter og KI velger fra"
       },
       "bulkEnrichment": {
         "title": "Masseberikelse",
@@ -1268,17 +1301,6 @@
       },
       "pagination": "Side {current} av {total}"
     },
-    "cuisineVocabulary": {
-      "description": "Kjøkken er en kuratert ordliste du eier. Navn vises nøyaktig slik de står her, på alle språk.",
-      "namePlaceholder": "Navn på kjøkken",
-      "addLabel": "Legg til et kjøkken",
-      "renameLabel": "Gi {name} nytt navn",
-      "deleteLabel": "Slett {name}",
-      "deleteConfirm": "Slette \"{name}\"? Oppskrifter som bruker det, mister det.",
-      "empty": "Ingen kjøkken ennå.",
-      "duplicate": "Et kjøkken med det navnet finnes allerede.",
-      "saveFailed": "Kunne ikke lagre det kjøkkenet."
-    },
     "toasts": {
       "localesSaved": "Språkinnstillinger lagret",
       "localesError": "Kunne ikke lagre språkinnstillinger",
@@ -1311,5 +1333,103 @@
     "changePhoto": "Endre bilde",
     "accountGroup": "Din konto",
     "phonesGroup": "På telefoner"
+  },
+  "content": {
+    "ariaLabel": "Innhold",
+    "listPicker": "Liste",
+    "lists": {
+      "tags": "Tagger",
+      "cuisines": "Kjøkken",
+      "categories": "Kategorier",
+      "ingredients": "Ingredienser"
+    },
+    "search": {
+      "tags": "Søk i tagger",
+      "cuisines": "Søk i kjøkken",
+      "categories": "Søk i kategorier"
+    },
+    "show": "Vis",
+    "all": "Alle",
+    "unused": "Ubrukte",
+    "recipes": "{count, plural, =0 {Ikke brukt} one {# oppskrift} other {# oppskrifter}}",
+    "sections": {
+      "ownCuisines": "Dine kjøkken",
+      "ownCategories": "Dine kategorier",
+      "server": "Fra serveren din",
+      "builtIn": "Innebygd"
+    },
+    "help": {
+      "server": "Serveradministratoren din vedlikeholder disse for alle husholdninger",
+      "serverAdmin": "Alle husholdninger på denne serveren får tilbud om disse. Som administrator vedlikeholder du dem.",
+      "builtIn": "Innebygde kategorier er like på alle servere og kan ikke endres"
+    },
+    "readOnly": "Skrivebeskyttet",
+    "empty": {
+      "tags": "Ingen tagger ennå",
+      "cuisines": "Ingen kjøkken ennå",
+      "categories": "Ingen kategorier ennå"
+    },
+    "nothingUnused": "Ingenting er ubrukt",
+    "noMatch": "Ingenting passer",
+    "loadFailed": "Kunne ikke laste denne listen",
+    "listOffline": "Denne listen krever en tilkobling",
+    "offline": "Du kan endre denne listen når du er pålogget.",
+    "panel": {
+      "addTitle": {
+        "tag": "Legg til tagg",
+        "cuisine": "Legg til kjøkken",
+        "category": "Legg til kategori",
+        "ingredient": "Legg til ingrediens"
+      },
+      "editTitle": {
+        "tag": "Rediger tagg",
+        "cuisine": "Rediger kjøkken",
+        "category": "Rediger kategori"
+      },
+      "server": "Server",
+      "name": "Navn",
+      "usedBy": "Brukt av",
+      "usedByOwn": "{count, plural, =0 {Ikke brukt i oppskriftene dine} one {# av oppskriftene dine} other {# av oppskriftene dine}}",
+      "already": {
+        "tag": "Allerede en tagg",
+        "cuisine": "Allerede et kjøkken",
+        "category": "Allerede en kategori",
+        "ingredient": "Allerede en ingrediens"
+      },
+      "addTo": "Legg til i",
+      "toHousehold": "Din husholdning",
+      "toServer": "Alle husholdninger på denne serveren",
+      "serverReadOnly": "Serveradministratoren din vedlikeholder dette kjøkkenet for alle husholdninger.",
+      "serverEditable": "Alle husholdninger på denne serveren får tilbud om dette kjøkkenet.",
+      "merge": "“{target}” finnes allerede. Når du slår sammen, {count, plural, =0 {fjernes {name}} one {flyttes # oppskrift fra {name} over på det} other {flyttes # oppskrifter fra {name} over på det}}.",
+      "mergeAction": "Slå sammen",
+      "tooLong": "Navn kan ha høyst {max} tegn.",
+      "failed": "Kunne ikke lagre. Prøv igjen.",
+      "stale": "Ikke lagret: det ble endret et annet sted først"
+    },
+    "delete": {
+      "title": "Slette “{name}”?",
+      "body": "{count, plural, =0 {Ingen oppskrift bruker det.} one {Det fjernes fra # oppskrift. Oppskriften blir.} other {Det fjernes fra # oppskrifter. Oppskriftene blir.}}",
+      "bodyServer": "{count, plural, =0 {Ingen oppskrift bruker det.} one {Det fjernes fra # oppskrift i alle husholdninger på denne serveren. Oppskriften blir.} other {Det fjernes fra # oppskrifter i alle husholdninger på denne serveren. Oppskriftene blir.}}",
+      "countFailed": "Kunne ikke telle oppskriftene som bruker den. Prøv igjen.",
+      "failed": "Kunne ikke slette. Prøv igjen.",
+      "action": {
+        "tag": "Slett tagg",
+        "cuisine": "Slett kjøkken",
+        "category": "Slett kategori"
+      }
+    },
+    "countCell": "{count, plural, =0 {Ikke brukt} other {#}}",
+    "count": {
+      "tag": "{count, plural, one {# tagg} other {# tagger}}",
+      "ingredient": "{count, plural, one {# ingrediens} other {# ingredienser}}"
+    },
+    "countUnused": {
+      "tag": "{count, plural, one {# ubrukt tagg} other {# ubrukte tagger}}"
+    },
+    "menu": {
+      "rename": "Gi nytt navn",
+      "showRecipes": "Vis oppskrifter"
+    }
   }
 }

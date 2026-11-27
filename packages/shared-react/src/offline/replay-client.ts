@@ -8,6 +8,8 @@
  * (a Conflicted first-writer-wins loss), and thrown errors run through the
  * failure taxonomy.
  */
+import { HOUSEHOLD_HEADER } from "@norish/shared/lib/trpc-errors";
+
 import type { ReplayOutcome } from "./error-classification";
 import type { OutboxEntry } from "./outbox-types";
 import { classifyReplayError, isStaleResult } from "./error-classification";
@@ -46,7 +48,12 @@ export function isOutboxReplayContext(context: unknown, replayHeaderValue: strin
 function createReplayContext(entry: OutboxEntry, replayHeaderValue: string): OutboxReplayContext {
   return {
     ...(entry.operationId ? { operationId: entry.operationId } : {}),
-    headers: { ...entry.headers, [OUTBOX_REPLAY_HEADER]: replayHeaderValue },
+    headers: {
+      ...entry.headers,
+      // The server refuses it unapplied once the account is in another household.
+      ...(entry.householdId ? { [HOUSEHOLD_HEADER]: entry.householdId } : {}),
+      [OUTBOX_REPLAY_HEADER]: replayHeaderValue,
+    },
     skipOutboxCapture: true,
   };
 }

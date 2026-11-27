@@ -1,9 +1,6 @@
 // @vitest-environment node
-/**
- * Every Sign-in Method leaves a new account in a household of one, which it
- * administers. The real auth config runs against Postgres, so the account and its
- * household are made in the transaction Better Auth creates the user in.
- */
+/** Every Sign-in Method leaves a new account in a household of one, which it administers, run
+ * against Postgres in the transaction Better Auth creates the user in. */
 import { handleOAuthUserInfo } from "better-auth/oauth2";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 

@@ -16,8 +16,7 @@ import {
 import { alias, QueryBuilder } from "drizzle-orm/pg-core";
 import z from "zod";
 
-import type { RecipePermissionPolicy } from "@norish/config/zod/server-config";
-import type { Db } from "@norish/db/drizzle";
+import type { Db, DbTransaction } from "@norish/db/drizzle";
 import type {
   FullRecipeDTO,
   FullRecipeInsertDTO,
@@ -32,12 +31,8 @@ import type {
 } from "@norish/shared/contracts/dto/recipe-ingredient";
 import type { StepDto, StepInsertDto } from "@norish/shared/contracts/dto/steps";
 import type { FilterMode, SearchField, SortOrder } from "@norish/shared/contracts/store-types";
-import type { LineJoin } from "@norish/shared/lib/line-foods";
-import {
-  DEFAULT_RECIPE_PERMISSION_POLICY,
-  policyReach,
-  ServerConfigKeys,
-} from "@norish/config/zod/server-config";
+import type { LineJoin, LineReadings } from "@norish/shared/lib/line-foods";
+import { policyReach } from "@norish/config/zod/server-config";
 import { db } from "@norish/db/drizzle";
 import { dbLogger } from "@norish/db/logger";
 import { entryFold } from "@norish/shared/lib/fold-name";
@@ -71,9 +66,14 @@ import {
   FullRecipeUpdateSchema,
   RecipeDashboardSchema,
 } from "../zodSchemas";
-import { attachCategoriesToRecipeByInputTx, RECIPE_CATEGORY_NAMES_SQL } from "./categories";
+import {
+  attachCategoriesToRecipeByInputTx,
+  categoryNamesToWrite,
+  RECIPE_CATEGORY_NAMES_SQL,
+} from "./categories";
 import { TakenIdError } from "./constraint-violation";
 import { currentHouseholdIdSql, householdMemberIdsSql } from "./household-members";
+import { lockRecipeHouseholdsTx } from "./household-rows";
 import {
   attachIngredientsToRecipeByInputTx,
   getUnitsForNormalization,
@@ -82,6 +82,7 @@ import {
   writeRecipeLineFoodsTx,
 } from "./ingredients";
 import {
+  lockEntryNamesTx,
   recipeCarriesFoldsSql,
   replaceRecipeEntriesByNameTx,
   replaceRecipeEntryIdsTx,
@@ -90,7 +91,7 @@ import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 import { pantryCoverageSql } from "./pantry-coverage";
 import { assertOwnRecipeMedia } from "./recipe-media-references";
 import { PRIMARY_IMAGE_SQL } from "./recipe-primary-image";
-import { getConfig } from "./server-config";
+import { getRecipePermissionPolicy } from "./server-config";
 import {
   createManyRecipeStepsTx,
   loadIngredientLineIdsByOrderTx,
@@ -109,16 +110,6 @@ const searchStep = alias(stepsTable, "search_step");
  * depends on this package.
  */
 export type PolicyAction = "view" | "edit" | "delete";
-
-async function getRecipePolicy(executor: Db = db): Promise<RecipePermissionPolicy> {
-  const stored = await getConfig<RecipePermissionPolicy>(
-    ServerConfigKeys.RECIPE_PERMISSION_POLICY,
-    false,
-    executor
-  );
-
-  return { ...DEFAULT_RECIPE_PERMISSION_POLICY, ...stored };
-}
 
 function nonEmpty(s: string | null | undefined): s is string {
   return typeof s === "string" && s.trim().length > 0;
@@ -283,7 +274,7 @@ export async function buildPolicyCondition(
   action: PolicyAction = "view",
   executor: Db = db
 ) {
-  const reach = policyReach(await getRecipePolicy(executor), action, ctx.householdId);
+  const reach = policyReach(await getRecipePermissionPolicy(executor), action, ctx.householdId);
 
   return reach === null ? undefined : eq(householdColumn, reach);
 }
@@ -549,7 +540,13 @@ export async function listRecipes(
    * Library applies, which is what makes a cookbook's count and its list
    * agree by construction (ADR-0027).
    */
-  options?: { cookbookId?: string; favoritesOnly?: boolean; pantryOnly?: boolean }
+  options?: {
+    cookbookId?: string;
+    favoritesOnly?: boolean;
+    pantryOnly?: boolean;
+    /** With `pantryOnly`, the lines read through the reader's catalogue (`lineReadingsOf`). */
+    lineReadings?: LineReadings;
+  }
 ): Promise<{ recipes: RecipeDashboardDTO[]; total: number }> {
   const whereConditions: any[] = [];
 
@@ -576,7 +573,9 @@ export async function listRecipes(
   }
 
   // Members with something at home, most complete first, as the Library orders them.
-  const pantryCoverage = options?.pantryOnly ? pantryCoverageSql(ctx.householdId) : undefined;
+  const pantryCoverage = options?.pantryOnly
+    ? pantryCoverageSql(ctx.householdId, options.lineReadings)
+    : undefined;
 
   if (pantryCoverage) {
     whereConditions.push(sql`${pantryCoverage} > 0`);
@@ -816,6 +815,21 @@ export type CreateRecipeResult =
  */
 export type WithIngredientResolutions<T> = T & { ingredientResolutions: IngredientResolutions };
 
+/** The Tag and Category folds a recipe write creates entries of, in one sorted call before any
+ * list row, so two writes naming the same new Tag and Category cannot deadlock. */
+function lockRecipeEntryFoldsTx(
+  tx: DbTransaction,
+  payload: { tags?: readonly { name: string }[]; categories?: readonly string[] },
+  entryOptions: EntryWriteOptions
+) {
+  if (entryOptions.createEntries === false) return;
+
+  return lockEntryNamesTx(tx, {
+    tag: payload.tags?.map((tag) => tag.name),
+    category: payload.categories && categoryNamesToWrite(payload.categories, entryOptions),
+  });
+}
+
 /** The files a recipe's gallery rows name: images, videos and their thumbnails. */
 function galleryMedia(
   images: ReadonlyArray<{ image: string }> = [],
@@ -903,6 +917,8 @@ export async function createRecipeWithRefs(
 
     const rid = inserted.id;
 
+    await lockRecipeHouseholdsTx(tx, { recipeIds: [rid] });
+    await lockRecipeEntryFoldsTx(tx, payload, entryOptions);
     if (payload.tags.length) {
       await replaceRecipeEntriesByNameTx(
         tx,
@@ -1026,6 +1042,7 @@ export async function updateRecipeCategories(
   }
 
   return await db.transaction(async (tx) => {
+    await lockRecipeHouseholdsTx(tx, { recipeIds: [recipeId] });
     const updated = await tx
       .update(recipes)
       .set({ updatedAt: new Date(), version: sql`${recipes.version} + 1` })
@@ -1340,7 +1357,8 @@ export async function writeConvertedCopy(
   resolutions: IngredientResolutions
 ): Promise<MutationOutcome<void>> {
   return db.transaction(async (tx) => {
-    // The version check takes the row first, so an edit made meanwhile keeps its lines.
+    // The household before the row, as a leave takes them; the version check then keeps an edit's lines.
+    await lockRecipeHouseholdsTx(tx, { recipeIds: [recipeId] });
     if (!(await switchSystemTx(tx, recipeId, conversion.to, version, conversion.from)))
       return staleOutcome();
 
@@ -1641,6 +1659,9 @@ async function syncRecipeVideosTx(
   }
 }
 
+/** An editor's save named an entry its recipe's lists no longer have: they changed under it. */
+class ListsChangedError extends Error {}
+
 export async function updateRecipeWithRefs(
   recipeId: string,
   userId: string,
@@ -1656,8 +1677,14 @@ export async function updateRecipeWithRefs(
   }
 
   const payload = parsed.data;
+  // An editor attaches only what its lists hold, so an entry gone means it saved from an old list.
+  const attached = (missing: number) => {
+    if (missing > 0 && entryOptions.createEntries === false) throw new ListsChangedError();
+  };
 
-  return await db.transaction(async (tx) => {
+  const written = db.transaction(async (tx): Promise<MutationOutcome<number | null>> => {
+    // The household first, as a leave or join locks it before the recipe row.
+    await lockRecipeHouseholdsTx(tx, { recipeIds: [recipeId] });
     // Update recipe base fields
     const updateData: any = {};
 
@@ -1711,25 +1738,30 @@ export async function updateRecipeWithRefs(
       return staleOutcome();
     }
 
+    await lockRecipeEntryFoldsTx(tx, payload, entryOptions);
     // Replace Cuisines if provided. An empty array is an editor clearing them,
     // which is deliberately distinct from an enrichment run writing nothing.
     if (payload.cuisines !== undefined) {
-      await replaceRecipeEntryIdsTx(tx, "cuisine", recipeId, payload.cuisines);
+      attached(await replaceRecipeEntryIdsTx(tx, "cuisine", recipeId, payload.cuisines));
     }
 
-    // An empty list leaves the Categories alone, as it always has.
-    if (payload.categories?.length) {
-      await attachCategoriesToRecipeByInputTx(tx, recipeId, payload.categories, entryOptions);
+    // Replace Categories if provided: an empty list clears them, as it does Tags and Cuisines.
+    if (payload.categories !== undefined) {
+      attached(
+        await attachCategoriesToRecipeByInputTx(tx, recipeId, payload.categories, entryOptions)
+      );
     }
 
     // Replace tags if provided
     if (payload.tags !== undefined) {
-      await replaceRecipeEntriesByNameTx(
-        tx,
-        "tag",
-        recipeId,
-        payload.tags.map((t) => t.name),
-        entryOptions
+      attached(
+        await replaceRecipeEntriesByNameTx(
+          tx,
+          "tag",
+          recipeId,
+          payload.tags.map((t) => t.name),
+          entryOptions
+        )
       );
     }
 
@@ -1807,6 +1839,11 @@ export async function updateRecipeWithRefs(
 
     // The version this write stored, so a client can send its next edit on top of it.
     return appliedOutcome(updatedRecipeRow?.version ?? null);
+  });
+
+  return written.catch((error: unknown) => {
+    if (error instanceof ListsChangedError) return staleOutcome<number | null>();
+    throw error;
   });
 }
 

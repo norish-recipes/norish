@@ -12,6 +12,10 @@ const UNCAPTURED_PROCEDURES: ReadonlySet<string> = new Set([
   "siteAuthTokens.create",
   "siteAuthTokens.update",
   "households.join",
+  // Moderation of other accounts' links acts on the server's state now, not on replay.
+  "recipes.shareRevokeAdmin",
+  "recipes.shareReactivateAdmin",
+  "recipes.shareDeleteAdmin",
   // Creating a list entry needs the server: it fails at once rather than waiting in the Outbox.
   "lists.add",
   ...ONE_TIME_SECRET_PATHS,
@@ -21,3 +25,15 @@ const UNCAPTURED_PROCEDURES: ReadonlySet<string> = new Set([
 export const isUncaptured = (path: string): boolean =>
   (path.includes(".") && UNCAPTURED_ROUTERS.has(path.split(".")[0] ?? "")) ||
   UNCAPTURED_PROCEDURES.has(path);
+
+/** The account's own writes, which no household change makes foreign: never household-checked. */
+const ACCOUNT_ROUTERS: ReadonlySet<string> = new Set([
+  "admin",
+  "user",
+  "caldav",
+  "caldavSubscriptions",
+  "siteAuthTokens",
+]);
+
+export const isAccountScoped = (path: string): boolean =>
+  ACCOUNT_ROUTERS.has(path.split(".")[0] ?? "");

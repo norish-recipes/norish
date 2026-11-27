@@ -4,6 +4,7 @@ import type { Db } from "@norish/db/drizzle";
 import { db } from "@norish/db/drizzle";
 import { ingredientAliases, ingredients, recipeIngredientFoods } from "@norish/db/schema";
 
+import { inScope } from "./household-scope";
 import { lineageCte } from "./ingredient-kinds";
 
 /**
@@ -21,7 +22,8 @@ export interface IconNode {
   offId: string | null;
   /** The own icon's file name, or null. */
   icon: string | null;
-  ownerId: string | null;
+  /** Its household, null for a seeded food. */
+  householdId: string | null;
 }
 
 /** These Ingredients and every ancestor of each, by id. */
@@ -39,7 +41,7 @@ export async function findIconLineage(ids: readonly string[]): Promise<Map<strin
       parentId: ingredients.parentId,
       offId: ingredients.offId,
       icon: ingredients.icon,
-      ownerId: ingredients.ownerId,
+      householdId: ingredients.householdId,
     })
     .from(lineage)
     .innerJoin(ingredients, eq(ingredients.id, lineage.lineageId));
@@ -56,7 +58,7 @@ export async function listIconCatalogue(): Promise<Map<string, IconNode>> {
       parentId: ingredients.parentId,
       offId: ingredients.offId,
       icon: ingredients.icon,
-      ownerId: ingredients.ownerId,
+      householdId: ingredients.householdId,
     })
     .from(ingredients);
 
@@ -72,15 +74,38 @@ export async function setIngredientIcon(
   tx: Db,
   id: string,
   icon: string | null,
-  { unlessSet = false }: { unlessSet?: boolean } = {}
+  {
+    unlessSet = false,
+    householdId,
+  }: {
+    unlessSet?: boolean;
+    /** The food's household (null: seeded) as the caller checked it. */
+    householdId?: string | null;
+  } = {}
 ): Promise<boolean> {
   const updated = await tx
     .update(ingredients)
     .set({ icon, version: sql`${ingredients.version} + 1` })
-    .where(and(eq(ingredients.id, id), unlessSet ? isNull(ingredients.icon) : undefined))
+    .where(
+      and(
+        eq(ingredients.id, id),
+        unlessSet ? isNull(ingredients.icon) : undefined,
+        householdId === undefined ? undefined : inScope(ingredients.householdId, householdId)
+      )
+    )
     .returning({ id: ingredients.id });
 
   return updated.length > 0;
+}
+
+/** The icon files a household's own foods point at, read through the caller's transaction. */
+export async function listHouseholdIconFiles(tx: Db, householdId: string): Promise<string[]> {
+  const rows = await tx
+    .selectDistinct({ icon: ingredients.icon })
+    .from(ingredients)
+    .where(and(eq(ingredients.householdId, householdId), isNotNull(ingredients.icon)));
+
+  return rows.flatMap((row) => (row.icon ? [row.icon] : []));
 }
 
 /** The file names every own icon points at: what the sweep keeps. */

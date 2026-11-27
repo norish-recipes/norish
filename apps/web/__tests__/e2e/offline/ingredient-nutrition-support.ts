@@ -3,6 +3,7 @@ import { expect } from "@playwright/test";
 
 import type { IngredientRef } from "@norish/db/repositories/ingredient-aliases";
 import type { NutritionCodes } from "@norish/db/schema";
+import { getHouseholdIdForUser } from "@norish/db/repositories/households";
 import {
   findIngredientAliasesByFolds,
   mintIngredientWithAliases,
@@ -124,7 +125,13 @@ export async function seedNutritionScenario(): Promise<NutritionScenario> {
     }))
   );
 
-  const [legacy] = await mintIngredientWithAliases({
+  const householdId = await getHouseholdIdForUser(owner);
+
+  if (!householdId) throw new Error("User A has no household");
+  const {
+    aliases: [legacy],
+  } = await mintIngredientWithAliases({
+    householdId,
     name: "salt to taste",
     aliases: [{ text: "salt to taste", fold: ingredientAliasFold("salt to taste") }],
     ownerId: owner,
@@ -132,7 +139,7 @@ export async function seedNutritionScenario(): Promise<NutritionScenario> {
     flagged: true,
     flagReason: "upgrade",
   });
-  const aliases = await findIngredientAliasesByFolds([...folds.values()]);
+  const aliases = await findIngredientAliasesByFolds(householdId, [...folds.values()]);
   const refs = new Map<string, IngredientRef>(
     FOODS.map((food) => [food.key, aliases.find((row) => row.fold === folds.get(food.key))!])
   );

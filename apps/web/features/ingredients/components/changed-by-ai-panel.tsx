@@ -7,12 +7,16 @@ import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
 import { changeMessage } from "@/components/ingredients/review-copy";
 import Panel from "@/components/Panel/Panel";
 import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
+import { EmptyState } from "@/components/shared/empty-state";
+import { SectionHeading } from "@/components/shared/section";
+import { SparklesIcon } from "@heroicons/react/24/outline";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useLocale, useTranslations } from "next-intl";
 import { twMerge } from "tailwind-merge";
 
 import type { AIChange } from "@norish/shared-react/ingredients";
 import {
+  aiChangesView,
   isOpenChange,
   useAIChangeMutations,
   useAIChangesQuery,
@@ -47,8 +51,7 @@ function rowKey(row: PanelRow): string {
 /** Everything the panel shows, in order, as the rows of one list. */
 function panelRows(changes: AIChange[]): PanelRow[] {
   const out: PanelRow[] = [];
-  const unsure = changes.filter(isOpenChange);
-  const rest = changes.filter((change) => !isOpenChange(change));
+  const { unsure, rest } = aiChangesView(changes);
 
   if (changes.length === 0) out.push({ kind: "empty" });
   if (unsure.length > 0) out.push({ kind: "heading", of: "unsure" });
@@ -137,10 +140,8 @@ export function ChangedByAIPanel({ open, onClose }: { open: boolean; onClose: ()
   const locale = useLocale();
   const changes = useAIChangesQuery((all) => all);
   const { keep, undo, keepAll, undoAll, clear } = useAIChangeMutations();
-  // What Keep all and Undo all answer: the open changes the viewer may act on.
-  const actionable = changes.filter((change) => isOpenChange(change) && change.canAct);
-  const anySettled = changes.some((change) => !isOpenChange(change));
-  const answerAll = actionable.length > 1;
+  const { rest, actionable, answerAll } = aiChangesView(changes);
+  const anySettled = rest.length > 0;
   // The food whose own panel is open over this one.
   const [openId, setOpenId] = useState<string | null>(null);
 
@@ -173,17 +174,12 @@ export function ChangedByAIPanel({ open, onClose }: { open: boolean; onClose: ()
 
     switch (row.kind) {
       case "empty":
-        return <p className="text-muted py-3 text-sm">{t("changedByAI.empty")}</p>;
+        return <EmptyState icon={SparklesIcon} title={t("changedByAI.empty")} variant="row" />;
       case "heading":
         return (
-          <h3
-            className={twMerge(
-              "text-muted pb-1 text-xs font-semibold tracking-wide uppercase",
-              index > 0 && "pt-4"
-            )}
-          >
+          <SectionHeading inList={index > 0 ? "later" : "first"} placement="panel">
             {t(`changedByAI.${row.of}`)}
-          </h3>
+          </SectionHeading>
         );
       case "change": {
         const { change } = row;

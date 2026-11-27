@@ -41,8 +41,6 @@ export {
   useFillGapsCounts,
   useFillGapsRunning,
 } from "./use-catalogue-runs";
-export type { CuisineRefusal } from "./use-cuisine-mutations";
-export { useCuisineMutations } from "./use-cuisine-mutations";
 export {
   usePageRendererTestMutation,
   usePageRenderersQuery,

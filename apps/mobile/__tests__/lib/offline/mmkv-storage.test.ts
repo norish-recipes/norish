@@ -81,6 +81,7 @@ function entry(overrides: Partial<NewOutboxEntry> = {}): NewOutboxEntry {
   return {
     id: "e",
     ownerId: "u1",
+    householdId: "h1",
     path: "recipes.uploadImage",
     input: { id: "g1" },
     entityId: "g1",

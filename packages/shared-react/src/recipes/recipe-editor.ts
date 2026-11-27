@@ -231,8 +231,62 @@ export function validateRecipeForm(form: RecipeFormState): RecipeFormErrors {
   return errors;
 }
 
-/** What a save sends for the form, shared by create and update; servings must be valid. */
-export function recipeFormPayload(form: RecipeFormState & { servings: number }) {
+// A list's entries, not their order: the same ones removed and added back are no change.
+const changed = (now: readonly string[], was: readonly string[] | undefined) =>
+  !was || now.length !== was.length || now.some((value) => !was.includes(value));
+
+/** Whether the reader changed a field from the recipe as opened; nothing opened is all changed. */
+const mine = <T>(value: T, was: T | undefined) =>
+  was === undefined ||
+  (Array.isArray(value) && value.every((item) => typeof item === "string")
+    ? changed(value, was as string[])
+    : isDirtyState(value, was));
+
+const placeOf = ({ cuisineIds: _, ...place }: ProvenanceFormValue) => place;
+
+/** A draft kept after a stale answer, on the fresh recipe: each field the reader changed from
+ * `opened` keeps their value, every other takes the fresh one. `opened` rebases to the fresh form. */
+export function rebaseRecipeForm(
+  form: RecipeFormState,
+  opened: RecipeFormState,
+  fresh: FullRecipeDTO,
+  labeller: UnitLabeller
+): RecipeFormState {
+  const now: RecipeFormState = {
+    ...initialRecipeForm(fresh),
+    ingredients: editorIngredientsOf(fresh, labeller),
+    steps: editorStepsOf(fresh),
+  };
+  // Steps point at lines by position, so lines and steps move as one: all the reader's or all fresh.
+  const lines = mine(form.ingredients, opened.ingredients) || mine(form.steps, opened.steps);
+  const rebased = { ...now };
+
+  for (const key of Object.keys(now) as (keyof RecipeFormState)[]) {
+    const kept = key === "ingredients" || key === "steps" ? lines : mine(form[key], opened[key]);
+
+    if (kept) Object.assign(rebased, { [key]: form[key] });
+  }
+  const { cuisineIds } = form.provenance;
+
+  return {
+    ...rebased,
+    provenance: {
+      ...(mine(placeOf(form.provenance), placeOf(opened.provenance))
+        ? placeOf(form.provenance)
+        : placeOf(now.provenance)),
+      cuisineIds: mine(cuisineIds, opened.provenance.cuisineIds)
+        ? cuisineIds
+        : now.provenance.cuisineIds,
+    },
+  };
+}
+
+/** A save's payload (servings valid). An edit passes the form it `opened` with: a list or a
+ * clearable field left as it was is not sent, so a change made to it elsewhere meanwhile stays. */
+export function recipeFormPayload(
+  form: RecipeFormState & { servings: number },
+  opened?: RecipeFormState
+) {
   // Lines are renumbered below; each reference follows its line, one to a line not saved goes.
   const renumbered = new Map(form.ingredients.map((ing, idx) => [ing.order, idx]));
   const refsOf = (refs: StepIngredientRef[]) =>
@@ -242,27 +296,34 @@ export function recipeFormPayload(form: RecipeFormState & { servings: number }) 
       return to === undefined ? [] : [{ ...ref, ingredientOrder: to }];
     });
 
+  const edited = (key: keyof RecipeFormState) => mine(form[key], opened?.[key]);
+  const decimal = (value: number | null) => (value != null ? value.toString() : null);
+
   return {
     name: form.name.trim(),
-    description: form.description.trim() || null,
-    notes: form.notes.trim() || null,
-    url: form.url.trim() || null,
+    ...(edited("description") && { description: form.description.trim() || null }),
+    ...(edited("notes") && { notes: form.notes.trim() || null }),
+    ...(edited("url") && { url: form.url.trim() || null }),
     servings: form.servings,
-    prepMinutes: form.prepMinutes ?? undefined,
-    cookMinutes: form.cookMinutes ?? undefined,
-    totalMinutes: form.totalMinutes ?? undefined,
-    calories: form.calories,
-    fat: form.fat != null ? form.fat.toString() : null,
-    carbs: form.carbs != null ? form.carbs.toString() : null,
-    protein: form.protein != null ? form.protein.toString() : null,
-    originCountry: form.provenance.originCountry,
-    originCountryName: form.provenance.originCountryName,
-    originRegion: form.provenance.originRegion.trim() || null,
-    provenanceNote: form.provenance.provenanceNote.trim() || null,
-    cuisines: form.provenance.cuisineIds,
+    ...(edited("prepMinutes") && { prepMinutes: form.prepMinutes }),
+    ...(edited("cookMinutes") && { cookMinutes: form.cookMinutes }),
+    ...(edited("totalMinutes") && { totalMinutes: form.totalMinutes }),
+    ...(edited("calories") && { calories: form.calories }),
+    ...(edited("fat") && { fat: decimal(form.fat) }),
+    ...(edited("carbs") && { carbs: decimal(form.carbs) }),
+    ...(edited("protein") && { protein: decimal(form.protein) }),
+    ...(mine(placeOf(form.provenance), opened && placeOf(opened.provenance)) && {
+      originCountry: form.provenance.originCountry,
+      originCountryName: form.provenance.originCountryName,
+      originRegion: form.provenance.originRegion.trim() || null,
+      provenanceNote: form.provenance.provenanceNote.trim() || null,
+    }),
+    ...(mine(form.provenance.cuisineIds, opened?.provenance.cuisineIds) && {
+      cuisines: form.provenance.cuisineIds,
+    }),
     systemUsed: form.systemUsed,
-    tags: form.tags.map((name) => ({ name })),
-    categories: form.categories,
+    ...(edited("tags") && { tags: form.tags.map((name) => ({ name })) }),
+    ...(edited("categories") && { categories: form.categories }),
     recipeIngredients: form.ingredients.map((ing, idx) => ({
       id: ing.id,
       version: ing.version,

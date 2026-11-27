@@ -75,3 +75,17 @@ Review round 2:
 6. Fixed: the list announce is asserted once the create answers, before the after-commit wait.
 
 Rejected: attach or detach not bumping the entry version; queue-time matching when the importer moves before the job runs; an extra announce from the extend strategy.
+
+Final review, server round:
+
+- Fixed (22bddda6c): manual allergy detection asks about the recipe's household's allergies.
+- Fixed (667b7bde4, df322f3c3): instance entries first everywhere. An instance add or rename takes over the households' entries of its fold in one transaction (every household row, then their recipes, then the entries; `lists.changed` to each); a household add or rename holds its household first, so it never shadows one. The boot fold merges a household entry folding like an instance entry into it ("Breakfast!", "Bréakfast"); 0092 unchanged.
+- Fixed (ea2eb174c): another household's Cuisine id with no entry of its fold is refused (NOT_FOUND), no longer dropped.
+
+Re-review of the server round:
+
+1. Fixed (18d08aa76, e337703d9): one transaction advisory lock per kind and fold (`lockEntryFoldsTx`), taken by every write giving an entry a fold, after household rows and before list rows; an instance takeover locks only the households holding the fold (until settled), list rows by id, retries `40P01` and `23505` three times; a leave or join maps a fold the instance holds onto its entry. Each household that lost a twin hears `lists.changed` once on its own channel.
+2. Verified (aad58e96f): after a takeover, a save leaving the Cuisines alone keeps the re-pointed link; one sending the old id answers stale. Tags and Categories save by name, covered by the stale-name tests.
+9. Fixed (ccbc6fe29): the entry comments run two lines.
+Final re-review 3. Fixed (5298c8b5b): `lockFoldsTx` takes every kind's folds in one sorted call; recipe create and update, a leave, a join and the boot upgrade take theirs before any list row.
+Final re-review 4. Fixed (a5b0abc61): `entriesByFoldTx` holds every candidate fold before it reads what the list has.

@@ -20,6 +20,8 @@ const getPublicRecipeViewMock = vi.hoisted(() => vi.fn());
 const getRecipeFullMock = vi.hoisted(() => vi.fn());
 const getRecipeShareByIdMock = vi.hoisted(() => vi.fn());
 const getRecipeSharesByUserIdMock = vi.hoisted(() => vi.fn());
+const getRecipeShareInventoryForAdminMock = vi.hoisted(() => vi.fn());
+const reactivateRecipeShareMock = vi.hoisted(() => vi.fn());
 const getRecipeShareUrlMock = vi.hoisted(() => vi.fn());
 const getUnitsMock = vi.hoisted(() => vi.fn());
 const isTimersEnabledMock = vi.hoisted(() => vi.fn());
@@ -54,6 +56,8 @@ vi.mock("@norish/db/repositories/recipe-shares", async () => ({
   getRecipeShareById: getRecipeShareByIdMock,
   getRecipeShareUrl: getRecipeShareUrlMock,
   getRecipeSharesByUserId: getRecipeSharesByUserIdMock,
+  getRecipeShareInventoryForAdmin: getRecipeShareInventoryForAdminMock,
+  reactivateRecipeShare: reactivateRecipeShareMock,
   revokeRecipeShare: revokeRecipeShareMock,
   reactivateRecipeShare: reactivateRecipeShareMock,
   updateRecipeShare: updateRecipeShareMock,
@@ -354,6 +358,154 @@ describe("recipe share procedures", () => {
     ]) {
       await expect(attempt()).rejects.toMatchObject({ code: "NOT_FOUND" });
     }
+  });
+
+  describe("share-link moderation", () => {
+    const othersShare = {
+      id: shareId,
+      userId: "other-user",
+      recipeId,
+      tokenHash: "hashed",
+      tokenEnc: null,
+      expiresAt: null,
+      revokedAt: null,
+      lastAccessedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      version: 1,
+    };
+    const applied = (version: number, revokedAt: Date | null) => ({
+      stale: false,
+      value: {
+        ...othersShare,
+        version,
+        revokedAt,
+        status: revokedAt ? "revoked" : "active",
+        hasLink: false,
+      },
+    });
+
+    beforeEach(() => vi.clearAllMocks());
+
+    it("is refused to an account that is not a server admin", async () => {
+      const caller = recipeSharesProcedures.createCaller(authedCtx as never);
+
+      getRecipeShareByIdMock.mockResolvedValue(othersShare);
+
+      for (const attempt of [
+        () => caller.shareListAdmin(),
+        () => caller.shareRevokeAdmin({ id: shareId, version: 1 }),
+        () => caller.shareReactivateAdmin({ id: shareId, version: 1 }),
+        () => caller.shareDeleteAdmin({ id: shareId, version: 1 }),
+      ]) {
+        await expect(attempt()).rejects.toMatchObject({ code: "FORBIDDEN" });
+      }
+      expect(getRecipeShareInventoryForAdminMock).not.toHaveBeenCalled();
+      expect(revokeRecipeShareMock).not.toHaveBeenCalled();
+      expect(reactivateRecipeShareMock).not.toHaveBeenCalled();
+      expect(deleteRecipeShareMock).not.toHaveBeenCalled();
+    });
+
+    it("lets a server admin list and act on another account's share, announced to the recipe's audience", async () => {
+      isUserServerAdminMock.mockResolvedValue(true);
+      const admin = recipeSharesProcedures.createCaller(authedCtx as never);
+      const listed = [{ ...othersShare, recipeName: "Soup", ownerId: "other-user" }];
+
+      getRecipeShareInventoryForAdminMock.mockResolvedValue(
+        listed.map((row) => ({
+          ...row,
+          status: "active",
+          hasLink: false,
+          ownerName: "Other",
+          makerMayView: false,
+        }))
+      );
+      getRecipeShareByIdMock.mockResolvedValue(othersShare);
+      revokeRecipeShareMock.mockResolvedValue(applied(2, new Date()));
+      reactivateRecipeShareMock.mockResolvedValue(applied(3, null));
+      deleteRecipeShareMock.mockResolvedValue({ stale: false });
+
+      const list = await admin.shareListAdmin();
+
+      expect(list).toHaveLength(1);
+      expect(Object.keys(list[0]!).sort()).toEqual([
+        "createdAt",
+        "expiresAt",
+        "hasLink",
+        "id",
+        "lastAccessedAt",
+        "makerMayView",
+        "ownerId",
+        "ownerName",
+        "recipeId",
+        "recipeName",
+        "revokedAt",
+        "status",
+        "updatedAt",
+        "userId",
+        "version",
+      ]);
+      expect(list[0]).toMatchObject({ id: shareId, ownerName: "Other", makerMayView: false });
+      await expect(admin.shareRevokeAdmin({ id: shareId, version: 1 })).resolves.toMatchObject({
+        status: "revoked",
+        stale: false,
+      });
+      await expect(admin.shareReactivateAdmin({ id: shareId, version: 2 })).resolves.toMatchObject({
+        status: "active",
+        stale: false,
+      });
+      await expect(admin.shareDeleteAdmin({ id: shareId, version: 3 })).resolves.toEqual({
+        success: true,
+        stale: false,
+      });
+
+      expect(assertRecipeAccessMock).not.toHaveBeenCalled();
+      for (const [kind, version] of [
+        ["revoked", 2],
+        ["reactivated", 3],
+        ["deleted", 1],
+      ] as const) {
+        expect(recipes.publish).toHaveBeenCalledWith(
+          "shareEvent",
+          { kind, share: { type: kind, recipeId, shareId, version } },
+          { viewPolicy: "household", householdId: authedCtx.householdId }
+        );
+      }
+    });
+
+    it("tells the maker's own devices of a moderation, naming the link and kind only", async () => {
+      isUserServerAdminMock.mockResolvedValue(true);
+      const admin = recipeSharesProcedures.createCaller(authedCtx as never);
+
+      getRecipeShareByIdMock.mockResolvedValue(othersShare);
+      revokeRecipeShareMock.mockResolvedValue(applied(2, new Date()));
+      reactivateRecipeShareMock.mockResolvedValue(applied(3, null));
+      deleteRecipeShareMock.mockResolvedValue({ stale: false });
+
+      await admin.shareRevokeAdmin({ id: shareId, version: 1 });
+      await admin.shareReactivateAdmin({ id: shareId, version: 2 });
+      await admin.shareDeleteAdmin({ id: shareId, version: 3 });
+
+      for (const kind of ["revoked", "reactivated", "deleted"] as const) {
+        expect(recipes.publish).toHaveBeenCalledWith(
+          "myShareEvent",
+          { kind, shareId },
+          { userId: "other-user" }
+        );
+      }
+    });
+
+    it("answers NOT_FOUND to an admin for a share that is gone", async () => {
+      isUserServerAdminMock.mockResolvedValue(true);
+      const admin = recipeSharesProcedures.createCaller(authedCtx as never);
+
+      getRecipeShareByIdMock.mockResolvedValue(null);
+
+      await expect(admin.shareRevokeAdmin({ id: shareId, version: 1 })).rejects.toMatchObject({
+        code: "NOT_FOUND",
+      });
+      expect(revokeRecipeShareMock).not.toHaveBeenCalled();
+    });
   });
 
   describe("a share's link", () => {

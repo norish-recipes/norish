@@ -138,6 +138,10 @@ const entry = (id: string, name: string, instance = false) => ({ id, name, insta
 
 beforeEach(() => {
   mocks.createRecipe.mockReset();
+  // The server stores each create.
+  mocks.createRecipe.mockImplementation((_input, after: { onSaved: () => void }) =>
+    after.onSaved()
+  );
   mocks.push.mockReset();
   mocks.readerHousehold = "household-2";
   sentWrites.mockReset();
@@ -181,7 +185,10 @@ describe("RecipeForm servings (#684)", () => {
     fireEvent.click(screen.getByRole("button", { name: "createRecipe" }));
 
     await waitFor(() =>
-      expect(mocks.createRecipe).toHaveBeenCalledWith(expect.objectContaining({ servings: 2 }))
+      expect(mocks.createRecipe).toHaveBeenCalledWith(
+        expect.objectContaining({ servings: 2 }),
+        expect.anything()
+      )
     );
   });
 
@@ -355,7 +362,8 @@ describe("RecipeForm categories", () => {
 
     await waitFor(() =>
       expect(mocks.createRecipe).toHaveBeenCalledWith(
-        expect.objectContaining({ categories: ["Breakfast"] })
+        expect.objectContaining({ categories: ["Breakfast"] }),
+        expect.anything()
       )
     );
     expect(sentWrites).not.toHaveBeenCalledWith("lists.add", expect.anything());
@@ -375,7 +383,10 @@ describe("RecipeForm categories", () => {
     fireEvent.click(screen.getByRole("button", { name: "createRecipe" }));
 
     await waitFor(() =>
-      expect(mocks.createRecipe).toHaveBeenCalledWith(expect.objectContaining({ categories: [] }))
+      expect(mocks.createRecipe).toHaveBeenCalledWith(
+        expect.objectContaining({ categories: [] }),
+        expect.anything()
+      )
     );
   });
 });

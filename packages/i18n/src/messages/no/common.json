@@ -262,6 +262,7 @@
       "syncing": "{count, plural, =0 {Synkroniserer} one {Synkroniserer # endring} other {Synkroniserer # endringer}}",
       "syncNow": "Synkroniser nå",
       "retryAll": "Prøv alle igjen",
+      "otherHousehold": "Noen endringer ble gjort for en annen husstand. «Prøv alle igjen» sender dem til husstanden du er i nå.",
       "discardAll": "Forkast alle",
       "discardConfirmBody": "{count, plural, one {Forkaste # endring i kø permanent? Den blir ikke sendt.} other {Forkaste # endringer i kø permanent? De blir ikke sendt.}}",
       "discardConfirm": "Forkast",
@@ -318,7 +319,7 @@
       "expired": "Den koden har utløpt. Be om en ny.",
       "alreadyMember": "Du er allerede i denne husstanden.",
       "shared": "Forlat husstanden din først for å bli med i en annen.",
-      "holdsThings": "Husstanden din har egne oppskrifter, innkjøp eller planer, så den kan ikke bli med i en annen husstand ennå."
+      "busy": "Den husstanden ble endret akkurat da. Prøv igjen."
     }
   },
   "photos": {

@@ -1,7 +1,13 @@
 import { eq, ne, sql } from "drizzle-orm";
 
+import type { RecipePermissionPolicy } from "@norish/config/zod/server-config";
 import type { Db } from "@norish/db/drizzle";
 import { decrypt, encrypt } from "@norish/config/crypto";
+import {
+  DEFAULT_RECIPE_PERMISSION_POLICY,
+  ServerConfigKeys,
+  withinView,
+} from "@norish/config/zod/server-config";
 import { db } from "@norish/db/drizzle";
 import { dbLogger } from "@norish/db/logger";
 
@@ -207,6 +213,20 @@ export async function getAllConfigKeys(): Promise<ServerConfigMetadata[]> {
     updatedBy: c.updatedBy,
     hasSensitiveData: c.isSensitive,
   }));
+}
+
+/** The Permission Policy (ADR-0041): each level as stored, else its default, edit and delete no
+ * wider than view. The one reader. */
+export async function getRecipePermissionPolicy(
+  executor: Db = db
+): Promise<RecipePermissionPolicy> {
+  const stored = await getConfig<Partial<RecipePermissionPolicy>>(
+    ServerConfigKeys.RECIPE_PERMISSION_POLICY,
+    false,
+    executor
+  );
+
+  return withinView({ ...DEFAULT_RECIPE_PERMISSION_POLICY, ...stored });
 }
 
 export async function getConfigSecret(key: ServerConfigKey, field: string): Promise<string | null> {

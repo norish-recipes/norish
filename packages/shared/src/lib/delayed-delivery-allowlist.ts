@@ -23,7 +23,6 @@ export const delayedDeliveryEligibleMutations = [
   "calendar.editItem",
   "calendar.deleteItem",
   "recipes.update",
-  "recipes.updateCategories",
   "recipes.delete",
   "recipes.convertMeasurements",
   "recipes.deleteGalleryImage",

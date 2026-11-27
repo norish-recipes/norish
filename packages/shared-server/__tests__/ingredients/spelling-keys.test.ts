@@ -8,6 +8,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { findIngredientFor, resolveIngredient } from "@norish/shared-server/ingredients/resolver";
 
+import { testHouseholdOf } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 import { SPELLING_CASES } from "../../../shared/__tests__/lib/spelling-cases";
 
@@ -30,8 +31,12 @@ describe("spelling keys, online", () => {
   });
 
   it.each(SPELLING_CASES)("a Pantry %j covers a line %j: %s", async (pantry, line, covered) => {
-    const held = await resolveIngredient(pantry, { userId }, "upgrade");
-    const found = await findIngredientFor(line);
+    const held = await resolveIngredient(
+      pantry,
+      { userId, householdId: testHouseholdOf(userId) },
+      "upgrade"
+    );
+    const found = await findIngredientFor(testHouseholdOf(userId), line);
 
     expect(found?.ingredientId === held!.ingredientId).toBe(covered);
   });

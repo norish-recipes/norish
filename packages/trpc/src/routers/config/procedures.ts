@@ -5,7 +5,7 @@ import { buildInternalParserApiUrl, SERVER_CONFIG } from "@norish/config/env-con
 import configPackage from "@norish/config/package.json" with { type: "json" };
 import { getDatabaseHealth } from "@norish/db/drizzle";
 import { listCategoryNamesForHousehold } from "@norish/db/repositories/categories";
-import { listEntryNames, listEntryRows } from "@norish/db/repositories/list-entries";
+import { listEntryNames } from "@norish/db/repositories/list-entries";
 import {
   getIngredientWords,
   getLocaleConfig,
@@ -107,13 +107,6 @@ const categories = authedProcedure.query(async ({ ctx }) => {
     categories: await listCategoryNamesForHousehold(ctx.householdId),
     builtInAliases: BUILT_IN_ALIASES,
   };
-});
-
-/** The household's Cuisines and the administrator's, the list an editor and AI pick from alike. */
-const cuisines = authedProcedure.query(async ({ ctx }) => {
-  log.debug({ userId: ctx.user.id }, "Getting cuisines");
-
-  return { cuisines: await listEntryRows("cuisine", ctx.householdId) };
 });
 
 /**
@@ -287,7 +280,6 @@ export const configProcedures = router({
   localeConfig,
   tags,
   categories,
-  cuisines,
   units,
   ingredientWords,
   recurrenceConfig,
