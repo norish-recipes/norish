@@ -335,6 +335,22 @@
         </li>
       </ul>
 
+      <h2>Deployment</h2>
+      <ul class="adr-list">
+        <li>
+          <a href="deployment/0044-the-master-key-lives-beside-the-database-never-in-it.md"
+            >ADR-0044 &mdash; The Master Key lives beside the database, never in it</a
+          >
+          <p>
+            The Master Key guards against a database-only leak. It is set as <code>MASTER_KEY</code> or
+            generated at first start into a <code>0600</code> file on the data volume, never stored in
+            Postgres or passed to a child process. A fingerprint in the database makes boot refuse a
+            wrong or missing key, and a lost key has no recovery mode. Rotation runs at boot in one
+            transaction, re-encrypts everything, ends every session and retires the old key.
+          </p>
+        </li>
+      </ul>
+
       <h2>Groceries</h2>
       <ul class="adr-list">
         <li>
