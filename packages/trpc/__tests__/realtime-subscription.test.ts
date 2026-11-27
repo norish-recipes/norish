@@ -703,7 +703,7 @@ describe("a cursor the server did not mint", () => {
 
   const withIds = (cursor: string, ids: string) => cursor.replace(/[^.]+$/, ids);
 
-  async function refusedBeforeValkey(
+  async function refusedBeforeTheBuffer(
     procedure: "onCreated" | "onImported",
     lastEventId: string,
     reason: string
@@ -740,7 +740,7 @@ describe("a cursor the server did not mint", () => {
       [id(2), { recipeId: "before" }],
     ]);
 
-    await refusedBeforeValkey(
+    await refusedBeforeTheBuffer(
       "onImported",
       withIds(await minted("onImported"), forged.join(",")),
       "identity-changed"
@@ -751,14 +751,14 @@ describe("a cursor the server did not mint", () => {
     seedStream(CREATED, [[id(1), { ids: ["before"] }]]);
 
     // The user channel was empty, so its cursor says 0-0: all of CREATED would replay.
-    await refusedBeforeValkey("onCreated", await minted("onFailed"), "identity-changed");
+    await refusedBeforeTheBuffer("onCreated", await minted("onFailed"), "identity-changed");
   });
 
   it("is Lagged cursor-invalid for a version-1 cursor", async () => {
     seedStream(CREATED, [[id(1), { ids: ["g-1"] }]]);
     const cursor = await minted("onCreated");
 
-    await refusedBeforeValkey(
+    await refusedBeforeTheBuffer(
       "onCreated",
       `1${cursor.slice(cursor.indexOf("."))}`,
       "cursor-invalid"

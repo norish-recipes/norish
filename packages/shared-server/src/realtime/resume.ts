@@ -141,7 +141,7 @@ export function decodeCursor(
   const cursor = { identity, channels, ids };
 
   // A user who left a household never reads that household's stream, and no
-  // client writes its own ids: both are refused before Valkey is touched.
+  // client writes its own ids: both are refused before the buffer is read.
   if (!timingSafeEqual(Buffer.from(cursorTag(cursor)), Buffer.from(tag))) {
     throw new RealtimeLaggedError(channels[0] ?? "", "identity-changed", 0);
   }
