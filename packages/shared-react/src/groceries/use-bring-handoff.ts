@@ -97,10 +97,23 @@ export function useBringHandoff({
     while (!openedRef.current && mountedRef.current) {
       const { key: target, list: wanted } = latestRef.current;
       const current = preparedRef.current;
+      const changed = current ? await update({ ...wanted, token: current.token }) : null;
 
-      if (current && (await update({ ...wanted, token: current.token }))) {
+      if (current && changed?.ok) {
+        // New servings come with a new link: Bring! shows the count the link names.
+        if (changed.deeplink) {
+          preparedRef.current = { token: current.token, deeplink: changed.deeplink };
+          setPrepared(preparedRef.current);
+        }
+
         setSyncedKey(target);
       } else {
+        // A handoff the server would not change is not left up for the hour.
+        if (current) {
+          discard({ token: current.token });
+          preparedRef.current = null;
+        }
+
         // None yet, or the server no longer has it: prepare one for this list.
         const result = await prepare(wanted);
 

@@ -66,8 +66,18 @@ export const PrepareBringHandoffResultSchema = z.discriminatedUnion("ok", [
   }),
 ]);
 
+/**
+ * A change to a handoff: whether the server still holds it for the reader, and the new deeplink
+ * when the servings changed, which Bring! takes from the link and not from the page.
+ */
+export const UpdateBringHandoffResultSchema = z.object({
+  ok: z.boolean(),
+  deeplink: deeplinkSchema.optional(),
+});
+
 export type BringItem = z.infer<typeof BringItemSchema>;
 export type BringList = z.infer<typeof BringListSchema>;
 export type UpdateBringHandoffInput = z.infer<typeof UpdateBringHandoffInputSchema>;
 export type BringFailureReason = z.infer<typeof BringFailureReasonSchema>;
 export type PrepareBringHandoffResult = z.infer<typeof PrepareBringHandoffResultSchema>;
+export type UpdateBringHandoffResult = z.infer<typeof UpdateBringHandoffResultSchema>;

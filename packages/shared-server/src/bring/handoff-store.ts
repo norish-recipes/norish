@@ -109,17 +109,17 @@ export async function createHandoff(
 }
 
 /**
- * Replaces the lines of `ownerId`'s handoff and keeps its deadline. False when the handoff is gone
- * or is someone else's: the caller prepares a new one.
+ * Replaces the lines of `ownerId`'s handoff and keeps its deadline. Answers the servings it held
+ * before, or null when the handoff is gone or is someone else's: the caller prepares a new one.
  */
 export async function updateHandoff(
   token: string,
   ownerId: string,
   content: BringHandoffContent
-): Promise<boolean> {
+): Promise<number | null> {
   const stored = await readStored(token);
 
-  if (stored?.ownerId !== ownerId) return false;
+  if (stored?.ownerId !== ownerId) return null;
 
   const valkey = await getPublisherClient();
   // XX: a handoff that expired between the read and this write is not brought back.
@@ -130,7 +130,7 @@ export async function updateHandoff(
     "XX"
   );
 
-  return written === "OK";
+  return written === "OK" ? stored.servings : null;
 }
 
 /**

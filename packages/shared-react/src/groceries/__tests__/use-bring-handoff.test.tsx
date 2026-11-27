@@ -51,7 +51,7 @@ function setup(initial: Partial<Props> = {}, opens = true) {
 const flush = () => act(() => new Promise((resolve) => setTimeout(resolve, 20)));
 
 /** A server that prepares every list and takes every change; each call is recorded. */
-function serveHandoffs(update: () => boolean = () => true) {
+function serveHandoffs(update: () => { ok: boolean; deeplink?: string } = () => ({ ok: true })) {
   const answered = vi.fn(async (path: string, _input: unknown) => {
     if (path === "bring.prepare") return PREPARED;
     if (path === "bring.update") return update();
@@ -167,7 +167,7 @@ describe("useBringHandoff", () => {
       vi.useFakeTimers();
       const fresh = "https://getbring.onelink.me/fresh";
       const answered = vi.fn(async (path: string, _input: unknown) => {
-        if (path === "bring.update") return false;
+        if (path === "bring.update") return { ok: false };
 
         return callsTo(answered, "bring.prepare").length === 1
           ? PREPARED
@@ -192,6 +192,30 @@ describe("useBringHandoff", () => {
       });
 
       expect(adapter.openExternalUrl).toHaveBeenCalledExactlyOnceWith(fresh);
+      // The old one, which the server would not change, is taken down.
+      expect(callsTo(answered, "bring.discard")).toEqual([{ token: TOKEN }]);
+    });
+
+    it("opens the new link a change of servings came back with", async () => {
+      vi.useFakeTimers();
+      const recount = "https://getbring.onelink.me/three";
+      const answered = serveHandoffs(() => ({ ok: true, deeplink: recount }));
+      const { result, rerender, adapter } = setup({ context: { servings: 4 } });
+
+      await act(() => vi.advanceTimersByTimeAsync(0));
+      rerender({ enabled: true, items: ITEMS, context: { servings: 3 } });
+      await act(() => vi.advanceTimersByTimeAsync(300));
+
+      expect(callsTo(answered, "bring.update")).toEqual([
+        { items: ITEMS, servings: 3, token: TOKEN },
+      ]);
+      expect(result.current.status).toBe("ready");
+
+      act(() => {
+        result.current.open();
+      });
+
+      expect(adapter.openExternalUrl).toHaveBeenCalledExactlyOnceWith(recount);
     });
   });
 

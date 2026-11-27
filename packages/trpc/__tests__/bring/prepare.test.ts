@@ -87,7 +87,8 @@ beforeEach(() => {
   getRecipeNameAndImage.mockReset().mockResolvedValue({ name: "Lasagne", image: null });
   createHandoff.mockReset().mockResolvedValue(TOKEN);
   deleteHandoff.mockReset().mockResolvedValue(undefined);
-  updateHandoff.mockReset().mockResolvedValue(true);
+  // The handoff held the servings the updates below send unless a test says otherwise.
+  updateHandoff.mockReset().mockResolvedValue(2);
   requestDeeplink.mockReset().mockResolvedValue({ ok: true, deeplink: DEEPLINK });
   checkImport.mockReset().mockResolvedValue({ ok: true });
   addressesOf.mockReset().mockResolvedValue([{ address: "93.184.216.34", family: 4 }]);
@@ -345,7 +346,7 @@ describe("bring.update", () => {
   it("replaces the reader's handoff with the newly formatted lines, without calling Bring!", async () => {
     await expect(
       caller.update({ token: TOKEN, recipeId: RECIPE_ID, servings: 2, items })
-    ).resolves.toBe(true);
+    ).resolves.toEqual({ ok: true });
 
     expect(updateHandoff).toHaveBeenCalledWith(TOKEN, user.id, {
       title: "Lasagne",
@@ -358,23 +359,56 @@ describe("bring.update", () => {
     expect(createHandoff).not.toHaveBeenCalled();
   });
 
-  it("is not counted against the rate limit", async () => {
+  it("is not counted against the rate limit while the servings stay", async () => {
     increment.mockResolvedValue(31);
 
-    await expect(caller.update({ token: TOKEN, items })).resolves.toBe(true);
+    await expect(caller.update({ token: TOKEN, servings: 2, items })).resolves.toEqual({
+      ok: true,
+    });
     expect(increment).not.toHaveBeenCalled();
   });
 
-  it("answers false when the handoff is gone or is someone else's", async () => {
-    updateHandoff.mockResolvedValue(false);
+  it("asks Bring! for a new link when the servings changed, since Bring! shows the link's count", async () => {
+    requestDeeplink.mockResolvedValue({ ok: true, deeplink: `${DEEPLINK}-3` });
 
-    await expect(caller.update({ token: TOKEN, items })).resolves.toBe(false);
+    await expect(caller.update({ token: TOKEN, servings: 3, items })).resolves.toEqual({
+      ok: true,
+      deeplink: `${DEEPLINK}-3`,
+    });
+    expect(requestDeeplink).toHaveBeenCalledWith({
+      url: expect.stringContaining(`/share/bring/${TOKEN}`),
+      servings: 3,
+    });
+    expect(increment).toHaveBeenCalledOnce();
+    expect(checkImport).not.toHaveBeenCalled();
   });
 
-  it("answers false, and changes nothing, when the list is no longer Bring!", async () => {
+  it("answers not ok when the new link could not be had, or the quota is used up", async () => {
+    requestDeeplink.mockResolvedValue({ ok: false, reason: "bring-unreachable" });
+
+    await expect(caller.update({ token: TOKEN, servings: 3, items })).resolves.toEqual({
+      ok: false,
+    });
+
+    increment.mockResolvedValue(31);
+    requestDeeplink.mockClear();
+
+    await expect(caller.update({ token: TOKEN, servings: 3, items })).resolves.toEqual({
+      ok: false,
+    });
+    expect(requestDeeplink).not.toHaveBeenCalled();
+  });
+
+  it("answers not ok when the handoff is gone or is someone else's", async () => {
+    updateHandoff.mockResolvedValue(null);
+
+    await expect(caller.update({ token: TOKEN, items })).resolves.toEqual({ ok: false });
+  });
+
+  it("answers not ok, and changes nothing, when the list is no longer Bring!", async () => {
     getGroceryListProvider.mockResolvedValue("builtin");
 
-    await expect(caller.update({ token: TOKEN, items })).resolves.toBe(false);
+    await expect(caller.update({ token: TOKEN, items })).resolves.toEqual({ ok: false });
     expect(updateHandoff).not.toHaveBeenCalled();
   });
 

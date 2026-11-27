@@ -172,15 +172,21 @@ test("the panel readies the ticked lines for Bring!, and one press opens its lin
   // tap.
   const [opened] = await Promise.all([ownerContext.waitForEvent("page"), add.click()]);
 
-  await opened.waitForURL(`${stack.bring.url}/deeplink/1`);
+  // The second link: new servings get a new one, since Bring! shows the count the link names.
+  await opened.waitForURL(`${stack.bring.url}/deeplink/2`);
   expect(await opened.evaluate(() => window.opener)).toBeNull();
   await opened.close();
   await expect(panel).toBeHidden();
   await expect(owner.getByRole("button", { name: "Open Bring!" })).toHaveCount(0);
 
-  // The changes stayed with this instance: Bring! was not asked again, and the link it gave
-  // reads the page as the member left it.
-  expect(stack.bring.requests).toHaveLength(1);
+  // Unticking stayed with this instance; the servings asked Bring! once more, for the same page
+  // at the new count, and the link it gave reads the page as the member left it.
+  expect(stack.bring.parsed).toHaveLength(1);
+  expect(stack.bring.requests).toHaveLength(2);
+  const [, recounted] = stack.bring.requests;
+
+  expect(recounted!.body.url).toBe(body.url);
+  expect(recounted!.body.requestedQuantity).toBe("3");
   expect(stack.bring.opened).toHaveLength(1);
   const [read] = stack.bring.opened;
 

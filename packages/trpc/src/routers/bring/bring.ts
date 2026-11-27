@@ -1,7 +1,11 @@
 import { TRPCError } from "@trpc/server";
 
 import type { BringHandoffContent } from "@norish/shared-server/bring/handoff-store";
-import type { BringList, PrepareBringHandoffResult } from "@norish/shared/contracts/zod/bring";
+import type {
+  BringList,
+  PrepareBringHandoffResult,
+  UpdateBringHandoffResult,
+} from "@norish/shared/contracts/zod/bring";
 import { valkeySecondaryStorage } from "@norish/auth/secondary-storage";
 import { getRecipeNameAndImage } from "@norish/db/repositories/recipes";
 import { checkImport, requestDeeplink } from "@norish/shared-server/bring/bring-client";
@@ -28,12 +32,25 @@ import { assertRecipeAccess } from "../recipes/helpers";
 
 /**
  * Each prepared handoff makes Bring!'s servers fetch a page from this instance, so a person may
- * prepare thirty in ten minutes: more than a week's planning in one sitting, too few to turn the
- * instance into a way of making Bring! fetch on someone's behalf. A change to a prepared one
- * stays on this server and is not counted.
+ * ask Bring! thirty times in ten minutes: more than a week's planning in one sitting, too few to
+ * turn the instance into a way of making Bring! fetch on someone's behalf. A change to a prepared
+ * handoff stays on this server and is not counted, unless it needs a new link.
  */
-const PREPARES_PER_WINDOW = 30;
+const BRING_REQUESTS_PER_WINDOW = 30;
 const WINDOW_SECONDS = 10 * 60;
+
+/** Counts a request to Bring! for the user; false once the window's are used up. */
+async function withinBringQuota(userId: string): Promise<boolean> {
+  const requests = await valkeySecondaryStorage.increment(
+    `bring-send-rate:${userId}`,
+    WINDOW_SECONDS
+  );
+
+  if (requests <= BRING_REQUESTS_PER_WINDOW) return true;
+  log.warn({ userId }, "Bring handoff rate limited");
+
+  return false;
+}
 /** The recipe name Bring! shows when the lines come from no single recipe. */
 const FALLBACK_TITLE = "Norish";
 
@@ -88,16 +105,7 @@ const prepare = authedProcedure
     }
 
     // Counted last, so a refusal that costs nothing does not use up the quota.
-    const prepared = await valkeySecondaryStorage.increment(
-      `bring-send-rate:${ctx.user.id}`,
-      WINDOW_SECONDS
-    );
-
-    if (prepared > PREPARES_PER_WINDOW) {
-      log.warn({ userId: ctx.user.id }, "Bring handoff rate limited");
-
-      return { ok: false, reason: "rate-limited" };
-    }
+    if (!(await withinBringQuota(ctx.user.id))) return { ok: false, reason: "rate-limited" };
 
     const token = await createHandoff(content, ctx.user.id);
     const page = { url: handoffUrl(token), servings: input.servings };
@@ -123,17 +131,26 @@ const prepare = authedProcedure
 
 /**
  * Changes a prepared handoff's lines, servings or recipe as the reader changes them. The deeplink
- * stays the same: it names only the page, which Bring! reads when it is opened. False when the
- * handoff is gone or is not the reader's, and the client prepares a new one.
+ * names only the page, which Bring! reads when it is opened, and the servings, which Bring! shows
+ * from the link and not from the page: a new count gets a new link. Not ok when the handoff is gone
+ * or is not the reader's, or the new link could not be had, and the client prepares a new one.
  */
 const update = authedProcedure
   .input(UpdateBringHandoffInputSchema)
-  .mutation(async ({ ctx, input }): Promise<boolean> => {
-    if ((await getGroceryListProvider()) !== "bring") return false;
+  .mutation(async ({ ctx, input }): Promise<UpdateBringHandoffResult> => {
+    if ((await getGroceryListProvider()) !== "bring") return { ok: false };
 
     const { token, ...list } = input;
+    const content = await contentFor(ctx, list);
+    const before = await updateHandoff(token, ctx.user.id, content);
 
-    return updateHandoff(token, ctx.user.id, await contentFor(ctx, list));
+    if (before === null) return { ok: false };
+    if (before === content.servings) return { ok: true };
+    if (!(await withinBringQuota(ctx.user.id))) return { ok: false };
+
+    const result = await requestDeeplink({ url: handoffUrl(token), servings: content.servings });
+
+    return result.ok ? { ok: true, deeplink: result.deeplink } : { ok: false };
   });
 
 /** Takes down a prepared handoff the reader left without opening Bring!. */

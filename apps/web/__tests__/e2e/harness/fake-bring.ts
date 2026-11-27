@@ -16,8 +16,8 @@ import type { IncomingMessage, Server, ServerResponse } from "node:http";
 
 export interface BringRequestBody {
   url: string;
-  baseQuantity?: number;
-  requestedQuantity?: number;
+  baseQuantity?: string;
+  requestedQuantity?: string;
   source?: string;
 }
 

@@ -120,7 +120,7 @@ describe("changing a handoff", () => {
 
     await expect(
       updateHandoff(token, OWNER, { title: "Lasagne", servings: 2, lines: ["1 Ei", "Salz"] })
-    ).resolves.toBe(true);
+    ).resolves.toBe(content.servings);
 
     expect(fakeValkey.set).toHaveBeenLastCalledWith(
       keyOf(token),
@@ -144,12 +144,12 @@ describe("changing a handoff", () => {
   it("answers false, and changes nothing, for someone else's handoff", async () => {
     const token = await createHandoff(content, OWNER);
 
-    await expect(updateHandoff(token, OTHER, { ...content, lines: ["Salz"] })).resolves.toBe(false);
+    await expect(updateHandoff(token, OTHER, { ...content, lines: ["Salz"] })).resolves.toBeNull();
     await expect(readHandoff(token)).resolves.toMatchObject({ lines: ["2 Eier"] });
   });
 
   it("answers false for a handoff that is gone, and does not bring it back", async () => {
-    await expect(updateHandoff("missing", OWNER, content)).resolves.toBe(false);
+    await expect(updateHandoff("missing", OWNER, content)).resolves.toBeNull();
     expect(store.has(keyOf("missing"))).toBe(false);
   });
 
@@ -158,7 +158,7 @@ describe("changing a handoff", () => {
 
     fakeValkey.set.mockImplementationOnce(async () => null);
 
-    await expect(updateHandoff(token, OWNER, content)).resolves.toBe(false);
+    await expect(updateHandoff(token, OWNER, content)).resolves.toBeNull();
   });
 });
 

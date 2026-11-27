@@ -75,7 +75,8 @@ the temporary link can read that list and see that photo until it expires
 after an hour.
 
 You can make up to 30 lists ready in 10 minutes. Changing a list that is
-already ready does not count.
+already ready does not count, except a change of servings, which Norish has to
+tell Bring! again.
 
 ## What happens to the Norish grocery list
 
