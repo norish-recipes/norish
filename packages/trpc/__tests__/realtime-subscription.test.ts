@@ -161,8 +161,7 @@ vi.mock("@norish/db/repositories/recipes", () => ({ getRecipeFull: vi.fn() }));
 vi.mock("@norish/shared-server/cache/household", () => ({ getCachedHouseholdForUser: vi.fn() }));
 const { RealtimeLaggedError } = await import("@norish/shared-server/realtime/hub");
 const { defineRealtimeDomain } = await import("@norish/shared-server/realtime/domain");
-const { encodeCursor, identityHashFor, RESUME_TTL_SECONDS } =
-  await import("@norish/shared-server/realtime/resume");
+const { encodeCursor, RESUME_TTL_SECONDS } = await import("@norish/shared-server/realtime/resume");
 const { createCallerFactory, router } = await import("../src/trpc");
 const { realtimeSubscription, UNAVAILABLE_LAG_PAUSE_MS } =
   await import("../src/realtime-subscription");
@@ -197,7 +196,10 @@ const IMPORTED = {
   user: `norish:grocery:user:${USER}:imported`,
 };
 const identity = { userId: USER, householdId: HOUSEHOLD, viewEpoch: "0" };
-const hash = identityHashFor(identity);
+/** The cursor the server mints for these channels' ids. */
+const cursorOn = (channels: string[], ...ids: string[]) =>
+  encodeCursor({ identity, channels, ids });
+const POLICY = [IMPORTED.household, IMPORTED.broadcast];
 
 /** Stream ids must be younger than the TTL, so they are minted from now. */
 const base = Date.now() - 60_000;
@@ -362,7 +364,7 @@ describe("fresh subscription", () => {
     const first = await take(iterator);
 
     expect(first.data).toEqual({ mark: "cursor" });
-    expect(first.cursor).toBe(encodeCursor({ identityHash: hash, ids: [id(2), "0-0"] }));
+    expect(first.cursor).toBe(cursorOn(POLICY, id(2), "0-0"));
     expect(valkey.xrevrange).toHaveBeenCalledTimes(2);
     expect(valkey.xrange).not.toHaveBeenCalled();
     controller.abort();
@@ -401,7 +403,7 @@ describe("fresh subscription", () => {
       meta: expect.objectContaining({ eventId: id(10), channel: CREATED }),
       payload: { ids: ["g-1"] },
     });
-    expect(live.cursor).toBe(encodeCursor({ identityHash: hash, ids: [id(10)] }));
+    expect(live.cursor).toBe(cursorOn([CREATED], id(10)));
     controller.abort();
   });
 
@@ -481,7 +483,7 @@ describe("resume", () => {
       [id(3), { ids: ["g-3"] }],
     ]);
 
-    const lastEventId = encodeCursor({ identityHash: hash, ids: [id(1)] });
+    const lastEventId = cursorOn([CREATED], id(1));
     const { iterator, controller } = await subscribe("onCreated", { lastEventId });
 
     const mark = await take(iterator);
@@ -494,9 +496,9 @@ describe("resume", () => {
 
     expect((second.data as RealtimeEventEnvelope).meta.eventId).toBe(id(2));
     expect((second.data as RealtimeEventEnvelope).payload).toEqual({ ids: ["g-2"] });
-    expect(second.cursor).toBe(encodeCursor({ identityHash: hash, ids: [id(2)] }));
+    expect(second.cursor).toBe(cursorOn([CREATED], id(2)));
     expect((third.data as RealtimeEventEnvelope).meta.eventId).toBe(id(3));
-    expect(third.cursor).toBe(encodeCursor({ identityHash: hash, ids: [id(3)] }));
+    expect(third.cursor).toBe(cursorOn([CREATED], id(3)));
 
     expect(valkey.xrange).toHaveBeenCalledWith(CREATED_STREAM, `(${id(1)}`, "+", "COUNT", 1000);
     expect(valkey.xrevrange).not.toHaveBeenCalled();
@@ -506,7 +508,7 @@ describe("resume", () => {
     const live = await take(iterator);
 
     expect((live.data as RealtimeEventEnvelope).meta.eventId).toBe(id(4));
-    expect(live.cursor).toBe(encodeCursor({ identityHash: hash, ids: [id(4)] }));
+    expect(live.cursor).toBe(cursorOn([CREATED], id(4)));
     controller.abort();
   });
 
@@ -517,7 +519,7 @@ describe("resume", () => {
     ]);
 
     const { iterator, controller } = await subscribe("onCreated", {
-      lastEventId: encodeCursor({ identityHash: hash, ids: [id(1)] }),
+      lastEventId: cursorOn([CREATED], id(1)),
     });
 
     await take(iterator);
@@ -542,7 +544,7 @@ describe("resume", () => {
     seedStream(IMPORTED.broadcast, [[id(6), { recipeId: "b6" }]]);
 
     const { iterator, controller } = await subscribe("onImported", {
-      lastEventId: encodeCursor({ identityHash: hash, ids: [id(1), "0-0"] }),
+      lastEventId: cursorOn(POLICY, id(1), "0-0"),
     });
 
     await take(iterator);
@@ -561,14 +563,14 @@ describe("resume", () => {
     // The broadcast cursor was 0-0: it had never been written when the cursor
     // was minted, so everything in it now came after and is replayed.
     expect(got.map((g) => g.recipeId)).toEqual(["h4", "h5", "b6"]);
-    expect(got[0]!.cursor).toBe(encodeCursor({ identityHash: hash, ids: [id(4), "0-0"] }));
-    expect(got[2]!.cursor).toBe(encodeCursor({ identityHash: hash, ids: [id(5), id(6)] }));
+    expect(got[0]!.cursor).toBe(cursorOn(POLICY, id(4), "0-0"));
+    expect(got[2]!.cursor).toBe(cursorOn(POLICY, id(5), id(6)));
     controller.abort();
   });
 
   it("continues when the stream key is missing and the cursor is younger than the TTL", async () => {
     const { iterator, controller } = await subscribe("onCreated", {
-      lastEventId: encodeCursor({ identityHash: hash, ids: [id(1)] }),
+      lastEventId: cursorOn([CREATED], id(1)),
     });
 
     await take(iterator);
@@ -587,7 +589,7 @@ describe("resume", () => {
     ]);
 
     const { iterator, controller } = await subscribe("onCreated", {
-      lastEventId: encodeCursor({ identityHash: hash, ids: [id(1)] }),
+      lastEventId: cursorOn([CREATED], id(1)),
     });
 
     await take(iterator);
@@ -602,7 +604,7 @@ describe("resume", () => {
   it("is Lagged cursor-expired without a Valkey call when the cursor is older than the TTL", async () => {
     const stale = `${Date.now() - RESUME_TTL_SECONDS * 1_000 - 5_000}-0`;
     const { iterator, controller } = await subscribe("onCreated", {
-      lastEventId: encodeCursor({ identityHash: hash, ids: [stale] }),
+      lastEventId: cursorOn([CREATED], stale),
     });
 
     const cause = laggedCause(await failure(iterator.next()));
@@ -629,7 +631,8 @@ describe("resume", () => {
       id: "household-a",
     });
     const cursorFromA = encodeCursor({
-      identityHash: identityHashFor({ userId: USER, householdId: "household-a", viewEpoch: "0" }),
+      identity: { ...identity, householdId: "household-a" },
+      channels: ["norish:grocery:household:household-a:created"],
       ids: [id(1)],
     });
 
@@ -676,13 +679,90 @@ describe("resume", () => {
 
   it("is Lagged identity-changed when the channel count does not match the current scope", async () => {
     const { iterator, controller } = await subscribe("onImported", {
-      lastEventId: encodeCursor({ identityHash: hash, ids: [id(1)] }),
+      lastEventId: cursorOn([CREATED], id(1)),
     });
 
     const cause = laggedCause(await failure(iterator.next()));
 
     expect(cause.reason).toBe("identity-changed");
     controller.abort();
+  });
+});
+
+describe("a cursor the server did not mint", () => {
+  /** The cursor a fresh subscription to `procedure` is handed in its Cursor Mark. */
+  async function minted(procedure: "onCreated" | "onFailed" | "onImported") {
+    const { iterator, controller } = await subscribe(procedure);
+    const { cursor } = await take(iterator);
+
+    controller.abort();
+    valkey.xrange.mockClear();
+
+    return cursor;
+  }
+
+  const withIds = (cursor: string, ids: string) => cursor.replace(/[^.]+$/, ids);
+
+  async function refusedBeforeValkey(
+    procedure: "onCreated" | "onImported",
+    lastEventId: string,
+    reason: string
+  ) {
+    const { iterator, controller } = await subscribe(procedure, { lastEventId });
+
+    expect(laggedCause(await failure(iterator.next())).reason).toBe(reason);
+    expect(valkey.xrange).not.toHaveBeenCalled();
+    controller.abort();
+  }
+
+  it("accepts a cursor the server minted and replays what came after it", async () => {
+    seedStream(CREATED, [[id(1), { ids: ["g-1"] }]]);
+    const cursor = await minted("onCreated");
+
+    seedStream(CREATED, [
+      [id(1), { ids: ["g-1"] }],
+      [id(2), { ids: ["g-2"] }],
+    ]);
+
+    const { iterator, controller } = await subscribe("onCreated", { lastEventId: cursor });
+
+    expect((await take(iterator)).cursor).toBe(cursor);
+    expect(((await take(iterator)).data as RealtimeEventEnvelope).meta.eventId).toBe(id(2));
+    controller.abort();
+  });
+
+  it.each([
+    ["ids all 0-0", ["0-0", "0-0"]],
+    ["one id moved back", [id(1), "0-0"]],
+  ])("is Lagged identity-changed for the right identity with %s", async (_, forged) => {
+    seedStream(IMPORTED.household, [
+      [id(1), { recipeId: "before" }],
+      [id(2), { recipeId: "before" }],
+    ]);
+
+    await refusedBeforeValkey(
+      "onImported",
+      withIds(await minted("onImported"), forged.join(",")),
+      "identity-changed"
+    );
+  });
+
+  it("is Lagged identity-changed for a cursor minted for another subscription", async () => {
+    seedStream(CREATED, [[id(1), { ids: ["before"] }]]);
+
+    // The user channel was empty, so its cursor says 0-0: all of CREATED would replay.
+    await refusedBeforeValkey("onCreated", await minted("onFailed"), "identity-changed");
+  });
+
+  it("is Lagged cursor-invalid for a version-1 cursor", async () => {
+    seedStream(CREATED, [[id(1), { ids: ["g-1"] }]]);
+    const cursor = await minted("onCreated");
+
+    await refusedBeforeValkey(
+      "onCreated",
+      `1${cursor.slice(cursor.indexOf("."))}`,
+      "cursor-invalid"
+    );
   });
 });
 

@@ -20,7 +20,6 @@ import { RealtimeLaggedError } from "@norish/shared-server/realtime/hub";
 import {
   compareStreamIds,
   decodeCursor,
-  identityHashFor,
   isStreamIdExpired,
   parseStreamId,
   RESUME_MAXLEN,
@@ -45,8 +44,6 @@ export async function openCursor(
   identity: RealtimeIdentity,
   lastEventId: string | null | undefined
 ): Promise<OpenedCursor> {
-  const identityHash = identityHashFor(identity);
-
   if (lastEventId == null) {
     const valkey = await getPublisherClient();
     const ids = await Promise.all(
@@ -57,17 +54,11 @@ export async function openCursor(
       })
     );
 
-    return { cursor: { identityHash, ids }, resume: false };
+    return { cursor: { identity, channels, ids }, resume: false };
   }
 
-  const cursor = decodeCursor(lastEventId);
-
-  // A user who left a household never reads that household's stream: the
-  // channels come from the current context, and a cursor minted for another
-  // identity is refused before Valkey is touched.
-  if (cursor.identityHash !== identityHash || cursor.ids.length !== channels.length) {
-    throw new RealtimeLaggedError(channels[0] ?? "", "identity-changed", 0);
-  }
+  // The channels come from the current context; the cursor's tag must be for them.
+  const cursor = decodeCursor(lastEventId, identity, channels);
 
   cursor.ids.forEach((id, index) => {
     if (isStreamIdExpired(id)) {

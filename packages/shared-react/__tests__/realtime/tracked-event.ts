@@ -25,12 +25,15 @@ export function realtimeEnvelope<P>(payload: P, eventName = "event"): RealtimeEv
 }
 
 export function trackedEvent<P>(payload: P, eventName?: string) {
-  return { id: "1.abcdef01.1700000000000-0", data: realtimeEnvelope(payload, eventName) };
+  return {
+    id: "2.0123456789abcdef0123456789abcdef.1700000000000-0",
+    data: realtimeEnvelope(payload, eventName),
+  };
 }
 
 /** The Cursor Mark that opens every subscription, as tRPC hands it `onData`. */
 export function trackedCursorMark() {
-  return { id: "1.abcdef01.1700000000000-0", data: CURSOR_MARK };
+  return { id: "2.0123456789abcdef0123456789abcdef.1700000000000-0", data: CURSOR_MARK };
 }
 
 /** Delivers one event through the subscription the mocked `useSubscription` saw last. */
