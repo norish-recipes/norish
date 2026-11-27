@@ -1,10 +1,15 @@
 import type { SharedValue } from "react-native-reanimated";
-import { Easing, FadeIn, FadeInDown, ReduceMotion } from "react-native-reanimated";
+import { Easing, FadeIn, FadeInDown, FadeOut, ReduceMotion } from "react-native-reanimated";
 import { EASE_OUT } from "@/lib/motion/ease";
 import { timedTo } from "@/lib/motion/timed";
 
 // Reanimated snaps every animation under Reduce Motion, so the plain fade opts out of that.
 export const FADE_IN = FadeIn.duration(240).reduceMotion(ReduceMotion.Never);
+
+// Sign in and Sign up trade rows: the leaving ones clear before the rest slide, the new ones
+// fade in once they have, so no row ever draws over another.
+export const MODE_ROW_OUT = FadeOut.duration(100);
+export const MODE_ROW_IN = FadeIn.duration(220).delay(300);
 
 // An error rising into its field; Reduce Motion falls back to FADE_IN.
 export const RISE_IN = FadeInDown.duration(240)

@@ -21,10 +21,7 @@ export type AuthConfig = ReturnType<typeof useAuthProvidersQuery>;
 interface AuthGateProps {
   /** The message id of the line over the brand, such as "Sign in to". */
   titleId: string;
-  slogan: boolean;
   footer: ReactNode;
-  /** Under the native header, with its back button (Sign up). */
-  underHeader?: boolean;
   /** Shows nothing while loading, then fades the whole screen in, footer too (a session end's arrival). */
   fadeIn?: boolean;
   /** Whether the loaded config top-aligns the block; status screens and the spinner stay centred. */
@@ -36,15 +33,14 @@ interface AuthGateProps {
 /** The brand, its title and what sits under it, fading in once where they stay. */
 function AuthBlock({
   titleId,
-  slogan,
   fades = true,
   children,
-}: Pick<AuthGateProps, "titleId" | "slogan"> & { fades?: boolean; children: ReactNode }) {
+}: Pick<AuthGateProps, "titleId"> & { fades?: boolean; children: ReactNode }) {
   const intl = useIntl();
 
   return (
     <Animated.View entering={fades ? FADE_IN : undefined}>
-      <Brand compact prefix={intl.formatMessage({ id: titleId })} slogan={slogan} />
+      <Brand compact prefix={intl.formatMessage({ id: titleId })} />
       <View className="mt-7">{children}</View>
     </Animated.View>
   );
@@ -53,16 +49,11 @@ function AuthBlock({
 function ConfigGate({
   authClient,
   titleId,
-  slogan,
   footer,
   fadeIn,
-  underHeader,
   topAligned,
   children,
-}: Pick<
-  AuthGateProps,
-  "titleId" | "slogan" | "footer" | "fadeIn" | "underHeader" | "topAligned" | "children"
-> & {
+}: Pick<AuthGateProps, "titleId" | "footer" | "fadeIn" | "topAligned" | "children"> & {
   authClient: AuthClient;
 }) {
   const intl = useIntl();
@@ -74,7 +65,7 @@ function ConfigGate({
   // The spinner stands alone, so the block never moves when the content replaces it.
   if (status === "loading") {
     return (
-      <AuthLayout footer={footer} underHeader={underHeader}>
+      <AuthLayout footer={footer}>
         <Loader centred />
       </AuthLayout>
     );
@@ -83,8 +74,8 @@ function ConfigGate({
   // A failed background refetch leaves loaded config up, so the form keeps its state.
   if (status === "failed") {
     return (
-      <AuthLayout footer={footer} underHeader={underHeader}>
-        <AuthBlock slogan={slogan} titleId={titleId}>
+      <AuthLayout footer={footer}>
+        <AuthBlock titleId={titleId}>
           <AuthStatus
             action={{
               label: intl.formatMessage({ id: "common.actions.retry" }),
@@ -99,8 +90,8 @@ function ConfigGate({
   }
 
   const form = (
-    <AuthLayout footer={footer} topAligned={topAligned?.(config)} underHeader={underHeader}>
-      <AuthBlock fades={!fadeIn} slogan={slogan} titleId={titleId}>
+    <AuthLayout footer={footer} topAligned={topAligned?.(config)}>
+      <AuthBlock fades={!fadeIn} titleId={titleId}>
         {children(authClient, config)}
       </AuthBlock>
     </AuthLayout>
@@ -110,23 +101,15 @@ function ConfigGate({
 }
 
 /** A signed-out form's frame: no server, loading and failed config, or the form itself. */
-export function AuthGate({
-  titleId,
-  slogan,
-  footer,
-  fadeIn = false,
-  underHeader = false,
-  topAligned,
-  children,
-}: AuthGateProps) {
+export function AuthGate({ titleId, footer, fadeIn = false, topAligned, children }: AuthGateProps) {
   const router = useRouter();
   const intl = useIntl();
   const authClient = useAuthClient();
 
   if (authClient === null) {
     return (
-      <AuthLayout footer={footer} underHeader={underHeader}>
-        <AuthBlock slogan={slogan} titleId={titleId}>
+      <AuthLayout footer={footer}>
+        <AuthBlock titleId={titleId}>
           <AuthStatus
             action={{
               label: intl.formatMessage({ id: "auth.connect.openServerAddress" }),
@@ -145,10 +128,9 @@ export function AuthGate({
       authClient={authClient}
       fadeIn={fadeIn}
       footer={footer}
-      slogan={slogan}
+
       titleId={titleId}
       topAligned={topAligned}
-      underHeader={underHeader}
     >
       {children}
     </ConfigGate>

@@ -1,10 +1,11 @@
 import type { ComponentProps } from "react";
 import React from "react";
 import { Text, useWindowDimensions, View } from "react-native";
-import Animated from "react-native-reanimated";
+import Animated, { LayoutAnimationConfig } from "react-native-reanimated";
 import LogoCream from "@/assets/brand/logo-cream.svg";
 import Logo from "@/assets/brand/logo.svg";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
+import { SPRING_FADE_IN, SPRING_FADE_OUT } from "@/lib/motion/layout";
 import { useIntl } from "react-intl";
 
 // The native splash draws the logo at this width too (app.json's imageWidth); the viewBox is 2370 x 639.
@@ -41,7 +42,19 @@ export function Brand({ prefix, slogan = true, sloganStyle, compact = false }: B
   return (
     // Compact spaces the prefix 10pt above the logo; the slogan sits 12pt under it.
     <View className={compact ? "items-center gap-2.5" : "items-center gap-3"}>
-      {prefix ? <Text className="text-muted text-[17px] font-normal">{prefix}</Text> : null}
+      {/* A new prefix crossfades over the old one; the first one arrives with the screen. */}
+      {prefix ? (
+        <LayoutAnimationConfig skipEntering>
+          <Animated.Text
+            key={prefix}
+            className="text-muted text-[17px] font-normal"
+            entering={SPRING_FADE_IN}
+            exiting={SPRING_FADE_OUT}
+          >
+            {prefix}
+          </Animated.Text>
+        </LayoutAnimationConfig>
+      ) : null}
       <Mark
         accessible
         accessibilityLabel="Norish"
