@@ -93,6 +93,12 @@ overrides:
   # a second copy breaks declaration emit with TS2742 errors naming
   # @norish/shared/node_modules/zod.
   zod: "catalog:"
+  # Patched versions for Dependabot alerts the latest upstream still pins below:
+  # @bacons/apple-targets 5 > @bacons/xcode > @expo/plist 0.0.18 (xmldom ~0.7, uuid ^8),
+  # drizzle-kit 0.31 > @esbuild-kit (esbuild 0.18).
+  "@expo/plist@0.0.18>@xmldom/xmldom": ^0.8.15
+  "@bacons/xcode>uuid": ^11.1.1
+  "@esbuild-kit/core-utils>esbuild": ^0.25.0
 
 peerDependencyRules:
   allowedVersions:
