@@ -2,7 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { NAV_LABEL_KEYS, NAV_TABS, NavTabLink, navTabPosition } from "@/components/navbar/nav-tabs";
+import {
+  NAV_LABEL_KEYS,
+  NavTabLink,
+  navTabPosition,
+  useNavTabs,
+} from "@/components/navbar/nav-tabs";
 import NavbarUserMenu from "@/components/navbar/navbar-user-menu";
 import { SETTINGS_HREF } from "@/components/settings/settings-tab";
 import { useAutoHide } from "@/hooks/auto-hide";
@@ -39,7 +44,8 @@ export const MobileNav = () => {
   const tNav = useTranslations("navbar.nav");
   const tMenu = useTranslations("navbar.userMenu");
   const pathname = usePathname();
-  const activeTab = navTabPosition(pathname);
+  const { tabs } = useNavTabs();
+  const activeTab = navTabPosition(pathname, tabs);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   // An action bar stands in the nav's place while it is up.
   const actionBarOpen = useActionBarStore((state) => state.actionBarOpen);
@@ -104,7 +110,7 @@ export const MobileNav = () => {
                   activeTab < 0 ? "opacity-0" : ""
                 }`}
                 style={{
-                  width: `${100 / NAV_TABS.length}%`,
+                  width: `${100 / tabs.length}%`,
                   translate: `${Math.max(activeTab, 0) * 100}% 0`,
                 }}
               >
@@ -112,9 +118,9 @@ export const MobileNav = () => {
               </span>
               <ul
                 className="relative grid w-full items-center justify-items-center"
-                style={{ gridTemplateColumns: `repeat(${NAV_TABS.length}, minmax(0, 1fr))` }}
+                style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }}
               >
-                {NAV_TABS.map((href, position) => {
+                {tabs.map((href, position) => {
                   const Icon = TAB_ICONS[href] ?? HomeIcon;
                   const label =
                     href === SETTINGS_HREF

@@ -71,6 +71,14 @@ describe("the proxy matcher", () => {
     expect(proxied.test("/share/public-token/media/cover.jpg")).toBe(false);
   });
 
+  it("leaves the Bring handoff page out: Bring!'s servers fetch it with no session, and its token is the check", () => {
+    const token = "A".repeat(32);
+
+    expect(proxied.test(`/share/bring/${token}`)).toBe(false);
+    // Left out in the proxy itself, so it is not sent to sign in either.
+    expect(proxied.test("/share/bring")).toBe(false);
+  });
+
   it.each(["/login", "/login/", "/icons/x.png", "/sw.js", "/serwist/sw.js", "/api/auth/session"])(
     "leaves %s out",
     (path) => {

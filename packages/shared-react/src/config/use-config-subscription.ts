@@ -21,6 +21,7 @@ export function useConfigSubscription() {
     trpc.config.timersEnabled.queryKey(),
     trpc.config.cuisines.queryKey(),
     trpc.config.localeConfig.queryKey(),
+    trpc.config.groceryListProvider.queryKey(),
   ];
 
   useKeepsCurrent(edited);

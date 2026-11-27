@@ -51,6 +51,7 @@
   "card": {
     "noImage": "Geen afbeelding beschikbaar",
     "viewGroceries": "Bekijk boodschappen",
+    "addToBring": "Toevoegen aan Bring!",
     "addToCalendar": "Toevoegen aan agenda",
     "deleteRecipe": "Recept verwijderen",
     "recipeOptions": "Receptopties",
@@ -87,6 +88,7 @@
   "actions": {
     "plan": "Plannen",
     "groceries": "Boodschappen",
+    "addToBring": "Toevoegen aan Bring!",
     "edit": "Bewerken",
     "delete": "Verwijder",
     "share": "Delen",

@@ -51,6 +51,7 @@
   "card": {
     "noImage": "이미지가 없습니다.",
     "viewGroceries": "장보기 보기",
+    "addToBring": "Bring!에 추가",
     "addToCalendar": "캘린더에 추가",
     "deleteRecipe": "레시피 삭제",
     "recipeOptions": "레시피 옵션",
@@ -87,6 +88,7 @@
   "actions": {
     "plan": "계획",
     "groceries": "장보기",
+    "addToBring": "Bring!에 추가",
     "edit": "편집",
     "delete": "삭제",
     "share": "공유",

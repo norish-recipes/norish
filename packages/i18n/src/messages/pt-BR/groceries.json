@@ -109,6 +109,21 @@
     "inYourPantry": "Na sua despensa",
     "offlineDetails": "Os detalhes de um alimento abrem quando você estiver online de novo."
   },
+  "bring": {
+    "addTitle": "Adicionar ao Bring!",
+    "addButton": "Adicionar ao Bring!",
+    "ready": "Seus itens estão prontos para o Bring!",
+    "open": "Abrir o Bring!",
+    "errors": {
+      "notPublic": "O Bring! não consegue acessar esta instância do Norish. Ela precisa estar acessível pela internet via HTTPS.",
+      "unreachable": "O Bring! não respondeu. Tente novamente em instantes.",
+      "rejected": "O Bring! não conseguiu ler a lista. Verifique se esta instância do Norish está acessível pela internet via HTTPS.",
+      "rateLimited": "Listas demais enviadas ao Bring! – aguarde alguns minutos.",
+      "failed": "Não foi possível enviar ao Bring!",
+      "pageUnreachable": "O Bring! não conseguiu abrir a página que o Norish criou para ele. Verifique se /share/bring/ no seu endereço do Norish está acessível pela internet sem login, VPN ou proteção contra bots.",
+      "pageStatus": "Seu servidor respondeu HTTP {status}."
+    }
+  },
   "panel": {
     "addTitle": "Adicionar item",
     "editTitle": "Editar item",

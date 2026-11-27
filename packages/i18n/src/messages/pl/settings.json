@@ -636,6 +636,13 @@
       "defaultLocale": "Domyślny język",
       "defaultLocaleDescription": "Język używany dla nowych użytkowników i jako zapasowy",
       "atLeastOneLocale": "Musi być włączony co najmniej jeden język",
+      "groceryListProvider": {
+        "title": "Lista zakupów",
+        "description": "Dokąd trafiają składniki przepisu, gdy ktoś dodaje je do listy.",
+        "builtin": "Lista zakupów Norish",
+        "bring": "Bring!",
+        "bringNotice": "Gdy ktoś dodaje składniki, serwery Bring! pobierają tymczasową publiczną stronę HTTPS pod /share/bring/, zawierającą nazwę przepisu, jego główne zdjęcie, porcje i pozycje, która jest usuwana po godzinie. Ta instancja Norish musi więc być dostępna z internetu, a /share/bring/ musi być otwarte bez logowania."
+      },
       "export": {
         "title": "Archiwum przepisów",
         "description": "Pobierz każdy przepis na tym serwerze.",

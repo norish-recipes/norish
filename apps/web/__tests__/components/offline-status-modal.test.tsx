@@ -17,6 +17,16 @@ vi.mock("@norish/shared-react/offline/react", () => ({
 
 vi.mock("@norish/shared-react/trpc", () => ({ useTRPC: () => ({}) }));
 
+const provider = vi.hoisted(() => ({ isBring: false }));
+
+vi.mock("@norish/shared-react/config", () => ({
+  useGroceryListProvider: () => ({
+    provider: provider.isBring ? "bring" : "builtin",
+    isBring: provider.isBring,
+    isLoading: false,
+  }),
+}));
+
 vi.mock("@/lib/offline/engine", () => ({ offlineEngine: {} }));
 
 vi.mock("@/hooks/use-is-mobile", () => ({
@@ -74,6 +84,7 @@ function makeStatus(overrides: Partial<OfflineStatus> = {}): Record<string, unkn
 }
 
 beforeEach(() => {
+  provider.isBring = false;
   h.status = makeStatus();
 });
 
@@ -89,6 +100,21 @@ describe("OfflineStatusModal", () => {
     expect(screen.getByText("12")).toBeInTheDocument(); // recipes count
     expect(screen.getByText("empty")).toBeInTheDocument();
     expect(screen.getByText("force")).toBeInTheDocument(); // dev-only section
+  });
+
+  it("counts the built-in list and its stores only while it is the shopping list", () => {
+    const view = renderModal();
+
+    expect(screen.getByText("groceries")).toBeInTheDocument();
+    expect(screen.getByText("stores")).toBeInTheDocument();
+    view.unmount();
+
+    provider.isBring = true;
+    renderModal();
+
+    expect(screen.queryByText("groceries")).not.toBeInTheDocument();
+    expect(screen.queryByText("stores")).not.toBeInTheDocument();
+    expect(screen.getByText("recipes")).toBeInTheDocument();
   });
 
   it("wipes the cache only after the inline confirm", async () => {

@@ -20,6 +20,9 @@ vi.mock("@norish/shared-react/reader", async () => ({
   useHiddenItemVisibility: () => ({ showRatings: true, showFavorites: true }),
 }));
 
+vi.mock("@norish/shared-react/config", () => ({
+  useGroceryListProvider: () => ({ provider: "builtin", isBring: false, isLoading: false }),
+}));
 vi.mock("@/hooks/use-recipe-prefetch", () => ({
   useRecipePrefetch: () => ({ current: null }),
 }));

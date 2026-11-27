@@ -96,6 +96,12 @@ export default withSerwist(
           ],
         },
         {
+          // The global Referrer-Policy above replaces the one the handler sets, so this later rule
+          // is what makes the handoff page answer with no-referrer.
+          source: "/share/bring/:token",
+          headers: [{ key: "Referrer-Policy", value: "no-referrer" }],
+        },
+        {
           // @serwist/turbopack serves the worker from a Route Handler rather
           // than public/, so the path is /serwist/sw.js and the handler owns
           // Content-Type + Service-Worker-Allowed. Only the policy headers

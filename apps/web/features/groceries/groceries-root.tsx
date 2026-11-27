@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 import { AnimatePresence, motion } from "motion/react";
 
-import { useIngredientsSubscription } from "@norish/shared-react/config";
+import { useGroceryListProvider, useIngredientsSubscription } from "@norish/shared-react/config";
 import {
   useGroceriesSubscription,
   useGroceriesUiStore,
@@ -29,6 +29,8 @@ const SLIDE_PX = 24;
  * add pill. The switch only rewrites the address, so the view changes here, with no navigation.
  */
 export function GroceriesRoot() {
+  const router = useRouter();
+  const { isBring } = useGroceryListProvider();
   const view = groceriesView(usePathname());
   const offset = usePrefersReducedMotion() ? 0 : view === "pantry" ? SLIDE_PX : -SLIDE_PX;
 
@@ -44,6 +46,13 @@ export function GroceriesRoot() {
 
   // The panels' store is global: leaving closes them for the next visit.
   useEffect(() => resetUi, [resetUi]);
+
+  // An administrator can switch to Bring! while this screen is open: it has no list to show then.
+  useEffect(() => {
+    if (isBring) router.replace("/");
+  }, [isBring, router]);
+
+  if (isBring) return null;
 
   return (
     <div className="flex min-h-0 w-full flex-1 flex-col">

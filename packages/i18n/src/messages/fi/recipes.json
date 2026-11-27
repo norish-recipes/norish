@@ -51,6 +51,7 @@
   "card": {
     "noImage": "Ei kuvaa saatavilla",
     "viewGroceries": "Näytä ostokset",
+    "addToBring": "Lisää Bring!iin",
     "addToCalendar": "Lisää kalenteriin",
     "deleteRecipe": "Poista resepti",
     "recipeOptions": "Reseptin asetukset",
@@ -87,6 +88,7 @@
   "actions": {
     "plan": "Suunnittele",
     "groceries": "Ostokset",
+    "addToBring": "Lisää Bring!iin",
     "edit": "Muokkaa",
     "delete": "Poista",
     "share": "Jaa",

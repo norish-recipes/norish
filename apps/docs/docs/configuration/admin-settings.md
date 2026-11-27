@@ -17,6 +17,17 @@ Choose everyone, the household or the owner.
 is the default. Merging entries requires edit permission on both. Anyone can
 add a translation.
 
+## Shopping list
+
+Under **General**, **Shopping list** sets where ingredients go when someone adds
+them to the groceries. **Norish grocery list** is the default. **Bring!** sends
+them to [Bring!](/groceries/bring) instead and hides the Groceries tab. The
+setting applies to everyone straight away and deletes nothing.
+
+Choose Bring! only if Norish is reachable from the internet over HTTPS. Bring!'s
+servers fetch a temporary public HTTPS page with the recipe name, the servings and the
+item lines.
+
 ## Ingredient words
 
 In admin settings, open **Content detection**, then **Ingredient words**.

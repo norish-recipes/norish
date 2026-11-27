@@ -199,6 +199,7 @@ vi.mock("next-intl", () => ({
 
 vi.mock("@/lib/ui/action-toast", () => ({ showActionToast: vi.fn() }));
 /** Whether the instance can draw icons. */
+const provider = vi.hoisted(() => ({ isBring: false }));
 const permissions = vi.hoisted(() => ({ isAIEnabled: true, canDrawImages: false }));
 
 vi.mock("@norish/shared-react/reader", async () =>
@@ -295,6 +296,7 @@ vi.mock("@norish/shared-react/config", async (importOriginal) => ({
   ...(await importOriginal<object>()),
   useIngredientsSubscription: () => undefined,
   useSpellingRules: () => undefined,
+  useGroceryListProvider: () => ({ isBring: provider.isBring }),
 }));
 vi.mock("@norish/shared-react/groceries", () => ({
   useGroceriesPantryAndCatalogueSubscriptions: () => undefined,
@@ -417,6 +419,7 @@ async function showSpellings(opened: HTMLElement) {
 describe("IngredientsScreen", () => {
   beforeEach(() => {
     linkedIngredient = null;
+    provider.isBring = false;
     // The end of the list watches for itself scrolling into view; jsdom has no observer.
     vi.stubGlobal(
       "IntersectionObserver",
@@ -742,6 +745,34 @@ describe("IngredientsScreen", () => {
     expect(where).toHaveTextContent("onions · done");
     expect(where).toHaveTextContent("pantry");
     expect(where).toHaveTextContent("elsewhere");
+  });
+
+  it("leaves the hidden built-in groceries out of where a food is used when the list is Bring!", async () => {
+    provider.isBring = true;
+    uses = {
+      recipes: [{ id: "r1", name: "Saté" }],
+      groceries: [{ name: "onions", done: true, recurring: false }],
+      pantry: true,
+      elsewhere: 0,
+      counts: { recipeLines: 3, groceries: 0, pantry: 1 },
+    };
+    await renderScreen();
+    const opened = await open("onion");
+
+    await act(async () => {
+      fireEvent.click(within(opened).getByTestId("ingredient-delete"));
+    });
+    await settle();
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "uses.show" }));
+    });
+    await settle();
+
+    const where = screen.getByTestId("ingredient-uses");
+
+    expect(within(where).getByRole("link", { name: "Saté" })).toBeInTheDocument();
+    expect(where).not.toHaveTextContent("onions");
+    expect(where).not.toHaveTextContent("uses.groceries");
   });
 
   it("offers the plain Delete on a food AI says is not a food, its lines keeping their text", async () => {

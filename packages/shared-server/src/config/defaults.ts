@@ -54,6 +54,8 @@ export function getDefaultConfigValue(key: ServerConfigKey): unknown {
       return { ...defaultTimerKeywords, isOverridden: false };
     case ServerConfigKeys.INGREDIENT_WORDS:
       return { words: defaultIngredientWords, isOverridden: false };
+    case ServerConfigKeys.GROCERY_LIST_PROVIDER:
+      return "builtin";
     default:
       return null;
   }

@@ -17,14 +17,22 @@ const state = vi.hoisted(() => ({
   lines: [] as never[],
   linesReady: true,
   create: undefined as unknown as ReturnType<typeof vi.fn>,
+  send: undefined as unknown as ReturnType<typeof vi.fn>,
+  bring: false,
+  providerLoading: false,
 }));
 
 vi.mock("../../config", async () => {
   const { spellingRules } = await import("@norish/shared/lib/spelling-keys");
   const units = (await import("@norish/config/units.default.json")).default;
 
-  return { useSpellingRules: () => spellingRules(units as UnitsMap) };
+  return {
+    useSpellingRules: () => spellingRules(units as UnitsMap),
+    useGroceryListProvider: () => ({ isBring: state.bring, isLoading: state.providerLoading }),
+    useUnitsQuery: () => ({ units }),
+  };
 });
+vi.mock("../use-send-to-bring", () => ({ useSendToBring: () => state.send }));
 vi.mock("../use-groceries-mutations", () => ({
   useGroceriesMutations: () => ({ createGroceriesFromData: state.create }),
 }));
@@ -67,6 +75,8 @@ function run(onOpenChange = vi.fn(), onDone = vi.fn()) {
   const view = renderHook(
     () =>
       useAddAtOnce({
+        recipeId: "r1",
+        servings: 4,
         lines: foodsToBuy(state.lines).map((food) => ({ ...food, amount: food.amount ?? null })),
         linesReady: state.linesReady,
         onOpenChange,
@@ -81,6 +91,9 @@ function run(onOpenChange = vi.fn(), onDone = vi.fn()) {
 describe("useAddAtOnce", () => {
   beforeEach(() => {
     state.create = vi.fn(async () => undefined);
+    state.send = vi.fn(async () => true);
+    state.bring = false;
+    state.providerLoading = false;
     state.pantry = [kept("olive oil"), kept("salt")];
     state.loading = false;
     state.fetching = false;
@@ -104,6 +117,39 @@ describe("useAddAtOnce", () => {
     expect(view.onDone).toHaveBeenCalledTimes(1);
     expect(view.onOpenChange).toHaveBeenCalledWith(false);
     expect(view.onOpenChange).not.toHaveBeenCalledWith(true);
+  });
+
+  it("sends what is to buy to Bring!, for the recipe and servings, where the list is Bring!", async () => {
+    state.bring = true;
+    let view!: ReturnType<typeof run>;
+
+    await act(async () => {
+      view = run();
+    });
+
+    expect(state.create).not.toHaveBeenCalled();
+    expect(state.send).toHaveBeenCalledWith([expect.objectContaining({ name: "chicken breast" })], {
+      recipeId: "r1",
+      servings: 4,
+    });
+    expect(view.onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it("waits until the instance has said which list this is, then adds to that one", async () => {
+    state.bring = true;
+    state.providerLoading = true;
+    const { rerender, onOpenChange } = run();
+
+    await act(async () => {});
+    expect(state.create).not.toHaveBeenCalled();
+    expect(state.send).not.toHaveBeenCalled();
+    expect(onOpenChange).not.toHaveBeenCalled();
+
+    state.providerLoading = false;
+    await act(async () => rerender());
+
+    expect(state.create).not.toHaveBeenCalled();
+    expect(state.send).toHaveBeenCalledTimes(1);
   });
 
   it("waits for the Pantry before deciding what to buy", async () => {

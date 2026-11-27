@@ -27,6 +27,7 @@ export const ServerConfigKeys = {
   TIMER_KEYWORDS: "timer_keywords",
   INGREDIENT_WORDS: "ingredient_words",
   PAGE_RENDERERS: "page_renderers",
+  GROCERY_LIST_PROVIDER: "grocery_list_provider",
 } as const;
 
 export type ServerConfigKey = (typeof ServerConfigKeys)[keyof typeof ServerConfigKeys];
@@ -592,6 +593,14 @@ export const PageRenderersConfigSchema = z.object({
 
 export type PageRenderersConfig = z.infer<typeof PageRenderersConfigSchema>;
 
+/**
+ * Where the instance's shopping list lives: Norish's own grocery list, or the
+ * external service Bring! (ADR-0041).
+ */
+export const GroceryListProviderSchema = z.enum(["builtin", "bring"]);
+
+export type GroceryListProvider = z.infer<typeof GroceryListProviderSchema>;
+
 // ============================================================================
 // Image Generation Configuration Schema
 // ============================================================================
@@ -1015,6 +1024,8 @@ export function getSchemaForConfigKey(key: ServerConfigKey): z.ZodType {
       return IngredientWordsConfigSchema;
     case ServerConfigKeys.PAGE_RENDERERS:
       return PageRenderersConfigSchema;
+    case ServerConfigKeys.GROCERY_LIST_PROVIDER:
+      return GroceryListProviderSchema;
     default:
       return z.any();
   }

@@ -636,6 +636,13 @@
       "defaultLocale": "Standardspråk",
       "defaultLocaleDescription": "Språk för nya användare och när en översättning saknas",
       "atLeastOneLocale": "Minst ett språk måste vara aktiverat",
+      "groceryListProvider": {
+        "title": "Inköpslista",
+        "description": "Vart ingredienserna i ett recept tar vägen när någon lägger till dem i listan.",
+        "builtin": "Norish inköpslista",
+        "bring": "Bring!",
+        "bringNotice": "När någon lägger till ingredienser hämtar Bring!s servrar en tillfällig offentlig HTTPS-sida under /share/bring/ med receptets namn, huvudbild, portioner och artikelrader, som raderas efter en timme. Den här Norish-instansen måste därför gå att nå från internet, med /share/bring/ öppen utan inloggning."
+      },
       "export": {
         "title": "Receptarkiv",
         "description": "Ladda ner alla recept på den här servern.",

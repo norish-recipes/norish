@@ -25,6 +25,7 @@ import { useTranslations } from "next-intl";
 import { twMerge } from "tailwind-merge";
 
 import type { RecipeEnrichmentKind } from "@norish/shared/lib/recipe-enrichment";
+import { useGroceryListProvider } from "@norish/shared-react/config";
 import {
   ownerAllows,
   useActiveAllergies,
@@ -85,6 +86,7 @@ export default function ActionsMenu({ id, buttonClassName, onPrint }: Props) {
   const { isSupported, isActive, toggle } = usePageWakeLock();
 
   const t = useTranslations("recipes.actions");
+  const { isBring } = useGroceryListProvider();
   const tPrint = useTranslations("recipes.print");
   const tEnrichment = useTranslations("recipes.enrichment");
   const canEdit = ownerAllows(recipe.userId, canEditRecipe);
@@ -110,7 +112,7 @@ export default function ActionsMenu({ id, buttonClassName, onPrint }: Props) {
       },
       {
         key: "groceries",
-        label: t("groceries"),
+        label: isBring ? t("addToBring") : t("groceries"),
         icon: <ShoppingCartIcon className="size-4" />,
         onPress: () => setOpenGroceries(true),
       },
@@ -259,6 +261,7 @@ export default function ActionsMenu({ id, buttonClassName, onPrint }: Props) {
     isActive,
     toggle,
     t,
+    isBring,
     tPrint,
     onPrint,
     tEnrichment,

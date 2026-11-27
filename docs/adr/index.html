@@ -952,6 +952,19 @@
             table.
           </p>
         </li>
+        <li>
+          <a href="groceries/0041-the-shopping-list-can-be-an-external-service.md"
+            >ADR-0041 &mdash; The shopping list can be an external service, reached by a one-way handoff</a
+          >
+          <p>
+            <b>Accepted.</b> An administrator can choose Bring! as the instance's shopping list.
+            Bring! takes no items, only the address of a page its servers fetch, so each send stores
+            the lines behind an unguessable, hour-long token and a public page that shows a title and
+            the lines only. The switch is in the interface alone and keeps every grocery, so
+            switching back is lossless. Rejects blocking grocery writes, a database table, the real
+            recipe share link and opening the link automatically on the web.
+          </p>
+        </li>
       </ul>
 
       <h2>Validation policy</h2>

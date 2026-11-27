@@ -20,6 +20,8 @@ type ToastAdapter = {
     subject?: string;
     actionLabel?: string;
     onActionPress?: () => void;
+    /** Stays until dismissed rather than timing out; for a toast whose button is the next step. */
+    persistent?: boolean;
   }) => void;
   translate: CompatibleMessageTranslator;
 };
@@ -50,6 +52,17 @@ export type PlatformAdapter = {
   /** Tells the reader an operation failed, under `title` if given; `context` names where, for the log. */
   showError: (error: unknown, context: string, title?: string) => void;
   storage: PlatformStorage;
+  /**
+   * Opens a link outside the app: a new tab on the web, the system handler on a phone. False when
+   * it did not open, such as a link of another scheme, or a browser that blocked the tab because
+   * the press that asked for it was too long ago.
+   */
+  openExternalUrl: (url: string) => boolean;
+  /**
+   * Whether this app follows the instance's Shopping List Provider setting. Only the web does
+   * today: where it is false the app keeps the built-in grocery list whatever the setting says.
+   */
+  supportsExternalShoppingList: boolean;
   deviceKind: DeviceKind;
   session: PlatformSession;
   /** Ends the session in `scope`; rejects when it could not. */

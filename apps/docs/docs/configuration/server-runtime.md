@@ -180,6 +180,18 @@ Set `NEXT_PUBLIC_LOG_LEVEL` to `debug`, `info`, `warn` or `error`. The default i
 | `MAX_IMAGE_FILE_SIZE`  | Max image upload size (bytes)  | `10485760`                                        |
 | `MAX_VIDEO_FILE_SIZE`  | Max video upload size (bytes)  | `104857600`                                       |
 
+## Bring!
+
+| Variable        | Description                                               | Default                    |
+| --------------- | --------------------------------------------------------- | -------------------------- |
+| `BRING_API_URL` | Address of the Bring! API. Advanced: only tests change it | `https://api.getbring.com` |
+
+Leave `BRING_API_URL` alone. It exists so a test setup can stand in for Bring!.
+Any other value also turns off the check that `AUTH_URL` is a public `https://`
+address and allows an `http` link in Bring!'s answer, because a stand-in is not
+Bring!. `ALLOW_PRIVATE_ADDRESSES` has no effect on Bring!.
+To use Bring! as the shopping list, see [Shop with Bring!](/groceries/bring).
+
 ## Scheduler
 
 Set `SCHEDULER_CLEANUP_MONTHS` to change the cleanup period. The default is three months.

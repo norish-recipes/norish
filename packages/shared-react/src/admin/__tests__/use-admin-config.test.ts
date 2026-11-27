@@ -8,7 +8,14 @@ import {
   fakePlatformAdapter,
 } from "@norish/shared-react/platform/testing";
 
-import { answerCall, failCall, keyOf, resetTRPCFake, serveTRPC } from "../../trpc/testing";
+import {
+  answerCall,
+  failCall,
+  keyOf,
+  resetTRPCFake,
+  sentCall,
+  serveTRPC,
+} from "../../trpc/testing";
 import { useAdminConfig, useConfigSecret } from "../use-admin-config";
 import {
   useAIConfigMutations,
@@ -24,6 +31,7 @@ vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC(
 const CONFIGS = keyOf("admin.getAllConfigs");
 const UNITS = keyOf("config.units");
 const INGREDIENT_WORDS = keyOf("config.ingredientWords");
+const GROCERY_LIST_PROVIDER = keyOf("config.groceryListProvider");
 
 function setUp() {
   const queryClient = createTestQueryClient();
@@ -104,6 +112,25 @@ describe("the config writes", () => {
     expect(stale(CONFIGS)).toBe(true);
     expect(stale(INGREDIENT_WORDS)).toBe(true);
     expect(stale(UNITS)).toBe(false);
+  });
+
+  it("read the admin config and where recipes add to the list again once the provider is saved", async () => {
+    const { queryClient, stale, wrapper } = setUp();
+    const { result } = renderHook(() => useGeneralConfigMutations(), { wrapper });
+    let saved: Promise<unknown> | undefined;
+
+    queryClient.setQueryData(GROCERY_LIST_PROVIDER, "builtin");
+    act(() => {
+      saved = result.current.setGroceryListProvider("bring");
+    });
+    const call = await sentCall("admin.updateGroceryListProvider");
+
+    expect(call.input).toBe("bring");
+    await answerCall("admin.updateGroceryListProvider", { success: true });
+
+    expect(await saved).toEqual({ success: true });
+    expect(stale(CONFIGS)).toBe(true);
+    expect(stale(GROCERY_LIST_PROVIDER)).toBe(true);
   });
 
   it("say how a language save went", async () => {

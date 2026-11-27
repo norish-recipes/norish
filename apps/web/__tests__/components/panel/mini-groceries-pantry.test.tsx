@@ -67,10 +67,17 @@ vi.mock("@norish/shared-react/config", async () => {
   const { spellingRules } = await import("@norish/shared/lib/spelling-keys");
   const units = (await import("@norish/config/units.default.json")).default;
 
-  return { useSpellingRules: () => spellingRules(units as UnitsMap) };
+  return {
+    useSpellingRules: () => spellingRules(units as UnitsMap),
+    useGroceryListProvider: () => ({ provider: "builtin", isBring: false, isLoading: false }),
+    useUnitsQuery: () => ({ units }),
+  };
 });
 // The shared hooks reach the Pantry, the list and the platform through their own modules, so the
 // seams are mocked where they are read.
+vi.mock("../../../../../packages/shared-react/src/groceries/use-send-to-bring", () => ({
+  useSendToBring: () => async () => true,
+}));
 vi.mock("../../../../../packages/shared-react/src/groceries/use-groceries-mutations", () => ({
   useGroceriesMutations: () => ({ createGroceriesFromData }),
 }));

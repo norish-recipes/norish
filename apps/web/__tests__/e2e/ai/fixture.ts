@@ -3,12 +3,14 @@ import { test as base, expect } from "@playwright/test";
 
 import type { IdentityProvider } from "../../../../../packages/auth/__tests__/helpers/identity-provider";
 import type { FakeAIProvider } from "../harness/ai-provider";
+import type { FakeBring } from "../harness/fake-bring";
 import type { SessionCookies } from "../harness/auth";
 import {
   createIdentityProvider,
   IDP_CLIENT_ID,
 } from "../../../../../packages/auth/__tests__/helpers/identity-provider";
 import { createFakeAIProvider } from "../harness/ai-provider";
+import { createFakeBring } from "../harness/fake-bring";
 import { signIn } from "../harness/auth";
 import { hydratingBrowser } from "../harness/hydration";
 import { ProductionStack } from "../harness/production-stack";
@@ -28,6 +30,7 @@ export const IDP_NAME = "Test IdP";
 
 export interface AIE2EStack {
   ai: FakeAIProvider;
+  bring: FakeBring;
   idp: IdentityProvider;
   server: ProductionStack;
   baseURL: string;
@@ -46,10 +49,11 @@ interface AIWorkerFixtures {
 
 async function cleanup(
   ai: FakeAIProvider,
+  bring: FakeBring,
   idp: IdentityProvider,
   stack: ProductionStack
 ): Promise<void> {
-  const results = await Promise.allSettled([stack.stop(), ai.stop(), idp.stop()]);
+  const results = await Promise.allSettled([stack.stop(), ai.stop(), bring.stop(), idp.stop()]);
   const failures = results
     .filter((result): result is PromiseRejectedResult => result.status === "rejected")
     .map((result) => result.reason);
@@ -64,9 +68,11 @@ export const test = base.extend<AITestFixtures, AIWorkerFixtures>({
   aiStack: [
     async ({}, use) => {
       const ai = createFakeAIProvider();
+      const bring = createFakeBring();
       const idp = createIdentityProvider();
 
       await ai.start();
+      await bring.start();
       // Better Auth reads OIDC discovery as the server boots.
       const issuer = await idp.start();
       const stack = new ProductionStack({
@@ -81,6 +87,8 @@ export const test = base.extend<AITestFixtures, AIWorkerFixtures>({
           AI_TEMPERATURE: "0",
           AI_MAX_TOKENS: "2048",
           AI_TIMEOUT_MS: "30000",
+          // Bring! is someone else's service: the fake stands in for it.
+          BRING_API_URL: bring.url,
           OIDC_NAME: IDP_NAME,
           OIDC_ISSUER: issuer,
           OIDC_CLIENT_ID: IDP_CLIENT_ID,
@@ -92,9 +100,9 @@ export const test = base.extend<AITestFixtures, AIWorkerFixtures>({
         await stack.start();
         const ownerCookies = await signIn(stack.baseURL, OWNER);
 
-        await use({ ai, idp, server: stack, baseURL: stack.baseURL, ownerCookies });
+        await use({ ai, bring, idp, server: stack, baseURL: stack.baseURL, ownerCookies });
       } finally {
-        await cleanup(ai, idp, stack);
+        await cleanup(ai, bring, idp, stack);
       }
     },
     { scope: "worker" },

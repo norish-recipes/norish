@@ -109,6 +109,21 @@
     "inYourPantry": "في المونة",
     "offlineDetails": "تُفتح تفاصيل المادة الغذائية عند عودة الاتصال."
   },
+  "bring": {
+    "addTitle": "أضف إلى Bring!",
+    "addButton": "أضف إلى Bring!",
+    "ready": "عناصرك جاهزة لـ Bring!",
+    "open": "افتح Bring!",
+    "errors": {
+      "notPublic": "لا يستطيع Bring! الوصول إلى نسخة Norish هذه. يجب أن تكون متاحة من الإنترنت عبر HTTPS.",
+      "unreachable": "لم يستجب Bring!. حاول مرة أخرى بعد قليل.",
+      "rejected": "لم يتمكن Bring! من قراءة القائمة. تأكد من أن نسخة Norish هذه متاحة من الإنترنت عبر HTTPS.",
+      "rateLimited": "تم إرسال عدد كبير جدًا من القوائم إلى Bring! – انتظر بضع دقائق.",
+      "failed": "تعذّر الإرسال إلى Bring!",
+      "pageUnreachable": "تعذّر على Bring! فتح الصفحة التي أنشأها Norish له. تأكد من أن /share/bring/ على عنوان Norish الخاص بك متاح من الإنترنت دون تسجيل دخول أو VPN أو حماية من الروبوتات.",
+      "pageStatus": "استجاب خادمك بـ HTTP {status}."
+    }
+  },
   "panel": {
     "addTitle": "إضافة إلى المشتريات",
     "editTitle": "تعديل الغرض",

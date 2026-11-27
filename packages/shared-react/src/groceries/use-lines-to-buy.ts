@@ -3,25 +3,36 @@ import { useRef, useState } from "react";
 import type { EditedIngredient, GroceryIngredient } from "@norish/shared/lib/grocery-lines";
 import type { FoodToBuy } from "@norish/shared/lib/line-foods";
 import { pantryIngredientFor } from "@norish/shared/lib/pantry";
+import { createUnitFormatter } from "@norish/shared/lib/unit-localization";
 
-import { useSpellingRules } from "../config";
+import { useGroceryListProvider, useSpellingRules, useUnitsQuery } from "../config";
 import { usePlatform } from "../platform";
 import { useGroceriesMutations } from "./use-groceries-mutations";
 import { usePantryMutations } from "./use-pantry-mutations";
 import { usePantryQuery } from "./use-pantry-query";
+import { useSendToBring } from "./use-send-to-bring";
 
 /** A recipe's food to buy at the servings picked, its amount always a number. */
 export type ScaledFood = Omit<FoodToBuy<GroceryIngredient>, "amount"> & { amount: number | null };
 
+/** Where lines go when the list is Bring!: the recipe and servings they are for, and the language their units are written in. */
+export type BringSource = { recipeId: string; servings: number; locale?: string };
+
 /**
  * A recipe's foods to buy, each line as edited here, split by whether the Pantry holds it; and
- * what puts lines on the list. `lines` come from `useRecipeFoodsToBuy`.
+ * what puts lines on the list. `lines` come from `useRecipeFoodsToBuy`. Where the instance's
+ * shopping list is Bring!, adding sends the lines there, for the recipe and servings in `source`.
  */
 export function useLinesToBuy<T extends ScaledFood>(
   lines: T[],
-  editedIngredients: Record<string, EditedIngredient>
+  editedIngredients: Record<string, EditedIngredient>,
+  source?: BringSource
 ) {
   const { toast } = usePlatform();
+  const { isBring, isLoading: isProviderLoading } = useGroceryListProvider();
+  // Bring! reads "250 g Mehl", so its units are written short, in the reader's language.
+  const { units } = useUnitsQuery({ enabled: isBring });
+  const sendToBring = useSendToBring();
   const { createGroceriesFromData } = useGroceriesMutations();
   const { addPantryIngredient } = usePantryMutations();
   // A line whose food the Pantry holds is shown apart and left off the list unless ticked; a line
@@ -61,9 +72,39 @@ export function useLinesToBuy<T extends ScaledFood>(
 
   /** Puts these lines on the list, as edited here; true once they are on it, false if not added. */
   const addLines = (picked: Array<FoodToBuy<GroceryIngredient>>) => {
-    if (addingRef.current) return Promise.resolve(false);
+    // Until the instance has said which list this is, an add could pick the wrong one.
+    if (addingRef.current || isProviderLoading) return Promise.resolve(false);
     addingRef.current = true;
     setIsAdding(true);
+
+    if (isBring) {
+      const { formatUnitOnly } = createUnitFormatter({
+        locale: source?.locale ?? "en",
+        units,
+        unitStyle: "abbreviated",
+      });
+
+      return sendToBring(
+        picked.map((ri) => {
+          const amount = editedIngredients[ri.id]?.amount ?? ri.amount;
+          const unit = editedIngredients[ri.id]?.unit ?? ri.unit ?? null;
+
+          return {
+            name: editedIngredients[ri.id]?.name ?? ri.ingredientName,
+            amount,
+            unit: unit ? formatUnitOnly(unit, amount) : null,
+          };
+        }),
+        { recipeId: source?.recipeId, servings: source?.servings }
+      ).then((sent) => {
+        if (!sent) {
+          addingRef.current = false;
+          setIsAdding(false);
+        }
+
+        return sent;
+      });
+    }
 
     return createGroceriesFromData(
       picked.map((ri) => ({
@@ -94,5 +135,5 @@ export function useLinesToBuy<T extends ScaledFood>(
       });
   };
 
-  return { pantry, keptFor, keepLine, toBuy, inPantry, addLines, isAdding };
+  return { pantry, keptFor, keepLine, toBuy, inPantry, addLines, isAdding, isProviderLoading };
 }

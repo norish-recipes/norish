@@ -20,7 +20,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     redirect(loginPath((await headers()).get(DESTINATION_HEADER)));
   }
 
-  // The shell's own reads: permissions (the AI-key prompt, the import modal) and Device Preferences.
+  // The shell's own reads: permissions (the AI-key prompt, the import modal), the grocery list
+  // provider (the navbar) and Device Preferences.
   // Not `user.get`: its API-key metadata would sit in every document the worker keeps.
   const [readerToday, queries] = await Promise.all([
     readReaderToday(),
@@ -28,7 +29,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       // What user.getDevicePreferences answers, from the preferences the gate already read.
       client.setQueryData(trpc.user.getDevicePreferences.queryKey(), deviceBlocks(preferences));
 
-      return [client.query(trpc.permissions.get.queryOptions())];
+      // The navbar's Groceries tab hangs on it, so it is right in the first frame.
+      return [
+        client.query(trpc.permissions.get.queryOptions()),
+        client.query(trpc.config.groceryListProvider.queryOptions()),
+      ];
     }),
   ]);
   const { id, email, name, image, version } = identity;

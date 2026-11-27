@@ -439,3 +439,27 @@ describe("the Decision Model block (ADR-0035)", () => {
     });
   });
 });
+
+describe("getGroceryListProvider", () => {
+  beforeEach(() => {
+    vi.resetModules();
+    mockGetConfig.mockReset();
+  });
+
+  it.each([
+    ["nothing stored", null, "builtin"],
+    ["bring stored", "bring", "bring"],
+    ["builtin stored", "builtin", "builtin"],
+    ["an unknown value stored", "anylist", "builtin"],
+    ["a wrong type stored", { provider: "bring" }, "builtin"],
+  ])("is the right provider with %s", async (_label, stored, expected) => {
+    mockGetConfig.mockImplementation((key: string) =>
+      Promise.resolve(key === ServerConfigKeys.GROCERY_LIST_PROVIDER ? stored : null)
+    );
+
+    const { getGroceryListProvider } =
+      await import("@norish/shared-server/config/server-config-loader");
+
+    await expect(getGroceryListProvider()).resolves.toBe(expected);
+  });
+});

@@ -1,5 +1,6 @@
 import { adminRouter } from "./routers/admin";
 import { archive } from "./routers/archive";
+import { bringRouter } from "./routers/bring";
 import { caldavRouter, caldavSubscriptions } from "./routers/caldav";
 import { calendarRouter } from "./routers/calendar";
 import { configRouter } from "./routers/config";
@@ -38,6 +39,7 @@ export const appRouter = router({
   pantry: pantryRouter,
   ingredients: ingredientsRouter,
   siteAuthTokens: siteAuthTokensRouter,
+  bring: bringRouter,
 });
 
 // Export type definition of API

@@ -636,6 +636,13 @@
       "defaultLocale": "Oletuskieli",
       "defaultLocaleDescription": "Uusien käyttäjien kieli ja varakieli",
       "atLeastOneLocale": "Vähintään yhden kielen on oltava käytössä",
+      "groceryListProvider": {
+        "title": "Ostoslista",
+        "description": "Minne reseptin ainekset menevät, kun joku lisää ne listaan.",
+        "builtin": "Norishin ostoslista",
+        "bring": "Bring!",
+        "bringNotice": "Kun joku lisää ainesosia, Bring!-palvelimet hakevat väliaikaisen julkisen HTTPS-sivun osoitteesta /share/bring/. Sivulla on reseptin nimi, pääkuva, annokset ja tuoterivit, ja se poistetaan tunnin kuluttua. Tämän Norish-instanssin on siksi oltava tavoitettavissa internetistä, ja /share/bring/ on oltava auki ilman kirjautumista."
+      },
       "export": {
         "title": "Reseptiarkisto",
         "description": "Lataa kaikki tämän palvelimen reseptit.",

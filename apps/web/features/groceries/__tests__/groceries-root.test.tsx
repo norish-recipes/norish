@@ -7,8 +7,12 @@ import "@testing-library/jest-dom";
 import { useGroceriesUiStore } from "@norish/shared-react/groceries";
 
 const path = vi.hoisted(() => ({ current: "/groceries" }));
+const provider = vi.hoisted(() => ({ isBring: false, replace: vi.fn() }));
 
-vi.mock("next/navigation", () => ({ usePathname: () => path.current }));
+vi.mock("next/navigation", () => ({
+  usePathname: () => path.current,
+  useRouter: () => ({ replace: provider.replace }),
+}));
 vi.mock("@/features/groceries/components/header/groceries-header", () => ({
   GroceriesHeader: ({ view }: { view: string }) => <h1>{view}</h1>,
   VIEW_TRANSITION: {},
@@ -31,11 +35,44 @@ vi.mock("@norish/shared-react/groceries", async (importOriginal) => ({
 vi.mock("@norish/shared-react/config", async (importOriginal) => ({
   ...(await importOriginal()),
   useIngredientsSubscription: () => undefined,
+  useGroceryListProvider: () => ({
+    provider: provider.isBring ? "bring" : "builtin",
+    isBring: provider.isBring,
+    isLoading: false,
+  }),
 }));
 
 describe("GroceriesRoot", () => {
   afterEach(() => {
     path.current = "/groceries";
+    provider.isBring = false;
+    provider.replace.mockClear();
+  });
+
+  it("stays on the list while it is the built-in one", () => {
+    render(<GroceriesRoot />);
+
+    expect(provider.replace).not.toHaveBeenCalled();
+  });
+
+  it("draws nothing and goes to the Library when Bring! is the shopping list", () => {
+    provider.isBring = true;
+    const view = render(<GroceriesRoot />);
+
+    expect(view.container).toBeEmptyDOMElement();
+    expect(provider.replace).toHaveBeenCalledExactlyOnceWith("/");
+  });
+
+  it("leaves when an administrator switches to Bring! while it is open", () => {
+    const view = render(<GroceriesRoot />);
+
+    expect(screen.getByText("list screen")).toBeInTheDocument();
+
+    provider.isBring = true;
+    view.rerender(<GroceriesRoot />);
+
+    expect(screen.queryByText("list screen")).toBeNull();
+    expect(provider.replace).toHaveBeenCalledExactlyOnceWith("/");
   });
 
   it("draws the view its address names under the header, and the add pill on the list only", async () => {

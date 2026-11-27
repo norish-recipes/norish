@@ -1,6 +1,6 @@
 import type { EditedIngredient } from "@norish/shared/lib/grocery-lines";
 
-import type { ScaledFood } from "./use-lines-to-buy";
+import type { BringSource, ScaledFood } from "./use-lines-to-buy";
 import { useOnTheList } from "./use-groceries-query";
 import { useLineSelection } from "./use-line-selection";
 import { useLinesToBuy } from "./use-lines-to-buy";
@@ -23,12 +23,11 @@ export type GroceryLineControls<T extends ScaledFood> = {
  */
 export function useGroceryLines<T extends ScaledFood>(
   lines: T[],
-  editedIngredients: Record<string, EditedIngredient>
+  editedIngredients: Record<string, EditedIngredient>,
+  source?: BringSource
 ) {
-  const { pantry, keptFor, keepLine, toBuy, inPantry, addLines, isAdding } = useLinesToBuy(
-    lines,
-    editedIngredients
-  );
+  const { pantry, keptFor, keepLine, toBuy, inPantry, addLines, isAdding, isProviderLoading } =
+    useLinesToBuy(lines, editedIngredients, source);
   const onTheList = useOnTheList(pantry.items);
   const { selectedCount, inPantrySelectedCount, isSelected, toggleSelect, toggleSection } =
     useLineSelection({
@@ -58,6 +57,8 @@ export function useGroceryLines<T extends ScaledFood>(
     selectedCount,
     inPantrySelectedCount,
     isAdding,
+    /** True until the instance has said which list this is; an add waits for it. */
+    isProviderLoading,
     /** Puts the ticked lines on the list; true once they are on it. */
     addTicked: () => addLines(lines.filter((line) => isSelected(line.id))),
     controls,

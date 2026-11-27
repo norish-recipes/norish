@@ -18,6 +18,7 @@ import type {
   CuisineStrategy,
   DecisionConfig,
   DecisionUse,
+  GroceryListProvider,
   I18nLocaleConfig,
   ImageGenerationConfig,
   IngredientPermissionPolicy,
@@ -45,6 +46,7 @@ import {
   DEFAULT_INGREDIENT_PERMISSION_POLICY,
   DEFAULT_RECIPE_PERMISSION_POLICY,
   DEFAULT_TAG_STRATEGY,
+  GroceryListProviderSchema,
   IngredientWordsConfigSchema,
   IngredientWordsMapSchema,
   isDecisionConfigValid,
@@ -81,6 +83,18 @@ export async function isRegistrationEnabled(): Promise<boolean> {
   const value = await getConfig<boolean>(ServerConfigKeys.REGISTRATION_ENABLED);
 
   return value ?? true;
+}
+
+/**
+ * Where the instance's shopping list lives. An unset or unreadable value is the
+ * built-in list.
+ */
+export async function getGroceryListProvider(): Promise<GroceryListProvider> {
+  const parsed = GroceryListProviderSchema.safeParse(
+    await getConfig<unknown>(ServerConfigKeys.GROCERY_LIST_PROVIDER)
+  );
+
+  return parsed.success ? parsed.data : "builtin";
 }
 
 /**

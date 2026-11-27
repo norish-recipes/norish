@@ -109,6 +109,21 @@
     "inYourPantry": "팬트리에 있음",
     "offlineDetails": "식품 상세 정보는 다시 온라인이 되면 열립니다."
   },
+  "bring": {
+    "addTitle": "Bring!에 추가",
+    "addButton": "Bring!에 추가",
+    "ready": "항목을 Bring!로 보낼 준비가 되었습니다",
+    "open": "Bring! 열기",
+    "errors": {
+      "notPublic": "Bring!가 이 Norish 인스턴스에 접근할 수 없습니다. HTTPS를 통해 인터넷에서 접근할 수 있어야 합니다.",
+      "unreachable": "Bring!가 응답하지 않았습니다. 잠시 후 다시 시도하세요.",
+      "rejected": "Bring!가 목록을 읽을 수 없었습니다. 이 Norish 인스턴스가 인터넷에서 HTTPS로 접근할 수 있는지 확인하세요.",
+      "rateLimited": "Bring!로 보낸 목록이 너무 많습니다. 몇 분 기다려 주세요.",
+      "failed": "Bring!로 보내지 못했습니다",
+      "pageUnreachable": "Bring!이 Norish가 만든 페이지를 열지 못했습니다. Norish 주소의 /share/bring/이 로그인, VPN 또는 봇 차단 없이 인터넷에서 접근 가능한지 확인하세요.",
+      "pageStatus": "서버가 HTTP {status}(으)로 응답했습니다."
+    }
+  },
   "panel": {
     "addTitle": "장보기 추가",
     "editTitle": "장보기 편집",

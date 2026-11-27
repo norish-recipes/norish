@@ -109,6 +109,21 @@
     "inYourPantry": "I ditt skafferi",
     "offlineDetails": "Du kan öppna livsmedlets detaljer när du är online igen."
   },
+  "bring": {
+    "addTitle": "Lägg till i Bring!",
+    "addButton": "Lägg till i Bring!",
+    "ready": "Dina varor är redo för Bring!",
+    "open": "Öppna Bring!",
+    "errors": {
+      "notPublic": "Bring! kan inte nå den här Norish-instansen. Den måste vara nåbar från internet via HTTPS.",
+      "unreachable": "Bring! svarade inte. Försök igen om en stund.",
+      "rejected": "Bring! kunde inte läsa listan. Kontrollera att den här Norish-instansen är nåbar från internet via HTTPS.",
+      "rateLimited": "För många listor skickade till Bring! – vänta några minuter.",
+      "failed": "Det gick inte att skicka till Bring!",
+      "pageUnreachable": "Bring! kunde inte öppna sidan som Norish skapade åt den. Kontrollera att /share/bring/ på din Norish-adress går att nå från internet utan inloggning, VPN eller botskydd.",
+      "pageStatus": "Din server svarade HTTP {status}."
+    }
+  },
   "panel": {
     "addTitle": "Lägg till vara",
     "editTitle": "Redigera vara",

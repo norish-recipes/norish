@@ -22,6 +22,7 @@ import { connectTimerStorage } from "@norish/shared-react/recipes/timers";
 import { signOut } from "@norish/shared/lib/auth/client";
 import { addBasePath } from "@norish/shared/lib/base-path";
 import { deviceKindFromUserAgent } from "@norish/shared/lib/device-kind";
+import { isOpenableExternalUrl } from "@norish/shared/lib/external-url";
 
 const SIGNED_OUT: PlatformSession = { user: null, isPending: false };
 
@@ -81,18 +82,22 @@ export function WebPlatformProvider({
 
   const adapter: PlatformAdapter = {
     toast: {
-      show: ({ severity, title, description, actionLabel, onActionPress }) => {
+      show: ({ severity, title, description, actionLabel, onActionPress, persistent }) => {
+        // A timeout of 0 keeps the toast until it is dismissed or its action is pressed.
+        const timeout = persistent ? 0 : undefined;
+
         if (actionLabel) {
           showActionToast(title, {
             description,
             variant: severity,
+            timeout,
             action: { label: actionLabel, onPress: () => onActionPress?.() },
           });
 
           return;
         }
 
-        toast(title, { description, variant: severity });
+        toast(title, { description, variant: severity, timeout });
       },
       translate: (messageId, values) => t(messageId as Parameters<typeof t>[0], values),
     },
@@ -108,6 +113,21 @@ export function WebPlatformProvider({
         context,
       }),
     storage: browserStorage,
+    // A browser opens a tab for a few seconds after a press, so a link that comes back from an
+    // async call usually still opens; one that blocks it says so with a null window. `noopener`
+    // would make every open answer null, so the tab's link back to this page is cut by hand,
+    // while the tab is still the blank one the browser creates first.
+    openExternalUrl: (url) => {
+      if (!isOpenableExternalUrl(url)) return false;
+
+      const opened = window.open(url, "_blank");
+
+      if (!opened) return false;
+      opened.opener = null;
+
+      return true;
+    },
+    supportsExternalShoppingList: true,
     deviceKind: kind,
     session,
     endSession: endWebSession,

@@ -21,7 +21,12 @@ import {
 const mockQueryKey = ["groceries", "list"];
 const mockQueryOptions = vi.fn();
 
-vi.mock("../../config", () => ({ useSpellingRules: () => BASE_SPELLING_RULES }));
+const provider = vi.hoisted(() => ({ isBring: false }));
+
+vi.mock("../../config", () => ({
+  useSpellingRules: () => BASE_SPELLING_RULES,
+  useGroceryListProvider: () => provider,
+}));
 
 vi.mock("../../trpc", () => ({
   useTRPC: () => ({
@@ -259,6 +264,27 @@ describe("the list's selects", () => {
     // Milk bought: no longer still to buy.
     await tick("g1");
     expect(result.current).toEqual([]);
+  });
+
+  it("holds nothing on the list where the list is Bring!", () => {
+    const milk = {
+      id: "p-milk",
+      userId: "u",
+      ingredientId: "i-milk",
+      name: "milk",
+      ancestorIds: [],
+      localeNames: {},
+      version: 1,
+    };
+
+    provider.isBring = true;
+    try {
+      const { result } = renderCounted(() => useOnTheList([milk]), queryClient);
+
+      expect(result.current).toEqual([]);
+    } finally {
+      provider.isBring = false;
+    }
   });
 
   it("finds a grocery's recurring row, re-rendering its reader only when that row changes", async () => {

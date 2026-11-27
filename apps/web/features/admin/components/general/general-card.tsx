@@ -11,7 +11,8 @@ import { Cog6ToothIcon } from "@heroicons/react/24/outline";
 import { ListBox, Select, Separator, toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { ServerConfigKeys } from "@norish/config/zod/server-config";
+import type { GroceryListProvider } from "@norish/config/zod/server-config";
+import { GroceryListProviderSchema, ServerConfigKeys } from "@norish/config/zod/server-config";
 import { useAdminConfig, useGeneralConfigMutations } from "@norish/shared-react/admin";
 
 import { UnsavedChangesChip } from "../unsaved-changes-chip";
@@ -21,7 +22,9 @@ export default function GeneralCard() {
   const tActions = useTranslations("common.actions");
   const registrationEnabled = useAdminConfig(ServerConfigKeys.REGISTRATION_ENABLED);
   const localeConfig = useAdminConfig(ServerConfigKeys.LOCALE_CONFIG);
-  const { setRegistration, saveLocales } = useGeneralConfigMutations();
+  const groceryListProvider = useAdminConfig(ServerConfigKeys.GROCERY_LIST_PROVIDER);
+  const { setRegistration, saveLocales, setGroceryListProvider } = useGeneralConfigMutations();
+  const [isSwitchingList, whileSwitchingList] = usePending();
 
   // Local state for locale config form
   const [enabledLocales, setEnabledLocales] = useState<string[]>([]);
@@ -42,6 +45,15 @@ export default function GeneralCard() {
       setDefaultLocale(localeConfig.defaultLocale);
     }
   }
+  const shoppingList: GroceryListProvider = groceryListProvider ?? "builtin";
+  const handleShoppingListChange = (selected: unknown) => {
+    const parsed = GroceryListProviderSchema.safeParse(selected);
+
+    // The choice saves as it is made, like the registration switch.
+    if (parsed.success && parsed.data !== shoppingList) {
+      void whileSwitchingList(() => setGroceryListProvider(parsed.data));
+    }
+  };
   const handleRegistrationToggle = async (checked: boolean) => {
     await setRegistration(checked);
   };
@@ -194,6 +206,47 @@ export default function GeneralCard() {
           {tActions("save")}
         </ActionButton>
       </ActionButtonGroup>
+
+      <Separator />
+
+      {/* Where recipe ingredients go: the built-in list or Bring! */}
+      <SettingRow
+        description={t("groceryListProvider.description")}
+        title={t("groceryListProvider.title")}
+      >
+        <Select
+          aria-label={t("groceryListProvider.title")}
+          className="w-full"
+          isDisabled={isSwitchingList}
+          value={shoppingList}
+          variant="secondary"
+          onChange={handleShoppingListChange}
+        >
+          <Select.Trigger>
+            <Select.Value />
+            <Select.Indicator />
+          </Select.Trigger>
+          <Select.Popover>
+            <ListBox>
+              {GroceryListProviderSchema.options.map((option) => (
+                <ListBox.Item
+                  key={option}
+                  id={option}
+                  textValue={t(`groceryListProvider.${option}`)}
+                >
+                  {t(`groceryListProvider.${option}`)}
+                  <ListBox.ItemIndicator />
+                </ListBox.Item>
+              ))}
+            </ListBox>
+          </Select.Popover>
+        </Select>
+      </SettingRow>
+      {shoppingList === "bring" ? (
+        <p className="text-muted -mt-3 text-sm" role="note">
+          {t("groceryListProvider.bringNotice")}
+        </p>
+      ) : null}
 
       <Separator />
 

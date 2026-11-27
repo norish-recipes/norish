@@ -85,8 +85,9 @@ describe("the layouts' seeds", () => {
     seed.reads = undefined;
   });
 
-  it("the app's carries only permissions and Device Preferences, which the shell draws", async () => {
+  it("the app's carries only permissions, the grocery list provider and Device Preferences, which the shell draws", async () => {
     expect(await seededBy(AppLayout({ children: null }))).toEqual([
+      "config.groceryListProvider",
       "permissions.get",
       "user.getDevicePreferences",
     ]);

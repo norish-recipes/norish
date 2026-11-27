@@ -177,6 +177,12 @@ const REQUIRED_CONFIGS: ConfigDefinition[] = [
     sensitive: false,
     description: "Timer detection keywords for multilingual support",
   },
+  {
+    key: ServerConfigKeys.GROCERY_LIST_PROVIDER,
+    getDefaultValue: () => "builtin",
+    sensitive: false,
+    description: "Shopping list provider (default: built-in grocery list)",
+  },
 ];
 
 /**

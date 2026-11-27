@@ -8,6 +8,9 @@ description: Grocery lists, stores, aisles, prices and pantry ingredients.
 
 In **Groceries**, use **View mode** to group the list **By Store** or **By Recipe**.
 
+An administrator can send your ingredients to Bring! instead. See
+[Shop with Bring!](/groceries/bring).
+
 ## Add ingredients for planned meals {#add-ingredients-to-groceries}
 
 Planning a recipe opens the groceries panel by default. It lists foods from

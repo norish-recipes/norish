@@ -109,6 +109,21 @@
     "inYourPantry": "I spiskammeret ditt",
     "offlineDetails": "Detaljene for en matvare åpnes når du er tilkoblet igjen."
   },
+  "bring": {
+    "addTitle": "Legg til i Bring!",
+    "addButton": "Legg til i Bring!",
+    "ready": "Varene dine er klare for Bring!",
+    "open": "Åpne Bring!",
+    "errors": {
+      "notPublic": "Bring! kan ikke nå denne Norish-instansen. Den må kunne nås fra internett via HTTPS.",
+      "unreachable": "Bring! svarte ikke. Prøv igjen om litt.",
+      "rejected": "Bring! kunne ikke lese listen. Sjekk at denne Norish-instansen kan nås fra internett over HTTPS.",
+      "rateLimited": "For mange lister sendt til Bring! – vent noen minutter.",
+      "failed": "Kunne ikke sende til Bring!",
+      "pageUnreachable": "Bring! kunne ikke åpne siden Norish laget for den. Sørg for at /share/bring/ på Norish-adressen din kan nås fra internett uten innlogging, VPN eller botbeskyttelse.",
+      "pageStatus": "Serveren din svarte HTTP {status}."
+    }
+  },
   "panel": {
     "addTitle": "Legg til handlevare",
     "editTitle": "Rediger handlevare",
