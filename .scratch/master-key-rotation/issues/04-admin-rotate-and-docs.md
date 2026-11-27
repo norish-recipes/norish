@@ -4,13 +4,13 @@
 
 **Blocked by:** 03
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [ ] **tRPC:** an admin procedure beside `restartServer` (`packages/trpc/src/routers/admin/system.ts`) that writes a new `current`, moves the old key to `previous`, then restarts. Refused in env mode and on a Demo Instance.
 - [x] **Web:** an action on the System card (`apps/web/features/admin/components/system/system-card.tsx`) with a confirmation saying every session ends. In env mode the card shows the `MASTER_KEY` + `MASTER_KEY_PREVIOUS` instruction instead. Strings in `packages/i18n`.
 - [x] **Mobile:** a session ended by rotation lands on sign-in without an error state.
 - [x] **E2E:** rotate in file mode, sign in again, a saved site auth token and a share link still work.
-- [ ] **Docs:** `MASTER_KEY` optional in `.env.example`, `docker/docker-compose.example.yml`, the landing compose and `apps/docs/docs/configuration/server-runtime.md` (rotation, `MASTER_KEY_PREVIOUS`, key file path, back up database and volume together, one process per database); upgrade notes and `apps/docs/docs/release-notes/0.28.0-beta.md`.
+- [x] **Docs:** `MASTER_KEY` optional in `.env.example`, `docker/docker-compose.example.yml`, the landing compose and `apps/docs/docs/configuration/server-runtime.md` (rotation, `MASTER_KEY_PREVIOUS`, key file path, back up database and volume together, one process per database); upgrade notes and `apps/docs/docs/release-notes/0.28.0-beta.md`.
 
 ## Comments
 
@@ -71,3 +71,32 @@ Re-review of the code round (Opus), no high findings:
 - **fix** 2: a first boot retried after a failed flush or a crash claims the fingerprint without redoing the flushes.
 - **fix** 3: the env-pair test's "ends the session" passes on the changed secret alone; it compares Valkey's keys.
 - **fix** 4-5: a short header value masks every match in yt-dlp's error; the base64 refusal reads wrongly for a URL-safe or 23-byte key.
+
+### Merge with rc/0.28.0-beta
+
+The branch was cut from `23e44f670`; rc had since fixed the two stale E2E specs (`846fd6a45`, `75630f1f3`), so rc was merged in (`6ebad6dc5`, rc at `e39dde5da`) instead of fixing them twice. Four conflicts; fixes after the merge: `c54a1ed69`, `1846d6f02` (rc's admin share list used `safeDecrypt`), `0829f2477`, `9ae14c9be` (rc's `shareReactivateAdmin` skipped the kept-link rule; one `reactivateShare` now serves both procedures). Gates 0 on `9ae14c9be`.
+
+Review of the seam (Sol), three findings:
+- **verify** 1: one unreadable owner name throws out the whole admin share list. Read owner names by the rule the admin users list uses for `users.name`; if that list throws too, this is the spec's `decrypt` trade-off (see Sol 4 above) and stays.
+- **fix (bug)** 2: a failed fingerprint claim on first adoption reaches `log.fatal` with Drizzle's bound parameters, the fingerprint among them. Give it the sanitised error the re-key has.
+- **fix** 3: the Revoke text (admin and mobile Settings) promises "until it is reactivated" for a link made before 0.28, which can only be deleted after a revoke. Say so for a share with no kept link.
+
+Fix round (`bc3fa07a9`, `a6fbb6c2c`): 2 and 3 fixed. 1 needed no change: `listUsersForAdmin` maps every row through the same throwing `decrypt`, so the share inventory already follows the users list's rule.
+
+### Added by Mike: sign the realtime resume cursor
+
+Found while answering CodeQL alert 29 on PR #774 (SHA-1 over `userId|householdId|viewEpoch` in `realtime/resume.ts`; no sensitive data, a false positive). The cursor is unsigned: a client can keep its current identity hash and write its own stream ids (`0-0`), and replay up to 1000 events / 24 h on its current channels from before a membership or policy change. Mike asked for the fix on this branch.
+- **fix (bug)**: the cursor's tag becomes an HMAC-SHA256 under the Master Key's HMAC key over the identity and the stream ids, with its own label; compared in constant time; cursor version 2. A rotation refuses every older cursor once, which ends Lagged and refetches.
+- Fixed in `24fe5eb54`. Accepted deviation: the tag also covers the subscription's channels, or a `0-0` cursor minted for an empty channel would open another subscription's buffer. No client parses a cursor. ADR-0034 and the glossary go to Terra.
+- Docs: ADR-0034 describes the signed cursor (`febdb3a71`); the glossary and ADR index still read true.
+
+Review of `24fe5eb54` (Sol), four findings:
+- **fix** 2: "refused before Valkey is touched" is wrong, the epoch read and the live listeners come first by design; the comment and the test helper now say "before the buffer is read" (`b12a7ba05`).
+- **fix** 4: no test depended on the key; a cursor minted under another Master Key is refused (`016e35fde`).
+- **reject** 1 (a replay already running outlives a policy change) and 3 (a just-minted cursor can expire early; an authentic `0-0` cursor replays the whole buffer within its view): both predate the signing, cross no view the signature guards, and belong to the household-boundary realtime work. Listed for Mike.
+
+### Final results
+
+On `b12a7ba05`: lint, typecheck, test:run, i18n:check, build, format:check, deps:cycles and the docs build all exit 0. E2E (`CI=1 TZ=UTC`): shards 1-4 pass 80, 75, 79, 75; the base-path shard 10; nothing failed, flaked or was skipped. The rotation spec passes 3 of 3 separate runs, the realtime project 60 of 60 with `--repeat-each 3`. The two stale specs and the three picker timeouts of the earlier run came from the old base and pass since the merge.
+
+Not run: mobile on a device; an upgrade from a real previous-release database (done once by hand on a prod copy before the merge). The tRPC box stays unticked for its Demo Instance clause only.
