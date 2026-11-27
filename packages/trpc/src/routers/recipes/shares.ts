@@ -124,6 +124,18 @@ async function writeShare(
   return { ...result.value, stale: false };
 }
 
+/** A reactivation of a share; one whose link was not kept can only be deleted. */
+function reactivateShare(share: ShareRow, version: number) {
+  if (!hasKeptLink(share)) {
+    throw new TRPCError({
+      code: "PRECONDITION_FAILED",
+      message: "A share whose link was not kept can only be deleted",
+    });
+  }
+
+  return writeShare(share, () => reactivateRecipeShare(share.id, version), "reactivated");
+}
+
 /** A delete of a share, announced unless it was stale. */
 async function deleteShare(share: ShareRow, version: number) {
   const result = await deleteRecipeShare(share.id, version);
@@ -202,14 +214,7 @@ const reactivate = authedProcedure
 
     await assertRecipeAccess(ctx, share.recipeId, "edit");
 
-    if (!hasKeptLink(share)) {
-      throw new TRPCError({
-        code: "PRECONDITION_FAILED",
-        message: "A share whose link was not kept can only be deleted",
-      });
-    }
-
-    return writeShare(share, () => reactivateRecipeShare(input.id, input.version), "reactivated");
+    return reactivateShare(share, input.version);
   });
 
 // Who made a share and may still edit its recipe may read its link; anyone else gets NOT_FOUND.
@@ -253,9 +258,7 @@ const reactivateAdmin = adminProcedure
   .input(ReactivateRecipeShareInputSchema)
   .output(RecipeShareMutationResultSchema)
   .mutation(async ({ input }) => {
-    const share = await getShareOrThrow(input.id);
-
-    return writeShare(share, () => reactivateRecipeShare(input.id, input.version), "reactivated");
+    return reactivateShare(await getShareOrThrow(input.id), input.version);
   });
 
 const removeAdmin = adminProcedure

@@ -364,7 +364,7 @@ describe("recipe share procedures", () => {
       userId: "other-user",
       recipeId,
       tokenHash: "hashed",
-      tokenEnc: null,
+      tokenEnc: "encrypted",
       expiresAt: null,
       revokedAt: null,
       lastAccessedAt: null,
@@ -379,7 +379,7 @@ describe("recipe share procedures", () => {
         version,
         revokedAt,
         status: revokedAt ? "revoked" : "active",
-        hasLink: false,
+        hasLink: true,
       },
     });
 
@@ -413,7 +413,7 @@ describe("recipe share procedures", () => {
         listed.map((row) => ({
           ...row,
           status: "active",
-          hasLink: false,
+          hasLink: true,
           ownerName: "Other",
           makerMayView: false,
         }))
@@ -732,6 +732,18 @@ describe("recipe share procedures", () => {
       getRecipeShareByIdMock.mockResolvedValue({ ...revokedShare, tokenEnc: null });
 
       await expect(caller.shareReactivate({ id: shareId, version: 2 })).rejects.toMatchObject({
+        code: "PRECONDITION_FAILED",
+      });
+      expect(reactivateRecipeShareMock).not.toHaveBeenCalled();
+    });
+
+    it("is refused to a server admin too for a share whose link was not kept", async () => {
+      isUserServerAdminMock.mockResolvedValue(true);
+      const admin = recipeSharesProcedures.createCaller(authedCtx as never);
+
+      getRecipeShareByIdMock.mockResolvedValue({ ...revokedShare, tokenEnc: null });
+
+      await expect(admin.shareReactivateAdmin({ id: shareId, version: 2 })).rejects.toMatchObject({
         code: "PRECONDITION_FAILED",
       });
       expect(reactivateRecipeShareMock).not.toHaveBeenCalled();
