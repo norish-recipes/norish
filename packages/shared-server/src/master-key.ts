@@ -338,7 +338,11 @@ async function adoptKey(source: KeySource): Promise<[KeySource, string | null]> 
     await flushFolder(SERVER_CONFIG.UPLOADS_DIR, true);
   }
   // Another first boot may have stored its fingerprint since this one looked; that one stands.
-  const stored = await claimMasterKeyFingerprint(masterKeyFingerprint(key.bytes));
+  const stored = await claimMasterKeyFingerprint(masterKeyFingerprint(key.bytes)).catch(
+    (error: unknown) => {
+      throw failed("Claiming the Master Key fingerprint", error);
+    }
+  );
 
   log.info({ source: key.label }, "Master Key adopted");
 
@@ -357,7 +361,7 @@ const SAFE_FIELDS = ["code", "table", "column", "constraint"] as const;
 
 /**
  * `error` as boot may log it: what failed, with the driver's safe fields only. A message can quote
- * a value, and parameters and arguments hold session tokens, new ciphertext and row ids.
+ * a value, and parameters and arguments hold tokens, fingerprints, ciphertext and row ids.
  */
 function failed(what: string, error: unknown): Error {
   // Drizzle wraps the driver's error in one whose message carries the statement's parameters.

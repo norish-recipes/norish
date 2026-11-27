@@ -30,6 +30,7 @@ const database = vi.hoisted(() => ({
   fingerprint: null as string | null,
   encrypted: [] as string[],
   meanwhile: async () => {},
+  claimFailure: null as Error | null,
 }));
 // Every fingerprint boot stored, and every key it opened, in order.
 const fingerprintWrites = vi.hoisted(() => [] as string[]);
@@ -61,6 +62,7 @@ vi.mock("@norish/config/env-config-server", async (importOriginal) => ({
 vi.mock("@norish/db/repositories/master-key", () => ({
   // A claim fills a missing fingerprint and keeps one already there.
   claimMasterKeyFingerprint: async (fingerprint: string) => {
+    if (database.claimFailure) throw database.claimFailure;
     fingerprintWrites.push(fingerprint);
     database.fingerprint ??= fingerprint;
 
@@ -164,6 +166,18 @@ function failSyncOf(code: string, ...targets: string[]) {
 
 const warnings = () => logged.filter(([level]) => level === "warn");
 
+/** What boot writes for `error`: `log.fatal({ err })`, through pino as the server logs. */
+function bootLogFor(error: unknown): string {
+  const lines: string[] = [];
+
+  pino({}, { write: (line: string) => void lines.push(line) }).fatal(
+    { err: error },
+    "Server startup failed"
+  );
+
+  return lines.join("");
+}
+
 /** A key's text as a generated one is written: base64 of 32 random bytes. */
 const newKey = () => randomBytes(32).toString("base64");
 const bytesOf = (text: string | undefined) => text && Buffer.from(text, "base64");
@@ -178,6 +192,7 @@ beforeEach(() => {
   database.fingerprint = null;
   database.encrypted = [];
   database.meanwhile = async () => {};
+  database.claimFailure = null;
   fingerprintWrites.length = 0;
   openedKeys.length = 0;
   logged.length = 0;
@@ -445,6 +460,23 @@ describe("which key boot opens", () => {
       await expect(boot).rejects.toThrow(RESTORE);
       expect(fingerprintWrites).toEqual([]);
       expect(opened).toThrow("used before boot resolved it");
+    });
+
+    it("refuses with Postgres's code when the claim fails, never the fingerprint it stores", async () => {
+      config.MASTER_KEY = textA;
+      const fingerprint = masterKeyFingerprint(keyA);
+
+      database.claimFailure = new DrizzleQueryError(
+        'insert into "server_config" ("key", "value") values ($1, $2)',
+        ["master_key_fingerprint", fingerprint],
+        Object.assign(new Error(`could not write ${fingerprint}`), { code: "57P01" })
+      );
+      const error = await resolveMasterKey().catch((caught: unknown) => caught);
+
+      expect(error).toMatchObject({
+        message: "Claiming the Master Key fingerprint failed (code 57P01)",
+      });
+      expect(bootLogFor(error)).not.toContain(fingerprint);
     });
 
     it("claims MASTER_KEY_PREVIOUS when only it opens the data, then re-keys to MASTER_KEY", async () => {
@@ -907,18 +939,6 @@ describe("which key boot opens", () => {
 
       describe("and a step failing", () => {
         const SECRET = "a-session-token-or-new-ciphertext";
-
-        /** What boot writes for `error`: `log.fatal({ err })`, through pino as the server logs. */
-        function bootLogFor(error: unknown): string {
-          const lines: string[] = [];
-
-          pino({}, { write: (line: string) => void lines.push(line) }).fatal(
-            { err: error },
-            "Server startup failed"
-          );
-
-          return lines.join("");
-        }
 
         beforeEach(() => {
           config.MASTER_KEY = keyB.toString("base64");
