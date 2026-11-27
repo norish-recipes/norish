@@ -26,7 +26,6 @@ const getRecipeShareUrlMock = vi.hoisted(() => vi.fn());
 const getUnitsMock = vi.hoisted(() => vi.fn());
 const isTimersEnabledMock = vi.hoisted(() => vi.fn());
 const revokeRecipeShareMock = vi.hoisted(() => vi.fn());
-const reactivateRecipeShareMock = vi.hoisted(() => vi.fn());
 const updateRecipeShareMock = vi.hoisted(() => vi.fn());
 const getCachedHouseholdForUserMock = vi.hoisted(() => vi.fn());
 const isUserServerAdminMock = vi.hoisted(() => vi.fn());
@@ -59,7 +58,6 @@ vi.mock("@norish/db/repositories/recipe-shares", async () => ({
   getRecipeShareInventoryForAdmin: getRecipeShareInventoryForAdminMock,
   reactivateRecipeShare: reactivateRecipeShareMock,
   revokeRecipeShare: revokeRecipeShareMock,
-  reactivateRecipeShare: reactivateRecipeShareMock,
   updateRecipeShare: updateRecipeShareMock,
 }));
 
