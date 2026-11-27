@@ -7,6 +7,7 @@ import { createClientLogger } from "@norish/shared/lib/logger";
 import type { LeaveReason, PlatformAdapter } from "../platform";
 import { useConnectivity } from "../offline/react/connectivity";
 import { usePlatform } from "../platform";
+import { isAccountDeletedWebSocketClose } from "../trpc/trpc-links";
 
 const log = createClientLogger("auth");
 
@@ -18,7 +19,8 @@ let inFlight = false;
 let sequenceLeft = false;
 // A 401 during a sequence that then stays signed in (a failed sign-out or delete) expires it after.
 let expiryAsked = false;
-let mountedExpiry: (() => Promise<void>) | null = null;
+let deletionHeard = false;
+let mountedExpiry: ((accountDeleted: boolean) => Promise<void>) | null = null;
 
 /** Runs one sequence that ends the session (Sign-out, Account deletion, Session Expiry) behind the guard. */
 export async function runSessionEnd(sequence: () => Promise<void>): Promise<void> {
@@ -26,6 +28,7 @@ export async function runSessionEnd(sequence: () => Promise<void>): Promise<void
   inFlight = true;
   sequenceLeft = false;
   expiryAsked = false;
+  deletionHeard = false;
 
   try {
     await sequence();
@@ -34,9 +37,11 @@ export async function runSessionEnd(sequence: () => Promise<void>): Promise<void
   }
 
   const expire = expiryAsked && !sequenceLeft;
+  const deleted = deletionHeard;
 
   expiryAsked = false;
-  if (expire) await expireSession();
+  deletionHeard = false;
+  if (expire) await (mountedExpiry?.(deleted) ?? Promise.resolve());
 }
 
 async function clearAndLeave(
@@ -99,8 +104,12 @@ export function useSessionExpiry(): void {
   const platform = usePlatform();
 
   useEffect(() => {
-    // A 401 may be a passing server error, so only the device's session goes.
-    const expire = () => runSessionEnd(() => dropAndLeave(platform, false, "expiry"));
+    // A 401 may be a passing server error, so only the device's session goes; a deletion's
+    // close clears the device as the deleting one does, Outbox included.
+    const expire = (accountDeleted: boolean) =>
+      runSessionEnd(() =>
+        dropAndLeave(platform, accountDeleted, accountDeleted ? "sign-out" : "expiry")
+      );
 
     mountedExpiry = expire;
 
@@ -110,9 +119,14 @@ export function useSessionExpiry(): void {
   }, [platform]);
 }
 
-/** The apps' 401 and 4401 callback: runs the mounted Session Expiry, or nothing off the signed-in shell. */
-export function expireSession(): Promise<void> {
-  if (inFlight) expiryAsked = true;
+/** The apps' 401, 4401 and 4410 callback: runs the mounted Session Expiry, or nothing off the signed-in shell. */
+export function expireSession(cause?: unknown): Promise<void> {
+  const accountDeleted = isAccountDeletedWebSocketClose(cause);
 
-  return mountedExpiry?.() ?? Promise.resolve();
+  if (inFlight) {
+    expiryAsked = true;
+    deletionHeard ||= accountDeleted;
+  }
+
+  return mountedExpiry?.(accountDeleted) ?? Promise.resolve();
 }

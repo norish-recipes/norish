@@ -18,7 +18,7 @@ import { getBullConnectionOptions } from "../../src/valkey/bullmq";
 
 const policy = vi.hoisted(() => ({ view: "everyone" as PermissionLevel }));
 const db = vi.hoisted(() => ({
-  recipeExistsByUrlForPolicy: vi.fn(async () => ({ exists: false as boolean })),
+  findRecipeIdByUrlForAccount: vi.fn(async (): Promise<string | null> => null),
 }));
 
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
@@ -55,8 +55,7 @@ function importData(overrides: Partial<RecipeImportJobData> = {}): RecipeImportJ
     url: "https://example.com/recipe",
     recipeId: "recipe-1",
     userId: "user-1",
-    householdKey: "household-1",
-    householdUserIds: ["user-1"],
+    householdId: "household-1",
     ...overrides,
   };
 }
@@ -87,10 +86,7 @@ it("imports the URL again once the first import has finished, though its job is 
 });
 
 it("answers with the recipe a URL already imported, and queues nothing", async () => {
-  db.recipeExistsByUrlForPolicy.mockResolvedValueOnce({
-    exists: true,
-    existingRecipeId: "kept",
-  } as never);
+  db.findRecipeIdByUrlForAccount.mockResolvedValueOnce("kept");
 
   await expect(addImportJob(queue, importData())).resolves.toEqual({
     status: "exists",
@@ -104,7 +100,7 @@ describe("the view policy scopes what counts as the same import", () => {
     await addImportJob(queue, importData());
     const other = await addImportJob(
       queue,
-      importData({ recipeId: "recipe-2", userId: "user-2", householdKey: "household-2" })
+      importData({ recipeId: "recipe-2", userId: "user-2", householdId: "household-2" })
     );
 
     expect(other.status).toBe("duplicate");
@@ -120,24 +116,10 @@ describe("the view policy scopes what counts as the same import", () => {
     );
     const otherHousehold = await addImportJob(
       queue,
-      importData({ recipeId: "recipe-3", userId: "user-3", householdKey: "household-3" })
+      importData({ recipeId: "recipe-3", userId: "user-3", householdId: "household-3" })
     );
 
     expect(sameHousehold.status).toBe("duplicate");
     expect(otherHousehold.status).toBe("queued");
-  });
-
-  it("owner: one per user", async () => {
-    policy.view = "owner";
-
-    await addImportJob(queue, importData());
-    const sameUser = await addImportJob(queue, importData({ recipeId: "recipe-2" }));
-    const otherUser = await addImportJob(
-      queue,
-      importData({ recipeId: "recipe-3", userId: "user-2" })
-    );
-
-    expect(sameUser.status).toBe("duplicate");
-    expect(otherUser.status).toBe("queued");
   });
 });

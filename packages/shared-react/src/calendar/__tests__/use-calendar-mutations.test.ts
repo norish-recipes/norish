@@ -239,7 +239,7 @@ describe("useCalendarMutations", () => {
       expect(planned().map((item) => item.id)).toEqual(["lunch-1", id]);
     });
 
-    it("counts only its owner's plans in the slot, as the server does", () => {
+    it("lands after every member's plans in the slot, as the server orders the household's", () => {
       queryClient.setQueryData(getQueryKey(), [
         createMockItem({ id: "h-1", userId: "housemate", slot: "Dinner", sortOrder: 0 }),
         createMockItem({ id: "h-2", userId: "housemate", slot: "Dinner", sortOrder: 1 }),
@@ -250,10 +250,10 @@ describe("useCalendarMutations", () => {
 
       act(() => result.current.planNote("2025-01-15", "Dinner", "Leftovers"));
 
-      expect(planned().find((item) => item.userId === "user-1")).toMatchObject({ sortOrder: 0 });
+      expect(planned().find((item) => item.userId === "user-1")).toMatchObject({ sortOrder: 3 });
     });
 
-    it("moves with no index last among its owner's plans", () => {
+    it("moves with no index last among the household's plans", () => {
       queryClient.setQueryData(getQueryKey(), [
         createMockItem({ id: "mine", slot: "Lunch", sortOrder: 0 }),
         createMockItem({ id: "h-1", userId: "housemate", slot: "Dinner", sortOrder: 0 }),
@@ -266,7 +266,7 @@ describe("useCalendarMutations", () => {
 
       expect(planned().find((item) => item.id === "mine")).toMatchObject({
         slot: "Dinner",
-        sortOrder: 0,
+        sortOrder: 2,
       });
     });
 

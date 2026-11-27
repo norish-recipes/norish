@@ -20,7 +20,7 @@ vi.mock("@norish/db/drizzle", () => ({
 describe("user preferences repository", () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    mockReturning.mockResolvedValue([{ id: "user-1" }]);
+    mockReturning.mockResolvedValue([{ version: 2 }]);
   });
 
   it("returns empty object when preferences row missing", async () => {
@@ -36,7 +36,7 @@ describe("user preferences repository", () => {
     await expect(updateUserPreferences("user-1", { locale: "en" })).resolves.toEqual({
       applied: true,
       stale: false,
-      value: undefined,
+      value: 2,
     });
 
     expect(mockUpdate).toHaveBeenCalled();

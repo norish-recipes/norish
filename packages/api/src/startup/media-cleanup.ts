@@ -4,6 +4,7 @@ import type { Dirent } from "node:fs";
 
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { getAllUserAvatars } from "@norish/db/repositories";
+import { listCookbookCovers } from "@norish/db/repositories/cookbooks";
 import { listAllRecipeMediaReferences } from "@norish/db/repositories/recipes";
 import { listAllStepImageUrls } from "@norish/db/repositories/steps";
 import { schedulerLogger } from "@norish/shared-server/logger";
@@ -11,6 +12,10 @@ import { isAvatarFilenameForUser } from "@norish/shared/lib/helpers";
 
 function getRecipesDiskDir() {
   return path.join(SERVER_CONFIG.UPLOADS_DIR, "recipes");
+}
+
+function getCookbooksDiskDir() {
+  return path.join(SERVER_CONFIG.UPLOADS_DIR, "cookbooks");
 }
 
 function getAvatarsDiskDir() {
@@ -90,12 +95,62 @@ function registerStepImageReference(
   getReferenceSet(references, recipeId).add(filename);
 }
 
+/** Deletes cookbook folders of no cookbook, and the files in a cookbook's folder its cover is not. */
+async function cleanupOrphanedCookbookImages(): Promise<{ deleted: number; errors: number }> {
+  let deleted = 0;
+  let errors = 0;
+  const dirs = await fs
+    .readdir(getCookbooksDiskDir(), { withFileTypes: true })
+    .then((entries) => entries.filter((entry) => entry.isDirectory()))
+    .catch(() => [] as Dirent[]);
+
+  if (dirs.length === 0) return { deleted, errors };
+
+  const covers = new Map(
+    (await listCookbookCovers()).map((row) => [row.id, row.image && path.basename(row.image)])
+  );
+
+  for (const dir of dirs) {
+    const cookbookDir = path.join(getCookbooksDiskDir(), dir.name);
+
+    try {
+      if (!covers.has(dir.name)) {
+        await fs.rm(cookbookDir, { recursive: true, force: true });
+        deleted++;
+        continue;
+      }
+      for (const file of await fs.readdir(cookbookDir)) {
+        if (file === covers.get(dir.name)) continue;
+        await fs.rm(path.join(cookbookDir, file), { recursive: true, force: true });
+        deleted++;
+      }
+    } catch (err) {
+      errors++;
+      schedulerLogger.error({ err, cookbookId: dir.name }, "Error cleaning up cookbook images");
+    }
+  }
+
+  schedulerLogger.info({ deleted, errors }, "Cookbook media cleanup complete");
+
+  return { deleted, errors };
+}
+
 /**
- * Clean up orphaned recipe media in uploads/recipes.
+ * Clean up orphaned recipe media in uploads/recipes, then cookbook covers in uploads/cookbooks.
  * - Deletes top-level recipe folders whose name is not present in recipes.id
  * - Deletes unreferenced root files in uploads/recipes/{recipeId}/
  */
 export async function cleanupOrphanedImages(): Promise<{ deleted: number; errors: number }> {
+  const recipeResult = await cleanupOrphanedRecipeImages();
+  const cookbookResult = await cleanupOrphanedCookbookImages();
+
+  return {
+    deleted: recipeResult.deleted + cookbookResult.deleted,
+    errors: recipeResult.errors + cookbookResult.errors,
+  };
+}
+
+async function cleanupOrphanedRecipeImages(): Promise<{ deleted: number; errors: number }> {
   let deleted = 0;
   let errors = 0;
 

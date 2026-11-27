@@ -7,7 +7,6 @@ import type {
   DecisionConfig,
   I18nLocaleConfig,
   ImageGenerationConfig,
-  IngredientPermissionPolicy,
   IngredientWordsConfig,
   JobRetentionConfig,
   PromptsConfig,
@@ -40,7 +39,6 @@ export type AdminConfigs = {
   [ServerConfigKeys.SCHEDULER_CLEANUP_MONTHS]: number;
   [ServerConfigKeys.JOB_RETENTION]: JobRetentionConfig;
   [ServerConfigKeys.RECIPE_PERMISSION_POLICY]: RecipePermissionPolicy;
-  [ServerConfigKeys.INGREDIENT_PERMISSION_POLICY]: IngredientPermissionPolicy;
 };
 
 export type AdminConfigKey = keyof AdminConfigs;

@@ -292,7 +292,7 @@ test("gap-filling leaves a hand-attached chip untouched while bare steps are fil
 
   // An editor attached paprika to the aggregate step by hand — the active
   // system's step, exactly as the editor's chips row would.
-  await supplyStepIngredient("Hand Linked Stew", {
+  await supplyStepIngredient(stack, "Hand Linked Stew", {
     systemUsed: "metric",
     stepOrder: 1,
     ingredientOrder: 2,

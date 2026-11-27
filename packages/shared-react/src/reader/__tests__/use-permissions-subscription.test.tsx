@@ -33,7 +33,7 @@ vi.mock("../../trpc", () => ({ useTRPC: () => proxy.current }));
 let queryClient: QueryClient;
 let trpc: ReturnType<typeof createTRPCOptionsProxy<AppRouter>>;
 
-/** The lists as the screens cache them: infinite queries, one per set of filters. */
+/** Every read the policy decides, the paged lists as the screens cache them: infinite queries. */
 function listKeys() {
   return [
     trpc.recipes.list.infiniteQueryOptions({}).queryKey,
@@ -41,6 +41,14 @@ function listKeys() {
     trpc.cookbooks.recipes.infiniteQueryOptions({ cookbookId: "c1" }).queryKey,
     // Search's Categories and Tags are built from the recipes the reader may see.
     trpc.library.discover.queryKey(),
+    trpc.recipes.get.queryKey({ id: "r1" }),
+    trpc.cookbooks.get.queryKey({ id: "c1" }),
+    trpc.cookbooks.memberIds.queryKey({ cookbookId: "c1" }),
+    trpc.favorites.list.queryKey(),
+    trpc.ratings.getAverage.queryKey({ recipeId: "r1" }),
+    trpc.calendar.listItems.queryKey({ startISO: "2026-01-01", endISO: "2026-01-07" }),
+    trpc.groceries.list.queryKey(),
+    trpc.config.tags.queryKey(),
   ];
 }
 
@@ -77,18 +85,18 @@ afterEach(() => {
 });
 
 describe("usePermissionsSubscription", () => {
-  it("rereads every paged recipe list and the discover read on a policy change", () => {
+  it("rereads every read the policy decides on a policy change", () => {
     act(() => subscription().onData(trackedEvent({})));
 
-    expect(rereads()).toEqual([true, true, true, true]);
+    expect(rereads()).toEqual(listKeys().map(() => true));
   });
 
-  it("rereads every paged recipe list and the discover read once live", () => {
+  it("rereads every read the policy decides once live", () => {
     vi.useFakeTimers();
     subscription().subscribe({});
     act(() => subscription().onData(trackedCursorMark()));
     act(() => vi.runOnlyPendingTimers());
 
-    expect(rereads()).toEqual([true, true, true, true]);
+    expect(rereads()).toEqual(listKeys().map(() => true));
   });
 });

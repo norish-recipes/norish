@@ -5,17 +5,14 @@
  * which answers afterwards. The Decision is mocked at `decide` and the language model at the
  * runtime's `generateStructured`; the configuration says whether either may be asked.
  */
-import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createRecipeWithRefs, getRecipeFull } from "@norish/db";
-import { withTransaction } from "@norish/db/drizzle";
 import { listAIChanges } from "@norish/db/repositories/ingredient-ai-changes";
 import { findIngredientByAliasId } from "@norish/db/repositories/ingredient-aliases";
 import { deleteCatalogueIngredient } from "@norish/db/repositories/ingredient-catalogue";
 import { listJunkFolds } from "@norish/db/repositories/ingredient-junk-pile";
 import { findIngredientAncestors } from "@norish/db/repositories/ingredient-relocation";
-import { ingredients } from "@norish/db/schema";
 import { decide, generateStructured } from "@norish/shared-server/ai/runtime/runtime";
 import {
   isAIEnabled,
@@ -31,7 +28,12 @@ import {
 import { resolveIngredients } from "@norish/shared-server/ingredients/resolver";
 import { askAIAbout } from "@norish/shared-server/ingredients/review";
 
-import { getTestDb } from "../../../db/__tests__/helpers/db-test-helpers";
+import {
+  inRepositoryTransaction,
+  readTestIngredient,
+  readTestIngredientNamed,
+  testHouseholdOf,
+} from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 import { foodReading, noFoodReading } from "../helpers/ingredient-readings";
 
@@ -80,7 +82,10 @@ describe("ingredient resolver with AI on", () => {
   });
 
   async function resolveOne(text: string) {
-    const [resolved] = await resolveIngredients([text], { userId });
+    const [resolved] = await resolveIngredients([text], {
+      userId,
+      householdId: testHouseholdOf(userId),
+    });
 
     return resolved!;
   }
@@ -103,7 +108,7 @@ describe("ingredient resolver with AI on", () => {
             order,
           })),
         },
-        { userId }
+        { userId, householdId: testHouseholdOf(userId) }
       )
     );
 
@@ -131,9 +136,11 @@ describe("ingredient resolver with AI on", () => {
       ]);
       // Both minted whole and unflagged, handed to the pass.
       for (const line of lines.slice(1)) {
-        await expect(
-          getTestDb().select().from(ingredients).where(eq(ingredients.id, line.ingredientId!))
-        ).resolves.toMatchObject([{ name: line.ingredientName, flagged: false, flagReason: null }]);
+        await expect(readTestIngredient(line.ingredientId!)).resolves.toMatchObject({
+          name: line.ingredientName,
+          flagged: false,
+          flagReason: null,
+        });
       }
       expect(minted.sort()).toEqual(
         lines
@@ -166,11 +173,17 @@ describe("ingredient resolver with AI on", () => {
       recipeIngredients: [{ ingredientName: "melted", ingredientId: null }],
     });
 
-    const [change, ...others] = await listAIChanges();
+    const [change, ...others] = await listAIChanges({
+      householdId: testHouseholdOf(userId),
+      isServerAdmin: false,
+    });
 
     expect(others).toEqual([]);
     expect(change).toMatchObject({ sure: true, undo: { kind: "not-a-food" } });
-    await undoAIChange({ userId, householdUserIds: null, isServerAdmin: false }, change!.id);
+    await undoAIChange(
+      { userId, householdId: testHouseholdOf(userId), isServerAdmin: false },
+      change!.id
+    );
     await expect(getRecipeFull(recipeId)).resolves.toMatchObject({
       recipeIngredients: [{ ingredientName: "melted", ingredientId: melted.ingredientId }],
     });
@@ -182,7 +195,7 @@ describe("ingredient resolver with AI on", () => {
 
     modelAnswers.push(noFoodReading(true));
     await askAIAbout(melted.ingredientId);
-    await expect(listJunkFolds()).resolves.toEqual(["melted"]);
+    await expect(listJunkFolds(testHouseholdOf(userId))).resolves.toEqual(["melted"]);
     vi.mocked(generateStructured).mockClear();
     const minted: string[] = [];
 
@@ -193,24 +206,31 @@ describe("ingredient resolver with AI on", () => {
       expectNoAIRequest();
       expect(minted).toEqual([]);
       expect(again.lines).toMatchObject([{ ingredientName: "melted", ingredientId: null }]);
-      await expect(
-        getTestDb().select().from(ingredients).where(eq(ingredients.name, "melted"))
-      ).resolves.toEqual([]);
+      await expect(readTestIngredientNamed("melted")).resolves.toBeNull();
     } finally {
       onIngredientsMinted(undefined);
     }
 
-    const [change] = await listAIChanges();
+    const [change] = await listAIChanges({
+      householdId: testHouseholdOf(userId),
+      isServerAdmin: false,
+    });
 
-    await undoAIChange({ userId, householdUserIds: null, isServerAdmin: false }, change!.id);
-    await expect(listJunkFolds()).resolves.toEqual([]);
+    await undoAIChange(
+      { userId, householdId: testHouseholdOf(userId), isServerAdmin: false },
+      change!.id
+    );
+    await expect(listJunkFolds(testHouseholdOf(userId))).resolves.toEqual([]);
     const restored = await saved(["melted"]);
 
     expect(restored.lines).toMatchObject([{ ingredientId: melted.ingredientId }]);
   });
 
   it("adds a grocery it does not know asking AI nothing", async () => {
-    const [typed] = await resolveGroceryNames([{ name: "Unox Knaks" }], { userId });
+    const [typed] = await resolveGroceryNames([{ name: "Unox Knaks" }], {
+      userId,
+      householdId: testHouseholdOf(userId),
+    });
 
     expectNoAIRequest();
     await expect(findIngredientByAliasId(typed!.aliasId)).resolves.toMatchObject({
@@ -263,7 +283,7 @@ describe("ingredient resolver with AI on", () => {
       userId,
       await withResolvedIngredients(
         { name: "Soup", systemUsed: "metric", recipeIngredients: lines },
-        { userId }
+        { userId, householdId: testHouseholdOf(userId) }
       )
     );
     const [kept, edited, reparsed] = (await getRecipeFull(recipeId))!.recipeIngredients;
@@ -294,7 +314,7 @@ describe("ingredient resolver with AI on", () => {
     const { recipeId, lines } = await saved(["deegroller", "flour"]);
     const [tool, flour] = lines;
 
-    await withTransaction((tx) => deleteCatalogueIngredient(tx, tool!.ingredientId!));
+    await inRepositoryTransaction((tx) => deleteCatalogueIngredient(tx, tool!.ingredientId!));
     await updateResolvedRecipe(
       recipeId,
       userId,
@@ -317,7 +337,10 @@ describe("ingredient resolver with AI on", () => {
   describe("a slip of the fingers", () => {
     it("takes the known food a text is one slip of, AI on or off", async () => {
       const parmesan = await resolveOne("parmezaan");
-      const [late, early] = await resolveIngredients(["parmezan", "parmesaan"], { userId });
+      const [late, early] = await resolveIngredients(["parmezan", "parmesaan"], {
+        userId,
+        householdId: testHouseholdOf(userId),
+      });
 
       expect(late).toMatchObject({ ingredientId: parmesan.ingredientId });
       expect(early).toMatchObject({ ingredientId: parmesan.ingredientId });
@@ -330,11 +353,17 @@ describe("ingredient resolver with AI on", () => {
     });
 
     it("takes no slip under five letters, of the first letter, nor one two foods are equally near", async () => {
-      const [meel, parmesan] = await resolveIngredients(["meel", "parmezaan"], { userId });
-      const [chilli, sause] = await resolveIngredients(["chilli sauce", "chili sause"], { userId });
+      const [meel, parmesan] = await resolveIngredients(["meel", "parmezaan"], {
+        userId,
+        householdId: testHouseholdOf(userId),
+      });
+      const [chilli, sause] = await resolveIngredients(["chilli sauce", "chili sause"], {
+        userId,
+        householdId: testHouseholdOf(userId),
+      });
       const [melk, barmezaan, chili] = await resolveIngredients(
         ["melk", "barmezaan", "chili sauce"],
-        { userId }
+        { userId, householdId: testHouseholdOf(userId) }
       );
 
       expect(melk!.ingredientId).not.toBe(meel!.ingredientId);

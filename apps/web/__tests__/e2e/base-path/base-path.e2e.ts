@@ -47,7 +47,7 @@ test("serves every surface, its assets and its media under the base path", async
   await expect(page.getByRole("button", { name: "Export", exact: true })).toBeVisible();
   await page.getByRole("tab", { name: "Household" }).click();
   await expect(page).toHaveURL(at("/settings/household"));
-  await expect(page.getByRole("heading", { name: "Create household", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Join household", exact: true })).toBeVisible();
 });
 
 test("serves a manifest that starts and scopes at the base path", async ({

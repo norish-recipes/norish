@@ -117,7 +117,8 @@ async function decideShares(
 
   if (undecided.length === 0) return shares;
 
-  const names = await findLocaleNames([...nodes.keys()]);
+  // The seed's spellings: the shipped set draws seeded foods.
+  const names = await findLocaleNames(null, [...nodes.keys()]);
   const nameOf = (node: IconNode) => names.get(node.id)?.en ?? node.name;
   const depths = new Map(undecided.map((node) => [node, depth(node)]));
 

@@ -1,7 +1,7 @@
 "use client";
 
 import type { MouseEvent } from "react";
-import { memo, useCallback, useMemo, useRef, useState } from "react";
+import { memo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import CookbookCover from "@/components/cookbooks/cookbook-cover";
 import { CookbookIconSolid } from "@/components/cookbooks/cookbook-icon";
@@ -22,7 +22,7 @@ import { Button, Card, Tooltip } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
-import { ownerAllows, useRecipePermissions } from "@norish/shared-react/reader";
+import { useRecipePermissions } from "@norish/shared-react/reader";
 import { allergenSet, formatMinutesHM, isAllergenTag } from "@norish/shared/lib/helpers";
 
 import { CardFacts } from "./card-facts";
@@ -80,61 +80,57 @@ function CookbookCardComponent({
 
   // Cookbooks answer to the recipe permission policy, so the same two
   // predicates the recipe card uses decide the menu here (ADR-0027).
-  const canEdit = ownerAllows(cookbook.userId, canEditRecipe);
-  const canDelete = ownerAllows(cookbook.userId, canDeleteRecipe);
+  const canEdit = canEditRecipe(cookbook.householdId);
+  const canDelete = canDeleteRecipe(cookbook.householdId);
 
-  const open = useCallback(() => {
+  const open = () => {
     if (!rowOpen) router.push(withOrigin(`/cookbooks/${cookbook.id}`, pathname));
-  }, [router, cookbook.id, rowOpen, pathname]);
+  };
 
-  const stopParentActivation = useCallback((event: MouseEvent) => {
+  const stopParentActivation = (event: MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
-  }, []);
+  };
 
-  const handleDelete = useCallback(() => {
+  const handleDelete = () => {
     setDeleteOpen(false);
     rowRef.current?.triggerDeleteAnimation(() => {
       onDelete({ id: cookbook.id, version: cookbook.version });
     });
-  }, [onDelete, cookbook.id, cookbook.version]);
+  };
 
-  const actions: SwipeAction[] = useMemo(() => {
-    const list: SwipeAction[] = [];
+  const actions: SwipeAction[] = [];
 
-    if (canEdit) {
-      list.push({
-        key: "add",
-        icon: PlusIcon,
-        color: "warning",
-        onPress: () => setAddOpen(true),
-        label: t("addRecipes"),
-      });
-    }
+  if (canEdit) {
+    actions.push({
+      key: "add",
+      icon: PlusIcon,
+      color: "warning",
+      onPress: () => setAddOpen(true),
+      label: t("addRecipes"),
+    });
+  }
 
-    if (canEdit) {
-      list.push({
-        key: "edit",
-        icon: PencilSquareIcon,
-        color: "accent",
-        onPress: () => setEditOpen(true),
-        label: t("editTitle"),
-      });
-    }
+  if (canEdit) {
+    actions.push({
+      key: "edit",
+      icon: PencilSquareIcon,
+      color: "accent",
+      onPress: () => setEditOpen(true),
+      label: t("editTitle"),
+    });
+  }
 
-    if (canDelete) {
-      list.push({
-        key: "delete",
-        icon: TrashIcon,
-        color: "danger",
-        onPress: () => setDeleteOpen(true),
-        primary: false,
-        label: t("deleteTitle"),
-      });
-    }
-
-    return list;
-  }, [canEdit, canDelete, t]);
+  if (canDelete) {
+    actions.push({
+      key: "delete",
+      icon: TrashIcon,
+      color: "danger",
+      onPress: () => setDeleteOpen(true),
+      primary: false,
+      label: t("deleteTitle"),
+    });
+  }
 
   /*
    * The facts a cookbook derives from its members, read in one place and with
@@ -161,10 +157,7 @@ function CookbookCardComponent({
   // Only the reader's own allergens, not every tag the members carry: a
   // cookbook is a set of other people's recipes and the warning is the part
   // worth the space.
-  const allergens = useMemo(
-    () => memberTags.filter((tag) => isAllergenTag(tag, allergySet)),
-    [memberTags, allergySet]
-  );
+  const allergens = memberTags.filter((tag) => isAllergenTag(tag, allergySet));
   const optionsButton = (
     <div className="hidden md:block" role="presentation" onClick={stopParentActivation}>
       <Tooltip delay={0}>
@@ -417,9 +410,9 @@ const CookbookCard = memo(CookbookCardComponent, (previous, next) => {
     (a.id === b.id &&
       a.title === b.title &&
       a.version === b.version &&
-      // The owner decides whether this card offers Rename and Delete at all,
-      // so an ownership change — a cookbook becoming Orphaned — has to redraw.
-      a.userId === b.userId &&
+      // The household decides whether this card offers Rename and Delete at all,
+      // so a cookbook moving with its Owner has to redraw.
+      a.householdId === b.householdId &&
       a.memberCount === b.memberCount &&
       a.totalMinutes === b.totalMinutes &&
       a.minServings === b.minServings &&

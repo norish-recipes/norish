@@ -1,22 +1,45 @@
 import crypto from "crypto";
 
-import { SERVER_CONFIG } from "@norish/config/env-config-server";
+type DerivedKeys = { authSecret: string; encryption: Buffer; hmac: Buffer };
 
-export const AUTH_SECRET = deriveKey("auth").toString("base64url");
-export const ENCRYPTION_KEY = deriveKey("encryption");
-export const HMAC_KEY = deriveKey("hmac");
+// On globalThis, so the copy of this module the Next bundle carries sees the key boot resolved.
+export const DERIVED_KEYS = Symbol.for("norish:master-key");
+const shared = globalThis as { [DERIVED_KEYS]?: DerivedKeys };
 
-function deriveKey(label: string, length = 32): Buffer {
-  const masterKey = Buffer.from(SERVER_CONFIG.MASTER_KEY, "base64"); // TODO: Generate this when the server is first set up
-
-  const raw = crypto.hkdfSync("sha256", masterKey, Buffer.alloc(0), Buffer.from(label), length);
-
-  return Buffer.from(raw);
+function deriveKey(masterKey: Buffer, label: string): Buffer {
+  return Buffer.from(crypto.hkdfSync("sha256", masterKey, Buffer.alloc(0), Buffer.from(label), 32));
 }
 
-export function encrypt(plain: string): string {
+/** Take the Master Key boot resolved; nothing encrypts, decrypts, signs or hashes before this. */
+export function initMasterKey(masterKey: Buffer): void {
+  shared[DERIVED_KEYS] = {
+    authSecret: deriveKey(masterKey, "auth").toString("base64url"),
+    encryption: deriveKey(masterKey, "encryption"),
+    hmac: deriveKey(masterKey, "hmac"),
+  };
+}
+
+function derivedKeys(): DerivedKeys {
+  const derived = shared[DERIVED_KEYS];
+
+  if (!derived) throw new Error("The Master Key is used before boot resolved it");
+
+  return derived;
+}
+
+/** Names a Master Key; its own label, so it tells nothing about the keys the Master Key yields. */
+export function masterKeyFingerprint(masterKey: Buffer): string {
+  return deriveKey(masterKey, "fingerprint").toString("hex");
+}
+
+/** Better Auth's `secret`. */
+export function authSecret(): string {
+  return derivedKeys().authSecret;
+}
+
+function encryptWith(encryptionKey: Buffer, plain: string): string {
   const iv = crypto.randomBytes(12);
-  const cipher = crypto.createCipheriv("aes-256-gcm", ENCRYPTION_KEY, iv);
+  const cipher = crypto.createCipheriv("aes-256-gcm", encryptionKey, iv);
 
   const encrypted = Buffer.concat([cipher.update(plain, "utf8"), cipher.final()]);
   const tag = cipher.getAuthTag();
@@ -24,33 +47,100 @@ export function encrypt(plain: string): string {
   return Buffer.concat([iv, tag, encrypted]).toString("base64");
 }
 
-export function decrypt(enc: string): string {
-  const data = Buffer.from(enc, "base64");
-  const iv = data.subarray(0, 12);
-  const tag = data.subarray(12, 28);
-  const encrypted = data.subarray(28);
+export function encrypt(plain: string): string {
+  return encryptWith(derivedKeys().encryption, plain);
+}
 
-  const decipher = crypto.createDecipheriv("aes-256-gcm", ENCRYPTION_KEY, iv);
+const IV_BYTES = 12;
+const TAG_BYTES = 16;
+
+function decryptWith(encryptionKey: Buffer, enc: string): string {
+  const data = Buffer.from(enc, "base64");
+  const iv = data.subarray(0, IV_BYTES);
+  const tag = data.subarray(IV_BYTES, IV_BYTES + TAG_BYTES);
+  const encrypted = data.subarray(IV_BYTES + TAG_BYTES);
+
+  const decipher = crypto.createDecipheriv("aes-256-gcm", encryptionKey, iv);
 
   decipher.setAuthTag(tag);
 
   return Buffer.concat([decipher.update(encrypted), decipher.final()]).toString("utf8");
 }
 
-export function hmacIndex(value: string): string {
-  return crypto.createHmac("sha256", HMAC_KEY).update(value).digest("hex");
+export function decrypt(enc: string): string {
+  return decryptWith(derivedKeys().encryption, enc);
 }
 
-export function hashToken(token: string): string {
-  return crypto.createHmac("sha256", HMAC_KEY).update(token).digest("hex");
-}
-
-export function safeDecrypt(value: string | null | undefined): string | null {
-  if (!value) return null;
-
+/** `enc` in plain text, or null when `encryptionKey` did not write it. */
+function tryDecryptWith(encryptionKey: Buffer, enc: string): string | null {
   try {
-    return decrypt(value);
+    return decryptWith(encryptionKey, enc);
   } catch {
-    return value;
+    return null;
   }
 }
+
+/** Whether `masterKey` wrote `enc`, without making it the key in use. */
+export function masterKeyOpens(masterKey: Buffer, enc: string): boolean {
+  return tryDecryptWith(deriveKey(masterKey, "encryption"), enc) !== null;
+}
+
+const lookupWith = (hmacKey: Buffer, value: string) =>
+  crypto.createHmac("sha256", hmacKey).update(value).digest("hex");
+
+export function hmacIndex(value: string): string {
+  return lookupWith(derivedKeys().hmac, value);
+}
+
+/** A share token's lookup hash: the same keyed HMAC as an email's. */
+export const hashToken = hmacIndex;
+
+/** Base64 characters alone, padded or not, as `encrypt` writes and `openssl rand -base64` makes. */
+export const isBase64 = (value: string) => /^[A-Za-z0-9+/]+={0,2}$/.test(value);
+
+/** Whether `value` may be what `encrypt` wrote, damaged: base64 of an IV and a tag, at least. */
+function mayBeCiphertext(value: string): boolean {
+  return isBase64(value) && Buffer.from(value, "base64").length >= IV_BYTES + TAG_BYTES;
+}
+
+/**
+ * Which key had sealed a value a re-key met: `plaintext` when a column once plain holds no
+ * ciphertext, `unreadable` when neither key opens it otherwise (damaged, or another key's).
+ */
+export type SealedBy = "previous" | "current" | "plaintext" | "unreadable";
+
+/**
+ * A re-key from `previous` to `current`, its keys kept here. The only place a value is read as
+ * plain text, and only with `legacyPlaintext`; one the current key opens, or neither does, stays.
+ */
+export function masterKeyRotation(previous: Buffer, current: Buffer) {
+  const from = deriveKey(previous, "encryption");
+  const to = deriveKey(current, "encryption");
+  const hmac = deriveKey(current, "hmac");
+
+  return {
+    reseal(
+      value: string,
+      { legacyPlaintext = false } = {}
+    ): { sealed: string; plain: string | null; was: SealedBy } {
+      const opened = tryDecryptWith(from, value);
+
+      if (opened !== null)
+        return { sealed: encryptWith(to, opened), plain: opened, was: "previous" };
+
+      const already = tryDecryptWith(to, value);
+
+      if (already !== null) return { sealed: value, plain: already, was: "current" };
+      // ponytail: plain text of 38+ base64 characters reads as ciphertext; the re-key logs it.
+      if (!legacyPlaintext || mayBeCiphertext(value)) {
+        return { sealed: value, plain: null, was: "unreadable" };
+      }
+
+      return { sealed: encryptWith(to, value), plain: value, was: "plaintext" };
+    },
+    /** `hmacIndex` and `hashToken` under the current key. */
+    lookup: (plain: string) => lookupWith(hmac, plain),
+  };
+}
+
+export type MasterKeyRotation = ReturnType<typeof masterKeyRotation>;

@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { importStatusProcedure } from "@norish/trpc/routers/recipes/recipes";
 
-import { canAccessResource } from "../mocks/permissions";
+import { canAccessResource, policy, resetPermissionsMocks } from "../mocks/permissions";
 import {
   createMockAuthedContext,
   createMockHousehold,
@@ -30,6 +30,12 @@ vi.mock("@norish/queue/registry", () => ({
 }));
 
 vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
+// Each job's account is in the household it was queued from, unless a test moves it.
+vi.mock("@norish/db/repositories/households", () => ({
+  getHouseholdIdForUser: vi.fn(async (userId: string) =>
+    userId === "other-user" ? "other-household" : "test-household-id"
+  ),
+}));
 
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   getRecipePermissionPolicy: mocks.getRecipePermissionPolicy,
@@ -41,6 +47,9 @@ vi.mock("@norish/db", async (importOriginal) => {
   return {
     ...actual,
     dashboardRecipe: mocks.dashboardRecipe,
+    // Every imported recipe is the importer's household's own.
+    getRecipeHouseholdIds: async (ids: string[]) =>
+      new Map(ids.map((id) => [id, "test-household-id"])),
   };
 });
 
@@ -81,7 +90,7 @@ describe("importStatusProcedure", () => {
     vi.clearAllMocks();
     ctx = createMockAuthedContext(mockUser, mockHousehold);
     mocks.getRecipePermissionPolicy.mockResolvedValue({ view: "household", edit: "household" });
-    canAccessResource.mockResolvedValue(true);
+    resetPermissionsMocks();
   });
 
   function caller() {
@@ -95,7 +104,7 @@ describe("importStatusProcedure", () => {
         recipeId: RECIPE_ID,
         url: "https://example.com/recipe",
         userId: mockUser.id,
-        householdKey: mockHousehold.id,
+        householdId: mockHousehold.id,
       },
       getState: vi.fn().mockResolvedValue("active"),
       progress: { step: "parsing" },
@@ -120,7 +129,7 @@ describe("importStatusProcedure", () => {
         recipeId: RECIPE_ID,
         url: "https://example.com/recipe",
         userId: mockUser.id,
-        householdKey: mockHousehold.id,
+        householdId: mockHousehold.id,
       },
       getState: vi.fn().mockResolvedValue("waiting"),
       progress: null,
@@ -149,7 +158,7 @@ describe("importStatusProcedure", () => {
         recipeId: RECIPE_ID,
         url: "https://example.com/recipe",
         userId: mockUser.id,
-        householdKey: mockHousehold.id,
+        householdId: mockHousehold.id,
       },
       getState: vi.fn().mockResolvedValue("completed"),
       progress: { step: "saving" },
@@ -175,7 +184,7 @@ describe("importStatusProcedure", () => {
         recipeId: RECIPE_ID,
         url: "https://example.com/recipe",
         userId: mockUser.id,
-        householdKey: mockHousehold.id,
+        householdId: mockHousehold.id,
       },
       getState: vi.fn().mockResolvedValue("failed"),
       failedReason: "Failed to parse recipe from URL",
@@ -195,14 +204,14 @@ describe("importStatusProcedure", () => {
   });
 
   it("answers not found for a job the viewer may not see", async () => {
-    canAccessResource.mockResolvedValue(false);
+    policy.view = "household";
     mocks.getJob.mockResolvedValue({
       id: RECIPE_ID,
       data: {
         recipeId: RECIPE_ID,
         url: "https://example.com/recipe",
         userId: "other-user",
-        householdKey: "other-household",
+        householdId: "other-household",
       },
       getState: vi.fn().mockResolvedValue("active"),
     });
@@ -211,13 +220,7 @@ describe("importStatusProcedure", () => {
     await expect(caller().importStatus({ recipeId: RECIPE_ID })).rejects.toThrow(
       "Import job or recipe not found"
     );
-    expect(canAccessResource).toHaveBeenCalledWith(
-      "view",
-      ctx.user.id,
-      "other-user",
-      ctx.householdUserIds,
-      ctx.isServerAdmin
-    );
+    expect(canAccessResource).toHaveBeenCalledWith("view", ctx.householdId, "other-household");
   });
 
   it("answers with the existing recipe when the URL was already imported", async () => {
@@ -283,7 +286,7 @@ describe("importStatusProcedure", () => {
         recipeId: RECIPE_ID,
         url: "https://example.com/recipe",
         userId: mockUser.id,
-        householdKey: mockHousehold.id,
+        householdId: mockHousehold.id,
       },
       getState: vi.fn().mockImplementation(async () => {
         callCount++;

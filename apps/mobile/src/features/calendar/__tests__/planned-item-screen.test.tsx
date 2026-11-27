@@ -223,6 +223,19 @@ describe("PlannedItemScreen", () => {
     stack.unmount();
   });
 
+  it("shows a recipe the household may not view by its title alone, and still moves it", () => {
+    held.items = [{ ...note, itemType: "recipe", recipeId: null, title: null, recipeName: "Stew" }];
+    render(<PlannedItemScreen />);
+
+    expect(screen.queryByTestId("planned-item-recipe")).toBeNull();
+    expect(screen.queryByTestId("planned-item-note")).toBeNull();
+    expect(screen.getByTestId("planned-item-recipe-title-only")).toBeTruthy();
+
+    fireEvent.click(screen.getByTestId("planned-item-slot-Snack"));
+    fireEvent.click(screen.getByTestId("planned-item-confirm"));
+    expect(held.saveItem).toHaveBeenCalledWith("note-1", { slot: "Snack" });
+  });
+
   it("has no recipe row for a note", () => {
     render(<PlannedItemScreen />);
 

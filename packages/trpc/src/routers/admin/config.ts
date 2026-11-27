@@ -1,7 +1,6 @@
 import { z } from "zod";
 
-import type { ServerConfigKey } from "@norish/config/zod/server-config";
-import { ServerConfigKeys } from "@norish/config/zod/server-config";
+import { AdminConfigKeySchema, ServerConfigKeys } from "@norish/config/zod/server-config";
 import { getAllConfigs, getConfigSecret } from "@norish/db/repositories/server-config";
 import { getEffectivePrompts } from "@norish/shared-server/ai/prompts/loader";
 import { trpcLogger as log } from "@norish/shared-server/logger";
@@ -34,14 +33,14 @@ const getAllConfigsProcedure = adminProcedure.query(async ({ ctx }) => {
 const getSecretField = adminProcedure
   .input(
     z.object({
-      key: z.enum(ServerConfigKeys),
+      key: AdminConfigKeySchema,
       field: z.string().min(1),
     })
   )
   .query(async ({ input, ctx }) => {
     log.debug({ userId: ctx.user.id, key: input.key, field: input.field }, "Getting secret field");
 
-    const secret = await getConfigSecret(input.key as ServerConfigKey, input.field);
+    const secret = await getConfigSecret(input.key, input.field);
 
     if (secret === null) {
       return { value: null };

@@ -41,12 +41,8 @@
   },
   "empty": {
     "title": "아직 레시피가 없어요",
-    "description": "위의 검색 필드에 레시피 URL을 붙여넣어 보세요.",
     "noResults": "레시피를 찾을 수 없습니다.",
-    "noResultsHint": "필터를 조정하거나 지워보세요.",
-    "noCookbooks": "아직 요리책이 없습니다",
-    "noCookbooksHint": "요리책은 제목이 있는 레시피 모음입니다. 첫 요리책을 만들어 라이브러리를 정리해 보세요.",
-    "descriptionMobile": "링크, 텍스트 또는 사진으로 첫 레시피를 추가하세요."
+    "noCookbooks": "아직 요리책이 없습니다"
   },
   "card": {
     "noImage": "이미지가 없습니다.",
@@ -67,6 +63,7 @@
     "addToGroceries": "장보기에 추가",
     "ratingPrompt": "이 레시피에 대해 어떻게 생각하시나요?",
     "notFound": "레시피를 찾을 수 없음",
+    "offline": "이 레시피를 보려면 연결이 필요합니다",
     "notFoundMessage": "이 레시피는 존재하지 않거나 볼 수 있는 권한이 없습니다.",
     "prep": "준비",
     "total": "총",
@@ -160,6 +157,7 @@
     "expiresAfter": "만료 시점",
     "expiresOn": "{date} 만료",
     "expiredOn": "{date} 만료됨",
+    "revokedOn": "{date} 취소됨",
     "lastOpenedOn": "마지막 열람 {date}",
     "neverExpires": "만료되지 않음",
     "linkCreated": "{date} 생성"
@@ -203,7 +201,7 @@
     "notesPlaceholder": "이 레시피에 대한 준비 메모, 조정 또는 서빙 팁을 추가하세요...",
     "ingredientsHelp": "\"밀가루 2컵\"과 같은 재료를 입력하면 양과 단위가 자동으로 분석됩니다.",
     "instructionsHelp": "단계별 조리 방법을 작성하세요. Enter를 눌러 다음 단계로 이동하세요.",
-    "tagsHelp": "태그를 입력하고 제안을 클릭하여 추가하세요. 레시피에 추가된 태그는 색으로 채워지고, 새 태그에는 점선 테두리가 있습니다.",
+    "tagsHelp": "태그를 고르거나 새로 만드세요.",
     "tagsAndCategories": "태그 및 카테고리",
     "categoriesHelp": "이 레시피에 대한 식사 카테고리를 선택하세요.",
     "addCategory": "카테고리 추가",
@@ -224,7 +222,7 @@
     "originRegion": "지역",
     "originRegionPlaceholder": "예: 시칠리아",
     "cuisines": "요리",
-    "cuisinesHelp": "설치본의 목록에서 선택하세요. 퓨전 요리라면 여러 개가 알맞습니다.",
+    "cuisinesHelp": "목록에서 고르거나 직접 만드세요. 퓨전 요리라면 여러 개가 알맞습니다.",
     "provenanceNote": "설명",
     "provenanceNotePlaceholder": "이 요리의 출처에 대한 몇 문장…",
     "servings": "인분",
@@ -441,7 +439,6 @@
     "singular": "요리책",
     "notFound": "요리책을 찾을 수 없습니다",
     "notFoundHint": "삭제되었거나 접근 권한이 없을 수 있습니다.",
-    "emptyHint": "레시피의 빠른 작업 메뉴에서 레시피를 추가하세요.",
     "panelTitle": "요리책에 추가",
     "newWithRecipe": "이 레시피로 새 요리책 만들기",
     "noneEditable": "편집할 수 있는 요리책이 아직 없습니다.",
@@ -545,7 +542,7 @@
     "tagsAndCategories": "태그 및 카테고리",
     "categories": "카테고리",
     "tags": "태그",
-    "tagsHint": "제안을 고르거나 새 태그를 입력하세요. 새 태그는 점선 테두리로 표시됩니다.",
+    "tagsHint": "목록에서 태그를 고르거나 새로 만드세요.",
     "addTag": "태그 추가",
     "removeNamed": "{name} 삭제",
     "servingsAndTime": "인분 및 시간",
@@ -561,6 +558,13 @@
     "discardMessage": "저장하지 않은 변경 사항이 있습니다.",
     "keepEditing": "계속 편집",
     "discard": "버리기"
+  },
+  "picker": {
+    "create": "\"{name}\" 만들기",
+    "createOffline": "온라인일 때 \"{name}\"을(를) 만들 수 있습니다.",
+    "tooLong": "이름은 최대 {max}자까지 쓸 수 있습니다.",
+    "createFailed": "\"{name}\"을(를) 만들지 못했습니다. 다시 시도하세요.",
+    "loadFailed": "목록을 불러오지 못했습니다."
   },
   "search": {
     "sortBestMatch": "가장 일치",

@@ -13,6 +13,7 @@ export const recipesSubscriptions = router({
   onConverted: realtimeSubscription(recipes, "converted"),
   onFailed: realtimeSubscription(recipes, "failed"),
   onShareEvent: realtimeSubscription(recipes, "shareEvent"),
+  onMyShareEvent: realtimeSubscription(recipes, "myShareEvent"),
   onEnrichment: realtimeSubscription(recipes, "enrichment"),
   onRecipeBatchCreated: realtimeSubscription(recipes, "recipeBatchCreated"),
 });

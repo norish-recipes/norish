@@ -9,9 +9,14 @@ import { createClientLogger } from "@norish/shared/lib/logger";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
 import { calculateNextOccurrence, getTodayString } from "@norish/shared/lib/recurrence/calculator";
 
+import type { HouseholdMark } from "../offline/optimistic-updates";
 import type { GroceriesData, GroceriesMutationsResult, GroceryCreateData } from "./types";
 import { useUnitsQuery } from "../config";
-import { shouldPreserveOptimisticUpdate } from "../offline/optimistic-updates";
+import {
+  markHousehold,
+  mayRestore,
+  shouldPreserveOptimisticUpdate,
+} from "../offline/optimistic-updates";
 import { writeOverRead } from "../offline/write-over-read";
 import { usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
@@ -239,7 +244,7 @@ function withEdit(
 }
 
 /** A write's undo: the lists before it, and the rows a create wrote for its answer to replace. */
-type Undo = {
+type Undo = HouseholdMark & {
   groceries: GroceryDto[];
   recurringGroceries: RecurringGroceryDto[];
   created: GroceryDto[];
@@ -293,6 +298,7 @@ export function useGroceriesMutations(): GroceriesMutationsResult {
       recurringGroceries: held()?.recurringGroceries ?? [],
       created,
       undone: false,
+      ...markHousehold(queryClient),
     };
 
     unsettled.add(was);
@@ -308,7 +314,7 @@ export function useGroceriesMutations(): GroceriesMutationsResult {
     return was;
   };
   const undo = (was: Undo) => {
-    if (was.undone) return;
+    if (was.undone || !mayRestore(queryClient, was)) return;
     setGroceriesData(
       (prev) =>
         prev && { ...prev, groceries: was.groceries, recurringGroceries: was.recurringGroceries }
@@ -339,6 +345,7 @@ export function useGroceriesMutations(): GroceriesMutationsResult {
   // before it bumped in the cache, so one sent ahead would be refused as stale.
   const inOrder = { ...settles, scope: { id: "grocery-writes" } };
   const reconcileCreated = (result: CreateGroceriesResult, was: Undo) =>
+    mayRestore(queryClient, was) &&
     setGroceriesData(
       (prev) =>
         prev &&
@@ -408,7 +415,8 @@ export function useGroceriesMutations(): GroceriesMutationsResult {
     ...settles,
     // Nothing is written before the answer, which says where the new line goes.
     onMutate: () => hold(),
-    onSuccess: (result: CreateRecurringResult) =>
+    onSuccess: (result: CreateRecurringResult, _input, was) =>
+      mayRestore(queryClient, was) &&
       setGroceriesData((prev) => prev && applyRecurringCreatedToCache(prev, result)),
   });
   const toggleOptions = trpc.groceries.toggle.mutationOptions({
@@ -615,6 +623,7 @@ export function useGroceriesMutations(): GroceriesMutationsResult {
       unit: g.unit ?? null,
       isDone: g.isDone ?? false,
       recipeIngredientId: g.recipeIngredientId ?? null,
+      lineFoodId: g.lineFoodId ?? null,
     }));
 
     return mutateCreateMany(rows).then(

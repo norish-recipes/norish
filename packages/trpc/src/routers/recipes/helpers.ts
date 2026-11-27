@@ -1,19 +1,22 @@
 import { TRPCError } from "@trpc/server";
-import { z } from "zod";
 
 import type { PermissionAction } from "@norish/auth/permissions";
 import type { FullRecipeDTO } from "@norish/shared/contracts";
-import { canAccessResource } from "@norish/auth/permissions";
-import { getRecipeFull, getRecipeOwnerId, getRecipeOwnerIds } from "@norish/db";
-import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
+import { canAccessResource, resourceAccess } from "@norish/auth/permissions";
+import { getRecipeFull, getRecipeHouseholdIds } from "@norish/db";
+import { getHouseholdIdForUser } from "@norish/db/repositories/households";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import {
+  mayUsePendingRecipeId,
+  releasePendingRecipeId,
+} from "@norish/shared-server/media/pending-recipe-media";
+import { accountAudience, policyAudience } from "@norish/shared-server/realtime/audience";
 import { recipes } from "@norish/shared-server/realtime/recipes";
+import { mediaId } from "@norish/shared/lib/recipe-media";
 
 export type RecipeUserContext = {
   user: { id: string };
-  householdUserIds: string[] | null;
-  householdKey: string;
-  isServerAdmin: boolean;
+  householdId: string;
 };
 
 // ponytail: this process's creates only; a second server process would need a shared lock.
@@ -36,21 +39,18 @@ export async function createSettled(recipeId: string): Promise<void> {
 }
 
 export async function emitRecipeFailure(
-  ctx: Pick<RecipeUserContext, "user" | "householdKey">,
+  ctx: Pick<RecipeUserContext, "user" | "householdId">,
   reason: string,
   meta?: { recipeId?: string; url?: string }
 ): Promise<void> {
-  const policy = await getRecipePermissionPolicy();
+  // Nothing stored yet: the actor's household, the one the recipe was for.
+  const audience = await accountAudience(ctx.user.id);
 
-  void recipes.publish(
-    "failed",
-    { reason, ...meta },
-    { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
-  );
+  if (audience) void recipes.publish("failed", { reason, ...meta }, audience);
 }
 
 export function handleRecipeError(
-  ctx: Pick<RecipeUserContext, "user" | "householdKey">,
+  ctx: Pick<RecipeUserContext, "user" | "householdId">,
   err: unknown,
   operation: string,
   meta?: { recipeId?: string; url?: string }
@@ -63,129 +63,117 @@ export function handleRecipeError(
 
 /** Announce a recipe as stored now to everyone who may view it, and return it. */
 export async function announceRecipeUpdated(
-  ctx: Pick<RecipeUserContext, "user" | "householdKey">,
+  ctx: Pick<RecipeUserContext, "user" | "householdId">,
   recipeId: string
 ): Promise<FullRecipeDTO | null> {
   const stored = await getRecipeFull(recipeId);
 
-  if (stored) {
-    const policy = await getRecipePermissionPolicy();
-
-    void recipes.publish(
-      "updated",
-      { recipe: stored },
-      { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
-    );
-  }
+  if (stored)
+    void recipes.publish("updated", { recipe: stored }, await policyAudience(stored.householdId));
 
   return stored;
 }
 
-export async function assertRecipeAccess(
-  ctx: Pick<RecipeUserContext, "user" | "householdUserIds" | "isServerAdmin">,
-  recipeId: string,
-  action: PermissionAction
-): Promise<void> {
-  const ownerId = await getRecipeOwnerId(recipeId);
-
-  if (ownerId === null) {
-    log.debug({ recipeId }, `${action} orphaned recipe`);
-
-    return;
-  }
-
-  const canAccess = await canAccessResource(
-    action,
-    ctx.user.id,
-    ownerId,
-    ctx.householdUserIds,
-    ctx.isServerAdmin
-  );
-
-  if (!canAccess) {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "You do not have permission to access this recipe",
-    });
-  }
-}
-
-/**
- * Whether the reader may do `action` to each of these recipes. Orphaned ones
- * are open to everyone; ones that do not exist are left out of the map.
- */
+/** Whether the reader may do `action` to each recipe; one they may not view is left out, as one
+ * that does not exist. */
 export async function recipeAccess(
-  ctx: Pick<RecipeUserContext, "user" | "householdUserIds" | "isServerAdmin">,
+  ctx: Pick<RecipeUserContext, "householdId">,
   recipeIds: string[],
   action: PermissionAction
 ): Promise<Map<string, boolean>> {
-  const owners = await getRecipeOwnerIds(recipeIds);
-  const byOwner = new Map<string, Promise<boolean>>();
   const access = new Map<string, boolean>();
 
-  for (const [recipeId, ownerId] of owners) {
-    if (ownerId === null) {
-      access.set(recipeId, true);
-      continue;
-    }
+  for (const [recipeId, householdId] of await getRecipeHouseholdIds(recipeIds)) {
+    const allowed = await resourceAccess(action, ctx.householdId, householdId);
 
-    let allowed = byOwner.get(ownerId);
-
-    if (!allowed) {
-      allowed = canAccessResource(
-        action,
-        ctx.user.id,
-        ownerId,
-        ctx.householdUserIds,
-        ctx.isServerAdmin
-      );
-      byOwner.set(ownerId, allowed);
-    }
-
-    access.set(recipeId, await allowed);
+    if (allowed !== undefined) access.set(recipeId, allowed);
   }
 
   return access;
 }
 
-/**
- * A recipe id a media path is built from: a UUID or nothing, since it becomes
- * a directory name under the uploads folder.
- */
-export function mediaRecipeId(value: unknown): string | null {
-  const parsed = z.uuid().safeParse(value);
+/** Whether the reader may view the recipe; a gone one and a hidden one answer the same. */
+export async function canViewRecipe(
+  ctx: Pick<RecipeUserContext, "householdId">,
+  recipeId: string
+): Promise<boolean> {
+  return (await recipeAccess(ctx, [recipeId], "view")).has(recipeId);
+}
 
-  return parsed.success ? parsed.data : null;
+/** A recipe or cookbook the reader may not view, or that is gone: the two read the same. */
+export function notFoundError(what: "recipe" | "cookbook") {
+  return new TRPCError({
+    code: "NOT_FOUND",
+    message: `${what === "recipe" ? "Recipe" : "Cookbook"} not found`,
+  });
+}
+
+/** Refuses what `resourceAccess` answered: not found when out of view, forbidden when not allowed. */
+export function refuseUnlessAllowed(
+  allowed: boolean | undefined,
+  what: "recipe" | "cookbook"
+): asserts allowed {
+  if (allowed === undefined) throw notFoundError(what);
+  if (!allowed) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: `You do not have permission to access this ${what}`,
+    });
+  }
+}
+
+/** Refuses unless the reader may do `action`; a recipe they may not view is not found. */
+export async function assertRecipeAccess(
+  ctx: Pick<RecipeUserContext, "householdId">,
+  recipeId: string,
+  action: PermissionAction
+): Promise<void> {
+  refuseUnlessAllowed((await recipeAccess(ctx, [recipeId], action)).get(recipeId), "recipe");
 }
 
 /** The recipe a stored media URL (`/recipes/{id}/…`) belongs to. */
 export function recipeIdOfMediaUrl(url: string): string | null {
-  return mediaRecipeId(/^\/recipes\/([^/]+)\//.exec(url)?.[1]);
+  return mediaId(/^\/recipes\/([^/]+)\//.exec(url)?.[1]);
 }
 
+/**
+ * Refuses media work on a recipe the reader may not edit. A recipe not stored yet (the new-recipe
+ * form uploads first) is the account's whose upload wrote its first file.
+ */
+export async function assertRecipeMediaAccess(
+  ctx: Pick<RecipeUserContext, "user" | "householdId">,
+  recipeId: string,
+  use: "upload" | "delete"
+): Promise<void> {
+  if ((await getRecipeHouseholdIds([recipeId])).has(recipeId)) {
+    await assertRecipeAccess(ctx, recipeId, "edit");
+  } else if (!(await mayUsePendingRecipeId(recipeId, ctx.user.id, use))) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Recipe not found" });
+  }
+}
+
+/** After a failed upload: drops the claim on a recipe id not stored yet if no file was written. */
+export async function releaseRecipeMediaClaim(
+  ctx: Pick<RecipeUserContext, "user">,
+  recipeId: string
+): Promise<void> {
+  await releasePendingRecipeId(recipeId, ctx.user.id);
+}
+
+/** Whether the reader may view an account's import, from the household it is in now. */
+export async function canViewImportOf(
+  ctx: Pick<RecipeUserContext, "householdId">,
+  userId: string
+): Promise<boolean> {
+  const householdId = await getHouseholdIdForUser(userId);
+
+  return householdId !== null && (await canAccessResource("view", ctx.householdId, householdId));
+}
+
+/** The recipe, or null when there is none or the reader may not view it. */
 export async function findRecipeForViewer(
-  ctx: Pick<RecipeUserContext, "user" | "householdUserIds" | "isServerAdmin">,
+  ctx: Pick<RecipeUserContext, "householdId">,
   recipeId: string
 ): Promise<FullRecipeDTO | null> {
-  const recipe = await getRecipeFull(recipeId);
-
-  if (!recipe) {
-    return null;
-  }
-
-  if (recipe.userId) {
-    const canView = await canAccessResource(
-      "view",
-      ctx.user.id,
-      recipe.userId,
-      ctx.householdUserIds,
-      ctx.isServerAdmin
-    );
-
-    if (!canView) {
-      return null;
-    }
-  }
-
-  return recipe;
+  return (await canViewRecipe(ctx, recipeId)) ? getRecipeFull(recipeId) : null;
 }

@@ -1,11 +1,13 @@
+import { randomBytes } from "node:crypto";
 import { describe, expect, it } from "vitest";
+
+import { openBase64MasterKey } from "@norish/config/testing";
 
 import { RealtimeLaggedError } from "../../src/realtime/hub";
 import {
   compareStreamIds,
   decodeCursor,
   encodeCursor,
-  identityHashFor,
   isStreamIdExpired,
   loadRealtimePublishScript,
   parseStreamId,
@@ -50,51 +52,79 @@ describe("compareStreamIds", () => {
   });
 });
 
-describe("identityHashFor", () => {
-  it("is eight hex characters of sha1(userId|householdKey)", () => {
-    const hash = identityHashFor({ userId: "u-1", householdKey: "hh-1" });
-
-    expect(hash).toMatch(/^[0-9a-f]{8}$/);
-    expect(hash).toBe("8ca3af7f");
-    expect(identityHashFor({ userId: "u-1", householdKey: "hh-2" })).not.toBe(hash);
-  });
-});
-
 describe("cursor codec", () => {
-  it("round-trips a policy cursor with three ids", () => {
-    const cursor = { identityHash: "8ca3af7f", ids: ["1700000000000-1", "0-0", "1700000000002-0"] };
+  const identity = { userId: "u-1", householdId: "hh-1", viewEpoch: "0" };
+  const channels = ["norish:a:household:hh-1:x", "norish:a:broadcast:x", "norish:a:user:u-1:x"];
+  const cursor = { identity, channels, ids: ["1700000000000-1", "0-0", "1700000000002-0"] };
+
+  function refusal(raw: string, opened = identity, on = channels): string | undefined {
+    try {
+      decodeCursor(raw, opened, on);
+    } catch (err) {
+      expect(err).toBeInstanceOf(RealtimeLaggedError);
+
+      return (err as RealtimeLaggedError).reason;
+    }
+  }
+
+  it("round-trips a policy cursor with three ids under a 128-bit tag", () => {
     const encoded = encodeCursor(cursor);
 
-    expect(encoded).toBe("1.8ca3af7f.1700000000000-1,0-0,1700000000002-0");
-    expect(decodeCursor(encoded)).toEqual(cursor);
+    expect(encoded).toMatch(/^2\.[0-9a-f]{32}\.1700000000000-1,0-0,1700000000002-0$/);
+    expect(decodeCursor(encoded, identity, channels)).toEqual(cursor);
   });
 
   it("round-trips a single-channel cursor", () => {
-    const cursor = { identityHash: "8ca3af7f", ids: ["1700000000000-1"] };
+    const single = { identity, channels: channels.slice(0, 1), ids: ["1700000000000-1"] };
 
-    expect(decodeCursor(encodeCursor(cursor))).toEqual(cursor);
+    expect(decodeCursor(encodeCursor(single), identity, single.channels)).toEqual(single);
+  });
+
+  it.each([
+    [
+      "ids it did not mint",
+      (raw: string) => raw.replace(/[^.]+$/, "0-0,0-0,0-0"),
+      identity,
+      channels,
+    ],
+    ["another user", (raw: string) => raw, { ...identity, userId: "u-2" }, channels],
+    ["another household", (raw: string) => raw, { ...identity, householdId: "hh-2" }, channels],
+    ["another View Epoch", (raw: string) => raw, { ...identity, viewEpoch: "1" }, channels],
+    [
+      "other channels",
+      (raw: string) => raw,
+      identity,
+      ["norish:b:broadcast:y", ...channels.slice(1)],
+    ],
+  ])("refuses %s as identity-changed", (_, tamper, opened, on) => {
+    expect(refusal(tamper(encodeCursor(cursor)), opened, on)).toBe("identity-changed");
   });
 
   it.each([
     "",
     "garbage",
-    "2.8ca3af7f.1-0",
-    "1.nothex!!.1-0",
-    "1.8ca3af7f.",
-    "1.8ca3af7f.1-0,abc",
-    "1.8ca3af7f.1-0.extra",
-    "1..1-0",
+    "1.72a4dd48.1700000000000-1",
+    "3.00000000000000000000000000000000.1-0",
+    "2.nothex!!nothex!!nothex!!nothex!!.1-0",
+    "2.00000000.1-0",
+    "2.00000000000000000000000000000000.",
+    "2.00000000000000000000000000000000.1-0,abc",
+    "2.00000000000000000000000000000000.1-0.extra",
+    "2..1-0",
   ])("decodes %j to cursor-invalid", (raw) => {
-    let caught: unknown;
+    expect(refusal(raw)).toBe("cursor-invalid");
+  });
 
+  it("refuses a cursor minted under another Master Key", () => {
+    const encoded = encodeCursor(cursor);
+
+    openBase64MasterKey(randomBytes(32).toString("base64"));
     try {
-      decodeCursor(raw);
-    } catch (err) {
-      caught = err;
+      expect(refusal(encoded)).toBe("identity-changed");
+    } finally {
+      openBase64MasterKey(process.env.MASTER_KEY!);
     }
-
-    expect(caught).toBeInstanceOf(RealtimeLaggedError);
-    expect((caught as RealtimeLaggedError).reason).toBe("cursor-invalid");
+    expect(decodeCursor(encoded, identity, channels)).toEqual(cursor);
   });
 });
 

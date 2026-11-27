@@ -6,7 +6,6 @@ import type { RecipeCategory, SortOrder } from "@norish/shared/contracts";
 import type { CanonicalRecipeFilters } from "@norish/shared/contracts/filter-contract";
 import { DEFAULT_RECIPE_FILTERS } from "@norish/shared/contracts/filter-contract";
 
-import { useHiddenItemVisibility } from "../reader";
 import { useLibraryFilters } from "./library-filters-store";
 
 /** The cooking-time limits a filter offers, with the `common.filters` key of each label. */
@@ -49,7 +48,6 @@ export function useFiltersDraft() {
   const filters = useLibraryFilters((state) => state.filters);
   const setFilters = useLibraryFilters((state) => state.setFilters);
   const clearFilters = useLibraryFilters((state) => state.clearFilters);
-  const { showRatings, showFavorites } = useHiddenItemVisibility();
   const [draft, setDraft] = useState(() => draftOf(filters));
 
   const update = (patch: Partial<FiltersDraft>) =>
@@ -73,12 +71,7 @@ export function useFiltersDraft() {
       clearFilters();
       setDraft(draftOf(DEFAULT_RECIPE_FILTERS));
     },
-    // A hidden favourites or rating filter is dropped, so it can't narrow a list that never offers it.
-    apply: () =>
-      setFilters({
-        ...draft,
-        showFavoritesOnly: showFavorites ? draft.showFavoritesOnly : false,
-        minRating: showRatings ? draft.minRating : null,
-      }),
+    // A filter the reader hides is kept as stored: hiding suppresses it where it is read.
+    apply: () => setFilters(draft),
   };
 }

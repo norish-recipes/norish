@@ -9,8 +9,8 @@ export interface RecipeImportJobData {
   url: string;
   recipeId: string;
   userId: string;
-  householdKey: string;
-  householdUserIds: string[] | null;
+  /** The importer's household when queued, for the duplicate key only: the job reads it afresh. */
+  householdId: string;
   forceAI?: boolean;
 }
 
@@ -43,8 +43,6 @@ export interface ImageImportFile {
 export interface ImageImportJobData {
   recipeId: string;
   userId: string;
-  householdKey: string;
-  householdUserIds: string[] | null;
   files: ImageImportFile[];
 }
 
@@ -56,8 +54,6 @@ export interface PasteImportJobData {
   batchId: string;
   recipeIds: string[];
   userId: string;
-  householdKey: string;
-  householdUserIds: string[] | null;
   text: string;
   forceAI?: boolean;
   structuredRecipes?: StructuredPasteImportRecipe[];
@@ -92,8 +88,7 @@ export interface RecipeEnrichmentJobData {
   runSequence: number;
   kind: RecipeEnrichmentKind;
   userId: string;
-  householdKey: string;
-  householdUserIds: string[] | null;
+  householdId: string;
   origin: RecipeEnrichmentOrigin;
   /** Set for manual runs only, so a terminal failure reaches the requester alone. */
   requestedByUserId?: string;
@@ -108,7 +103,7 @@ export interface RecipeEnrichmentJobData {
 /** An administrator's Enrich All: who asked, and whether the sweep overwrites what is stored. */
 export interface EnrichAllJobData {
   userId: string;
-  householdKey: string;
+  householdId: string;
   replaceExisting: boolean;
 }
 
@@ -127,11 +122,12 @@ export type StoreLookupJobData =
       storeId: string;
       /** The Ingredient asked about, which the answer is filed under (ADR-0037). */
       ingredientId: string;
+      /** The grocery that asked: the answer goes under the food it names when the job runs. */
+      groceryId: string;
       /** The grocery's name as the list shows it: what the shop is searched for. */
       name: string;
-      householdKey: string;
     }
-  | { kind: "refresh"; storeId: string; productIds: string[]; householdKey: string };
+  | { kind: "refresh"; storeId: string; productIds: string[] };
 
 /** Drawing these foods' Ingredient Icons, for a mint's pass or Fill gaps, a step per food. */
 export interface IngredientIconsJobData {

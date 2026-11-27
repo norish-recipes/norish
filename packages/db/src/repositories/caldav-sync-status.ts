@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, notExists, notInArray, sql } from "drizzle-orm";
 
 import type {
   CaldavSyncStatus,
@@ -13,6 +13,8 @@ import {
   CaldavSyncStatusInsertSchema,
   CaldavSyncStatusSelectSchema,
 } from "@norish/shared/contracts/zod/caldav-sync-status";
+
+import { currentHouseholdIdSql } from "./household-members";
 
 export async function createCaldavSyncStatus(
   input: CaldavSyncStatusInsertDto
@@ -49,20 +51,6 @@ export async function updateCaldavSyncStatus(
   return result.data;
 }
 
-export async function getCaldavSyncStatusById(id: string): Promise<CaldavSyncStatusDto | null> {
-  const rows = await db.select().from(caldavSyncStatus).where(eq(caldavSyncStatus.id, id)).limit(1);
-
-  const row = rows[0];
-
-  if (!row) return null;
-
-  const validated = CaldavSyncStatusSelectSchema.safeParse(row);
-
-  if (!validated.success) throw new Error("Invalid sync status data");
-
-  return validated.data;
-}
-
 export async function getCaldavSyncStatusByItemId(
   userId: string,
   itemId: string
@@ -84,6 +72,27 @@ export async function getCaldavSyncStatusByItemId(
   return validated.data;
 }
 
+/** The account's statuses, less those of entries that stayed in a household it has left. */
+function shownTo(userId: string, statusFilter?: CaldavSyncStatus[]) {
+  return and(
+    eq(caldavSyncStatus.userId, userId),
+    statusFilter && statusFilter.length > 0
+      ? inArray(caldavSyncStatus.syncStatus, statusFilter)
+      : undefined,
+    notExists(
+      db
+        .select({ id: plannedItems.id })
+        .from(plannedItems)
+        .where(
+          and(
+            eq(plannedItems.id, caldavSyncStatus.plannedItemId),
+            notInArray(plannedItems.householdId, currentHouseholdIdSql(userId))
+          )
+        )
+    )
+  );
+}
+
 export async function getCaldavSyncStatusesByUser(
   userId: string,
   statusFilter?: CaldavSyncStatus[],
@@ -92,7 +101,7 @@ export async function getCaldavSyncStatusesByUser(
 ): Promise<{ items: CaldavSyncStatusViewDto[]; total: number }> {
   const offset = (page - 1) * pageSize;
 
-  let query = db
+  const items = await db
     .select({
       id: caldavSyncStatus.id,
       userId: caldavSyncStatus.userId,
@@ -113,34 +122,15 @@ export async function getCaldavSyncStatusesByUser(
     })
     .from(caldavSyncStatus)
     .leftJoin(plannedItems, eq(caldavSyncStatus.plannedItemId, plannedItems.id))
-    .where(eq(caldavSyncStatus.userId, userId))
-    .$dynamic();
-
-  if (statusFilter && statusFilter.length > 0) {
-    query = query.where(
-      and(eq(caldavSyncStatus.userId, userId), inArray(caldavSyncStatus.syncStatus, statusFilter))
-    );
-  }
-
-  const items = await query
+    .where(shownTo(userId, statusFilter))
     .orderBy(desc(caldavSyncStatus.createdAt))
     .limit(pageSize)
     .offset(offset);
 
-  // Get total count
-  let countQuery = db
+  const countRows = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(caldavSyncStatus)
-    .where(eq(caldavSyncStatus.userId, userId))
-    .$dynamic();
-
-  if (statusFilter && statusFilter.length > 0) {
-    countQuery = countQuery.where(
-      and(eq(caldavSyncStatus.userId, userId), inArray(caldavSyncStatus.syncStatus, statusFilter))
-    );
-  }
-
-  const countRows = await countQuery;
+    .where(shownTo(userId, statusFilter));
   const count = countRows[0]?.count ?? 0;
 
   const viewItems: CaldavSyncStatusViewDto[] = items.map((item) => ({
@@ -165,23 +155,6 @@ export async function getCaldavSyncStatusesByUser(
   return { items: viewItems, total: count };
 }
 
-export async function getFailedSyncStatuses(): Promise<CaldavSyncStatusDto[]> {
-  const rows = await db
-    .select()
-    .from(caldavSyncStatus)
-    .where(
-      and(eq(caldavSyncStatus.syncStatus, "failed"), sql`${caldavSyncStatus.retryCount} < 10`)
-    );
-
-  return rows.map((row) => {
-    const validated = CaldavSyncStatusSelectSchema.safeParse(row);
-
-    if (!validated.success) throw new Error("Invalid sync status data");
-
-    return validated.data;
-  });
-}
-
 export async function getPendingOrFailedSyncStatuses(
   userId: string
 ): Promise<CaldavSyncStatusDto[]> {
@@ -197,6 +170,28 @@ export async function getPendingOrFailedSyncStatuses(
 
   return rows.map((row) => {
     const validated = CaldavSyncStatusSelectSchema.safeParse(row);
+
+    if (!validated.success) throw new Error("Invalid sync status data");
+
+    return validated.data;
+  });
+}
+
+/** The account's sync statuses of entries that stayed in a household it has left. */
+export async function listSyncStatusesLeftBehind(userId: string): Promise<CaldavSyncStatusDto[]> {
+  const rows = await db
+    .select({ status: caldavSyncStatus })
+    .from(caldavSyncStatus)
+    .innerJoin(plannedItems, eq(plannedItems.id, caldavSyncStatus.plannedItemId))
+    .where(
+      and(
+        eq(caldavSyncStatus.userId, userId),
+        notInArray(plannedItems.householdId, currentHouseholdIdSql(userId))
+      )
+    );
+
+  return rows.map(({ status }) => {
+    const validated = CaldavSyncStatusSelectSchema.safeParse(status);
 
     if (!validated.success) throw new Error("Invalid sync status data");
 
@@ -236,7 +231,7 @@ export async function getSyncStatusSummary(
       count: sql<number>`count(*)::int`,
     })
     .from(caldavSyncStatus)
-    .where(eq(caldavSyncStatus.userId, userId))
+    .where(shownTo(userId))
     .groupBy(caldavSyncStatus.syncStatus);
 
   const summary = {

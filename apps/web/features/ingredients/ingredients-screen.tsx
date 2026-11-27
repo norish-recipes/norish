@@ -4,36 +4,35 @@ import { useState, useTransition } from "react";
 import { useSearchParams } from "next/navigation";
 import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
 import { SettingsCard } from "@/components/settings/settings-card";
-import { SkeletonRows } from "@/components/settings/settings-skeleton";
 import { ActionButton } from "@/components/shared/action-button";
-import { FunnelIcon, SparklesIcon } from "@heroicons/react/16/solid";
+import { EmptyState } from "@/components/shared/empty-state";
+import { SparklesIcon } from "@heroicons/react/16/solid";
 import { BookOpenIcon } from "@heroicons/react/24/outline";
-import { Button } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
+import type { IngredientFilters } from "@norish/shared-react/ingredients";
 import { useIngredientsSubscription } from "@norish/shared-react/config";
-import {
-  isOpenChange,
-  useAIChangesQuery,
-  useIngredientListQuery,
-} from "@norish/shared-react/ingredients";
-
-import type { IngredientFilters } from "./components/ingredient-filters-panel";
-import { ChangedByAIPanel } from "./components/changed-by-ai-panel";
-import DataSourcesCard from "./components/data-sources-card";
 import {
   DEFAULT_INGREDIENT_FILTERS,
   hasIngredientFilters,
-  IngredientFiltersPanel,
-} from "./components/ingredient-filters-panel";
+  useAIChangeCounts,
+  useIngredientList,
+} from "@norish/shared-react/ingredients";
+
+import { ChangedByAIPanel } from "./components/changed-by-ai-panel";
+import DataSourcesCard from "./components/data-sources-card";
+import { IngredientAddPanel } from "./components/ingredient-add-panel";
+import { IngredientFiltersButton } from "./components/ingredient-filters-button";
+import { IngredientFiltersPanel } from "./components/ingredient-filters-panel";
 import { IngredientList } from "./components/ingredient-list";
 import { IngredientSearch } from "./components/ingredient-search";
-import { useIngredientTree } from "./hooks/use-ingredient-tree";
+import { IngredientRowsSkeleton } from "./components/ingredients-skeleton";
 
 /** The catalogue of Ingredients (ADR-0037): a tree of kinds unless searched or filtered. */
 export function IngredientsScreen() {
   const t = useTranslations("settings.ingredients");
-  const tFilters = useTranslations("common.filters");
+  const tActions = useTranslations("common.actions");
+  const tContent = useTranslations("settings.content");
   const locale = useLocale();
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<IngredientFilters>(DEFAULT_INGREDIENT_FILTERS);
@@ -47,9 +46,6 @@ export function IngredientsScreen() {
 
   useIngredientsSubscription();
 
-  // A search or filter may match at any depth, so only the unfiltered list is a tree of roots.
-  const { tree: asTree, ...searchFilters } = filters;
-  const treeMode = asTree && !search && !hasIngredientFilters({ ...searchFilters, tree: true });
   // Not deferred: a search lands in a transition, and a deferred copy kept the old page's rows with
   // the new one's kinds folded in.
   const {
@@ -60,77 +56,74 @@ export function IngredientsScreen() {
     hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
-  } = useIngredientListQuery({
-    search: search || undefined,
-    ...searchFilters,
-    rootsOnly: treeMode || undefined,
-    locale,
-  });
+    treeMode,
+    tree,
+  } = useIngredientList(search, filters, locale);
   // Another search's rows standing in, not a reread of the rows showing.
   const settling = isPending || isPlaceholderData;
-  const tree = useIngredientTree(items, treeMode, locale);
   // Every food on screen, the folded-out kinds included.
   const shown = tree.rows.map((row) => row.item);
   // The panel follows its food's row, and reads it on its own once a filter drops the row.
   const openItem = openId ? (shown.find((item) => item.id === openId) ?? null) : null;
 
   const [changesOpen, setChangesOpen] = useState(false);
-  const { total, unsure } = useAIChangesQuery((changes) => ({
-    total: changes.length,
-    unsure: changes.filter(isOpenChange).length,
-  }));
+  // Each opening starts a fresh Add panel, so it never keeps the name typed last time.
+  const [addOpen, setAddOpen] = useState(false);
+  const [addCount, setAddCount] = useState(0);
+  const { total, unsure } = useAIChangeCounts();
 
   return (
     <div className="flex flex-col gap-6">
       <SettingsCard
         actions={
-          total > 0 ? (
+          <>
+            {total > 0 ? (
+              <ActionButton
+                action="edit"
+                data-testid="ingredients-ai-changes-open"
+                icon={SparklesIcon}
+                onPress={() => setChangesOpen(true)}
+              >
+                <span className="sm:hidden">{t("changedByAI.openCompact", { count: unsure })}</span>
+                <span className="hidden sm:inline">{t("changedByAI.open", { count: unsure })}</span>
+              </ActionButton>
+            ) : null}
             <ActionButton
-              action="edit"
-              data-testid="ingredients-ai-changes-open"
-              icon={SparklesIcon}
-              size="sm"
-              onPress={() => setChangesOpen(true)}
+              action="add"
+              data-testid="ingredients-add"
+              onPress={() => {
+                setAddCount(addCount + 1);
+                setAddOpen(true);
+              }}
             >
-              {t("changedByAI.open", { count: unsure })}
+              {tActions("add")}
             </ActionButton>
-          ) : null
+          </>
         }
-        description={t("description")}
         icon={BookOpenIcon}
         title={t("title")}
       >
         <IngredientSearch
           busy={settling}
           suffix={
-            <Button
-              isIconOnly
-              aria-label={tFilters("title")}
-              // The dot alone says a filter is on.
-              className="relative"
-              data-testid="ingredients-filters"
-              size="sm"
-              variant="ghost"
+            <IngredientFiltersButton
+              active={hasIngredientFilters(filters)}
               onPress={() => setFiltersOpen(true)}
-            >
-              <FunnelIcon className="size-4" />
-              {hasIngredientFilters(filters) ? (
-                <span className="bg-accent absolute top-1 right-1 inline-flex size-2 rounded-full" />
-              ) : null}
-            </Button>
+            />
           }
           onSearch={onSearch}
         />
 
         {isLoading || (isPlaceholderData && items.length === 0 && !isPaused) ? (
-          // The tab skeleton's rows until an answer lands; a read paused Offline is not loading.
-          <div aria-busy className="flex flex-col gap-4" data-testid="ingredients-loading">
-            <SkeletonRows count={5} />
-          </div>
+          // The skeleton's rows until an answer lands; a read paused Offline is not loading.
+          <IngredientRowsSkeleton />
         ) : items.length === 0 ? (
-          <p className="text-muted py-6 text-center" data-testid="ingredients-empty">
-            {filters.flaggedOnly ? t("emptyFlagged") : t("empty")}
-          </p>
+          <EmptyState
+            data-testid="ingredients-empty"
+            icon={BookOpenIcon}
+            title={filters.flaggedOnly ? t("emptyFlagged") : tContent("noMatch")}
+            variant="row"
+          />
         ) : (
           <IngredientList
             hasMore={hasNextPage}
@@ -158,6 +151,14 @@ export function IngredientsScreen() {
         onClose={() => setOpenId(null)}
       />
       <ChangedByAIPanel open={changesOpen} onClose={() => setChangesOpen(false)} />
+      {addCount > 0 ? (
+        <IngredientAddPanel
+          key={addCount}
+          open={addOpen}
+          onOpenChange={setAddOpen}
+          onOpenFood={setOpenId}
+        />
+      ) : null}
     </div>
   );
 }

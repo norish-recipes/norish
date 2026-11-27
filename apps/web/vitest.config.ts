@@ -19,7 +19,7 @@ export default defineConfig({
       // next.config.js inlines this at build time; the suites stand in for the build.
       NEXT_PUBLIC_APP_VERSION: "0.0.0-test",
     },
-    setupFiles: ["./__tests__/setup.ts"],
+    setupFiles: ["./__tests__/setup.ts", "@norish/config/testing-setup"],
     globalSetup: ["../../packages/db/__tests__/setup/global-setup.ts"],
     hookTimeout: 60000,
     testTimeout: 15000,

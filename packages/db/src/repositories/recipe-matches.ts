@@ -1,5 +1,6 @@
 import type { SQL } from "drizzle-orm";
-import { sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
+import { alias, QueryBuilder } from "drizzle-orm/pg-core";
 
 import type { LibraryMatchDTO } from "@norish/shared/contracts/dto/cookbook";
 import type { SearchField } from "@norish/shared/contracts/store-types";
@@ -9,8 +10,13 @@ import { searchWords } from "@norish/shared/lib/search-terms";
 
 import { recipeIngredients, recipes, recipeTags, steps as stepsTable, tags } from "../schema";
 import { lineNamesKindSql } from "./ingredient-kinds";
-import { rowsOf, uuidListSql } from "./raw-sql";
 import { searchTsqueryTerms } from "./recipes";
+
+const qb = new QueryBuilder();
+const matchLine = alias(recipeIngredients, "match_ri");
+const matchStep = alias(stepsTable, "match_step");
+const matchTagLink = alias(recipeTags, "match_rt");
+const matchTag = alias(tags, "match_tag");
 
 /** One fragment around the hit; ts_headline takes no empty markers, so these are stripped after. */
 const MATCH_SNIPPET_OPTIONS =
@@ -18,29 +24,36 @@ const MATCH_SNIPPET_OPTIONS =
 const plainSnippet = (snippet: string) => snippet.replace(/[\uE000\uE001]/g, "");
 
 /** The recipe's first line (in the order the page reads them) that `condition` accepts, as written.
- * Correlated on `"recipes"."id"`; the line is `match_ri`. */
-function ingredientLineSql(condition: SQL) {
-  return sql`(
-    SELECT CASE WHEN match_ri.name ~ ${HEADING_LINE}
-      THEN json_build_object('amount', NULL, 'unit', NULL,
-        'name', regexp_replace(match_ri.name, ${HEADING_MARKS}, '', 'g'))
-      ELSE json_build_object(
-        'amount', match_ri.amount, 'unit', match_ri.unit, 'name', match_ri.name) END
-    FROM ${recipeIngredients} match_ri
-    WHERE match_ri.recipe_id = "recipes"."id" AND ${condition}
-    ORDER BY (match_ri.name ~ ${HEADING_LINE}),
-      (match_ri.system_used <> "recipes"."system_used"),
-      coalesce(match_ri."order", 0), match_ri."order" NULLS LAST,
-      match_ri.created_at, match_ri.id
-    LIMIT 1
-  )`;
+ * Correlated on the outer query's recipe; the line is `matchLine`. */
+function ingredientLine(condition: SQL) {
+  return qb
+    .select({
+      line: sql`CASE WHEN ${matchLine.name} ~ ${HEADING_LINE}
+        THEN json_build_object('amount', NULL, 'unit', NULL,
+          'name', regexp_replace(${matchLine.name}, ${HEADING_MARKS}, '', 'g'))
+        ELSE json_build_object(
+          'amount', ${matchLine.amount}, 'unit', ${matchLine.unit}, 'name', ${matchLine.name}) END`,
+    })
+    .from(matchLine)
+    .where(and(eq(matchLine.recipeId, recipes.id), condition))
+    .orderBy(
+      sql`(${matchLine.name} ~ ${HEADING_LINE})`,
+      sql`(${matchLine.systemUsed} <> ${recipes.systemUsed})`,
+      sql`coalesce(${matchLine.order}, 0)`,
+      sql`${matchLine.order} NULLS LAST`,
+      matchLine.createdAt,
+      matchLine.id
+    )
+    .limit(1);
 }
+
+type IngredientMatch = { amount: number | null; unit: string | null; name: string };
 
 type MatchRow = {
   id: string;
-  title_hit: boolean;
+  titleHit: boolean;
   tag: string | null;
-  ingredient: { amount: number | null; unit: string | null; name: string } | null;
+  ingredient: IngredientMatch | null;
   description: string | null;
   step: { number: number | null; snippet: string } | null;
 };
@@ -58,81 +71,90 @@ function addMatches<T extends { id: string }>(
   }
 }
 
+/** The recipe's first step (in the order the page reads them) that `query` finds, with its number. */
+function stepMatch(query: SQL) {
+  const numbered = qb
+    .select({
+      systemUsed: matchStep.systemUsed,
+      body: sql<string>`CASE WHEN ${matchStep.step} ~ ${HEADING_LINE}
+        THEN regexp_replace(${matchStep.step}, ${HEADING_MARKS}, '', 'g')
+        ELSE ${matchStep.step} END`.as("body"),
+      n: sql<number | null>`CASE WHEN ${matchStep.step} ~ ${HEADING_LINE} THEN NULL
+        ELSE count(*) FILTER (WHERE ${matchStep.step} !~ ${HEADING_LINE}) OVER (
+          PARTITION BY ${matchStep.systemUsed}
+          ORDER BY coalesce(${matchStep.order}, 0), ${matchStep.order} NULLS LAST,
+            ${matchStep.createdAt}, ${matchStep.id}
+        ) END`.as("n"),
+    })
+    .from(matchStep)
+    .where(eq(matchStep.recipeId, recipes.id))
+    .as("numbered");
+
+  return qb
+    .select({
+      step: sql`json_build_object('number', ${numbered.n},
+        'snippet', ts_headline('simple', ${numbered.body}, ${query}, ${MATCH_SNIPPET_OPTIONS}))`,
+    })
+    .from(numbered)
+    .where(sql`to_tsvector('simple', ${numbered.body}) @@ ${query}`)
+    .orderBy(
+      sql`(${numbered.n} IS NULL)`,
+      sql`(${numbered.systemUsed} <> ${recipes.systemUsed})`,
+      numbered.n
+    )
+    .limit(1);
+}
+
 /** One row per recipe of `ids`: what each in-scope field holds that `query` finds. */
 async function recipeMatchRows(
   ids: string[],
   searchFields: SearchField[],
-  query: ReturnType<typeof sql>
+  query: SQL
 ): Promise<MatchRow[]> {
   const inScope = (field: SearchField) => searchFields.includes(field);
 
-  return rowsOf<MatchRow>(
-    await db.execute(sql`
-    SELECT "recipes"."id" AS id,
-      ${
-        inScope("title")
-          ? sql`to_tsvector('simple', coalesce("recipes"."name", '')) @@ ${query}`
-          : sql`false`
-      } AS title_hit,
-      ${
-        inScope("tags")
-          ? sql`(
-              SELECT match_tag.name
-              FROM ${recipeTags} match_rt
-              INNER JOIN ${tags} match_tag ON match_rt.tag_id = match_tag.id
-              WHERE match_rt.recipe_id = "recipes"."id"
-                AND to_tsvector('simple', match_tag.name) @@ ${query}
-              ORDER BY match_rt."order", match_tag.name
-              LIMIT 1
-            )`
-          : sql`NULL::text`
-      } AS tag,
-      ${
-        inScope("ingredients")
-          ? ingredientLineSql(sql`to_tsvector('simple', match_ri.name) @@ ${query}`)
-          : sql`NULL::json`
-      } AS ingredient,
-      ${
-        inScope("description")
-          ? sql`CASE WHEN to_tsvector('simple', coalesce("recipes"."description", '')) @@ ${query}
-              THEN ts_headline('simple', "recipes"."description", ${query}, ${MATCH_SNIPPET_OPTIONS})
-            END`
-          : sql`NULL::text`
-      } AS description,
-      ${
-        inScope("steps")
-          ? sql`(
-              SELECT json_build_object(
-                'number', numbered.n,
-                'snippet', ts_headline('simple', numbered.body, ${query}, ${MATCH_SNIPPET_OPTIONS}))
-              FROM (
-                SELECT match_step.system_used,
-                  CASE WHEN match_step.step ~ ${HEADING_LINE}
-                    THEN regexp_replace(match_step.step, ${HEADING_MARKS}, '', 'g')
-                    ELSE match_step.step END AS body,
-                  CASE WHEN match_step.step ~ ${HEADING_LINE} THEN NULL
-                    ELSE count(*) FILTER (WHERE match_step.step !~ ${HEADING_LINE}) OVER (
-                      PARTITION BY match_step.system_used
-                      ORDER BY coalesce(match_step."order", 0), match_step."order" NULLS LAST,
-                        match_step.created_at, match_step.id
-                    ) END AS n
-                FROM ${stepsTable} match_step
-                WHERE match_step.recipe_id = "recipes"."id"
-              ) numbered
-              WHERE to_tsvector('simple', numbered.body) @@ ${query}
-              ORDER BY (numbered.n IS NULL), (numbered.system_used <> "recipes"."system_used"), numbered.n
-              LIMIT 1
-            )`
-          : sql`NULL::json`
-      } AS step
-    FROM ${recipes}
-    WHERE "recipes"."id" IN (${uuidListSql(ids)})
-  `)
-  );
+  return await db
+    .select({
+      id: recipes.id,
+      titleHit: inScope("title")
+        ? sql<boolean>`to_tsvector('simple', coalesce(${recipes.name}, '')) @@ ${query}`
+        : sql<boolean>`false`,
+      tag: inScope("tags")
+        ? sql<string | null>`${qb
+            .select({ name: matchTag.name })
+            .from(matchTagLink)
+            .innerJoin(matchTag, eq(matchTagLink.tagId, matchTag.id))
+            .where(
+              and(
+                eq(matchTagLink.recipeId, recipes.id),
+                sql`to_tsvector('simple', ${matchTag.name}) @@ ${query}`
+              )
+            )
+            .orderBy(matchTagLink.order, matchTag.name)
+            .limit(1)}`
+        : sql<string | null>`NULL::text`,
+      ingredient: inScope("ingredients")
+        ? sql<IngredientMatch | null>`${ingredientLine(
+            sql`to_tsvector('simple', ${matchLine.name}) @@ ${query}`
+          )}`
+        : sql<IngredientMatch | null>`NULL::json`,
+      description: inScope("description")
+        ? sql<
+            string | null
+          >`CASE WHEN to_tsvector('simple', coalesce(${recipes.description}, '')) @@ ${query}
+            THEN ts_headline('simple', ${recipes.description}, ${query}, ${MATCH_SNIPPET_OPTIONS})
+          END`
+        : sql<string | null>`NULL::text`,
+      step: inScope("steps")
+        ? sql<MatchRow["step"]>`${stepMatch(query)}`
+        : sql<MatchRow["step"]>`NULL::json`,
+    })
+    .from(recipes)
+    .where(inArray(recipes.id, ids));
 }
 
 function toLibraryMatch(row: MatchRow): LibraryMatchDTO | null {
-  if (row.title_hit) return { field: "title" };
+  if (row.titleHit) return { field: "title" };
   if (row.tag) return { field: "tags", tag: row.tag };
   if (row.ingredient) return { field: "ingredients", ...row.ingredient };
   if (row.description) return { field: "description", snippet: plainSnippet(row.description) };
@@ -187,14 +209,15 @@ export async function recipeIngredientMatches(
 
   if (ids.length === 0 || ingredientIds.length === 0) return matches;
 
-  const rows = rowsOf<Pick<MatchRow, "id" | "ingredient">>(
-    await db.execute(sql`
-    SELECT "recipes"."id" AS id,
-      ${ingredientLineSql(lineNamesKindSql("match_ri", ingredientIds))} AS ingredient
-    FROM ${recipes}
-    WHERE "recipes"."id" IN (${uuidListSql(ids)})
-  `)
-  );
+  const rows = await db
+    .select({
+      id: recipes.id,
+      ingredient: sql<IngredientMatch | null>`${ingredientLine(
+        lineNamesKindSql(matchLine.id, ingredientIds)
+      )}`,
+    })
+    .from(recipes)
+    .where(inArray(recipes.id, ids));
 
   addMatches(matches, rows, ({ ingredient }) =>
     ingredient ? { field: "ingredients", ...ingredient } : null

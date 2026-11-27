@@ -46,10 +46,13 @@ export async function requireServerAdmin(): Promise<User> {
 
 export async function requireUserAndHousehold(): Promise<{
   user: User;
-  household: HouseholdWithUsersNamesDto | null;
+  household: HouseholdWithUsersNamesDto;
 }> {
   const user = await requireUser();
   const household = await getHouseholdForUser(user.id);
+
+  // Every account has one; none means the account is gone.
+  if (!household) throw new Error("UNAUTHORIZED");
 
   return { user, household };
 }
@@ -61,7 +64,7 @@ export async function withAuth<R>(fn: (user: User) => Promise<R>): Promise<R> {
 }
 
 export async function withAuthAndHousehold<R>(
-  fn: (user: User, household: HouseholdWithUsersNamesDto | null) => Promise<R>
+  fn: (user: User, household: HouseholdWithUsersNamesDto) => Promise<R>
 ): Promise<R> {
   const { user, household } = await requireUserAndHousehold();
 
@@ -84,7 +87,7 @@ function handleApiError(err: any): Response {
 export function withHouseholdApiAuth(
   fn: (ctx: {
     user: User;
-    household: HouseholdWithUsersNamesDto | null;
+    household: HouseholdWithUsersNamesDto;
     searchParams: URLSearchParams;
     params: Record<string, string>;
   }) => Promise<Response>

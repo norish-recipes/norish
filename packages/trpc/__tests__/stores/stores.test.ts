@@ -16,7 +16,6 @@ import {
   createMockUser,
 } from "../calendar/test-utils";
 import { createMockGrocery } from "../groceries/test-utils";
-import { assertHouseholdAccess } from "../mocks/permissions";
 import { groceries } from "../mocks/realtime/groceries";
 import { stores } from "../mocks/realtime/stores";
 
@@ -26,8 +25,8 @@ const storesRepository = vi.hoisted(() => ({
   createStore: vi.fn(),
   deleteStore: vi.fn(),
   getStoreById: vi.fn(),
-  getStoreOwnerId: vi.fn(),
-  listStoresByUserIds: vi.fn(),
+  ownStoreExists: vi.fn(),
+  listStoresByHousehold: vi.fn(),
   reorderStores: vi.fn(),
   updateStore: vi.fn(),
 }));
@@ -60,8 +59,7 @@ describe("stores procedures", () => {
   const ctx = createMockAuthedContext(user, household);
 
   beforeEach(() => {
-    storesRepository.getStoreOwnerId.mockResolvedValue(ctx.user.id);
-    assertHouseholdAccess.mockResolvedValue(undefined);
+    storesRepository.ownStoreExists.mockResolvedValue(true);
   });
 
   it("checks the link the client just saved, not the one it replaced", async () => {
@@ -126,12 +124,12 @@ describe("stores procedures", () => {
     expect(stores.publish).toHaveBeenCalledWith(
       "updated",
       { store: { id: storeId, version: 4 } },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   });
 
   it("answers an update to a Store that no longer exists as stale", async () => {
-    storesRepository.getStoreOwnerId.mockResolvedValue(null);
+    storesRepository.ownStoreExists.mockResolvedValue(false);
 
     const caller = storesProcedures.createCaller(createMockCallerContext(ctx));
 
@@ -213,12 +211,12 @@ describe("stores procedures", () => {
     expect(stores.publish).toHaveBeenCalledWith(
       "deleted",
       { storeId, deletedGroceryIds: [groceryId] },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
     expect(groceries.publish).toHaveBeenCalledWith(
       "deleted",
       { groceryIds: [groceryId] },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   });
 
@@ -247,12 +245,12 @@ describe("stores procedures", () => {
     expect(groceries.publish).toHaveBeenCalledWith(
       "updated",
       { changedGroceries: [moved] },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   });
 
   it("takes a delete of a Store already gone as done", async () => {
-    storesRepository.getStoreOwnerId.mockResolvedValue(null);
+    storesRepository.ownStoreExists.mockResolvedValue(false);
 
     const caller = storesProcedures.createCaller(createMockCallerContext(ctx));
 
@@ -312,7 +310,7 @@ describe("stores procedures", () => {
       {
         stores: [reorderedStore],
       },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   });
 
@@ -375,14 +373,15 @@ describe("stores procedures", () => {
           { id: zuivel, name: "Zuivel" },
           { id: brood, name: "Brood" },
         ],
-      })
+      }),
+      ctx.householdId
     );
     expect(stores.publish).toHaveBeenCalledWith(
       "updated",
       {
         store: saved,
       },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   });
 
@@ -430,7 +429,7 @@ describe("stores procedures", () => {
       expect.objectContaining({
         store: expect.objectContaining({ aisles: [expect.objectContaining({ name: "Zuivel" })] }),
       }),
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   });
 
@@ -449,7 +448,7 @@ describe("stores procedures", () => {
       },
     ];
 
-    storesRepository.listStoresByUserIds.mockResolvedValue(stores);
+    storesRepository.listStoresByHousehold.mockResolvedValue(stores);
 
     const caller = openApiStoresRouter.createCaller(createMockCallerContext(ctx));
     const result = await caller.listStores();
@@ -491,7 +490,7 @@ describe("stores procedures", () => {
       expect.objectContaining({
         store: expect.objectContaining({ name: "Market" }),
       }),
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   });
 

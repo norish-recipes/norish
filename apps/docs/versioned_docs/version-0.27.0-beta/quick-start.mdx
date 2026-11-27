@@ -1,0 +1,51 @@
+---
+id: quick-start
+title: Quick start
+slug: /quick-start
+sidebar_position: 2
+description: Run Norish with Docker Compose.
+---
+
+import { DocLinkCard, LinkCardGrid } from "@site/src/components/LinkCard";
+import QuickStartCompose from "@site/src/components/QuickStartCompose";
+
+# Quick start
+
+Save the file below as `docker-compose.yml` and run:
+
+```bash
+docker compose up -d
+```
+
+Open [http://localhost:3000](http://localhost:3000) and [create your account](#first-run).
+
+<QuickStartCompose />
+
+:::info Generating the secrets
+The example generates a `MASTER_KEY` and `OBSCURA_CDP_TOKEN` in your browser. To generate your own, run
+
+```bash
+openssl rand -base64 32 # MASTER_KEY
+openssl rand -hex 32    # OBSCURA_CDP_TOKEN, the same value on both services
+```
+
+Keep both values secret. If you change `MASTER_KEY`, Norish can no longer read the secrets it encrypted with the old key.
+:::
+
+:::tip Production template
+See
+[`docker-compose.example.yml`](https://github.com/norish-recipes/Norish/blob/main/docker/docker-compose.example.yml) for production settings.
+:::
+
+## First run
+
+Sign in with your email and password. The first account owns the server. Norish then closes registration. Manage registration and other sign-in methods in **Settings**, under **Admin**.
+
+## Next steps
+
+<LinkCardGrid>
+  <DocLinkCard doc="configuration/authentication" />
+  <DocLinkCard doc="configuration/ai-provider" />
+  <DocLinkCard doc="configuration/server-runtime" />
+  <DocLinkCard doc="configuration/admin-settings" />
+</LinkCardGrid>

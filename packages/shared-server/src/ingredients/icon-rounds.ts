@@ -50,8 +50,9 @@ export async function drawNewIngredientIcon(
   set: IconSet = shippedIconSet()
 ): Promise<IconDrawOutcome> {
   const lineage = await findIconLineage([ingredientId]);
+  const food = lineage.get(ingredientId);
 
-  if (!lineage.has(ingredientId)) return { outcome: "skipped", reason: "not-found" };
+  if (!food) return { outcome: "skipped", reason: "not-found" };
   if (chooseIcon(ingredientId, lineage, set)) return { outcome: "skipped", reason: "has-icon" };
 
   const drawn = await drawDraftIcon(ingredientId);
@@ -60,7 +61,7 @@ export async function drawNewIngredientIcon(
   );
 
   if (!own) return { outcome: "skipped", reason: "has-icon" };
-  await ingredientChanges().changed([ingredientId]);
+  await ingredientChanges().changed([ingredientId], food.householdId);
 
   return { outcome: "drawn" };
 }

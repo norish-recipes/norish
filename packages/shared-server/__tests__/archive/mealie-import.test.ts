@@ -28,10 +28,13 @@ vi.mock("@norish/shared-server/media/dish-color", () => ({
 vi.mock("@norish/db/repositories/ratings", () => ({ rateRecipe: vi.fn() }));
 vi.mock("@norish/db/repositories/favorites", () => ({ addFavorite: mockAddFavorite }));
 vi.mock("@norish/db/repositories/categories", () => ({
-  listCategoryNamesForUsers: vi.fn().mockResolvedValue(["Breakfast", "Lunch", "Dinner", "Snack"]),
+  listCategoryNamesForHousehold: vi
+    .fn()
+    .mockResolvedValue(["Breakfast", "Lunch", "Dinner", "Snack"]),
 }));
-vi.mock("@norish/db/repositories/cuisines", () => ({
-  listCuisines: vi.fn().mockResolvedValue([{ id: "italian-id", name: "Italian", version: 1 }]),
+vi.mock("@norish/db/repositories/list-entries", () => ({
+  listEntryNames: vi.fn().mockResolvedValue([]),
+  listEntryRows: vi.fn().mockResolvedValue([{ id: "italian-id", name: "Italian", version: 1 }]),
 }));
 vi.mock("@norish/db/repositories/cookbooks", () => ({
   findOwnCookbookIdByTitle: vi.fn(),
@@ -159,7 +162,10 @@ async function zipBytes(files: Record<string, string>) {
 }
 
 async function importFiles(files: Record<string, string>) {
-  const result = await importArchive("user-1", ["user-1"], await zipBytes(files));
+  const result = await importArchive(
+    { userId: "user-1", householdId: "household-1" },
+    await zipBytes(files)
+  );
 
   return { result, dtos: mockCreateResolvedRecipe.mock.calls.map((call) => call[2]) };
 }

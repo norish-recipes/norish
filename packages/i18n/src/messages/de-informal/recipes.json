@@ -41,12 +41,8 @@
   },
   "empty": {
     "title": "Deine Bibliothek wartet",
-    "description": "Füge eine Rezept-URL in das Suchfeld oben ein und schau, wie die Magie passiert.",
     "noResults": "Keine Rezepte gefunden",
-    "noResultsHint": "Versuche, deine Filter anzupassen oder zu löschen.",
-    "noCookbooks": "Noch keine Kochbücher",
-    "noCookbooksHint": "Ein Kochbuch ist eine benannte Sammlung von Rezepten. Erstelle dein erstes, um deine Bibliothek zu ordnen.",
-    "descriptionMobile": "Füge dein erstes Rezept über einen Link, Text oder Fotos hinzu."
+    "noCookbooks": "Noch keine Kochbücher"
   },
   "card": {
     "noImage": "Kein Bild verfügbar",
@@ -67,6 +63,7 @@
     "addToGroceries": "Zur Einkaufsliste hinzufügen",
     "ratingPrompt": "Was hältst du von diesem Rezept?",
     "notFound": "Rezept nicht gefunden",
+    "offline": "Dieses Rezept braucht eine Verbindung",
     "notFoundMessage": "Dieses Rezept existiert nicht oder du hast keine Berechtigung, es anzuzeigen.",
     "prep": "Vorbereitung",
     "total": "gesamt",
@@ -160,6 +157,7 @@
     "expiresAfter": "Läuft ab nach",
     "expiresOn": "Läuft ab am {date}",
     "expiredOn": "Abgelaufen am {date}",
+    "revokedOn": "Widerrufen am {date}",
     "lastOpenedOn": "Zuletzt geöffnet {date}",
     "neverExpires": "Läuft nie ab",
     "linkCreated": "Erstellt am {date}"
@@ -203,7 +201,7 @@
     "notesPlaceholder": "Füge Hinweise zur Vorbereitung, Anpassungen oder Serviervorschläge für dieses Rezept hinzu...",
     "ingredientsHelp": "Gib Zutaten wie \"2 Tassen Mehl\" ein - wir analysieren die Mengen und Einheiten automatisch.",
     "instructionsHelp": "Schreibe klare Schritt-für-Schritt-Anleitungen. Drücke Enter, um zum nächsten Schritt zu gehen.",
-    "tagsHelp": "Gib Tags ein und klicke auf Vorschläge zum Hinzufügen. Tags am Rezept sind ausgefüllt, neue Tags haben einen gestrichelten Rahmen.",
+    "tagsHelp": "Wähle einen Tag oder erstelle einen neuen.",
     "tagsAndCategories": "Tags & Kategorien",
     "categoriesHelp": "Wähle Mahlzeitkategorien für dieses Rezept.",
     "addCategory": "Kategorie hinzufügen",
@@ -224,7 +222,7 @@
     "originRegion": "Region",
     "originRegionPlaceholder": "z. B. Sizilien",
     "cuisines": "Küchen",
-    "cuisinesHelp": "Wähle aus der Liste deiner Installation. Bei einem Fusionsgericht sind mehrere sinnvoll.",
+    "cuisinesHelp": "Wähle aus der Liste oder erstelle eine eigene. Bei einem Fusionsgericht sind mehrere sinnvoll.",
     "provenanceNote": "Notiz",
     "provenanceNotePlaceholder": "Ein paar Sätze dazu, woher dieses Gericht stammt …",
     "servings": "Portionen",
@@ -441,7 +439,6 @@
     "singular": "Kochbuch",
     "notFound": "Kochbuch nicht gefunden",
     "notFoundHint": "Es wurde möglicherweise gelöscht oder ist für dich nicht sichtbar.",
-    "emptyHint": "Füge Rezepte über das Aktionsmenü eines Rezepts hinzu.",
     "panelTitle": "Zu Kochbuch hinzufügen",
     "newWithRecipe": "Neues Kochbuch mit diesem Rezept",
     "noneEditable": "Es gibt keine Kochbücher, die du bearbeiten kannst.",
@@ -545,7 +542,7 @@
     "tagsAndCategories": "Tags und Kategorien",
     "categories": "Kategorien",
     "tags": "Tags",
-    "tagsHint": "Wähle einen Vorschlag oder gib einen neuen Tag ein; neue Tags haben einen gestrichelten Rand.",
+    "tagsHint": "Wähle einen Tag aus der Liste oder erstelle einen neuen.",
     "addTag": "Tag hinzufügen",
     "removeNamed": "{name} entfernen",
     "servingsAndTime": "Portionen und Zeit",
@@ -561,6 +558,13 @@
     "discardMessage": "Du hast ungespeicherte Änderungen.",
     "keepEditing": "Weiter bearbeiten",
     "discard": "Verwerfen"
+  },
+  "picker": {
+    "create": "\"{name}\" erstellen",
+    "createOffline": "Du kannst \"{name}\" erstellen, wenn du online bist.",
+    "tooLong": "Namen dürfen höchstens {max} Zeichen haben.",
+    "createFailed": "\"{name}\" konnte nicht erstellt werden. Versuch es noch einmal.",
+    "loadFailed": "Die Liste konnte nicht geladen werden."
   },
   "search": {
     "sortBestMatch": "Beste Treffer",

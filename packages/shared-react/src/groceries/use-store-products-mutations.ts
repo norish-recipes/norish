@@ -9,7 +9,12 @@ import type {
 } from "@norish/shared/contracts";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
 
-import { shouldPreserveOptimisticUpdate } from "../offline/optimistic-updates";
+import type { HouseholdMark } from "../offline/optimistic-updates";
+import {
+  markHousehold,
+  mayRestore,
+  shouldPreserveOptimisticUpdate,
+} from "../offline/optimistic-updates";
 import { usePlatform } from "../platform/platform";
 import { useTRPC } from "../trpc";
 
@@ -45,7 +50,7 @@ function chosenProduct(
 }
 
 /** The prices as they were before each choice's optimistic write, keyed by the input sent. */
-const pricesBefore = new WeakMap<object, ResolvedProductLink[]>();
+const pricesBefore = new WeakMap<object, HouseholdMark & { prices: ResolvedProductLink[] }>();
 
 /** Writes the picker's choice on Save or Add, priced on the list at once; a refusal puts it back and toasts. */
 export function useChooseProduct() {
@@ -61,7 +66,7 @@ export function useChooseProduct() {
         if (shouldPreserveOptimisticUpdate(error)) return;
         const was = pricesBefore.get(input);
 
-        if (was) queryClient.setQueryData(pricesKey, was);
+        if (mayRestore(queryClient, was)) queryClient.setQueryData(pricesKey, was.prices);
         showError(error, "stores:chooseProduct");
         reread();
       },
@@ -100,7 +105,7 @@ export function useChooseProduct() {
     }
     const input = { storeId, name, choice };
 
-    if (was) pricesBefore.set(input, was);
+    if (was) pricesBefore.set(input, { prices: was, ...markHousehold(queryClient) });
     mutate(input);
   };
 }

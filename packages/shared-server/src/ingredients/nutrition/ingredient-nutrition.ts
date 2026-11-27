@@ -49,7 +49,6 @@ import type {
   Per100g,
 } from "@norish/shared/contracts/ingredient-nutrition";
 import {
-  findAnyCorrections,
   findHouseholdCorrections,
   findNutritionEstimates,
   findNutritionFoods,
@@ -58,12 +57,12 @@ import {
 } from "@norish/db/repositories/ingredient-nutrition";
 import { knownExtras } from "@norish/shared/contracts/nutrients";
 
-/** Whose corrections count: a household's members, or nobody's (the catalogue export). */
+/** Whose corrections count: a household's, or nobody's (the catalogue export). */
 export interface NutritionReader {
-  householdUserIds: readonly string[];
+  householdId: string | null;
 }
 
-export const NO_HOUSEHOLD: NutritionReader = { householdUserIds: [] };
+export const NO_CORRECTIONS: NutritionReader = { householdId: null };
 
 /** One step's dataset food for an Ingredient, and where it is from. */
 interface Step {
@@ -111,10 +110,12 @@ function first<T>(offers: ReadonlyArray<Offer<T>>): { value: T; source: Nutritio
 
 /** The corrections, estimates, foods and rules every node of a lineage needs, in five queries. */
 async function readSources(nodes: readonly NutritionNode[], reader: NutritionReader) {
-  const corrections = await findHouseholdCorrections(
-    nodes.map((node) => node.id),
-    reader.householdUserIds
-  );
+  const corrections = reader.householdId
+    ? await findHouseholdCorrections(
+        nodes.map((node) => node.id),
+        reader.householdId
+      )
+    : new Map<string, NutritionCorrectionRow>();
   const estimates = await findNutritionEstimates(nodes.map((node) => node.id));
   const rules = await findNutritionRules(nodes.flatMap((node) => (node.offId ? [node.offId] : [])));
   const fixes = new Map<string, string>();
@@ -408,40 +409,26 @@ export interface NutritionGaps {
 }
 
 /**
- * The gaps of each of these Ingredients: no source, earlier estimate or household's correction,
- * any household's, gives the fact; what a parent would lend does not count. A piece fix, or AI's
- * "no pieces", answers the piece weight. An id that names no Ingredient answers nothing.
+ * The facts no source or earlier estimate gives, for AI's instance-wide estimate: no household's
+ * correction or parent's lending closes one; a piece fix or "no pieces" answers the piece weight.
  */
 export async function findNutritionGaps(
   ingredientIds: readonly string[]
 ): Promise<Map<string, NutritionGaps>> {
   const lineage = await findNutritionLineage(ingredientIds);
   const nodes = [...new Set(ingredientIds)].flatMap((id) => lineage.get(id) ?? []);
-  const sources = await readSources(nodes, NO_HOUSEHOLD);
-  const corrected = new Map<string, NutritionGaps>();
-
-  for (const row of await findAnyCorrections(ingredientIds)) {
-    const was = corrected.get(row.ingredientId);
-    const typed = [row.kcal, row.fat, row.carbs, row.protein].every((value) => value !== null);
-
-    corrected.set(row.ingredientId, {
-      numbers: !!was?.numbers || row.numbersFood !== null || typed,
-      pieceWeight: !!was?.pieceWeight || row.pieceWeightFood !== null || row.pieceWeight !== null,
-      density: !!was?.density || row.densityFood !== null || row.density !== null,
-    });
-  }
+  const sources = await readSources(nodes, NO_CORRECTIONS);
 
   return new Map(
     nodes.map((node) => {
       const own = ownFacts(node, sources);
-      const fixed = corrected.get(node.id);
 
       return [
         node.id,
         {
-          numbers: !own.numbers && !fixed?.numbers,
-          pieceWeight: !own.pieceWeight && !fixed?.pieceWeight && !isPieceless(node, sources),
-          density: !own.density && !fixed?.density,
+          numbers: !own.numbers,
+          pieceWeight: !own.pieceWeight && !isPieceless(node, sources),
+          density: !own.density,
         },
       ];
     })

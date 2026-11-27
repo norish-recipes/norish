@@ -27,7 +27,7 @@ const log = createLogger("queue:enrichment-bulk");
 /** The administrator who asked; the fallback context for ownerless recipes. */
 export interface BulkEnrichmentRequester {
   userId: string;
-  householdKey: string;
+  householdId: string;
 }
 
 export interface BulkEnrichmentResult {
@@ -58,8 +58,7 @@ export async function enrollEnrichmentForAllRecipes(
     const context: RecipeEnrichmentContext = {
       recipeId: target.recipeId,
       userId: target.userId ?? requester.userId,
-      householdKey: target.householdId ?? requester.householdKey,
-      householdUserIds: null,
+      householdId: target.householdId ?? requester.householdId,
     };
 
     const results = await enrichRecipe(context, { origin: "automatic", replaceExisting });

@@ -1,12 +1,12 @@
 import React, { useEffect, useEffectEvent, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
+import { Ionicons } from "@/components/icon";
 import { IconButton } from "@/components/icon-button";
 import { PressableScale } from "@/components/pressable-scale";
 import { SliceHairline } from "@/components/slice-row";
 import { TimerRing } from "@/components/timer-ring";
 import { lightImpact } from "@/lib/haptics";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import * as Notifications from "expo-notifications";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";

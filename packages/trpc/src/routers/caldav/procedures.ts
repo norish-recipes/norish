@@ -135,7 +135,7 @@ export const caldavRouter = router({
         log.info({ userId }, "CalDAV enabled - starting initial sync");
 
         // Run sync in background, don't wait
-        syncAllFutureItems(userId)
+        syncAllFutureItems(userId, ctx.householdId)
           .then((result) => {
             log.info({ userId, ...result }, "Initial CalDAV sync completed");
             void caldav.publish(
@@ -292,7 +292,7 @@ export const caldavRouter = router({
     );
 
     // Run retry in background
-    retryFailedSyncs(userId)
+    retryFailedSyncs(userId, ctx.householdId)
       .then((result) => {
         log.info({ userId, ...result }, "Manual CalDAV sync completed");
         void caldav.publish(
@@ -333,7 +333,7 @@ export const caldavRouter = router({
     );
 
     // Run sync in background
-    syncAllFutureItems(userId)
+    syncAllFutureItems(userId, ctx.householdId)
       .then((result) => {
         log.info({ userId, ...result }, "Full CalDAV sync completed");
         void caldav.publish(

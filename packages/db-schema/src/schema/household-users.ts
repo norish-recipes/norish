@@ -1,4 +1,12 @@
-import { index, pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import {
+  index,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
 
 import { users } from "./auth";
 import { households } from "./households";
@@ -22,6 +30,7 @@ export const householdUsers = pgTable(
       name: "pk_household_users",
     }),
     index("idx_household_users_household_id").on(t.householdId),
-    index("idx_household_users_user_id").on(t.userId),
+    // Every account is in exactly one household (ADR-0041).
+    uniqueIndex("uq_household_users_user_id").on(t.userId),
   ]
 );

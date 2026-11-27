@@ -9,6 +9,7 @@ import { decode } from "html-entities";
 import type { SiteAuthTokenDecryptedDto } from "@norish/shared/contracts/dto/site-auth-tokens";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { getVideoConfig } from "@norish/shared-server/config/server-config-loader";
+import { childEnv } from "@norish/shared-server/lib/child-env";
 import { videoLogger as log } from "@norish/shared-server/logger";
 import { getFfmpegPath } from "@norish/shared-server/media/ffmpeg";
 
@@ -135,6 +136,47 @@ export function ytDlpArgs(url: string, options: readonly string[]): string[] {
   return [...options, "--", url];
 }
 
+/** Options whose value is a credential: a saved site header, a proxy URL that may hold a login. */
+const CREDENTIAL_OPTIONS = new Set(["--add-header", "--proxy"]);
+
+/** A header value shorter than this is masked only as its whole argument, as alone it is common text. */
+const MASKED_VALUE_LENGTH = 8;
+
+/** `text` with each credential argument in `args` masked, and a long header value on its own too. */
+function withoutCredentials(text: string, args: readonly string[]): string {
+  const credentials = args.filter((_, index) => CREDENTIAL_OPTIONS.has(args[index - 1] ?? ""));
+  // yt-dlp's info JSON shows a header's value alone, in each format's http_headers.
+  const values = args
+    .filter((_, index) => args[index - 1] === "--add-header")
+    .map((header) => header.slice(header.indexOf(":") + 1).trim())
+    .filter((value) => value.length >= MASKED_VALUE_LENGTH);
+
+  return [...credentials, ...values]
+    .filter(Boolean)
+    .reduce((masked, value) => masked.replaceAll(value, "[redacted]"), text);
+}
+
+/**
+ * Why yt-dlp failed, from its message and output with every credential masked. Node's error is
+ * left out: its message and `cmd` hold the whole command line.
+ */
+function ytDlpFailure(error: unknown, args: readonly string[]): Error {
+  const childError = error as Error & { stdout?: string | Buffer; stderr?: string | Buffer };
+  const stderr = childError.stderr?.toString().trim();
+  const stdout = childError.stdout?.toString().trim();
+  const details = [childError.message];
+
+  if (stderr) {
+    details.push(`Stderr:\n${stderr}`);
+  }
+
+  if (stdout) {
+    details.push(`Stdout:\n${stdout}`);
+  }
+
+  return new Error(withoutCredentials(details.join("\n\n"), args));
+}
+
 async function execYtDlp(url: string, options: string[], cwd?: string): Promise<string> {
   const args = ytDlpArgs(url, options);
 
@@ -145,24 +187,12 @@ async function execYtDlp(url: string, options: string[], cwd?: string): Promise<
       cwd,
       windowsHide: true,
       maxBuffer: 64 * 1024 * 1024,
+      env: childEnv(),
     });
 
     return stdout;
   } catch (error: unknown) {
-    const childError = error as Error & { stdout?: string | Buffer; stderr?: string | Buffer };
-    const stderr = childError.stderr?.toString().trim();
-    const stdout = childError.stdout?.toString().trim();
-    const details = [childError.message];
-
-    if (stderr) {
-      details.push(`Stderr:\n${stderr}`);
-    }
-
-    if (stdout) {
-      details.push(`Stdout:\n${stdout}`);
-    }
-
-    throw new Error(details.join("\n\n"), { cause: error });
+    throw ytDlpFailure(error, args);
   }
 }
 

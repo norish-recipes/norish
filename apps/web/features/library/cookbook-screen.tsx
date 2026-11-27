@@ -25,7 +25,7 @@ import { Button, Dropdown, Label, Tabs } from "@heroui/react";
 import { useTranslations } from "next-intl";
 import { twMerge } from "tailwind-merge";
 
-import { ownerAllows, useRecipePermissions } from "@norish/shared-react/reader";
+import { useRecipePermissions } from "@norish/shared-react/reader";
 import { useCookbookQuery, useCookbooksMutations } from "@norish/shared-react/recipes";
 import {
   cssButtonPill,
@@ -69,8 +69,8 @@ export function CookbookScreen({ cookbookId }: { cookbookId: string }) {
   if (!cookbook) return <CookbookSkeleton />;
 
   // Cookbooks answer to the recipe permission policy (ADR-0027).
-  const canEdit = ownerAllows(cookbook.userId, canEditRecipe);
-  const canDelete = ownerAllows(cookbook.userId, canDeleteRecipe);
+  const canEdit = canEditRecipe(cookbook.householdId);
+  const canDelete = canDeleteRecipe(cookbook.householdId);
 
   return (
     <section aria-labelledby={COOKBOOK_HEADING_ID} className="flex min-h-0 flex-1 flex-col">

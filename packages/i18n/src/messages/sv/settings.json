@@ -8,7 +8,7 @@
     "household": "Hushåll",
     "caldav": "CalDAV",
     "admin": "Administration",
-    "ingredients": "Ingredienser"
+    "content": "Innehåll"
   },
   "user": {
     "signInMethods": {
@@ -76,13 +76,15 @@
         "warning": "Spara nyckeln nu! Du kan inte se den igen. Vi lagrar bara ett hashvärde och kan inte återskapa nyckeln.",
         "hint": "Använd nyckeln i HTTP-headern <code>x-api-key</code> vid API-anrop.",
         "confirmButton": "Jag har sparat den",
-        "copyButton": "Kopiera nyckel"
+        "copyButton": "Kopiera nyckel",
+        "copied": "Nyckel kopierad"
       },
       "deleteModal": {
         "title": "Ta bort API-nyckel",
         "message": "Vill du ta bort den här API-nyckeln? Alla appar som använder den förlorar omedelbart åtkomsten. Det går inte att ångra.",
         "confirmButton": "Ta bort nyckel"
-      }
+      },
+      "createNoAnswer": "Servern svarade inte. Nyckeln kan ha skapats: kontrollera dina nycklar."
     },
     "archiveImport": {
       "title": "Importera receptarkiv",
@@ -134,9 +136,9 @@
       "deleteModal": {
         "title": "Ta bort konto",
         "permanentWarning": "Den här åtgärden är permanent och går inte att ångra!",
-        "dataWarning": "Dina personliga data, inklusive inköpslistor, kalenderposter och anteckningar, tas bort permanent.",
-        "recipesNote": "Recept du har skapat behålls men kopplas inte längre till ditt konto.",
-        "adminNote": "Om du är administratör i ett hushåll med andra medlemmar måste du först överföra administratörsbehörigheten.",
+        "dataWarning": "Dina recept och kokböcker tas bort, liksom dina betyg, favoriter, allergier, inställningar, API-nycklar, delningslänkar, CalDAV och webbplatstokens.",
+        "recipesNote": "Ditt hushåll behåller sina inköp, butiker, skafferi och måltidsplan. Dina recept i planen ligger kvar där som anteckningar.",
+        "adminNote": "Om du är administratör för hushållet tar den medlem som varit med längst över. Om du är den sista medlemmen tas hushållet bort med allt i det.",
         "confirmButton": "Ta bort mitt konto"
       }
     },
@@ -228,6 +230,7 @@
       "revokeModal": {
         "title": "Återkalla länk",
         "message": "Den här länken till {recipeName} slutar fungera tills du aktiverar den igen.",
+        "finalMessage": "Den här länken till {recipeName} slutar fungera och du kan inte aktivera den igen.",
         "confirm": "Återkalla"
       },
       "reactivateModal": {
@@ -247,11 +250,13 @@
       "yourRole": "Din roll",
       "admin": "Administratör",
       "member": "Medlem",
+      "justYou": "Ditt hushåll (bara du)",
       "members": "Medlemmar",
       "leaveButton": "Lämna hushåll",
       "leaveModal": {
         "title": "Lämna hushåll",
         "confirmMessage": "Vill du lämna {name}?",
+        "goesAndStays": "Dina recept och kokböcker följer med dig, med sina taggar och ingredienser. Inköpslistan, skafferiet, måltidsplanen och butikerna stannar i hushållet.",
         "adminWarning": "Du är administratör. Du måste överföra administratörsbehörigheten innan du lämnar.",
         "confirmButton": "Lämna hushåll"
       }
@@ -269,7 +274,7 @@
       "kickModal": {
         "title": "Ta bort användare",
         "confirmMessage": "Vill du ta bort {name} från hushållet?",
-        "warning": "Användaren förlorar åtkomsten till alla delade recept, inköpslistor och kalenderposter.",
+        "warning": "Deras recept och kokböcker följer med dem, med sina taggar och ingredienser. Inköpslistan, skafferiet, måltidsplanen och butikerna stannar i hushållet.",
         "confirmButton": "Ta bort användare"
       },
       "transferModal": {
@@ -293,18 +298,11 @@
       "copyFailed": "Det gick inte att kopiera inbjudningskoden",
       "copyButton": "Kopiera inbjudningskod"
     },
-    "create": {
-      "title": "Skapa hushåll",
-      "description": "Skapa ett hushåll för att dela recept och inköpslistor med familj eller vänner.",
-      "nameLabel": "Hushållets namn",
-      "namePlaceholder": "T.ex. Familjen Andersson",
-      "submitButton": "Skapa hushåll"
-    },
     "join": {
       "title": "Gå med i hushåll",
-      "description": "Ange en inbjudningskod för att gå med i ett befintligt hushåll.",
+      "description": "Ange en inbjudningskod för att gå med i ett befintligt hushåll. Ditt hushåll slås ihop med det: dina recept, inköp, skafferi, måltidsplan och butiker följer med.",
       "codeLabel": "Inbjudningskod",
-      "codePlaceholder": "Kod med 8 tecken",
+      "codePlaceholder": "Kod med 6 siffror",
       "submitButton": "Gå med i hushåll"
     }
   },
@@ -392,7 +390,9 @@
   },
   "ingredients": {
     "title": "Ingredienser",
-    "description": "Ingredienskatalogen som Norish använder för att bestämma näringsvärden, ingrediensikoner och översättningar.",
+    "sheetTitle": "Ingrediens",
+    "loadFailed": "Det gick inte att läsa in ingrediensen",
+    "loadOffline": "Den här ingrediensen kräver en anslutning",
     "search": "Sök efter ingredienser",
     "searchMatch": "Matchning",
     "searchIn": "Sök i",
@@ -416,7 +416,6 @@
       "seed-ambiguous": "Katalogen innehåller flera livsmedel som detta kan vara.",
       "ai-junk": "AI bedömde att detta inte är ett livsmedel, till exempel ett köksredskap eller en del av en receptrad."
     },
-    "empty": "Inga ingredienser hittades",
     "emptyFlagged": "Inget är flaggat",
     "rename": "Byt namn",
     "delete": "Ta bort",
@@ -428,8 +427,8 @@
       "pantry": "{count, plural, one {# vara i skafferiet tas bort} other {# varor i skafferiet tas bort}}"
     },
     "markDistinct": "Markera som eget livsmedel",
-    "summary": "{spellings, plural, one {# översättning} other {# översättningar}}{kinds, plural, =0 {} one {, # sort} other {, # sorter}}{parent, select, none {} other {, överordnad: {parent}}}",
-    "addAlias": "Lägg till översättning",
+    "summary": "{spellings, plural, one {# stavning} other {# stavningar}}{kinds, plural, =0 {} one {, # sort} other {, # sorter}}{parent, select, none {} other {, överordnad: {parent}}}",
+    "addAlias": "Lägg till en stavning",
     "removeAlias": "Ta bort {alias}",
     "mergeInto": "Slå ihop med…",
     "merge": "Slå ihop",
@@ -449,15 +448,17 @@
     "clearParent": "Ta bort överordnad ingrediens",
     "nameSection": "Namn",
     "parentSection": "Överordnad ingrediens",
-    "spellingsSection": "Översättningar",
+    "spellingsSection": "Stavningar",
     "shownAs": "Visas för dig som {name}",
     "changeParent": "Byt överordnad ingrediens…",
-    "spellingsCount": "{count, plural, one {# översättning} other {# översättningar}}",
+    "spellingsCount": "{count, plural, one {# stavning} other {# stavningar}}",
     "dataSources": {
       "title": "Datakällor",
       "notice": "Ingredienskatalogen bygger på ingredienstaxonomin från <off>Open Food Facts</off>, som är tillgänglig under <odbl>Open Database License (ODbL)</odbl>. Katalogen som Norish skapar utifrån den tillhandahålls under samma licens.",
       "nutritionNotice": "Näringsvärden per 100 g kommer från <ciqual>CIQUAL 2025</ciqual> och CALNUT (ANSES), <usda>USDA FoodData Central</usda> och <cofid>CoFID</cofid>, sammankopplade via koderna som Open Food Facts ger varje livsmedel. Hushållets rättelser är egna värden och kommer inte från datamängderna.",
-      "download": "Ladda ner ingredienskatalogen (JSON)"
+      "download": "Ladda ner ingredienskatalogen (JSON)",
+      "downloadOffline": "Du kan ladda ned katalogen när du är online.",
+      "downloadFailed": "Katalogen kunde inte laddas ned."
     },
     "nutrition": {
       "section": "Näringsvärden",
@@ -509,6 +510,7 @@
           "hundredMl": "100 ml väger (g)"
         }
       },
+      "overHundred": "Fett, kolhydrater och protein kan inte vara mer än 100 g per 100 g.",
       "searchFood": "Sök i datakällorna, till exempel mellanmjölk",
       "foodHint": "Skriv några ord ur livsmedlets namn",
       "searchingFoods": "Söker…",
@@ -556,7 +558,6 @@
       "done": "klart",
       "repeats": "upprepas",
       "pantry": "Finns i skafferiet",
-      "elsewhere": "{count, plural, one {# ytterligare användning} other {# ytterligare användningar}} i recept eller listor du inte kan öppna",
       "none": "Används inte längre"
     },
     "keepAlias": "Behåll {alias}",
@@ -573,6 +574,7 @@
     "changedByAI": {
       "title": "Ändrat av AI",
       "open": "{count, plural, =0 {Ändrat av AI} other {Ändrat av AI · # att kontrollera}}",
+      "openCompact": "{count, plural, =0 {Ändrat av AI} other {# att kontrollera}}",
       "unsure": "Osäkert",
       "sure": "Ändrat",
       "empty": "AI har inte ändrat något den senaste månaden.",
@@ -587,7 +589,8 @@
       "plainName": "Namnet ändrat från {from}",
       "notAFood": "Borttagen eftersom den inte är ett livsmedel. Dess receptrader och inköpsvaror behåller sin text.",
       "spellingRemoved": "Översättningen {from} togs bort",
-      "spellingMoved": "Översättningen {from} flyttades till {of}"
+      "spellingMoved": "Översättningen {from} flyttades till {of}",
+      "toCheck": "{count, plural, other {# att kontrollera}}"
     },
     "icon": {
       "change": "Byt ikon",
@@ -596,13 +599,16 @@
       "failed": "Det gick inte att skapa en ikon av den bilden.",
       "generate": "Skapa med AI",
       "generateFailed": "Det gick inte att skapa ikonen."
-    }
+    },
+    "keepDistinct": "Behåll separat",
+    "offline": "Du kan ändra den här ingrediensen när du är online."
   },
   "admin": {
     "shareLinks": {
       "title": "Moderering av receptdelning",
       "description": "Granska offentliga receptlänkar på servern och hantera deras giltighet.",
       "empty": "Inga delningslänkar hittades.",
+      "inactive": "Inaktiv",
       "table": {
         "recipe": "RECEPT",
         "owner": "ÄGARE",
@@ -614,6 +620,7 @@
       "revokeModal": {
         "title": "Återkalla länk",
         "message": "Den här länken till {recipeName} slutar fungera tills den aktiveras igen.",
+        "finalMessage": "Den här länken till {recipeName} slutar fungera och kan inte aktiveras igen.",
         "confirm": "Återkalla"
       },
       "reactivateModal": {
@@ -635,12 +642,7 @@
       "localesDescription": "Välj vilka språk användarna kan välja mellan",
       "defaultLocale": "Standardspråk",
       "defaultLocaleDescription": "Språk för nya användare och när en översättning saknas",
-      "atLeastOneLocale": "Minst ett språk måste vara aktiverat",
-      "export": {
-        "title": "Receptarkiv",
-        "description": "Ladda ner alla recept på den här servern.",
-        "button": "Exportera receptarkiv"
-      }
+      "atLeastOneLocale": "Minst ett språk måste vara aktiverat"
     },
     "users": {
       "title": "Användare",
@@ -656,7 +658,6 @@
         "owner": "Ägare",
         "admin": "Administratör"
       },
-      "noHousehold": "Inget hushåll",
       "loading": "Läser in användare…",
       "empty": "Inga användare ännu.",
       "loadFailed": "Det gick inte att hämta användarlistan.",
@@ -676,9 +677,8 @@
     },
     "permissions": {
       "title": "Behörigheter",
-      "description": "Vem som får se och ändra det andra har skapat. Serveradministratörer har alltid full åtkomst.",
+      "description": "Vem utanför ett hushåll som får se och ändra dess recept och kokböcker. Serveradministratörer följer samma regler.",
       "recipes": "Recept",
-      "ingredients": "Ingredienser",
       "viewRecipes": "Visa recept",
       "viewDescription": "Vem som kan se recept på startsidan",
       "editRecipes": "Redigera recept",
@@ -689,26 +689,9 @@
         "everyone": "Alla",
         "everyoneDescription": "Alla inloggade användare",
         "household": "Hushåll",
-        "householdDescription": "Receptets ägare och medlemmarna i ägarens hushåll",
-        "owner": "Endast ägaren",
-        "ownerDescription": "Endast receptets ägare"
+        "householdDescription": "Receptets ägare och medlemmarna i ägarens hushåll"
       },
       "note": "Inköpslistor och kalenderposter följer alltid hushållets regler: medlemmar kan redigera och ta bort varandras poster."
-    },
-    "ingredientPermissions": {
-      "title": "Ingrediensbehörigheter",
-      "description": "Vem som får byta namn på ingredienser, markera dem som egna livsmedel eller ta bort deras översättningar. Alla kan lägga till en översättning.",
-      "editIngredients": "Redigera ingredienser",
-      "editDescription": "Vem som kan ändra en ingrediens som någon annan har lagt till",
-      "levels": {
-        "everyone": "Alla",
-        "everyoneDescription": "Alla inloggade användare",
-        "household": "Hushåll",
-        "householdDescription": "Den som lade till ingrediensen och medlemmarna i samma hushåll",
-        "owner": "Endast ägaren",
-        "ownerDescription": "Endast den som lade till ingrediensen"
-      },
-      "note": "Ingredienser från den inbyggda katalogen kan bara redigeras av serveradministratörer."
     },
     "system": {
       "title": "Systeminställningar",
@@ -720,6 +703,12 @@
         "restartLabel": "Starta om servern",
         "restartDescription": "Tillämpa konfigurationsändringar som kräver omstart",
         "restartButton": "Starta om servern"
+      },
+      "masterKey": {
+        "label": "Byt huvudnyckel",
+        "description": "Kryptera allt med en ny nyckel och pensionera den gamla",
+        "button": "Byt huvudnyckel",
+        "pinned": "<code>MASTER_KEY</code> är satt, så byt den där: flytta den nuvarande nyckeln till <code>MASTER_KEY_PREVIOUS</code>, sätt en ny <code>MASTER_KEY</code> och starta om."
       }
     },
     "restart": {
@@ -730,6 +719,13 @@
       "warning2": "Servern är otillgänglig i några sekunder",
       "warning3": "Se till att installationen har <code>restart: always</code> inställt, annars startar servern inte automatiskt igen",
       "confirmButton": "Starta om"
+    },
+    "rotateMasterKey": {
+      "title": "Byt huvudnyckel",
+      "confirmMessage": "Servern skriver en ny huvudnyckel och startar om. När den startar krypterar den allt med den nya nyckeln.",
+      "sessions": "Alla sessioner avslutas, även din, så alla loggar in igen",
+      "shareLinks": "Delningslänkar som skapades före 0.28 slutar fungera och kan bara tas bort",
+      "confirmButton": "Byt"
     },
     "authProviders": {
       "title": "Inloggningsleverantörer",
@@ -862,10 +858,6 @@
       "prompts": {
         "title": "Promptar",
         "subtitle": "Anpassa AI-instruktioner för receptbearbetning"
-      },
-      "cuisines": {
-        "title": "Matkulturer",
-        "subtitle": "Listan som recept och AI väljer från"
       },
       "bulkEnrichment": {
         "title": "Komplettera alla recept",
@@ -1311,17 +1303,6 @@
       },
       "pagination": "Sida {current} av {total}"
     },
-    "cuisineVocabulary": {
-      "description": "Matkulturer är en lista som du själv förvaltar. Namnen visas exakt som de skrivs här, på alla språk.",
-      "namePlaceholder": "Matkulturens namn",
-      "addLabel": "Lägg till matkultur",
-      "renameLabel": "Byt namn på {name}",
-      "deleteLabel": "Ta bort {name}",
-      "deleteConfirm": "Ta bort ”{name}”? Den tas bort från recepten som använder den.",
-      "empty": "Inga matkulturer ännu.",
-      "duplicate": "En matkultur med det namnet finns redan.",
-      "saveFailed": "Det gick inte att spara matkulturen."
-    },
     "toasts": {
       "localesSaved": "Språkinställningarna har sparats",
       "localesError": "Det gick inte att spara språkinställningarna",
@@ -1335,8 +1316,122 @@
     "errors": {
       "failedTitle": "Exporten misslyckades",
       "failedDescription": "Det gick inte att ladda ner receptarkivet. Försök igen.",
-      "signedOut": "Din session har gått ut. Logga in igen för att exportera.",
-      "notAllowed": "Du har inte behörighet att exportera detta."
+      "signedOut": "Din session har gått ut. Logga in igen för att exportera."
+    }
+  },
+  "mobile": {
+    "connections": "Anslutningar",
+    "app": "App",
+    "server": "Server",
+    "support": "Support",
+    "changeServer": {
+      "title": "Byta server?",
+      "description": "Du loggas ut från den här servern.",
+      "action": "Byt server"
+    },
+    "versionServer": "Server {server}",
+    "offlineReason": "Offline · ändringar är pausade",
+    "avatarHint": "Tryck på ditt foto för att ändra det",
+    "changePhoto": "Ändra foto",
+    "accountGroup": "Ditt konto",
+    "phonesGroup": "På telefoner"
+  },
+  "content": {
+    "ariaLabel": "Innehåll",
+    "listPicker": "Lista",
+    "lists": {
+      "tags": "Taggar",
+      "cuisines": "Matkulturer",
+      "categories": "Kategorier",
+      "ingredients": "Ingredienser"
+    },
+    "search": {
+      "tags": "Sök taggar",
+      "cuisines": "Sök matkulturer",
+      "categories": "Sök kategorier"
+    },
+    "show": "Visa",
+    "all": "Alla",
+    "unused": "Oanvända",
+    "recipes": "{count, plural, =0 {Används inte} one {# recept} other {# recept}}",
+    "sections": {
+      "ownCuisines": "Dina matkulturer",
+      "ownCategories": "Dina kategorier",
+      "server": "Från din server",
+      "builtIn": "Inbyggda"
+    },
+    "help": {
+      "server": "Din serveradministratör underhåller dessa för alla hushåll",
+      "serverAdmin": "Alla hushåll på den här servern erbjuds dessa. Som administratör underhåller du dem.",
+      "builtIn": "Inbyggda kategorier är likadana på alla servrar och kan inte ändras"
+    },
+    "readOnly": "Skrivskyddad",
+    "empty": {
+      "tags": "Inga taggar än",
+      "cuisines": "Inga matkulturer än",
+      "categories": "Inga kategorier än"
+    },
+    "nothingUnused": "Inget är oanvänt",
+    "noMatch": "Inget matchar",
+    "loadFailed": "Det gick inte att läsa in listan",
+    "listOffline": "Den här listan kräver en anslutning",
+    "offline": "Du kan ändra den här listan när du är online.",
+    "panel": {
+      "addTitle": {
+        "tag": "Lägg till tagg",
+        "cuisine": "Lägg till matkultur",
+        "category": "Lägg till kategori",
+        "ingredient": "Lägg till ingrediens"
+      },
+      "editTitle": {
+        "tag": "Redigera tagg",
+        "cuisine": "Redigera matkultur",
+        "category": "Redigera kategori"
+      },
+      "server": "Server",
+      "name": "Namn",
+      "usedBy": "Används av",
+      "usedByOwn": "{count, plural, =0 {Används inte i dina recept} one {# av dina recept} other {# av dina recept}}",
+      "already": {
+        "tag": "Redan en tagg",
+        "cuisine": "Redan en matkultur",
+        "category": "Redan en kategori",
+        "ingredient": "Redan en ingrediens"
+      },
+      "addTo": "Lägg till i",
+      "toHousehold": "Ditt hushåll",
+      "toServer": "Alla hushåll på den här servern",
+      "serverReadOnly": "Din serveradministratör underhåller den här matkulturen för alla hushåll.",
+      "serverEditable": "Alla hushåll på den här servern erbjuds den här matkulturen.",
+      "merge": "”{target}” finns redan. När du slår ihop {count, plural, =0 {tas {name} bort} one {flyttas # recept från {name} över till den} other {flyttas # recept från {name} över till den}}.",
+      "mergeAction": "Slå ihop",
+      "tooLong": "Namn får vara högst {max} tecken.",
+      "failed": "Det gick inte att spara. Försök igen.",
+      "stale": "Inte sparat: det ändrades någon annanstans först"
+    },
+    "delete": {
+      "title": "Ta bort ”{name}”?",
+      "body": "{count, plural, =0 {Inget recept använder den.} one {Den tas bort från # recept. Receptet finns kvar.} other {Den tas bort från # recept. Recepten finns kvar.}}",
+      "bodyServer": "{count, plural, =0 {Inget recept använder den.} one {Den tas bort från # recept i alla hushåll på den här servern. Receptet finns kvar.} other {Den tas bort från # recept i alla hushåll på den här servern. Recepten finns kvar.}}",
+      "countFailed": "Det gick inte att räkna recepten som använder den. Försök igen.",
+      "failed": "Det gick inte att ta bort. Försök igen.",
+      "action": {
+        "tag": "Ta bort tagg",
+        "cuisine": "Ta bort matkultur",
+        "category": "Ta bort kategori"
+      }
+    },
+    "countCell": "{count, plural, =0 {Används inte} other {#}}",
+    "count": {
+      "tag": "{count, plural, one {# tagg} other {# taggar}}",
+      "ingredient": "{count, plural, one {# ingrediens} other {# ingredienser}}"
+    },
+    "countUnused": {
+      "tag": "{count, plural, one {# oanvänd tagg} other {# oanvända taggar}}"
+    },
+    "menu": {
+      "rename": "Byt namn",
+      "showRecipes": "Visa recept"
     }
   }
 }

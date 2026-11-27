@@ -2,10 +2,11 @@ import type { Locator, Page } from "@playwright/test";
 
 import type { AdminUserRowDTO } from "@norish/shared/contracts";
 import {
-  addUserToHousehold,
-  createHousehold,
   getHouseholdById,
+  getHouseholdIdForUser,
   getUsersByHouseholdId,
+  joinHousehold,
+  renameHouseholdOfOne,
 } from "@norish/db/repositories/households";
 
 import type { AIE2EStack } from "./fixture";
@@ -58,9 +59,16 @@ export async function seedHousehold(
   adminUserId: string,
   memberIds: readonly string[]
 ): Promise<string> {
-  const { id } = await createHousehold({ name, adminUserId });
+  // The admin's own household of one becomes it; the fresh members join it.
+  const id = await getHouseholdIdForUser(adminUserId);
 
-  for (const userId of memberIds) await addUserToHousehold({ householdId: id, userId });
+  if (!id) throw new Error(`No household for ${adminUserId}`);
+
+  await renameHouseholdOfOne(adminUserId, name);
+
+  for (const userId of memberIds) {
+    if (userId !== adminUserId) await joinHousehold(userId, { householdId: id });
+  }
 
   return id;
 }

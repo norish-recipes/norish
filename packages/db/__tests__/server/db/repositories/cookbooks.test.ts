@@ -4,8 +4,9 @@
  *
  * A mocked repository cannot prove that a policy condition filters or that a
  * unique pair holds, so these are the seams worth a container: who can see
- * which cookbook under each view policy, that an Orphaned cookbook is visible
- * under all of them, and what deleting either side of a membership does.
+ * which cookbook under each view policy, that a member out of view is hidden
+ * and comes back when the policy widens, and what deleting either side of a
+ * membership does.
  */
 
 import { eq } from "drizzle-orm";
@@ -32,27 +33,22 @@ import {
 import { setFavorite } from "@norish/db/repositories/favorites";
 import { deleteRecipeById, listRecipes } from "@norish/db/repositories/recipes";
 import { deleteConfig, setConfig } from "@norish/db/repositories/server-config";
-import {
-  cookbooks as cookbooksTable,
-  recipeImages as recipeImagesTable,
-  recipes as recipesTable,
-  recipeTags as recipeTagsTable,
-  tags as tagsTable,
-} from "@norish/db/schema";
+import { recipeImages as recipeImagesTable, recipes as recipesTable } from "@norish/db/schema";
 
-import { createTestRecipe, createTestUser, getTestDb } from "../../../helpers/db-test-helpers";
+import {
+  attachTestEntry,
+  createTestRecipe,
+  createTestUser,
+  getTestDb,
+  joinTestHousehold,
+  testHouseholdOf,
+} from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
-type PermissionLevel = "everyone" | "household" | "owner";
+type PermissionLevel = "everyone" | "household";
 
-function viewer(
-  userId: string,
-  { householdUserIds = null, isServerAdmin = false } = {} as {
-    householdUserIds?: string[] | null;
-    isServerAdmin?: boolean;
-  }
-): RecipeListContext {
-  return { userId, householdUserIds, isServerAdmin };
+function viewer(userId: string): RecipeListContext {
+  return { userId, householdId: testHouseholdOf(userId) };
 }
 
 async function setPolicy(level: {
@@ -65,16 +61,7 @@ async function setPolicy(level: {
 
 /** Put named tags on a recipe, so a cookbook has member tags to gather. */
 async function tagRecipe(recipeId: string, names: string[]) {
-  const db = getTestDb();
-
-  for (const [order, name] of names.entries()) {
-    // Tags are shared rows, so two members carrying the same one must reuse it.
-    await db.insert(tagsTable).values({ name }).onConflictDoNothing();
-
-    const [tag] = await db.select().from(tagsTable).where(eq(tagsTable.name, name)).limit(1);
-
-    await db.insert(recipeTagsTable).values({ recipeId, tagId: tag!.id, order });
-  }
+  for (const name of names) await attachTestEntry("tag", [recipeId], name);
 }
 
 /**
@@ -86,14 +73,6 @@ async function setTimes(
   times: { totalMinutes: number | null; prepMinutes: number | null; cookMinutes: number | null }
 ) {
   await getTestDb().update(recipesTable).set(times).where(eq(recipesTable.id, recipeId));
-}
-
-/** Detach a cookbook's owner, the way deleting an account does. */
-async function orphan(cookbookId: string) {
-  await getTestDb()
-    .update(cookbooksTable)
-    .set({ userId: null })
-    .where(eq(cookbooksTable.id, cookbookId));
 }
 
 describe("cookbook repository", () => {
@@ -118,7 +97,7 @@ describe("cookbook repository", () => {
   });
 
   describe("the view policy", () => {
-    it("shows another household's cookbook under `everyone` and hides it under `owner`", async () => {
+    it("shows another household's cookbook under `everyone` and hides it under `household`", async () => {
       await setPolicy({ view: "everyone", edit: "household", delete: "household" });
       const cookbook = await createCookbook({ userId: ownerId, title: "Weeknights" });
 
@@ -127,7 +106,7 @@ describe("cookbook repository", () => {
       expect(seenByEveryone.cookbooks.map((c) => c.id)).toContain(cookbook.id);
       expect(seenByEveryone.total).toBe(1);
 
-      await setPolicy({ view: "owner", edit: "owner", delete: "owner" });
+      await setPolicy({ view: "household", edit: "household", delete: "household" });
       const seenByOwnerOnly = await listCookbooks(viewer(strangerId), { limit: 50 });
 
       expect(seenByOwnerOnly.cookbooks).toHaveLength(0);
@@ -140,49 +119,23 @@ describe("cookbook repository", () => {
       await setPolicy({ view: "household", edit: "household", delete: "household" });
       const cookbook = await createCookbook({ userId: ownerId, title: "Ours" });
 
-      const housemate = viewer(strangerId, { householdUserIds: [strangerId, ownerId] });
-      const outsider = viewer(strangerId, { householdUserIds: [strangerId] });
+      const outsider = viewer(strangerId);
 
-      expect((await listCookbooks(housemate, { limit: 50 })).cookbooks).toHaveLength(1);
       expect((await listCookbooks(outsider, { limit: 50 })).cookbooks).toHaveLength(0);
+
+      await joinTestHousehold(strangerId, ownerId);
+
+      expect((await listCookbooks(viewer(strangerId), { limit: 50 })).cookbooks).toHaveLength(1);
     });
 
-    it("shows an Orphaned cookbook under every policy", async () => {
-      const cookbook = await createCookbook({
-        userId: ownerId,
-        title: "From a departed housemate",
-      });
-
-      await orphan(cookbook.id);
-
-      for (const level of ["everyone", "household", "owner"] as const) {
-        await setPolicy({ view: level, edit: level, delete: level });
-
-        const visible = await listCookbooks(viewer(strangerId), { limit: 50 });
-
-        expect(
-          visible.cookbooks.map((c) => c.id),
-          `view: ${level}`
-        ).toContain(cookbook.id);
-        // Editable and deletable by everyone too, so a departure cannot strand it.
-        const editable = await listEditableCookbooks(viewer(strangerId));
-
-        expect(
-          editable.map((c) => c.id),
-          `edit: ${level}`
-        ).toContain(cookbook.id);
-      }
-    });
-
-    it("shows a server admin everything under the tightest policy", async () => {
-      await setPolicy({ view: "owner", edit: "owner", delete: "owner" });
+    it("hides another household's cookbook from someone flagged server admin", async () => {
+      await setPolicy({ view: "household", edit: "household", delete: "household" });
       const cookbook = await createCookbook({ userId: ownerId, title: "Private" });
+      const admin = await createTestUser({ name: "Admin", isServerAdmin: true });
 
-      const admin = viewer(strangerId, { isServerAdmin: true });
-
-      expect((await listCookbooks(admin, { limit: 50 })).cookbooks.map((c) => c.id)).toContain(
-        cookbook.id
-      );
+      expect((await listCookbooks(viewer(admin.id), { limit: 50 })).cookbooks).toHaveLength(0);
+      expect(await getCookbookForViewer(viewer(admin.id), cookbook.id)).toBeNull();
+      expect(await listEditableCookbooks(viewer(admin.id))).toHaveLength(0);
     });
   });
 
@@ -249,7 +202,7 @@ describe("cookbook repository", () => {
       await addRecipeToCookbook(cookbook.id, recipe.id);
       await addRecipeToCookbook(cookbook.id, recipe.id);
 
-      expect(await listCookbookMemberIds(cookbook.id)).toEqual([recipe.id]);
+      expect(await listCookbookMemberIds(viewer(ownerId), cookbook.id)).toEqual([recipe.id]);
       expect((await getCookbookForViewer(viewer(ownerId), cookbook.id))?.memberCount).toBe(1);
     });
 
@@ -293,32 +246,35 @@ describe("cookbook repository", () => {
       await addRecipeToCookbook(cookbook.id, pasta.id);
       await addRecipesToCookbook(cookbook.id, [pasta.id, pizza.id]);
 
-      expect((await listCookbookMemberIds(cookbook.id)).sort()).toEqual(
+      expect((await listCookbookMemberIds(viewer(ownerId), cookbook.id)).sort()).toEqual(
         [pasta.id, pizza.id].sort()
       );
 
       await removeRecipesFromCookbook(cookbook.id, [pasta.id, pizza.id]);
 
-      expect(await listCookbookMemberIds(cookbook.id)).toEqual([]);
+      expect(await listCookbookMemberIds(viewer(ownerId), cookbook.id)).toEqual([]);
     });
 
-    it("counts only the members the reader can see", async () => {
-      await setPolicy({ view: "owner", edit: "owner", delete: "owner" });
+    it("counts only the members the reader can see, and all of them again when it widens", async () => {
+      // Filed while reading across households was allowed.
+      await setPolicy({ view: "everyone", edit: "household", delete: "household" });
       const cookbook = await createCookbook({ userId: ownerId, title: "Shared" });
+      const theirs = await createTestRecipe(strangerId, { name: "Theirs" });
+      const mine = await createTestRecipe(ownerId, { name: "Mine" });
 
-      // Orphaned, so both readers can see the cookbook itself under `owner`
-      // and the only thing that differs is which members they can see.
-      await orphan(cookbook.id);
-
-      const mine = await createTestRecipe(strangerId, { name: "Mine" });
-      const theirs = await createTestRecipe(ownerId, { name: "Theirs" });
-
-      await addRecipeToCookbook(cookbook.id, mine.id);
       await addRecipeToCookbook(cookbook.id, theirs.id);
+      await addRecipeToCookbook(cookbook.id, mine.id);
 
-      // Two readers, two honest counts for the same cookbook (ADR-0027).
-      expect((await getCookbookForViewer(viewer(strangerId), cookbook.id))?.memberCount).toBe(1);
+      await setPolicy({ view: "household", edit: "household", delete: "household" });
       expect((await getCookbookForViewer(viewer(ownerId), cookbook.id))?.memberCount).toBe(1);
+      expect(await getCookbookForViewer(viewer(strangerId), cookbook.id)).toBeNull();
+
+      // Nothing was changed: the membership comes back as it was.
+      await setPolicy({ view: "everyone", edit: "household", delete: "household" });
+      expect((await getCookbookForViewer(viewer(ownerId), cookbook.id))?.memberCount).toBe(2);
+      expect((await listCookbookMemberIds(viewer(ownerId), cookbook.id)).sort()).toEqual(
+        [theirs.id, mine.id].sort()
+      );
     });
   });
 
@@ -334,7 +290,7 @@ describe("cookbook repository", () => {
     });
 
     it("lists the titles of the cookbooks a reader can see that hold each recipe", async () => {
-      await setPolicy({ view: "owner", edit: "owner", delete: "owner" });
+      await setPolicy({ view: "household", edit: "household", delete: "household" });
       const recipe = await createTestRecipe(ownerId, { name: "Tiramisù" });
       const dolci = await createCookbook({ userId: ownerId, title: "Dolci" });
       const kerst = await createCookbook({ userId: ownerId, title: "Kerst" });
@@ -352,19 +308,16 @@ describe("cookbook repository", () => {
 
   describe("browsing a cookbook", () => {
     it("filters members by the same view policy the recipe list applies", async () => {
-      await setPolicy({ view: "owner", edit: "owner", delete: "owner" });
       const cookbook = await createCookbook({ userId: ownerId, title: "Shared" });
-
-      await orphan(cookbook.id);
-
-      const mine = await createTestRecipe(strangerId, { name: "Mine" });
-      const theirs = await createTestRecipe(ownerId, { name: "Theirs" });
+      const mine = await createTestRecipe(ownerId, { name: "Mine" });
+      const theirs = await createTestRecipe(strangerId, { name: "Theirs" });
 
       await addRecipeToCookbook(cookbook.id, mine.id);
       await addRecipeToCookbook(cookbook.id, theirs.id);
+      await setPolicy({ view: "household", edit: "household", delete: "household" });
 
       const seen = await listRecipes(
-        viewer(strangerId),
+        viewer(ownerId),
         50,
         0,
         undefined,
@@ -382,7 +335,7 @@ describe("cookbook repository", () => {
       // count run the same policy condition (ADR-0027).
       expect(seen.recipes.map((recipe) => recipe.id)).toEqual([mine.id]);
       expect(seen.total).toBe(1);
-      expect((await getCookbookForViewer(viewer(strangerId), cookbook.id))?.memberCount).toBe(1);
+      expect((await getCookbookForViewer(viewer(ownerId), cookbook.id))?.memberCount).toBe(1);
     });
 
     it("lists only members, under the reader's own sort and search", async () => {
@@ -521,7 +474,7 @@ describe("cookbook repository", () => {
     });
 
     it("derives all of it from the members the reader may see, and no others", async () => {
-      await setPolicy({ view: "owner", edit: "owner", delete: "owner" });
+      await setPolicy({ view: "household", edit: "household", delete: "household" });
 
       const cookbook = await createCookbook({ userId: ownerId, title: "Mine" });
       const mine = await createTestRecipe(ownerId, { name: "Mine", servings: 4 });
@@ -530,7 +483,6 @@ describe("cookbook repository", () => {
       await tagRecipe(theirs.id, ["Shellfish"]);
       await addRecipeToCookbook(cookbook.id, mine.id);
       await addRecipeToCookbook(cookbook.id, theirs.id);
-      await orphan(cookbook.id);
 
       const summary = await getCookbookForViewer(viewer(ownerId), cookbook.id);
 
@@ -553,7 +505,7 @@ describe("cookbook repository", () => {
       expect(surviving).not.toBeNull();
       expect(surviving?.title).toBe("Weeknights");
       expect(surviving?.memberCount).toBe(0);
-      expect(await listCookbookMemberIds(cookbook.id)).toEqual([]);
+      expect(await listCookbookMemberIds(viewer(ownerId), cookbook.id)).toEqual([]);
     });
 
     it("deleting a cookbook leaves every recipe it held untouched", async () => {
@@ -564,7 +516,7 @@ describe("cookbook repository", () => {
 
       const deleted = await deleteCookbookById(cookbook.id, cookbook.version);
 
-      expect(deleted.applied).toBe(true);
+      expect(deleted).toMatchObject({ applied: true, value: cookbook.householdId });
       expect(await getCookbookForViewer(viewer(ownerId), cookbook.id)).toBeNull();
 
       const recipesStillThere = await getTestDb().query.recipes.findMany();

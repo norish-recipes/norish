@@ -4,13 +4,11 @@ import { getAvailableProviders, isPasswordAuthEnabled } from "@norish/auth/provi
 import { buildInternalParserApiUrl, SERVER_CONFIG } from "@norish/config/env-config-server";
 import configPackage from "@norish/config/package.json" with { type: "json" };
 import { getDatabaseHealth } from "@norish/db/drizzle";
-import { listCategoryNamesForUsers } from "@norish/db/repositories/categories";
-import { listCuisines } from "@norish/db/repositories/cuisines";
-import { listAllTagNames, listTagNamesForUsers } from "@norish/db/repositories/tags";
+import { listCategoryNamesForHousehold } from "@norish/db/repositories/categories";
+import { listEntryNames } from "@norish/db/repositories/list-entries";
 import {
   getIngredientWords,
   getLocaleConfig,
-  getRecipePermissionPolicy,
   getRecurrenceConfig,
   getTimerKeywords,
   getUnits,
@@ -94,48 +92,21 @@ const localeConfig = publicProcedure.query(async () => {
   };
 });
 
-/**
- * Get all unique tag names visible to the authenticated user. Scoped to the
- * user's household unless the recipe view policy (or server admin role)
- * grants access to all recipes.
- */
+/** The household's Tags, whatever the Permission Policy (ADR-0043). */
 const tags = authedProcedure.query(async ({ ctx }) => {
   log.debug({ userId: ctx.user.id }, "Getting tags");
 
-  const policy = await getRecipePermissionPolicy();
-  const tagNames =
-    policy.view === "everyone" || ctx.isServerAdmin
-      ? await listAllTagNames()
-      : await listTagNamesForUsers(ctx.userIds);
-
-  return { tags: tagNames };
+  return { tags: await listEntryNames("tag", ctx.householdId) };
 });
 
-/**
- * The household's Categories. Always household-scoped, unlike `tags`: another
- * household's Categories would fill the chip row (ADR-0040).
- */
+/** The built-in Categories, then the household's own, whatever the Permission Policy (ADR-0040). */
 const categories = authedProcedure.query(async ({ ctx }) => {
   log.debug({ userId: ctx.user.id }, "Getting categories");
 
   return {
-    categories: await listCategoryNamesForUsers(ctx.userIds),
+    categories: await listCategoryNamesForHousehold(ctx.householdId),
     builtInAliases: BUILT_IN_ALIASES,
   };
-});
-
-/**
- * Get the deployment's Cuisine vocabulary.
- *
- * Unscoped on purpose: unlike Tags, which grow out of whichever recipes a user
- * can see, the vocabulary is one administrator-owned list. An editor picks from
- * exactly the same list AI does, which is what makes manual entries match
- * inferred ones.
- */
-const cuisines = authedProcedure.query(async ({ ctx }) => {
-  log.debug({ userId: ctx.user.id }, "Getting the Cuisine vocabulary");
-
-  return { cuisines: await listCuisines() };
 });
 
 /**
@@ -309,7 +280,6 @@ export const configProcedures = router({
   localeConfig,
   tags,
   categories,
-  cuisines,
   units,
   ingredientWords,
   recurrenceConfig,

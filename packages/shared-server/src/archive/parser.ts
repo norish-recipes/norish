@@ -6,14 +6,14 @@ import JSZip from "jszip";
 import type { CreateRecipeResult } from "@norish/db/repositories/recipes";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import { dashboardRecipe, findExistingRecipe } from "@norish/db";
-import { listCategoryNamesForUsers } from "@norish/db/repositories/categories";
+import { listCategoryNamesForHousehold } from "@norish/db/repositories/categories";
 import {
   addRecipeToCookbook,
   createCookbook,
   findOwnCookbookIdByTitle,
 } from "@norish/db/repositories/cookbooks";
-import { listCuisines } from "@norish/db/repositories/cuisines";
 import { addFavorite } from "@norish/db/repositories/favorites";
+import { listEntryRows } from "@norish/db/repositories/list-entries";
 import { rateRecipe } from "@norish/db/repositories/ratings";
 import {
   createResolvedRecipe,
@@ -21,11 +21,13 @@ import {
 } from "@norish/shared-server/ingredients/recipe-lines";
 import { serverLogger as log } from "@norish/shared-server/logger";
 import { withDishColor, withDishColorForUpdate } from "@norish/shared-server/media/dish-color";
+import { matchImportedTags } from "@norish/shared-server/recipes/imported-tags";
 import {
   CookbookSummaryDTO,
   FullRecipeInsertDTO,
   RecipeDashboardDTO,
 } from "@norish/shared/contracts";
+import { entryFold } from "@norish/shared/lib/fold-name";
 
 import {
   detectMealieLegacyArchive,
@@ -343,13 +345,11 @@ function isParseError(
 }
 
 async function applyImportedMarks(
-  userId: string | undefined,
+  userId: string,
   recipeId: string,
   importedRating: number | undefined,
   importedFavorite: boolean | undefined
 ): Promise<void> {
-  if (!userId) return;
-
   if (importedRating) {
     try {
       await rateRecipe(userId, recipeId, importedRating);
@@ -373,13 +373,13 @@ async function applyImportedMarks(
  * run, filing only ever adds a membership, and a failure is logged and never
  * fails the import, like the imported rating.
  */
-function createCookbookFiler(userId: string | undefined) {
+function createCookbookFiler(userId: string) {
   const cookbookIds = new Map<string, string>();
 
   return async (recipeId: string, titles: string[] | undefined): Promise<CookbookFiling[]> => {
     const filings: CookbookFiling[] = [];
 
-    if (!userId || !titles) return filings;
+    if (!titles) return filings;
 
     for (const title of titles) {
       const trimmed = title.trim();
@@ -449,8 +449,8 @@ export type ImportProgressListener = (
  */
 export async function importRecipeItems(
   items: AsyncGenerator<RecipeImportItemOrError, void, unknown>,
-  userId: string | undefined,
-  userIds: string[],
+  userId: string,
+  householdId: string,
   onProgress?: ImportProgressListener
 ): Promise<ImportResult> {
   const imported: RecipeDashboardDTO[] = [];
@@ -486,25 +486,21 @@ export async function importRecipeItems(
 
     try {
       // Check for duplicates
-      const existingId = await findExistingRecipe(userIds, dto.url, dto.name, [...writtenThisRun]);
+      const existingId = await findExistingRecipe(householdId, dto.url, dto.name, [
+        ...writtenThisRun,
+      ]);
 
       if (existingId) {
-        const overwriteUserId = userId ?? userIds[0];
-
-        if (!overwriteUserId) {
-          throw new Error("Cannot overwrite existing recipe without user context");
-        }
-
-        const overwriteDto = await rehomeArchiveMediaToRecipe(dto, existingId);
+        const overwriteDto = await rehomeArchiveMediaToRecipe(
+          await matchImportedTags(householdId, dto),
+          existingId
+        );
 
         // The receiving instance extracts its own Dish Colour from the
         // media it just rehomed; nothing colour-shaped travels in an archive.
-        await updateResolvedRecipe(
-          existingId,
-          overwriteUserId,
-          await withDishColorForUpdate(overwriteDto),
-          { userId: overwriteUserId }
-        );
+        await updateResolvedRecipe(existingId, userId, await withDishColorForUpdate(overwriteDto), {
+          userId,
+        });
 
         writtenThisRun.add(existingId);
         await applyImportedMarks(userId, existingId, importedRating, importedFavorite);
@@ -527,9 +523,12 @@ export async function importRecipeItems(
         throw new Error("Archive recipe missing preallocated recipe ID");
       }
 
-      const created = await createResolvedRecipe(recipeId, userId, await withDishColor(dto), {
-        userId: userId ?? null,
-      });
+      const created = await createResolvedRecipe(
+        recipeId,
+        userId,
+        await withDishColor(await matchImportedTags(householdId, dto)),
+        { userId }
+      );
 
       let filings: CookbookFiling[] = [];
 
@@ -561,11 +560,11 @@ export async function importRecipeItems(
   return { imported, errors, notes };
 }
 
-/** The receiving instance's cuisine vocabulary, by lowercased name. */
-async function loadCuisineVocabulary(): Promise<Map<string, string>> {
-  const vocabulary = await listCuisines();
+/** The importing household's Cuisines and the instance's, by folded name. */
+async function loadCuisineVocabulary(householdId: string): Promise<Map<string, string>> {
+  const vocabulary = await listEntryRows("cuisine", householdId);
 
-  return new Map(vocabulary.map((cuisine) => [cuisine.name.trim().toLowerCase(), cuisine.id]));
+  return new Map(vocabulary.map((cuisine) => [entryFold(cuisine.name), cuisine.id]));
 }
 
 function droppedCuisinesNote(
@@ -581,13 +580,15 @@ function droppedCuisinesNote(
  * Generator for Norish Recipe Archive recipes.
  */
 async function* generateNorishRecipes(
-  zip: JSZip
+  zip: JSZip,
+  householdId: string,
+  householdCategories: readonly string[]
 ): AsyncGenerator<RecipeImportItemOrError, void, unknown> {
   const manifest = await readNorishManifest(zip);
 
   assertSupportedNorishFormatVersion(manifest);
 
-  const cuisineIdsByName = await loadCuisineVocabulary();
+  const cuisineIdsByName = await loadCuisineVocabulary(householdId);
 
   const entries = await extractNorishRecipes(zip);
 
@@ -603,7 +604,8 @@ async function* generateNorishRecipes(
           entry.json,
           createArchiveRecipeId(),
           cuisineIdsByName,
-          zip.folder(entry.folderKey)
+          zip.folder(entry.folderKey),
+          householdCategories
         );
 
       const fileName = `recipe_${dto.name}`;
@@ -653,13 +655,14 @@ async function* generateMelaRecipes(
  */
 async function* generateMealieRecipes(
   zip: JSZip,
-  household: readonly string[]
+  household: readonly string[],
+  householdId: string
 ): AsyncGenerator<RecipeImportItemOrError, void, unknown> {
   const { recipes, database } = await parseMealieArchive(zip);
 
   // Build lookup maps once for efficient resolution
   const lookups = buildMealieLookups(database);
-  const cuisineIdsByName = await loadCuisineVocabulary();
+  const cuisineIdsByName = await loadCuisineVocabulary(householdId);
 
   for (const mealieRecipe of recipes) {
     const recipeName = mealieRecipe.name || mealieRecipe.id;
@@ -840,8 +843,7 @@ async function* generateRecipeKeeperRecipes(
  * Import archive (auto-detects Norish, Mela, Mealie, Paprika, Tandoor, or Recipe Keeper format)
  */
 export async function importArchive(
-  userId: string | undefined,
-  userIds: string[],
+  importer: { userId: string; householdId: string },
   zipBytes: Buffer,
   onProgress?: ImportProgressListener
 ): Promise<ImportResult> {
@@ -864,18 +866,18 @@ export async function importArchive(
 
   // Select generator based on format
   let generator: AsyncGenerator<RecipeImportItemOrError, void, unknown>;
-  // Another app's categories match the importing household's list.
-  const household = format === ArchiveFormat.NORISH ? [] : await listCategoryNamesForUsers(userIds);
+  // An archive's categories match the importing household's list.
+  const household = await listCategoryNamesForHousehold(importer.householdId);
 
   switch (format) {
     case ArchiveFormat.NORISH:
-      generator = generateNorishRecipes(zip);
+      generator = generateNorishRecipes(zip, importer.householdId, household);
       break;
     case ArchiveFormat.MELA:
       generator = generateMelaRecipes(zip, household);
       break;
     case ArchiveFormat.MEALIE:
-      generator = generateMealieRecipes(zip, household);
+      generator = generateMealieRecipes(zip, household, importer.householdId);
       break;
     case ArchiveFormat.MEALIE_LEGACY:
       generator = generateMealieLegacyRecipes(zip, household);
@@ -891,5 +893,5 @@ export async function importArchive(
       break;
   }
 
-  return importRecipeItems(generator, userId, userIds, onProgress);
+  return importRecipeItems(generator, importer.userId, importer.householdId, onProgress);
 }

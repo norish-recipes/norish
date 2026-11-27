@@ -77,7 +77,7 @@ describe("Paprika Parser", () => {
       const result = PaprikaRecipeSchema.parse(recipe);
 
       expect(result.name).toBe("Minimal Recipe");
-      expect(result.categories).toEqual([]);
+      expect(result.categories).toBeUndefined();
       expect(result.photos).toEqual([]);
     });
 
@@ -143,6 +143,20 @@ describe("Paprika Parser", () => {
       expect(dto.prepMinutes).toBe(15);
       expect(dto.cookMinutes).toBe(30);
       expect(dto.totalMinutes).toBe(45);
+    });
+
+    it("carries no list the file has none of, so an overwrite keeps the recipe's own", async () => {
+      const { categories: _none, ...uncategorised } = mockRecipe;
+      const dto = await parsePaprikaRecipeToDTO(
+        uncategorised,
+        "123e4567-e89b-42d3-a456-426614174000",
+        undefined,
+        BUILT_IN_CATEGORIES
+      );
+
+      expect(dto).not.toHaveProperty("categories");
+      expect(dto).not.toHaveProperty("tags");
+      expect(dto).not.toHaveProperty("cuisines");
     });
 
     it("imports images as supplied: nothing in a foreign archive is a Generated Image", async () => {

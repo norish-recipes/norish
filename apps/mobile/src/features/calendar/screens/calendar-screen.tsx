@@ -97,17 +97,22 @@ export function CalendarScreen() {
   // The offset the list mounts at, fixed on the first render of rows: a day sits just under the
   // bar from the first frame, and rows added above later are kept in place by the list.
   const [openingAt, setOpeningAt] = useState<number | null>(null);
+  const [opened, setOpened] = useState(false);
 
   if (isRead && openingAt === null) {
     setOpeningAt(openIndex < 0 ? 0 : openingOffset(rows, openIndex, fontScale, 0, listTop));
   }
+  // Emptied reads (a household change) unmount the list, so the next one opens afresh.
+  if (!isRead && (openingAt !== null || opened)) {
+    setOpeningAt(null);
+    setOpened(false);
+  }
 
   // An opening `contentOffset` sends no scroll event, which the list's window (under
   // `initialScrollIndex`) and the title wait for: a half-point scroll after the first layout sends it.
-  const openedRef = useRef(false);
   const sendOpeningScroll = () => {
-    if (openedRef.current || openingAt === null) return;
-    openedRef.current = true;
+    if (opened || openingAt === null) return;
+    setOpened(true);
     listRef.current?.scrollToOffset({ offset: openingAt + 0.5, animated: false });
   };
 

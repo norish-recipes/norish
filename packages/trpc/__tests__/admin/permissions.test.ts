@@ -1,7 +1,7 @@
 // @vitest-environment node
 /**
- * The permission policies an administrator sets: each is stored, and each is
- * announced so every open page offers what the new policy allows.
+ * The Permission Policy an administrator sets: stored and announced, so every open page offers
+ * what it allows; edit and delete never reach further than view.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -9,7 +9,6 @@ import { ServerConfigKeys } from "@norish/config/zod/server-config";
 
 import { permissionsProcedures } from "../../src/routers/admin/permissions";
 import { createMockCallerContext } from "../calendar/test-utils";
-import { ingredients as ingredientsRealtime } from "../mocks/realtime/ingredients";
 import { permissions as permissionsRealtime } from "../mocks/realtime/permissions";
 import { setConfig } from "../mocks/server-config";
 import { isUserServerAdmin } from "../mocks/users";
@@ -21,10 +20,9 @@ vi.mock(
   "@norish/shared-server/realtime/permissions",
   () => import("../mocks/realtime/permissions")
 );
-vi.mock(
-  "@norish/shared-server/realtime/ingredients",
-  () => import("../mocks/realtime/ingredients")
-);
+const bumpViewEpoch = vi.hoisted(() => vi.fn(async () => undefined));
+
+vi.mock("@norish/shared-server/realtime/resume", () => ({ bumpViewEpoch }));
 vi.mock("@norish/shared-server/logger", () => ({
   trpcLogger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
   createLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
@@ -34,27 +32,51 @@ const admin = () =>
   permissionsProcedures.createCaller(createMockCallerContext(createMockAdminContext()));
 
 beforeEach(() => {
-  ingredientsRealtime.reset();
   permissionsRealtime.reset();
   setConfig.mockResolvedValue(undefined);
   isUserServerAdmin.mockResolvedValue(true);
 });
 
-describe("the ingredient permission policy", () => {
-  it("is stored, and announced as an Ingredient change about no Ingredient in particular", async () => {
-    await expect(admin().updateIngredientPermissionPolicy({ edit: "everyone" })).resolves.toEqual({
+describe("the Permission Policy", () => {
+  it("is stored, refuses older Resume cursors, and is announced to everyone", async () => {
+    const policy = { view: "household", edit: "household", delete: "household" } as const;
+
+    await expect(admin().updateRecipePermissionPolicy(policy)).resolves.toEqual({
       success: true,
     });
 
     expect(setConfig).toHaveBeenCalledWith(
-      ServerConfigKeys.INGREDIENT_PERMISSION_POLICY,
-      { edit: "everyone" },
+      ServerConfigKeys.RECIPE_PERMISSION_POLICY,
+      policy,
       expect.any(String),
       false
     );
-    expect(ingredientsRealtime.published).toEqual([
-      expect.objectContaining({ event: "changed", payload: { ingredientIds: [] } }),
+    expect(bumpViewEpoch.mock.invocationCallOrder[0]).toBeGreaterThan(
+      setConfig.mock.invocationCallOrder[0]!
+    );
+    expect(permissionsRealtime.published).toEqual([
+      expect.objectContaining({ event: "policyUpdated", payload: { recipePolicy: policy } }),
     ]);
+  });
+
+  it.each([
+    ["edit", { view: "household", edit: "everyone", delete: "household" }],
+    ["delete", { view: "household", edit: "household", delete: "everyone" }],
+  ] as const)("refuses %s reaching further than view", async (_, policy) => {
+    await expect(admin().updateRecipePermissionPolicy(policy)).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+    });
+    expect(setConfig).not.toHaveBeenCalled();
+  });
+
+  it("refuses a level that no longer exists", async () => {
+    await expect(
+      admin().updateRecipePermissionPolicy({
+        view: "owner" as never,
+        edit: "household",
+        delete: "household",
+      })
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
   });
 
   it("is an administrator's to set", async () => {
@@ -65,7 +87,11 @@ describe("the ingredient permission policy", () => {
     );
 
     await expect(
-      member.updateIngredientPermissionPolicy({ edit: "everyone" })
+      member.updateRecipePermissionPolicy({
+        view: "everyone",
+        edit: "everyone",
+        delete: "everyone",
+      })
     ).rejects.toMatchObject({ code: "FORBIDDEN" });
     expect(setConfig).not.toHaveBeenCalled();
   });

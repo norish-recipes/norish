@@ -1,6 +1,18 @@
 import { describe, expect, it } from "vitest";
 
-import { HIDDEN_ITEMS, hiddenItemVisibility, partitionHiddenItems } from "../hidden-items";
+import {
+  HIDDEN_ITEMS,
+  hiddenItemVisibility,
+  offeredHiddenItems,
+  partitionHiddenItems,
+} from "../hidden-items";
+
+describe("offeredHiddenItems", () => {
+  it("leaves out timers when the deployment has them off", () => {
+    expect(offeredHiddenItems(true)).toEqual(HIDDEN_ITEMS);
+    expect(offeredHiddenItems(false)).toEqual(HIDDEN_ITEMS.filter((item) => item !== "timers"));
+  });
+});
 
 describe("partitionHiddenItems", () => {
   it("splits a stored list into what a control can offer and what it must carry", () => {

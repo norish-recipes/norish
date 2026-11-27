@@ -1,13 +1,14 @@
+import type { TabScroll } from "@/lib/use-tab-scroll";
 import React from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { Card, CardRow } from "@/components/card";
 import { CardPhoto } from "@/components/card-photo";
+import { Ionicons } from "@/components/icon";
 import { PressableScale } from "@/components/pressable-scale";
 import { Section } from "@/components/section";
 import { ToggleChip } from "@/components/toggle-chip";
 import { useCategoryLabel } from "@/hooks/use-category-label";
 import { useTokenColor } from "@/hooks/use-token-color";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { Skeleton } from "heroui-native";
 import { useIntl } from "react-intl";
 
@@ -20,6 +21,7 @@ import type { SectionRead } from "../utils/discover";
 import { useRecentSearches } from "../hooks/use-recent-searches";
 import { discoverSections } from "../utils/discover";
 import { quickFilters } from "../utils/search-chips";
+import { SearchScroll } from "./search-scroll";
 
 const TILE_COUNT = 4;
 const SKELETON_TAG_WIDTHS = ["w-24", "w-28", "w-24", "w-20", "w-24", "w-16"];
@@ -203,11 +205,13 @@ function TagsSection({
  * Tags. It shows only with no chip applied, so a tap's chip is the only one; `onPicked` follows. */
 export function Discover({
   focused,
+  scroll,
   onRun,
   onEdit,
   onPicked,
 }: {
   focused: boolean;
+  scroll: TabScroll;
   onRun: (text: string) => void;
   onEdit: (text: string) => void;
   onPicked: () => void;
@@ -231,10 +235,9 @@ export function Discover({
   };
 
   return (
-    <ScrollView
+    <SearchScroll
       contentContainerClassName="gap-[22px] px-5 pt-5 pb-96"
-      contentInsetAdjustmentBehavior="automatic"
-      keyboardShouldPersistTaps="handled"
+      scroll={scroll}
       testID="search-screen"
     >
       {sections.map((section) => {
@@ -255,6 +258,6 @@ export function Discover({
             return <TagsSection key={section} tags={discover.data?.tags} onPick={pick} />;
         }
       })}
-    </ScrollView>
+    </SearchScroll>
   );
 }

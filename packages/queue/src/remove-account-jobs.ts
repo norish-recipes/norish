@@ -1,0 +1,80 @@
+import type { Job, JobType, Queue } from "bullmq";
+
+import { createLogger } from "@norish/shared-server/logger";
+
+import { ACCOUNT_QUEUES } from "./account-jobs";
+import { deleteUnstoredRecipeMedia } from "./import-cleanup";
+import { QUEUE_NAMES } from "./queue-names";
+import { getQueueByName } from "./registry";
+import { getBullClient } from "./valkey/bullmq";
+
+const log = createLogger("queue:account-jobs");
+
+/** Every state but active (a paused queue keeps its jobs in wait): a running job is its worker's. */
+const IDLE_STATES: JobType[] = [
+  "waiting",
+  "prioritized",
+  "delayed",
+  "waiting-children",
+  "completed",
+  "failed",
+];
+
+type AccountJobData = { userId?: unknown; recipeId?: unknown; recipeIds?: unknown };
+
+/** The recipe ids an import job was given before it ran; a paste may have downloaded their media. */
+function importedRecipeIds(name: string, data: AccountJobData): string[] {
+  if (name === QUEUE_NAMES.PASTE_IMPORT && Array.isArray(data.recipeIds)) {
+    return data.recipeIds.filter((id): id is string => typeof id === "string");
+  }
+  const imports: string[] = [QUEUE_NAMES.RECIPE_IMPORT, QUEUE_NAMES.IMAGE_IMPORT];
+
+  return imports.includes(name) && typeof data.recipeId === "string" ? [data.recipeId] : [];
+}
+
+/** Drops the follow-ups BullMQ keeps (`dn:` hashes) for a deduplicated job still running. */
+async function removeDeferredFollowUps(queue: Queue, belongs: (data: AccountJobData) => boolean) {
+  const client = getBullClient();
+  let cursor = "0";
+
+  do {
+    const [next, keys] = await client.scan(cursor, "MATCH", queue.toKey("dn:*"), "COUNT", 500);
+
+    for (const key of keys) {
+      const data = await client.hget(key, "data");
+
+      if (data && belongs(JSON.parse(data) as AccountJobData)) await client.del(key);
+    }
+    cursor = next;
+  } while (cursor !== "0");
+}
+
+/** Removes every job of a deleted account, and of its erased recipes, that no worker is running. */
+export async function removeAccountJobs(userId: string, recipeIds: string[]): Promise<void> {
+  const erased = new Set(recipeIds);
+  const belongs = ({ userId: owner, recipeId }: AccountJobData) =>
+    owner === userId || (typeof recipeId === "string" && erased.has(recipeId));
+  const unstored: string[] = [];
+
+  await Promise.all(
+    ACCOUNT_QUEUES.map(async (name) => {
+      const queue = getQueueByName(name);
+      const jobs = (await queue.getJobs(IDLE_STATES)).filter(
+        (job: Job | undefined): job is Job => !!job && belongs(job.data ?? {})
+      );
+
+      await Promise.all(
+        jobs.map((job) =>
+          job
+            .remove()
+            .then(() => unstored.push(...importedRecipeIds(name, job.data ?? {})))
+            .catch((err: unknown) =>
+              log.warn({ err, queueName: name, jobId: job.id }, "Could not remove a job")
+            )
+        )
+      );
+      if (name === QUEUE_NAMES.CALDAV_SYNC) await removeDeferredFollowUps(queue, belongs);
+    })
+  );
+  await deleteUnstoredRecipeMedia(unstored);
+}

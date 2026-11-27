@@ -3,8 +3,17 @@ import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const sync = vi.fn(async () => {});
-const range = vi.hoisted(() => ({ read: false }));
+const clear = vi.fn(async (_message: string) => {});
+const range = vi.hoisted(() => ({ read: false, household: "h1" }));
 
+const stored = vi.hoisted(() => new Map<string, string>());
+
+vi.mock("@/lib/storage/mmkv", () => ({
+  storage: {
+    getString: (key: string) => stored.get(key),
+    set: (key: string, value: string) => void stored.set(key, value),
+  },
+}));
 vi.mock("expo-linking", () => ({ createURL: (path: string) => path }));
 vi.mock("react-native", () => ({ AppState: { addEventListener: () => ({ remove() {} }) } }));
 vi.mock("react-intl", () => ({
@@ -13,17 +22,27 @@ vi.mock("react-intl", () => ({
 vi.mock("@/lib/calendar-widgets", () => ({
   startCalendarWidgets: () => {},
   syncCalendarWidgets: sync,
+  clearCalendarWidgets: clear,
 }));
 // Seeded from another range's cache, so the query already reads as `isRead`.
 vi.mock("@norish/shared-react/calendar", () => ({
   useCalendarQuery: () => ({ calendarData: {}, isLoading: false, isRead: true }),
   useCalendarRangeRead: () => range.read,
 }));
-vi.mock("@norish/shared-react/reader", () => ({ useToday: () => "2026-11-15" }));
+vi.mock("@norish/shared-react/reader", () => ({
+  useToday: () => "2026-11-15",
+  useHousehold: () => ({ household: { id: range.household } }),
+}));
 
 const { useCalendarWidgets } = await import("../hooks/use-calendar-widgets");
 
-beforeEach(() => sync.mockClear());
+beforeEach(() => {
+  sync.mockClear();
+  clear.mockClear();
+  range.household = "h1";
+  stored.clear();
+  stored.set("calendar-widgets.household", "h1");
+});
 
 describe("useCalendarWidgets", () => {
   it("pushes nothing until the widgets' own range is read, then pushes", () => {
@@ -35,5 +54,34 @@ describe("useCalendarWidgets", () => {
     rerender();
 
     expect(sync).toHaveBeenCalledOnce();
+  });
+
+  it("empties the widgets when the household changes, though the new plan is not read yet", () => {
+    range.read = true;
+    const { rerender } = renderHook(() => useCalendarWidgets());
+
+    expect(clear).not.toHaveBeenCalled();
+    range.read = false;
+    range.household = "h2";
+    rerender();
+
+    expect(clear).toHaveBeenCalledOnce();
+  });
+
+  it("empties the widgets on the first household read after a start, if they show another's plan", () => {
+    range.read = false;
+    renderHook(() => useCalendarWidgets()).unmount();
+    range.household = "h2";
+    renderHook(() => useCalendarWidgets());
+
+    expect(clear).toHaveBeenCalledOnce();
+  });
+
+  it("empties the widgets when no household was recorded, as an older build may have filled them", () => {
+    stored.clear();
+    renderHook(() => useCalendarWidgets());
+
+    expect(clear).toHaveBeenCalledOnce();
+    expect(stored.get("calendar-widgets.household")).toBe("h1");
   });
 });

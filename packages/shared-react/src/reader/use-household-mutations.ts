@@ -3,25 +3,38 @@
 import { useMutation } from "@tanstack/react-query";
 
 import type { HouseholdSettingsDto } from "@norish/shared/contracts/dto/household";
+import type { JoinRefusal } from "@norish/shared/lib/join-refusals";
+import { joinRefusalOf } from "@norish/shared/lib/join-refusals";
 
+import { wentThrough } from "../offline/settled";
+import { usePlatform } from "../platform";
 import { useTRPC } from "../trpc";
 import { useHousehold, useHouseholdCacheHelpers } from "./use-household";
-import { useReader } from "./use-reader";
 
+const JOIN_REFUSAL_COPY: Record<JoinRefusal, string> = {
+  gone: "common.household.joinRefused.invalidCode",
+  expired: "common.household.joinRefused.expired",
+  "already-member": "common.household.joinRefused.alreadyMember",
+  shared: "common.household.joinRefused.shared",
+  busy: "common.household.joinRefused.busy",
+};
+
+/** Each action resolves whether its request went through: false when it failed. */
 type HouseholdMutationsResult = {
-  createHousehold: (name: string) => void;
-  joinHousehold: (code: string) => void;
-  leaveHousehold: (householdId: string) => void;
-  kickUser: (householdId: string, userId: string) => void;
-  regenerateJoinCode: (householdId: string) => void;
-  transferAdmin: (householdId: string, newAdminId: string) => void;
+  joinHousehold: (code: string) => Promise<boolean>;
+  leaveHousehold: (householdId: string) => Promise<boolean>;
+  kickUser: (householdId: string, userId: string) => Promise<boolean>;
+  regenerateJoinCode: (householdId: string) => Promise<boolean>;
+  transferAdmin: (householdId: string, newAdminId: string) => Promise<boolean>;
+  /** Whether each action's request is in flight, for a caller that must not send it twice. */
+  pending: Record<"join" | "leave" | "kick" | "regenerate" | "transfer", boolean>;
 };
 
 export function useHouseholdMutations(): HouseholdMutationsResult {
   const trpc = useTRPC();
   const { household, currentUserId } = useHousehold();
   const { setHouseholdData, invalidate } = useHouseholdCacheHelpers();
-  const userName = useReader().user?.name ?? null;
+  const { showError, toast } = usePlatform();
 
   const getHouseholdVersion = (householdId: string): number =>
     household?.id === householdId ? household.version : 1;
@@ -29,43 +42,34 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
     household?.id === householdId
       ? (household.users.find((user) => user.id === userId)?.version ?? 1)
       : 1;
-  const onError = () => invalidate();
+  // A failed action rereads the household and tells the reader why, with the server's reason.
+  const onError = (action: string) => (error: unknown) => {
+    void invalidate();
+    showError(error, `household:${action}`);
+  };
 
-  const { mutate: mutateCreate } = useMutation(
-    trpc.households.create.mutationOptions({
-      onSuccess: ({ id }, { name }) => {
-        if (!currentUserId) return;
+  // A refused join is told in the reader's language; any other failure as the server gave it.
+  const onJoinError = (error: unknown) => {
+    const refusal = error instanceof Error ? joinRefusalOf(error.message) : undefined;
 
-        const created: HouseholdSettingsDto = {
-          id,
-          name: name ?? "",
-          version: 1,
-          users: [{ id: currentUserId, name: userName, isAdmin: true, version: 1 }],
-          allergies: [],
-        };
+    if (!refusal) return onError("join")(error);
+    void invalidate();
+    toast.show({
+      severity: "danger",
+      title: toast.translate("common.errors.operationFailed"),
+      description: toast.translate(JOIN_REFUSAL_COPY[refusal]),
+    });
+  };
 
-        setHouseholdData((prev) => ({
-          household: created,
-          currentUserId: prev?.currentUserId ?? currentUserId,
-        }));
-      },
-      onError,
-    })
-  );
   // The joined household arrives through the subscription.
-  const { mutate: mutateJoin } = useMutation(trpc.households.join.mutationOptions({ onError }));
-  const { mutate: mutateLeave } = useMutation(
-    trpc.households.leave.mutationOptions({
-      onSuccess: () => {
-        setHouseholdData((prev) => ({
-          household: null,
-          currentUserId: prev?.currentUserId ?? currentUserId ?? "",
-        }));
-      },
-      onError,
-    })
+  const { mutateAsync: mutateJoin, isPending: isJoining } = useMutation(
+    trpc.households.join.mutationOptions({ onError: onJoinError })
   );
-  const { mutate: mutateKick } = useMutation(
+  // The new household of one arrives through the subscription.
+  const { mutateAsync: mutateLeave, isPending: isLeaving } = useMutation(
+    trpc.households.leave.mutationOptions({ onError: onError("leave") })
+  );
+  const { mutateAsync: mutateKick, isPending: isKicking } = useMutation(
     trpc.households.kick.mutationOptions({
       onSuccess: (_data, { userId }) => {
         setHouseholdData((prev) => {
@@ -80,14 +84,14 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
           };
         });
       },
-      onError,
+      onError: onError("kick"),
     })
   );
   // The new join code arrives through the subscription.
-  const { mutate: mutateRegenerateCode } = useMutation(
-    trpc.households.regenerateCode.mutationOptions({ onError })
+  const { mutateAsync: mutateRegenerateCode, isPending: isRegenerating } = useMutation(
+    trpc.households.regenerateCode.mutationOptions({ onError: onError("regenerate") })
   );
-  const { mutate: mutateTransferAdmin } = useMutation(
+  const { mutateAsync: mutateTransferAdmin, isPending: isTransferring } = useMutation(
     trpc.households.transferAdmin.mutationOptions({
       onSuccess: (_data, { newAdminId }) => {
         setHouseholdData((prev) => {
@@ -105,23 +109,11 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
           return { ...prev, household: updated };
         });
       },
-      onError,
+      onError: onError("transfer"),
     })
   );
 
-  const createHousehold = (name: string): void => {
-    if (!name.trim()) {
-      throw new Error("Household name cannot be empty");
-    }
-
-    if (!currentUserId) {
-      throw new Error("User ID not available");
-    }
-
-    mutateCreate({ name: name.trim() });
-  };
-
-  const joinHousehold = (code: string): void => {
+  const joinHousehold = (code: string): Promise<boolean> => {
     if (!code.trim()) {
       throw new Error("Join code cannot be empty");
     }
@@ -130,31 +122,45 @@ export function useHouseholdMutations(): HouseholdMutationsResult {
       throw new Error("User ID not available");
     }
 
-    mutateJoin({ code: code.trim() });
+    return wentThrough(mutateJoin({ code: code.trim() }));
   };
 
-  const leaveHousehold = (householdId: string): void => {
-    mutateLeave({ householdId, version: memberVersion(householdId, currentUserId) });
+  const leaveHousehold = (householdId: string): Promise<boolean> => {
+    return wentThrough(
+      mutateLeave({ householdId, version: memberVersion(householdId, currentUserId) })
+    );
   };
 
-  const kickUser = (householdId: string, userId: string): void => {
-    mutateKick({ householdId, userId, version: memberVersion(householdId, userId) });
+  const kickUser = (householdId: string, userId: string): Promise<boolean> => {
+    return wentThrough(
+      mutateKick({ householdId, userId, version: memberVersion(householdId, userId) })
+    );
   };
 
-  const regenerateJoinCode = (householdId: string): void => {
-    mutateRegenerateCode({ householdId, version: getHouseholdVersion(householdId) });
+  const regenerateJoinCode = (householdId: string): Promise<boolean> => {
+    return wentThrough(
+      mutateRegenerateCode({ householdId, version: getHouseholdVersion(householdId) })
+    );
   };
 
-  const transferAdmin = (householdId: string, newAdminId: string): void => {
-    mutateTransferAdmin({ householdId, newAdminId, version: getHouseholdVersion(householdId) });
+  const transferAdmin = (householdId: string, newAdminId: string): Promise<boolean> => {
+    return wentThrough(
+      mutateTransferAdmin({ householdId, newAdminId, version: getHouseholdVersion(householdId) })
+    );
   };
 
   return {
-    createHousehold,
     joinHousehold,
     leaveHousehold,
     kickUser,
     regenerateJoinCode,
     transferAdmin,
+    pending: {
+      join: isJoining,
+      leave: isLeaving,
+      kick: isKicking,
+      regenerate: isRegenerating,
+      transfer: isTransferring,
+    },
   };
 }

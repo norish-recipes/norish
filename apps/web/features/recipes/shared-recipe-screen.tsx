@@ -8,7 +8,7 @@ import RecipePageTint from "@/features/recipes/components/read-only/recipe-page-
 import { SharedRecipePageDesktop } from "@/features/recipes/components/share/shared-recipe-page-desktop";
 import { SharedRecipePageMobile } from "@/features/recipes/components/share/shared-recipe-page-mobile";
 import RecipeSkeleton from "@/features/recipes/components/skeleton/recipe-skeleton";
-import { SharePageProvider } from "@/features/recipes/lib/share-page-store";
+import { SharedRecipeLoaded, SharePageProvider } from "@/features/recipes/lib/share-page-store";
 import { useTranslations } from "next-intl";
 
 import { useSharedRecipeQuery } from "@norish/shared-react/recipes";
@@ -32,7 +32,7 @@ function SharedRecipePageContent({ token }: { token: string }) {
   }
 
   return (
-    <>
+    <SharedRecipeLoaded recipe={recipe}>
       <TimerTicker />
       <div className="hidden justify-end pt-4 md:flex md:px-6">
         <AuthLanguageSelector />
@@ -41,7 +41,7 @@ function SharedRecipePageContent({ token }: { token: string }) {
         <SharedRecipePageDesktop />
         <SharedRecipePageMobile />
       </RecipePageTint>
-    </>
+    </SharedRecipeLoaded>
   );
 }
 

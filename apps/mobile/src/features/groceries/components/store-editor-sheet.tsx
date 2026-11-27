@@ -1,11 +1,11 @@
 import React from "react";
 import { Text, View } from "react-native";
 import { LabelWithHint } from "@/components/hint-button";
+import { Ionicons } from "@/components/icon";
 import { Sheet } from "@/components/sheet";
 import { SheetInput } from "@/components/sheet-input";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { useText } from "@/lib/i18n/use-text";
 import { TextField, useThemeColor } from "heroui-native";
-import { useIntl } from "react-intl";
 
 import type { EditingStore } from "@norish/shared-react/groceries";
 import { canSaveStore } from "@norish/shared-react/groceries";
@@ -27,8 +27,7 @@ export function StoreEditorSheet({
   onSave: () => void;
   onBack: () => void;
 }) {
-  const intl = useIntl();
-  const text = (id: string) => intl.formatMessage({ id });
+  const text = useText();
   const [accent, muted] = useThemeColor(["accent", "muted"] as const);
   const link = editing.link.trim();
   const derived = link ? deriveSearchAddress(link) : null;

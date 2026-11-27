@@ -7,13 +7,24 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { createGroceries, createRecipeWithRefs, getRecipeFull } from "@norish/db";
-import { withTransaction } from "@norish/db/drizzle";
+import { joinHousehold, moveToHouseholdOfOne } from "@norish/db/repositories/households";
 import { deleteCatalogueIngredient } from "@norish/db/repositories/ingredient-catalogue";
-import { groceries, ingredients } from "@norish/db/schema";
 import { groceryParts, resolveGroceryNames } from "@norish/shared-server/ingredients/groceries";
 import { withResolvedIngredients } from "@norish/shared-server/ingredients/recipe-lines";
 
-import { getTestDb, mintTestFood } from "../../../db/__tests__/helpers/db-test-helpers";
+import {
+  addTestGrocery,
+  createTestIngredient,
+  createTestUser,
+  householdIdOf,
+  inRepositoryTransaction,
+  listTestIngredientIds,
+  mintTestFood,
+  readTestIngredient,
+  readTestSpelling,
+  testGroceryFoods,
+  testHouseholdOf,
+} from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 
 describe("grocery names through aliases", () => {
@@ -35,12 +46,12 @@ describe("grocery names through aliases", () => {
     await testBase.teardown();
   });
 
-  async function recipeLine(text: string) {
+  async function recipeLine(text: string, ownerId = userId) {
     const recipeId = crypto.randomUUID();
 
     await createRecipeWithRefs(
       recipeId,
-      userId,
+      ownerId,
       await withResolvedIngredients(
         {
           name: "Soup",
@@ -49,16 +60,19 @@ describe("grocery names through aliases", () => {
             { ingredientId: null, ingredientName: text, amount: 1, unit: null, order: 0 },
           ],
         },
-        { userId }
+        { userId: ownerId, householdId: await householdIdOf(ownerId) }
       )
     );
 
-    return (await getRecipeFull(recipeId))!.recipeIngredients[0]!;
+    return { ...(await getRecipeFull(recipeId))!.recipeIngredients[0]!, recipeId };
   }
 
   it("recognises a name typed by hand as the food a recipe line names", async () => {
     const line = await recipeLine("onions, diced");
-    const [typed] = await resolveGroceryNames([{ name: "Onions" }], { userId });
+    const [typed] = await resolveGroceryNames([{ name: "Onions" }], {
+      userId,
+      householdId: testHouseholdOf(userId),
+    });
 
     expect(typed?.ingredientId).toBe(line.ingredientId);
   });
@@ -67,7 +81,7 @@ describe("grocery names through aliases", () => {
     const line = await recipeLine("onions, diced");
     const [fromRecipe, typed] = await resolveGroceryNames(
       [{ name: "onions, diced", recipeIngredientId: line.id }, { name: "onions, diced" }],
-      { userId }
+      { userId, householdId: testHouseholdOf(userId) }
     );
 
     expect(fromRecipe).toEqual(typed);
@@ -77,36 +91,42 @@ describe("grocery names through aliases", () => {
   it("adds a recipe line whose food was deleted with no food, rather than minting it again", async () => {
     const line = await recipeLine("deegroller");
 
-    await withTransaction((tx) => deleteCatalogueIngredient(tx, line.ingredientId!));
+    await inRepositoryTransaction((tx) => deleteCatalogueIngredient(tx, line.ingredientId!));
 
     await expect(
-      resolveGroceryNames([{ name: "deegroller", recipeIngredientId: line.id }], { userId })
+      resolveGroceryNames([{ name: "deegroller", recipeIngredientId: line.id }], {
+        userId,
+        householdId: testHouseholdOf(userId),
+      })
     ).resolves.toEqual([null]);
-    await expect(getTestDb().select().from(ingredients)).resolves.toHaveLength(0);
+    await expect(listTestIngredientIds()).resolves.toHaveLength(0);
   });
 
   it("keeps a grocery's having no food while an edit leaves its text alone, and resolves a new text", async () => {
-    const [food] = await resolveGroceryNames([{ name: "deegroller" }], { userId });
-    const [grocery] = await getTestDb()
-      .insert(groceries)
-      .values({
-        userId,
-        name: "deegroller",
-        ingredientAliasId: food!.aliasId,
-        ingredientId: food!.ingredientId,
-      })
-      .returning({ id: groceries.id });
+    const [food] = await resolveGroceryNames([{ name: "deegroller" }], {
+      userId,
+      householdId: testHouseholdOf(userId),
+    });
+    const grocery = await addTestGrocery(userId, {
+      name: "deegroller",
+      ingredientAliasId: food!.aliasId,
+      ingredientId: food!.ingredientId,
+    });
 
-    await withTransaction((tx) => deleteCatalogueIngredient(tx, food!.ingredientId));
+    await inRepositoryTransaction((tx) => deleteCatalogueIngredient(tx, food!.ingredientId));
 
     await expect(
-      resolveGroceryNames([{ name: "Deegroller", groceryId: grocery!.id }], { userId })
+      resolveGroceryNames(
+        [{ name: "Deegroller", groceryId: grocery.id, householdId: testHouseholdOf(userId) }],
+        { userId, householdId: testHouseholdOf(userId) }
+      )
     ).resolves.toEqual([null]);
-    await expect(getTestDb().select().from(ingredients)).resolves.toHaveLength(0);
+    await expect(listTestIngredientIds()).resolves.toHaveLength(0);
 
-    const [renamed] = await resolveGroceryNames([{ name: "deeg", groceryId: grocery!.id }], {
-      userId,
-    });
+    const [renamed] = await resolveGroceryNames(
+      [{ name: "deeg", groceryId: grocery.id, householdId: testHouseholdOf(userId) }],
+      { userId, householdId: testHouseholdOf(userId) }
+    );
 
     expect(renamed).toEqual(expect.objectContaining({ aliasId: expect.any(String) }));
   });
@@ -115,7 +135,7 @@ describe("grocery names through aliases", () => {
     const line = await recipeLine("olive oil");
     const [renamed] = await resolveGroceryNames(
       [{ name: "extra virgin olive oil", recipeIngredientId: line.id }],
-      { userId }
+      { userId, householdId: testHouseholdOf(userId) }
     );
 
     expect(renamed?.ingredientId).not.toBe(line.ingredientId);
@@ -124,9 +144,11 @@ describe("grocery names through aliases", () => {
   it("answers a grocery replayed after being added offline exactly as it did the first time", async () => {
     const first = await resolveGroceryNames([{ name: "Uien" }, { name: "leeks, sliced" }], {
       userId,
+      householdId: testHouseholdOf(userId),
     });
     const replayed = await resolveGroceryNames([{ name: "Uien" }, { name: "leeks, sliced" }], {
       userId,
+      householdId: testHouseholdOf(userId),
     });
 
     expect(replayed).toEqual(first);
@@ -134,25 +156,32 @@ describe("grocery names through aliases", () => {
 
   it("keeps a typed grocery that names no food without one, and mints nothing", async () => {
     await expect(
-      resolveGroceryNames([{ name: ")" }, { name: "—" }, { name: "leeks" }], { userId })
+      resolveGroceryNames([{ name: ")" }, { name: "—" }, { name: "leeks" }], {
+        userId,
+        householdId: testHouseholdOf(userId),
+      })
     ).resolves.toEqual([null, null, expect.objectContaining({ aliasId: expect.any(String) })]);
-    await expect(getTestDb().select().from(ingredients)).resolves.toHaveLength(1);
+    await expect(listTestIngredientIds()).resolves.toHaveLength(1);
   });
 
   it("has nothing to resolve for a grocery with no name", async () => {
     await expect(
-      resolveGroceryNames([{ name: null }, { name: "  " }], { userId })
+      resolveGroceryNames([{ name: null }, { name: "  " }], {
+        userId,
+        householdId: testHouseholdOf(userId),
+      })
     ).resolves.toEqual([null, null]);
   });
 
   describe("a name whose words join foods", () => {
     beforeEach(async () => {
-      for (const text of ["zout", "peper", "boter", "olie"]) await mintTestFood(text);
+      for (const text of ["zout", "peper", "boter", "olie"])
+        await mintTestFood(testHouseholdOf(userId), text);
     });
 
     it("stands for a grocery per food it joins, the first of alternatives, and minting nothing", async () => {
       await expect(
-        groceryParts([
+        groceryParts(testHouseholdOf(userId), [
           { id: "a", name: "Zout en peper" },
           { id: "b", name: "boter of olie" },
           { id: "c", name: "zout en suiker" },
@@ -169,11 +198,14 @@ describe("grocery names through aliases", () => {
         [{ id: "d", name: ")" }],
         [{ id: "e", name: null }],
       ]);
-      await expect(getTestDb().select().from(ingredients)).resolves.toHaveLength(4);
+      await expect(listTestIngredientIds()).resolves.toHaveLength(4);
     });
 
     it("keeps whole a grocery whose joined text an edit leaves alone", async () => {
-      const [zout] = await resolveGroceryNames([{ name: "zout" }], { userId });
+      const [zout] = await resolveGroceryNames([{ name: "zout" }], {
+        userId,
+        householdId: testHouseholdOf(userId),
+      });
       const groceryId = crypto.randomUUID();
 
       await createGroceries(
@@ -181,6 +213,7 @@ describe("grocery names through aliases", () => {
           {
             id: groceryId,
             groceries: {
+              householdId: testHouseholdOf(userId),
               userId,
               name: "zout en peper",
               ingredientAliasId: zout!.aliasId,
@@ -194,20 +227,116 @@ describe("grocery names through aliases", () => {
             },
           },
         ],
-        [userId]
+        testHouseholdOf(userId)
       );
 
+      const edit = { groceryId, householdId: testHouseholdOf(userId) };
+
       await expect(
-        groceryParts([
-          { name: "Zout en peper", groceryId: groceryId },
-          { name: "peper en zout", groceryId: groceryId },
+        groceryParts(testHouseholdOf(userId), [
+          { name: "Zout en peper", ...edit },
+          { name: "peper en zout", ...edit },
         ])
       ).resolves.toEqual([
-        [{ name: "Zout en peper", groceryId: groceryId }],
+        [{ name: "Zout en peper", ...edit }],
         [
-          { name: "peper", groceryId: groceryId },
-          { name: "zout", groceryId: groceryId, id: undefined },
+          { name: "peper", ...edit },
+          { name: "zout", ...edit, id: undefined },
         ],
+      ]);
+    });
+  });
+
+  describe("a line naming a food outside the reader's catalogue", () => {
+    /** Each answer's food and spelling, with the household each belongs to (null: the seed). */
+    async function homes(refs: Array<{ aliasId: string; ingredientId: string } | null>) {
+      return await Promise.all(
+        refs.map(async (ref) => ({
+          food: (await readTestIngredient(ref!.ingredientId))!.householdId,
+          spelling: (await readTestSpelling(ref!.aliasId))!.householdId,
+        }))
+      );
+    }
+
+    it("goes on another household's list as that household's food, or the seed's", async () => {
+      await createTestIngredient({ name: "zout" });
+      const reader = (await createTestUser())!.id;
+      const readerHousehold = testHouseholdOf(reader);
+      const theirs = await mintTestFood(readerHousehold, "ui");
+      const [ui, zout, prei] = [
+        await recipeLine("ui"),
+        await recipeLine("zout"),
+        await recipeLine("prei"),
+      ];
+
+      const resolved = await resolveGroceryNames(
+        [ui, zout, prei].map((line) => ({
+          name: line.ingredientName,
+          recipeIngredientId: line.id,
+        })),
+        { userId: reader, householdId: readerHousehold }
+      );
+
+      expect(resolved[0]?.ingredientId).toBe(theirs.ingredientId);
+      // A seeded food is everyone's, so the line keeps it.
+      expect(resolved[1]?.ingredientId).toBe(zout.ingredientId);
+      expect(resolved[2]?.ingredientId).not.toBe(prei.ingredientId);
+      await createGroceries(
+        [ui, zout, prei].map((line, index) => ({
+          id: crypto.randomUUID(),
+          groceries: {
+            householdId: readerHousehold,
+            userId: reader,
+            name: line.ingredientName,
+            unit: null,
+            amount: null,
+            isDone: false,
+            recipeIngredientId: line.id,
+            recurringGroceryId: null,
+            ingredientAliasId: resolved[index]!.aliasId,
+            ingredientId: resolved[index]!.ingredientId,
+          },
+        })),
+        readerHousehold
+      );
+      // The rows as written, by name: prei, ui, zout.
+      const written = await testGroceryFoods(reader);
+
+      await expect(
+        homes(written.map((row) => ({ aliasId: row.aliasId!, ingredientId: row.ingredientId! })))
+      ).resolves.toEqual([
+        { food: readerHousehold, spelling: readerHousehold },
+        { food: readerHousehold, spelling: readerHousehold },
+        { food: null, spelling: null },
+      ]);
+      await expect(homes(resolved)).resolves.toEqual([
+        { food: readerHousehold, spelling: readerHousehold },
+        { food: null, spelling: null },
+        { food: readerHousehold, spelling: readerHousehold },
+      ]);
+      await expect(
+        groceryParts(readerHousehold, [{ name: "ui", recipeIngredientId: ui.id }])
+      ).resolves.toEqual([[{ name: "ui", recipeIngredientId: ui.id }]]);
+    });
+
+    it("names a leaver's own food: their lines moved with them", async () => {
+      const leaver = (await createTestUser())!.id;
+
+      await joinHousehold(leaver, { householdId: testHouseholdOf(userId) });
+      const line = await recipeLine("kapucijners", leaver);
+
+      await moveToHouseholdOfOne(testHouseholdOf(userId), leaver);
+      const newHousehold = await householdIdOf(leaver);
+      const [resolved] = await resolveGroceryNames(
+        [{ name: line.ingredientName, recipeIngredientId: line.id }],
+        { userId: leaver, householdId: newHousehold }
+      );
+      const moved = (await getRecipeFull(line.recipeId))!.recipeIngredients[0]!;
+
+      expect(moved.ingredientId).not.toBe(line.ingredientId);
+      expect(resolved?.ingredientId).toBe(moved.ingredientId);
+      await expect(homes([resolved!])).resolves.toEqual([
+        { food: newHousehold, spelling: newHousehold },
       ]);
     });
   });

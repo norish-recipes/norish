@@ -29,11 +29,14 @@ export interface IngredientForEstimation {
 /** A line a worked-out total left out, with the key its share is stored under (`lineKey`). */
 export interface LineForEstimation extends IngredientForEstimation {
   key: string;
+  /** The recipe line it is (of), carried to its share for the save. */
+  lineId?: string;
 }
 
 /** One left-out line's per-serving share, as the estimate stores it. */
 export interface EstimatedLineShare {
   key: string;
+  lineId?: string;
   calories: number;
   fat: number;
   carbs: number;
@@ -219,6 +222,7 @@ export async function estimateNutritionGap(
   const shares = output.lines.map(
     ({ line, calories, fat, carbs, protein, saturatedFat, sugars, fiber, sodium }) => ({
       key: lines[line - 1]!.key,
+      ...(lines[line - 1]!.lineId !== undefined && { lineId: lines[line - 1]!.lineId }),
       calories,
       fat,
       carbs,

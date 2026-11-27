@@ -43,6 +43,7 @@ vi.mock("@norish/shared-server/media/dish-color", async (importOriginal) => ({
 describe("a gallery upload right after recipes.create", () => {
   const testBase = new RepositoryTestBase("test_media_after_create");
   let user: User;
+  let householdId: string;
   let createCaller: typeof import("../../src/routers/recipes").recipesRouter.createCaller;
   let getRecipeFull: typeof import("@norish/db").getRecipeFull;
   let realtime: FakeRealtimeDomain<typeof recipesRealtime>;
@@ -61,6 +62,9 @@ describe("a gallery upload right after recipes.create", () => {
     const [stored] = await testBase.beforeEachTest();
 
     user = { ...stored, isServerAdmin: false } as User;
+    const { getHouseholdIdForUser } = await import("@norish/db/repositories/households");
+
+    householdId = (await getHouseholdIdForUser(user.id))!;
     mocks.announce.mockReset();
     realtime.reset();
     // The pool is reset per suite; warm it so the first create does not pay for it.
@@ -74,7 +78,7 @@ describe("a gallery upload right after recipes.create", () => {
   const caller = () =>
     createCaller({
       user,
-      household: { id: user.id, users: [{ id: user.id, name: user.name }] },
+      household: { id: householdId, users: [{ id: user.id, name: user.name }] },
       operationId: null,
     } as never);
 
@@ -158,7 +162,7 @@ describe("a gallery upload right after recipes.create", () => {
     expect(announced().map((r) => r.images.map((i) => i.id))).toEqual([[image.id], [image.id]]);
     expect(announced()[1]?.videos.map((v) => v.id)).toEqual([video.id]);
     expect(realtime.published.find((entry) => entry.event === "updated")?.target).toEqual(
-      expect.objectContaining({ viewPolicy: "household", householdKey: user.id })
+      expect.objectContaining({ viewPolicy: "household", householdId })
     );
 
     await caller().deleteGalleryImage({ imageId: image.id, version: image.version ?? 1 });
@@ -223,5 +227,45 @@ describe("a gallery upload right after recipes.create", () => {
     await caller().deleteGalleryImage({ imageId: image.id, version: (image.version ?? 1) + 1 });
 
     expect(announced()).toEqual([]);
+  });
+
+  it("keeps a pending id's files to the account that first uploaded for it", async () => {
+    const { createTestUser } = await import("../../../db/__tests__/helpers/db-test-helpers");
+    const { getHouseholdIdForUser } = await import("@norish/db/repositories/households");
+    const other = { ...(await createTestUser()), isServerAdmin: false } as User;
+    const otherHousehold = (await getHouseholdIdForUser(other.id))!;
+    const asOther = createCaller({
+      user: other,
+      household: { id: otherHousehold, users: [{ id: other.id, name: other.name }] },
+      operationId: null,
+    } as never);
+    const pendingId = crypto.randomUUID();
+
+    expect(await caller().uploadGalleryImage(photo(pendingId, 0))).toMatchObject({ success: true });
+    await expect(asOther.uploadGalleryImage(photo(pendingId, 1))).rejects.toThrow("not found");
+    await expect(asOther.deleteImage({ url: `/recipes/${pendingId}/a.jpg` })).rejects.toThrow(
+      "not found"
+    );
+    await expect(asOther.create({ ...recipe("Taken"), id: pendingId })).rejects.toThrow(
+      "Not found"
+    );
+    expect(await caller().create({ ...recipe("Mine"), id: pendingId })).toBe(pendingId);
+  });
+
+  it("answers an id another account's recipe holds as not found, like any taken id", async () => {
+    const { createTestUser } = await import("../../../db/__tests__/helpers/db-test-helpers");
+    const { getHouseholdIdForUser } = await import("@norish/db/repositories/households");
+    const other = { ...(await createTestUser()), isServerAdmin: false } as User;
+    const asOther = createCaller({
+      user: other,
+      household: { id: (await getHouseholdIdForUser(other.id))!, users: [] },
+      operationId: null,
+    } as never);
+    const id = await caller().create(recipe("Held"));
+
+    await expect(asOther.create({ ...recipe("Taken"), id })).rejects.toMatchObject({
+      code: "NOT_FOUND",
+      message: "Not found",
+    });
   });
 });

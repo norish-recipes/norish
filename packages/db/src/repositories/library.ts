@@ -1,6 +1,20 @@
-import type { SQL } from "drizzle-orm";
+import type { SQL, SQLWrapper } from "drizzle-orm";
 import type { AnyPgColumn, PgTable } from "drizzle-orm/pg-core";
-import { and, asc, desc, eq, notInArray, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  avg,
+  count,
+  countDistinct,
+  desc,
+  eq,
+  exists,
+  gt,
+  notInArray,
+  or,
+  sql,
+} from "drizzle-orm";
+import { alias, QueryBuilder } from "drizzle-orm/pg-core";
 
 import type {
   CookbookSummaryDTO,
@@ -15,9 +29,10 @@ import type {
   SortOrder,
 } from "@norish/shared/contracts";
 import type { IngredientSearch } from "@norish/shared/lib/ingredient-search";
+import type { LineReadings } from "@norish/shared/lib/line-foods";
 import { db } from "@norish/db/drizzle";
 import { BUILT_IN_CATEGORIES } from "@norish/shared/lib/categories";
-import { viewerAndHouseholdIds } from "@norish/shared/lib/household";
+import { entryFold } from "@norish/shared/lib/fold-name";
 import { parseIngredientSearch } from "@norish/shared/lib/ingredient-search";
 import { hasSearchText } from "@norish/shared/lib/search-terms";
 
@@ -36,16 +51,19 @@ import {
   recipeTags,
   tags as tagsTable,
 } from "../schema";
-import { recipeInAnyCategorySql } from "./categories";
 import { cookbookTitleMatch, listCookbooksByIds } from "./cookbooks";
+import { inCatalogue, inScope } from "./household-scope";
 import { findLocaleNames } from "./ingredient-aliases";
 import { matchingSearch, nameStartsWith } from "./ingredient-catalogue";
 import { kindWalkSql, lineNamesKindSql } from "./ingredient-kinds";
+import { recipeCarriesFoldsSql } from "./list-entries";
 import { pantryCoverageSql } from "./pantry-coverage";
-import { rowsOf, uuidListSql } from "./raw-sql";
 import { recipeIngredientMatches, recipeSearchMatches } from "./recipe-matches";
 import { PRIMARY_IMAGE_SQL } from "./recipe-primary-image";
-import { buildOwnerPolicyCondition, listDashboardRecipesByIds, recipeSearchSql } from "./recipes";
+import { buildPolicyCondition, listDashboardRecipesByIds, recipeSearchSql } from "./recipes";
+
+const qb = new QueryBuilder();
+const filterLine = alias(recipeIngredients, "filter_line");
 
 export type LibraryListParams = {
   limit: number;
@@ -62,6 +80,8 @@ export type LibraryListParams = {
   categories?: RecipeCategory[];
   favoritesOnly?: boolean;
   pantryOnly?: boolean;
+  /** With `pantryOnly`, the lines read through the reader's catalogue (`lineReadingsOf`). */
+  lineReadings?: LineReadings;
   type?: LibraryTypeFilter;
   /** An explicit sort orders a search too; only `none` still ranks. */
   sortBeatsRank?: boolean;
@@ -80,13 +100,36 @@ export type LibraryListItem =
  * what stops paging repeating or skipping a row when two titles or two
  * timestamps are equal.
  */
-const LIBRARY_ORDER_BY: Record<SortOrder, SQL> = {
-  titleAsc: sql`title ASC`,
-  titleDesc: sql`title DESC`,
-  dateAsc: sql`created_at ASC`,
-  dateDesc: sql`created_at DESC`,
-  none: sql`created_at DESC`,
+const LIBRARY_ORDER_BY: Record<
+  SortOrder,
+  (row: { title: SQLWrapper; createdAt: SQLWrapper }) => SQL
+> = {
+  titleAsc: (row) => asc(row.title),
+  titleDesc: (row) => desc(row.title),
+  dateAsc: (row) => asc(row.createdAt),
+  dateDesc: (row) => desc(row.createdAt),
+  none: (row) => desc(row.createdAt),
 };
+
+/** A Library row as both kinds' branches of the union select it. */
+type LibraryFields = {
+  kind: SQL.Aliased<string>;
+  id: SQL.Aliased<string>;
+  title: SQL.Aliased<string>;
+  createdAt: SQL.Aliased<string>;
+  pinned: SQL.Aliased<number>;
+  rank: SQL.Aliased<number>;
+  pantryCoverage: SQL.Aliased<number | null>;
+};
+
+function libraryBranch(fields: LibraryFields, table: PgTable, conditions: SQL[]) {
+  return qb
+    .select(fields)
+    .from(table)
+    .where(and(...conditions));
+}
+
+type LibraryBranch = ReturnType<typeof libraryBranch>;
 
 /** Filters that mean nothing for a cookbook, so an active one drops them. */
 function hasRecipeOnlyFilter(params: LibraryListParams): boolean {
@@ -118,10 +161,6 @@ function hasRecipeOnlyFilter(params: LibraryListParams): boolean {
  *
  * Recipe-only filters — rating, cooking time, categories, tags, favourites, pantry —
  * drop cookbooks out the same way a recipe missing that data drops out.
- *
- * The recipe branch's correlated subqueries spell `"recipes"."…"` by hand:
- * an interpolated drizzle column renders unqualified, which inside a
- * subquery resolves to the wrong table and silently matches nothing.
  */
 export async function listLibrary(
   ctx: RecipeListContext,
@@ -159,139 +198,156 @@ export async function listLibrary(
     return { items: [], total: 0 };
   }
 
-  const branches: SQL[] = [];
+  const branches: LibraryBranch[] = [];
   // Recipes with something at home, most complete first (#679).
-  const pantryCoverage = pantryOnly ? pantryCoverageSql(viewerAndHouseholdIds(ctx)) : undefined;
+  const pantryCoverage = pantryOnly
+    ? pantryCoverageSql(ctx.householdId, params.lineReadings)
+    : undefined;
 
   if (includeRecipes) {
     const conditions: SQL[] = [];
-    const policyCondition = await buildOwnerPolicyCondition(ctx, recipes.userId, "view");
+    const policyCondition = await buildPolicyCondition(ctx, recipes.householdId, "view");
 
     if (policyCondition) conditions.push(policyCondition as SQL);
     if (searchSql) conditions.push(searchSql.match);
 
     if (categories?.length) {
-      conditions.push(recipeInAnyCategorySql(categories));
+      conditions.push(recipeCarriesFoldsSql("category", categories));
     }
 
     if (maxCookingTime !== undefined) {
       conditions.push(sql`(
-        ("recipes"."total_minutes" IS NOT NULL
-          OR "recipes"."prep_minutes" IS NOT NULL
-          OR "recipes"."cook_minutes" IS NOT NULL)
-        AND (CASE WHEN "recipes"."total_minutes" IS NOT NULL THEN "recipes"."total_minutes"
-                  ELSE COALESCE("recipes"."prep_minutes", 0) + COALESCE("recipes"."cook_minutes", 0)
+        (${recipes.totalMinutes} IS NOT NULL
+          OR ${recipes.prepMinutes} IS NOT NULL
+          OR ${recipes.cookMinutes} IS NOT NULL)
+        AND (CASE WHEN ${recipes.totalMinutes} IS NOT NULL THEN ${recipes.totalMinutes}
+                  ELSE COALESCE(${recipes.prepMinutes}, 0) + COALESCE(${recipes.cookMinutes}, 0)
              END) <= ${maxCookingTime}
       )`);
     }
 
     if (minRating !== undefined) {
       // In SQL rather than post-fetch, so a page of the union has no gaps.
-      conditions.push(sql`COALESCE((
-        SELECT AVG(rating.rating) FROM ${recipeRatings} AS rating
-        WHERE rating.recipe_id = "recipes"."id"
-      ), -1) >= ${minRating}`);
+      const rating = qb
+        .select({ rating: avg(recipeRatings.rating) })
+        .from(recipeRatings)
+        .where(eq(recipeRatings.recipeId, recipes.id));
+
+      conditions.push(sql`COALESCE(${rating}, -1) >= ${minRating}`);
     }
 
     if (favoritesOnly) {
-      conditions.push(sql`EXISTS (
-        SELECT 1 FROM ${recipeFavorites} AS favorite
-        WHERE favorite.recipe_id = "recipes"."id" AND favorite.user_id = ${ctx.userId}
-      )`);
+      conditions.push(
+        exists(
+          qb
+            .select({ recipeId: recipeFavorites.recipeId })
+            .from(recipeFavorites)
+            .where(
+              and(eq(recipeFavorites.recipeId, recipes.id), eq(recipeFavorites.userId, ctx.userId))
+            )
+        )
+      );
     }
 
     // Tags and Ingredients are one All/Any group: every one of them, or at least one.
     const tagAndIngredientClauses: SQL[] = [];
 
     if (tags?.length) {
-      const normalized = tags.map((tag) => tag.toLowerCase());
-      const required = filterMode === "AND" ? normalized.length : 1;
+      // Across households a Tag filter matches on the folded name (ADR-0043).
+      const folds = new Set(tags.map(entryFold));
 
-      // One bound parameter per name: an interpolated JS array would reach
-      // Postgres as a single text value and fail as a malformed array literal.
-      const nameList = sql.join(
-        normalized.map((tag) => sql`${tag}`),
-        sql`, `
+      tagAndIngredientClauses.push(
+        recipeCarriesFoldsSql("tag", tags, filterMode === "AND" ? folds.size : 1)
       );
-
-      tagAndIngredientClauses.push(sql`(
-        SELECT COUNT(DISTINCT lower(filter_tag.name))
-        FROM ${recipeTags} AS filter_rt
-        INNER JOIN ${tagsTable} AS filter_tag ON filter_rt.tag_id = filter_tag.id
-        WHERE filter_rt.recipe_id = "recipes"."id"
-          AND lower(filter_tag.name) IN (${nameList})
-      ) >= ${required}`);
     }
 
     for (const id of new Set(ingredientIds)) {
-      tagAndIngredientClauses.push(sql`EXISTS (
-        SELECT 1 FROM recipe_ingredients filter_line
-        WHERE filter_line.recipe_id = "recipes"."id" AND ${lineNamesKindSql("filter_line", [id])}
-      )`);
-    }
-
-    if (tagAndIngredientClauses.length) {
-      conditions.push(
-        sql`(${sql.join(tagAndIngredientClauses, filterMode === "AND" ? sql` AND ` : sql` OR `)})`
+      tagAndIngredientClauses.push(
+        exists(
+          qb
+            .select({ id: filterLine.id })
+            .from(filterLine)
+            .where(and(eq(filterLine.recipeId, recipes.id), lineNamesKindSql(filterLine.id, [id])))
+        )
       );
     }
 
-    branches.push(sql`
-      SELECT 'recipe'::text AS kind,
-             "recipes"."id" AS id,
-             "recipes"."name" AS title,
-             "recipes"."created_at" AS created_at,
-             0 AS pinned,
-             ${searchSql ? searchSql.rank : sql`0::real`} AS rank,
-             ${pantryCoverage ?? sql`NULL::real`} AS pantry_coverage
-      FROM ${recipes}
-      ${conditions.length ? sql`WHERE ${sql.join(conditions, sql` AND `)}` : sql``}
-    `);
+    if (tagAndIngredientClauses.length) {
+      const group =
+        filterMode === "AND" ? and(...tagAndIngredientClauses) : or(...tagAndIngredientClauses);
+
+      if (group) conditions.push(group);
+    }
+
+    branches.push(
+      libraryBranch(
+        {
+          kind: sql<string>`'recipe'::text`.as("kind"),
+          id: sql<string>`${recipes.id}`.as("id"),
+          title: sql<string>`${recipes.name}`.as("title"),
+          createdAt: sql<string>`${recipes.createdAt}`.as("created_at"),
+          pinned: sql<number>`0`.as("pinned"),
+          rank: sql<number>`${searchSql ? searchSql.rank : sql`0::real`}`.as("rank"),
+          pantryCoverage: sql<number | null>`${pantryCoverage ?? sql`NULL::real`}`.as(
+            "pantry_coverage"
+          ),
+        },
+        recipes,
+        conditions
+      )
+    );
   }
 
   if (includeCookbooks) {
     const conditions: SQL[] = [];
-    const policyCondition = await buildOwnerPolicyCondition(ctx, cookbooks.userId, "view");
+    const policyCondition = await buildPolicyCondition(ctx, cookbooks.householdId, "view");
 
     if (policyCondition) conditions.push(policyCondition as SQL);
     if (cookbookTitleCondition) conditions.push(sql`(${cookbookTitleCondition})`);
 
-    branches.push(sql`
-      SELECT 'cookbook'::text AS kind,
-             "cookbooks"."id" AS id,
-             "cookbooks"."title" AS title,
-             "cookbooks"."created_at" AS created_at,
-             ${search ? sql`1` : sql`0`} AS pinned,
-             0::real AS rank,
-             NULL::real AS pantry_coverage
-      FROM ${cookbooks}
-      ${conditions.length ? sql`WHERE ${sql.join(conditions, sql` AND `)}` : sql``}
-    `);
+    branches.push(
+      libraryBranch(
+        {
+          kind: sql<string>`'cookbook'::text`.as("kind"),
+          id: sql<string>`${cookbooks.id}`.as("id"),
+          title: sql<string>`${cookbooks.title}`.as("title"),
+          createdAt: sql<string>`${cookbooks.createdAt}`.as("created_at"),
+          pinned: sql<number>`${search ? sql`1` : sql`0`}`.as("pinned"),
+          rank: sql<number>`0::real`.as("rank"),
+          pantryCoverage: sql<number | null>`NULL::real`.as("pantry_coverage"),
+        },
+        cookbooks,
+        conditions
+      )
+    );
   }
 
-  const union = sql.join(branches, sql` UNION ALL `);
-  const baseOrder = LIBRARY_ORDER_BY[sortMode] ?? LIBRARY_ORDER_BY.dateDesc;
+  const [first, second] = branches;
+
+  if (!first) return { items: [], total: 0 };
+
+  const library = db.$with("library").as(second ? first.unionAll(second) : first);
+  const baseOrder = (LIBRARY_ORDER_BY[sortMode] ?? LIBRARY_ORDER_BY.dateDesc)(library);
   const relevanceFirst = Boolean(search) && !(sortBeatsRank && sortMode !== "none");
-  const orderBy = sql`ORDER BY ${sql.join(
-    [
-      ...(pantryCoverage ? [sql`pantry_coverage DESC`] : []),
-      ...(relevanceFirst ? [sql`pinned DESC, rank DESC`] : []),
-      baseOrder,
-      sql`id ASC`,
-    ],
-    sql`, `
-  )}`;
-  const where = pantryCoverage ? sql`WHERE pantry_coverage > 0` : sql``;
+  const where = pantryCoverage ? gt(library.pantryCoverage, 0) : undefined;
 
-  const [pageResult, totalResult] = await Promise.all([
-    db.execute(
-      sql`WITH library AS (${union}) SELECT kind, id, pantry_coverage FROM library ${where} ${orderBy} LIMIT ${limit} OFFSET ${offset}`
-    ),
-    db.execute(sql`WITH library AS (${union}) SELECT COUNT(*)::int AS total FROM library ${where}`),
+  const [page, [totalRow]] = await Promise.all([
+    db
+      .with(library)
+      .select({ kind: library.kind, id: library.id, pantryCoverage: library.pantryCoverage })
+      .from(library)
+      .where(where)
+      .orderBy(
+        ...(pantryCoverage ? [desc(library.pantryCoverage)] : []),
+        ...(relevanceFirst ? [desc(library.pinned), desc(library.rank)] : []),
+        baseOrder,
+        asc(library.id)
+      )
+      .limit(limit)
+      .offset(offset),
+    db.with(library).select({ total: count() }).from(library).where(where),
   ]);
-
-  const page = rowsOf<{ kind: string; id: string; pantry_coverage: number | null }>(pageResult);
-  const total = Number(rowsOf<{ total: number | string }>(totalResult)[0]?.total ?? 0);
+  const total = totalRow?.total ?? 0;
 
   const pageRecipeIds = page.filter((row) => row.kind === "recipe").map((row) => row.id);
   const [recipeCards, cookbookCards, matches] = await Promise.all([
@@ -323,9 +379,9 @@ export async function listLibrary(
         {
           kind: "recipe" as const,
           recipe:
-            row.pantry_coverage === null
+            row.pantryCoverage === null
               ? recipe
-              : { ...recipe, pantryCoverage: row.pantry_coverage },
+              : { ...recipe, pantryCoverage: row.pantryCoverage },
           ...(match ? { match } : {}),
         },
       ];
@@ -343,28 +399,37 @@ export async function listLibrary(
 const DISCOVER_CATEGORIES = 4;
 const DISCOVER_TAGS = 12;
 
-/** What Search offers with no text: up to four Categories holding a visible recipe, built-ins first
- * in their fixed order, and the Tags most used over visible recipes. */
+/** What Search offers with no text: up to four of the reader's Categories holding a visible recipe,
+ * built-ins first in their fixed order, and the reader's Tags most used over visible recipes. */
 export async function listLibraryDiscover(ctx: RecipeListContext): Promise<LibraryDiscoverDTO> {
-  const visible = (await buildOwnerPolicyCondition(ctx, recipes.userId, "view")) ?? sql`true`;
+  const visible = (await buildPolicyCondition(ctx, recipes.householdId, "view")) ?? sql`true`;
   const [categoryRows, tagNames] = await Promise.all([
     // A Category's photo is the newest visible recipe that has an image; none when no recipe does.
-    db.execute(sql`
-      SELECT DISTINCT ON (${categories.id}) ${categories.name} AS name, ${PRIMARY_IMAGE_SQL} AS image
-      FROM ${categories}
-      JOIN ${recipeCategories} link ON link.category_id = ${categories.id}
-      JOIN ${recipes} ON ${recipes.id} = link.recipe_id
-      WHERE ${visible}
-      ORDER BY ${categories.id}, (${PRIMARY_IMAGE_SQL} IS NULL), ${recipes.createdAt} DESC, ${recipes.id} DESC
-    `),
-    namesOnVisible(TAG_NAMES, visible, DISCOVER_TAGS),
+    db
+      .selectDistinctOn([ownCategories.nameFold], {
+        name: ownCategories.name,
+        image: PRIMARY_IMAGE_SQL,
+      })
+      .from(ownCategories)
+      .innerJoin(carriedCategories, eq(carriedCategories.nameFold, ownCategories.nameFold))
+      .innerJoin(recipeCategories, eq(recipeCategories.categoryId, carriedCategories.id))
+      .innerJoin(recipes, eq(recipes.id, recipeCategories.recipeId))
+      .where(and(inScope(ownCategories.householdId, ctx.householdId, { offered: true }), visible))
+      .orderBy(
+        ownCategories.nameFold,
+        sql`${ownCategories.householdId} NULLS FIRST`,
+        sql`(${PRIMARY_IMAGE_SQL} IS NULL)`,
+        desc(recipes.createdAt),
+        desc(recipes.id)
+      ),
+    namesOnVisible(TAG_NAMES, ctx.householdId, visible, DISCOVER_TAGS),
   ]);
   const builtInRank = (name: string) => {
     const rank = (BUILT_IN_CATEGORIES as readonly string[]).indexOf(name);
 
     return rank === -1 ? BUILT_IN_CATEGORIES.length : rank;
   };
-  const picked = rowsOf<{ name: string; image: string | null }>(categoryRows)
+  const picked = categoryRows
     .sort(
       (a, b) =>
         builtInRank(a.name) - builtInRank(b.name) ||
@@ -378,8 +443,8 @@ export async function listLibraryDiscover(ctx: RecipeListContext): Promise<Libra
 /** How many of each kind the typing state offers. */
 const SUGGESTIONS_PER_KIND = 3;
 
-/** The Ingredients and Tags whose word starts with `text` and that narrow to a visible recipe, most
- * used first and `except` left out before the cap; every Category on a visible recipe. */
+/** The Ingredients and the reader's Tags whose word starts with `text` and that narrow to a visible
+ * recipe, most used first and `except` left out before the cap; the reader's Categories likewise. */
 export async function listLibrarySuggestions(
   ctx: RecipeListContext,
   text: string,
@@ -389,26 +454,25 @@ export async function listLibrarySuggestions(
 
   if (!search) return { ingredients: [], tags: [], categories: [] };
 
-  const visible = (await buildOwnerPolicyCondition(ctx, recipes.userId, "view")) ?? sql`true`;
+  const visible = (await buildPolicyCondition(ctx, recipes.householdId, "view")) ?? sql`true`;
   const [foods, tagNames, categoryNames] = await Promise.all([
-    matchedFoods(visible, search, except.ingredientIds),
+    matchedFoods(ctx.householdId, visible, search, except.ingredientIds),
     namesOnVisible(
       TAG_NAMES,
+      ctx.householdId,
       and(
         visible,
         nameStartsWith(tagsTable.name, search.fold),
-        except.tags.length
-          ? notInArray(
-              sql`lower(${tagsTable.name})`,
-              except.tags.map((tag) => tag.toLowerCase())
-            )
-          : undefined
+        except.tags.length ? notInArray(tagsTable.nameFold, except.tags.map(entryFold)) : undefined
       ),
       SUGGESTIONS_PER_KIND
     ),
-    namesOnVisible(CATEGORY_NAMES, visible),
+    namesOnVisible(CATEGORY_NAMES, ctx.householdId, visible),
   ]);
-  const localeNames = await findLocaleNames(foods.map((food) => food.id));
+  const localeNames = await findLocaleNames(
+    ctx.householdId,
+    foods.map((food) => food.id)
+  );
 
   return {
     ingredients: foods.map((food) => ({ ...food, localeNames: localeNames.get(food.id) ?? {} })),
@@ -419,40 +483,93 @@ export async function listLibrarySuggestions(
 
 /** The text-matched Ingredients with the distinct visible recipes narrowing to each returns (the
  * recipes naming it or a kind of it), most first. The walk down the kinds starts at the matches. */
-async function matchedFoods(visible: SQL, search: IngredientSearch, except: string[]) {
-  const roots = except.length
-    ? sql`${matchingSearch(search, undefined, true)} AND ${ingredients.id} NOT IN (${uuidListSql(except)})`
-    : matchingSearch(search, undefined, true);
-  const result = await db.execute(sql`
-    WITH RECURSIVE ${kindWalkSql(sql`SELECT ${ingredients.id} FROM ${ingredients} WHERE ${roots}`)}
-    SELECT ${ingredients.id} AS id, ${ingredients.name} AS name
-    FROM kinds
-    JOIN ${ingredients} ON ${ingredients.id} = kinds.root
-    JOIN ${ingredientAliases} spelling ON spelling.ingredient_id = kinds.ingredient_id
-    JOIN ${recipeIngredientFoods} food ON food.ingredient_alias_id = spelling.id
-    JOIN ${recipeIngredients} line ON line.id = food.recipe_ingredient_id
-    JOIN ${recipes} ON ${recipes.id} = line.recipe_id
-    WHERE ${visible}
-    GROUP BY ${ingredients.id}, ${ingredients.name}
-    ORDER BY count(DISTINCT ${recipes.id}) DESC, lower(${ingredients.name}) ASC, ${ingredients.id} ASC
-    LIMIT ${SUGGESTIONS_PER_KIND}
-  `);
+async function matchedFoods(
+  householdId: string,
+  visible: SQL,
+  search: IngredientSearch,
+  except: string[]
+) {
+  const roots = qb
+    .select({ id: ingredients.id })
+    .from(ingredients)
+    .where(
+      and(
+        inCatalogue(ingredients.householdId, householdId),
+        matchingSearch(search, householdId, undefined, true),
+        except.length ? notInArray(ingredients.id, except) : undefined
+      )
+    );
+  // No recursive CTE in the builder: the walk is SQL over the schema, read through a builder query.
+  const walked = db
+    .$with("walked", {
+      root: sql<string>`root`.as("root"),
+      // Named apart from the joined tables' columns: a CTE's columns render unqualified.
+      kindId: sql<string>`kind_id`.as("kind_id"),
+    })
+    .as(
+      sql`with recursive ${kindWalkSql(sql`${roots}`)} select root, ingredient_id as kind_id from kinds`
+    );
 
-  return rowsOf<{ id: string; name: string }>(result);
+  return await db
+    .with(walked)
+    .select({ id: ingredients.id, name: ingredients.name })
+    .from(walked)
+    .innerJoin(ingredients, eq(ingredients.id, walked.root))
+    .innerJoin(ingredientAliases, eq(ingredientAliases.ingredientId, walked.kindId))
+    .innerJoin(
+      recipeIngredientFoods,
+      eq(recipeIngredientFoods.ingredientAliasId, ingredientAliases.id)
+    )
+    .innerJoin(
+      recipeIngredients,
+      eq(recipeIngredients.id, recipeIngredientFoods.recipeIngredientId)
+    )
+    .innerJoin(recipes, eq(recipes.id, recipeIngredients.recipeId))
+    .where(visible)
+    .groupBy(ingredients.id, ingredients.name)
+    .orderBy(desc(countDistinct(recipes.id)), sql`lower(${ingredients.name})`, asc(ingredients.id))
+    .limit(SUGGESTIONS_PER_KIND);
 }
 
 type NamedEntity = {
-  entity: { table: PgTable; id: AnyPgColumn; name: AnyPgColumn };
+  entity: {
+    table: PgTable;
+    name: AnyPgColumn;
+    nameFold: AnyPgColumn;
+    householdId: AnyPgColumn;
+  };
+  /** The same table again, as the entries recipes carry: any household's of the reader's fold. */
+  carried: { table: PgTable; id: AnyPgColumn; nameFold: AnyPgColumn };
   link: { table: PgTable; recipeId: AnyPgColumn; entityId: AnyPgColumn };
 };
 
+const carriedTags = alias(tagsTable, "carried");
+const ownCategories = alias(categories, "own");
+const carriedCategories = alias(categories, "carried");
+
 const TAG_NAMES: NamedEntity = {
-  entity: { table: tagsTable, id: tagsTable.id, name: tagsTable.name },
+  entity: {
+    table: tagsTable,
+    name: tagsTable.name,
+    nameFold: tagsTable.nameFold,
+    householdId: tagsTable.householdId,
+  },
+  carried: { table: carriedTags, id: carriedTags.id, nameFold: carriedTags.nameFold },
   link: { table: recipeTags, recipeId: recipeTags.recipeId, entityId: recipeTags.tagId },
 };
 
 const CATEGORY_NAMES: NamedEntity = {
-  entity: { table: categories, id: categories.id, name: categories.name },
+  entity: {
+    table: categories,
+    name: categories.name,
+    nameFold: categories.nameFold,
+    householdId: categories.householdId,
+  },
+  carried: {
+    table: carriedCategories,
+    id: carriedCategories.id,
+    nameFold: carriedCategories.nameFold,
+  },
   link: {
     table: recipeCategories,
     recipeId: recipeCategories.recipeId,
@@ -460,24 +577,27 @@ const CATEGORY_NAMES: NamedEntity = {
   },
 };
 
-/** The names of an entity (Tag or Category) on recipes that satisfy `where`, most used first. */
+/**
+ * The household's and the instance's entries (Tags or Categories) whose fold a recipe satisfying
+ * `where` carries, in any household, most such recipes first; an instance entry's name wins.
+ */
 async function namesOnVisible(
-  { entity, link }: NamedEntity,
+  { entity, carried, link }: NamedEntity,
+  householdId: string,
   where: SQL | undefined,
   limit?: number
 ): Promise<string[]> {
   const query = db
-    .select({ name: sql<string>`${entity.name}` })
+    .select({
+      name: sql<string>`(array_agg(${entity.name} ORDER BY ${entity.householdId} NULLS FIRST, ${entity.name}))[1]`,
+    })
     .from(entity.table)
-    .innerJoin(link.table, eq(link.entityId, entity.id))
+    .innerJoin(carried.table, eq(carried.nameFold, entity.nameFold))
+    .innerJoin(link.table, eq(link.entityId, carried.id))
     .innerJoin(recipes, eq(recipes.id, link.recipeId))
-    .where(where)
-    .groupBy(entity.id, entity.name)
-    .orderBy(
-      desc(sql`count(distinct ${recipes.id})`),
-      asc(sql`lower(${entity.name})`),
-      asc(entity.id)
-    )
+    .where(and(inScope(entity.householdId, householdId, { offered: true }), where))
+    .groupBy(entity.nameFold)
+    .orderBy(desc(sql`count(distinct ${recipes.id})`), asc(entity.nameFold))
     .$dynamic();
   const rows = await (limit === undefined ? query : query.limit(limit));
 

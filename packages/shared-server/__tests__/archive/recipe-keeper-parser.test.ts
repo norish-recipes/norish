@@ -32,11 +32,12 @@ vi.mock("@norish/shared-server/media/dish-color", () => ({
 }));
 vi.mock("@norish/db/repositories/ratings", () => ({ rateRecipe: mockRateRecipe }));
 vi.mock("@norish/db/repositories/favorites", () => ({ addFavorite: mockAddFavorite }));
-vi.mock("@norish/db/repositories/cuisines", () => ({
-  listCuisines: vi.fn().mockResolvedValue([]),
+vi.mock("@norish/db/repositories/list-entries", () => ({
+  listEntryNames: vi.fn().mockResolvedValue([]),
+  listEntryRows: vi.fn().mockResolvedValue([]),
 }));
 vi.mock("@norish/db/repositories/categories", () => ({
-  listCategoryNamesForUsers: mockListCategoryNames,
+  listCategoryNamesForHousehold: mockListCategoryNames,
 }));
 vi.mock("@norish/db/repositories/cookbooks", () => ({
   findOwnCookbookIdByTitle: vi.fn().mockResolvedValue(null),
@@ -137,7 +138,7 @@ async function exportZip(blocks: string[], { wrapper = "" } = {}) {
 
 async function importBlocks(blocks: string[]) {
   const bytes = Buffer.from(await (await exportZip(blocks)).generateAsync({ type: "uint8array" }));
-  const result = await importArchive("user-1", ["user-1"], bytes);
+  const result = await importArchive({ userId: "user-1", householdId: "household-1" }, bytes);
 
   return { result, dtos: mockCreateResolvedRecipe.mock.calls.map((call) => call[2]) };
 }
@@ -255,7 +256,7 @@ describe("Recipe Keeper import", () => {
       categories: ["Dessert"],
     });
     expect(mockListCategoryNames).toHaveBeenCalledTimes(1);
-    expect(mockListCategoryNames).toHaveBeenCalledWith(["user-1"]);
+    expect(mockListCategoryNames).toHaveBeenCalledWith("household-1");
   });
 
   it("files a recipe into its collections as the importer's cookbooks", async () => {
@@ -361,6 +362,13 @@ describe("Recipe Keeper import", () => {
     const { dtos } = await importBlocks([recipeBlock({ source: "Recipe Keeper" })]);
 
     expect(dtos[0].url).toBeUndefined();
+  });
+
+  it("carries no list a recipe has no course or category for, so an overwrite keeps its own", async () => {
+    const { dtos } = await importBlocks([recipeBlock({ extra: "" })]);
+
+    expect(dtos[0]).not.toHaveProperty("tags");
+    expect(dtos[0]).not.toHaveProperty("categories");
   });
 
   it("imports a recipe without ingredients", async () => {

@@ -83,7 +83,8 @@
   "errors": {
     "operationFailed": "Vorgang fehlgeschlagen",
     "nameCannotBeEmpty": "Name darf nicht leer sein",
-    "technicalDetails": "Etwas ist schiefgelaufen. Sehen Sie in der Browser-Konsole nach technischen Details."
+    "technicalDetails": "Etwas ist schiefgelaufen. Sehen Sie in der Browser-Konsole nach technischen Details.",
+    "noAnswer": "Der Server hat nicht geantwortet. Bitte versuchen Sie es erneut."
   },
   "slots": {
     "breakfast": "Frühstück",
@@ -261,6 +262,7 @@
       "syncing": "{count, plural, =0 {Wird synchronisiert} one {# Änderung wird synchronisiert} other {# Änderungen werden synchronisiert}}",
       "syncNow": "Jetzt synchronisieren",
       "retryAll": "Alle erneut versuchen",
+      "otherHousehold": "Einige Änderungen wurden für einen anderen Haushalt gemacht. „Alle erneut versuchen“ schickt sie an den Haushalt, in dem Sie jetzt sind.",
       "discardAll": "Alle verwerfen",
       "discardConfirmBody": "{count, plural, one {# ausstehende Änderung endgültig verwerfen? Sie wird nicht gesendet.} other {# ausstehende Änderungen endgültig verwerfen? Sie werden nicht gesendet.}}",
       "discardConfirm": "Verwerfen",
@@ -294,6 +296,9 @@
   "changedElsewhere": {
     "title": "Nicht gespeichert: Es wurde zuerst anderswo geändert"
   },
+  "lateAnswer": {
+    "title": "Der Server hat spät geantwortet: Es hat doch geklappt."
+  },
   "storageUnavailable": {
     "title": "Speicher nicht verfügbar",
     "description": "Norish konnte den Schlüsselbund dieses iPhones nicht lesen.",
@@ -308,7 +313,14 @@
     "adminTransferred": "Admin übertragen an {name}",
     "unknownMember": "Unbekannt",
     "removedTitle": "Aus dem Haushalt entfernt",
-    "removedDescription": "Ein Admin hat Sie aus dem Haushalt entfernt."
+    "removedDescription": "Ein Admin hat Sie aus dem Haushalt entfernt.",
+    "joinRefused": {
+      "invalidCode": "Dieser Beitrittscode ist ungültig.",
+      "expired": "Dieser Beitrittscode ist abgelaufen. Bitten Sie um einen neuen.",
+      "alreadyMember": "Sie sind bereits in diesem Haushalt.",
+      "shared": "Verlassen Sie zuerst Ihren Haushalt, um einem anderen beizutreten.",
+      "busy": "Dieser Haushalt wurde gerade geändert. Versuchen Sie es erneut."
+    }
   },
   "photos": {
     "pickFailedTitle": "Foto konnte nicht gewählt werden",

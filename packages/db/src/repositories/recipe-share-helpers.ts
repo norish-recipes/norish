@@ -1,3 +1,5 @@
+import { eq, isNull, or } from "drizzle-orm";
+
 import type { FullRecipeDTO } from "@norish/shared/contracts";
 import type {
   PublicRecipeViewDTO,
@@ -8,6 +10,8 @@ import {
   PublicRecipeViewSchema,
   RecipeShareSummarySchema,
 } from "@norish/shared/contracts/zod/recipe-shares";
+
+import { recipeShares } from "../schema/recipe-shares";
 
 export type RecipeShareStatus = "active" | "expired" | "revoked";
 export type RecipeShareExpiryPolicy = "1day" | "1week" | "1month" | "1year" | "forever";
@@ -26,10 +30,21 @@ export function getRecipeShareStatus(
   return "active";
 }
 
+/** Whether a share kept its link: one made before 0.28 kept no token, and an empty one is none. */
+export function hasKeptLink<T extends Pick<RecipeShareDto, "tokenEnc">>(
+  share: T
+): share is T & { tokenEnc: string } {
+  return Boolean(share.tokenEnc);
+}
+
+/** The shares that kept no link, as `hasKeptLink` tells them, as a query condition. */
+export const keptNoLink = or(isNull(recipeShares.tokenEnc), eq(recipeShares.tokenEnc, ""));
+
 export function toRecipeShareSummary(share: RecipeShareDto): RecipeShareSummaryDto {
   return RecipeShareSummarySchema.parse({
     ...share,
     status: getRecipeShareStatus(share),
+    hasLink: hasKeptLink(share),
   });
 }
 

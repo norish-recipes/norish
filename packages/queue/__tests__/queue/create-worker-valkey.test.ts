@@ -30,6 +30,10 @@ import { closeBullConnection, getBullClient } from "../../src/valkey/bullmq";
 const config = vi.hoisted(() => ({ url: "" }));
 const logged = vi.hoisted(() => vi.fn());
 
+// Every job here belongs to an account that still exists.
+vi.mock("@norish/db/repositories/households", () => ({
+  getHouseholdIdForUser: async () => "household-1",
+}));
 vi.mock("@norish/config/env-config-server", () => ({
   SERVER_CONFIG: {
     get VALKEY_URL() {

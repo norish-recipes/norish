@@ -7,7 +7,7 @@
 
 import { z } from "zod";
 
-import type { FullRecipeDTO, RecipeDashboardDTO } from "@norish/shared/contracts";
+import type { FullRecipeDTO, RecipeConversion, RecipeDashboardDTO } from "@norish/shared/contracts";
 import type {
   RecipeEnrichmentKind,
   RecipeEnrichmentLifecycleEventDto,
@@ -60,6 +60,11 @@ export const recipesRealtime = defineRealtimeCatalogue("recipe", {
   },
   /** One event for every share lifecycle transition; `kind` says which. */
   shareEvent: { scope: "policy", payload: RecipeShareEventSchema },
+  /** Tells the maker's devices a link changed, whoever may view its recipe: the link and kind only. */
+  myShareEvent: {
+    scope: "user",
+    payload: z.object({ kind: z.enum(recipeShareEventKinds), shareId: z.string() }),
+  },
   // z.custom: FullRecipeDTO has no standalone zod schema yet.
   updated: {
     scope: "policy",
@@ -73,8 +78,16 @@ export const recipesRealtime = defineRealtimeCatalogue("recipe", {
   deleted: { scope: "policy", payload: z.object({ ids: z.array(z.string()) }) },
   /** The caller's delete found these recipes edited elsewhere, so they were kept. */
   deleteKept: { scope: "user", payload: z.object({ ids: z.array(z.string()) }) },
-  // z.custom: FullRecipeDTO has no standalone zod schema yet.
-  converted: { scope: "policy", payload: z.custom<{ recipe: FullRecipeDTO }>() },
+  /** A conversion settled: the recipe as it now is, and whether the conversion asked found it
+   * edited since (`stale`) and changed nothing. z.custom: FullRecipeDTO has no zod schema yet. */
+  converted: {
+    scope: "policy",
+    payload: z.custom<{
+      recipe: FullRecipeDTO;
+      conversion: RecipeConversion;
+      stale: boolean;
+    }>(),
+  },
   failed: {
     scope: "policy",
     payload: z.object({

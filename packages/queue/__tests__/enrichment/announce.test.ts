@@ -6,11 +6,27 @@ import type { FullRecipeDTO } from "@norish/shared/contracts";
 const mocks = vi.hoisted(() => ({
   publishRecipe: vi.fn(async () => undefined),
   publishEnrichment: vi.fn(async () => undefined),
+  publishLists: vi.fn(async () => undefined),
 }));
 
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   getRecipePermissionPolicy: vi.fn().mockResolvedValue({ view: "household" }),
 }));
+// The recipe lives in another household than the requester's (edit Everyone).
+vi.mock("@norish/db/repositories/recipes", () => ({
+  getRecipeHouseholdIds: vi.fn(
+    async (ids: string[]) => new Map(ids.map((id) => [id, "owners-household"]))
+  ),
+}));
+vi.mock("@norish/db/repositories/households", () => ({
+  getHouseholdIdForUser: vi.fn().mockResolvedValue("household-1"),
+}));
+vi.mock("@norish/db/repositories/cookbooks", () => ({ getCookbookRow: vi.fn() }));
+vi.mock("@norish/db/repositories/list-entries", () => ({
+  LIST_KINDS: ["tag", "cuisine", "category"],
+  recipeHouseholdId: vi.fn().mockResolvedValue("owners-household"),
+}));
+vi.mock("@norish/shared-server/realtime/lists", () => ({ lists: { publish: mocks.publishLists } }));
 vi.mock("@norish/shared-server/logger", () => ({
   createLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
 }));
@@ -30,8 +46,7 @@ const data: RecipeEnrichmentJobData = {
   runSequence: 1,
   kind: "auto-tagging",
   userId: "user-1",
-  householdKey: "household-1",
-  householdUserIds: ["user-1"],
+  householdId: "household-1",
   origin: "manual",
   requestedByUserId: "user-1",
 };
@@ -41,6 +56,10 @@ describe("publishEnrichmentLifecycle", () => {
     await publishEnrichmentLifecycle(data, "queued");
     await publishEnrichmentLifecycle(data, "failed");
 
+    expect(mocks.publishRecipe.mock.calls[0]?.[2]).toEqual({
+      viewPolicy: "household",
+      householdId: "owners-household",
+    });
     expect(mocks.publishRecipe.mock.calls[0]?.[1]).toEqual({
       recipeId: "recipe-1",
       runId: "run-1",
@@ -62,21 +81,28 @@ describe("publishEnrichmentLifecycle", () => {
 });
 
 describe("publishEnrichmentRecipeUpdated", () => {
-  it("marks the canonical update as enrichment-originated, naming its kind", async () => {
-    const recipe = { id: "recipe-1" } as FullRecipeDTO;
+  it("marks the canonical update as enrichment-originated, to the row's household at publish", async () => {
+    // The DTO was read before its Owner moved; the row is in the Owner's household now.
+    const recipe = { id: "recipe-1", householdId: "before-the-move" } as FullRecipeDTO;
 
     await publishEnrichmentRecipeUpdated(data, recipe);
 
     expect(mocks.publishRecipe).toHaveBeenCalledWith(
       "updated",
       { recipe, source: "enrichment", kind: data.kind },
-      { viewPolicy: "household", userId: "user-1", householdKey: "household-1" }
+      { viewPolicy: "household", householdId: "owners-household" }
+    );
+    // The Tags it wrote may be new entries of that household's list.
+    expect(mocks.publishLists).toHaveBeenCalledWith(
+      "changed",
+      { kinds: ["tag"] },
+      { viewPolicy: "household", householdId: "owners-household" }
     );
   });
 });
 
 describe("announceUsableRecipe", () => {
-  const context = { userId: "user-1", householdKey: "household-1", householdUserIds: ["user-1"] };
+  const context = { userId: "user-1", householdId: "household-1" };
 
   it("announces a genuinely new recipe on the internal channel", async () => {
     await announceUsableRecipe({ status: "inserted", recipeId: "recipe-1" }, context);

@@ -83,7 +83,8 @@
   "errors": {
     "operationFailed": "Toiminto epäonnistui",
     "nameCannotBeEmpty": "Nimi ei voi olla tyhjä",
-    "technicalDetails": "Jokin meni pieleen. Tekniset tiedot löytyvät selaimen konsolista."
+    "technicalDetails": "Jokin meni pieleen. Tekniset tiedot löytyvät selaimen konsolista.",
+    "noAnswer": "Palvelin ei vastannut. Yritä uudelleen."
   },
   "slots": {
     "breakfast": "Aamiainen",
@@ -261,6 +262,7 @@
       "syncing": "{count, plural, =0 {Synkronoidaan} one {Synkronoidaan # muutos} other {Synkronoidaan # muutosta}}",
       "syncNow": "Synkronoi nyt",
       "retryAll": "Yritä kaikkia uudelleen",
+      "otherHousehold": "Jotkin muutokset tehtiin toiselle kotitaloudelle. ”Yritä kaikkia uudelleen” lähettää ne kotitalouteen, jossa olet nyt.",
       "discardAll": "Hylkää kaikki",
       "discardConfirmBody": "{count, plural, one {Hylätäänkö # jonossa oleva muutos pysyvästi? Sitä ei lähetetä.} other {Hylätäänkö # jonossa olevaa muutosta pysyvästi? Niitä ei lähetetä.}}",
       "discardConfirm": "Hylkää",
@@ -294,6 +296,9 @@
   "changedElsewhere": {
     "title": "Ei tallennettu: sitä muutettiin ensin muualla"
   },
+  "lateAnswer": {
+    "title": "Palvelin vastasi myöhässä: se onnistui sittenkin."
+  },
   "storageUnavailable": {
     "title": "Tallennustila ei ole käytettävissä",
     "description": "Norish ei voinut lukea tämän iPhonen avainnippua.",
@@ -308,7 +313,14 @@
     "adminTransferred": "Ylläpito siirrettiin käyttäjälle {name}",
     "unknownMember": "Tuntematon",
     "removedTitle": "Poistettu kotitaloudesta",
-    "removedDescription": "Ylläpitäjä poisti sinut kotitaloudesta."
+    "removedDescription": "Ylläpitäjä poisti sinut kotitaloudesta.",
+    "joinRefused": {
+      "invalidCode": "Liittymiskoodi ei ole kelvollinen.",
+      "expired": "Liittymiskoodi on vanhentunut. Pyydä uusi.",
+      "alreadyMember": "Olet jo tässä kotitaloudessa.",
+      "shared": "Poistu ensin kotitaloudestasi liittyäksesi toiseen.",
+      "busy": "Kotitaloutta muutettiin juuri silloin. Yritä uudelleen."
+    }
   },
   "photos": {
     "pickFailedTitle": "Kuvan valinta epäonnistui",

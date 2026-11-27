@@ -9,7 +9,7 @@ import { HomeIcon } from "@heroicons/react/24/outline";
 import { Chip, Separator } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { useHousehold, useHouseholdMutations } from "@norish/shared-react/reader";
+import { leaveWarns, useHousehold, useHouseholdMutations } from "@norish/shared-react/reader";
 
 export default function HouseholdInfoCard() {
   const t = useTranslations("settings.household.info");
@@ -19,6 +19,11 @@ export default function HouseholdInfoCard() {
   if (!household) return null;
 
   const otherMembers = household.users.filter((u) => u.id !== currentUserId);
+
+  if (otherMembers.length === 0) {
+    return <SettingsCard description={t("justYou")} icon={HomeIcon} title={household.name} />;
+  }
+
   const handleLeaveHousehold = () => {
     leaveHousehold(household.id);
     setShowLeaveModal(false);
@@ -64,7 +69,8 @@ export default function HouseholdInfoCard() {
         onOpenChange={setShowLeaveModal}
       >
         <p>{t("leaveModal.confirmMessage", { name: household.name })}</p>
-        {isAdmin && otherMembers.length > 0 && (
+        <p className="text-muted mt-2 text-base">{t("leaveModal.goesAndStays")}</p>
+        {leaveWarns({ isAdmin, otherMemberCount: otherMembers.length }) && (
           <p className="text-warning mt-2">{t("leaveModal.adminWarning")}</p>
         )}
       </ConfirmModal>

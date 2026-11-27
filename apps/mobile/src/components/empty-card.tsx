@@ -1,61 +1,66 @@
-import type { ComponentProps, ReactNode } from "react";
+import type { ComponentProps } from "react";
 import React from "react";
 import { Text, View } from "react-native";
+import { Ionicons } from "@/components/icon";
+import { useOnSheet } from "@/components/on-sheet";
 import { useTokenColor } from "@/hooks/use-token-color";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { Button } from "heroui-native";
 
-type Tone = "accent" | "shop" | "warning" | "neutral";
+type Icon = ComponentProps<typeof Ionicons>["name"];
 
-const GROUND: Record<Tone, string> = {
-  accent: "bg-accent/10",
-  shop: "bg-shop/25",
-  warning: "bg-warning/20",
-  neutral: "bg-muted/10",
-};
-const INK: Record<Tone, string> = {
-  accent: "accent-text",
-  shop: "shop-ink",
-  warning: "warning",
-  neutral: "muted",
-};
+/** Where the card sits, each placement carrying its one margin: `screen` is a screen list's,
+ * `section` is under a Settings group, `sheet` has none because the sheet body owns the inset. */
+const EMPTY_CARD_PLACEMENT = {
+  screen: "mx-5",
+  section: "mt-4",
+  sheet: "",
+} as const;
 
-/** A list with nothing in it: the area's icon in its tint (or the `ink` token) on the left, title and
- * at most one line on the right, an optional action under them. A sheet passes its own `className`. */
+type EmptyCardPlacement = keyof typeof EMPTY_CARD_PLACEMENT;
+
+/** A list with nothing in it: the area's icon in muted ink on the left, the title on the right and
+ * at most one action under them. The card's ground is sand on a sheet, the surface off one. */
 export function EmptyCard({
   icon,
-  tone = "accent",
-  ink,
   title,
-  description,
-  className = "bg-surface mx-5",
+  placement,
   testID,
-  children,
+  action,
 }: {
-  icon: ComponentProps<typeof Ionicons>["name"];
-  tone?: Tone;
-  ink?: string;
+  icon: Icon;
   title: string;
-  description?: string;
-  className?: string;
+  placement: EmptyCardPlacement;
   testID: string;
-  children?: ReactNode;
+  action?: { label: string; icon: Icon; testID: string; onPress: () => void };
 }) {
-  const iconColor = useTokenColor(ink ?? INK[tone]);
+  const iconColor = useTokenColor("muted");
+  const actionColor = useTokenColor("accent-text");
+  const ground = useOnSheet() ? "bg-sand" : "bg-surface";
 
   return (
-    <View className={`${className} gap-3.5 rounded-3xl p-[18px]`} testID={testID}>
-      <View className="flex-row items-center gap-3.5">
-        <View className={`${GROUND[tone]} size-12 items-center justify-center rounded-full`}>
+    <View
+      className={`${ground} ${EMPTY_CARD_PLACEMENT[placement]} gap-3.5 rounded-3xl p-4.5`}
+      testID={testID}
+    >
+      <View className="flex-row items-center gap-2.5">
+        <View className="size-6 items-center justify-center">
           <Ionicons color={iconColor} name={icon} size={22} />
         </View>
-        <View className="min-w-0 flex-1 gap-0.5">
-          <Text className="text-foreground text-lg font-semibold">{title}</Text>
-          {description ? (
-            <Text className="text-muted text-[15px] leading-[21px]">{description}</Text>
-          ) : null}
-        </View>
+        <Text className="text-foreground min-w-0 flex-1 text-lg font-semibold">{title}</Text>
       </View>
-      {children}
+      {action ? (
+        <Button
+          className="bg-accent-soft h-11 rounded-full"
+          testID={action.testID}
+          variant="secondary"
+          onPress={action.onPress}
+        >
+          <Ionicons color={actionColor} name={action.icon} size={18} />
+          <Button.Label className="text-accent-text text-[15px] font-medium">
+            {action.label}
+          </Button.Label>
+        </Button>
+      ) : null}
     </View>
   );
 }

@@ -1,7 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Modal, Radio, RadioGroup } from "@heroui/react";
+import { ActionButton } from "@/components/shared/action-button";
+import {
+  CancelButton,
+  ModalFooter,
+  ModalFrame,
+  ModalTitle,
+} from "@/components/shared/confirm-modal";
+import { Modal, Radio, RadioGroup } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { useStoreGroceryCount } from "@norish/shared-react/groceries";
@@ -21,20 +28,14 @@ export function DeleteStoreModal({
   onConfirm,
 }: DeleteStoreModalProps) {
   return (
-    // Portalled to <body> above the open drawer (z-[1001]); pointer-events-auto undoes the
-    // `pointer-events: none` vaul sets on <body>, which would swallow every click.
-    <Modal.Backdrop className="pointer-events-auto z-[1099]" isOpen={isOpen} onOpenChange={onClose}>
-      <Modal.Container className="z-[1100]">
-        <Modal.Dialog>
-          <DeleteStoreDialog
-            storeId={storeId}
-            storeName={storeName}
-            onClose={onClose}
-            onConfirm={onConfirm}
-          />
-        </Modal.Dialog>
-      </Modal.Container>
-    </Modal.Backdrop>
+    <ModalFrame isOpen={isOpen} onOpenChange={onClose}>
+      <DeleteStoreDialog
+        storeId={storeId}
+        storeName={storeName}
+        onClose={onClose}
+        onConfirm={onConfirm}
+      />
+    </ModalFrame>
   );
 }
 
@@ -47,7 +48,6 @@ function DeleteStoreDialog({
 }: Omit<DeleteStoreModalProps, "isOpen">) {
   const [deleteOption, setDeleteOption] = useState<"keep" | "delete">("keep");
   const t = useTranslations("groceries.storeManager");
-  const tActions = useTranslations("common.actions");
   const itemCount = useStoreGroceryCount(storeId) ?? 0;
 
   const handleConfirm = () => {
@@ -58,7 +58,7 @@ function DeleteStoreDialog({
 
   return (
     <>
-      <Modal.Header>{t("deleteStore")}</Modal.Header>
+      <ModalTitle>{t("deleteStore")}</ModalTitle>
       <Modal.Body className="gap-4">
         <p className="text-muted text-base">
           {t("confirmDelete", {
@@ -106,14 +106,11 @@ function DeleteStoreDialog({
 
         {itemCount === 0 && <p className="text-muted text-sm">{t("noItems")}</p>}
       </Modal.Body>
-      <Modal.Footer>
-        <Button variant="tertiary" onPress={onClose}>
-          {tActions("cancel")}
-        </Button>
-        <Button variant="danger" onPress={handleConfirm}>
+      <ModalFooter start={<CancelButton onPress={onClose} />}>
+        <ActionButton action="delete" variant="danger" onPress={handleConfirm}>
           {t("deleteStore")}
-        </Button>
-      </Modal.Footer>
+        </ActionButton>
+      </ModalFooter>
     </>
   );
 }

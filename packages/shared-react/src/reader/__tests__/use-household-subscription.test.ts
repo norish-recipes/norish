@@ -106,13 +106,26 @@ vi.mock("../../trpc", () => ({
       },
     },
     recipes: {
+      pathKey: () => [["recipes"]],
       get: { pathKey: () => [["recipes", "get"]] },
     },
     calendar: {
+      pathKey: () => [["calendar"]],
       listRecipes: {
         queryKey: () => [["calendar", "listRecipes"], { type: "query" }],
       },
     },
+    permissions: { get: { queryKey: () => [["permissions", "get"], { type: "query" }] } },
+    cookbooks: { pathKey: () => [["cookbooks"]] },
+    library: { pathKey: () => [["library"]] },
+    favorites: { pathKey: () => [["favorites"]] },
+    ratings: { pathKey: () => [["ratings"]] },
+    groceries: { pathKey: () => [["groceries"]] },
+    lists: { pathKey: () => [["lists"]] },
+    ingredients: { pathKey: () => [["ingredients"]] },
+    stores: { pathKey: () => [["stores"]] },
+    pantry: { pathKey: () => [["pantry"]] },
+    config: { tags: { queryKey: () => [["config", "tags"], { type: "query" }] } },
     user: {
       get: {
         queryKey: () => [["user", "get"], { type: "query" }],
@@ -166,6 +179,14 @@ describe("useHouseholdSubscription", () => {
 
       // The hook should call useSubscription for each event type
       expect(useSubscription).toHaveBeenCalled();
+    });
+
+    it("reads the household on a screen that shows none, so a write can name it", async () => {
+      renderHook(() => useHouseholdSubscription(), { wrapper: readerWrapper(queryClient) });
+
+      await waitFor(() =>
+        expect(queryClient.getQueryData(householdQueryKey)).toEqual(createMockHouseholdData())
+      );
     });
   });
 
@@ -307,6 +328,41 @@ describe("useHouseholdSubscription", () => {
         title: "common.household.removedTitle",
         description: "common.household.removedDescription",
       });
+    });
+  });
+
+  describe("a membership change", () => {
+    it("rereads what a member joining or leaving brings or takes", () => {
+      queryClient.setQueryData(householdQueryKey, createMockHouseholdData(null, "user-1"));
+      const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+
+      renderHook(() => useHouseholdSubscription(), { wrapper: readerWrapper(queryClient) });
+      for (const name of ["onUserJoined", "onUserLeft", "onMemberRemoved"]) {
+        invalidateSpy.mockClear();
+        act(() => {
+          subscriptionCallbacks[name]?.(
+            trackedEvent({ user: createMockHouseholdUser({ id: "u2" }), userId: "u2" })
+          );
+        });
+
+        for (const key of ["recipes", "calendar", "groceries", "lists", "ingredients", "pantry"]) {
+          expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: [[key]] });
+        }
+        expect(invalidateSpy).not.toHaveBeenCalledWith();
+      }
+    });
+
+    it("rereads everything once the Reader is in another household", () => {
+      const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+
+      renderHook(() => useHouseholdSubscription(), { wrapper: readerWrapper(queryClient) });
+      act(() => {
+        subscriptionCallbacks.onCreated?.(
+          trackedEvent({ household: createMockHouseholdSettings({ id: "h2" }) })
+        );
+      });
+
+      expect(invalidateSpy).toHaveBeenCalledWith();
     });
   });
 

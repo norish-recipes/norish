@@ -1,13 +1,17 @@
-import { and, asc, eq, inArray, isNotNull, ne, or, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNotNull, ne, notExists, or, sql } from "drizzle-orm";
+import { alias, QueryBuilder } from "drizzle-orm/pg-core";
 import z from "zod";
 
 import type { Db } from "@norish/db/drizzle";
 import type { AisleDto, AisleFiled, AisleInput, AisleLinkDto } from "@norish/shared/contracts";
 import { db } from "@norish/db/drizzle";
-import { aisleLinks, aisles } from "@norish/db/schema";
+import { aisleLinks, aisles, groceries, ingredients, recurringGroceries } from "@norish/db/schema";
 import { AisleLinkSelectSchema, AisleSelectSchema } from "@norish/shared/contracts/zod";
 
-import { uuidListSql } from "./raw-sql";
+import { ancestryCte } from "./ingredient-kinds";
+
+const qb = new QueryBuilder();
+const ownLink = alias(aisleLinks, "own");
 
 const AislesSchema = z.array(AisleSelectSchema);
 const AisleLinksSchema = z.array(AisleLinkSelectSchema);
@@ -36,8 +40,13 @@ export async function listAislesByStoreIds(storeIds: string[], tx: Db = db): Pro
   return parseAisles(rows);
 }
 
-export async function getAisleById(id: string): Promise<AisleDto | null> {
-  const [row] = await db.select().from(aisles).where(eq(aisles.id, id)).limit(1);
+/** An aisle of this Store. */
+export async function getAisleById(id: string, storeId: string): Promise<AisleDto | null> {
+  const [row] = await db
+    .select()
+    .from(aisles)
+    .where(and(eq(aisles.id, id), eq(aisles.storeId, storeId)))
+    .limit(1);
 
   if (!row) return null;
   const parsed = AisleSelectSchema.safeParse(row);
@@ -158,42 +167,49 @@ export async function listAisleLinksByStoreIds(storeIds: string[]): Promise<Aisl
  */
 export async function listInheritedAisleLinks(
   storeIds: string[],
-  userIds: string[]
+  householdId: string
 ): Promise<AisleLinkDto[]> {
-  if (storeIds.length === 0 || userIds.length === 0) return [];
+  if (storeIds.length === 0) return [];
 
-  const stores = uuidListSql(storeIds);
-  const users = sql.join(
-    userIds.map((id) => sql`${id}`),
-    sql`, `
-  );
-  const result = await db.execute<{ storeId: string; ingredientId: string; aisleId: string }>(sql`
-    with recursive listed as (
-      select ingredient_id from groceries where user_id in (${users}) and ingredient_id is not null
-      union
-      select ingredient_id from recurring_groceries
-        where user_id in (${users}) and ingredient_id is not null
-    ),
-    up(start, ancestor, depth) as (
-      select i.id, i.parent_id, 1 from ingredients i
-        join listed l on l.ingredient_id = i.id
-        where i.parent_id is not null
-      union all
-      select up.start, p.parent_id, up.depth + 1 from up
-        join ingredients p on p.id = up.ancestor
-        where p.parent_id is not null and up.depth < 32
+  const listed = qb
+    .select({ ingredientId: groceries.ingredientId })
+    .from(groceries)
+    .where(and(eq(groceries.householdId, householdId), isNotNull(groceries.ingredientId)))
+    .union(
+      qb
+        .select({ ingredientId: recurringGroceries.ingredientId })
+        .from(recurringGroceries)
+        .where(
+          and(
+            eq(recurringGroceries.householdId, householdId),
+            isNotNull(recurringGroceries.ingredientId)
+          )
+        )
+    );
+  const up = ancestryCte(inArray(ingredients.id, listed), 32);
+  const rows = await db
+    .with(up)
+    .selectDistinctOn([up.start, aisleLinks.storeId], {
+      storeId: aisleLinks.storeId,
+      ingredientId: up.start,
+      aisleId: aisleLinks.aisleId,
+    })
+    .from(up)
+    .innerJoin(
+      aisleLinks,
+      and(eq(aisleLinks.ingredientId, up.ancestor), inArray(aisleLinks.storeId, storeIds))
     )
-    select distinct on (up.start, l.store_id)
-        l.store_id::text as "storeId", up.start::text as "ingredientId", l.aisle_id::text as "aisleId"
-      from up
-      join aisle_links l on l.ingredient_id = up.ancestor and l.store_id in (${stores})
-      where not exists (
-        select 1 from aisle_links own
-          where own.store_id = l.store_id and own.ingredient_id = up.start
+    .where(
+      notExists(
+        qb
+          .select({ id: ownLink.id })
+          .from(ownLink)
+          .where(and(eq(ownLink.storeId, aisleLinks.storeId), eq(ownLink.ingredientId, up.start)))
       )
-      order by up.start, l.store_id, up.depth`);
+    )
+    .orderBy(up.start, aisleLinks.storeId, up.depth);
 
-  const parsed = AisleLinksSchema.safeParse(result.rows);
+  const parsed = AisleLinksSchema.safeParse(rows);
 
   if (!parsed.success) throw new Error("Failed to parse inherited aisle links");
 

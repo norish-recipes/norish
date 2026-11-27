@@ -361,6 +361,84 @@ describe("runWithIdempotency", () => {
   });
 });
 
+describe("runWithIdempotency for a one-time secret", () => {
+  const secretParams = (next: () => Promise<TestResult>) => ({
+    isMutation: true,
+    operationId: "op-key",
+    userId: "user-1",
+    oneTimeSecret: true,
+    next,
+    ...RESULT_ADAPTERS,
+  });
+
+  it("returns the secret once, stores no copy and refuses a replay", async () => {
+    const valkey = createFakeValkey();
+    let calls = 0;
+    const params = secretParams(async () => {
+      calls++;
+
+      return { ok: true, data: { key: "nsh_plaintext-secret" } };
+    });
+
+    const first = await runWithIdempotency(params, makeConfig(valkey));
+
+    expect(first.data).toEqual({ key: "nsh_plaintext-secret" });
+    expect(valkey.store.get("norish:idempotency:user-1:op-key")).not.toContain("plaintext-secret");
+    await expect(runWithIdempotency(params, makeConfig(valkey))).rejects.toMatchObject({
+      code: "CONFLICT",
+    });
+    expect(calls).toBe(1);
+  });
+
+  it("refuses a replay of a response stored before secrets were kept out", async () => {
+    const valkey = createFakeValkey();
+    let calls = 0;
+
+    await valkey.set(
+      "norish:idempotency:user-1:op-key",
+      superjson.stringify({ done: true, response: { key: "nsh_plaintext-secret" } }),
+      "EX",
+      IDEMPOTENCY_TTL_SECONDS
+    );
+
+    await expect(
+      runWithIdempotency(
+        secretParams(async () => {
+          calls++;
+
+          return { ok: true, data: { key: "second" } };
+        }),
+        makeConfig(valkey)
+      )
+    ).rejects.toMatchObject({ code: "CONFLICT" });
+    expect(calls).toBe(0);
+  });
+
+  it("refuses a duplicate that was waiting on the pending claim", async () => {
+    const valkey = createFakeValkey();
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    const owner = runWithIdempotency(
+      secretParams(async () => {
+        await gate;
+
+        return { ok: true, data: { key: "nsh_plaintext-secret" } };
+      }),
+      makeConfig(valkey)
+    );
+
+    await expect.poll(() => valkey.store.has("norish:idempotency:user-1:op-key")).toBe(true);
+    const duplicate = runWithIdempotency(
+      secretParams(async () => ({ ok: true, data: { key: "second" } })),
+      makeConfig(valkey)
+    );
+
+    release();
+    await expect(owner).resolves.toMatchObject({ data: { key: "nsh_plaintext-secret" } });
+    await expect(duplicate).rejects.toMatchObject({ code: "CONFLICT" });
+  });
+});
+
 describe("withIdempotency (through a real tRPC procedure caller)", () => {
   // Exercises the synthetic `cachedMiddlewareResult` marker end-to-end: tRPC's
   // procedure caller rejects a result whose marker it doesn't recognise, so this

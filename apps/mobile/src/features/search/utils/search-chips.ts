@@ -1,4 +1,4 @@
-import type Ionicons from "@expo/vector-icons/Ionicons";
+import type { Ionicons } from "@/components/icon";
 import type { ComponentProps } from "react";
 
 import type { HiddenItemVisibility } from "@norish/shared-react/reader";
@@ -132,21 +132,6 @@ export const chipIcon = (chip: FilterChip) => kindOf(chip).icon?.(chip.value) ??
 /** `filters` less `chip`, as the patch to apply. */
 export const withoutChip = (filters: CanonicalRecipeFilters, chip: FilterChip): Patch =>
   kindOf(chip).remove(filters, chip.value);
-
-/** `filters` as Search reads them: without the favourites and rating filters Hidden Items hides, so
- * none narrows the list or shows a chip; the same object while none is. */
-export function visibleFilters(
-  filters: CanonicalRecipeFilters,
-  visibility: HiddenItemVisibility
-): CanonicalRecipeFilters {
-  const hidden = filterChips(filters).filter(
-    (chip) => kindOf(chip).offered?.(visibility) === false
-  );
-
-  return hidden.length === 0
-    ? filters
-    : Object.assign({ ...filters }, ...hidden.map((chip) => withoutChip(filters, chip)));
-}
 
 /** The Quick filters in the board's order. */
 const QUICK_ORDER = ["favorites", "time", "rating", "pantry"] as const;

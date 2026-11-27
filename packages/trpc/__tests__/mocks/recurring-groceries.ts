@@ -3,7 +3,7 @@
  */
 import { vi } from "vitest";
 
-export const listRecurringGroceriesByUsers = vi.fn();
+export const listRecurringGroceriesByHousehold = vi.fn();
 export const createRecurringGroceries = vi.fn();
 export const updateRecurringGrocery = vi.fn();
 export const updateRecurringGroceryWithGrocery = vi.fn();
@@ -11,10 +11,10 @@ export const detachRecurringGrocery = vi.fn();
 export const checkRecurringGrocery = vi.fn();
 export const deleteRecurringGroceryById = vi.fn();
 export const getRecurringGroceryById = vi.fn();
-export const getRecurringGroceryOwnerId = vi.fn();
+export const ownRecurringGroceryExists = vi.fn();
 
 export function resetRecurringGroceriesMocks() {
-  listRecurringGroceriesByUsers.mockReset();
+  listRecurringGroceriesByHousehold.mockReset();
   createRecurringGroceries.mockReset();
   updateRecurringGrocery.mockReset();
   updateRecurringGroceryWithGrocery.mockReset();
@@ -22,5 +22,5 @@ export function resetRecurringGroceriesMocks() {
   checkRecurringGrocery.mockReset();
   deleteRecurringGroceryById.mockReset();
   getRecurringGroceryById.mockReset();
-  getRecurringGroceryOwnerId.mockReset();
+  ownRecurringGroceryExists.mockReset();
 }

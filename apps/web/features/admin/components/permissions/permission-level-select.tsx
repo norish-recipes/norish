@@ -4,7 +4,7 @@ import { ListBox, Select } from "@heroui/react";
 
 import type { PermissionLevel } from "@norish/config/zod/server-config";
 
-const LEVELS: readonly PermissionLevel[] = ["everyone", "household", "owner"];
+const LEVELS: readonly PermissionLevel[] = ["everyone", "household"];
 
 /** One permission level's words, as the card that shows it phrases them. */
 export type PermissionLevelLabels = Record<PermissionLevel, { label: string; description: string }>;
@@ -14,21 +14,25 @@ interface PermissionLevelSelectProps {
   value: PermissionLevel | null;
   labels: PermissionLevelLabels;
   isDisabled: boolean;
+  /** Levels offered but not choosable. */
+  disabledLevels?: readonly PermissionLevel[];
   onChange: (level: PermissionLevel) => void;
 }
 
-/** The everyone / household / owner select every permission policy row uses. */
+/** The everyone / household select every permission policy row uses. */
 export function PermissionLevelSelect({
   ariaLabel,
   value,
   labels,
   isDisabled,
+  disabledLevels,
   onChange,
 }: PermissionLevelSelectProps) {
   return (
     <Select
       aria-label={ariaLabel}
       className="w-full"
+      disabledKeys={disabledLevels}
       isDisabled={isDisabled}
       placeholder={ariaLabel}
       value={value}

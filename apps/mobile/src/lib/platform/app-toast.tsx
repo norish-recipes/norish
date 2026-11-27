@@ -2,8 +2,9 @@ import type { ToastComponentProps } from "heroui-native";
 import type { ComponentProps } from "react";
 import React, { useRef } from "react";
 import { Text, View } from "react-native";
+import { Ionicons } from "@/components/icon";
 import { useTokenColor } from "@/hooks/use-token-color";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { spokenLabel } from "@/lib/spoken-label";
 import { Button, Toast, useThemeColor } from "heroui-native";
 
 export type ToastSeverity = "default" | "success" | "warning" | "danger";
@@ -55,7 +56,7 @@ export function AppToast({
       </View>
       <View
         accessible
-        accessibilityLabel={body ? `${title}, ${body}` : title}
+        accessibilityLabel={spokenLabel(title, body)}
         accessibilityRole="alert"
         className="min-w-0 flex-1 gap-px"
       >

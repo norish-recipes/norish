@@ -100,6 +100,15 @@ describe("the WebSocket client", () => {
     expect(client.close).not.toHaveBeenCalled();
   });
 
+  it("while the browser is offline keeps every retry within a second", () => {
+    const { client } = createLinks({ retryRandom: () => 1 });
+
+    vi.stubGlobal("navigator", { onLine: false });
+    expect(client.options.retryDelayMs(5)).toBe(1_000);
+    vi.stubGlobal("navigator", { onLine: true });
+    expect(client.options.retryDelayMs(5)).toBe(30_000);
+  });
+
   it("on 4401 stops the client, fires onWebSocketUnauthorized once, and still reports the close", () => {
     const { client, onWebSocketClose, onWebSocketUnauthorized } = createLinks();
 

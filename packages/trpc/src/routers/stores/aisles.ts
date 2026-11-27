@@ -7,7 +7,7 @@ import {
   listAisleLinksByStoreIds,
   listInheritedAisleLinks,
 } from "@norish/db/repositories/aisles";
-import { listStoresByUserIds } from "@norish/db/repositories/stores";
+import { listStoresByHousehold } from "@norish/db/repositories/stores";
 import { resolveIngredient, writeResolved } from "@norish/shared-server/ingredients/resolver";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { stores } from "@norish/shared-server/realtime/stores";
@@ -26,10 +26,10 @@ import { assertStoreAccess } from "./stores-helpers";
  * (ADR-0031), and the screen never walks the tree.
  */
 const aisleLinks = authedProcedure.query(async ({ ctx }): Promise<AisleLinkDto[]> => {
-  const storeIds = (await listStoresByUserIds(ctx.userIds)).map((store) => store.id);
+  const storeIds = (await listStoresByHousehold(ctx.householdId)).map((store) => store.id);
   const [own, inherited] = await Promise.all([
     listAisleLinksByStoreIds(storeIds),
-    listInheritedAisleLinks(storeIds, ctx.userIds),
+    listInheritedAisleLinks(storeIds, ctx.householdId),
   ]);
 
   return [...own, ...inherited];
@@ -50,16 +50,14 @@ const fileGroceryName = authedProcedure
 
     if (input.aisleId !== null) {
       // An aisle of another Store is not somewhere this Store files anything.
-      const aisle = await getAisleById(input.aisleId);
-
-      if (!aisle || aisle.storeId !== input.storeId) {
+      if (!(await getAisleById(input.aisleId, input.storeId))) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Aisle not found in this store" });
       }
     }
 
     // Markup alone names no food, and is filed nowhere.
     const filing = await writeResolved(
-      () => resolveIngredient(input.name, { userId: ctx.user.id }),
+      () => resolveIngredient(input.name, { userId: ctx.user.id, householdId: ctx.householdId }),
       async (ingredient) =>
         ingredient
           ? await fileIngredient(input.storeId, ingredient.ingredientId, input.aisleId)
@@ -72,7 +70,7 @@ const fileGroceryName = authedProcedure
       { userId: ctx.user.id, storeId: input.storeId, aisleId: input.aisleId },
       "Filed a grocery name"
     );
-    void stores.publish("aisleFiled", { filing }, { householdKey: ctx.householdKey });
+    void stores.publish("aisleFiled", { filing }, { householdId: ctx.householdId });
 
     return filing;
   });

@@ -1,23 +1,37 @@
 "use client";
 
+import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { writeOverRead } from "../offline/write-over-read";
+import type { ReadStatus } from "../trpc/read-status";
 import { usePlatform } from "../platform";
+import { acceptedFresh, useStaleRefusal } from "../platform/stale-write";
 import { useTRPC } from "../trpc";
+import { readStatus } from "../trpc/read-status";
 import { useProfileCache } from "./use-profile";
+import { writeOrReread } from "./write-or-reread";
 
 const NONE: string[] = [];
 
-/** The Reader's own allergies, as they set them (not the household's). */
-export function useAllergiesQuery(): string[] {
+/** The Reader's own allergies, as they set them (not the household's), and how their read went. */
+export function useAllergiesQuery(): ReadStatus & { allergies: string[] } {
   const trpc = useTRPC();
-  const { data } = useQuery({
-    ...trpc.user.getAllergies.queryOptions(),
-    select: (allergies) => allergies.allergies,
+  const queryClient = useQueryClient();
+  const query = useQuery(trpc.user.getAllergies.queryOptions());
+  const { data: learned } = useQuery({
+    ...trpc.user.get.queryOptions(),
+    select: (profile) => profile.user.version,
+    enabled: false,
   });
+  const readAt = query.data?.version;
 
-  return data ?? NONE;
+  // A newer version learned elsewhere rereads the list, so a save sends the list with its version.
+  useEffect(() => {
+    if (learned !== undefined && readAt !== undefined && learned > readAt)
+      void queryClient.invalidateQueries({ queryKey: trpc.user.getAllergies.queryKey() });
+  }, [learned, readAt, queryClient, trpc]);
+
+  return { allergies: query.data?.allergies ?? NONE, ...readStatus(query) };
 }
 
 /** Sets the Reader's allergies; the household hears of it through its subscription. */
@@ -25,28 +39,37 @@ export function useAllergiesMutation() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { showError } = usePlatform();
-  const { mergeUser } = useProfileCache();
+  const refuseStale = useStaleRefusal();
+  const profile = useProfileCache();
   const queryKey = trpc.user.getAllergies.queryKey();
-  const heldVersion = () => queryClient.getQueryData(queryKey)?.version ?? 0;
 
-  const { mutate, isPending } = useMutation(
+  const { mutateAsync, isPending } = useMutation(
     trpc.user.setAllergies.mutationOptions({
       onSuccess: (answer) => {
         if (!answer.success) return;
-        const version = answer.version ?? heldVersion();
-
-        writeOverRead(queryClient, queryKey, () => ({
-          allergies: answer.allergies ?? [],
-          version,
-        }));
-        if (answer.version) mergeUser({ version: answer.version });
+        if (answer.stale) refuseStale("user-settings:update-allergies");
+        writeOrReread(
+          queryClient,
+          queryKey,
+          () => ({ allergies: answer.allergies, version: answer.version }),
+          { version: answer.version, known: profile.version() }
+        );
+        if (answer.version > (profile.knownVersion() ?? 0)) void profile.invalidate();
       },
       onError: (error) => showError(error, "user-settings:update-allergies"),
     })
   );
 
   return {
-    setAllergies: (allergies: string[]) => mutate({ allergies, version: heldVersion() }),
+    /** Resolves whether the server took them; a stale write is refused as changed elsewhere. It
+     * replaces every stored allergy, so it goes only from a read list, at that list's version. */
+    setAllergies: (allergies: string[]): Promise<boolean> => {
+      const read = queryClient.getQueryData(queryKey);
+
+      return read === undefined
+        ? Promise.resolve(false)
+        : acceptedFresh(mutateAsync({ allergies, version: read.version }));
+    },
     isUpdatingAllergies: isPending,
   };
 }

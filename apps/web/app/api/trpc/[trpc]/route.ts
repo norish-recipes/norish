@@ -14,6 +14,8 @@ const handler = (req: Request) =>
     createContext,
     // Reads that can carry a secret are sent as POST, see trpc-links.
     allowMethodOverride: true,
+    // GET reads can carry a secret (a share link); no browser, proxy or iOS URL cache keeps one.
+    responseMeta: () => ({ headers: { "Cache-Control": "no-store" } }),
   });
 
 export { handler as GET, handler as POST };

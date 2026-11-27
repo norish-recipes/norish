@@ -7,6 +7,7 @@ import {
   listUsersForAdmin,
   setUserAdminStatus,
 } from "@norish/db/repositories/users";
+import { removeAccountJobs } from "@norish/queue/remove-account-jobs";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 
 import { adminProcedure } from "../../middleware";
@@ -97,7 +98,7 @@ const remove = adminProcedure.input(DeleteUserInputSchema).mutation(async ({ inp
 
   log.info({ actingUserId: ctx.user.id, userId }, "Deleting user");
 
-  await deleteUserAccount(userId);
+  await deleteUserAccount(userId, removeAccountJobs);
 
   return { success: true };
 });

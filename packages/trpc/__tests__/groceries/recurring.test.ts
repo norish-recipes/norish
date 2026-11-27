@@ -5,11 +5,10 @@ import { recurringGroceriesProcedures } from "@norish/trpc/routers/groceries/rec
 
 // Import test utilities
 import { createMockCallerContext } from "../calendar/test-utils";
-import { createGroceries, listGroceriesByUsers, lockGroceryList } from "../mocks/db";
+import { createGroceries, listGroceriesByHousehold, lockGroceryList } from "../mocks/db";
 import { TX } from "../mocks/drizzle";
 import { parseIngredientWithDefaults } from "../mocks/helpers";
 import { resolveGroceryNames } from "../mocks/ingredient-groceries";
-import { assertHouseholdAccess } from "../mocks/permissions";
 import { groceries } from "../mocks/realtime/groceries";
 import { stores } from "../mocks/realtime/stores";
 import { calculateNextOccurrence } from "../mocks/recurrence";
@@ -20,7 +19,7 @@ import {
   deleteRecurringGroceryById,
   detachRecurringGrocery,
   getRecurringGroceryById,
-  getRecurringGroceryOwnerId,
+  ownRecurringGroceryExists,
   updateRecurringGrocery,
   updateRecurringGroceryWithGrocery,
 } from "../mocks/recurring-groceries";
@@ -35,11 +34,11 @@ import {
 
 const storesRepository = vi.hoisted(() => ({
   findBestIngredientStorePreference: vi.fn(),
-  getStoreOwnerId: vi.fn(),
+  ownStoreExists: vi.fn(),
   upsertIngredientStorePreference: vi.fn(),
   // A household with no Store that points at a shop: pricing notices the
   // groceries, finds nothing to ask, and visits nothing.
-  listStoresByUserIds: vi.fn(async () => []),
+  listStoresByHousehold: vi.fn(async () => []),
 }));
 
 const storeProductsRepository = vi.hoisted(() => ({
@@ -104,10 +103,10 @@ describe("recurring groceries procedures", () => {
 
   beforeEach(() => {
     ctx = createMockAuthedContext(mockUser, mockHousehold);
-    getRecurringGroceryOwnerId.mockResolvedValue(ctx.user.id);
-    assertHouseholdAccess.mockResolvedValue(undefined);
+    ownRecurringGroceryExists.mockResolvedValue(true);
+    storesRepository.ownStoreExists.mockResolvedValue(true);
     createRecurringGroceries.mockImplementation(madeAsAsked);
-    listGroceriesByUsers.mockResolvedValue([]);
+    listGroceriesByHousehold.mockResolvedValue([]);
     createGroceries.mockImplementation(groceriesAsAsked);
   });
 
@@ -145,7 +144,7 @@ describe("recurring groceries procedures", () => {
           recurringGrocery: mockRecurring,
           grocery: mockGrocery,
         },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
 
       expect(groceries.publish).toHaveBeenCalledWith(
@@ -154,7 +153,7 @@ describe("recurring groceries procedures", () => {
           recurringGrocery: mockRecurring,
           grocery: mockGrocery,
         }),
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
     });
 
@@ -175,7 +174,7 @@ describe("recurring groceries procedures", () => {
 
       expect(createRecurringGroceries).toHaveBeenCalledWith(
         [expect.objectContaining({ recurring: expect.objectContaining({ id: clientId }) })],
-        ctx.userIds
+        ctx.householdId
       );
     });
 
@@ -217,7 +216,7 @@ describe("recurring groceries procedures", () => {
             }),
           }),
         ],
-        ctx.userIds
+        ctx.householdId
       );
       for (const name of ["zout", "peper"]) {
         expect(groceries.publish).toHaveBeenCalledWith(
@@ -226,7 +225,7 @@ describe("recurring groceries procedures", () => {
             recurringGrocery: expect.objectContaining({ name }),
             grocery: expect.objectContaining({ name }),
           },
-          { householdKey: ctx.householdKey }
+          { householdId: ctx.householdId }
         );
       }
     });
@@ -255,7 +254,7 @@ describe("recurring groceries procedures", () => {
             }),
           },
         ],
-        ctx.userIds
+        ctx.householdId
       );
     });
   });
@@ -287,11 +286,11 @@ describe("recurring groceries procedures", () => {
 
       expect(resolveGroceryNames).toHaveBeenCalledWith(
         [expect.objectContaining({ name: "Melk", groceryId })],
-        { userId: ctx.user.id }
+        { userId: ctx.user.id, householdId: ctx.householdId }
       );
       expect(resolveGroceryNames).toHaveBeenCalledWith(
         [expect.objectContaining({ name: "Test", groceryId })],
-        { userId: ctx.user.id }
+        { userId: ctx.user.id, householdId: ctx.householdId }
       );
     });
 
@@ -334,11 +333,12 @@ describe("recurring groceries procedures", () => {
               }),
             }),
           ],
-          ctx.userIds,
+          ctx.householdId,
           TX
         )
       );
       expect(updateRecurringGroceryWithGrocery).toHaveBeenCalledWith(
+        ctx.householdId,
         expect.objectContaining({ id: recurringGroceryId, name: "zout" }),
         expect.anything(),
         TX
@@ -348,8 +348,8 @@ describe("recurring groceries procedures", () => {
       );
       // The new food keeps nothing of the grocery being renamed.
       expect(resolveGroceryNames).toHaveBeenCalledWith(
-        [{ name: "zout", groceryId }, { name: "peper" }],
-        { userId: ctx.user.id }
+        [{ name: "zout", groceryId, householdId: ctx.householdId }, { name: "peper" }],
+        { userId: ctx.user.id, householdId: ctx.householdId }
       );
     });
 
@@ -368,7 +368,7 @@ describe("recurring groceries procedures", () => {
       await flushAsync();
 
       expect(groceries.publish).toHaveBeenCalledWith("stale", expect.anything(), {
-        householdKey: ctx.householdKey,
+        householdId: ctx.householdId,
       });
       expect(createRecurringGroceries).not.toHaveBeenCalled();
     });
@@ -399,17 +399,18 @@ describe("recurring groceries procedures", () => {
         expect(groceries.publish).toHaveBeenCalledWith(
           "created",
           { groceries: [expect.objectContaining({ name: "peper" })] },
-          { householdKey: ctx.householdKey }
+          { householdId: ctx.householdId }
         )
       );
       // The detach and the new grocery are one transaction.
       expect(detachRecurringGrocery).toHaveBeenCalledWith(
+        ctx.householdId,
         expect.objectContaining({ grocery: expect.objectContaining({ name: "zout" }) }),
         TX
       );
       expect(createGroceries).toHaveBeenCalledWith(
         [expect.objectContaining({ groceries: expect.objectContaining({ name: "peper" }) })],
-        ctx.userIds,
+        ctx.householdId,
         TX
       );
     });
@@ -444,7 +445,7 @@ describe("recurring groceries procedures", () => {
           recurringGrocery: mockRecurring,
           grocery: mockGrocery,
         },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
 
       expect(groceries.publish).toHaveBeenCalledWith(
@@ -453,7 +454,7 @@ describe("recurring groceries procedures", () => {
           recurringGrocery: mockRecurring,
           grocery: mockGrocery,
         }),
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
     });
   });
@@ -475,13 +476,13 @@ describe("recurring groceries procedures", () => {
         {
           recurringGroceryId,
         },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
 
       expect(groceries.publish).toHaveBeenCalledWith(
         "recurringDeleted",
         { recurringGroceryId },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
     });
 
@@ -501,18 +502,18 @@ describe("recurring groceries procedures", () => {
       await flushAsync();
 
       expect(result).toEqual({ success: true, stale: false });
-      expect(deleteRecurringGroceryById).toHaveBeenCalledWith("r1", 4);
+      expect(deleteRecurringGroceryById).toHaveBeenCalledWith(ctx.householdId, "r1", 4);
       expect(groceries.publish).toHaveBeenCalledWith(
         "deleted",
         {
           groceryIds: ["g1", "g2"],
         },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
       expect(groceries.publish).toHaveBeenCalledWith(
         "recurringDeleted",
         { recurringGroceryId: "r1" },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
     });
 
@@ -529,16 +530,16 @@ describe("recurring groceries procedures", () => {
       expect(result).toEqual({ success: true, stale: true });
       await flushAsync();
 
-      expect(deleteRecurringGroceryById).toHaveBeenCalledWith("r1", 4);
+      expect(deleteRecurringGroceryById).toHaveBeenCalledWith(ctx.householdId, "r1", 4);
       expect(groceries.publish).not.toHaveBeenCalledWith("recurringDeleted", expect.anything(), {
-        householdKey: ctx.householdKey,
+        householdId: ctx.householdId,
       });
       expect(groceries.publish).toHaveBeenCalledWith(
         "stale",
         {
           reason: expect.any(String),
         },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
     });
   });
@@ -568,6 +569,7 @@ describe("recurring groceries procedures", () => {
 
       expect(result).toEqual({ success: true, stale: false });
       expect(updateRecurringGroceryWithGrocery).toHaveBeenCalledWith(
+        ctx.householdId,
         {
           id: "r1",
           version: 2,
@@ -581,7 +583,7 @@ describe("recurring groceries procedures", () => {
       expect(groceries.publish).toHaveBeenCalledWith(
         "recurringUpdated",
         { recurringGrocery: mockRecurring, grocery: mockGrocery },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
     });
 
@@ -610,6 +612,7 @@ describe("recurring groceries procedures", () => {
       await flushAsync();
 
       expect(updateRecurringGroceryWithGrocery).toHaveBeenCalledWith(
+        ctx.householdId,
         {
           id: "r1",
           version: 2,
@@ -621,6 +624,7 @@ describe("recurring groceries procedures", () => {
         TX
       );
       expect(storesRepository.upsertIngredientStorePreference).toHaveBeenCalledWith(
+        ctx.householdId,
         ctx.user.id,
         "ingredient:oat milk",
         storeId
@@ -648,10 +652,10 @@ describe("recurring groceries procedures", () => {
         {
           reason: expect.any(String),
         },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
       expect(groceries.publish).not.toHaveBeenCalledWith("recurringUpdated", expect.anything(), {
-        householdKey: ctx.householdKey,
+        householdId: ctx.householdId,
       });
     });
   });
@@ -679,6 +683,7 @@ describe("recurring groceries procedures", () => {
       expect(result).toEqual({ success: true, stale: false });
       // Parsed ingredient comes from the mocked parseIngredientWithDefaults
       expect(detachRecurringGrocery).toHaveBeenCalledWith(
+        ctx.householdId,
         {
           recurringGroceryId,
           recurringVersion: 2,
@@ -697,14 +702,14 @@ describe("recurring groceries procedures", () => {
       expect(groceries.publish).toHaveBeenCalledWith(
         "recurringDeleted",
         { recurringGroceryId },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
       expect(groceries.publish).toHaveBeenCalledWith(
         "updated",
         {
           changedGroceries: [detached],
         },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
     });
 
@@ -735,6 +740,7 @@ describe("recurring groceries procedures", () => {
       await flushAsync();
 
       expect(detachRecurringGrocery).toHaveBeenCalledWith(
+        ctx.householdId,
         {
           recurringGroceryId,
           recurringVersion: 2,
@@ -752,6 +758,7 @@ describe("recurring groceries procedures", () => {
         TX
       );
       expect(storesRepository.upsertIngredientStorePreference).toHaveBeenCalledWith(
+        ctx.householdId,
         ctx.user.id,
         "ingredient:test",
         storeId
@@ -782,13 +789,13 @@ describe("recurring groceries procedures", () => {
         {
           reason: expect.any(String),
         },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
       expect(groceries.publish).not.toHaveBeenCalledWith("recurringDeleted", expect.anything(), {
-        householdKey: ctx.householdKey,
+        householdId: ctx.householdId,
       });
       expect(groceries.publish).not.toHaveBeenCalledWith("updated", expect.anything(), {
-        householdKey: ctx.householdKey,
+        householdId: ctx.householdId,
       });
     });
   });
@@ -829,6 +836,7 @@ describe("recurring groceries procedures", () => {
 
       expect(result).toEqual({ success: true, stale: false });
       expect(checkRecurringGrocery).toHaveBeenCalledWith({
+        householdId: ctx.householdId,
         groceryId: "g1",
         groceryVersion: 3,
         isDone: true,
@@ -842,7 +850,7 @@ describe("recurring groceries procedures", () => {
       expect(groceries.publish).toHaveBeenCalledWith(
         "recurringUpdated",
         { recurringGrocery: advancedRecurring, grocery: checkedGrocery },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
     });
 
@@ -870,6 +878,7 @@ describe("recurring groceries procedures", () => {
       await flushAsync();
 
       expect(checkRecurringGrocery).toHaveBeenCalledWith({
+        householdId: ctx.householdId,
         groceryId: "g1",
         groceryVersion: 3,
         isDone: false,
@@ -878,7 +887,7 @@ describe("recurring groceries procedures", () => {
       expect(groceries.publish).toHaveBeenCalledWith(
         "recurringUpdated",
         { recurringGrocery: mockRecurring, grocery: uncheckedGrocery },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
     });
 
@@ -907,10 +916,10 @@ describe("recurring groceries procedures", () => {
         {
           reason: expect.any(String),
         },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
       expect(groceries.publish).not.toHaveBeenCalledWith("recurringUpdated", expect.anything(), {
-        householdKey: ctx.householdKey,
+        householdId: ctx.householdId,
       });
     });
   });
@@ -968,7 +977,7 @@ describe("a failed repeat edit rejects, so Replay parks it", () => {
     ["deleteRecurring", () => caller().deleteRecurring({ recurringGroceryId: "r1", version: 2 })],
     ["checkRecurring", () => caller().checkRecurring({ ...versions, isDone: true })],
   ])("%s", async (_, write) => {
-    getRecurringGroceryOwnerId.mockResolvedValue(null);
+    ownRecurringGroceryExists.mockResolvedValue(false);
 
     await expect(write()).rejects.toThrow("Recurring grocery not found");
     // The app's own client toasts the rejection; a `failed` event would toast it twice.
@@ -992,11 +1001,13 @@ describe("a repeating grocery asks its Store what it knows", () => {
 
   beforeEach(() => {
     ctx = createMockAuthedContext(mockUser, mockHousehold);
-    getRecurringGroceryOwnerId.mockResolvedValue(ctx.user.id);
-    assertHouseholdAccess.mockResolvedValue(undefined);
+    ownRecurringGroceryExists.mockResolvedValue(true);
+    storesRepository.ownStoreExists.mockResolvedValue(true);
     storeProductsRepository.resolveProductLinks.mockResolvedValue([link]);
     // Pricing answers only for the household's own Stores.
-    storesRepository.listStoresByUserIds.mockResolvedValue([{ id: storeId, searchAddress: null }]);
+    storesRepository.listStoresByHousehold.mockResolvedValue([
+      { id: storeId, searchAddress: null },
+    ]);
   });
 
   // Every other way a grocery lands on the list under a Store asks that Store
@@ -1020,14 +1031,14 @@ describe("a repeating grocery asks its Store what it knows", () => {
     });
 
     expect(storeProductsRepository.resolveProductLinks).toHaveBeenCalledWith([
-      { storeId, ingredientId: "ingredient:melk", name: "melk" },
+      { storeId, ingredientId: "ingredient:melk", name: "melk", groceryId: expect.any(String) },
     ]);
     expect(stores.publish).toHaveBeenCalledWith(
       "linkUpdated",
       {
         link,
       },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   });
 
@@ -1058,7 +1069,7 @@ describe("a repeating grocery asks its Store what it knows", () => {
       {
         link,
       },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   });
 
@@ -1091,7 +1102,7 @@ describe("a repeating grocery asks its Store what it knows", () => {
       {
         link,
       },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   });
 });

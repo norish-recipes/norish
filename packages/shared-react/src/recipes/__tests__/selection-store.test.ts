@@ -6,7 +6,11 @@ import { useRecipeSelection } from "@norish/shared-react/recipes";
 const selection = () => useRecipeSelection.getState();
 const selectedIds = () => [...selection().selected.keys()];
 
-const recipe = (id: string, version = 1): SelectedRecipe => ({ id, version, userId: "owner" });
+const recipe = (id: string, version = 1): SelectedRecipe => ({
+  id,
+  version,
+  householdId: "household-1",
+});
 /** A page's loaded list, in grid order. */
 const PAGE = ["a", "b", "c", "d", "e"].map((id) => recipe(id));
 
@@ -19,9 +23,13 @@ describe("useRecipeSelection", () => {
   });
 
   it("toggles a recipe in and out, keeping its id, version and owner", () => {
-    selection().toggle({ ...recipe("b", 3), userId: "someone" });
+    selection().toggle({ ...recipe("b", 3), householdId: "household-2" });
 
-    expect(selection().selected.get("b")).toEqual({ id: "b", version: 3, userId: "someone" });
+    expect(selection().selected.get("b")).toEqual({
+      id: "b",
+      version: 3,
+      householdId: "household-2",
+    });
     expect(selection().anchor).toBe("b");
 
     selection().toggle(recipe("b", 3));

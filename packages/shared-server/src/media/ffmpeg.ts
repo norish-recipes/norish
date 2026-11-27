@@ -2,6 +2,7 @@ import { execSync } from "node:child_process";
 import fsSync from "node:fs";
 import path from "node:path";
 
+import { childEnv } from "@norish/shared-server/lib/child-env";
 import { videoLogger as log } from "@norish/shared-server/logger";
 
 // Resolve ffmpeg path at runtime
@@ -13,7 +14,7 @@ export function getFfmpegPath(): string | null {
   // Method 1: Check if system ffmpeg is available (production Docker)
   try {
     // eslint-disable-next-line sonarjs/no-os-command-from-path -- finding ffmpeg on PATH is the point of this lookup
-    const systemPath = execSync("which ffmpeg", { encoding: "utf8" }).trim();
+    const systemPath = execSync("which ffmpeg", { encoding: "utf8", env: childEnv() }).trim();
 
     if (systemPath && fsSync.existsSync(systemPath)) {
       log.debug({ ffmpegPath: systemPath }, "Found system ffmpeg");

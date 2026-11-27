@@ -1,8 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const getRecipeFull = vi.fn();
-const getHouseholdMemberIds = vi.fn();
-const getAllergiesForUsers = vi.fn();
+const getHouseholdAllergyNames = vi.fn();
 const getAllRecipesForEnrichment = vi.fn();
 const isAIEnabled = vi.fn();
 const getAutomaticEnrichmentConfig = vi.fn();
@@ -10,8 +9,7 @@ const addEnrichmentJob = vi.fn();
 
 vi.mock("@norish/db", () => ({
   getRecipeFull,
-  getHouseholdMemberIds,
-  getAllergiesForUsers,
+  getHouseholdAllergyNames,
 }));
 
 vi.mock("@norish/db/repositories/recipes", () => ({
@@ -36,7 +34,7 @@ vi.mock("../../src/enrichment/producer", () => ({ addEnrichmentJob }));
 
 const { enrollEnrichmentForAllRecipes } = await import("../../src/enrichment/bulk");
 
-const requester = { userId: "admin-1", householdKey: "admin-household" };
+const requester = { userId: "admin-1", householdId: "admin-household" };
 
 const ALL_ON = {
   autoTagging: true,
@@ -73,8 +71,7 @@ function recipe(id: string, overrides: Record<string, unknown> = {}) {
 
 beforeEach(() => {
   getRecipeFull.mockImplementation(async (id: string) => recipe(id));
-  getHouseholdMemberIds.mockResolvedValue(["user-1"]);
-  getAllergiesForUsers.mockResolvedValue(["Milk"]);
+  getHouseholdAllergyNames.mockResolvedValue(["Milk"]);
   isAIEnabled.mockResolvedValue(true);
   getAutomaticEnrichmentConfig.mockResolvedValue(ALL_ON);
   getAllRecipesForEnrichment.mockResolvedValue([
@@ -98,7 +95,7 @@ describe("enrollEnrichmentForAllRecipes", () => {
       expect.objectContaining({
         recipeId: "recipe-2",
         userId: "user-2",
-        householdKey: "household-2",
+        householdId: "household-2",
         origin: "automatic",
         requestedByUserId: undefined,
       })
@@ -199,7 +196,7 @@ describe("enrollEnrichmentForAllRecipes", () => {
       expect.objectContaining({
         recipeId: "recipe-orphan",
         userId: "admin-1",
-        householdKey: "admin-household",
+        householdId: "admin-household",
       })
     );
   });

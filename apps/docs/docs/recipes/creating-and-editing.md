@@ -12,12 +12,12 @@ Add photos to the recipe or to a step.
 
 ## Categories
 
-Under **Tags & Categories**, type a name in **Add a category** and press Enter.
+Under **Tags & Categories**, type a name in **Add a category** and select **Create**.
 Your household can then select it or use it as a filter.
 
 ![Drinks added beside the built-in Categories on the recipe form](/img/screenshots/recipe-form-add-category.png)
 
-A category stays on the list while a recipe in your household uses it.
+A category stays on the list until a household member deletes or merges it. Renaming an entry to an existing name merges them. Manage Tags, Cuisines and Categories in [Content](/content).
 
 ## Headings with `#`
 
@@ -64,15 +64,15 @@ With AI enabled, use the recipe's **⋯** menu for **Auto-tag**, **Detect
 Allergies**, **Auto Categorize**, **Estimate Nutrition**, **Work Out Provenance**,
 **Link Ingredients to Steps** or **Generate Picture**. **Detect Allergies**
 requires household allergies, and **Generate Picture** needs an
-[image provider](../configuration/ai-provider.md#image-generation).
+[image provider](/configuration/ai-provider#image-generation).
 
 These actions can replace categories, nutrition, provenance or the main
-picture. [Automatic enrichment](../configuration/ai-provider.md#automatic-enrichment)
+picture. [Automatic enrichment](/configuration/ai-provider#automatic-enrichment)
 keeps details you entered or imported.
 
 ## Cookbooks
 
 Use the recipe's quick actions to add it to a cookbook. Cookbooks follow
-your server's [recipe permissions](../configuration/admin-settings.md#permissions).
+your server's [recipe permissions](/configuration/admin-settings#permissions).
 Deleting a cookbook keeps its recipes. Deleting a recipe removes it from
 every cookbook.

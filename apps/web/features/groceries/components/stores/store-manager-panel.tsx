@@ -7,6 +7,8 @@ import {
   ActionButtonGroup,
   IconActionButton,
 } from "@/components/shared/action-button";
+import { EmptyState } from "@/components/shared/empty-state";
+import { BuildingStorefrontIcon } from "@heroicons/react/24/outline";
 import { Bars3Icon } from "@heroicons/react/24/solid";
 import { Reorder, useDragControls } from "motion/react";
 import { useTranslations } from "next-intl";
@@ -91,10 +93,7 @@ export function StoreManagerPanel({ open, onOpenChange, stores }: StoreManagerPa
           {/* Store list */}
           <div ref={dragConstraintsRef} className="min-h-0 flex-1">
             {stores.length === 0 && (
-              <div className="text-muted py-8 text-center">
-                <p>{t("noStoresYet")}</p>
-                <p className="text-sm">{t("createStoreHint")}</p>
-              </div>
+              <EmptyState icon={BuildingStorefrontIcon} title={t("noStoresYet")} variant="row" />
             )}
 
             <Reorder.Group

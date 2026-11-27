@@ -83,7 +83,8 @@
   "errors": {
     "operationFailed": "L'opération a échoué",
     "nameCannotBeEmpty": "Le nom ne peut pas être vide",
-    "technicalDetails": "Une erreur s'est produite. Consultez la console du navigateur pour les détails techniques."
+    "technicalDetails": "Une erreur s'est produite. Consultez la console du navigateur pour les détails techniques.",
+    "noAnswer": "Le serveur n'a pas répondu. Réessayez."
   },
   "slots": {
     "breakfast": "Petit déjeuner",
@@ -261,6 +262,7 @@
       "syncing": "{count, plural, =0 {Synchronisation} one {Synchronisation de # modification} other {Synchronisation de # modifications}}",
       "syncNow": "Synchroniser maintenant",
       "retryAll": "Tout réessayer",
+      "otherHousehold": "Certaines modifications ont été faites pour un autre foyer. « Tout réessayer » les envoie au foyer dont vous faites partie maintenant.",
       "discardAll": "Tout abandonner",
       "discardConfirmBody": "{count, plural, one {Abandonner définitivement # modification en attente ? Elle ne sera pas envoyée.} other {Abandonner définitivement # modifications en attente ? Elles ne seront pas envoyées.}}",
       "discardConfirm": "Abandonner",
@@ -294,6 +296,9 @@
   "changedElsewhere": {
     "title": "Non enregistré : modifié ailleurs entre-temps"
   },
+  "lateAnswer": {
+    "title": "Le serveur a répondu tard : c'est passé quand même."
+  },
   "storageUnavailable": {
     "title": "Stockage indisponible",
     "description": "Norish n'a pas pu lire le trousseau de cet iPhone.",
@@ -308,7 +313,14 @@
     "adminTransferred": "Privilèges admin transférés à {name}",
     "unknownMember": "Inconnu",
     "removedTitle": "Retiré du foyer",
-    "removedDescription": "Un administrateur vous a retiré du foyer."
+    "removedDescription": "Un administrateur vous a retiré du foyer.",
+    "joinRefused": {
+      "invalidCode": "Ce code d'invitation n'est pas valide.",
+      "expired": "Ce code d'invitation a expiré. Demandez-en un nouveau.",
+      "alreadyMember": "Vous faites déjà partie de ce foyer.",
+      "shared": "Quittez d'abord votre foyer pour en rejoindre un autre.",
+      "busy": "Ce foyer était en cours de modification. Réessayez."
+    }
   },
   "photos": {
     "pickFailedTitle": "Impossible de choisir la photo",

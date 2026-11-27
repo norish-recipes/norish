@@ -1,226 +1,96 @@
 // @vitest-environment node
-import { initTRPC } from "@trpc/server";
-import superjson from "superjson";
+/**
+ * Favourites through the real procedures: a reader favourites only what they may view, and a
+ * favourite out of view reads as none, through the viewer every read hands the repository.
+ */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { trpcLogger } from "@norish/shared-server/logger";
 import { favoritesProcedures } from "@norish/trpc/routers/favorites/favorites";
 
 import {
-  getFavoriteRecipeIds,
   getFavoriteRecipesWithVersions,
   getFavoritesByRecipeIds,
-  isFavorite,
+  resetFavoritesMocks,
   setFavorite,
-  toggleFavorite,
 } from "../mocks/favorites-repository";
+import { policy, resetPermissionsMocks } from "../mocks/permissions";
+import { everyRecipeIn, resetRecipesMocks } from "../mocks/recipes-repository";
 import { createMockAuthedContext, createMockHousehold, createMockUser } from "./test-utils";
 
 vi.mock("@norish/db/repositories/favorites", () => import("../mocks/favorites-repository"));
+vi.mock("@norish/db", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/db")>()),
+  getRecipeHouseholdIds: (await import("../mocks/recipes-repository")).getRecipeHouseholdIds,
+}));
+vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
 vi.mock("@norish/shared-server/logger", () => ({
   trpcLogger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
   createLogger: () => ({ debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }),
 }));
 
-const t = initTRPC.context<ReturnType<typeof createMockAuthedContext>>().create({
-  transformer: superjson,
-});
+const RECIPE = "11111111-1111-4111-8111-111111111111";
 
 describe("favorites procedures", () => {
-  const mockUser = createMockUser();
-  const mockHousehold = createMockHousehold();
-  let ctx: ReturnType<typeof createMockAuthedContext>;
+  const ctx = createMockAuthedContext(createMockUser(), createMockHousehold());
+  const caller = () => favoritesProcedures.createCaller(ctx as never);
+  const viewer = { userId: ctx.user.id, householdId: ctx.householdId };
 
   beforeEach(() => {
-    ctx = createMockAuthedContext(mockUser, mockHousehold);
+    resetFavoritesMocks();
+    resetPermissionsMocks();
+    resetRecipesMocks();
+    everyRecipeIn("another-household");
+    setFavorite.mockResolvedValue({ stale: false, value: { isFavorite: true } });
   });
 
-  describe("toggle", () => {
-    it("toggles favorite on (adds to favorites)", async () => {
-      toggleFavorite.mockResolvedValue({ isFavorite: true });
-
-      const testRouter = t.router({
-        toggle: t.procedure
-          .input((v) => v as { recipeId: string })
-          .mutation(async ({ input }) => {
-            const result = await toggleFavorite(ctx.user.id, input.recipeId);
-
-            return { recipeId: input.recipeId, isFavorite: result.isFavorite };
-          }),
-      });
-
-      const caller = t.createCallerFactory(testRouter)(ctx);
-      const result = await caller.toggle({ recipeId: "recipe-1" });
-
-      expect(toggleFavorite).toHaveBeenCalledWith(ctx.user.id, "recipe-1");
-      expect(result.isFavorite).toBe(true);
+  it("favourites a recipe the reader may view", async () => {
+    await expect(caller().toggle({ recipeId: RECIPE, isFavorite: true })).resolves.toEqual({
+      recipeId: RECIPE,
+      isFavorite: true,
+      stale: false,
     });
-
-    it("toggles favorite off (removes from favorites)", async () => {
-      toggleFavorite.mockResolvedValue({ isFavorite: false });
-
-      const testRouter = t.router({
-        toggle: t.procedure
-          .input((v) => v as { recipeId: string })
-          .mutation(async ({ input }) => {
-            const result = await toggleFavorite(ctx.user.id, input.recipeId);
-
-            return { recipeId: input.recipeId, isFavorite: result.isFavorite };
-          }),
-      });
-
-      const caller = t.createCallerFactory(testRouter)(ctx);
-      const result = await caller.toggle({ recipeId: "recipe-1" });
-
-      expect(result.isFavorite).toBe(false);
-    });
-
-    it("logs a stale favorite mutation as a no-op", async () => {
-      setFavorite.mockResolvedValue({ stale: true, value: { isFavorite: false } });
-
-      const caller = favoritesProcedures.createCaller(ctx as any);
-      const result = await caller.toggle({
-        recipeId: crypto.randomUUID(),
-        isFavorite: false,
-        version: 3,
-      } as any);
-
-      expect(setFavorite).toHaveBeenCalledWith(ctx.user.id, result.recipeId, false, 3);
-      expect(result).toEqual({ recipeId: result.recipeId, isFavorite: false, stale: true });
-      expect(trpcLogger.info).toHaveBeenCalledWith(
-        { userId: ctx.user.id, recipeId: result.recipeId, version: 3 },
-        "Ignoring stale favorite mutation"
-      );
-    });
+    expect(setFavorite).toHaveBeenCalledWith(ctx.user.id, RECIPE, true, undefined);
   });
 
-  describe("check", () => {
-    it("returns true for favorited recipe", async () => {
-      isFavorite.mockResolvedValue(true);
+  it("answers a recipe out of view as a gone one, and favourites nothing", async () => {
+    policy.view = "household";
 
-      const testRouter = t.router({
-        check: t.procedure
-          .input((v) => v as { recipeId: string })
-          .query(async ({ input }) => {
-            const result = await isFavorite(ctx.user.id, input.recipeId);
-
-            return { recipeId: input.recipeId, isFavorite: result };
-          }),
-      });
-
-      const caller = t.createCallerFactory(testRouter)(ctx);
-      const result = await caller.check({ recipeId: "recipe-1" });
-
-      expect(isFavorite).toHaveBeenCalledWith(ctx.user.id, "recipe-1");
-      expect(result.isFavorite).toBe(true);
+    await expect(caller().toggle({ recipeId: RECIPE, isFavorite: true })).rejects.toMatchObject({
+      code: "NOT_FOUND",
     });
-
-    it("returns false for non-favorited recipe", async () => {
-      isFavorite.mockResolvedValue(false);
-
-      const testRouter = t.router({
-        check: t.procedure
-          .input((v) => v as { recipeId: string })
-          .query(async ({ input }) => {
-            const result = await isFavorite(ctx.user.id, input.recipeId);
-
-            return { recipeId: input.recipeId, isFavorite: result };
-          }),
-      });
-
-      const caller = t.createCallerFactory(testRouter)(ctx);
-      const result = await caller.check({ recipeId: "recipe-1" });
-
-      expect(result.isFavorite).toBe(false);
-    });
+    expect(setFavorite).not.toHaveBeenCalled();
   });
 
-  describe("list", () => {
-    it("returns all favorite recipe IDs for user", async () => {
-      const mockIds = ["recipe-1", "recipe-2", "recipe-3"];
+  it("logs a stale favorite mutation as a no-op", async () => {
+    setFavorite.mockResolvedValue({ stale: true, value: { isFavorite: false } });
 
-      getFavoriteRecipeIds.mockResolvedValue(mockIds);
-      getFavoriteRecipesWithVersions.mockResolvedValue([]);
+    const result = await caller().toggle({ recipeId: RECIPE, isFavorite: false, version: 3 });
 
-      const testRouter = t.router({
-        list: t.procedure.query(async () => {
-          const favoriteIds = await getFavoriteRecipeIds(ctx.user.id);
-
-          return { favoriteIds };
-        }),
-      });
-
-      const caller = t.createCallerFactory(testRouter)(ctx);
-      const result = await caller.list();
-
-      expect(getFavoriteRecipeIds).toHaveBeenCalledWith(ctx.user.id);
-      expect(result.favoriteIds).toEqual(mockIds);
-    });
-
-    it("returns empty array when no favorites", async () => {
-      getFavoriteRecipeIds.mockResolvedValue([]);
-
-      const testRouter = t.router({
-        list: t.procedure.query(async () => {
-          const favoriteIds = await getFavoriteRecipeIds(ctx.user.id);
-
-          return { favoriteIds };
-        }),
-      });
-
-      const caller = t.createCallerFactory(testRouter)(ctx);
-      const result = await caller.list();
-
-      expect(result.favoriteIds).toEqual([]);
-    });
+    expect(setFavorite).toHaveBeenCalledWith(ctx.user.id, RECIPE, false, 3);
+    expect(result).toEqual({ recipeId: RECIPE, isFavorite: false, stale: true });
+    expect(trpcLogger.info).toHaveBeenCalledWith(
+      { userId: ctx.user.id, recipeId: RECIPE, version: 3 },
+      "Ignoring stale favorite mutation"
+    );
   });
 
-  describe("batchCheck", () => {
-    it("returns favorited IDs from batch", async () => {
-      const favoritesSet = new Set(["recipe-1", "recipe-3"]);
+  it("reads every favourite as the reader, so the repository applies the policy", async () => {
+    getFavoritesByRecipeIds.mockResolvedValue(new Set([RECIPE]));
+    getFavoriteRecipesWithVersions.mockResolvedValue([{ recipeId: RECIPE, version: 2 }]);
 
-      getFavoritesByRecipeIds.mockResolvedValue(favoritesSet);
-
-      const testRouter = t.router({
-        batchCheck: t.procedure
-          .input((v) => v as { recipeIds: string[] })
-          .query(async ({ input }) => {
-            const favorites = await getFavoritesByRecipeIds(ctx.user.id, input.recipeIds);
-
-            return { favoriteIds: Array.from(favorites) };
-          }),
-      });
-
-      const caller = t.createCallerFactory(testRouter)(ctx);
-      const result = await caller.batchCheck({
-        recipeIds: ["recipe-1", "recipe-2", "recipe-3"],
-      });
-
-      expect(getFavoritesByRecipeIds).toHaveBeenCalledWith(ctx.user.id, [
-        "recipe-1",
-        "recipe-2",
-        "recipe-3",
-      ]);
-      expect(result.favoriteIds).toEqual(["recipe-1", "recipe-3"]);
+    await expect(caller().check({ recipeId: RECIPE })).resolves.toEqual({
+      recipeId: RECIPE,
+      isFavorite: true,
     });
-
-    it("returns empty array when no recipes are favorited", async () => {
-      getFavoritesByRecipeIds.mockResolvedValue(new Set());
-
-      const testRouter = t.router({
-        batchCheck: t.procedure
-          .input((v) => v as { recipeIds: string[] })
-          .query(async ({ input }) => {
-            const favorites = await getFavoritesByRecipeIds(ctx.user.id, input.recipeIds);
-
-            return { favoriteIds: Array.from(favorites) };
-          }),
-      });
-
-      const caller = t.createCallerFactory(testRouter)(ctx);
-      const result = await caller.batchCheck({ recipeIds: ["recipe-1", "recipe-2"] });
-
-      expect(result.favoriteIds).toEqual([]);
+    await expect(caller().batchCheck({ recipeIds: [RECIPE] })).resolves.toEqual({
+      favoriteIds: [RECIPE],
     });
+    await expect(caller().list()).resolves.toEqual({
+      favoriteIds: [RECIPE],
+      favoriteVersions: { [RECIPE]: 2 },
+    });
+    expect(getFavoritesByRecipeIds).toHaveBeenCalledWith(viewer, [RECIPE]);
+    expect(getFavoriteRecipesWithVersions).toHaveBeenCalledWith(viewer);
   });
 });

@@ -1,27 +1,44 @@
 import type { SQL } from "drizzle-orm";
-import { and, asc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, notInArray, notLike, sql } from "drizzle-orm";
+import { alias, QueryBuilder } from "drizzle-orm/pg-core";
 import z from "zod";
 
 import type { Db, DbTransaction } from "@norish/db/drizzle";
 import type { PantryIngredientDto, PantrySuggestionDto } from "@norish/shared/contracts";
 import { db, holdLock } from "@norish/db/drizzle";
-import { ingredients, pantryIngredients } from "@norish/db/schema";
+import {
+  ingredientAliases,
+  ingredients,
+  pantryIngredients,
+  recipeIngredientFoods,
+  recipeIngredients,
+  recipes,
+} from "@norish/db/schema";
 import { PantryIngredientSelectSchema, PantrySuggestionSchema } from "@norish/shared/contracts/zod";
 
+import { assertOwnReferences, householdRow, ownRowIds } from "./household-rows";
+import { inCatalogue } from "./household-scope";
 import { findLocaleNames } from "./ingredient-aliases";
 import { coveredCte } from "./pantry-coverage";
 
+const qb = new QueryBuilder();
+const walkStart = alias(ingredients, "walk_start");
+const walkParent = alias(ingredients, "walk_parent");
 const PantryIngredientsSchema = z.array(PantryIngredientSelectSchema);
 
-/** Pantry rows as read, with each Ingredient's spelling in every language. */
+/** One household's Pantry rows as read, with each Ingredient's spelling in every language. */
 async function parsePantryIngredients(
-  rows: Array<{ ingredientId: string }>,
+  rows: Array<{ ingredientId: string; householdId: string }>,
   tx: Db = db
 ): Promise<PantryIngredientDto[]> {
-  const localeNames = await findLocaleNames(
-    rows.map((row) => row.ingredientId),
-    tx
-  );
+  const [first] = rows;
+  const localeNames = first
+    ? await findLocaleNames(
+        first.householdId,
+        rows.map((row) => row.ingredientId),
+        tx
+      )
+    : new Map();
   const parsed = PantryIngredientsSchema.safeParse(
     rows.map((row) => ({ ...row, localeNames: localeNames.get(row.ingredientId) ?? {} }))
   );
@@ -40,17 +57,20 @@ function selectPantry(tx: Db = db) {
   return tx
     .select({
       id: pantryIngredients.id,
+      householdId: pantryIngredients.householdId,
       userId: pantryIngredients.userId,
       ingredientId: pantryIngredients.ingredientId,
       version: pantryIngredients.version,
       name: ingredients.name,
       ancestorIds: sql<string[]>`(
         with recursive up(ancestor, depth) as (
-          select i.parent_id, 1 from ${ingredients} i
-          where i.id = ${pantryIngredients.ingredientId} and i.parent_id is not null
+          select ${walkStart.parentId}, 1 from ${ingredients} as ${walkStart}
+          where ${walkStart.id} = ${pantryIngredients.ingredientId}
+            and ${walkStart.parentId} is not null
           union all
-          select p.parent_id, up.depth + 1 from up join ${ingredients} p on p.id = up.ancestor
-          where p.parent_id is not null and up.depth < 32
+          select ${walkParent.parentId}, up.depth + 1 from up
+          join ${ingredients} as ${walkParent} on ${walkParent.id} = up.ancestor
+          where ${walkParent.parentId} is not null and up.depth < 32
         )
         select coalesce(array_agg(ancestor::text order by depth), '{}'::text[]) from up
       )`,
@@ -71,38 +91,26 @@ async function findOnePantryIngredient(
   return (await parsePantryIngredients([row], tx))[0] ?? null;
 }
 
-/**
- * The Pantry as the household reads it: every member's items in one query,
- * ordered by name, the way the household's Stores are read across its user ids.
- */
-export async function listPantryIngredientsByUserIds(
-  userIds: string[]
+/** The household's Pantry, ordered by name. */
+export async function listPantryIngredientsByHousehold(
+  householdId: string
 ): Promise<PantryIngredientDto[]> {
-  if (userIds.length === 0) return [];
-
   const rows = await selectPantry()
-    .where(inArray(pantryIngredients.userId, userIds))
+    .where(eq(pantryIngredients.householdId, householdId))
     .orderBy(asc(sql`lower(${ingredients.name})`), asc(pantryIngredients.createdAt));
 
   return await parsePantryIngredients(rows);
 }
 
-/**
- * The household's Pantry Ingredient of an Ingredient, if any member has one.
- * The household-wide rule that an Ingredient is in the Pantry once lives here
- * rather than in a constraint, because the rows span user ids, as Store names
- * do.
- */
+/** The household's Pantry Ingredient of an Ingredient, if it has one. */
 export async function findPantryIngredientInHousehold(
-  userIds: string[],
+  householdId: string,
   ingredientId: string,
   tx: Db = db
 ): Promise<PantryIngredientDto | null> {
-  if (userIds.length === 0) return null;
-
   return findOnePantryIngredient(
     and(
-      inArray(pantryIngredients.userId, userIds),
+      eq(pantryIngredients.householdId, householdId),
       eq(pantryIngredients.ingredientId, ingredientId)
     ),
     tx
@@ -126,10 +134,19 @@ export interface PantryAdded {
  */
 export async function addPantryIngredients(
   items: Array<{ id: string; ingredientAliasId: string | null; ingredientId: string }>,
-  owner: { userId: string; userIds: string[] }
+  owner: { userId: string; householdId: string }
 ): Promise<PantryAdded[]> {
   return await db.transaction(async (tx) => {
     const foods = [...new Set(items.map((item) => item.ingredientId))];
+
+    await assertOwnReferences(
+      owner.householdId,
+      {
+        ingredientIds: foods,
+        ingredientAliasIds: items.map((item) => item.ingredientAliasId),
+      },
+      tx
+    );
 
     for (const ingredientId of foods.sort((a, b) => a.localeCompare(b))) {
       await lockPantryFood(tx, ingredientId);
@@ -138,7 +155,7 @@ export async function addPantryIngredients(
     const added: PantryAdded[] = [];
 
     for (const { id, ingredientAliasId, ingredientId } of items) {
-      const held = await findPantryIngredientInHousehold(owner.userIds, ingredientId, tx);
+      const held = await findPantryIngredientInHousehold(owner.householdId, ingredientId, tx);
 
       if (held) {
         added.push({ item: held, created: false });
@@ -147,9 +164,15 @@ export async function addPantryIngredients(
 
       const [row] = await tx
         .insert(pantryIngredients)
-        .values({ id, userId: owner.userId, ingredientId, ingredientAliasId })
+        .values({
+          id,
+          householdId: owner.householdId,
+          userId: owner.userId,
+          ingredientId,
+          ingredientAliasId,
+        })
         .returning({ id: pantryIngredients.id });
-      const item = row && (await findPantryIngredient(row.id, tx));
+      const item = row && (await findPantryIngredient(row.id, owner.householdId, tx));
 
       if (!item) throw new Error("Failed to create pantry ingredient");
 
@@ -160,23 +183,19 @@ export async function addPantryIngredients(
   });
 }
 
-/** One Pantry Ingredient with its name, however it was reached. */
-export async function findPantryIngredient(
+/** One of the household's Pantry Ingredients with its name. */
+async function findPantryIngredient(
   id: string,
+  householdId: string,
   tx: Db = db
 ): Promise<PantryIngredientDto | null> {
-  return findOnePantryIngredient(eq(pantryIngredients.id, id), tx);
+  return findOnePantryIngredient(householdRow(pantryIngredients, householdId, id), tx);
 }
 
-/** Whose Pantry Ingredient this is: the authorization primitive, as for a Store. */
-export async function getPantryIngredientOwnerId(id: string): Promise<string | null> {
-  const [row] = await db
-    .select({ userId: pantryIngredients.userId })
-    .from(pantryIngredients)
-    .where(eq(pantryIngredients.id, id))
-    .limit(1);
-
-  return row?.userId ?? null;
+/** The household a Pantry Ingredient belongs to, for the household guard. */
+/** Whether the household's Pantry Ingredient exists; another household's is refused. */
+export async function ownPantryIngredientExists(householdId: string, id: string): Promise<boolean> {
+  return (await ownRowIds(pantryIngredients, householdId, [id])).size > 0;
 }
 
 /**
@@ -185,10 +204,10 @@ export async function getPantryIngredientOwnerId(id: string): Promise<string | n
  * already gone is nothing to report. The Ingredient stays: it is not the
  * household's to delete.
  */
-export async function deletePantryIngredient(id: string): Promise<boolean> {
+export async function deletePantryIngredient(id: string, householdId: string): Promise<boolean> {
   const deleted = await db
     .delete(pantryIngredients)
-    .where(eq(pantryIngredients.id, id))
+    .where(householdRow(pantryIngredients, householdId, id))
     .returning({ id: pantryIngredients.id });
 
   return deleted.length > 0;
@@ -201,21 +220,33 @@ export async function deletePantryIngredient(id: string): Promise<boolean> {
  * only a row from before the catalogue lacks.
  */
 export async function findIngredientOwnSpelling(
+  householdId: string,
   ingredientId: string
 ): Promise<{ ingredientId: string; ingredientAliasId: string | null } | null> {
-  const rows = await db.execute<{ ingredient_id: string; alias_id: string | null }>(sql`
-    select i.id as ingredient_id, (
-      select a.id from ingredient_aliases a
-      where a.ingredient_id = i.id
-      order by (lower(a.text) = lower(i.name)) desc, a.created_at asc
-      limit 1
-    ) as alias_id
-    from ingredients i
-    where i.id = ${ingredientId}
-  `);
-  const row = rows.rows[0];
+  const ownSpelling = qb
+    .select({ id: ingredientAliases.id })
+    .from(ingredientAliases)
+    .where(
+      and(
+        eq(ingredientAliases.ingredientId, ingredients.id),
+        inCatalogue(ingredientAliases.householdId, householdId)
+      )
+    )
+    .orderBy(
+      desc(sql`lower(${ingredientAliases.text}) = lower(${ingredients.name})`),
+      asc(ingredientAliases.createdAt)
+    )
+    .limit(1)
+    .as("own_spelling");
+  const [row] = await db
+    .select({ ingredientId: ingredients.id, ingredientAliasId: ownSpelling.id })
+    .from(ingredients)
+    .leftJoinLateral(ownSpelling, sql`true`)
+    .where(
+      and(eq(ingredients.id, ingredientId), inCatalogue(ingredients.householdId, householdId))
+    );
 
-  return row ? { ingredientId: row.ingredient_id, ingredientAliasId: row.alias_id } : null;
+  return row ?? null;
 }
 
 /** How many foods "From your recipes" offers at most. */
@@ -225,47 +256,58 @@ const PantrySuggestionsSchema = z.array(PantrySuggestionSchema);
 
 /**
  * The foods the household's own recipes use most, for an empty Pantry to
- * start from: each food named by the lines of recipes its members own,
+ * start from: each food named by the lines of the household's recipes,
  * ranked by how many of those recipes name it, a recipe counting once per
  * food. Lines that name no food (a heading, a link to another recipe) never
  * count, and a food the Pantry covers (the same Ingredient, or a kept kind
  * of it) is left out.
  */
-export async function listPantrySuggestions(userIds: string[]): Promise<PantrySuggestionDto[]> {
-  if (userIds.length === 0) return [];
-
-  const members = sql.join(
-    userIds.map((id) => sql`${id}`),
-    sql`, `
+export async function listPantrySuggestions(householdId: string): Promise<PantrySuggestionDto[]> {
+  // No recursive CTE in the builder: the Pantry's walk is SQL over the schema inside a `$with`.
+  const covered = db
+    .$with("covered_foods", { coveredId: sql<string>`covered_id`.as("covered_id") })
+    .as(
+      sql`with recursive ${coveredCte(householdId)} select ingredient_id as covered_id from covered`
+    );
+  const used = db.$with("used").as(
+    db
+      .select({
+        ingredientId: ingredientAliases.ingredientId,
+        recipeCount: sql<number>`count(distinct ${recipes.id})::int`.as("recipe_count"),
+      })
+      .from(recipes)
+      .innerJoin(recipeIngredients, eq(recipeIngredients.recipeId, recipes.id))
+      .innerJoin(
+        recipeIngredientFoods,
+        eq(recipeIngredientFoods.recipeIngredientId, recipeIngredients.id)
+      )
+      .innerJoin(
+        ingredientAliases,
+        eq(ingredientAliases.id, recipeIngredientFoods.ingredientAliasId)
+      )
+      .where(
+        and(
+          eq(recipes.householdId, householdId),
+          notLike(sql`ltrim(${recipeIngredients.name})`, "#%"),
+          sql`position('(id:' in ${recipeIngredients.name}) = 0`
+        )
+      )
+      .groupBy(ingredientAliases.ingredientId)
   );
-  const rows = await db.execute<{ ingredient_id: string; name: string; recipe_count: number }>(sql`
-    with recursive ${coveredCte(userIds)},
-    used as (
-      select a.ingredient_id, count(distinct r.id)::int as recipe_count
-      from recipes r
-      join recipe_ingredients ri on ri.recipe_id = r.id
-      join recipe_ingredient_foods on recipe_ingredient_foods.recipe_ingredient_id = ri.id
-      join ingredient_aliases a on a.id = recipe_ingredient_foods.ingredient_alias_id
-      where r.user_id in (${members})
-        and ltrim(ri.name) not like '#%'
-        and position('(id:' in ri.name) = 0
-      group by a.ingredient_id
-    )
-    select i.id as ingredient_id, i.name, used.recipe_count
-    from used
-    join ingredients i on i.id = used.ingredient_id
-    where used.ingredient_id not in (select ingredient_id from covered)
-    order by used.recipe_count desc, lower(i.name) asc
-    limit ${SUGGESTION_LIMIT}
-  `);
-  const localeNames = await findLocaleNames(rows.rows.map((row) => row.ingredient_id));
+  const rows = await db
+    .with(covered, used)
+    .select({ ingredientId: ingredients.id, name: ingredients.name, recipeCount: used.recipeCount })
+    .from(used)
+    .innerJoin(ingredients, eq(ingredients.id, used.ingredientId))
+    .where(notInArray(used.ingredientId, db.select({ id: covered.coveredId }).from(covered)))
+    .orderBy(desc(used.recipeCount), asc(sql`lower(${ingredients.name})`))
+    .limit(SUGGESTION_LIMIT);
+  const localeNames = await findLocaleNames(
+    householdId,
+    rows.map((row) => row.ingredientId)
+  );
   const parsed = PantrySuggestionsSchema.safeParse(
-    rows.rows.map((row) => ({
-      ingredientId: row.ingredient_id,
-      name: row.name,
-      recipeCount: row.recipe_count,
-      localeNames: localeNames.get(row.ingredient_id) ?? {},
-    }))
+    rows.map((row) => ({ ...row, localeNames: localeNames.get(row.ingredientId) ?? {} }))
   );
 
   if (!parsed.success) throw new Error("Failed to parse pantry suggestions");

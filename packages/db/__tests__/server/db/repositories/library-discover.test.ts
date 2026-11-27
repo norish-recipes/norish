@@ -1,26 +1,26 @@
 // @vitest-environment node
 /** What Search offers with no text, against a real database: four Categories with a photo, twelve Tags. */
 
-import { sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import type { RecipeListContext } from "@norish/db/repositories/recipes";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { listLibraryDiscover } from "@norish/db/repositories/library";
 import { deleteConfig, setConfig } from "@norish/db/repositories/server-config";
-import {
-  categories,
-  recipeCategories,
-  recipeImages,
-  recipeTags,
-  tags as tagsTable,
-} from "@norish/db/schema";
+import { recipeImages, recipes } from "@norish/db/schema";
 
-import { createTestRecipe, createTestUser, getTestDb } from "../../../helpers/db-test-helpers";
+import {
+  attachTestEntry,
+  createTestRecipe,
+  createTestUser,
+  getTestDb,
+  testHouseholdOf,
+} from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 function viewer(userId: string): RecipeListContext {
-  return { userId, householdUserIds: null, isServerAdmin: false };
+  return { userId, householdId: testHouseholdOf(userId) };
 }
 
 describe("the discover reads", () => {
@@ -63,25 +63,11 @@ describe("the discover reads", () => {
   }
 
   async function categorise(recipeIds: string[], name: string) {
-    // The built-in names are seeded, so an existing row is the one to use.
-    await getTestDb().insert(categories).values({ name }).onConflictDoNothing();
-
-    const [row] = await getTestDb()
-      .select()
-      .from(categories)
-      .where(sql`lower(${categories.name}) = ${name.toLowerCase()}`);
-
-    await getTestDb()
-      .insert(recipeCategories)
-      .values(recipeIds.map((recipeId) => ({ recipeId, categoryId: row!.id, order: 0 })));
+    await attachTestEntry("category", recipeIds, name);
   }
 
   async function tag(recipeIds: string[], name: string) {
-    const [row] = await getTestDb().insert(tagsTable).values({ name }).returning();
-
-    await getTestDb()
-      .insert(recipeTags)
-      .values(recipeIds.map((recipeId) => ({ recipeId, tagId: row!.id, order: 0 })));
+    await attachTestEntry("tag", recipeIds, name);
   }
 
   describe("Categories", () => {
@@ -103,7 +89,7 @@ describe("the discover reads", () => {
     it("skips a Category with no recipe the reader can see", async () => {
       await setConfig(
         ServerConfigKeys.RECIPE_PERMISSION_POLICY,
-        { view: "owner", edit: "owner", delete: "owner" },
+        { view: "household", edit: "household", delete: "household" },
         null,
         false
       );
@@ -124,16 +110,14 @@ describe("the discover reads", () => {
         .values({ recipeId: newest, image: "/newest-first.jpg", order: "-1", createdAt: minute() });
       await categorise([older, newest, hidden], "Dinner");
 
-      // `hidden` is newest of all but belongs to a stranger once the policy is owner-only.
+      // `hidden` is newest of all but belongs to a stranger once the policy is household-only.
       await setConfig(
         ServerConfigKeys.RECIPE_PERMISSION_POLICY,
-        { view: "owner", edit: "owner", delete: "owner" },
+        { view: "household", edit: "household", delete: "household" },
         null,
         false
       );
-      await getTestDb().execute(
-        sql`UPDATE recipes SET user_id = ${strangerId} WHERE id = ${hidden}`
-      );
+      await getTestDb().update(recipes).set({ userId: strangerId }).where(eq(recipes.id, hidden));
 
       expect((await discover()).categories).toEqual([
         { name: "Dinner", image: "/newest-first.jpg" },
@@ -192,7 +176,7 @@ describe("the discover reads", () => {
     it("leaves out a Tag only on a recipe the reader cannot see", async () => {
       await setConfig(
         ServerConfigKeys.RECIPE_PERMISSION_POLICY,
-        { view: "owner", edit: "owner", delete: "owner" },
+        { view: "household", edit: "household", delete: "household" },
         null,
         false
       );
@@ -202,6 +186,40 @@ describe("the discover reads", () => {
       expect((await discover()).tags).toEqual(["mine"]);
     });
   });
+
+  it.each(["everyone", "household"] as const)(
+    "offers only the reader's and the instance's entries under view %s, counting every visible recipe of the fold",
+    async (view) => {
+      await setConfig(
+        ServerConfigKeys.RECIPE_PERMISSION_POLICY,
+        { view, edit: "household", delete: "household" },
+        null,
+        false
+      );
+
+      const [ours, ours2] = [await recipe(ownerId), await recipe(ownerId)];
+      const [theirs, theirs2] = [await recipe(strangerId), await recipe(strangerId)];
+
+      await tag([ours], "Soja");
+      await tag([ours, ours2], "Sour");
+      await tag([theirs, theirs2], "soja!");
+      await tag([theirs], "Smoky");
+      await categorise([theirs], "Supper");
+      await categorise([theirs], "Dinner");
+      await categorise([ours], "Dessert");
+
+      expect(await discover()).toEqual({
+        categories:
+          view === "everyone"
+            ? [
+                { name: "Dinner", image: null },
+                { name: "Dessert", image: null },
+              ]
+            : [{ name: "Dessert", image: null }],
+        tags: view === "everyone" ? ["Soja", "Sour"] : ["Sour", "Soja"],
+      });
+    }
+  );
 
   it("returns nothing for a reader with no recipes", async () => {
     expect(await discover()).toEqual({ categories: [], tags: [] });

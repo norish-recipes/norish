@@ -162,12 +162,25 @@ describe("useLinesToBuy", () => {
           unit: "pcs",
           isDone: false,
           recipeIngredientId: "l-chicken",
+          lineFoodId: null,
         },
       ]);
       expect(adapter.toast.show).toHaveBeenCalledWith({
         severity: "success",
         title: "groceries.panel.ingredientsAdded",
       });
+    });
+
+    it("sends an untouched line as the line's food, for the server to read through the line", async () => {
+      const { result } = setup({ "l-oil": { name: "rapeseed oil", amount: 2, unit: null } });
+
+      await act(async () => {
+        await result.current.addLines(result.current.toBuy);
+      });
+
+      expect(
+        state.create.mock.calls[0]![0].map((row: { lineFoodId: string | null }) => row.lineFoodId)
+      ).toEqual([null, "i-chicken breast"]);
     });
 
     it("adds once however often it is called, and shows it is adding", async () => {
@@ -222,7 +235,7 @@ describe("useLinesToBuy", () => {
   });
 
   describe("keepLine", () => {
-    it("keeps a line's own food", () => {
+    it("keeps a line's own food, with the line the server reads it through", () => {
       const { result } = setup();
 
       act(() => result.current.keepLine(result.current.toBuy[0]!));
@@ -230,6 +243,7 @@ describe("useLinesToBuy", () => {
       expect(state.keep).toHaveBeenCalledWith({
         ingredientId: "i-chicken breast",
         name: "chicken breast",
+        recipeIngredientId: "l-chicken",
       });
     });
 

@@ -40,7 +40,7 @@ pnpm run docker:up
 pnpm run dev
 ```
 
-`.env.local` needs `DATABASE_URL`, `VALKEY_URL`, `AUTH_URL` and `MASTER_KEY`. See
+`.env.local` needs `DATABASE_URL`, `VALKEY_URL` and `AUTH_URL`. See
 [Server & runtime](../configuration/server-runtime.md).
 
 ## Contributing

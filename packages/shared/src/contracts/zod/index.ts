@@ -2,6 +2,7 @@ export * from "./common";
 export * from "./recipe";
 export * from "./tag";
 export * from "./cuisine";
+export * from "./list-entry";
 export * from "./ingredient";
 export * from "./recipe-ingredients";
 export * from "./steps";

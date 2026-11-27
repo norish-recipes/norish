@@ -63,7 +63,8 @@ async function correctSeed(): Promise<CorrectionOutcome> {
     if (!toId) continue;
     for (const child of await listUnchosenOwnChildren(fromId)) {
       if (
-        (await (await readName(child.name)).parent(child.id)) === toId &&
+        child.householdId &&
+        (await (await readName(child.householdId, child.name)).parent(child.id)) === toId &&
         (await refileOwnFood(child.id, fromId, toId))
       ) {
         outcome.refiled += 1;

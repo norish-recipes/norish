@@ -10,6 +10,7 @@ import {
   getMaxVideoFileSize,
   getPageRenderersConfig,
 } from "@norish/shared-server/config/server-config-loader";
+import { childEnv } from "@norish/shared-server/lib/child-env";
 import { serverLogger as log } from "@norish/shared-server/logger";
 import { guardedFetch } from "@norish/shared-server/private-addresses";
 
@@ -355,6 +356,14 @@ async function saveImageBytesCore(bytes: Buffer, options: SaveImageOptions): Pro
 
 // --- Core image delete helper ---
 
+/** Refuses a file outside the folder of the recipe whose row or request names it. */
+function assertFileOfRecipe(urlRecipeId: string, ownerRecipeId: string): void {
+  if (!/^[a-f0-9-]{36}$/i.test(urlRecipeId)) throw new Error("Invalid recipe ID in URL");
+  if (urlRecipeId.toLowerCase() !== ownerRecipeId.toLowerCase()) {
+    throw new Error("Not a file of this recipe");
+  }
+}
+
 interface DeleteImageOptions {
   /** URL pattern regex with named groups: recipeId, filename */
   urlPattern: RegExp;
@@ -368,7 +377,11 @@ interface DeleteImageOptions {
  * Core helper to delete an image by URL.
  * All image delete functions should use this internally.
  */
-async function deleteImageByUrlCore(url: string, options: DeleteImageOptions): Promise<void> {
+async function deleteImageByUrlCore(
+  url: string,
+  ownerRecipeId: string,
+  options: DeleteImageOptions
+): Promise<void> {
   const match = url.match(options.urlPattern);
 
   if (!match) {
@@ -378,10 +391,7 @@ async function deleteImageByUrlCore(url: string, options: DeleteImageOptions): P
   const recipeId = match[1]!;
   const filename = match[2]!;
 
-  // Validate recipeId is a UUID
-  if (!/^[a-f0-9-]{36}$/i.test(recipeId)) {
-    throw new Error("Invalid recipe ID in URL");
-  }
+  assertFileOfRecipe(recipeId, ownerRecipeId);
 
   // Validate filename
   if (!/^[a-zA-Z0-9_-]+\.[a-zA-Z0-9]+$/.test(filename)) {
@@ -565,20 +575,29 @@ export async function saveStepImageBytes(bytes: Buffer, recipeId: string): Promi
  * Delete recipe image by URL.
  * URL format: /recipes/{recipeId}/{hash}.jpg
  */
-export async function deleteImageByUrl(url: string): Promise<void> {
-  return deleteImageByUrlCore(url, {
+export async function deleteImageByUrl(url: string, recipeId: string): Promise<void> {
+  return deleteImageByUrlCore(url, recipeId, {
     urlPattern: /^\/recipes\/([a-f0-9-]+)\/([^/]+)$/i,
     buildPath: (recipeId, filename) => path.join(RECIPES_BASE_DIR, recipeId, filename),
     label: "recipe",
   });
 }
 
+/** After a failed row insert: removes the file unless a row still names it (files are named by content). */
+export async function deleteUnreferencedRecipeFile(url: string, recipeId: string): Promise<void> {
+  const { isRecipeMediaReferenced } = await import("@norish/db/repositories/recipes");
+
+  if (await isRecipeMediaReferenced(url)) return;
+  if (/\/video-[^/]+$/.test(url)) await deleteVideoByUrl(url, recipeId);
+  else await deleteImageByUrl(url, recipeId);
+}
+
 /**
  * Delete step image by URL.
  * URL format: /recipes/{recipeId}/steps/{hash}.jpg
  */
-export async function deleteStepImageByUrl(url: string): Promise<void> {
-  return deleteImageByUrlCore(url, {
+export async function deleteStepImageByUrl(url: string, recipeId: string): Promise<void> {
+  return deleteImageByUrlCore(url, recipeId, {
     urlPattern: /^\/recipes\/([a-f0-9-]+)\/steps\/([^/]+)$/i,
     buildPath: (recipeId, filename) => path.join(RECIPES_BASE_DIR, recipeId, "steps", filename),
     label: "step",
@@ -808,7 +827,7 @@ async function probeVideoCodecs(
         "-i",
         inputPath,
       ],
-      { stdio: ["ignore", "pipe", "pipe"] }
+      { stdio: ["ignore", "pipe", "pipe"], env: childEnv() }
     );
 
     let stdout = "";
@@ -976,6 +995,7 @@ function runFfmpeg(ffmpegPath: string, args: string[]): Promise<void> {
   return new Promise((resolve, reject) => {
     const proc = spawn(ffmpegPath, ["-y", ...args], {
       stdio: ["ignore", "pipe", "pipe"],
+      env: childEnv(),
     });
 
     let stderr = "";
@@ -1158,7 +1178,7 @@ export async function saveVideoBytes(
  * Delete recipe video by URL.
  * URL format: /recipes/{recipeId}/video-{timestamp}.{ext}
  */
-export async function deleteVideoByUrl(url: string): Promise<void> {
+export async function deleteVideoByUrl(url: string, ownerRecipeId: string): Promise<void> {
   // Match video URLs: /recipes/{uuid}/video-{timestamp}.{ext}
   const match = url.match(/^\/recipes\/([a-f0-9-]+)\/(video-[^/]+)$/i);
 
@@ -1169,10 +1189,7 @@ export async function deleteVideoByUrl(url: string): Promise<void> {
   const recipeId = match[1]!;
   const filename = match[2]!;
 
-  // Validate recipeId is a UUID
-  if (!/^[a-f0-9-]{36}$/i.test(recipeId)) {
-    throw new Error("Invalid recipe ID in URL");
-  }
+  assertFileOfRecipe(recipeId, ownerRecipeId);
 
   // Validate filename pattern
   if (!/^video-\d+\.[a-zA-Z0-9]+$/.test(filename)) {

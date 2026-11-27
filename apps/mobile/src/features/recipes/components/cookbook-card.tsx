@@ -1,10 +1,10 @@
 import type { CardActions } from "@/hooks/use-card-actions";
 import React, { memo } from "react";
 import { Text, View } from "react-native";
+import { Ionicons } from "@/components/icon";
 import { Pill } from "@/components/pill";
 import { PressTap } from "@/components/press-tap";
 import { cookbookRoute } from "@/lib/tab-routes";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";

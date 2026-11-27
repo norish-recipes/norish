@@ -1,14 +1,20 @@
 import React, { createContext, use, useEffect, useState } from "react";
 import { Platform, Settings } from "react-native";
-import { deviceLanguage, matchDeviceLocale, resolveLocaleSelection } from "@/lib/i18n/locale-state";
 import {
+  deviceLanguage,
+  isOffered,
+  matchDeviceLocale,
+  resolveLocaleSelection,
+} from "@/lib/i18n/locale-state";
+import {
+  clearLocalePreference,
   loadLocalePreference,
   saveLocalePreference,
 } from "@/lib/preferences/locale-preference-store";
 import { IntlProvider } from "react-intl";
 
 import type { EnabledLocale } from "@norish/shared-react/config";
-import { DEFAULT_LOCALE } from "@norish/i18n/config";
+import { DEFAULT_LOCALE, isValidLocale } from "@norish/i18n/config";
 import { getBundledLocales } from "@norish/i18n/locales";
 import { loadLocaleMessages } from "@norish/i18n/messages";
 import enAuthMessages from "@norish/i18n/messages/en/auth.json";
@@ -19,18 +25,18 @@ import enNavbarMessages from "@norish/i18n/messages/en/navbar.json";
 import enRecipesMessages from "@norish/i18n/messages/en/recipes.json";
 import enSettingsMessages from "@norish/i18n/messages/en/settings.json";
 import { useLocaleConfigQuery } from "@norish/shared-react/config";
-import { useLocaleSave } from "@norish/shared-react/reader";
+import { useSavedLocale } from "@norish/shared-react/reader";
 
-type MobileLocaleContextValue = {
+export type MobileLocaleContextValue = {
   locale: string;
   /** The languages the reader can pick. */
   options: EnabledLocale[];
   isLoading: boolean;
-  /** `fromServer` applies the server's own preference, so it is not written back. */
-  setLocale: (nextLocale: string, options?: { fromServer?: boolean }) => void;
+  /** Signed in, `LocaleSaveScope` saves it to the profile, whose saved language is shown. */
+  setLocale: (nextLocale: string) => void;
 };
 
-const MobileLocaleContext = createContext<MobileLocaleContextValue | null>(null);
+export const MobileLocaleContext = createContext<MobileLocaleContextValue | null>(null);
 
 const FALLBACK_MESSAGES: Record<string, unknown> = {
   auth: enAuthMessages,
@@ -148,26 +154,33 @@ export function MobileIntlProvider({
 }) {
   // Read at first render, so a remount never opens on the default locale first.
   const [preferredLocale, setPreferredLocale] = useState(loadLocalePreference);
+  const savedLocale = useSavedLocale();
   const {
     enabledLocales: configuredLocales,
     defaultLocale: configuredDefaultLocale,
     isLoading: isConfigLoading,
   } = useLocaleConfigQuery();
 
-  const saveLocale = useLocaleSave(signedIn);
-
   const localeOptions = resolveLocaleOptions(BUNDLED_LOCALES, configuredLocales);
-  const bundledCodes = new Set(localeOptions.map((locale) => locale.code));
-  const effectiveDefaultLocale = bundledCodes.has(configuredDefaultLocale)
+  const effectiveDefaultLocale = isOffered(localeOptions, configuredDefaultLocale)
     ? configuredDefaultLocale
     : DEFAULT_LOCALE;
 
-  // Signed out, the screens follow the device language.
+  // Signed in, the profile's saved language, else the device's own; signed out, the device language.
   const activeLocale = resolveLocaleSelection(
-    signedIn ? preferredLocale : matchDeviceLocale(DEVICE_LOCALE, localeOptions),
+    signedIn ? (savedLocale ?? preferredLocale) : matchDeviceLocale(DEVICE_LOCALE, localeOptions),
     localeOptions,
     effectiveDefaultLocale
   );
+
+  useEffect(() => {
+    if (!signedIn) return;
+
+    const choice = savedLocale ?? preferredLocale;
+
+    if (isValidLocale(choice)) saveLocalePreference(choice);
+    else clearLocalePreference();
+  }, [signedIn, savedLocale, preferredLocale]);
 
   const { messages, isLoading: isMessagesLoading } = useLocaleMessages(activeLocale);
 
@@ -176,23 +189,8 @@ export function MobileIntlProvider({
     options: localeOptions,
     // The server's enabled locales can still change the language until they load.
     isLoading: isMessagesLoading || isConfigLoading,
-    setLocale: (nextLocale, options) => {
-      const nextResolved = resolveLocaleSelection(
-        nextLocale,
-        localeOptions,
-        effectiveDefaultLocale
-      );
-
-      if (nextResolved === activeLocale) {
-        return;
-      }
-
-      setPreferredLocale(nextResolved);
-      void saveLocalePreference(nextResolved);
-
-      if (signedIn && !options?.fromServer) {
-        saveLocale(nextResolved);
-      }
+    setLocale: (nextLocale) => {
+      if (isOffered(localeOptions, nextLocale)) setPreferredLocale(nextLocale);
     },
   };
 
@@ -218,10 +216,10 @@ export function MobileIntlFallbackProvider({ children }: { children: React.React
     options: BUNDLED_LOCALES,
     isLoading,
     setLocale: (nextLocale: string) => {
-      const nextResolved = resolveLocaleSelection(nextLocale, BUNDLED_LOCALES, DEFAULT_LOCALE);
+      if (!isOffered(BUNDLED_LOCALES, nextLocale)) return;
 
-      setPreferredLocale(nextResolved);
-      void saveLocalePreference(nextResolved);
+      setPreferredLocale(nextLocale);
+      saveLocalePreference(nextLocale);
     },
   };
 

@@ -144,19 +144,17 @@ describe("deletePlannedItem", () => {
     );
   });
 
-  it("keeps the server error on the row when the delete fails", async () => {
+  it("throws a failed delete for the job to retry, leaving the row unremoved", async () => {
     mockGetCaldavSyncStatusByItemId.mockResolvedValue({
       id: "status-1",
       caldavEventUid: "event-uid",
       eventTitle: "Lasagne",
     });
     mockDeleteEvent.mockRejectedValue(new Error("boom"));
+    mockUpdateCaldavSyncStatus.mockClear();
 
-    await deletePlannedItem("user-1", "item-1");
+    await expect(deletePlannedItem("user-1", "item-1")).rejects.toThrow("boom");
 
-    expect(mockUpdateCaldavSyncStatus).toHaveBeenCalledWith(
-      "status-1",
-      expect.objectContaining({ syncStatus: "removed", errorMessage: "boom" })
-    );
+    expect(mockUpdateCaldavSyncStatus).not.toHaveBeenCalled();
   });
 });

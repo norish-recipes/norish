@@ -16,6 +16,7 @@ import {
   INTERNAL_PARSER_API_URL,
   SERVER_CONFIG,
 } from "@norish/config/env-config-server";
+import { childEnv } from "@norish/shared-server/lib/child-env";
 import { parserLogger as log } from "@norish/shared-server/logger";
 import { withTimeout } from "@norish/shared/lib/with-timeout";
 
@@ -126,7 +127,7 @@ async function start(): Promise<void> {
   const child = spawn(python, args, {
     cwd: appDir,
     // The parser stops itself once this process is gone, however it died (app/main.py).
-    env: { ...process.env, PARSER_API_PARENT_PID: String(process.pid) },
+    env: childEnv({ PARSER_API_PARENT_PID: String(process.pid) }),
     stdio: ["ignore", "pipe", "pipe"],
     detached: process.platform !== "win32",
   });

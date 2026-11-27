@@ -210,6 +210,10 @@ describe("MiniGroceries, open on a recipe", () => {
     queryClient.setQueryData(fakeProcedure("recipes.get").queryKey({ id: "r1" }), recipe("butter"));
     queryClient.setQueryData(key("pantry.list"), []);
     queryClient.setQueryData(key("groceries.list"), { groceries: [], recurringGroceries: [] });
+    queryClient.setQueryData(
+      fakeProcedure("recipes.lineReadings").queryKey({ recipeIds: ["r1"] }),
+      {}
+    );
     render(<MiniGroceries open recipeId="r1" onOpenChange={() => {}} />, {
       wrapper: createTestWrapper(queryClient),
     });
@@ -226,6 +230,7 @@ describe("MiniGroceries, open on a recipe", () => {
 const COOKBOOK: CookbookSummaryDTO = {
   id: "11111111-1111-4111-8111-111111111111",
   userId: "reader",
+  householdId: "readers-household",
   title: "Weeknights",
   createdAt: new Date("2026-01-01T00:00:00Z"),
   updatedAt: new Date("2026-01-01T00:00:00Z"),

@@ -92,6 +92,23 @@ const plannedRange = () => ({
   endISO: dateKey(addDays(new Date(), 60)),
 });
 
+// What `read` answers once it equals `is`, for a write still on its way; any answer without `is`.
+async function onceItIs(read, is, what) {
+  const deadline = Date.now() + 15_000;
+
+  for (;;) {
+    const found = await read();
+
+    if (is === undefined || JSON.stringify(found) === JSON.stringify(is)) return found;
+    if (Date.now() > deadline) {
+      throw new Error(
+        `waited 15 s for ${what} ${JSON.stringify(is)}; it is ${JSON.stringify(found)}`
+      );
+    }
+    await sleep(250);
+  }
+}
+
 // `trpc` posts a mutation, `query` reads one; both throw on a failed call.
 export function seeder({ trpc, query }) {
   const recipes = async (search) => {
@@ -109,8 +126,19 @@ export function seeder({ trpc, query }) {
   };
 
   return {
-    // Every recipe, cookbook, grocery and pantry food the account has, so a flow starts from nothing.
+    // Every recipe, cookbook, grocery, pantry food, site token and API key the account has, and its
+    // first name back, so a flow starts from nothing.
     async reset() {
+      const { user, apiKeys } = await query("user.get");
+
+      if (user.name !== "Maestro") {
+        await trpc("user.updateName", { name: "Maestro", version: user.version });
+      }
+      for (const { id } of apiKeys) await trpc("user.apiKeys.delete", { keyId: id });
+      for (const { id, version } of await query("siteAuthTokens.list")) {
+        await trpc("siteAuthTokens.remove", { id, version });
+      }
+
       const stale = (await recipes()).map(({ id, version }) => ({ id, version }));
 
       if (stale.length > 0) await trpc("recipes.delete", { recipes: stale });
@@ -142,8 +170,40 @@ export function seeder({ trpc, query }) {
         });
       }
     },
+    // A header token for `domain`; answers its id.
+    async createToken({ domain, name = "Authorization", value = "maestro-token" }) {
+      return (await trpc("siteAuthTokens.create", { domain, name, value, type: "header" })).id;
+    },
+    profileName: ({ is } = {}) =>
+      onceItIs(async () => (await query("user.get")).user.name, is, "the name"),
+    tokenDomains: ({ is } = {}) =>
+      onceItIs(
+        async () => (await query("siteAuthTokens.list")).map((token) => token.domain).sort(),
+        is,
+        "site tokens"
+      ),
+    apiKeyNames: ({ is } = {}) =>
+      onceItIs(
+        async () => (await query("user.get")).apiKeys.map((key) => key.name).sort(),
+        is,
+        "API keys"
+      ),
     // A recipe as the recipe form saves one; answers its id.
-    createRecipe({ name, ingredients = [], steps = [], tags = [], categories = [], minutes }) {
+    /** @param {{ name: string, ingredients?: string[], steps?: string[], tags?: string[], categories?: string[], minutes?: number }} recipe */
+    async createRecipe({
+      name,
+      ingredients = [],
+      steps = [],
+      tags = [],
+      categories = [],
+      minutes,
+    }) {
+      // The form's save only attaches entries the list has, so the entries are made first.
+      for (const tag of tags) await trpc("lists.add", { kind: "tag", name: tag });
+      for (const category of categories) {
+        await trpc("lists.add", { kind: "category", name: category });
+      }
+
       return trpc("recipes.create", {
         name,
         systemUsed: "metric",
@@ -180,11 +240,11 @@ export function seeder({ trpc, query }) {
     // A grocery as another member adds it, filed under the Store named `store`; answers its id.
     async createGrocery({ name, store }) {
       const storeId = store ? await storeIdOf(store) : null;
-      const [created] = await trpc("groceries.create", [
+      const { ids } = await trpc("groceries.create", [
         { name, unit: null, amount: null, ...(storeId && { storeId }) },
       ]);
 
-      return created.id;
+      return ids[0];
     },
     // Where the grocery `name` stands: now, or once it matches `want` (`done`, `store` as a Store's
     // name or null, `repeats`), throwing after `within` ms (15 s) with where it is instead.

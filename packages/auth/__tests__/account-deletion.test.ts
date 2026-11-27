@@ -1,126 +1,236 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { AccountDeletion } from "@norish/db/repositories/households";
 import { deleteUserAccount } from "@norish/auth/account-deletion";
 
-const repositories = vi.hoisted(() => ({
-  getHouseholdForUser: vi.fn(),
-  transferHouseholdAdmin: vi.fn(),
-  deleteUser: vi.fn(),
-  sweepUserAvatars: vi.fn(),
-  emitConnectionInvalidation: vi.fn(),
+const order: string[] = [];
+const step = (name: string) =>
+  vi.fn(async (...args: unknown[]) => {
+    order.push(`${name}${args.length ? ` ${JSON.stringify(args)}` : ""}`);
+  });
+
+const mocks = vi.hoisted(() => ({
+  deleteAccount: vi.fn(),
+  getHouseholdById: vi.fn(),
   deleteUserSessions: vi.fn(),
+  sweepUserAvatars: vi.fn(),
+  deleteRecipeImagesDir: vi.fn(),
+  sweepCookbookImages: vi.fn(),
+  invalidateHouseholdCacheForUsers: vi.fn(),
+  bumpViewEpoch: vi.fn(),
+  emitConnectionInvalidation: vi.fn(),
+  householdsPublish: vi.fn(),
+  recipesPublish: vi.fn(),
+  cookbooksPublish: vi.fn(),
+  publishCalendarItemEvent: vi.fn(),
+  removeJobs: vi.fn(),
+  sweepPendingUploadsOf: vi.fn(),
+  deleteUnusedIngredientIcons: vi.fn(),
 }));
 
 vi.mock("@norish/auth/auth", () => ({
   auth: {
     $context: Promise.resolve({
-      internalAdapter: { deleteUserSessions: repositories.deleteUserSessions },
+      internalAdapter: { deleteUserSessions: mocks.deleteUserSessions },
     }),
   },
 }));
-
 vi.mock("@norish/db/repositories/households", () => ({
-  getHouseholdForUser: repositories.getHouseholdForUser,
-  transferHouseholdAdmin: repositories.transferHouseholdAdmin,
+  deleteAccount: mocks.deleteAccount,
+  getHouseholdById: mocks.getHouseholdById,
 }));
-
-vi.mock("@norish/db/repositories/users", () => ({
-  deleteUser: repositories.deleteUser,
-}));
-
 vi.mock("@norish/shared-server/media/avatar-cleanup", () => ({
-  sweepUserAvatars: repositories.sweepUserAvatars,
+  sweepUserAvatars: mocks.sweepUserAvatars,
 }));
-
+vi.mock("@norish/shared-server/media/pending-recipe-media", () => ({
+  sweepPendingUploadsOf: mocks.sweepPendingUploadsOf,
+}));
+vi.mock("@norish/shared-server/media/storage", () => ({
+  deleteRecipeImagesDir: mocks.deleteRecipeImagesDir,
+  sweepCookbookImages: mocks.sweepCookbookImages,
+}));
+vi.mock("@norish/shared-server/cache/household", () => ({
+  invalidateHouseholdCacheForUsers: mocks.invalidateHouseholdCacheForUsers,
+}));
+vi.mock("@norish/shared-server/realtime/resume", () => ({ bumpViewEpoch: mocks.bumpViewEpoch }));
 vi.mock("@norish/shared-server/realtime/connection", () => ({
-  emitConnectionInvalidation: repositories.emitConnectionInvalidation,
+  ACCOUNT_DELETED: "account-deleted",
+  emitConnectionInvalidation: mocks.emitConnectionInvalidation,
 }));
-
+vi.mock("@norish/shared-server/realtime/households", () => ({
+  households: { publish: mocks.householdsPublish },
+}));
+vi.mock("@norish/shared-server/realtime/recipes", () => ({
+  recipes: { publish: mocks.recipesPublish },
+}));
+vi.mock("@norish/shared-server/realtime/cookbooks", () => ({
+  cookbooks: { publish: mocks.cookbooksPublish },
+}));
+vi.mock("@norish/shared-server/realtime/calendar-items", () => ({
+  publishCalendarItemEvent: mocks.publishCalendarItemEvent,
+}));
+vi.mock("@norish/shared-server/realtime/audience", () => ({
+  policyAudience: async (householdId: string) => ({ viewPolicy: "everyone", householdId }),
+}));
+vi.mock("@norish/shared-server/ingredients/icon-drafts", () => ({
+  deleteUnusedIngredientIcons: mocks.deleteUnusedIngredientIcons,
+}));
 vi.mock("@norish/shared-server/logger", () => ({
   authLogger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
 
-function household(adminUserId: string, memberIds: readonly string[]) {
-  return {
-    id: "household-1",
-    name: "Household",
-    adminUserId,
-    users: memberIds.map((id) => ({ id, name: id, isAdmin: id === adminUserId, version: 1 })),
-  };
-}
+const NOTE = {
+  id: "plan-1",
+  householdId: "elsewhere",
+  userId: "stranger",
+  date: "2031-05-06",
+  slot: "Dinner",
+  sortOrder: 0,
+  itemType: "note",
+  recipeId: null,
+  title: "Soep",
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  version: 2,
+} as const;
+
+const DELETION: AccountDeletion = {
+  householdId: "home",
+  householdErased: false,
+  successorId: "member",
+  memberIds: ["member"],
+  recipeIds: ["recipe-1"],
+  cookbookIds: ["cookbook-1"],
+  iconFiles: ["0123456789abcdef0123456789abcdef.webp"],
+  notes: [NOTE],
+};
 
 describe("deleteUserAccount", () => {
   beforeEach(() => {
-    repositories.getHouseholdForUser.mockResolvedValue(null);
-    repositories.transferHouseholdAdmin.mockResolvedValue(undefined);
-    repositories.deleteUser.mockResolvedValue(undefined);
-    repositories.sweepUserAvatars.mockResolvedValue(undefined);
-    repositories.emitConnectionInvalidation.mockResolvedValue(undefined);
-    repositories.deleteUserSessions.mockResolvedValue(undefined);
-  });
-
-  it("sweeps avatars, deletes the row, ends its sessions and cuts live connections", async () => {
-    await deleteUserAccount("user-1");
-
-    expect(repositories.sweepUserAvatars).toHaveBeenCalledWith("user-1");
-    expect(repositories.deleteUser).toHaveBeenCalledWith("user-1");
-    expect(repositories.deleteUserSessions).toHaveBeenCalledWith("user-1");
-    expect(repositories.emitConnectionInvalidation).toHaveBeenCalledWith(
-      "user-1",
-      "account-deleted"
-    );
-  });
-
-  it("hands the household to a remaining member before deleting its admin", async () => {
-    repositories.getHouseholdForUser.mockResolvedValue(household("user-1", ["user-1", "user-2"]));
-
-    await deleteUserAccount("user-1");
-
-    expect(repositories.transferHouseholdAdmin).toHaveBeenCalledWith(
-      "household-1",
-      "user-1",
-      "user-2"
-    );
-  });
-
-  it("hands the household on before the row that cascades it is deleted", async () => {
-    const order: string[] = [];
-
-    repositories.getHouseholdForUser.mockResolvedValue(household("user-1", ["user-1", "user-2"]));
-    repositories.transferHouseholdAdmin.mockImplementation(async () => {
-      order.push("transfer");
-    });
-    repositories.deleteUser.mockImplementation(async () => {
+    order.length = 0;
+    vi.clearAllMocks();
+    mocks.deleteAccount.mockImplementation(async () => {
       order.push("delete");
+
+      return DELETION;
+    });
+    mocks.getHouseholdById.mockResolvedValue({ id: "home", version: 7 });
+    for (const [name, mock] of Object.entries(mocks)) {
+      if (name !== "deleteAccount" && name !== "getHouseholdById")
+        mock.mockImplementation(step(name));
+    }
+  });
+
+  it("ends sessions, rescopes the account, tells everyone else, removes its jobs, then sweeps the files", async () => {
+    await deleteUserAccount("gone", mocks.removeJobs);
+
+    expect(order).toEqual([
+      "delete",
+      'deleteUserSessions ["gone"]',
+      'invalidateHouseholdCacheForUsers [["gone","member"]]',
+      "bumpViewEpoch",
+      'emitConnectionInvalidation ["gone","account-deleted"]',
+      'householdsPublish ["memberRemoved",{"userId":"gone"},{"householdId":"home"}]',
+      'householdsPublish ["adminTransferred",{"oldAdminId":"gone","newAdminId":"member","version":7},{"householdId":"home"}]',
+      'recipesPublish ["deleted",{"ids":["recipe-1"]},{"viewPolicy":"everyone","householdId":"home"}]',
+      'cookbooksPublish ["deleted",{"id":"cookbook-1"},{"viewPolicy":"everyone","householdId":"home"}]',
+      `publishCalendarItemEvent ${JSON.stringify([
+        "itemUpdated",
+        {
+          item: {
+            id: "plan-1",
+            date: "2031-05-06",
+            slot: "Dinner",
+            sortOrder: 0,
+            itemType: "note",
+            recipeId: null,
+            title: "Soep",
+            userId: "stranger",
+            version: 2,
+            recipeName: null,
+            recipeImage: null,
+            servings: null,
+            calories: null,
+          },
+        },
+        "elsewhere",
+      ])}`,
+      'removeJobs ["gone",["recipe-1"]]',
+      'sweepPendingUploadsOf ["gone"]',
+      'sweepUserAvatars ["gone"]',
+      'deleteRecipeImagesDir ["recipe-1"]',
+      'sweepCookbookImages ["cookbook-1"]',
+      'deleteUnusedIngredientIcons [["0123456789abcdef0123456789abcdef.webp"]]',
+    ]);
+  });
+
+  it("tells no member of an erased household, but still the readers of what it held", async () => {
+    mocks.deleteAccount.mockResolvedValue({
+      ...DELETION,
+      householdErased: true,
+      successorId: null,
+      memberIds: [],
+      notes: [],
     });
 
-    await deleteUserAccount("user-1");
+    await deleteUserAccount("gone", mocks.removeJobs);
 
-    expect(order).toEqual(["transfer", "delete"]);
+    expect(mocks.householdsPublish).not.toHaveBeenCalled();
+    expect(mocks.recipesPublish).toHaveBeenCalledOnce();
+    expect(mocks.cookbooksPublish).toHaveBeenCalledOnce();
+    expect(mocks.emitConnectionInvalidation).toHaveBeenCalledWith("gone", "account-deleted");
   });
 
-  it("lets a household with nobody left in it go with the cascade", async () => {
-    repositories.getHouseholdForUser.mockResolvedValue(household("user-1", ["user-1"]));
+  it("reports the committed deletion and runs every later step when one fails", async () => {
+    mocks.deleteUserSessions.mockRejectedValue(new Error("valkey down"));
+    mocks.householdsPublish.mockRejectedValue(new Error("publish failed"));
+    mocks.recipesPublish.mockRejectedValue(new Error("publish failed"));
 
-    await deleteUserAccount("user-1");
-
-    expect(repositories.transferHouseholdAdmin).not.toHaveBeenCalled();
-    expect(repositories.deleteUser).toHaveBeenCalledWith("user-1");
+    await expect(deleteUserAccount("gone", mocks.removeJobs)).resolves.toBeUndefined();
+    expect(mocks.emitConnectionInvalidation).toHaveBeenCalledWith("gone", "account-deleted");
+    expect(mocks.householdsPublish).toHaveBeenCalledTimes(2);
+    expect(mocks.cookbooksPublish).toHaveBeenCalledOnce();
+    expect(mocks.publishCalendarItemEvent).toHaveBeenCalledOnce();
+    expect(mocks.deleteRecipeImagesDir).toHaveBeenCalledWith("recipe-1");
+    expect(mocks.sweepUserAvatars).toHaveBeenCalledWith("gone");
   });
 
-  it("leaves a household alone when the deleted user does not administer it", async () => {
-    repositories.getHouseholdForUser.mockResolvedValue(household("user-2", ["user-1", "user-2"]));
+  it("goes on past a Valkey step that never answers, logging it", async () => {
+    const { authLogger } = await import("@norish/shared-server/logger");
+    const hang = () => new Promise<never>(() => {});
 
-    await deleteUserAccount("user-1");
+    vi.useFakeTimers();
+    try {
+      mocks.deleteUserSessions.mockImplementation(hang);
+      mocks.removeJobs.mockImplementation(hang);
+      mocks.sweepPendingUploadsOf.mockImplementation(hang);
 
-    expect(repositories.transferHouseholdAdmin).not.toHaveBeenCalled();
+      const deleted = deleteUserAccount("gone", mocks.removeJobs);
+
+      await vi.runAllTimersAsync();
+      await expect(deleted).resolves.toBeUndefined();
+      expect(mocks.sweepCookbookImages).toHaveBeenCalledWith("cookbook-1");
+      expect(authLogger.error).toHaveBeenCalledTimes(3);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
-  it("does nothing about households for a user who is in none", async () => {
-    await deleteUserAccount("user-1");
+  it("keeps the deletion when a file sweep fails, and sweeps the rest", async () => {
+    mocks.sweepUserAvatars.mockRejectedValue(new Error("disk"));
 
-    expect(repositories.transferHouseholdAdmin).not.toHaveBeenCalled();
-    expect(repositories.deleteUser).toHaveBeenCalledWith("user-1");
+    await expect(deleteUserAccount("gone", mocks.removeJobs)).resolves.toBeUndefined();
+    expect(mocks.deleteRecipeImagesDir).toHaveBeenCalledWith("recipe-1");
+    expect(mocks.sweepCookbookImages).toHaveBeenCalledWith("cookbook-1");
+  });
+
+  it("keeps every file of an account whose deletion failed", async () => {
+    mocks.deleteAccount.mockRejectedValue(new Error("connection lost"));
+
+    await expect(deleteUserAccount("gone", mocks.removeJobs)).rejects.toThrow("connection lost");
+    expect(mocks.sweepUserAvatars).not.toHaveBeenCalled();
+    expect(mocks.deleteRecipeImagesDir).not.toHaveBeenCalled();
+    expect(mocks.emitConnectionInvalidation).not.toHaveBeenCalled();
   });
 });

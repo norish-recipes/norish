@@ -83,7 +83,8 @@
   "errors": {
     "operationFailed": "Handlingen mislykkedes",
     "nameCannotBeEmpty": "Navn kan ikke være tomt",
-    "technicalDetails": "Noget gik galt. Tjek browserkonsollen for tekniske detaljer."
+    "technicalDetails": "Noget gik galt. Tjek browserkonsollen for tekniske detaljer.",
+    "noAnswer": "Serveren svarede ikke. Prøv igen."
   },
   "slots": {
     "breakfast": "Morgenmad",
@@ -261,6 +262,7 @@
       "syncing": "{count, plural, =0 {Synkroniserer} one {Synkroniserer # ændring} other {Synkroniserer # ændringer}}",
       "syncNow": "Synkroniser nu",
       "retryAll": "Prøv alle igen",
+      "otherHousehold": "Nogle ændringer blev lavet til en anden husstand. „Prøv alle igen“ sender dem til den husstand, du er i nu.",
       "discardAll": "Kassér alle",
       "discardConfirmBody": "{count, plural, one {Kassér # ændring i kø permanent? Den bliver ikke sendt.} other {Kassér # ændringer i kø permanent? De bliver ikke sendt.}}",
       "discardConfirm": "Kassér",
@@ -294,6 +296,9 @@
   "changedElsewhere": {
     "title": "Ikke gemt: det blev ændret et andet sted først"
   },
+  "lateAnswer": {
+    "title": "Serveren svarede sent: det lykkedes alligevel."
+  },
   "storageUnavailable": {
     "title": "Lager utilgængeligt",
     "description": "Norish kunne ikke læse denne iPhones nøglering.",
@@ -308,7 +313,14 @@
     "adminTransferred": "Overførte administrator til {name}",
     "unknownMember": "Ukendt",
     "removedTitle": "Fjernet fra husstanden",
-    "removedDescription": "En administrator har fjernet dig fra husstanden."
+    "removedDescription": "En administrator har fjernet dig fra husstanden.",
+    "joinRefused": {
+      "invalidCode": "Den kode er ikke gyldig.",
+      "expired": "Den kode er udløbet. Bed om en ny.",
+      "alreadyMember": "Du er allerede i denne husstand.",
+      "shared": "Forlad først din husstand for at blive medlem af en anden.",
+      "busy": "Den husstand blev ændret lige i det øjeblik. Prøv igen."
+    }
   },
   "photos": {
     "pickFailedTitle": "Kunne ikke vælge et foto",

@@ -45,6 +45,7 @@ test("a recipe image is served to a signed-in reader and a share link, never wit
 }) => {
   const id = await seedRecipe("Picture Stew");
   const { url } = await seedRecipePhoto({
+    stack: aiStack,
     recipeName: "Picture Stew",
     uploadsDir: aiStack.server.uploadsDir,
     photoPath: PHOTO,
@@ -93,6 +94,7 @@ test("a share link's page shows its images signed out", async ({ browser, aiStac
   const id = await seedRecipe("Shared Picture Stew");
 
   await seedRecipePhoto({
+    stack: aiStack,
     recipeName: "Shared Picture Stew",
     uploadsDir: aiStack.server.uploadsDir,
     photoPath: PHOTO,

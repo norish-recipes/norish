@@ -11,8 +11,11 @@ const log = createClientLogger("server-change");
 const SERVER_ADDRESS_CHANGE: Href = { pathname: "/(auth)", params: { change: "server" } };
 
 // The signed-in shell's Sign-out, mounted while it is; a change asked for opens once signed out.
-let mountedSignOut: ((onLeaving: () => void) => Promise<boolean>) | null = null;
+let mountedSignOut: ((onLeaving: () => void, serverChange: boolean) => Promise<boolean>) | null =
+  null;
 let changeAfterSignOut = false;
+// A second tap while one change is under way would be refused by the Sign-out guard and clear it.
+let changing = false;
 
 /** Changes the Server Address: Server address opens, after a confirmed Sign-out while signed in. */
 export function changeServerAddress() {
@@ -25,18 +28,22 @@ export function changeServerAddress() {
     return;
   }
 
+  if (changing) return;
+  changing = true;
+
   // Pending only once the Sign-out goes ahead, so an expiry during its confirm lands on Sign in;
   // the too-old hold goes then too, so the fresh stack opens on Server address.
   void signOut(() => {
     changeAfterSignOut = true;
     clearServerTooOld();
-  })
+  }, true)
     .catch((error: unknown) => {
       log.error({ error }, "Sign-out before a server change failed");
 
       return false;
     })
     .then((left) => {
+      changing = false;
       if (!left) changeAfterSignOut = false;
     });
 }
@@ -49,7 +56,10 @@ export function useSignOutBeforeServerChange() {
     mountedSignOut = signOut;
 
     return () => {
-      if (mountedSignOut === signOut) mountedSignOut = null;
+      if (mountedSignOut === signOut) {
+        mountedSignOut = null;
+        changing = false;
+      }
     };
   }, [signOut]);
 }

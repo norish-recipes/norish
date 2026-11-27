@@ -8,20 +8,31 @@ import {
   ActionButtonGroup,
   IconActionButton,
 } from "@/components/shared/action-button";
-import ConfirmModal from "@/components/shared/confirm-modal";
+import ConfirmModal, {
+  ModalFooter,
+  ModalFrame,
+  ModalTitle,
+} from "@/components/shared/confirm-modal";
+import { EmptyState } from "@/components/shared/empty-state";
 import { usePending } from "@/hooks/use-pending";
 import { ClipboardDocumentIcon, PauseIcon, PlayIcon } from "@heroicons/react/16/solid";
 import { ArrowTopRightOnSquareIcon, KeyIcon } from "@heroicons/react/24/outline";
 import { Chip, Input, Label, Modal, Table, TextField } from "@heroui/react";
 import { useFormatter, useTranslations } from "next-intl";
 
-import { useApiKeyMutations, useProfileQuery } from "@norish/shared-react/reader";
+import {
+  API_KEY_NAME_MAX_LENGTH,
+  apiKeyName,
+  apiKeyPrefix,
+  useApiKeyMutations,
+  useProfileQuery,
+} from "@norish/shared-react/reader";
 
 export default function ApiKeyCard() {
   const t = useTranslations("settings.user.apiKeys");
   const format = useFormatter();
   const { apiKeys } = useProfileQuery();
-  const { createApiKey, deleteApiKey, toggleApiKey } = useApiKeyMutations();
+  const { createApiKey, forgetCreatedKey, deleteApiKey, toggleApiKey } = useApiKeyMutations();
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [generatedKey, setGeneratedKey] = useState<string | null>(null);
   const [generatingKey, whileGeneratingKey] = usePending();
@@ -30,13 +41,19 @@ export default function ApiKeyCard() {
   const [newKeyName, setNewKeyName] = useState("");
   const handleGenerateKey = async () => {
     await whileGeneratingKey(() =>
-      createApiKey(newKeyName || undefined).then((key) => {
+      createApiKey(apiKeyName(newKeyName)).then((key) => {
         if (!key) return;
         setGeneratedKey(key);
         setShowTokenModal(true);
         setNewKeyName("");
       })
     );
+  };
+  // Every way the dialog closes drops the key, so a later Create cannot replace one never saved.
+  const dismissKey = () => {
+    setGeneratedKey(null);
+    forgetCreatedKey();
+    setShowTokenModal(false);
   };
   const handleCopyKey = () => {
     if (generatedKey) {
@@ -50,6 +67,7 @@ export default function ApiKeyCard() {
     setShowDeleteModal(false);
     setKeyToDelete(null);
   };
+
   return (
     <>
       <SettingsCard
@@ -69,7 +87,11 @@ export default function ApiKeyCard() {
         </a>
 
         <div className="flex flex-col gap-3">
-          <TextField value={newKeyName} onChange={setNewKeyName}>
+          <TextField
+            maxLength={API_KEY_NAME_MAX_LENGTH}
+            value={newKeyName}
+            onChange={setNewKeyName}
+          >
             <Label>{t("keyNameLabel")}</Label>
             <Input variant="secondary" placeholder={t("keyNamePlaceholder")} />
           </TextField>
@@ -101,7 +123,7 @@ export default function ApiKeyCard() {
                         <Table.Cell>{key.name || t("unnamed")}</Table.Cell>
                         <Table.Cell>
                           <code className="bg-surface-secondary rounded px-2 py-1 text-xs">
-                            {key.start || "***"}...
+                            {apiKeyPrefix(key.start)}
                           </code>
                         </Table.Cell>
                         <Table.Cell>{format.dateTime(new Date(key.createdAt))}</Table.Cell>
@@ -139,63 +161,50 @@ export default function ApiKeyCard() {
           </div>
         )}
 
-        {apiKeys.length === 0 && <p className="text-muted py-4 text-base">{t("noKeys")}</p>}
+        {apiKeys.length === 0 && <EmptyState icon={KeyIcon} title={t("noKeys")} variant="row" />}
       </SettingsCard>
 
-      <Modal.Backdrop
-        className="z-[1099]"
+      <ModalFrame
         isDismissable={false}
         isOpen={showTokenModal}
-        onOpenChange={setShowTokenModal}
+        onOpenChange={(open) => {
+          if (!open) dismissKey();
+        }}
       >
-        <Modal.Container className="z-[1100]">
-          <Modal.Dialog>
-            {({ close: onClose }) => (
-              <>
-                <Modal.Header>{t("generatedModal.title")}</Modal.Header>
-                <Modal.Body>
-                  <p className="text-warning mb-4 text-base">{t("generatedModal.warning")}</p>
-                  <div className="flex gap-2">
-                    <Input
-                      variant="secondary"
-                      readOnly
-                      className="font-mono text-xs"
-                      value={generatedKey || ""}
-                    />
-                    <IconActionButton
-                      action="duplicate"
-                      icon={ClipboardDocumentIcon}
-                      label={t("generatedModal.copyButton")}
-                      variant="primary"
-                      onPress={handleCopyKey}
-                    />
-                  </div>
-                  <p className="text-muted mt-2 text-xs">
-                    {t.rich("generatedModal.hint", {
-                      code: (chunks) => (
-                        <code className="bg-surface-secondary rounded px-1">{chunks}</code>
-                      ),
-                    })}
-                  </p>
-                </Modal.Body>
-                <Modal.Footer>
-                  <ActionButtonGroup>
-                    <ActionButton
-                      action="done"
-                      onPress={() => {
-                        setGeneratedKey(null);
-                        onClose();
-                      }}
-                    >
-                      {t("generatedModal.confirmButton")}
-                    </ActionButton>
-                  </ActionButtonGroup>
-                </Modal.Footer>
-              </>
-            )}
-          </Modal.Dialog>
-        </Modal.Container>
-      </Modal.Backdrop>
+        <>
+          <ModalTitle>{t("generatedModal.title")}</ModalTitle>
+          <Modal.Body>
+            <p className="text-warning mb-4 text-base">{t("generatedModal.warning")}</p>
+            <div className="flex gap-2">
+              <Input
+                variant="secondary"
+                readOnly
+                className="font-mono text-xs"
+                value={generatedKey || ""}
+              />
+              <IconActionButton
+                action="duplicate"
+                icon={ClipboardDocumentIcon}
+                label={t("generatedModal.copyButton")}
+                variant="primary"
+                onPress={handleCopyKey}
+              />
+            </div>
+            <p className="text-muted mt-2 text-xs">
+              {t.rich("generatedModal.hint", {
+                code: (chunks) => (
+                  <code className="bg-surface-secondary rounded px-1">{chunks}</code>
+                ),
+              })}
+            </p>
+          </Modal.Body>
+          <ModalFooter>
+            <ActionButton action="done" onPress={dismissKey}>
+              {t("generatedModal.confirmButton")}
+            </ActionButton>
+          </ModalFooter>
+        </>
+      </ModalFrame>
       <ConfirmModal
         confirm={
           <ActionButton

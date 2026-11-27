@@ -1,5 +1,7 @@
 import type { SQL } from "drizzle-orm";
-import { and, asc, count, eq, inArray, sql } from "drizzle-orm";
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
+import { and, asc, count, eq, inArray, isNotNull, ne, sql } from "drizzle-orm";
+import { QueryBuilder } from "drizzle-orm/pg-core";
 
 import type { Db, DbTransaction } from "@norish/db/drizzle";
 import type { LineJoin } from "@norish/shared/lib/line-foods";
@@ -7,7 +9,6 @@ import { db, holdLock } from "@norish/db/drizzle";
 import {
   aisleLinks,
   groceries,
-  householdUsers,
   ingredientAliases,
   ingredientNutritionCorrections,
   ingredients,
@@ -20,33 +21,63 @@ import {
 } from "@norish/db/schema";
 import { distinctFoods, joinOf } from "@norish/shared/lib/line-foods";
 
+import { isAnyOf } from "./array-params";
+import { assertOwnReferences } from "./household-rows";
+import { inCatalogue, ownBeforeSeed } from "./household-scope";
 import { moveMergedAIChanges } from "./ingredient-ai-changes";
-import { rowsNaming } from "./ingredient-catalogue";
+import { rowsNaming, spellingsSeenBy } from "./ingredient-catalogue";
+import { ancestryCte } from "./ingredient-kinds";
 import { writeRecipeLineFoodsTx } from "./ingredients";
 import { lockPantryFood } from "./pantry";
-import { uuidListSql } from "./raw-sql";
+import { rekeyNutritionSharesTx } from "./recipe-enrichment";
+
+const qb = new QueryBuilder();
 
 /**
  * What moves between Ingredients (ADR-0037): a merge, an alias move, a parent. Each takes the tree
- * lock first, inside the edit's transaction; the edit policy is the caller's.
+ * lock first, inside the edit's transaction; the rights are the caller's. Nothing moves between
+ * households, nor from the seed into a household (ADR-0042).
  */
 
 /**
- * Rows holding a fact about an Ingredient, unique on it plus one column: a Product and Aisle Link
- * per Store; a store preference, correction and Pantry row per member.
+ * Whether `targetId` is a food `sourceId` may be merged into or filed under: the seed's, or one of
+ * the source's household. A seeded food never goes into a household's.
  */
-const PANTRY_KEYED = { table: pantryIngredients, key: "user_id" } as const;
+export async function fitsInCatalogueOf(
+  tx: Db,
+  sourceId: string,
+  targetId: string
+): Promise<boolean> {
+  const rows = await tx
+    .select({ id: ingredients.id, householdId: ingredients.householdId })
+    .from(ingredients)
+    .where(inArray(ingredients.id, [sourceId, targetId]));
+  const source = rows.find((row) => row.id === sourceId);
+  const target = rows.find((row) => row.id === targetId);
+
+  return (
+    source !== undefined &&
+    target !== undefined &&
+    (target.householdId === null || target.householdId === source.householdId)
+  );
+}
+
+/**
+ * Rows holding a fact about an Ingredient, unique on it plus one column: a Product and Aisle Link
+ * per Store; a store preference, correction and Pantry row per household.
+ */
+const PANTRY_KEYED = { table: pantryIngredients, key: pantryIngredients.householdId } as const;
 const KEYED_BY_INGREDIENT = [
-  { table: storeProductLinks, key: "store_id" },
-  { table: aisleLinks, key: "store_id" },
-  { table: ingredientStorePreferences, key: "user_id" },
-  { table: ingredientNutritionCorrections, key: "user_id" },
+  { table: storeProductLinks, key: storeProductLinks.storeId },
+  { table: aisleLinks, key: aisleLinks.storeId },
+  { table: ingredientStorePreferences, key: ingredientStorePreferences.householdId },
+  { table: ingredientNutritionCorrections, key: ingredientNutritionCorrections.householdId },
   PANTRY_KEYED,
 ] as const;
 
 /**
- * Re-point the rows `which` picks out of `table` (as `p`) at `targetId`, deleting each one the
- * target already has under the table's key.
+ * Re-point the rows `which` picks out of `table` at `targetId`, deleting each one the target
+ * already has under the table's key.
  */
 async function repointKeyed(
   tx: DbTransaction,
@@ -54,26 +85,17 @@ async function repointKeyed(
   which: SQL,
   targetId: string
 ): Promise<void> {
-  const column = sql.identifier(key);
-
-  await tx.execute(sql`
-    delete from ${table} p using ${table} q
-    where ${which} and q.ingredient_id = ${targetId} and q.${column} = p.${column} and q.id <> p.id`);
-  await tx.execute(sql`update ${table} p set ingredient_id = ${targetId} where ${which}`);
-}
-
-/**
- * A merge or move can leave a household two Pantry rows for `targetId` (one per member): the oldest
- * stays, under the add's `pantry:<ingredient>` lock.
- */
-async function keepOnePantryRowPerHousehold(tx: DbTransaction, targetId: string): Promise<void> {
-  await lockPantryFood(tx, targetId);
-  await tx.execute(sql`
-    delete from ${pantryIngredients} p
-    using ${pantryIngredients} q, ${householdUsers} hp, ${householdUsers} hq
-    where p.ingredient_id = ${targetId} and q.ingredient_id = ${targetId} and p.id <> q.id
-      and hp.user_id = p.user_id and hq.user_id = q.user_id and hp.household_id = hq.household_id
-      and (q.created_at, q.id) < (p.created_at, p.id)`);
+  // The inner `table` is the target's rows: one of `which` whose key the target holds goes.
+  await tx
+    .delete(table)
+    .where(
+      and(
+        which,
+        ne(table.ingredientId, targetId),
+        inArray(key, qb.select({ key }).from(table).where(eq(table.ingredientId, targetId)))
+      )
+    );
+  await tx.update(table).set({ ingredientId: targetId }).where(which);
 }
 
 /**
@@ -89,7 +111,7 @@ export async function lockIngredients(tx: DbTransaction, ids: readonly string[])
   const rows = await tx
     .select({ id: ingredients.id })
     .from(ingredients)
-    .where(inArray(ingredients.id, [...ids]))
+    .where(isAnyOf(ingredients.id, ids, "uuid"))
     .orderBy(asc(ingredients.id))
     .for("update");
 
@@ -117,18 +139,10 @@ async function ancestorsOf(tx: Db, ids: readonly string[]): Promise<Map<string, 
 
   const answer = new Map(wanted.map((id) => [id, [] as string[]]));
 
-  const result = await tx.execute<{ start: string; ancestor: string; depth: number }>(sql`
-    with recursive up(start, ancestor, depth) as (
-      select i.id, i.parent_id, 1 from ${ingredients} i
-      where i.id in (${uuidListSql(wanted)}) and i.parent_id is not null
-      union all
-      select up.start, p.parent_id, up.depth + 1 from up
-      join ${ingredients} p on p.id = up.ancestor
-      where p.parent_id is not null and up.depth < ${MAX_DEPTH}
-    )
-    select start::text as start, ancestor::text as ancestor, depth from up order by start, depth`);
+  const walked = ancestryCte(inArray(ingredients.id, wanted), MAX_DEPTH);
+  const rows = await tx.with(walked).select().from(walked).orderBy(walked.start, walked.depth);
 
-  for (const row of result.rows) answer.get(row.start)?.push(row.ancestor);
+  for (const row of rows) answer.get(row.start)?.push(row.ancestor);
 
   return answer;
 }
@@ -147,15 +161,17 @@ export async function closesCycle(tx: Db, id: string, parentId: string): Promise
 }
 
 /**
- * Set or clear (`null`) a parent. A person's choice also marks it chosen and clears the flag; AI's
- * (`byAI`) does neither. The caller holds the tree lock and has ruled out a cycle.
+ * Set or clear (`null`) a parent of the food's own catalogue (`fitsInCatalogueOf`), else false. A
+ * person's choice also marks it chosen and clears the flag; AI's (`byAI`) does neither. The caller
+ * holds the tree lock and has ruled out a cycle.
  */
 export async function setCatalogueIngredientParent(
   tx: DbTransaction,
   id: string,
   parentId: string | null,
   { byAI = false }: { byAI?: boolean } = {}
-): Promise<void> {
+): Promise<boolean> {
+  if (parentId && !(await fitsInCatalogueOf(tx, id, parentId))) return false;
   await tx
     .update(ingredients)
     .set({
@@ -164,26 +180,48 @@ export async function setCatalogueIngredientParent(
       version: sql`${ingredients.version} + 1`,
     })
     .where(eq(ingredients.id, id));
+
+  return true;
 }
 
 /**
  * Merge source into target, locking both: spellings and rows move, links unless the target has its
- * own; its OFF id and icon fill gaps, the flag clears unless `keepFlag`. False where one is gone.
+ * own; its icon fills a gap, the flag clears unless `keepFlag`. A seeded target's row is left as it
+ * is: the household's spellings stay the household's on it. False where one is gone, or the target
+ * is neither the source's household's nor the seed's (`fitsInCatalogueOf`).
  */
 export async function mergeCatalogueIngredients(
   tx: DbTransaction,
   sourceId: string,
   targetId: string,
-  { keepFlag = false }: { keepFlag?: boolean } = {}
+  options: { keepFlag?: boolean } = {}
 ): Promise<boolean> {
   if (sourceId === targetId || !(await lockFoods(tx, [sourceId, targetId]))) return false;
+  if (!(await fitsInCatalogueOf(tx, sourceId, targetId))) return false;
+  await mergeLockedFoods(tx, sourceId, targetId, options);
 
+  return true;
+}
+
+/** The merge itself, both foods locked; the caller has checked where they may go. */
+export async function mergeLockedFoods(
+  tx: DbTransaction,
+  sourceId: string,
+  targetId: string,
+  { keepFlag = false }: { keepFlag?: boolean }
+): Promise<void> {
   // Where the target sat under the source it first moves up to the source's parent, so the children
   // re-parented onto it can never close a cycle.
   if ((await ancestorsOf(tx, [targetId])).get(targetId)?.includes(sourceId)) {
-    await tx.execute(sql`
-      update ${ingredients} set parent_id = (select parent_id from ${ingredients} where id = ${sourceId})
-      where id = ${targetId}`);
+    const [source] = await tx
+      .select({ parentId: ingredients.parentId })
+      .from(ingredients)
+      .where(eq(ingredients.id, sourceId));
+
+    await tx
+      .update(ingredients)
+      .set({ parentId: source?.parentId ?? null })
+      .where(eq(ingredients.id, targetId));
   }
   await tx
     .update(ingredients)
@@ -191,62 +229,107 @@ export async function mergeCatalogueIngredients(
     .where(eq(ingredients.parentId, sourceId));
   await moveMergedAIChanges(tx, sourceId, targetId);
 
+  // Under the add's `pantry:<ingredient>` lock, so a Pantry add of the target waits for the move.
+  await lockPantryFood(tx, targetId);
   for (const keyed of KEYED_BY_INGREDIENT) {
-    await repointKeyed(tx, keyed, sql`p.ingredient_id = ${sourceId}`, targetId);
+    await repointKeyed(tx, keyed, eq(keyed.table.ingredientId, sourceId), targetId);
   }
-  await keepOnePantryRowPerHousehold(tx, targetId);
   for (const table of [groceries, recurringGroceries]) {
     await tx.update(table).set({ ingredientId: targetId }).where(eq(table.ingredientId, sourceId));
   }
+  await rekeyNutritionSharesTx(tx, recipesNaming(sourceId), new Map([[sourceId, targetId]]));
   await tx
     .update(ingredientAliases)
     .set({ ingredientId: targetId, updatedAt: new Date() })
     .where(eq(ingredientAliases.ingredientId, sourceId));
-  // A person's merge settles the target's flag. A source hands on its Open Food Facts id
-  // and icon where the target has none, so the nightly seed keeps finding the food.
+  // A person's merge settles the target's flag. A source hands on its icon where the target has
+  // none; a seeded source only ever joins a seeded target, which keeps its own Open Food Facts id.
   const [gone] = await tx
     .delete(ingredients)
     .where(eq(ingredients.id, sourceId))
-    .returning({ offId: ingredients.offId, icon: ingredients.icon });
+    .returning({ icon: ingredients.icon });
 
-  await tx.execute(sql`update ${ingredients} set version = version + 1,
-      ${keepFlag ? sql`` : sql`flagged = false, flag_reason = null,`}
-      off_id = coalesce(off_id, ${gone?.offId ?? null}),
-      icon = coalesce(icon, ${gone?.icon ?? null})
-    where id = ${targetId}`);
-
-  return true;
+  await tx
+    .update(ingredients)
+    .set({
+      version: sql`${ingredients.version} + 1`,
+      ...(keepFlag ? {} : { flagged: false, flagReason: null }),
+      icon: sql`coalesce(${ingredients.icon}, ${gone?.icon ?? null})`,
+    })
+    .where(and(eq(ingredients.id, targetId), isNotNull(ingredients.householdId)));
 }
 
-/** How many spellings an Ingredient has. */
-export async function countAliasesOf(tx: DbTransaction, ingredientId: string): Promise<number> {
+/** The recipes with a line naming one of the food's spellings. */
+function recipesNaming(food: string) {
+  return qb
+    .selectDistinct({ id: recipeIngredients.recipeId })
+    .from(recipeIngredients)
+    .innerJoin(
+      recipeIngredientFoods,
+      eq(recipeIngredientFoods.recipeIngredientId, recipeIngredients.id)
+    )
+    .where(rowsNaming(food).lineFoods);
+}
+
+/** How many spellings of an Ingredient the rows of a spelling of `householdId` (null: the seed's) may move to. */
+export async function countAliasesOf(
+  tx: DbTransaction,
+  ingredientId: string,
+  householdId: string | null
+): Promise<number> {
   const [{ value } = { value: 0 }] = await tx
     .select({ value: count() })
     .from(ingredientAliases)
-    .where(eq(ingredientAliases.ingredientId, ingredientId));
+    .where(and(eq(ingredientAliases.ingredientId, ingredientId), spellingsSeenBy(householdId)));
 
   return value;
 }
 
 /**
- * A new Ingredient named for a spelling moved out to it, by a person or AI's split. Its
- * name is unique, so one another Ingredient goes by throws a unique violation.
+ * A household's new Ingredient named for a spelling moved out to it, by a person or AI's split. Its
+ * name is unique in the household, so one another of its Ingredients goes by throws a unique violation.
  */
 export async function insertCatalogueIngredient(
   tx: DbTransaction,
-  values: Pick<typeof ingredients.$inferInsert, "name" | "ownerId" | "flagged" | "flagReason">
+  values: Pick<
+    typeof ingredients.$inferInsert,
+    "name" | "ownerId" | "flagged" | "flagReason" | "addedByHand" | "nameChosen" | "nameSettled"
+  > & {
+    householdId: string;
+  }
 ): Promise<string> {
   const [row] = await tx.insert(ingredients).values(values).returning({ id: ingredients.id });
 
   return row!.id;
 }
 
-/** The food that goes by `name` in any case, locked, or null. */
-export async function lockIngredientNamed(tx: DbTransaction, name: string): Promise<string | null> {
+/** Two food names that are one name, case aside, as the unique name index reads them. */
+export function sameFoodName(name: AnyPgColumn, other: AnyPgColumn | string): SQL {
+  return eq(sql`lower(${name})`, sql`lower(${other})`);
+}
+
+/**
+ * The household's (else the seed's; null: the seed's alone) food that goes by `name` in any case,
+ * other than `exceptId`, locked.
+ */
+export async function lockIngredientNamed(
+  tx: DbTransaction,
+  householdId: string | null,
+  name: string,
+  exceptId?: string
+): Promise<string | null> {
   const [row] = await tx
     .select({ id: ingredients.id })
     .from(ingredients)
-    .where(eq(sql`lower(${ingredients.name})`, sql`lower(${name})`))
+    .where(
+      and(
+        sameFoodName(ingredients.name, name),
+        inCatalogue(ingredients.householdId, householdId),
+        exceptId ? ne(ingredients.id, exceptId) : undefined
+      )
+    )
+    .orderBy(ownBeforeSeed(ingredients.householdId))
+    .limit(1)
     .for("update");
 
   return row?.id ?? null;
@@ -265,8 +348,8 @@ export async function moveCatalogueAlias(
     .update(ingredientAliases)
     .set({ ingredientId: targetId, updatedAt: new Date() })
     .where(eq(ingredientAliases.id, aliasId));
-  await repointKeyed(tx, PANTRY_KEYED, sql`p.ingredient_alias_id = ${aliasId}`, targetId);
-  await keepOnePantryRowPerHousehold(tx, targetId);
+  await lockPantryFood(tx, targetId);
+  await repointKeyed(tx, PANTRY_KEYED, eq(pantryIngredients.ingredientAliasId, aliasId), targetId);
   for (const table of [groceries, recurringGroceries]) {
     await tx
       .update(table)
@@ -361,24 +444,36 @@ export async function splitCatalogueIngredient(
   }
 
   const keepers = await tx
-    .select({ userId: pantryIngredients.userId })
+    .select({ householdId: pantryIngredients.householdId, userId: pantryIngredients.userId })
     .from(pantryIngredients)
     .where(eq(pantryIngredients.ingredientId, sourceId));
 
+  for (const householdId of new Set(keepers.map((keeper) => keeper.householdId))) {
+    await assertOwnReferences(householdId, partFoods(parts), tx);
+  }
   for (const part of keepers.length > 0 ? parts : []) {
+    await lockPantryFood(tx, part.ingredientId);
     await tx
       .insert(pantryIngredients)
       .values(
-        keepers.map(({ userId }) => ({
+        keepers.map(({ householdId, userId }) => ({
+          householdId,
           userId,
           ingredientId: part.ingredientId,
           ingredientAliasId: part.aliasId,
         }))
       )
       .onConflictDoNothing();
-    await keepOnePantryRowPerHousehold(tx, part.ingredientId);
   }
   await tx.delete(ingredients).where(eq(ingredients.id, sourceId));
+}
+
+/** The foods and spellings parts name, for `assertOwnReferences`. */
+function partFoods(parts: ReadonlyArray<{ aliasId: string | null; ingredientId: string | null }>) {
+  return {
+    ingredientIds: parts.map((part) => part.ingredientId),
+    ingredientAliasIds: parts.map((part) => part.aliasId),
+  };
 }
 
 /** A food a Grocery names, and the name it goes by there. */
@@ -399,6 +494,7 @@ export async function writeGroceryParts(
   rows: ReadonlyArray<{ id: string; name: string | null; parts: readonly GroceryPart[] }>
 ): Promise<void> {
   const table = kind === "groceries" ? groceries : recurringGroceries;
+  const named = new Map<string, GroceryPart[]>();
   const columns = (part: GroceryPart) => ({
     name: part.name,
     ingredientAliasId: part.aliasId,
@@ -418,6 +514,7 @@ export async function writeGroceryParts(
       .returning();
 
     if (!row) continue;
+    named.set(row.householdId, [...(named.get(row.householdId) ?? []), first, ...rest]);
     const { id: _id, version: _version, ...copy } = row;
 
     // ponytail: a copy of a recurring grocery's row recurs with neither; link them if it matters.
@@ -429,4 +526,6 @@ export async function writeGroceryParts(
       });
     }
   }
+  for (const [householdId, parts] of named)
+    await assertOwnReferences(householdId, partFoods(parts), tx);
 }

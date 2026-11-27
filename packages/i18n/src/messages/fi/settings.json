@@ -8,7 +8,7 @@
     "household": "Kotitalous",
     "caldav": "CalDAV",
     "admin": "Ylläpito",
-    "ingredients": "Ainesosat"
+    "content": "Sisältö"
   },
   "user": {
     "signInMethods": {
@@ -76,13 +76,15 @@
         "warning": "Tallenna tämä avain nyt! Et näe sitä enää uudelleen. Tallennamme vain tiivisteen emmekä voi palauttaa tätä avainta.",
         "hint": "Käytä tätä avainta <code>x-api-key</code>-otsakkeessa API-pyyntöjä tehdessäsi.",
         "confirmButton": "Olen tallentanut sen",
-        "copyButton": "Kopioi avain"
+        "copyButton": "Kopioi avain",
+        "copied": "Avain kopioitu"
       },
       "deleteModal": {
         "title": "Poista API-avain",
         "message": "Haluatko varmasti poistaa tämän API-avaimen? Kaikki sitä käyttävät sovellukset menettävät pääsyn välittömästi. Tätä ei voi kumota.",
         "confirmButton": "Poista avain"
-      }
+      },
+      "createNoAnswer": "Palvelin ei vastannut. Avain on ehkä luotu: tarkista avaimesi."
     },
     "archiveImport": {
       "title": "Tuo reseptiarkisto",
@@ -134,9 +136,9 @@
       "deleteModal": {
         "title": "Poista tili",
         "permanentWarning": "Tämä toiminto on pysyvä eikä sitä voi kumota!",
-        "dataWarning": "Henkilökohtaiset tietosi, mukaan lukien ostokset, kalenterimerkinnät ja muistiinpanot, poistetaan pysyvästi.",
-        "recipesNote": "Luomasi reseptit säilyvät, mutta niitä ei enää liitetä tiliisi.",
-        "adminNote": "Jos olet sellaisen kotitalouden ylläpitäjä, jossa on muita jäseniä, sinun on ensin siirrettävä ylläpito-oikeudet.",
+        "dataWarning": "Reseptisi ja keittokirjasi poistetaan, samoin arviosi, suosikkisi, allergiasi, asetuksesi, API-avaimesi, jakolinkkisi, CalDAV ja sivustotunnukset.",
+        "recipesNote": "Kotitaloutesi säilyttää ostoksensa, kauppansa, ruokakomeronsa ja ateriasuunnitelmansa. Suunnitelmassa olevat reseptisi jäävät sinne muistiinpanoina.",
+        "adminNote": "Jos olet kotitalouden ylläpitäjä, pisimpään mukana ollut jäsen jatkaa ylläpitäjänä. Jos olet sen viimeinen jäsen, kotitalous poistetaan kaikkine sisältöineen.",
         "confirmButton": "Poista tilini"
       }
     },
@@ -228,6 +230,7 @@
       "revokeModal": {
         "title": "Mitätöi linkki",
         "message": "Tämä reseptin {recipeName} linkki lakkaa toimimasta, kunnes otat sen uudelleen käyttöön.",
+        "finalMessage": "Tämä reseptin {recipeName} linkki lakkaa toimimasta, etkä voi ottaa sitä uudelleen käyttöön.",
         "confirm": "Mitätöi"
       },
       "reactivateModal": {
@@ -247,11 +250,13 @@
       "yourRole": "Roolisi",
       "admin": "Ylläpitäjä",
       "member": "Jäsen",
+      "justYou": "Kotitaloutesi (vain sinä)",
       "members": "Jäsenet",
       "leaveButton": "Poistu kotitaloudesta",
       "leaveModal": {
         "title": "Poistu kotitaloudesta",
         "confirmMessage": "Haluatko varmasti poistua kotitaloudesta {name}?",
+        "goesAndStays": "Reseptisi ja keittokirjasi lähtevät mukaasi tunnisteineen ja aineksineen. Ostokset, ruokakomero, ateriasuunnitelma ja kaupat jäävät kotitaloudelle.",
         "adminWarning": "Olet ylläpitäjä. Sinun on siirrettävä ylläpito-oikeudet ennen poistumista.",
         "confirmButton": "Poistu kotitaloudesta"
       }
@@ -269,7 +274,7 @@
       "kickModal": {
         "title": "Poista käyttäjä",
         "confirmMessage": "Haluatko varmasti poistaa käyttäjän {name} kotitaloudesta?",
-        "warning": "Hän menettää pääsyn kaikkiin jaettuihin resepteihin, ostoksiin ja kalenterimerkintöihin.",
+        "warning": "Hänen reseptinsä ja keittokirjansa lähtevät mukana tunnisteineen ja aineksineen. Ostokset, ruokakomero, ateriasuunnitelma ja kaupat jäävät kotitaloudelle.",
         "confirmButton": "Poista käyttäjä"
       },
       "transferModal": {
@@ -293,18 +298,11 @@
       "copyFailed": "Liittymiskoodin kopiointi epäonnistui",
       "copyButton": "Kopioi liittymiskoodi"
     },
-    "create": {
-      "title": "Luo kotitalous",
-      "description": "Luo uusi kotitalous jakaaksesi reseptejä ja ostoksia perheen tai ystävien kanssa.",
-      "nameLabel": "Kotitalouden nimi",
-      "namePlaceholder": "esim. Perhe Virtanen",
-      "submitButton": "Luo kotitalous"
-    },
     "join": {
       "title": "Liity kotitalouteen",
-      "description": "Anna liittymiskoodi liittyäksesi olemassa olevaan kotitalouteen.",
+      "description": "Anna liittymiskoodi liittyäksesi olemassa olevaan kotitalouteen. Kotitaloutesi yhdistetään siihen: reseptisi, ostokset, ruokakomero, ateriasuunnitelma ja kaupat tulevat mukaan.",
       "codeLabel": "Liittymiskoodi",
-      "codePlaceholder": "8-merkkinen koodi",
+      "codePlaceholder": "6-numeroinen koodi",
       "submitButton": "Liity kotitalouteen"
     }
   },
@@ -392,7 +390,9 @@
   },
   "ingredients": {
     "title": "Ainesosat",
-    "description": "Ainesosaluettelo, jonka avulla Norish määrittää ravintosisällön, ainesosien kuvakkeet ja käännökset.",
+    "sheetTitle": "Ainesosa",
+    "loadFailed": "Ainesosaa ei voitu ladata",
+    "loadOffline": "Tämä ainesosa tarvitsee yhteyden",
     "search": "Hae ainesosia",
     "searchMatch": "Vastaavuus",
     "searchIn": "Hae kohteesta",
@@ -416,7 +416,6 @@
       "seed-ambiguous": "Luettelo tuntee useita ainesosia, joita tämä voisi olla.",
       "ai-junk": "Tekoäly arveli, ettei tämä ole ainesosa, vaan esimerkiksi keittiöväline tai reseptirivin katkelma."
     },
-    "empty": "Ainesosia ei löytynyt",
     "emptyFlagged": "Mitään ei ole merkitty",
     "rename": "Nimeä uudelleen",
     "delete": "Poista",
@@ -428,8 +427,8 @@
       "pantry": "{count, plural, one {# ruokakomeron tuote poistetaan} other {# ruokakomeron tuotetta poistetaan}}"
     },
     "markDistinct": "Merkitse erilliseksi",
-    "summary": "{spellings, plural, one {# käännös} other {# käännöstä}}{kinds, plural, =0 {} one {, # laji} other {, # lajia}}{parent, select, none {} other {, yläkäsite: {parent}}}",
-    "addAlias": "Lisää käännös",
+    "summary": "{spellings, plural, one {# kirjoitusasu} other {# kirjoitusasua}}{kinds, plural, =0 {} one {, # laji} other {, # lajia}}{parent, select, none {} other {, yläkäsite: {parent}}}",
+    "addAlias": "Lisää kirjoitusasu",
     "removeAlias": "Poista {alias}",
     "mergeInto": "Yhdistä…",
     "merge": "Yhdistä",
@@ -449,15 +448,17 @@
     "clearParent": "Poista yläkäsite",
     "nameSection": "Nimi",
     "parentSection": "Yläkäsite",
-    "spellingsSection": "Käännökset",
+    "spellingsSection": "Kirjoitusasut",
     "shownAs": "Näytetään sinulle nimellä {name}",
     "changeParent": "Vaihda yläkäsite…",
-    "spellingsCount": "{count, plural, one {# käännös} other {# käännöstä}}",
+    "spellingsCount": "{count, plural, one {# kirjoitusasu} other {# kirjoitusasua}}",
     "dataSources": {
       "title": "Tietolähteet",
       "notice": "Ainesosaluettelo perustuu <off>Open Food Factsin</off> ainesosataksonomiaan, joka on saatavilla <odbl>Open Database License (ODbL)</odbl> -lisenssillä. Norishin siitä rakentama luettelo tarjotaan samalla lisenssillä.",
       "nutritionNotice": "Ravintoarvot 100 g:ssa tulevat lähteistä <ciqual>CIQUAL 2025</ciqual> ja CALNUT (ANSES), <usda>USDA FoodData Central</usda> ja <cofid>CoFID</cofid>, yhdistettyinä koodeilla, jotka Open Food Facts antaa kullekin ainekselle. Kotitalouden korjaukset ovat sen omia arvoja, eivät tietoaineistojen.",
-      "download": "Lataa ainesosaluettelo (JSON)"
+      "download": "Lataa ainesosaluettelo (JSON)",
+      "downloadOffline": "Voit ladata luettelon, kun olet verkossa.",
+      "downloadFailed": "Luetteloa ei voitu ladata."
     },
     "nutrition": {
       "section": "Ravintoarvot",
@@ -509,6 +510,7 @@
           "hundredMl": "100 ml painaa (g)"
         }
       },
+      "overHundred": "Rasvaa, hiilihydraatteja ja proteiinia voi olla enintään 100 g 100 grammassa.",
       "searchFood": "Hae tietoaineistoista (englanniksi), esimerkiksi milk semi-skimmed",
       "foodHint": "Kirjoita muutama sana nimestä",
       "searchingFoods": "Haetaan…",
@@ -556,7 +558,6 @@
       "done": "tehty",
       "repeats": "toistuu",
       "pantry": "Ruokavarastossa",
-      "elsewhere": "{count, plural, one {# käyttö lisää} other {# käyttöä lisää}} resepteissä tai listoissa, joita et voi avata",
       "none": "Mikään ei enää käytä sitä"
     },
     "keepAlias": "Säilytä {alias}",
@@ -573,6 +574,7 @@
     "changedByAI": {
       "title": "Tekoälyn muutokset",
       "open": "{count, plural, =0 {Tekoälyn muutokset} other {Tekoälyn muutokset · # tarkistettavaa}}",
+      "openCompact": "{count, plural, =0 {Tekoälyn muutokset} other {# tarkistettavaa}}",
       "unsure": "Ei varma",
       "sure": "Muutettu",
       "empty": "Tekoäly ei ole muuttanut mitään viimeisen kuukauden aikana.",
@@ -587,7 +589,8 @@
       "plainName": "Nimetty uudelleen, oli {from}",
       "notAFood": "Poistettu, koska se ei ole ainesosa. Reseptirivit ja ostokset säilyttävät tekstinsä.",
       "spellingRemoved": "Käännös {from} poistettu",
-      "spellingMoved": "Käännös {from} siirretty kohteeseen {of}"
+      "spellingMoved": "Käännös {from} siirretty kohteeseen {of}",
+      "toCheck": "{count, plural, other {# tarkistettavaa}}"
     },
     "icon": {
       "change": "Vaihda kuvake",
@@ -596,13 +599,16 @@
       "failed": "Kuvasta ei voitu tehdä kuvaketta.",
       "generate": "Luo tekoälyllä",
       "generateFailed": "Kuvaketta ei voitu luoda."
-    }
+    },
+    "keepDistinct": "Pidä erillisenä",
+    "offline": "Voit muuttaa tätä ainesosaa, kun olet verkossa."
   },
   "admin": {
     "shareLinks": {
       "title": "Reseptien jakojen valvonta",
       "description": "Tarkastele palvelimen julkisia reseptilinkkejä ja valvo niiden elinkaarta.",
       "empty": "Jakolinkkejä ei löytynyt.",
+      "inactive": "Ei käytössä",
       "table": {
         "recipe": "RESEPTI",
         "owner": "OMISTAJA",
@@ -614,6 +620,7 @@
       "revokeModal": {
         "title": "Mitätöi linkki",
         "message": "Tämä reseptin {recipeName} linkki lakkaa toimimasta, kunnes se otetaan uudelleen käyttöön.",
+        "finalMessage": "Tämä reseptin {recipeName} linkki lakkaa toimimasta, eikä sitä voi ottaa uudelleen käyttöön.",
         "confirm": "Mitätöi"
       },
       "reactivateModal": {
@@ -635,12 +642,7 @@
       "localesDescription": "Valitse, mistä kielistä käyttäjät voivat valita",
       "defaultLocale": "Oletuskieli",
       "defaultLocaleDescription": "Uusien käyttäjien kieli ja varakieli",
-      "atLeastOneLocale": "Vähintään yhden kielen on oltava käytössä",
-      "export": {
-        "title": "Reseptiarkisto",
-        "description": "Lataa kaikki tämän palvelimen reseptit.",
-        "button": "Vie reseptiarkisto"
-      }
+      "atLeastOneLocale": "Vähintään yhden kielen on oltava käytössä"
     },
     "users": {
       "title": "Käyttäjät",
@@ -656,7 +658,6 @@
         "owner": "Omistaja",
         "admin": "Ylläpitäjä"
       },
-      "noHousehold": "Ei kotitaloutta",
       "loading": "Ladataan käyttäjiä…",
       "empty": "Ei vielä käyttäjiä.",
       "loadFailed": "Käyttäjälistaa ei voitu ladata.",
@@ -676,9 +677,8 @@
     },
     "permissions": {
       "title": "Oikeudet",
-      "description": "Kuka saa nähdä ja muuttaa muiden tekemää. Palvelimen ylläpitäjillä on aina täydet oikeudet.",
+      "description": "Kuka kotitalouden ulkopuolelta saa nähdä ja muuttaa sen reseptejä ja keittokirjoja. Palvelimen ylläpitäjiä koskevat samat säännöt.",
       "recipes": "Reseptit",
-      "ingredients": "Ruoka-aineet",
       "viewRecipes": "Reseptien katselu",
       "viewDescription": "Kuka näkee reseptit etusivulla",
       "editRecipes": "Reseptien muokkaus",
@@ -689,26 +689,9 @@
         "everyone": "Kaikki",
         "everyoneDescription": "Kaikki kirjautuneet käyttäjät",
         "household": "Kotitalous",
-        "householdDescription": "Reseptin omistaja ja hänen kotitaloutensa jäsenet",
-        "owner": "Vain omistaja",
-        "ownerDescription": "Vain reseptin omistaja"
+        "householdDescription": "Reseptin omistaja ja hänen kotitaloutensa jäsenet"
       },
       "note": "Ostokset ja kalenterimerkinnät noudattavat aina kotitalouden sääntöjä: kotitalouden jäsenet voivat muokata tai poistaa toistensa merkintöjä."
-    },
-    "ingredientPermissions": {
-      "title": "Ainesosien oikeudet",
-      "description": "Kuka saa nimetä ainesosia uudelleen, merkitä ne erillisiksi tai poistaa niiden käännöksiä. Kuka tahansa voi lisätä käännöksen.",
-      "editIngredients": "Muokkaa ainesosia",
-      "editDescription": "Kuka voi muuttaa jonkun toisen lisäämää ainesosaa",
-      "levels": {
-        "everyone": "Kaikki",
-        "everyoneDescription": "Kaikki kirjautuneet käyttäjät",
-        "household": "Kotitalous",
-        "householdDescription": "Lisääjä ja hänen kotitaloutensa jäsenet",
-        "owner": "Vain omistaja",
-        "ownerDescription": "Vain lisääjä"
-      },
-      "note": "Sisäänrakennetun luettelon ainesosia voivat muokata vain palvelimen ylläpitäjät."
     },
     "system": {
       "title": "Järjestelmäasetukset",
@@ -720,6 +703,12 @@
         "restartLabel": "Käynnistä palvelin uudelleen",
         "restartDescription": "Ota käyttöön asetusmuutokset, jotka vaativat uudelleenkäynnistyksen",
         "restartButton": "Käynnistä palvelin uudelleen"
+      },
+      "masterKey": {
+        "label": "Vaihda pääavain",
+        "description": "Salaa kaikki uudella avaimella ja poista vanha käytöstä",
+        "button": "Vaihda pääavain",
+        "pinned": "<code>MASTER_KEY</code> on asetettu, joten vaihda se siellä: siirrä nykyinen avain muuttujaan <code>MASTER_KEY_PREVIOUS</code>, aseta uusi <code>MASTER_KEY</code> ja käynnistä uudelleen."
       }
     },
     "restart": {
@@ -730,6 +719,13 @@
       "warning2": "Palvelin ei ole käytettävissä muutamaan sekuntiin",
       "warning3": "Varmista, että asennuksessasi on määritetty <code>restart: always</code>, muuten palvelin ei käynnisty automaattisesti takaisin",
       "confirmButton": "Käynnistä uudelleen"
+    },
+    "rotateMasterKey": {
+      "title": "Vaihda pääavain",
+      "confirmMessage": "Palvelin kirjoittaa uuden pääavaimen ja käynnistyy uudelleen. Käynnistyessään se salaa kaiken uudella avaimella.",
+      "sessions": "Kaikki istunnot päättyvät, myös omasi, joten kaikkien on kirjauduttava uudelleen",
+      "shareLinks": "Ennen versiota 0.28 luodut jakolinkit lakkaavat toimimasta, ja ne voi vain poistaa",
+      "confirmButton": "Vaihda"
     },
     "authProviders": {
       "title": "Kirjautumistavat",
@@ -862,10 +858,6 @@
       "prompts": {
         "title": "Kehotteet",
         "subtitle": "Mukauta tekoälyn ohjeita reseptien käsittelyyn"
-      },
-      "cuisines": {
-        "title": "Ruokakulttuurit",
-        "subtitle": "Sanasto, josta reseptit ja tekoäly valitsevat"
       },
       "bulkEnrichment": {
         "title": "Joukkorikastus",
@@ -1311,17 +1303,6 @@
       },
       "pagination": "Sivu {current} / {total}"
     },
-    "cuisineVocabulary": {
-      "description": "Ruokakulttuurit ovat sinun ylläpitämäsi sanasto. Nimet näytetään täsmälleen sellaisina kuin ne on tähän kirjoitettu, kaikilla kielillä.",
-      "namePlaceholder": "Ruokakulttuurin nimi",
-      "addLabel": "Lisää ruokakulttuuri",
-      "renameLabel": "Nimeä {name} uudelleen",
-      "deleteLabel": "Poista {name}",
-      "deleteConfirm": "Poistetaanko \"{name}\"? Sitä käyttävät reseptit menettävät sen.",
-      "empty": "Ei vielä ruokakulttuureita.",
-      "duplicate": "Samanniminen ruokakulttuuri on jo olemassa.",
-      "saveFailed": "Ruokakulttuuria ei voitu tallentaa."
-    },
     "toasts": {
       "localesSaved": "Kieliasetukset tallennettu",
       "localesError": "Kieliasetusten tallennus epäonnistui",
@@ -1335,8 +1316,122 @@
     "errors": {
       "failedTitle": "Vienti epäonnistui",
       "failedDescription": "Reseptiarkistoa ei voitu ladata. Yritä uudelleen.",
-      "signedOut": "Istuntosi on vanhentunut. Kirjaudu uudelleen sisään viedäksesi.",
-      "notAllowed": "Sinulla ei ole oikeutta viedä tätä."
+      "signedOut": "Istuntosi on vanhentunut. Kirjaudu uudelleen sisään viedäksesi."
+    }
+  },
+  "mobile": {
+    "connections": "Yhteydet",
+    "app": "Sovellus",
+    "server": "Palvelin",
+    "support": "Tuki",
+    "changeServer": {
+      "title": "Vaihdetaanko palvelinta?",
+      "description": "Sinut kirjataan ulos tältä palvelimelta.",
+      "action": "Vaihda palvelinta"
+    },
+    "versionServer": "Palvelin {server}",
+    "offlineReason": "Offline · muutokset ovat tauolla",
+    "avatarHint": "Vaihda kuva napauttamalla sitä",
+    "changePhoto": "Vaihda kuva",
+    "accountGroup": "Tilisi",
+    "phonesGroup": "Puhelimissa"
+  },
+  "content": {
+    "ariaLabel": "Sisältö",
+    "listPicker": "Luettelo",
+    "lists": {
+      "tags": "Tunnisteet",
+      "cuisines": "Ruokakulttuurit",
+      "categories": "Luokat",
+      "ingredients": "Ainesosat"
+    },
+    "search": {
+      "tags": "Hae tunnisteita",
+      "cuisines": "Hae ruokakulttuureja",
+      "categories": "Hae luokkia"
+    },
+    "show": "Näytä",
+    "all": "Kaikki",
+    "unused": "Käyttämättömät",
+    "recipes": "{count, plural, =0 {Ei käytössä} one {# resepti} other {# reseptiä}}",
+    "sections": {
+      "ownCuisines": "Omat ruokakulttuurisi",
+      "ownCategories": "Omat luokkasi",
+      "server": "Palvelimeltasi",
+      "builtIn": "Sisäänrakennetut"
+    },
+    "help": {
+      "server": "Palvelimesi ylläpitäjä hallinnoi näitä kaikille kotitalouksille",
+      "serverAdmin": "Kaikille tämän palvelimen kotitalouksille tarjotaan nämä. Ylläpitäjänä hallinnoit niitä.",
+      "builtIn": "Sisäänrakennetut luokat ovat samat jokaisella palvelimella, eikä niitä voi muuttaa"
+    },
+    "readOnly": "Vain luku",
+    "empty": {
+      "tags": "Ei vielä tunnisteita",
+      "cuisines": "Ei vielä ruokakulttuureja",
+      "categories": "Ei vielä luokkia"
+    },
+    "nothingUnused": "Mikään ei ole käyttämättä",
+    "noMatch": "Ei osumia",
+    "loadFailed": "Luetteloa ei voitu ladata",
+    "listOffline": "Tämä luettelo tarvitsee yhteyden",
+    "offline": "Voit muuttaa tätä luetteloa, kun olet verkossa.",
+    "panel": {
+      "addTitle": {
+        "tag": "Lisää tunniste",
+        "cuisine": "Lisää ruokakulttuuri",
+        "category": "Lisää luokka",
+        "ingredient": "Lisää ainesosa"
+      },
+      "editTitle": {
+        "tag": "Muokkaa tunnistetta",
+        "cuisine": "Muokkaa ruokakulttuuria",
+        "category": "Muokkaa luokkaa"
+      },
+      "server": "Palvelin",
+      "name": "Nimi",
+      "usedBy": "Käytössä",
+      "usedByOwn": "{count, plural, =0 {Ei käytössä resepteissäsi} one {# reseptistäsi} other {# reseptistäsi}}",
+      "already": {
+        "tag": "Jo tunniste",
+        "cuisine": "Jo ruokakulttuuri",
+        "category": "Jo luokka",
+        "ingredient": "Jo ainesosa"
+      },
+      "addTo": "Lisää kohteeseen",
+      "toHousehold": "Kotitaloutesi",
+      "toServer": "Kaikki tämän palvelimen kotitaloudet",
+      "serverReadOnly": "Palvelimesi ylläpitäjä hallinnoi tätä ruokakulttuuria kaikille kotitalouksille.",
+      "serverEditable": "Kaikille tämän palvelimen kotitalouksille tarjotaan tätä ruokakulttuuria.",
+      "merge": "”{target}” on jo olemassa. Yhdistäminen {count, plural, =0 {poistaa kohteen {name}} one {siirtää # reseptin kohteesta {name} siihen} other {siirtää # reseptiä kohteesta {name} siihen}}.",
+      "mergeAction": "Yhdistä",
+      "tooLong": "Nimessä voi olla enintään {max} merkkiä.",
+      "failed": "Tallennus ei onnistunut. Yritä uudelleen.",
+      "stale": "Ei tallennettu: sitä muutettiin ensin muualla"
+    },
+    "delete": {
+      "title": "Poistetaanko ”{name}”?",
+      "body": "{count, plural, =0 {Mikään resepti ei käytä sitä.} one {Se poistetaan # reseptistä. Resepti säilyy.} other {Se poistetaan # reseptistä. Reseptit säilyvät.}}",
+      "bodyServer": "{count, plural, =0 {Mikään resepti ei käytä sitä.} one {Se poistetaan # reseptistä jokaisessa tämän palvelimen kotitaloudessa. Resepti säilyy.} other {Se poistetaan # reseptistä jokaisessa tämän palvelimen kotitaloudessa. Reseptit säilyvät.}}",
+      "countFailed": "Sitä käyttävien reseptien määrää ei voitu hakea. Yritä uudelleen.",
+      "failed": "Poistaminen ei onnistunut. Yritä uudelleen.",
+      "action": {
+        "tag": "Poista tunniste",
+        "cuisine": "Poista ruokakulttuuri",
+        "category": "Poista luokka"
+      }
+    },
+    "countCell": "{count, plural, =0 {Ei käytössä} other {#}}",
+    "count": {
+      "tag": "{count, plural, one {# tunniste} other {# tunnistetta}}",
+      "ingredient": "{count, plural, one {# ainesosa} other {# ainesosaa}}"
+    },
+    "countUnused": {
+      "tag": "{count, plural, one {# käyttämätön tunniste} other {# käyttämätöntä tunnistetta}}"
+    },
+    "menu": {
+      "rename": "Nimeä uudelleen",
+      "showRecipes": "Näytä reseptit"
     }
   }
 }

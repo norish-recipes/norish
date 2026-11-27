@@ -1,19 +1,21 @@
 import React from "react";
 import { ScrollView, View } from "react-native";
+import { EmptyCard } from "@/components/empty-card";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
 import { homeIndicator } from "@/lib/home-indicator";
+import { useText } from "@/lib/i18n/use-text";
 import { tabListBottomInset } from "@/lib/tab-bar-placement";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { Skeleton, useThemeColor } from "heroui-native";
 
 import { useDevicePreference, useHiddenItemVisibility } from "@norish/shared-react/reader";
 import {
+  LoadedPageRecipe,
   useAutoConversion,
   useFavoritesMutation,
   useLoadedPageRecipe,
   useRecipeQuery,
 } from "@norish/shared-react/recipes";
-import { isNotFoundError } from "@norish/shared-react/trpc";
 
 import { CookbooksSection } from "../components/cookbooks-section";
 import { PrefetchIngredientIcons } from "../components/ingredient-icon-prefetch";
@@ -60,7 +62,10 @@ function RecipePage() {
   return (
     <TintContext value={tint}>
       {/* The page's lines and the steps' chips name the same foods, so one read covers them. */}
-      <PrefetchIngredientIcons ids={recipe.recipeIngredients.map((line) => line.ingredientId)} />
+      <PrefetchIngredientIcons
+        ids={recipe.recipeIngredients.map((line) => line.ingredientId)}
+        recipeId={recipe.id}
+      />
       <Stack.Screen
         options={{
           // The header floats over the photo: its items stay pinned, with no bar or title behind
@@ -101,21 +106,50 @@ function RecipePage() {
 export function RecipeScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { recipe, error } = useRecipeQuery(id);
+  const text = useText();
+  const { recipe, state, retry } = useRecipeQuery(id);
   const page =
-    !recipe && isNotFoundError(error) ? (
+    state === "not-found" ? (
       <RecipeNotFound />
+    ) : state === "offline" ? (
+      <View className="bg-background flex-1 justify-center">
+        <EmptyCard
+          icon="cloud-offline-outline"
+          placement="screen"
+          testID="recipe-offline"
+          title={text("recipes.detail.offline")}
+        />
+      </View>
+    ) : state === "failed" ? (
+      <View className="bg-background flex-1 justify-center">
+        <EmptyCard
+          action={{
+            label: text("common.actions.retry"),
+            icon: "refresh-outline",
+            testID: "recipe-retry",
+            onPress: retry,
+          }}
+          icon="alert-circle-outline"
+          placement="screen"
+          testID="recipe-failed"
+          title={text("common.errorPage.title")}
+        />
+      </View>
     ) : recipe ? (
-      <RecipePage key={recipe.id} />
+      <LoadedPageRecipe recipe={recipe}>
+        <RecipePage key={recipe.id} />
+      </LoadedPageRecipe>
     ) : (
       <RecipeSkeleton />
     );
 
   // Back in every state, a missing recipe too; the stack's anchor puts the list under a link.
+  // Without a recipe the page's actions go, also those a recipe shown before it left.
   return (
     <>
       <Stack.Screen
         options={{
+          ...(state === "ready" ? {} : { unstable_headerRightItems: () => [] }),
           unstable_headerLeftItems: () => [
             {
               type: "button",

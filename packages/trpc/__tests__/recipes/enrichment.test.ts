@@ -7,8 +7,13 @@ import type { RecipeEnrichmentEnrollment } from "@norish/shared/lib/recipe-enric
 import { ENRICHMENT_KINDS } from "@norish/shared/lib/recipe-enrichment";
 
 import { recipesRouter } from "../../src/routers/recipes";
-import { canAccessResource, isAIEnabled } from "../mocks/permissions";
-import { getRecipeFull, getRecipeOwnerId } from "../mocks/recipes-repository";
+import {
+  canAccessResource,
+  isAIEnabled,
+  policy,
+  resetPermissionsMocks,
+} from "../mocks/permissions";
+import { everyRecipeIn, getRecipeFull } from "../mocks/recipes-repository";
 import {
   createMockAuthedContext,
   createMockFullRecipe,
@@ -30,7 +35,7 @@ vi.mock("@norish/db", async (importOriginal) => {
   return {
     ...actual,
     getRecipeFull: recipes.getRecipeFull,
-    getRecipeOwnerId: recipes.getRecipeOwnerId,
+    getRecipeHouseholdIds: recipes.getRecipeHouseholdIds,
   };
 });
 
@@ -69,9 +74,8 @@ function queued(): RecipeEnrichmentEnrollment[] {
 
 beforeEach(() => {
   ctx = createMockAuthedContext(mockUser, mockHousehold);
-  isAIEnabled.mockResolvedValue(true);
-  canAccessResource.mockResolvedValue(true);
-  getRecipeOwnerId.mockResolvedValue(mockUser.id);
+  resetPermissionsMocks();
+  everyRecipeIn(mockHousehold.id);
   getRecipeFull.mockResolvedValue(createMockFullRecipe({ id: RECIPE_ID }));
   enrichRecipe.mockResolvedValue(queued());
   getRecipeEnrichmentStatus.mockResolvedValue({ recipeId: RECIPE_ID, kinds: [] });
@@ -106,20 +110,13 @@ describe("requestEnrichment", () => {
   });
 
   it("requires edit permission, not merely view", async () => {
-    getRecipeOwnerId.mockResolvedValue("someone-else");
-    canAccessResource.mockResolvedValue(false);
+    everyRecipeIn("another-household");
 
     await expect(
       caller().requestEnrichment({ recipeId: RECIPE_ID, kind: "auto-tagging" })
     ).rejects.toMatchObject({ code: "FORBIDDEN" });
     expect(enrichRecipe).not.toHaveBeenCalled();
-    expect(canAccessResource).toHaveBeenCalledWith(
-      "edit",
-      mockUser.id,
-      "someone-else",
-      expect.anything(),
-      expect.anything()
-    );
+    expect(canAccessResource).toHaveBeenCalledWith("edit", mockHousehold.id, "another-household");
   });
 
   it("rejects a duplicate while the same kind is already running", async () => {
@@ -185,11 +182,11 @@ describe("enrichmentStatus", () => {
   });
 
   it("does not disclose the status of a recipe the caller cannot view", async () => {
-    getRecipeOwnerId.mockResolvedValue("someone-else");
-    canAccessResource.mockResolvedValue(false);
+    policy.view = "household";
+    everyRecipeIn("another-household");
 
     await expect(caller().enrichmentStatus({ recipeId: RECIPE_ID })).rejects.toMatchObject({
-      code: "FORBIDDEN",
+      code: "NOT_FOUND",
     });
     expect(getRecipeEnrichmentStatus).not.toHaveBeenCalled();
   });

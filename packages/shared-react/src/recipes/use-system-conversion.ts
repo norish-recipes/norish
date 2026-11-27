@@ -1,19 +1,24 @@
 import { useEffect, useRef } from "react";
 
 import type { MeasurementSystem } from "@norish/shared/contracts";
+import type { PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
+import type { RecipesRealtime } from "@norish/shared/contracts/realtime/recipes";
 import {
   getMeasurementSystemPreference,
   measurementSystemTarget,
 } from "@norish/shared/lib/user-preferences";
 
 import {
-  ownerAllows,
   useHiddenItemVisibility,
   usePermissions,
+  usePreferencesSaving,
+  usePreferencesUnconfirmed,
   useProfileQuery,
   useRecipePermissions,
 } from "../reader";
-import { useRecipePageStore } from "./recipe-page-store";
+import { useRealtimeSubscription } from "../realtime";
+import { useTRPC } from "../trpc";
+import { sameConversion, useRecipePageStore, useRecipePageStoreApi } from "./recipe-page-store";
 import { useLoadedPageRecipe, useRecipeConversion } from "./use-recipe-page";
 import { useRecipeQuery } from "./use-recipe-query";
 
@@ -83,14 +88,16 @@ export function useSystemConversion(): SystemConversion {
     convertTo: (option) => {
       if (!option.withAI && option.system === currentSystem) return;
 
-      startConversion(option.system, option.withAI);
+      startConversion({ target: option.system, withAI: option.withAI }, { manual: true });
     },
   };
 }
 
-/** Converts once per opened recipe for a reader whose Preferences name a system and who may, once
- * the server's copy is in (a cached one may be stale); with AI it writes only a missing copy. */
+/** Converts once per recipe and confirmed choice (Off included), on the server's copy, with AI only
+ * for a missing copy; a pick by hand the server applied counts as acting on the next choice. */
 export function useAutoConversion() {
+  const saving = usePreferencesSaving();
+  const unconfirmed = usePreferencesUnconfirmed();
   const recipeId = useRecipePageStore((state) => state.recipeId);
   const { recipe, isFetching } = useRecipeQuery(recipeId);
   const { convertingTo, startConversion } = useRecipeConversion();
@@ -99,27 +106,72 @@ export function useAutoConversion() {
   const isAIEnabled = usePermissions((p) => p.isAIEnabled);
   const choice = getMeasurementSystemPreference(user);
   const doneForRef = useRef<string | null>(null);
+  // Whether the pick by hand that just ended was the server's own result, not a stale one.
+  const confirmedRef = useRef(false);
+  const store = useRecipePageStoreApi();
+  const manual = useRecipePageStore((state) => state.manualConversion);
+  const trpc = useTRPC();
+
+  // A pick by hand is settled by its own conversion's result alone.
+  useRealtimeSubscription<PayloadOf<RecipesRealtime, "converted">>(trpc.recipes.onConverted, {
+    onEvent: ({ recipe: settled, conversion, stale }) => {
+      const page = store.getState();
+      const asked = page.manualConversion;
+
+      if (settled.id !== recipeId || !asked || !sameConversion(asked, conversion)) return;
+      confirmedRef.current = !stale;
+      page.endManualConversion();
+    },
+  });
+
+  // A failed conversion is announced, not answered: it ends the one on its way.
+  useRealtimeSubscription<PayloadOf<RecipesRealtime, "failed">>(trpc.recipes.onFailed, {
+    onEvent: ({ recipeId: failed }) => {
+      const page = store.getState();
+
+      if (failed === recipeId && (page.conversion || page.manualConversion))
+        page.conversionFailed();
+    },
+  });
 
   useEffect(() => {
+    if (convertingTo || !recipe || isLoading || isFetching || saving || unconfirmed) return;
     const target = measurementSystemTarget(choice);
+    const doneFor = `${recipe.id}:${choice}`;
 
-    if (!recipe || !target || isLoading || isFetching || convertingTo) return;
-    if (doneForRef.current === recipe.id) return;
+    // A pick by hand the server applied stands; one it found stale does not.
+    if (manual) return;
+    if (confirmedRef.current) {
+      confirmedRef.current = false;
+      doneForRef.current = doneFor;
+
+      return;
+    }
+    if (doneForRef.current === doneFor) return;
+    if (!target) {
+      doneForRef.current = doneFor;
+
+      return;
+    }
     if (recipe.recipeIngredients.length === 0) return;
-    if (!ownerAllows(recipe.userId, canEditRecipe)) return;
+    if (!canEditRecipe(recipe.householdId)) return;
 
-    doneForRef.current = recipe.id;
+    doneForRef.current = doneFor;
     if (recipe.systemUsed === target.system) return;
 
     const hasCopy = recipe.recipeIngredients.some((line) => line.systemUsed === target.system);
 
-    startConversion(target.system, target.withAI && isAIEnabled && !hasCopy);
+    startConversion({ target: target.system, withAI: target.withAI && isAIEnabled && !hasCopy });
   }, [
     recipe,
     choice,
+    saving,
+    unconfirmed,
     isLoading,
     isFetching,
     convertingTo,
+    manual,
+    store,
     canEditRecipe,
     isAIEnabled,
     startConversion,

@@ -3,33 +3,29 @@ import {
   getUserRatingWithVersion,
   rateRecipe,
 } from "@norish/db/repositories/ratings";
-import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import { accountAudience, recipeAudience } from "@norish/shared-server/realtime/audience";
 import { ratings } from "@norish/shared-server/realtime/ratings";
 import { RatingGetInputSchema, RatingInputSchema } from "@norish/shared/contracts/zod";
 
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
+import { assertRecipeAccess, canViewRecipe } from "../recipes/helpers";
 
 interface UserContext {
   user: { id: string };
-  householdKey: string;
 }
 
-async function emitRatingFailed(ctx: UserContext, recipeId: string, reason: string): Promise<void> {
-  const policy = await getRecipePermissionPolicy();
-
-  void ratings.publish(
-    "ratingFailed",
-    { recipeId, reason },
-    { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
-  );
+/** Rating events reach the recipe's own household now, or the actor's once it is gone. */
+async function ratingAudience(ctx: UserContext, recipeId: string) {
+  return (await recipeAudience(recipeId)) ?? (await accountAudience(ctx.user.id));
 }
 
-const rate = authedProcedure.input(RatingInputSchema).mutation(({ ctx, input }) => {
+const rate = authedProcedure.input(RatingInputSchema).mutation(async ({ ctx, input }) => {
   const { recipeId, rating, version } = input;
 
   log.debug({ userId: ctx.user.id, recipeId, rating }, "Rating recipe");
+  await assertRecipeAccess(ctx, recipeId, "view");
 
   rateRecipe(ctx.user.id, recipeId, rating, version)
     .then(async (result) => {
@@ -40,24 +36,31 @@ const rate = authedProcedure.input(RatingInputSchema).mutation(({ ctx, input }) 
       }
 
       const stats = await getAverageRating(recipeId);
-      const policy = await getRecipePermissionPolicy();
 
       log.info(
         { userId: ctx.user.id, recipeId, rating, isNew: result.isNew },
         rating === null ? "Recipe rating removed" : "Recipe rated"
       );
 
-      void ratings.publish(
-        "ratingUpdated",
-        { recipeId, averageRating: stats.averageRating, ratingCount: stats.ratingCount },
-        { viewPolicy: policy.view, userId: ctx.user.id, householdKey: ctx.householdKey }
-      );
+      const audience = await ratingAudience(ctx, recipeId);
+
+      if (audience) {
+        void ratings.publish(
+          "ratingUpdated",
+          { recipeId, averageRating: stats.averageRating, ratingCount: stats.ratingCount },
+          audience
+        );
+      }
     })
     .catch((err) => {
       const error = err as Error;
 
       log.error({ err: error, userId: ctx.user.id, recipeId }, "Failed to rate recipe");
-      emitRatingFailed(ctx, recipeId, error.message || "Failed to rate recipe");
+      void ratings.publish(
+        "ratingFailed",
+        { recipeId, reason: error.message || "Failed to rate recipe" },
+        { userId: ctx.user.id }
+      );
     });
 
   return { success: true };
@@ -66,13 +69,20 @@ const rate = authedProcedure.input(RatingInputSchema).mutation(({ ctx, input }) 
 const getUserRatingProcedure = authedProcedure
   .input(RatingGetInputSchema)
   .query(async ({ ctx, input }) => {
-    const rating = await getUserRatingWithVersion(ctx.user.id, input.recipeId);
+    // A recipe out of view answers as one never rated, as a gone one does.
+    const viewable = await canViewRecipe(ctx, input.recipeId);
+    const rating = viewable
+      ? await getUserRatingWithVersion(ctx.user.id, input.recipeId)
+      : { rating: null, version: null };
 
     return { recipeId: input.recipeId, userRating: rating.rating, version: rating.version };
   });
 
-const getAverage = authedProcedure.input(RatingGetInputSchema).query(async ({ input }) => {
-  const stats = await getAverageRating(input.recipeId);
+const getAverage = authedProcedure.input(RatingGetInputSchema).query(async ({ ctx, input }) => {
+  const viewable = await canViewRecipe(ctx, input.recipeId);
+  const stats = viewable
+    ? await getAverageRating(input.recipeId)
+    : { averageRating: null, ratingCount: 0 };
 
   return { recipeId: input.recipeId, ...stats };
 });

@@ -1,9 +1,9 @@
 import type { ComponentProps } from "react";
 import React from "react";
 import { Text } from "react-native";
+import { Ionicons } from "@/components/icon";
 import { PressableScale } from "@/components/pressable-scale";
 import { useTokenColor } from "@/hooks/use-token-color";
-import Ionicons from "@expo/vector-icons/Ionicons";
 
 /** The kit's chip, such as a filter or a Category: sand, accent while it applies. */
 export function ToggleChip({
@@ -13,6 +13,7 @@ export function ToggleChip({
   even = false,
   mutedIcon = false,
   solid = false,
+  disabled = false,
   onPress,
   testID,
 }: {
@@ -25,6 +26,8 @@ export function ToggleChip({
   mutedIcon?: boolean;
   /** Inactive, a solid default fill without the hairline, as on a page rather than a sheet. */
   solid?: boolean;
+  /** Dimmed and not pressable; a screen reader reads it as disabled. */
+  disabled?: boolean;
   onPress: () => void;
   testID?: string;
 }) {
@@ -35,8 +38,9 @@ export function ToggleChip({
   return (
     <PressableScale
       accessibilityRole="button"
-      accessibilityState={{ selected: active }}
-      className={`h-9 flex-row items-center gap-1.5 rounded-full ${even ? "flex-1 justify-center" : "flex-none px-3.5"} ${active ? "bg-accent" : solid ? "bg-default" : "bg-sand border-stroke border-[0.5px]"}`}
+      accessibilityState={{ selected: active, disabled }}
+      className={`h-9 flex-row items-center gap-1.5 rounded-full ${even ? "flex-1 justify-center" : "flex-none px-3.5"} ${active ? "bg-accent" : solid ? "bg-default" : "bg-sand border-stroke border-[0.5px]"} ${disabled ? "opacity-50" : ""}`}
+      disabled={disabled}
       testID={testID}
       onPress={onPress}
     >

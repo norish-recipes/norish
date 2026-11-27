@@ -1,6 +1,6 @@
 import React from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, renderHook } from "@testing-library/react";
+import { QueryClient, QueryClientProvider, QueryObserver } from "@tanstack/react-query";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -64,6 +64,8 @@ vi.mock("../../trpc", () => ({ useTRPC: () => trpc }));
 
 const sentShareWrites: [string, unknown][] = [];
 const refuseCreate = { current: false };
+const failShareWrites = { current: false };
+const staleShareWrites = { current: false };
 
 /** A share write that answers with the share, as the server does. */
 function shareWrite(name: string) {
@@ -72,8 +74,9 @@ function shareWrite(name: string) {
       ...options,
       mutationFn: async (input: { id: string }) => {
         sentShareWrites.push([name, input]);
+        if (failShareWrites.current) throw new Error("offline");
 
-        return { id: input.id, recipeId: "recipe-1" };
+        return { id: input.id, recipeId: "recipe-1", stale: staleShareWrites.current };
       },
     }),
   };
@@ -86,6 +89,7 @@ function shareListKey({ recipeId }: { recipeId: string }) {
 const trpc = {
   recipes: {
     shareList: {
+      pathKey: () => [["recipes", "shareList"]],
       queryKey: shareListKey,
       queryOptions: (input: { recipeId: string }) => ({
         queryKey: shareListKey(input),
@@ -121,6 +125,9 @@ const trpc = {
     shareRevoke: shareWrite("shareRevoke"),
     shareReactivate: shareWrite("shareReactivate"),
     shareDelete: shareWrite("shareDelete"),
+    shareRevokeAdmin: shareWrite("shareRevokeAdmin"),
+    shareReactivateAdmin: shareWrite("shareReactivateAdmin"),
+    shareDeleteAdmin: shareWrite("shareDeleteAdmin"),
   },
 };
 
@@ -138,6 +145,8 @@ afterEach(() => {
   useSubscriptionMock.mockReset();
   sentShareWrites.length = 0;
   refuseCreate.current = false;
+  failShareWrites.current = false;
+  staleShareWrites.current = false;
 });
 
 describe("recipe share hooks", () => {
@@ -167,9 +176,9 @@ describe("recipe share hooks", () => {
       wrapper: createTestWrapper(queryClient),
     });
 
-    act(() => result.current.revokeShare(share.id, share.version));
-    act(() => result.current.reactivateShare(share.id, share.version));
-    act(() => result.current.deleteShare(share.id, share.version));
+    act(() => void result.current.revokeShare(share.id, share.version));
+    act(() => void result.current.reactivateShare(share.id, share.version));
+    act(() => void result.current.deleteShare(share.id, share.version));
 
     await vi.waitFor(() => expect(sentShareWrites).toHaveLength(3));
     expect(sentShareWrites).toEqual([
@@ -183,6 +192,107 @@ describe("recipe share hooks", () => {
           ([filters]) => JSON.stringify(filters?.queryKey) === JSON.stringify(listKey)
         )
       ).toHaveLength(3)
+    );
+  });
+
+  it("moderates any account's share through the admin procedures, then rereads the admin list", async () => {
+    const queryClient = createTestQueryClient();
+    const adminKey = trpc.recipes.shareListAdmin.queryKey();
+    const { result } = renderHook(() => recipes.useAdminRecipeShareMutations(), {
+      wrapper: createTestWrapper(queryClient, fakePlatformAdapter()),
+    });
+    const share = createMockShare();
+
+    for (const action of [
+      result.current.revokeShare,
+      result.current.reactivateShare,
+      result.current.deleteShare,
+    ]) {
+      queryClient.setQueryData(adminKey, [share]);
+      expect(await act(() => action(share.id, share.version))).toBe(true);
+      expect(queryClient.getQueryState(adminKey)?.isInvalidated).toBe(true);
+    }
+
+    expect(sentShareWrites).toEqual([
+      ["shareRevokeAdmin", { id: share.id, version: share.version }],
+      ["shareReactivateAdmin", { id: share.id, version: share.version }],
+      ["shareDeleteAdmin", { id: share.id, version: share.version }],
+    ]);
+  });
+
+  it("resolves each share action once its request settled, and tells the reader one failed", async () => {
+    failShareWrites.current = true;
+    const platform = fakePlatformAdapter();
+    const share = createMockShare({ recipeId: "recipe-1" });
+    const { result } = renderHook(() => recipes.useRecipeShareMutations(null), {
+      wrapper: createTestWrapper(createTestQueryClient(), platform),
+    });
+
+    const sent = await act(() =>
+      Promise.all([
+        result.current.revokeShare(share.id, share.version),
+        result.current.reactivateShare(share.id, share.version),
+        result.current.deleteShare(share.id, share.version),
+      ])
+    );
+
+    expect(sent).toEqual([false, false, false]);
+    expect(platform.showError).toHaveBeenCalledTimes(3);
+  });
+
+  it("rereads the list when a share action failed, as when its recipe was deleted elsewhere", async () => {
+    failShareWrites.current = true;
+    const queryClient = createTestQueryClient();
+    const invalidateQueries = vi.spyOn(queryClient, "invalidateQueries");
+    const { result } = renderHook(() => recipes.useRecipeShareMutations(null), {
+      wrapper: createTestWrapper(queryClient, fakePlatformAdapter()),
+    });
+
+    await act(() => result.current.revokeShare("share-gone", 1));
+
+    expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: trpc.recipes.shareListMine.queryKey(),
+    });
+  });
+
+  it("rereads every held recipe's share list when an inventory action failed or was stale", async () => {
+    const queryClient = createTestQueryClient();
+    const listKey = trpc.recipes.shareList.queryKey({ recipeId: "recipe-1" });
+    const { result } = renderHook(() => recipes.useRecipeShareMutations(null), {
+      wrapper: createTestWrapper(queryClient, fakePlatformAdapter()),
+    });
+    const reread = async (action: () => Promise<boolean>) => {
+      queryClient.setQueryData(listKey, [createMockShare()]);
+      await act(action);
+
+      return queryClient.getQueryState(listKey)?.isInvalidated;
+    };
+
+    failShareWrites.current = true;
+    expect(await reread(() => result.current.revokeShare("s1", 1))).toBe(true);
+    failShareWrites.current = false;
+    staleShareWrites.current = true;
+    expect(await reread(() => result.current.deleteShare("s1", 1))).toBe(true);
+  });
+
+  it("refuses a stale share action as changed elsewhere and keeps the share", async () => {
+    staleShareWrites.current = true;
+    const platform = fakePlatformAdapter();
+    const queryClient = createTestQueryClient();
+    const removeQueries = vi.spyOn(queryClient, "removeQueries");
+    const { result } = renderHook(() => recipes.useRecipeShareMutations(null), {
+      wrapper: createTestWrapper(queryClient, platform),
+    });
+
+    const sent = await act(() =>
+      Promise.all([result.current.revokeShare("s1", 1), result.current.deleteShare("s1", 1)])
+    );
+
+    expect(sent).toEqual([false, false]);
+    expect(removeQueries).not.toHaveBeenCalled();
+    expect(platform.showError).toHaveBeenCalledWith(
+      "common.changedElsewhere.title",
+      expect.any(String)
     );
   });
 
@@ -204,6 +314,61 @@ describe("recipe share hooks", () => {
     });
   });
 
+  it("keeps no copy of the new link once the hook is gone", async () => {
+    const queryClient = createTestQueryClient();
+    const { result, unmount } = renderHook(() => recipes.useRecipeShareMutations("recipe-1"), {
+      wrapper: createTestWrapper(queryClient, fakePlatformAdapter()),
+    });
+    const held = () =>
+      queryClient
+        .getMutationCache()
+        .getAll()
+        .some((mutation) => JSON.stringify(mutation.state.data ?? null).includes("token-1"));
+
+    await act(() => result.current.createShare("1week"));
+    expect(held()).toBe(true);
+
+    unmount();
+    await waitFor(() => expect(held()).toBe(false));
+  });
+
+  it("keeps no copy of the new link once it is forgotten", async () => {
+    const queryClient = createTestQueryClient();
+    const { result } = renderHook(() => recipes.useRecipeShareMutations("recipe-1"), {
+      wrapper: createTestWrapper(queryClient, fakePlatformAdapter()),
+    });
+    const held = () =>
+      queryClient
+        .getMutationCache()
+        .getAll()
+        .some((mutation) => JSON.stringify(mutation.state.data ?? null).includes("token-1"));
+
+    await act(() => result.current.createShare("1week"));
+    expect(held()).toBe(true);
+
+    act(() => result.current.forgetCreatedShare());
+    await waitFor(() => expect(held()).toBe(false));
+  });
+
+  it("lists a share made while the recipe's first share read was under way, from a read begun after it", async () => {
+    const queryClient = createTestQueryClient();
+    const listKey = trpc.recipes.shareList.queryKey({ recipeId: "recipe-1" });
+    const reads: ((shares: unknown) => void)[] = [];
+    const unsubscribe = new QueryObserver(queryClient, {
+      queryKey: listKey,
+      queryFn: () => new Promise((resolve) => reads.push(resolve)),
+    }).subscribe(() => {});
+    const { result } = renderHook(() => recipes.useRecipeShareMutations("recipe-1"), {
+      wrapper: createTestWrapper(queryClient, fakePlatformAdapter()),
+    });
+
+    await vi.waitFor(() => expect(reads).toHaveLength(1));
+    await act(() => result.current.createShare());
+    await act(async () => reads[0]?.([]));
+    await vi.waitFor(() => expect(reads).toHaveLength(2));
+    unsubscribe();
+  });
+
   it("tells the reader a refused share and answers null", async () => {
     refuseCreate.current = true;
     const platform = fakePlatformAdapter();
@@ -218,7 +383,7 @@ describe("recipe share hooks", () => {
     expect(platform.toast.show).not.toHaveBeenCalled();
   });
 
-  it("invalidates recipe share queries when share lifecycle events arrive", () => {
+  it("invalidates recipe share queries when share lifecycle events arrive", async () => {
     const queryClient = new QueryClient();
     const invalidateQueries = vi.spyOn(queryClient, "invalidateQueries");
     const removeQueries = vi.spyOn(queryClient, "removeQueries");
@@ -255,11 +420,14 @@ describe("recipe share hooks", () => {
       })
     );
 
-    expect(invalidateQueries).toHaveBeenCalledWith({
-      queryKey: [["recipes", "shareList"], { input: { recipeId: "recipe-1" }, type: "query" }],
-    });
-    expect(invalidateQueries).toHaveBeenCalledWith({
-      queryKey: [["recipes", "shareGet"], { input: { id: "share-1" }, type: "query" }],
+    // Each reread waits for a cancel first, so it lands a tick later.
+    await vi.waitFor(() => {
+      expect(invalidateQueries).toHaveBeenCalledWith({
+        queryKey: [["recipes", "shareList"], { input: { recipeId: "recipe-1" }, type: "query" }],
+      });
+      expect(invalidateQueries).toHaveBeenCalledWith({
+        queryKey: [["recipes", "shareGet"], { input: { id: "share-1" }, type: "query" }],
+      });
     });
 
     options.onData?.(

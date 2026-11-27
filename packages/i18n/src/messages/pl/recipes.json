@@ -41,12 +41,8 @@
   },
   "empty": {
     "title": "Twoja biblioteka czeka",
-    "description": "Wklej URL przepisu w pole wyszukiwania powyżej i obserwuj magię.",
     "noResults": "Nie znaleziono przepisów",
-    "noResultsHint": "Spróbuj zmienić lub wyczyścić filtry.",
-    "noCookbooks": "Brak książek kucharskich",
-    "noCookbooksHint": "Książka kucharska to nazwany zbiór przepisów. Utwórz pierwszą, aby uporządkować bibliotekę.",
-    "descriptionMobile": "Dodaj swój pierwszy przepis z linku, tekstu lub zdjęć."
+    "noCookbooks": "Brak książek kucharskich"
   },
   "card": {
     "noImage": "Brak obrazu",
@@ -67,6 +63,7 @@
     "addToGroceries": "Dodaj do zakupów",
     "ratingPrompt": "Co sądzisz o tym przepisie?",
     "notFound": "Nie znaleziono przepisu",
+    "offline": "Ten przepis wymaga połączenia",
     "notFoundMessage": "Ten przepis nie istnieje lub nie masz uprawnień do jego wyświetlenia.",
     "prep": "przygot.",
     "total": "łącznie",
@@ -160,6 +157,7 @@
     "expiresAfter": "Wygasa po",
     "expiresOn": "Wygasa {date}",
     "expiredOn": "Wygasł {date}",
+    "revokedOn": "Odwołany {date}",
     "lastOpenedOn": "Ostatnio otwarto {date}",
     "neverExpires": "Nigdy nie wygasa",
     "linkCreated": "Utworzono {date}"
@@ -203,7 +201,7 @@
     "notesPlaceholder": "Uwagi, wskazówki dotyczące podania...",
     "ingredientsHelp": "Wpisuj składniki jak \"2 szklanki mąki\" – automatycznie przetworzymy ilości i jednostki.",
     "instructionsHelp": "Pisz jasne instrukcje krok po kroku. Naciśnij Enter, aby przejść do następnego kroku.",
-    "tagsHelp": "Wpisuj tagi i klikaj sugestie, aby dodać.",
+    "tagsHelp": "Wybierz tag lub utwórz nowy.",
     "tagsAndCategories": "Tagi i kategorie",
     "categoriesHelp": "Wybierz kategorie posiłku.",
     "addCategory": "Dodaj kategorię",
@@ -224,7 +222,7 @@
     "originRegion": "Region",
     "originRegionPlaceholder": "np. Sycylia",
     "cuisines": "Kuchnie",
-    "cuisinesHelp": "Wybierz z listy swojej instalacji. Kilka ma sens przy daniu fusion.",
+    "cuisinesHelp": "Wybierz z listy lub utwórz własną. W daniu fusion sensowne bywa kilka.",
     "provenanceNote": "Notatka",
     "provenanceNotePlaceholder": "Kilka zdań o tym, skąd pochodzi to danie…",
     "servings": "Porcje",
@@ -441,7 +439,6 @@
     "singular": "Książka kucharska",
     "notFound": "Nie znaleziono książki kucharskiej",
     "notFoundHint": "Mogła zostać usunięta lub nie jest dla Ciebie widoczna.",
-    "emptyHint": "Dodawaj przepisy z menu szybkich akcji przepisu.",
     "panelTitle": "Dodaj do książki kucharskiej",
     "newWithRecipe": "Nowa książka z tym przepisem",
     "noneEditable": "Nie ma jeszcze książek kucharskich, które możesz edytować.",
@@ -545,7 +542,7 @@
     "tagsAndCategories": "Tagi i kategorie",
     "categories": "Kategorie",
     "tags": "Tagi",
-    "tagsHint": "Wybierz podpowiedź lub wpisz nowy tag; nowe tagi mają przerywaną ramkę.",
+    "tagsHint": "Wybierz tag z listy lub utwórz nowy.",
     "addTag": "Dodaj tag",
     "removeNamed": "Usuń {name}",
     "servingsAndTime": "Porcje i czas",
@@ -561,6 +558,13 @@
     "discardMessage": "Masz niezapisane zmiany.",
     "keepEditing": "Edytuj dalej",
     "discard": "Odrzuć"
+  },
+  "picker": {
+    "create": "Utwórz \"{name}\"",
+    "createOffline": "Możesz utworzyć \"{name}\", gdy będziesz online.",
+    "tooLong": "Nazwa może mieć najwyżej {max} znaków.",
+    "createFailed": "Nie udało się utworzyć \"{name}\". Spróbuj ponownie.",
+    "loadFailed": "Nie udało się wczytać listy."
   },
   "search": {
     "sortBestMatch": "Najlepsze dopasowanie",

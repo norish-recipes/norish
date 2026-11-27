@@ -1,8 +1,8 @@
 import React from "react";
 import { Text, View } from "react-native";
+import { Ionicons } from "@/components/icon";
 import { useCardActions } from "@/hooks/use-card-actions";
 import { useTabScroll } from "@/lib/use-tab-scroll";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";

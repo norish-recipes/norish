@@ -48,17 +48,17 @@ export function createMockHousehold(
  */
 export function createMockAuthedContext(
   user: User = createMockUser(),
-  household: HouseholdWithUsersNamesDto | null = createMockHousehold()
+  household: HouseholdWithUsersNamesDto = createMockHousehold()
 ) {
-  const householdUserIds = household?.users.map((u) => u.id) ?? [];
-  const allUserIds = [user.id, ...householdUserIds].filter((id, i, arr) => arr.indexOf(id) === i);
+  const allUserIds = [user.id, ...household.users.map((u) => u.id)].filter(
+    (id, i, arr) => arr.indexOf(id) === i
+  );
 
   return {
     user,
     household,
-    householdKey: household?.id ?? user.id,
+    householdId: household.id,
     userIds: allUserIds,
-    householdUserIds: householdUserIds.length > 0 ? householdUserIds : null,
     isServerAdmin: user.isServerAdmin ?? false,
   };
 }

@@ -74,6 +74,7 @@ function cookbook(overrides: Partial<CookbookSummaryDTO> = {}): CookbookSummaryD
   return {
     id: "11111111-1111-4111-8111-111111111111",
     userId: "reader",
+    householdId: "readers-household",
     title: "Weeknights",
     createdAt: new Date("2026-01-01T00:00:00Z"),
     updatedAt: new Date("2026-01-01T00:00:00Z"),

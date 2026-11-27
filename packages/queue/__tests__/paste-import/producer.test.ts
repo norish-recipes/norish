@@ -18,8 +18,7 @@ function jobData(): PasteImportJobData {
     batchId: "batch-1",
     recipeIds: ["recipe-1"],
     userId: "user-1",
-    householdKey: "household-1",
-    householdUserIds: ["user-1"],
+    householdId: "household-1",
     text: "Pancakes\n\n1 cup flour",
   };
 }

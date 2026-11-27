@@ -7,7 +7,11 @@ import { useCardActions } from "@/hooks/use-card-actions";
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 import { useDevicePreference } from "@norish/shared-react/reader";
-import { useLibraryCards, useLibraryFilters } from "@norish/shared-react/recipes";
+import {
+  useAppliedLibraryFilters,
+  useLibraryCards,
+  useLibraryFilters,
+} from "@norish/shared-react/recipes";
 import { hasAppliedRecipeFilters } from "@norish/shared/contracts/filter-contract";
 
 import type { FadeHeight } from "./card-list";
@@ -67,6 +71,7 @@ export function LibraryCards<Row>({
   const variant = forced ?? preferred;
   const filters = useLibraryFilters((state) => state.filters);
   const clearFilters = useLibraryFilters((state) => state.clearFilters);
+  const applied = useAppliedLibraryFilters();
   const { isFavorite, allergies } = useLibraryCards();
   const actions = useCardActions(cookbook);
 
@@ -77,7 +82,7 @@ export function LibraryCards<Row>({
           <LibrarySkeleton variant={variant} />
         ) : noResults ? (
           noResults
-        ) : hasAppliedRecipeFilters(filters) ? (
+        ) : hasAppliedRecipeFilters(applied) ? (
           <LibraryNoResults onClear={clearFilters} />
         ) : (
           empty

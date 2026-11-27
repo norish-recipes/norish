@@ -41,6 +41,7 @@ export default function EditTagPanel({
   // Exclude the current tag being edited from the check
   const isDuplicate = useMemo(() => {
     const trimmed = tagName.trim().toLowerCase();
+
     if (!trimmed) return false;
     if (trimmed === tag.toLowerCase()) return false; // Same as original is OK
 
@@ -58,28 +59,27 @@ export default function EditTagPanel({
     onDelete();
     onOpenChange(false);
   };
+
   return (
     <Panel open={open} title={t("editTitle")} onOpenChange={onOpenChange}>
-      <Panel.Body>
-        <div className="space-y-3">
-          <TextField isInvalid={isDuplicate} value={tagName} onChange={setTagName}>
-            <Input
-              className="h-12 text-base font-medium"
-              variant="secondary"
-              placeholder={t("editPlaceholder")}
-              style={{
-                fontSize: "16px",
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleSubmit();
-                }
-              }}
-            />
-            {isDuplicate && <FieldError>{t("duplicateTag")}</FieldError>}
-          </TextField>
-        </div>
+      <Panel.Body sections>
+        <TextField isInvalid={isDuplicate} value={tagName} onChange={setTagName}>
+          <Input
+            className="h-12 text-base font-medium"
+            variant="secondary"
+            placeholder={t("editPlaceholder")}
+            style={{
+              fontSize: "16px",
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleSubmit();
+              }
+            }}
+          />
+          {isDuplicate && <FieldError>{t("duplicateTag")}</FieldError>}
+        </TextField>
       </Panel.Body>
       <Panel.Footer>
         <ActionButtonGroup

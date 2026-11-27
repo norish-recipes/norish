@@ -8,31 +8,31 @@ import type {
   PlannedItemMoveInputSchema,
   PlannedItemWithRecipePayload,
 } from "@norish/shared/contracts/zod";
-import { assertHouseholdAccess } from "@norish/auth/permissions";
 import {
   createPlannedItem,
   deletePlannedItem,
   editPlannedItem,
   getPlannedItemById,
   getPlannedItemWithRecipeById,
-  listPlannedItemsByUserAndDateRange,
+  listPlannedItemsByHouseholdAndDateRange,
   listPlannedItemsWithRecipeBySlot,
   moveItem,
+  ownPlannedItemExists,
 } from "@norish/db/repositories/planned-items";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import { publishCalendarItemEvent } from "@norish/shared-server/realtime/calendar-items";
 import { plannedItemEditTarget } from "@norish/shared/contracts/zod";
 
 import type { CreateItemInput, PlannedRecipeListItem } from "./planned-items-openapi-types";
-import { publishCalendarItemEvent } from "./publish";
+import { assertRecipeAccess } from "../recipes/helpers";
 
 export type CalendarProcedureContext = {
   user: { id: string };
-  userIds: string[];
-  householdKey: string;
+  householdId: string;
 };
 
 type PlannedItemWithRecipeRow = Awaited<
-  ReturnType<typeof listPlannedItemsByUserAndDateRange>
+  ReturnType<typeof listPlannedItemsByHouseholdAndDateRange>
 >[number];
 
 export function buildPlannedItemPayload(
@@ -120,7 +120,7 @@ export async function listItemsByRange(
   startISO: string,
   endISO: string
 ) {
-  return listPlannedItemsByUserAndDateRange(ctx.userIds, startISO, endISO);
+  return listPlannedItemsByHouseholdAndDateRange(ctx.householdId, startISO, endISO);
 }
 
 export async function listPlannedRecipesByRange(
@@ -131,17 +131,24 @@ export async function listPlannedRecipesByRange(
 ) {
   const items = await listItemsByRange(ctx, startISO, endISO);
 
-  return items
-    .filter((item) => (item.itemType === "recipe" && item.recipeId) || includeNotes)
-    .map(toPlannedRecipeListItem);
+  return (
+    items
+      // A recipe out of view stays, with its title only, as the app shows it.
+      .filter((item) => item.itemType === "recipe" || includeNotes)
+      .map(toPlannedRecipeListItem)
+  );
 }
 
 export async function createCalendarItem(ctx: CalendarProcedureContext, input: CreateItemInput) {
   const { id, date, slot, itemType, recipeId, title } = input;
 
+  // Only a recipe the household may view now; one out of view answers as a gone one.
+  if (recipeId) await assertRecipeAccess(ctx, recipeId, "view");
+
   const newItem = await createPlannedItem({
     // Client-minted id when supplied; drizzle falls back to its default when undefined (ADR-0003).
     id,
+    householdId: ctx.householdId,
     userId: ctx.user.id,
     date,
     slot,
@@ -150,7 +157,7 @@ export async function createCalendarItem(ctx: CalendarProcedureContext, input: C
     title: title ?? null,
   });
 
-  const itemWithRecipe = await getPlannedItemWithRecipeById(newItem.id);
+  const itemWithRecipe = await getPlannedItemWithRecipeById(newItem.id, ctx.householdId);
   const itemPayload = buildPlannedItemPayload({
     id: newItem.id,
     date: newItem.date,
@@ -167,11 +174,18 @@ export async function createCalendarItem(ctx: CalendarProcedureContext, input: C
     calories: itemWithRecipe?.calories ?? null,
   });
 
-  await publishCalendarItemEvent("itemCreated", { item: itemPayload }, ctx.householdKey);
+  await publishCalendarItemEvent("itemCreated", { item: itemPayload }, ctx.householdId);
 
   // The item rides the response so the actor's own caches converge without
   // waiting on the realtime echo; the REST route's output schema keeps `id`.
   return { id: newItem.id, item: itemPayload };
+}
+
+/** The household's plan entry, null when gone; another household's is refused. */
+async function plannedItemOfHousehold(ctx: CalendarProcedureContext, itemId: string) {
+  if (!(await ownPlannedItemExists(ctx.householdId, itemId))) return null;
+
+  return getPlannedItemById(itemId, ctx.householdId);
 }
 
 /** The REST API answers a missing plan with 404; the app's delete of one already gone is a no-op. */
@@ -181,7 +195,7 @@ export async function deleteCalendarItem(
   { rejectMissing = false } = {}
 ) {
   const { itemId, version } = input;
-  const item = await getPlannedItemById(itemId);
+  const item = await plannedItemOfHousehold(ctx, itemId);
 
   if (!item && rejectMissing) {
     throw new TRPCError({
@@ -191,9 +205,7 @@ export async function deleteCalendarItem(
   }
   if (!item) return { success: true, stale: false };
 
-  await assertHouseholdAccess(ctx.user.id, item.userId);
-
-  const deleteResult = await deletePlannedItem(itemId, version);
+  const deleteResult = await deletePlannedItem(itemId, ctx.householdId, version);
 
   if (deleteResult.stale) {
     log.info({ userId: ctx.user.id, itemId, version }, "Ignoring stale calendar delete mutation");
@@ -204,7 +216,7 @@ export async function deleteCalendarItem(
   await publishCalendarItemEvent(
     "itemDeleted",
     { itemId, date: item.date, slot: item.slot },
-    ctx.householdKey
+    ctx.householdId
   );
 
   return { success: true, stale: false };
@@ -217,10 +229,12 @@ export async function publishItemMoved(
   item: PlannedItemWithRecipePayload
 ) {
   const sortOf = async (date: string, slot: Slot) =>
-    (await listPlannedItemsWithRecipeBySlot(ctx.userIds, date, slot)).map(({ id, sortOrder }) => ({
-      id,
-      sortOrder,
-    }));
+    (await listPlannedItemsWithRecipeBySlot(ctx.householdId, date, slot)).map(
+      ({ id, sortOrder }) => ({
+        id,
+        sortOrder,
+      })
+    );
   const crossSlot = from.date !== item.date || from.slot !== item.slot;
 
   await publishCalendarItemEvent(
@@ -233,7 +247,7 @@ export async function publishItemMoved(
       oldSlot: from.slot,
       oldSortOrder: from.sortOrder,
     },
-    ctx.householdKey
+    ctx.householdId
   );
 }
 
@@ -243,12 +257,10 @@ async function itemAtVersion(
   { itemId, version }: { itemId: string; version: number },
   write: "edit" | "move"
 ) {
-  const item = await getPlannedItemById(itemId);
+  const item = await plannedItemOfHousehold(ctx, itemId);
 
   // A plan another member removed lost to an earlier write: stale, as a changed version is.
   if (!item) return null;
-
-  await assertHouseholdAccess(ctx.user.id, item.userId);
 
   // A write at another version changes nothing, whatever it asks (ADR-0004).
   if (item.version === version) return item;
@@ -266,8 +278,8 @@ function logStale(
 }
 
 /** The stored item as the household hears it; null when it was removed since the write. */
-async function storedPayload(itemId: string) {
-  const stored = await getPlannedItemWithRecipeById(itemId);
+async function storedPayload(ctx: CalendarProcedureContext, itemId: string) {
+  const stored = await getPlannedItemWithRecipeById(itemId, ctx.householdId);
 
   return stored ? buildPlannedItemPayload(stored) : null;
 }
@@ -288,7 +300,7 @@ export async function editCalendarItem(
   if (!moves && title === undefined) return { success: true, stale: false };
 
   // A failure here rejects, so the client rolls back and Replay never takes it as stored.
-  const result = await editPlannedItem(itemId, { title, date, slot }, version);
+  const result = await editPlannedItem(ctx.householdId, itemId, { title, date, slot }, version);
 
   if (result.stale) {
     logStale(ctx, input, "edit");
@@ -296,13 +308,13 @@ export async function editCalendarItem(
     return { success: true, stale: true };
   }
 
-  const payload = await storedPayload(result.value.id);
+  const payload = await storedPayload(ctx, result.value.id);
 
   // Stored all the same: no item in the answer makes the client reread.
   if (!payload) return { success: true, stale: false };
 
   if (moves) await publishItemMoved(ctx, item, payload);
-  else await publishCalendarItemEvent("itemUpdated", { item: payload }, ctx.householdKey);
+  else await publishCalendarItemEvent("itemUpdated", { item: payload }, ctx.householdId);
 
   // The item rides the answer, as a create's does: the echo is the fast path (ADR-0011).
   return { success: true, stale: false, item: payload };
@@ -321,7 +333,14 @@ export async function moveCalendarItem(
     return { success: true, moved: false, stale: false };
   }
 
-  const result = await moveItem(itemId, targetDate, targetSlot, targetIndex, version);
+  const result = await moveItem(
+    ctx.householdId,
+    itemId,
+    targetDate,
+    targetSlot,
+    targetIndex,
+    version
+  );
 
   if (result.stale) {
     logStale(ctx, input, "move");
@@ -329,7 +348,7 @@ export async function moveCalendarItem(
     return { success: true, moved: false, stale: true };
   }
 
-  const payload = await storedPayload(result.value.id);
+  const payload = await storedPayload(ctx, result.value.id);
 
   // Stored all the same: no item in the answer makes the client reread.
   if (!payload) return { success: true, moved: true, stale: false };

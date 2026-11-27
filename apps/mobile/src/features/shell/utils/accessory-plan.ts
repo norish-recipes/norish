@@ -1,5 +1,5 @@
+import type { Ionicons } from "@/components/icon";
 import type { GroceriesSection } from "@/lib/groceries-section";
-import type Ionicons from "@expo/vector-icons/Ionicons";
 import type { Href } from "expo-router";
 import type { ComponentProps } from "react";
 import { cookbookIdOf, cookModeRoute, TAB_ROUTES } from "@/lib/tab-routes";
@@ -93,7 +93,7 @@ export function shellTab(path: string, inSearch = false) {
 
   if (inSearch) return "search";
 
-  return first === "groceries" || first === "calendar" || first === "settings" ? first : "recipes";
+  return first === "groceries" || first === "calendar" ? first : "recipes";
 }
 
 /** The tab page shown at `path`: itself on a tab, else the last one, under a root sheet such as the

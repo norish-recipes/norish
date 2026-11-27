@@ -15,6 +15,7 @@ export const recipeShares = pgTable(
       .notNull()
       .references(() => recipes.id, { onDelete: "cascade" }),
     tokenHash: text("token_hash").notNull(),
+    tokenEnc: text("token_enc"),
     expiresAt: timestamp("expires_at", { withTimezone: true }),
     revokedAt: timestamp("revoked_at", { withTimezone: true }),
     lastAccessedAt: timestamp("last_accessed_at", { withTimezone: true }),

@@ -3,9 +3,10 @@ import type { ComponentProps } from "react";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { Card, CardRow } from "@/components/card";
+import { Ionicons } from "@/components/icon";
 import { Sheet, SheetBody } from "@/components/sheet";
+import { useText } from "@/lib/i18n/use-text";
 import { hostOf, plainLink } from "@/lib/network/host-of";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -69,12 +70,11 @@ function OptionRow({ option, first }: { option: Option; first: boolean }) {
 
 /** Add recipe: the copied link when there is one, then From a link, photos (AI only), text, or by hand. */
 export function AddRecipeScreen() {
-  const intl = useIntl();
   const copiedLink = useCopiedLink();
   const isAIEnabled = usePermissions((permissions) => permissions.isAIEnabled);
   const { importRecipe } = useImportRecipe({ stay: true });
   const startImport = useStartImport();
-  const text = (id: string) => intl.formatMessage({ id });
+  const text = useText();
 
   const options: Option[] = [
     {

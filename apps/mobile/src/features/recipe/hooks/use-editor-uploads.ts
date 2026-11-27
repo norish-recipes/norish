@@ -1,8 +1,8 @@
 import type * as ImagePicker from "expo-image-picker";
 import { useRef, useState } from "react";
 import { Alert } from "react-native";
+import { useText } from "@/lib/i18n/use-text";
 import { File } from "expo-file-system";
-import { useIntl } from "react-intl";
 
 import type { RecipeGalleryMedia, StepImage } from "@norish/shared-react/recipes";
 import { useConnectivity } from "@norish/shared-react/offline/react";
@@ -19,7 +19,6 @@ export type PendingPhoto = { key: string; uri: string; target: string };
 /** The editor's photo uploads, which need the server: the form holds each photo's address, which
  * a queued upload has not got. Removing a photo deletes it at once, as on web. */
 export function useEditorUploads(recipeId: string) {
-  const intl = useIntl();
   const { isOffline } = useConnectivity();
   const images = useRecipeImages();
   const { deleteGalleryVideo } = useRecipeVideos();
@@ -27,7 +26,7 @@ export function useEditorUploads(recipeId: string) {
   // Removed by the reader; one still uploading stops being waited for, and is deleted if it lands.
   const cancelledRef = useRef(new Set<string>());
   const removersRef = useRef(new Map<string, () => void>());
-  const text = (id: string) => intl.formatMessage({ id });
+  const text = useText();
 
   const failed = (error: unknown) => {
     log.error({ error }, "Photo upload failed");

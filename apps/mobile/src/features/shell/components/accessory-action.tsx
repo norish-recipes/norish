@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import { Ionicons } from "@/components/icon";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
 import { labelFits } from "@/lib/label-fits";
 import { closeOpenRow } from "@/lib/open-row";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { NativeTabs } from "expo-router/native-tabs";
 import { useIntl } from "react-intl";

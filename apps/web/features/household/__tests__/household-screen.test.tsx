@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import "@testing-library/jest-dom";
 
+import type { HouseholdShape } from "@/features/household/household-shape";
 import { fakeProcedure } from "@/__tests__/helpers/trpc-fake";
 import { HouseholdScreen } from "@/features/household/household-screen";
 
@@ -26,7 +27,7 @@ const MEMBER = { id: "bob", name: "Bob", isAdmin: false, version: 1 };
 let queryClient: ReturnType<typeof createTestQueryClient>;
 
 /** The screen over a cache holding `data`, or over a household read still pending. */
-function renderScreen(shape: "none" | "member" | "admin", data?: HouseholdData) {
+function renderScreen(shape: HouseholdShape, data?: HouseholdData) {
   if (data) queryClient.setQueryData(fakeProcedure("households.get").queryKey(), data);
 
   return render(<HouseholdScreen shape={shape} />, {
@@ -39,14 +40,28 @@ describe("HouseholdScreen", () => {
     queryClient = createTestQueryClient();
   });
 
-  it("offers to create or join a household when the reader has none", () => {
-    renderScreen("none", { household: null, currentUserId: ADMIN.id });
+  it("shows a household of one as just you, with its join code and a way to join another", () => {
+    renderScreen("solo", {
+      household: {
+        id: "h1",
+        name: "My household",
+        version: 1,
+        users: [ADMIN],
+        allergies: [],
+        joinCode: "424242",
+        joinCodeExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
+      },
+      currentUserId: ADMIN.id,
+    });
 
-    expect(screen.getByText("settings.household.create.title")).toBeInTheDocument();
+    expect(screen.getByText("My household")).toBeInTheDocument();
+    expect(screen.getByText("settings.household.info.justYou")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("424242")).toBeInTheDocument();
     expect(screen.getByText("settings.household.join.title")).toBeInTheDocument();
+    expect(screen.queryByText("settings.household.members.title")).not.toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "settings.household.create.submitButton" })
-    ).toBeInTheDocument();
+      screen.queryByRole("button", { name: "settings.household.info.leaveButton" })
+    ).not.toBeInTheDocument();
   });
 
   it("shows an admin the household, its members and the join code", () => {

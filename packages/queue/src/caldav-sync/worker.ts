@@ -6,13 +6,17 @@ import type { CaldavSyncStatusInsertDto } from "@norish/shared/contracts/dto/cal
 import type { CaldavSyncEventData } from "@norish/shared/contracts/realtime/caldav";
 import {
   createCaldavSyncStatus,
+  deleteCaldavSyncStatusByItemId,
   getCaldavSyncStatusByItemId,
   updateCaldavSyncStatus,
 } from "@norish/db/repositories/caldav-sync-status";
+import { findPlannedItemPlace } from "@norish/db/repositories/planned-items";
+import { accountCanViewRecipe } from "@norish/db/repositories/recipes";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
 import { createLogger } from "@norish/shared-server/logger";
 import { caldav } from "@norish/shared-server/realtime/caldav";
 
+import { AccountGoneError } from "../account-jobs";
 import { createWorker, isFinalFailure } from "../create-worker";
 import { reportStep } from "../job-steps";
 import { QUEUE_NAMES } from "../queue-names";
@@ -21,11 +25,24 @@ const log = createLogger("worker:caldav-sync");
 
 type CaldavItemStatusUpdatedPayload = CaldavSyncEventData["itemStatusUpdated"];
 
+async function takeOffCalendar(
+  job: Job<CaldavSyncJobData>,
+  userId: string,
+  itemId: string,
+  place: "current" | "elsewhere" | null
+): Promise<void> {
+  const deletePlannedItem = requireQueueApiHandler("deletePlannedItem");
+
+  await reportStep(job, "deleting-event");
+  await deletePlannedItem(userId, itemId);
+  // An entry left behind in another household keeps no status on the leaver's calendar.
+  if (place === "elsewhere") await deleteCaldavSyncStatusByItemId(userId, itemId);
+}
+
 /**
  * Process a single CalDAV sync job.
  */
 async function processCaldavSyncJob(job: Job<CaldavSyncJobData>): Promise<void> {
-  const deletePlannedItem = requireQueueApiHandler("deletePlannedItem");
   const syncPlannedItem = requireQueueApiHandler("syncPlannedItem");
   const { userId, itemId, itemType, plannedItemId, eventTitle, operation } = job.data;
 
@@ -50,15 +67,28 @@ async function processCaldavSyncJob(job: Job<CaldavSyncJobData>): Promise<void> 
     void caldav.publish("syncEvent", { type: "itemStatusUpdated", data: payload }, { userId });
   }
 
+  // Read now, not when queued: the account may have left the entry's household since.
+  const place = await findPlannedItemPlace(itemId, userId);
+
+  if (place !== "current") {
+    await takeOffCalendar(job, userId, itemId, place);
+
+    return;
+  }
+  // Only a leave removes an entry that still exists: the account is back in its household.
   if (operation === "delete") {
-    await reportStep(job, "deleting-event");
-    await deletePlannedItem(userId, itemId);
+    log.info({ userId, itemId }, "CalDAV removal skipped: the entry is the account's plan again");
 
     return;
   }
 
   // operation === "sync" handles both create and update
-  const { date, slot, recipeId } = job.data;
+  const { date, slot } = job.data;
+  // Linked only to a recipe the account may view now; one out of view syncs as its title.
+  const recipeId =
+    job.data.recipeId && (await accountCanViewRecipe(userId, job.data.recipeId))
+      ? job.data.recipeId
+      : undefined;
 
   // Check if sync status record exists
   const isNewRecord = !existingStatus;
@@ -67,27 +97,46 @@ async function processCaldavSyncJob(job: Job<CaldavSyncJobData>): Promise<void> 
   await reportStep(job, "syncing-event");
   const { uid } = await syncPlannedItem(userId, itemId, eventTitle, date, slot as Slot, recipeId);
 
-  const persistedStatus = isNewRecord
-    ? await createCaldavSyncStatus({
-        userId,
-        itemId,
-        itemType,
-        plannedItemId,
-        eventTitle,
-        syncStatus: "synced",
-        caldavEventUid: uid,
-        retryCount: job.attemptsMade,
-        errorMessage: null,
-        lastSyncAt: new Date(),
-      })
-    : await updateCaldavSyncStatus(existingStatus.id, {
-        eventTitle,
-        syncStatus: "synced",
-        caldavEventUid: uid,
-        retryCount: job.attemptsMade,
-        errorMessage: null,
-        lastSyncAt: new Date(),
-      });
+  const persistedStatus = await (
+    isNewRecord
+      ? createCaldavSyncStatus({
+          userId,
+          itemId,
+          itemType,
+          plannedItemId,
+          eventTitle,
+          syncStatus: "synced",
+          caldavEventUid: uid,
+          retryCount: job.attemptsMade,
+          errorMessage: null,
+          lastSyncAt: new Date(),
+        })
+      : updateCaldavSyncStatus(existingStatus.id, {
+          // An entry whose recipe was erased is a note now.
+          itemType,
+          eventTitle,
+          syncStatus: "synced",
+          caldavEventUid: uid,
+          retryCount: job.attemptsMade,
+          errorMessage: null,
+          lastSyncAt: new Date(),
+        })
+  ).catch(async (error: unknown) => {
+    // No status to chase the event just written (the account went meanwhile), so take it off now.
+    await takeOffCalendar(job, userId, itemId, null).catch((cleanup: unknown) =>
+      log.warn({ err: cleanup, userId, itemId }, "Could not take off an event with no status")
+    );
+    throw error;
+  });
+
+  // A leave or deletion during the write found no status to chase, so this job takes it off.
+  const placeAfter = await findPlannedItemPlace(itemId, userId);
+
+  if (placeAfter !== "current") {
+    await takeOffCalendar(job, userId, itemId, placeAfter);
+
+    return;
+  }
 
   // Emit success events
   const successPayload = {
@@ -114,7 +163,8 @@ async function processCaldavSyncJob(job: Job<CaldavSyncJobData>): Promise<void> 
   );
 }
 
-async function handleJobFailed(
+/** Records a failed attempt on the item's status; exported for tests. */
+export async function handleCaldavJobFailed(
   job: Job<CaldavSyncJobData> | undefined,
   error: Error
 ): Promise<void> {
@@ -124,6 +174,9 @@ async function handleJobFailed(
 
   const { userId, itemId, itemType, plannedItemId, eventTitle } = job.data;
   const isFinal = isFinalFailure(job, error);
+
+  // A deleted account keeps no status; its calendar went with its CalDAV settings.
+  if (error instanceof AccountGoneError) return;
 
   const errorMessage = truncateErrorMessage(error.message);
 
@@ -144,6 +197,7 @@ async function handleJobFailed(
         lastSyncAt: new Date(),
       } satisfies CaldavSyncStatusInsertDto)
     : await updateCaldavSyncStatus(existingStatus.id, {
+        itemType,
         eventTitle,
         syncStatus: isFinal ? "failed" : "pending",
         retryCount: job.attemptsMade,
@@ -180,5 +234,5 @@ async function handleJobFailed(
 }
 
 export function startCaldavSyncWorker(): void {
-  createWorker(QUEUE_NAMES.CALDAV_SYNC, processCaldavSyncJob, { onFailed: handleJobFailed });
+  createWorker(QUEUE_NAMES.CALDAV_SYNC, processCaldavSyncJob, { onFailed: handleCaldavJobFailed });
 }

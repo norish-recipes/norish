@@ -16,7 +16,6 @@
   },
   "empty": {
     "title": "Twoja lista zakupów czeka",
-    "description": "Dodaj produkty przyciskiem \"Dodaj produkt\" powyżej.",
     "manual": "Ręczne produkty"
   },
   "item": {
@@ -54,7 +53,6 @@
     },
     "confirmDelete": "Czy na pewno chcesz usunąć {storeName}?",
     "noStoresYet": "Brak sklepów",
-    "createStoreHint": "Utwórz sklep, aby organizować zakupy",
     "hasItems": "Ten sklep ma {count} produkt.",
     "hasItemsPlural": "Ten sklep ma {count} produktów.",
     "whatToDo": "Co chcesz z nimi zrobić?",
@@ -153,6 +151,7 @@
     "cannotSearchHint": "Norish nie odczytał strony wyszukiwania z linku sklepu {store}. Popraw go w Zarządzaj sklepami, a ceny się pojawią.",
     "packAmount": "Ilość w opakowaniu",
     "packUnit": "Jednostka",
+    "noUnit": "Brak jednostki",
     "productPage": "Strona produktu",
     "invalidUrl": "Wpisz adres strony, np. https://www.dirk.nl/…",
     "invalidPack": "Podaj zarówno ilość, jak i jednostkę, albo żadnej z nich",
@@ -185,7 +184,6 @@
     "viewByStore": "Według sklepu",
     "viewByRecipe": "Według przepisu",
     "listSettings": "Ustawienia listy",
-    "emptyHint": "Dodaj produkty przyciskiem poniżej.",
     "addTitle": "Dodaj zakupy",
     "editTitle": "Edytuj produkt",
     "store": "Sklep",

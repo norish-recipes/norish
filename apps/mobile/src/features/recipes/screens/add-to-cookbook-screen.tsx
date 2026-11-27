@@ -1,8 +1,9 @@
 import React from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import { EmptyCard } from "@/components/empty-card";
+import { Ionicons } from "@/components/icon";
 import { IconButton } from "@/components/icon-button";
 import { SheetInput } from "@/components/sheet-input";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { TextField, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
@@ -76,9 +77,12 @@ export function AddToCookbookScreen() {
           : {
               items,
               empty: (
-                <Text className="text-muted py-10 text-center text-base">
-                  {intl.formatMessage({ id: "recipes.cookbooks.noneEditable" })}
-                </Text>
+                <EmptyCard
+                  icon="book-outline"
+                  placement="sheet"
+                  testID="add-to-cookbook-none"
+                  title={intl.formatMessage({ id: "recipes.cookbooks.noneEditable" })}
+                />
               ),
               keyExtractor: (item) =>
                 String(item.kind === "pending" ? item.entry.key : item.cookbook.id),

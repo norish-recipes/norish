@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import type { ReactNode } from "react";
 import React from "react";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 type Props = {
@@ -9,6 +9,7 @@ type Props = {
   testID?: string;
   style?: object | object[];
   contentContainerStyle?: object;
+  contentContainerClassName?: string;
   onLayout?: (event: { nativeEvent: { layout: { height: number } } }) => void;
 };
 
@@ -21,8 +22,16 @@ const BOTTOM = 34;
 
 const host =
   (kind: string) =>
-  ({ children, testID, style, contentContainerStyle, onLayout }: Props) => (
+  ({
+    children,
+    testID,
+    style,
+    contentContainerStyle,
+    contentContainerClassName,
+    onLayout,
+  }: Props) => (
     <div
+      data-class={contentContainerClassName}
       data-content={JSON.stringify(contentContainerStyle ?? {})}
       data-kind={kind}
       data-style={JSON.stringify(Object.assign({}, ...[style ?? {}].flat()))}
@@ -65,7 +74,7 @@ vi.mock("react-native-safe-area-context", () => ({
 vi.mock("@/lib/tab-bar-visibility", () => ({ useMarkSheetOpen: () => {} }));
 vi.mock("@/components/modal-header", () => ({ ModalHeader: () => null }));
 
-const { Sheet, SheetBody, SheetList, SheetScrollView, SHEET_BODY_TOP, FULL_SHEET_TOP } =
+const { FitSheet, Sheet, SheetBody, SheetList, SheetScrollView, SHEET_BODY_TOP, FULL_SHEET_TOP } =
   await import("@/components/sheet");
 // The native header: where the body starts under the sheet's top.
 const HEADER = SHEET_BODY_TOP - FULL_SHEET_TOP;
@@ -92,7 +101,40 @@ function fitSheet() {
   );
 }
 
+describe("FitSheet", () => {
+  it("is a sheet whose body is a fit body", () => {
+    render(
+      <FitSheet name="fit" title="Fit">
+        <span data-testid="content">content</span>
+      </FitSheet>
+    );
+
+    expect(screen.getByTestId("content").closest("[data-kind]")?.getAttribute("data-kind")).toBe(
+      "scroll"
+    );
+    expect(screen.getByTestId("fit-sheet")).toBeTruthy();
+  });
+});
+
 describe("Sheet", () => {
+  it("lays a fit sheet's blocks 16 pt apart unless the body says otherwise", () => {
+    const bodyClass = () =>
+      screen.getByTestId("content").closest("[data-class]")?.getAttribute("data-class");
+
+    fitSheet();
+    expect(bodyClass()).toContain("gap-4");
+    cleanup();
+    render(
+      <Sheet name="fit" title="Fit">
+        <SheetBody contentClassName="gap-2">
+          <span data-testid="content">content</span>
+        </SheetBody>
+      </Sheet>
+    );
+    expect(bodyClass()).toContain("gap-2");
+    expect(bodyClass()).not.toContain("gap-4");
+  });
+
   it("holds a fit sheet's content to the room under the sheet's top, its body scrolling beyond", () => {
     fitSheet();
 

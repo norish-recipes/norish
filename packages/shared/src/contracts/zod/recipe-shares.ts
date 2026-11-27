@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { measurementSystems, recipeCategorySchema } from "./recipe";
+import { measurementSystems } from "./recipe";
 import { StepIngredientOutputSchema } from "./step-ingredients";
 
 export const recipeShareExpiryPolicies = ["1day", "1week", "1month", "1year", "forever"] as const;
@@ -18,6 +18,7 @@ export const RecipeShareSelectSchema = z.object({
   userId: z.string(),
   recipeId: z.uuid(),
   tokenHash: z.string(),
+  tokenEnc: z.string().nullable(),
   expiresAt: z.date().nullable(),
   revokedAt: z.date().nullable(),
   lastAccessedAt: z.date().nullable(),
@@ -31,10 +32,12 @@ export const RecipeShareLifecycleEventTypeSchema = z.enum(recipeShareLifecycleEv
 
 const RecipeShareManagementBaseSchema = RecipeShareSelectSchema.omit({
   tokenHash: true,
+  tokenEnc: true,
 });
 
 export const RecipeShareSummarySchema = RecipeShareManagementBaseSchema.extend({
   status: RecipeShareStatusSchema,
+  hasLink: z.boolean(),
 });
 
 export const RecipeShareInventorySchema = RecipeShareSummarySchema.extend({
@@ -44,6 +47,8 @@ export const RecipeShareInventorySchema = RecipeShareSummarySchema.extend({
 export const AdminRecipeShareInventorySchema = RecipeShareInventorySchema.extend({
   ownerId: z.string(),
   ownerName: z.string().nullable(),
+  /** False while the maker may not view the recipe: the link is inactive until they may again. */
+  makerMayView: z.boolean(),
 });
 
 export const CreateRecipeShareInputSchema = z.object({
@@ -82,6 +87,10 @@ export const DeleteRecipeShareInputSchema = z.object({
 
 export const ResolveSharedRecipeInputSchema = z.object({
   token: z.string().trim().min(1),
+});
+
+export const RecipeShareUrlSchema = z.object({
+  url: z.string().startsWith("/share/").nullable(),
 });
 
 export const RecipeShareCreatedSchema = RecipeShareSummarySchema.extend({
@@ -161,7 +170,7 @@ export const PublicRecipeViewSchema = z.object({
   fat: z.string().nullable(),
   carbs: z.string().nullable(),
   protein: z.string().nullable(),
-  categories: z.array(recipeCategorySchema).default([]),
+  categories: z.array(z.string()).default([]),
   tags: z.array(PublicRecipeTagSchema).default([]),
   recipeIngredients: z.array(PublicRecipeIngredientSchema).default([]),
   steps: z.array(PublicRecipeStepSchema).default([]),

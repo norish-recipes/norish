@@ -1,17 +1,22 @@
 "use client";
 
-import { useEffect } from "react";
+import { use, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import type {
   FullRecipeDTO,
   MeasurementSystem,
+  RecipeConversion,
   RecipeIngredientsDto,
 } from "@norish/shared/contracts";
 
 import type { RecipeEnrichmentResult } from "./use-recipe-enrichment";
 import { useTRPC } from "../trpc";
-import { useRecipePageStore, useRecipePageStoreApi } from "./recipe-page-store";
+import {
+  LoadedRecipeContext,
+  useRecipePageStore,
+  useRecipePageStoreApi,
+} from "./recipe-page-store";
 import { scaleIngredients } from "./scale-ingredients";
 import { servingsShown } from "./servings";
 import { useConvertMutation } from "./use-convert-mutation";
@@ -26,9 +31,10 @@ export function usePageRecipe(): FullRecipeDTO | null {
   return data ?? null;
 }
 
-/** The page's recipe, for the pieces drawn once it has loaded. */
+/** The page's recipe, for the pieces drawn inside `LoadedPageRecipe`. */
 export function useLoadedPageRecipe(): FullRecipeDTO {
-  const recipe = usePageRecipe();
+  const held = use(LoadedRecipeContext);
+  const recipe = usePageRecipe() ?? held;
 
   if (!recipe) throw new Error("Recipe not loaded");
 
@@ -63,8 +69,12 @@ export function usePageEnrichment(): RecipeEnrichmentResult {
 type RecipeConversionResult = {
   /** The system on its way, until the recipe shows it. */
   convertingTo: MeasurementSystem | null;
-  /** Convert to `target`; with AI, the copy in it is written again even where one exists. */
-  startConversion: (target: MeasurementSystem, withAI?: boolean) => void;
+  /** Converts to `target`; with AI, the copy in it is written again even where one exists. One
+   * picked by hand (`manual`) is settled by its own result alone. */
+  startConversion: (
+    asked: Omit<RecipeConversion, "version">,
+    options?: { manual?: boolean }
+  ) => void;
 };
 
 export function useRecipeConversion(): RecipeConversionResult {
@@ -76,13 +86,13 @@ export function useRecipeConversion(): RecipeConversionResult {
   const endConversion = useRecipePageStore((state) => state.endConversion);
   const recipe = usePageRecipe();
 
-  // Over once the recipe shows the target; with AI the copy showing is written
-  // again, so it waits for the recipe to change.
+  // Over once the recipe shows the target (with AI, a copy written again) or moved past the version
+  // it was asked on, which the server refuses as stale.
   const isOver =
     !!recipe &&
     !!conversion &&
-    recipe.systemUsed === conversion.target &&
-    (!conversion.withAI || recipe.version !== conversion.version);
+    (recipe.version > conversion.version ||
+      (recipe.systemUsed === conversion.target && !conversion.withAI));
 
   // Cleared once over, so a later change of the recipe's system doesn't revive it.
   useEffect(() => {
@@ -91,11 +101,12 @@ export function useRecipeConversion(): RecipeConversionResult {
 
   return {
     convertingTo: conversion && !isOver ? conversion.target : null,
-    startConversion: (target, withAI = false) => {
+    startConversion: (asked, { manual = false } = {}) => {
       if (!recipe) return;
+      const conversion = { ...asked, version: recipe.version };
 
-      store.getState().startConversion({ target, withAI, version: recipe.version });
-      convertMeasurements(target, recipe.version, withAI);
+      store.getState().startConversion(conversion, manual);
+      convertMeasurements(conversion);
     },
   };
 }

@@ -1,15 +1,15 @@
 // @vitest-environment node
 /**
  * The reference data an administrator edits is announced to every client, which reads it again:
- * units, words, recurrence, timers, locales and the Cuisine vocabulary.
+ * units, words, recurrence, timers, locales and the instance's Cuisines.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 
 import { contentConfigProcedures } from "../../src/routers/admin/content-config";
-import { cuisinesProcedures } from "../../src/routers/admin/cuisines";
 import { systemProcedures } from "../../src/routers/admin/system";
+import { listsProcedures } from "../../src/routers/lists/lists";
 import { createMockCallerContext } from "../calendar/test-utils";
 import { config as configRealtime } from "../mocks/realtime/config";
 import { setConfig } from "../mocks/server-config";
@@ -18,11 +18,14 @@ import { createMockAdminContext } from "./test-utils";
 
 vi.mock("@norish/db/repositories/server-config", () => import("../mocks/server-config"));
 vi.mock("@norish/db/repositories/users", () => import("../mocks/users"));
-vi.mock("@norish/db/repositories/cuisines", () => ({
-  createCuisine: vi.fn(async (name: string) => ({ id: "c1", name })),
-  renameCuisine: vi.fn(),
-  deleteCuisine: vi.fn(),
+vi.mock("@norish/db/repositories/list-entries", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/db/repositories/list-entries")>()),
+  addEntry: vi.fn(async (_kind: string, _scope: string | null, name: string) => ({
+    created: true,
+    entry: { id: "c1", name, instance: true, version: 1 },
+  })),
 }));
+vi.mock("@norish/shared-server/realtime/lists", () => import("../mocks/realtime/lists"));
 vi.mock("@norish/shared-server/realtime/config", () => import("../mocks/realtime/config"));
 vi.mock("@norish/shared-server/ingredients/resolver", () => ({ forgetSpellingRules: vi.fn() }));
 vi.mock("@norish/shared-server/logger", () => ({
@@ -44,7 +47,9 @@ describe("an administrator's edit to reference data", () => {
     const content = contentConfigProcedures.createCaller(context());
 
     await content.updateUnits(JSON.stringify({}));
-    await cuisinesProcedures.createCaller(context()).create({ name: "Thai" });
+    await listsProcedures
+      .createCaller(context())
+      .add({ kind: "cuisine", name: "Thai", instance: true });
 
     expect(announced()).toEqual(["changed", "changed"]);
   });

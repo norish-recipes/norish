@@ -9,13 +9,6 @@ import { useTranslations } from "next-intl";
 
 import { addBasePath } from "@norish/shared/lib/base-path";
 
-/**
- * `viewer` exports everything the pressing user can see under the view
- * policy; `instance` exports every recipe on the server. Both go through the
- * same route, which authorises the instance scope itself.
- */
-type ArchiveExportScope = "viewer" | "instance";
-
 const EXPORT_PATH = "/export/recipes";
 
 /**
@@ -27,12 +20,7 @@ const HANDOFF_GUARD_MS = 3000;
 
 interface ArchiveExportButtonProps {
   label: string;
-  scope?: ArchiveExportScope;
   fullWidth?: boolean;
-}
-
-function exportUrl(scope: ArchiveExportScope): string {
-  return scope === "instance" ? `${EXPORT_PATH}?scope=instance` : EXPORT_PATH;
 }
 
 /**
@@ -42,7 +30,7 @@ function exportUrl(scope: ArchiveExportScope): string {
 const FALLBACK_FILE_NAME = "norish-recipes.norishrecipes";
 
 /**
- * Downloads a Recipe Archive of everything in scope.
+ * Downloads a Recipe Archive of everything the reader may view.
  *
  * Where the browser allows it the archive is streamed out through the service
  * worker, so the button stays busy for exactly as long as the transfer runs
@@ -50,11 +38,7 @@ const FALLBACK_FILE_NAME = "norish-recipes.norishrecipes";
  * download and the button falls back to a short guard. Either way an
  * unauthorised export is reported here rather than replacing the page.
  */
-export default function ArchiveExportButton({
-  label,
-  scope = "viewer",
-  fullWidth,
-}: ArchiveExportButtonProps) {
+export default function ArchiveExportButton({ label, fullWidth }: ArchiveExportButtonProps) {
   const t = useTranslations("settings.archiveExport");
   const [exporting, setExporting] = useState(false);
   const [bytes, setBytes] = useState(0);
@@ -81,7 +65,7 @@ export default function ArchiveExportButton({
     setBytes(0);
 
     const outcome = await startArchiveDownload({
-      url: addBasePath(exportUrl(scope)),
+      url: addBasePath(EXPORT_PATH),
       fallbackFileName: FALLBACK_FILE_NAME,
       onProgress: (transferred) => {
         if (mountedRef.current) setBytes(transferred);
@@ -90,17 +74,12 @@ export default function ArchiveExportButton({
 
     if (outcome.status === "failed") {
       const description =
-        outcome.reason === "unauthorized"
-          ? t("errors.signedOut")
-          : outcome.reason === "forbidden"
-            ? t("errors.notAllowed")
-            : t("errors.failedDescription");
+        outcome.reason === "unauthorized" ? t("errors.signedOut") : t("errors.failedDescription");
 
       showSafeErrorToast({
         title: t("errors.failedTitle"),
         description,
         error: "error" in outcome ? outcome.error : undefined,
-        metadata: { scope },
         context: "archive-export",
       });
       finish();

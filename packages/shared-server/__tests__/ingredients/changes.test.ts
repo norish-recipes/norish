@@ -28,15 +28,15 @@ afterAll(restore);
 
 describe("announcing Ingredient changes", () => {
   it("announces an edit on its own", async () => {
-    await ingredientChanges().changed(["onion"]);
+    await ingredientChanges().changed(["onion"], "household-a");
 
     expect(announced).toEqual([["onion"]]);
   });
 
   it("holds a run's changes back and announces them once, together, each food once", async () => {
     const result = await announcingTogether(async () => {
-      await ingredientChanges().changed(["uien", "onion"]);
-      await ingredientChanges().changed(["onion", "shallot"]);
+      await ingredientChanges().changed(["uien", "onion"], "household-a");
+      await ingredientChanges().changed(["onion", "shallot"], "household-a");
       expect(announced).toEqual([]);
 
       return "done";
@@ -49,7 +49,7 @@ describe("announcing Ingredient changes", () => {
   it("announces what was held even when the run fails partway", async () => {
     await expect(
       announcingTogether(async () => {
-        await ingredientChanges().changed(["uien"]);
+        await ingredientChanges().changed(["uien"], "household-a");
         throw new Error("database away");
       })
     ).rejects.toThrow("database away");
@@ -62,16 +62,16 @@ describe("announcing Ingredient changes", () => {
     const gate = new Promise<void>((resolve) => (release = resolve));
 
     const first = announcingTogether(async () => {
-      await ingredientChanges().changed(["a"]);
+      await ingredientChanges().changed(["a"], "household-a");
       await gate;
-      await ingredientChanges().changed(["b"]);
+      await ingredientChanges().changed(["b"], "household-a");
     });
     const second = announcingTogether(async () => {
-      await ingredientChanges().changed(["c"]);
+      await ingredientChanges().changed(["c"], "household-a");
     });
 
     await second;
-    await ingredientChanges().changed(["outside"]);
+    await ingredientChanges().changed(["outside"], "household-a");
     release();
     await first;
 

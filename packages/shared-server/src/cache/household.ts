@@ -2,8 +2,11 @@ import superjson from "superjson";
 
 import { getHouseholdForUser as dbGetHouseholdForUser } from "@norish/db/repositories/households";
 import { getPublisherClient } from "@norish/shared-server/valkey/client";
+import { currentToken, freshToken } from "@norish/shared-server/valkey/token";
 
 const CACHE_PREFIX = "norish:cache:household:user:";
+/** A random token each invalidation replaces; an entry counts only while it carries the current one. */
+const GENERATION_PREFIX = "norish:cache:household:generation:";
 const CACHE_TTL_SECONDS = 30;
 
 type CachedHousehold = Awaited<ReturnType<typeof dbGetHouseholdForUser>>;
@@ -11,34 +14,42 @@ type CachedHousehold = Awaited<ReturnType<typeof dbGetHouseholdForUser>>;
 export async function getCachedHouseholdForUser(userId: string): Promise<CachedHousehold> {
   const valkey = await getPublisherClient();
   const cacheKey = `${CACHE_PREFIX}${userId}`;
+  const generationKey = `${GENERATION_PREFIX}${userId}`;
+  const [cached, stored] = await valkey.mget(cacheKey, generationKey);
 
-  // Try cache first
-  const cached = await valkey.get(cacheKey);
+  if (cached && stored) {
+    const split = cached.indexOf(":");
 
-  if (cached) {
-    return superjson.parse<CachedHousehold>(cached);
+    if (cached.slice(0, split) === stored) {
+      return superjson.parse<CachedHousehold>(cached.slice(split + 1));
+    }
   }
 
-  // Fetch from DB
+  const generation = stored ?? (await currentToken(valkey, generationKey));
+
   const household = await dbGetHouseholdForUser(userId);
 
-  // Cache result (including null)
-  await valkey.setex(cacheKey, CACHE_TTL_SECONDS, superjson.stringify(household));
+  // Stamped with the generation read before the database: an invalidation since makes it stale.
+  await valkey.set(
+    cacheKey,
+    `${generation}:${superjson.stringify(household)}`,
+    "EX",
+    CACHE_TTL_SECONDS
+  );
 
   return household;
 }
 
 export async function invalidateHouseholdCache(userId: string): Promise<void> {
-  const valkey = await getPublisherClient();
-
-  await valkey.del(`${CACHE_PREFIX}${userId}`);
+  await invalidateHouseholdCacheForUsers([userId]);
 }
 
 export async function invalidateHouseholdCacheForUsers(userIds: string[]): Promise<void> {
   if (userIds.length === 0) return;
 
   const valkey = await getPublisherClient();
-  const keys = userIds.map((id) => `${CACHE_PREFIX}${id}`);
+  const bumps = valkey.multi();
 
-  await valkey.del(...keys);
+  for (const id of userIds) bumps.set(`${GENERATION_PREFIX}${id}`, freshToken());
+  await bumps.exec();
 }

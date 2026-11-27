@@ -335,9 +335,9 @@ export function syncCalendarWidgets(plan: Plan, strings: WidgetStrings): Promise
   );
 }
 
-/** Leaves both widgets on `signIn`, the signed-out line, and removes their photos at once; a
- * refresh still downloading is dropped, not awaited. */
-export function clearCalendarWidgets(signIn: string): Promise<void> {
+/** Leaves both widgets on one `line` (signed out, or a household change) and removes their photos
+ * at once; a refresh still downloading is dropped, not awaited. */
+export function clearCalendarWidgets(line: string): Promise<void> {
   if (!widgets) return Promise.resolve();
   ended = true;
   generation += 1;
@@ -345,7 +345,7 @@ export function clearCalendarWidgets(signIn: string): Promise<void> {
   widgetPushes.reset();
 
   return queue(async () => {
-    push(signedOutTimelines({ signIn }));
+    push(signedOutTimelines({ signIn: line }));
     clearPhotos();
   });
 }

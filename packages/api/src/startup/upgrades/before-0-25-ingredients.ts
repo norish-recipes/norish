@@ -12,9 +12,13 @@ import {
 import { resolveAgain } from "@norish/shared-server/ingredients/resolve-again";
 import { resolveIngredient, resolveIngredients } from "@norish/shared-server/ingredients/resolver";
 import { readIngredientSeedState } from "@norish/shared-server/ingredients/seed/catalogue-seed";
+import { createLogger } from "@norish/shared-server/logger";
+import { groupBy } from "@norish/shared/lib/group-by";
 import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
 const BATCH_SIZE = 500;
+
+const log = createLogger("upgrade:before-0.25");
 
 /**
  * Rows from before 0.25 name a food through a spelling (ADR-0037), as an import with AI off reads
@@ -60,15 +64,14 @@ async function resolveAll<R extends { id: string }>(
   }
 }
 
-/** A Pantry Ingredient names the food its old Ingredient's name resolves to. */
+/** A Pantry Ingredient names the food its old Ingredient's name resolves to in its household. */
 async function upgradePantry(): Promise<number> {
   const pantry = await listPantryIngredientsWithoutSpelling();
 
-  for (const ownerId of new Set(pantry.map((row) => row.ownerId))) {
-    const owned = pantry.filter((row) => row.ownerId === ownerId);
+  for (const [householdId, owned] of groupBy(pantry, (row) => row.householdId)) {
     const foods = await resolveIngredients(
       owned.map((row) => row.name),
-      { userId: ownerId },
+      { householdId, userId: null },
       "upgrade"
     );
 
@@ -84,28 +87,43 @@ async function upgradePantry(): Promise<number> {
 
 /**
  * A parked link is keyed by the food its household's grocery of that name names, else the food its
- * name resolves to; one naming none, or whose Store went, is dropped.
+ * name resolves to; one naming none, or whose Store, aisle or product went, is dropped.
  */
 async function upgradeParkedLinks(): Promise<number> {
   const groceryFoods = new Map<string, string>();
+  const keyOf = (householdId: string, name: string) =>
+    `${householdId}|${ingredientAliasFold(name)}`;
 
-  for (const { name, ingredientId } of await listGroceryNamesWithFood()) {
-    const fold = ingredientAliasFold(name);
+  for (const { householdId, name, ingredientId } of await listGroceryNamesWithFood()) {
+    const key = keyOf(householdId, name);
 
-    if (!groceryFoods.has(fold)) groceryFoods.set(fold, ingredientId);
+    if (!groceryFoods.has(key)) groceryFoods.set(key, ingredientId);
   }
 
   let kept = 0;
+  let targetGone = 0;
 
   for (const parked of await listParkedLinks()) {
     const name = parked.link.normalized_name;
-    const ingredientId = parked.ownerId
-      ? (groceryFoods.get(ingredientAliasFold(name)) ??
-        (await resolveIngredient(name, { userId: parked.ownerId }, "upgrade"))?.ingredientId ??
+    const { householdId } = parked;
+
+    if (!householdId) {
+      log.info({ id: parked.id, kind: parked.kind }, "Dropped a parked link whose Store is gone");
+    }
+    const ingredientId = householdId
+      ? (groceryFoods.get(keyOf(householdId, name)) ??
+        (await resolveIngredient(name, { householdId, userId: null }, "upgrade"))?.ingredientId ??
         null)
       : null;
 
-    if (await unparkLink(parked, ingredientId)) kept += 1;
+    const outcome = await unparkLink(parked, ingredientId);
+
+    if (outcome === "restored") kept += 1;
+    if (outcome === "target-gone") targetGone += 1;
+  }
+
+  if (targetGone > 0) {
+    log.info({ count: targetGone }, "Dropped parked links whose aisle or product is gone");
   }
 
   return kept;

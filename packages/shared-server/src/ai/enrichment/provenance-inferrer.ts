@@ -49,12 +49,14 @@
 
 import type { CuisineStrategy } from "@norish/config/zod/server-config";
 import type { CuisineVocabularyEntry } from "@norish/shared/lib/cuisine-resolver";
-import { createCuisines, listCuisines } from "@norish/db/repositories/cuisines";
+import { cuisinesForNames } from "@norish/db/repositories/cuisines";
+import { listEntryRows } from "@norish/db/repositories/list-entries";
 import {
   getCuisineStrategy,
   isDecisionUseEnabled,
 } from "@norish/shared-server/config/server-config-loader";
 import { aiLogger } from "@norish/shared-server/logger";
+import { announceListsChanged } from "@norish/shared-server/realtime/list-changes";
 import { resolveCuisines } from "@norish/shared/lib/cuisine-resolver";
 import { normalizeOriginCountry } from "@norish/shared/lib/recipe-enrichment";
 import { countryDisplayName, listCountryOptions } from "@norish/shared/lib/recipe-provenance";
@@ -150,6 +152,8 @@ export interface SuppliedProvenance {
 }
 
 export interface RecipeForProvenance {
+  /** The recipe's household: its Cuisines and the instance's are offered, `extend` adds to it. */
+  householdId: string;
   title: string;
   description: string | null;
   ingredients: string[];
@@ -244,11 +248,12 @@ function buildSuppliedSection(
 /**
  * Turn proposed names into vocabulary row ids.
  *
- * Matching runs under both strategies; only the `extend` strategy may add rows.
+ * Matching runs under both strategies; only `extend` may add rows, to the recipe's household.
  * Dropped names are deliberately discarded here: nothing logs, persists, or
  * surfaces them.
  */
 async function resolveProposedCuisines(
+  householdId: string,
   proposed: readonly string[],
   vocabulary: readonly CuisineVocabularyEntry[],
   strategy: CuisineStrategy
@@ -258,16 +263,11 @@ async function resolveProposedCuisines(
 
   if (created.length === 0) return ids;
 
-  const rows = await createCuisines(created);
-  const byName = new Map(rows.map((row) => [row.name.toLowerCase(), row.id]));
+  const rows = await cuisinesForNames(householdId, created, { create: true });
 
-  for (const name of created) {
-    const id = byName.get(name.toLowerCase());
+  await announceListsChanged(householdId, ["cuisine"]);
 
-    if (id) ids.push(id);
-  }
-
-  return ids;
+  return [...new Set([...ids, ...rows.map((row) => row.id)])];
 }
 
 /** The structured recipe every Decision here is asked about. */
@@ -383,7 +383,7 @@ export async function inferRecipeProvenance(
   // The request schema is built from the vocabulary as it stands right now,
   // never from a compile-time list. The strategy shapes the request as well as
   // the resolution: what the model is allowed to propose is the same decision.
-  const vocabulary = await listCuisines();
+  const vocabulary = await listEntryRows("cuisine", recipe.householdId);
   const strategy = await getCuisineStrategy();
 
   let decided: DecidedProvenance | null = null;
@@ -504,6 +504,7 @@ export async function inferRecipeProvenance(
     const keptNames = new Set(kept.map((claim) => claim.id));
 
     cuisineIds = await resolveProposedCuisines(
+      recipe.householdId,
       proposed.filter((name) => echoesSupplied(name) || keptNames.has(name)),
       vocabulary,
       strategy

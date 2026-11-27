@@ -4,8 +4,13 @@ import { useRef, useState } from "react";
 import { IngredientIcon } from "@/components/ingredients/ingredient-icon";
 import { IngredientPanel } from "@/components/ingredients/ingredient-panel";
 import { IconActionButton } from "@/components/shared/action-button";
+import { EmptyState } from "@/components/shared/empty-state";
 import { FIELD_STYLE } from "@/features/groceries/lib/grocery-field";
 import { MagnifyingGlassIcon, PlusIcon } from "@heroicons/react/16/solid";
+import {
+  ArchiveBoxIcon,
+  MagnifyingGlassIcon as MagnifyingGlassOutlineIcon,
+} from "@heroicons/react/24/outline";
 import { Button, InputGroup, Skeleton, TextField } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
@@ -129,13 +134,23 @@ export function PantryScreen() {
           ))}
         </div>
       ) : items.length === 0 ? (
-        <p className="text-muted py-2 text-center" data-testid="pantry-empty">
-          {t("empty")}
-        </p>
+        <div className="bg-surface overflow-hidden rounded-lg">
+          <EmptyState
+            data-testid="pantry-empty"
+            icon={ArchiveBoxIcon}
+            title={t("empty")}
+            variant="cell"
+          />
+        </div>
       ) : kept.length === 0 ? (
-        <p className="text-muted py-2 text-center" data-testid="pantry-no-match">
-          {tStatus("noResults")}
-        </p>
+        <div className="bg-surface overflow-hidden rounded-lg">
+          <EmptyState
+            data-testid="pantry-no-match"
+            icon={MagnifyingGlassOutlineIcon}
+            title={tStatus("noResults")}
+            variant="cell"
+          />
+        </div>
       ) : (
         <ul
           className="divide-border divide-y overflow-hidden rounded-lg"

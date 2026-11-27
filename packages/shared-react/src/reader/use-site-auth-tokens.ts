@@ -5,33 +5,52 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { settled, wentThrough } from "../offline/settled";
 import { writeOverRead } from "../offline/write-over-read";
 import { usePlatform } from "../platform";
+import { useStaleRefusal } from "../platform/stale-write";
 import { useTRPC } from "../trpc";
+import { readStatus, rereadAfterWrite } from "../trpc/read-status";
+
+/** The tokens and how their read went. */
+export function useSiteAuthTokensRead() {
+  const trpc = useTRPC();
+  const query = useQuery(trpc.siteAuthTokens.list.queryOptions());
+
+  return { tokens: query.data ?? [], ...readStatus(query) };
+}
 
 /** The tokens the Reader's imports send to sites that need a sign-in. */
 export function useSiteAuthTokensQuery() {
-  const trpc = useTRPC();
-  const { data } = useQuery(trpc.siteAuthTokens.list.queryOptions());
-
-  return data ?? [];
+  return useSiteAuthTokensRead().tokens;
 }
 
 export function useSiteAuthTokenMutations() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { showError } = usePlatform();
+  const refuseStale = useStaleRefusal();
   const queryKey = trpc.siteAuthTokens.list.queryKey();
 
   const { mutateAsync: mutateCreate, isPending: isCreating } = useMutation(
     trpc.siteAuthTokens.create.mutationOptions({
+      // A list never read is reread, not seeded with this one token as if it were the whole list.
       onSuccess: (token) =>
-        writeOverRead(queryClient, queryKey, (prev) => (prev ? [...prev, token] : [token])),
+        queryClient.getQueryData(queryKey) === undefined
+          ? void rereadAfterWrite(queryClient, queryKey)
+          : writeOverRead(queryClient, queryKey, (prev) => prev && [...prev, token]),
       onError: (error) => showError(error, "site-auth-tokens:create"),
     })
   );
   const { mutateAsync: mutateRemove, isPending: isRemoving } = useMutation(
     trpc.siteAuthTokens.remove.mutationOptions({
-      onSuccess: (_answer, { id }) =>
-        writeOverRead(queryClient, queryKey, (prev) => prev?.filter((token) => token.id !== id)),
+      onSuccess: ({ stale }, { id }) => {
+        if (!stale)
+          return writeOverRead(queryClient, queryKey, (prev) =>
+            prev?.filter((token) => token.id !== id)
+          );
+        // Edited elsewhere since it was read: the token stays, as the server now holds it.
+        refuseStale("site-auth-tokens:delete");
+
+        return queryClient.invalidateQueries({ queryKey });
+      },
       onError: (error) => showError(error, "site-auth-tokens:delete"),
     })
   );

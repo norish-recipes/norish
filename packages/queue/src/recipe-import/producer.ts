@@ -8,7 +8,7 @@
 import type { Queue } from "bullmq";
 
 import type { AddImportJobResult, RecipeImportJobData } from "@norish/queue/contracts/job-types";
-import { recipeExistsByUrlForPolicy } from "@norish/db";
+import { findRecipeIdByUrlForAccount } from "@norish/db";
 import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { createLogger } from "@norish/shared-server/logger";
 
@@ -28,32 +28,19 @@ export async function addImportJob(
   data: RecipeImportJobData
 ): Promise<AddImportJobResult> {
   const policy = await getRecipePermissionPolicy();
-  const deduplicationId = recipeImportDeduplicationId(
-    data.url,
-    data.userId,
-    data.householdKey,
-    policy.view
-  );
+  const deduplicationId = recipeImportDeduplicationId(data.url, data.householdId, policy);
 
   log.debug(
     { url: data.url, deduplicationId, policy: policy.view },
     "Attempting to add import job"
   );
 
-  const existingCheck = await recipeExistsByUrlForPolicy(
-    data.url,
-    data.userId,
-    data.householdUserIds,
-    policy.view
-  );
+  const existingRecipeId = await findRecipeIdByUrlForAccount(data.url, data.userId);
 
-  if (existingCheck.exists && existingCheck.existingRecipeId) {
-    log.info(
-      { url: data.url, existingRecipeId: existingCheck.existingRecipeId },
-      "Recipe already exists in DB, skipping queue"
-    );
+  if (existingRecipeId) {
+    log.info({ url: data.url, existingRecipeId }, "Recipe already exists in DB, skipping queue");
 
-    return { status: "exists", existingRecipeId: existingCheck.existingRecipeId };
+    return { status: "exists", existingRecipeId };
   }
 
   const job = await queue.add("import", data, {

@@ -9,7 +9,9 @@ import {
   removeRecipesFromCookbook,
 } from "@norish/db/repositories/cookbooks";
 import { listRecipes } from "@norish/db/repositories/recipes";
+import { lineReadingsOf } from "@norish/shared-server/ingredients/line-readings";
 import { trpcLogger as log } from "@norish/shared-server/logger";
+import { cookbookAudience } from "@norish/shared-server/realtime/audience";
 import {
   CookbookForRecipeInputSchema,
   CookbookMemberIdsInputSchema,
@@ -66,7 +68,7 @@ const setMembership = authedProcedure
     );
 
     if (recipeIds.length > 0) {
-      await emitCookbookEvent(ctx, "membershipChanged", {
+      await emitCookbookEvent(await cookbookAudience(input.cookbookId), "membershipChanged", {
         cookbookId: input.cookbookId,
         recipeIds,
         isMember: input.isMember,
@@ -129,6 +131,9 @@ const recipes = authedProcedure
         cookbookId: input.cookbookId,
         favoritesOnly: input.favoritesOnly,
         pantryOnly: input.pantryOnly,
+        lineReadings: input.pantryOnly
+          ? await lineReadingsOf(ctx.householdId, { of: "cookbook", id: input.cookbookId })
+          : undefined,
       }
     );
 
@@ -154,7 +159,7 @@ const memberIds = authedProcedure
   .query(async ({ ctx, input }) => {
     await assertCookbookAccess(ctx, input.cookbookId, "view");
 
-    return listCookbookMemberIds(input.cookbookId);
+    return listCookbookMemberIds(viewerOf(ctx), input.cookbookId);
   });
 
 export const cookbookMembershipProcedures = router({

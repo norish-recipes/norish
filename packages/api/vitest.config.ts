@@ -21,6 +21,7 @@ export default defineConfig({
     // The ingredient backfill's tests start a Postgres container.
     hookTimeout: 60000,
     include: ["**/*.{test,spec}.{ts,tsx}"],
+    setupFiles: ["@norish/config/testing-setup"],
     env: {
       NODE_ENV: "development",
       DATABASE_URL: "postgresql://test:test@localhost:5432/test",

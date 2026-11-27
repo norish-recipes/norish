@@ -24,6 +24,7 @@ import { dateKey } from "@norish/shared/lib/helpers";
 import type { RealtimeStack } from "./fixture";
 import type { HouseholdRow } from "./support";
 import { closePanel, openGroceries, rowFor } from "../harness/groceries";
+import { readOfflineStore } from "../harness/offline-store";
 import { removePlans } from "../harness/plans";
 import { swipeOpenTo } from "../harness/pointer";
 import { readRecipe, seedRecipe } from "../harness/recipes";
@@ -89,17 +90,17 @@ test.beforeAll(async ({ realtimeStack }) => {
   contextA = await stack.newContext("a");
   pageA = await contextA.newPage();
 
-  // A founds the household before either browser opens a socket, so the
-  // join later is the one Scope Change the scenario is about.
-  const created = await callMutation(pageA, stack.baseURL, "households.create", {
-    name: "Realtime household",
+  // A's household of one gets a join code before either browser opens a socket, so
+  // the join later is the one Scope Change the scenario is about.
+  const own = (await readHousehold(stack, "a"))!;
+  const coded = await callMutation(pageA, stack.baseURL, "households.regenerateCode", {
+    householdId: own.id,
+    version: own.version,
   });
 
-  expect(created.ok).toBe(true);
+  expect(coded.ok).toBe(true);
   await expect.poll(() => readHousehold(stack, "a").then((row) => row?.joinCode)).toBeTruthy();
   household = (await readHousehold(stack, "a"))!;
-  // The create finishes asynchronously with a connection invalidation; let it land.
-  await delay(1_000);
 
   await openGroceries(pageA);
   await waitForSocket(pageA, 1);
@@ -114,6 +115,9 @@ test.afterAll(async () => {
 });
 
 test("a household join mid-connection restarts the joining browser's socket and refuses its old cursor", async () => {
+  // A row of A's household, made before B joins: B's list must be the joined household's after.
+  await addGrocery(pageA, "voor-toetreden");
+  await expect(rowFor(pageB, "voor-toetreden")).toHaveCount(0);
   const before = await socketLedger(pageB);
   const refetched = pageB.waitForResponse(
     (response) => response.url().includes("groceries.list") && response.ok(),
@@ -138,8 +142,9 @@ test("a household join mid-connection restarts the joining browser's socket and 
       timeout: 30_000,
     })
     .toBe(true);
-  // A lagged subscription refetches its domain.
+  // A lagged subscription refetches its domain: B's list is now the joined household's.
   await refetched;
+  await expect(rowFor(pageB, "voor-toetreden")).toBeVisible();
 
   // And from here on, B hears the household: a create by A reaches it live.
   await addGrocery(pageA, "na-toetreden");
@@ -150,7 +155,7 @@ test("grocery create, update and delete reach the other browser without a reload
   await addGrocery(pageA, "realtime-melk");
   await expect(rowFor(pageB, "realtime-melk")).toBeVisible();
 
-  const created = (await readGrocery("realtime-melk"))!;
+  const created = (await readGrocery(stack, "realtime-melk"))!;
   const updated = await callMutation(pageA, stack.baseURL, "groceries.update", {
     groceryId: created.id,
     raw: "realtime-melk-hernoemd",
@@ -161,7 +166,7 @@ test("grocery create, update and delete reach the other browser without a reload
   await expect(rowFor(pageB, "realtime-melk-hernoemd")).toBeVisible();
   await expect(rowFor(pageB, "realtime-melk")).toHaveCount(0);
 
-  const renamed = (await readGrocery("realtime-melk-hernoemd"))!;
+  const renamed = (await readGrocery(stack, "realtime-melk-hernoemd"))!;
   const deleted = await callMutation(pageA, stack.baseURL, "groceries.delete", {
     groceries: [{ id: renamed.id, version: renamed.version }],
   });
@@ -214,7 +219,7 @@ test("a change made before a fresh screen's subscriptions are live shows once th
     await expect(rowFor(page, name)).toBeVisible();
   } finally {
     await context.close();
-    const row = await readGrocery(name);
+    const row = await readGrocery(stack, name);
 
     if (row) {
       await callMutation(pageA, stack.baseURL, "groceries.delete", {
@@ -285,7 +290,7 @@ test("a rename, a repeating grocery and a Pantry add naming two foods are a row 
         recurrenceRule: "week",
         recurrenceInterval: 1,
         recurrenceWeekday: null,
-        nextPlannedFor: new Date().toISOString().slice(0, 10),
+        nextPlannedFor: dateKey(new Date()),
       })
     ).ok
   ).toBe(true);
@@ -644,7 +649,7 @@ test("a browser back from a network gap gets what it missed through Resume, befo
 
   // The link resent the cursor, and the missed event — that row, by id —
   // rode the new socket.
-  const missed = (await readGrocery("tunnel-appel"))!;
+  const missed = (await readGrocery(stack, "tunnel-appel"))!;
   const resubscribed = frames.frames.filter(
     (frame) =>
       frame.direction === "sent" &&
@@ -795,6 +800,71 @@ test("a restart closes every socket with 1012 within seconds, and clients reconn
 
   await addGrocery(pageA, "na-server-herstart");
   await expect(rowFor(pageB, "na-server-herstart")).toBeVisible({ timeout: 30_000 });
+});
+
+test("a removed browser holds none of the former household's groceries or plan, shown or saved", async () => {
+  const saved = async (fragment: string) =>
+    JSON.stringify(await readOfflineStore(pageB, "keyval")).includes(fragment);
+  const plan = "realtime-oud-plan";
+  const grocery = "realtime-oude-boodschap";
+  const planned = await callMutation(pageA, stack.baseURL, "calendar.createItem", {
+    date: dateKey(new Date()),
+    slot: "Dinner",
+    itemType: "note",
+    title: plan,
+  });
+
+  expect(planned.ok).toBe(true);
+  await addGrocery(pageA, grocery);
+  // B reads the plan in a tab it then closes: only B's saved copy still holds it.
+  const calendar = await contextB.newPage();
+
+  try {
+    await calendar.goto("/calendar");
+    await expect(calendar.getByText(plan).first()).toBeVisible();
+    // The plan shows in the server's first frame, before this tab can save it; closed sooner, it never does.
+    await expect.poll(() => saved(plan), { timeout: 30_000 }).toBe(true);
+  } finally {
+    await calendar.close();
+  }
+  await expect(rowFor(pageB, grocery)).toBeVisible();
+  await expect.poll(() => saved(grocery), { timeout: 30_000 }).toBe(true);
+
+  try {
+    // A kick is made at the member's version, as the household card sends it.
+    const { household: read } = await callQuery<{
+      household: { users: { id: string; version: number }[] };
+    }>(pageA, stack.baseURL, "households.get");
+    const member = read.users.find((user) => user.id === stack.userIds.b)!;
+    const removed = await callMutation(pageA, stack.baseURL, "households.kick", {
+      householdId: household.id,
+      userId: stack.userIds.b,
+      version: member.version,
+    });
+
+    expect(removed.ok).toBe(true);
+    await expect
+      .poll(() => readHousehold(stack, "b").then((row) => row?.id))
+      .not.toBe(household.id);
+
+    await expect(rowFor(pageB, grocery)).toHaveCount(0, { timeout: 30_000 });
+    await expect.poll(() => saved(plan), { timeout: 30_000 }).toBe(false);
+    await expect.poll(() => saved(grocery), { timeout: 30_000 }).toBe(false);
+
+    const after = await contextB.newPage();
+
+    try {
+      await after.goto("/calendar");
+      // The skeleton shows no plan either: absence counts only once the days are read.
+      await expect(after.locator("[data-day-key]").first()).toBeVisible();
+      await expect(after.locator("[data-calendar-skeleton]")).toHaveCount(0);
+      await expect(after.getByText(plan)).toHaveCount(0);
+    } finally {
+      await after.close();
+    }
+  } finally {
+    await removePlans(stack.baseURL, stack.cookies.a, (row) => row.title === plan);
+  }
 });
 
 test("a revoked session ends at the sign-in page, not in a reconnect loop", async () => {

@@ -8,7 +8,7 @@
     "household": "Haushalt",
     "caldav": "CalDAV",
     "admin": "Admin",
-    "ingredients": "Zutaten"
+    "content": "Inhalte"
   },
   "user": {
     "signInMethods": {
@@ -76,13 +76,15 @@
         "warning": "Speichern Sie diesen Schlüssel jetzt! Sie können ihn später nicht mehr sehen. Wir speichern nur einen Hash und können diesen Schlüssel nicht wiederherstellen.",
         "hint": "Nutzen Sie diesen Schlüssel im <code>x-api-key</code>-Header bei API-Anfragen.",
         "confirmButton": "Ich habe es gespeichert",
-        "copyButton": "Schlüssel kopieren"
+        "copyButton": "Schlüssel kopieren",
+        "copied": "Schlüssel kopiert"
       },
       "deleteModal": {
         "title": "API-Schlüssel löschen",
         "message": "Sind Sie sicher, dass Sie diesen API-Schlüssel löschen möchten? Alle Anwendungen, die ihn nutzen, verlieren sofort den Zugriff. Das kann nicht rückgängig gemacht werden.",
         "confirmButton": "Schlüssel löschen"
-      }
+      },
+      "createNoAnswer": "Der Server hat nicht geantwortet. Der Schlüssel wurde möglicherweise erstellt: Prüfen Sie Ihre Schlüssel."
     },
     "archiveImport": {
       "title": "Rezeptarchiv importieren",
@@ -134,9 +136,9 @@
       "deleteModal": {
         "title": "Konto löschen",
         "permanentWarning": "Diese Aktion ist permanent und kann nicht rückgängig gemacht werden!",
-        "dataWarning": "Ihre persönlichen Daten, einschließlich Einkaufsliste, Kalendereinträge und Notizen, werden permanent gelöscht.",
-        "recipesNote": "Rezepte, die Sie erstellt haben, werden erhalten, aber nicht mehr mit Ihrem Konto verknüpft.",
-        "adminNote": "Wenn Sie Administrator eines Haushalts mit anderen Mitgliedern sind, müssen Sie die Admin-Berechtigung zunächst übertragen.",
+        "dataWarning": "Ihre Rezepte und Kochbücher werden gelöscht, ebenso Ihre Bewertungen, Favoriten, Allergien, Einstellungen, API-Schlüssel, Freigabelinks, CalDAV und Website-Tokens.",
+        "recipesNote": "Ihr Haushalt behält seine Einkaufsliste, Geschäfte, Vorratskammer und Essensplanung. Ihre Rezepte im Plan bleiben dort als Notizen.",
+        "adminNote": "Wenn Sie Administrator des Haushalts sind, übernimmt das am längsten dabei befindliche Mitglied. Sind Sie das letzte Mitglied, wird der Haushalt mit allem darin gelöscht.",
         "confirmButton": "Mein Konto löschen"
       }
     },
@@ -228,6 +230,7 @@
       "revokeModal": {
         "title": "Link widerrufen",
         "message": "Dieser Link für {recipeName} funktioniert nicht mehr, bis Sie ihn reaktivieren.",
+        "finalMessage": "Dieser Link für {recipeName} funktioniert nicht mehr, und Sie können ihn nicht reaktivieren.",
         "confirm": "Widerrufen"
       },
       "reactivateModal": {
@@ -247,11 +250,13 @@
       "yourRole": "Ihre Rolle",
       "admin": "Administrator",
       "member": "Mitglied",
+      "justYou": "Ihr Haushalt (nur Sie)",
       "members": "Mitglieder",
       "leaveButton": "Haushalt verlassen",
       "leaveModal": {
         "title": "Haushalt verlassen",
         "confirmMessage": "Sind Sie sicher, dass Sie {name} verlassen möchten?",
+        "goesAndStays": "Ihre Rezepte und Kochbücher kommen mit, samt Tags und Zutaten. Einkaufsliste, Vorratskammer, Essensplan und Geschäfte bleiben beim Haushalt.",
         "adminWarning": "Sie sind der Administrator. Sie müssen die Admin-Berechtigung zunächst übertragen.",
         "confirmButton": "Haushalt verlassen"
       }
@@ -269,7 +274,7 @@
       "kickModal": {
         "title": "Benutzer entfernen",
         "confirmMessage": "Sind Sie sicher, dass Sie {name} aus dem Haushalt entfernen möchten?",
-        "warning": "Er/Sie verliert Zugriff auf alle gemeinsamen Rezepte, Einkaufsliste und Kalendereinträge.",
+        "warning": "Seine/ihre Rezepte und Kochbücher gehen mit, samt Tags und Zutaten. Einkaufsliste, Vorratskammer, Essensplan und Geschäfte bleiben beim Haushalt.",
         "confirmButton": "Benutzer entfernen"
       },
       "transferModal": {
@@ -293,18 +298,11 @@
       "copyFailed": "Join-Code konnte nicht kopiert werden",
       "copyButton": "Join-Code kopieren"
     },
-    "create": {
-      "title": "Haushalt erstellen",
-      "description": "Erstellen Sie einen neuen Haushalt, um Rezepte und Einkaufslisten mit Familie oder Freunden zu teilen.",
-      "nameLabel": "Haushaltsname",
-      "namePlaceholder": "z.B. Familie Müller",
-      "submitButton": "Haushalt erstellen"
-    },
     "join": {
       "title": "Haushalt beitreten",
-      "description": "Geben Sie einen Beitrittscode ein, um einem bestehenden Haushalt beizutreten.",
+      "description": "Geben Sie einen Beitrittscode ein, um einem bestehenden Haushalt beizutreten. Ihr Haushalt geht darin auf: Ihre Rezepte, Einkäufe, Vorratskammer, Essensplan und Geschäfte kommen mit.",
       "codeLabel": "Beitrittscode",
-      "codePlaceholder": "8-stelliger Code",
+      "codePlaceholder": "6-stelliger Code",
       "submitButton": "Haushalt beitreten"
     }
   },
@@ -392,7 +390,9 @@
   },
   "ingredients": {
     "title": "Zutaten",
-    "description": "Der Zutatenkatalog, mit dem Norish Nährwerte, Zutatensymbole und Übersetzungen bestimmt.",
+    "sheetTitle": "Zutat",
+    "loadFailed": "Diese Zutat konnte nicht geladen werden",
+    "loadOffline": "Diese Zutat benötigt eine Verbindung",
     "search": "Zutaten suchen",
     "searchMatch": "Treffer",
     "searchIn": "Suchen in",
@@ -416,7 +416,6 @@
       "seed-ambiguous": "Der Katalog kennt mehrere Zutaten, die dies sein könnten.",
       "ai-junk": "KI hielt dies für keine Zutat, etwa ein Küchenutensil oder ein Bruchstück einer Rezeptzeile."
     },
-    "empty": "Keine Zutaten gefunden",
     "emptyFlagged": "Nichts ist markiert",
     "rename": "Umbenennen",
     "delete": "Löschen",
@@ -428,8 +427,8 @@
       "pantry": "{count, plural, one {# Vorratseintrag wird entfernt} other {# Vorratseinträge werden entfernt}}"
     },
     "markDistinct": "Als eigenständig markieren",
-    "summary": "{spellings, plural, one {# Übersetzung} other {# Übersetzungen}}{kinds, plural, =0 {} one {, # Sorte} other {, # Sorten}}{parent, select, none {} other {, übergeordnet: {parent}}}",
-    "addAlias": "Übersetzung hinzufügen",
+    "summary": "{spellings, plural, one {# Schreibweise} other {# Schreibweisen}}{kinds, plural, =0 {} one {, # Sorte} other {, # Sorten}}{parent, select, none {} other {, übergeordnet: {parent}}}",
+    "addAlias": "Schreibweise hinzufügen",
     "removeAlias": "{alias} entfernen",
     "mergeInto": "Zusammenführen mit…",
     "merge": "Zusammenführen",
@@ -449,15 +448,17 @@
     "clearParent": "Oberbegriff entfernen",
     "nameSection": "Name",
     "parentSection": "Übergeordnet",
-    "spellingsSection": "Übersetzungen",
+    "spellingsSection": "Schreibweisen",
     "shownAs": "Ihnen angezeigt als {name}",
     "changeParent": "Übergeordnete Zutat ändern…",
-    "spellingsCount": "{count, plural, one {# Übersetzung} other {# Übersetzungen}}",
+    "spellingsCount": "{count, plural, one {# Schreibweise} other {# Schreibweisen}}",
     "dataSources": {
       "title": "Datenquellen",
       "notice": "Der Zutatenkatalog basiert auf der Zutatentaxonomie von <off>Open Food Facts</off>, verfügbar unter der <odbl>Open Database License (ODbL)</odbl>. Der Katalog, den Norish daraus aufbaut, steht unter derselben Lizenz.",
       "nutritionNotice": "Die Nährwerte pro 100 g stammen aus <ciqual>CIQUAL 2025</ciqual> und CALNUT (ANSES), <usda>USDA FoodData Central</usda> und <cofid>CoFID</cofid>, verknüpft über die Codes, die Open Food Facts jeder Zutat gibt. Die Korrekturen eines Haushalts sind dessen eigene Werte, nicht die der Datensätze.",
-      "download": "Zutatenkatalog herunterladen (JSON)"
+      "download": "Zutatenkatalog herunterladen (JSON)",
+      "downloadOffline": "Sie können den Katalog herunterladen, wenn Sie online sind.",
+      "downloadFailed": "Der Katalog konnte nicht heruntergeladen werden."
     },
     "nutrition": {
       "section": "Nährwerte",
@@ -507,6 +508,7 @@
           "hundredMl": "100 ml wiegen (g)"
         }
       },
+      "overHundred": "Fett, Kohlenhydrate und Eiweiß können nicht mehr als 100 g pro 100 g sein.",
       "searchingFoods": "Suche…",
       "noFoods": "Kein Lebensmittel in den Datensätzen hat all diese Wörter.",
       "saved": "Korrektur gespeichert",
@@ -556,7 +558,6 @@
       "done": "erledigt",
       "repeats": "wiederholt sich",
       "pantry": "Im Vorrat",
-      "elsewhere": "{count, plural, one {# weitere Verwendung} other {# weitere Verwendungen}} in Rezepten oder Listen, die Sie nicht öffnen können",
       "none": "Nichts verwendet es mehr"
     },
     "keepAlias": "{alias} behalten",
@@ -573,6 +574,7 @@
     "changedByAI": {
       "title": "Von KI geändert",
       "open": "{count, plural, =0 {Von KI geändert} other {Von KI geändert · # zu prüfen}}",
+      "openCompact": "{count, plural, =0 {Von KI geändert} other {# zu prüfen}}",
       "unsure": "Nicht sicher",
       "sure": "Geändert",
       "empty": "Die KI hat im letzten Monat nichts geändert.",
@@ -587,7 +589,8 @@
       "plainName": "Umbenannt von {from}",
       "notAFood": "Gelöscht, da es keine Zutat ist. Rezeptzeilen und Einkäufe behalten ihren Text.",
       "spellingRemoved": "Übersetzung {from} entfernt",
-      "spellingMoved": "Übersetzung {from} nach {of} verschoben"
+      "spellingMoved": "Übersetzung {from} nach {of} verschoben",
+      "toCheck": "{count, plural, other {# zu prüfen}}"
     },
     "icon": {
       "change": "Symbol ändern",
@@ -596,13 +599,16 @@
       "failed": "Aus diesem Bild konnte kein Symbol erstellt werden.",
       "generate": "Mit KI erstellen",
       "generateFailed": "Das Symbol konnte nicht erstellt werden."
-    }
+    },
+    "keepDistinct": "Getrennt halten",
+    "offline": "Sie können diese Zutat ändern, wenn Sie online sind."
   },
   "admin": {
     "shareLinks": {
       "title": "Moderation von Rezept-Freigaben",
       "description": "Überprüfen Sie öffentliche Rezept-Links der gesamten Instanz und moderieren Sie deren Lebenszyklus.",
       "empty": "Keine Freigabe-Links gefunden.",
+      "inactive": "Inaktiv",
       "table": {
         "recipe": "REZEPT",
         "owner": "EIGENTÜMER",
@@ -614,6 +620,7 @@
       "revokeModal": {
         "title": "Link widerrufen",
         "message": "Dieser Link für {recipeName} funktioniert nicht mehr, bis er reaktiviert wird.",
+        "finalMessage": "Dieser Link für {recipeName} funktioniert nicht mehr und kann nicht reaktiviert werden.",
         "confirm": "Widerrufen"
       },
       "reactivateModal": {
@@ -635,12 +642,7 @@
       "localesDescription": "Wählen Sie, welche Sprachen Benutzer auswählen können",
       "defaultLocale": "Standardsprache",
       "defaultLocaleDescription": "Sprache für neue Benutzer und als Fallback",
-      "atLeastOneLocale": "Mindestens eine Sprache muss aktiviert sein",
-      "export": {
-        "title": "Rezeptarchiv",
-        "description": "Laden Sie jedes Rezept auf diesem Server herunter.",
-        "button": "Rezeptarchiv exportieren"
-      }
+      "atLeastOneLocale": "Mindestens eine Sprache muss aktiviert sein"
     },
     "users": {
       "title": "Benutzer",
@@ -656,7 +658,6 @@
         "owner": "Eigentümer",
         "admin": "Admin"
       },
-      "noHousehold": "Kein Haushalt",
       "loading": "Benutzer werden geladen…",
       "empty": "Noch keine Benutzer.",
       "loadFailed": "Die Benutzerliste konnte nicht geladen werden.",
@@ -676,9 +677,8 @@
     },
     "permissions": {
       "title": "Berechtigungen",
-      "description": "Wer sehen und ändern darf, was andere angelegt haben. Server-Admins haben immer vollen Zugriff.",
+      "description": "Wer außerhalb eines Haushalts dessen Rezepte und Kochbücher sehen und ändern darf. Server-Admins gelten dieselben Regeln.",
       "recipes": "Rezepte",
-      "ingredients": "Zutaten",
       "viewRecipes": "Rezepte ansehen",
       "viewDescription": "Wer kann Rezepte im Dashboard sehen",
       "editRecipes": "Rezepte bearbeiten",
@@ -689,26 +689,9 @@
         "everyone": "Alle",
         "everyoneDescription": "Alle authentifizierten Benutzer",
         "household": "Haushalt",
-        "householdDescription": "Rezept-Eigentümer und ihre Haushaltsmitglieder",
-        "owner": "Nur Eigentümer",
-        "ownerDescription": "Nur der Rezept-Eigentümer"
+        "householdDescription": "Rezept-Eigentümer und ihre Haushaltsmitglieder"
       },
       "note": "Einkaufs- und Kalendereinträge folgen immer den Haushaltsregeln: Haushaltsmitglieder können die Einträge der anderen bearbeiten oder löschen."
-    },
-    "ingredientPermissions": {
-      "title": "Zutatenberechtigungen",
-      "description": "Wer Zutaten umbenennen, als eigenständig markieren oder ihre Übersetzungen entfernen darf. Jeder darf eine Übersetzung hinzufügen.",
-      "editIngredients": "Zutaten bearbeiten",
-      "editDescription": "Wer eine Zutat ändern darf, die jemand anderes hinzugefügt hat",
-      "levels": {
-        "everyone": "Alle",
-        "everyoneDescription": "Alle angemeldeten Benutzer",
-        "household": "Haushalt",
-        "householdDescription": "Wer sie hinzugefügt hat und die Mitglieder des Haushalts",
-        "owner": "Nur Eigentümer",
-        "ownerDescription": "Nur wer sie hinzugefügt hat"
-      },
-      "note": "Zutaten aus dem eingebauten Katalog können nur von Serveradministratoren bearbeitet werden."
     },
     "system": {
       "title": "Systemeinstellungen",
@@ -720,6 +703,12 @@
         "restartLabel": "Server neu starten",
         "restartDescription": "Konfigurationsänderungen übernehmen, die einen Neustart erfordern",
         "restartButton": "Server neu starten"
+      },
+      "masterKey": {
+        "label": "Hauptschlüssel wechseln",
+        "description": "Alles mit einem neuen Schlüssel verschlüsseln und den alten stilllegen",
+        "button": "Hauptschlüssel wechseln",
+        "pinned": "<code>MASTER_KEY</code> ist gesetzt, wechseln Sie ihn also dort: Verschieben Sie den aktuellen Schlüssel nach <code>MASTER_KEY_PREVIOUS</code>, setzen Sie einen neuen <code>MASTER_KEY</code> und starten Sie neu."
       }
     },
     "restart": {
@@ -730,6 +719,13 @@
       "warning2": "Der Server ist für ein paar Sekunden nicht verfügbar",
       "warning3": "Stellen Sie sicher, dass Ihre Bereitstellung <code>restart: always</code> konfiguriert hat, sonst startet der Server nicht automatisch neu",
       "confirmButton": "Neu starten"
+    },
+    "rotateMasterKey": {
+      "title": "Hauptschlüssel wechseln",
+      "confirmMessage": "Der Server schreibt einen neuen Hauptschlüssel und startet neu. Beim Start verschlüsselt er alles mit dem neuen Schlüssel.",
+      "sessions": "Jede Sitzung endet, auch Ihre, sodass sich alle erneut anmelden müssen",
+      "shareLinks": "Freigabe-Links, die vor 0.28 erstellt wurden, funktionieren nicht mehr und können nur noch gelöscht werden",
+      "confirmButton": "Wechseln"
     },
     "authProviders": {
       "title": "Authentifizierungsanbieter",
@@ -862,10 +858,6 @@
       "prompts": {
         "title": "Prompts",
         "subtitle": "Passe KI-Anweisungen für Rezept-Verarbeitung an"
-      },
-      "cuisines": {
-        "title": "Küchen",
-        "subtitle": "Das Vokabular, aus dem Rezepte und KI wählen"
       },
       "bulkEnrichment": {
         "title": "Massen-Anreicherung",
@@ -1311,17 +1303,6 @@
       },
       "pagination": "Seite {current} von {total}"
     },
-    "cuisineVocabulary": {
-      "description": "Küchen sind ein kuratiertes Vokabular, das Ihnen gehört. Namen werden in jeder Sprache genau so angezeigt, wie sie hier stehen.",
-      "namePlaceholder": "Name der Küche",
-      "addLabel": "Küche hinzufügen",
-      "renameLabel": "{name} umbenennen",
-      "deleteLabel": "{name} löschen",
-      "deleteConfirm": "\"{name}\" löschen? Rezepte, die sie verwenden, verlieren sie.",
-      "empty": "Noch keine Küchen.",
-      "duplicate": "Eine Küche mit diesem Namen existiert bereits.",
-      "saveFailed": "Diese Küche konnte nicht gespeichert werden."
-    },
     "toasts": {
       "localesSaved": "Spracheinstellungen gespeichert",
       "localesError": "Spracheinstellungen konnten nicht gespeichert werden",
@@ -1335,8 +1316,122 @@
     "errors": {
       "failedTitle": "Export fehlgeschlagen",
       "failedDescription": "Das Rezeptarchiv konnte nicht heruntergeladen werden. Bitte versuchen Sie es erneut.",
-      "signedOut": "Ihre Sitzung ist abgelaufen. Melden Sie sich erneut an, um zu exportieren.",
-      "notAllowed": "Sie haben keine Berechtigung, dies zu exportieren."
+      "signedOut": "Ihre Sitzung ist abgelaufen. Melden Sie sich erneut an, um zu exportieren."
+    }
+  },
+  "mobile": {
+    "connections": "Verbindungen",
+    "app": "App",
+    "server": "Server",
+    "support": "Support",
+    "changeServer": {
+      "title": "Server wechseln?",
+      "description": "Sie werden von diesem Server abgemeldet.",
+      "action": "Server wechseln"
+    },
+    "versionServer": "Server {server}",
+    "offlineReason": "Offline · Änderungen sind pausiert",
+    "avatarHint": "Tippen Sie auf Ihr Foto, um es zu ändern",
+    "changePhoto": "Foto ändern",
+    "accountGroup": "Ihr Konto",
+    "phonesGroup": "Auf Smartphones"
+  },
+  "content": {
+    "ariaLabel": "Inhalte",
+    "listPicker": "Liste",
+    "lists": {
+      "tags": "Tags",
+      "cuisines": "Küchen",
+      "categories": "Kategorien",
+      "ingredients": "Zutaten"
+    },
+    "search": {
+      "tags": "Tags suchen",
+      "cuisines": "Küchen suchen",
+      "categories": "Kategorien suchen"
+    },
+    "show": "Anzeigen",
+    "all": "Alle",
+    "unused": "Unbenutzt",
+    "recipes": "{count, plural, =0 {Nicht verwendet} one {# Rezept} other {# Rezepte}}",
+    "sections": {
+      "ownCuisines": "Ihre Küchen",
+      "ownCategories": "Ihre Kategorien",
+      "server": "Von Ihrem Server",
+      "builtIn": "Eingebaut"
+    },
+    "help": {
+      "server": "Der Administrator Ihres Servers pflegt diese für jeden Haushalt",
+      "serverAdmin": "Jedem Haushalt auf diesem Server werden diese angeboten. Als Administrator pflegen Sie sie.",
+      "builtIn": "Eingebaute Kategorien sind auf jedem Server gleich und lassen sich nicht ändern"
+    },
+    "readOnly": "Schreibgeschützt",
+    "empty": {
+      "tags": "Noch keine Tags",
+      "cuisines": "Noch keine Küchen",
+      "categories": "Noch keine Kategorien"
+    },
+    "nothingUnused": "Nichts ist unbenutzt",
+    "noMatch": "Nichts passt",
+    "loadFailed": "Diese Liste konnte nicht geladen werden",
+    "listOffline": "Diese Liste benötigt eine Verbindung",
+    "offline": "Sie können diese Liste ändern, wenn Sie online sind.",
+    "panel": {
+      "addTitle": {
+        "tag": "Tag hinzufügen",
+        "cuisine": "Küche hinzufügen",
+        "category": "Kategorie hinzufügen",
+        "ingredient": "Zutat hinzufügen"
+      },
+      "editTitle": {
+        "tag": "Tag bearbeiten",
+        "cuisine": "Küche bearbeiten",
+        "category": "Kategorie bearbeiten"
+      },
+      "server": "Server",
+      "name": "Name",
+      "usedBy": "Verwendet von",
+      "usedByOwn": "{count, plural, =0 {In Ihren Rezepten nicht verwendet} one {# Ihrer Rezepte} other {# Ihrer Rezepte}}",
+      "already": {
+        "tag": "Schon ein Tag",
+        "cuisine": "Schon eine Küche",
+        "category": "Schon eine Kategorie",
+        "ingredient": "Schon eine Zutat"
+      },
+      "addTo": "Hinzufügen zu",
+      "toHousehold": "Ihrem Haushalt",
+      "toServer": "Jedem Haushalt auf diesem Server",
+      "serverReadOnly": "Der Administrator Ihres Servers pflegt diese Küche für jeden Haushalt.",
+      "serverEditable": "Jedem Haushalt auf diesem Server wird diese Küche angeboten.",
+      "merge": "„{target}“ gibt es schon. Beim Zusammenführen {count, plural, =0 {entfällt {name}} one {wandert # Rezept von {name} dorthin} other {wandern # Rezepte von {name} dorthin}}.",
+      "mergeAction": "Zusammenführen",
+      "tooLong": "Namen dürfen höchstens {max} Zeichen haben.",
+      "failed": "Das konnte nicht gespeichert werden. Versuchen Sie es erneut.",
+      "stale": "Nicht gespeichert: Es wurde zuerst anderswo geändert"
+    },
+    "delete": {
+      "title": "„{name}“ löschen?",
+      "body": "{count, plural, =0 {Kein Rezept verwendet es.} one {Es wird von # Rezept entfernt. Das Rezept bleibt.} other {Es wird von # Rezepten entfernt. Die Rezepte bleiben.}}",
+      "bodyServer": "{count, plural, =0 {Kein Rezept verwendet es.} one {Es wird von # Rezept in jedem Haushalt auf diesem Server entfernt. Das Rezept bleibt.} other {Es wird von # Rezepten in jedem Haushalt auf diesem Server entfernt. Die Rezepte bleiben.}}",
+      "countFailed": "Die Rezepte, die es verwenden, konnten nicht gezählt werden. Versuchen Sie es erneut.",
+      "failed": "Das konnte nicht gelöscht werden. Versuchen Sie es erneut.",
+      "action": {
+        "tag": "Tag löschen",
+        "cuisine": "Küche löschen",
+        "category": "Kategorie löschen"
+      }
+    },
+    "countCell": "{count, plural, =0 {Nicht verwendet} other {#}}",
+    "count": {
+      "tag": "{count, plural, one {# Tag} other {# Tags}}",
+      "ingredient": "{count, plural, one {# Zutat} other {# Zutaten}}"
+    },
+    "countUnused": {
+      "tag": "{count, plural, one {# ungenutzter Tag} other {# ungenutzte Tags}}"
+    },
+    "menu": {
+      "rename": "Umbenennen",
+      "showRecipes": "Rezepte anzeigen"
     }
   }
 }

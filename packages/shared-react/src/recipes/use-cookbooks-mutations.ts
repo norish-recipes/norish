@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import type { CookbookSummaryDTO } from "@norish/shared/contracts";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
@@ -10,15 +10,18 @@ import { uploadForm } from "@norish/shared/lib/upload-form";
 import type { CookbooksMutationsResult } from "./cookbook-types";
 import {
   invalidateUnlessPreserved,
+  markHousehold,
+  mayRestore,
   shouldPreserveOptimisticUpdate,
 } from "../offline/optimistic-updates";
-import { useReader } from "../reader";
+import { useReaderOwner } from "../reader";
 import { useTRPC } from "../trpc";
 import { useCookbooksCacheHelpers } from "./use-cookbooks-cache";
 import { useRecipeMutationErrorToast } from "./use-recipe-mutation-error-toast";
 
 export function useCookbooksMutations(): CookbooksMutationsResult {
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const {
     setAllCookbooksData,
     invalidate,
@@ -28,8 +31,8 @@ export function useCookbooksMutations(): CookbooksMutationsResult {
     seedCookbook,
     seedCookbookMembers,
   } = useCookbooksCacheHelpers();
-  // So a cookbook created Offline is the Reader's own rather than Orphaned (ADR-0027).
-  const currentUserId = useReader().user?.id;
+  // A cookbook created Offline is the Reader's own, in their household (ADR-0027).
+  const owner = useReaderOwner();
 
   // A queued write keeps its tentative state: there is nothing to refetch Offline, and refetching
   // would erase the change the reader can see (ADR-0009).
@@ -79,16 +82,13 @@ export function useCookbooksMutations(): CookbooksMutationsResult {
   const createMutation = useMutation(
     trpc.cookbooks.create.mutationOptions({
       onMutate: ({ id, title, recipeIds = [] }) => {
-        if (!id) return undefined;
+        // With no Owner known yet there is nothing to show until the echo.
+        if (!id || !owner) return { tentative: undefined, ...markHousehold(queryClient) };
 
         const now = new Date();
-
-        // The owner is the caller: minting this as Orphaned would offer rename
-        // and delete to everyone under every policy until the echo arrived
-        // (ADR-0027).
         const tentative: CookbookSummaryDTO = {
           id,
-          userId: currentUserId ?? null,
+          ...owner,
           title,
           createdAt: now,
           updatedAt: now,
@@ -105,7 +105,7 @@ export function useCookbooksMutations(): CookbooksMutationsResult {
           minServings: null,
         };
 
-        return { tentative };
+        return { tentative, ...markHousehold(queryClient) };
       },
       onSuccess: (cookbook, { recipeIds = [] }, context) => {
         invalidate();
@@ -116,14 +116,18 @@ export function useCookbooksMutations(): CookbooksMutationsResult {
         // moment it exists (ADR-0008).
         const seeded = cookbook ?? context?.tentative;
 
-        if (seeded) seedCookbook(seeded);
+        if (seeded && mayRestore(queryClient, context)) seedCookbook(seeded);
       },
       onError: (error, { id, recipeIds = [] }, context) => {
         const tentative = context?.tentative;
 
         tellRefusal("create")(error);
 
-        if (!shouldPreserveOptimisticUpdate(error) || !tentative) {
+        if (
+          !shouldPreserveOptimisticUpdate(error) ||
+          !tentative ||
+          !mayRestore(queryClient, context)
+        ) {
           invalidate();
 
           return;

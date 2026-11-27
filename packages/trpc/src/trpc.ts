@@ -3,6 +3,7 @@ import { initTRPC } from "@trpc/server";
 import superjson from "superjson";
 
 import type { Context } from "./context";
+import { OtherHouseholdWriteError } from "./household-write";
 import { trpcLogger } from "./logger";
 
 const t = initTRPC
@@ -10,11 +11,13 @@ const t = initTRPC
   .meta<OpenApiMeta>()
   .create({
     transformer: superjson,
-    errorFormatter({ shape, error: _error }) {
+    errorFormatter({ shape, error }) {
       return {
         ...shape,
         data: {
           ...shape.data,
+          // The apps' Outbox parks such a write for the user to send or discard, never retries it.
+          ...(error.cause instanceof OtherHouseholdWriteError ? { otherHousehold: true } : {}),
         },
       };
     },

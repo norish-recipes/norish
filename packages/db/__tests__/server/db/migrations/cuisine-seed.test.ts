@@ -11,10 +11,13 @@
 
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import pg from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+
+import { cuisines } from "@norish/db/schema";
 
 import {
   createTestDatabase,
@@ -37,9 +40,12 @@ describe("Cuisine vocabulary seed", () => {
   }
 
   async function cuisineNames(): Promise<string[]> {
-    const result = await pool.query<{ name: string }>("SELECT name FROM cuisines ORDER BY name");
+    const rows = await drizzle(pool)
+      .select({ name: cuisines.name })
+      .from(cuisines)
+      .orderBy(cuisines.name);
 
-    return result.rows.map((row) => row.name);
+    return rows.map((row) => row.name);
   }
 
   beforeAll(async () => {
@@ -66,7 +72,7 @@ describe("Cuisine vocabulary seed", () => {
   });
 
   it("does not restore a Cuisine an administrator deleted", async () => {
-    await pool.query("DELETE FROM cuisines WHERE name = 'Italian'");
+    await drizzle(pool).delete(cuisines).where(eq(cuisines.name, "Italian"));
 
     await applyMigrations();
 

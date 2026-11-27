@@ -17,7 +17,7 @@ import type { ReplayOutcome } from "./error-classification";
 import type { OutboxStore } from "./outbox-store";
 import type { OutboxEntry, ParkedReason } from "./outbox-types";
 import { parkedPatch } from "./outbox-store";
-import { isUncaptured } from "./uncaptured";
+import { isAccountScoped, isUncaptured } from "./uncaptured";
 
 /** Attempts a 5xx entry gets before it is parked as retries-exhausted. */
 export const MAX_AMBIGUOUS_ATTEMPTS = 3;
@@ -95,10 +95,13 @@ export async function runReplayPass({
   store,
   submit,
   ownerId,
+  householdId,
 }: {
   store: OutboxStore;
   submit: ReplaySubmit;
   ownerId: string;
+  /** The household the server has the account in now; an entry made for another can't apply. */
+  householdId: string;
 }): Promise<ReplayPassResult> {
   const parkedEntityIds = new Set<string>();
 
@@ -149,6 +152,14 @@ export async function runReplayPass({
   };
 
   for (const entry of await store.forOwner(ownerId, "pending")) {
+    // An early exit only: the server refuses one made for another household when it is sent.
+    if (!isAccountScoped(entry.path) && entry.householdId !== householdId) {
+      await store.park(entry.seq, "other-household");
+      countParked(entry, "other-household");
+
+      continue;
+    }
+
     if (referencesParkedEntity(entry.input, parkedEntityIds)) {
       await store.park(entry.seq, "dependency");
       countParked(entry, "dependency");
@@ -194,7 +205,8 @@ export async function runReplayPass({
         break;
 
       case "deterministic":
-        await park("deterministic");
+      case "other-household":
+        await park(outcome.kind);
         break;
 
       case "unauthorized":

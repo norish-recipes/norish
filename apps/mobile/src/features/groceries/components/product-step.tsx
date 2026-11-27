@@ -2,12 +2,12 @@ import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { Card } from "@/components/card";
 import { Checkmark } from "@/components/checkmark";
+import { Ionicons } from "@/components/icon";
 import { PillButton } from "@/components/pill-button";
 import { SectionLabel } from "@/components/section-label";
 import { Sheet, SheetBody } from "@/components/sheet";
 import { SheetInput } from "@/components/sheet-input";
 import { SliceHairline } from "@/components/slice-row";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { TextField, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
@@ -122,7 +122,7 @@ export function ProductStep({
       title={text("groceries.mobile.product")}
       onClose={onBack}
     >
-      <SheetBody contentClassName="gap-4">
+      <SheetBody>
         <TextField>
           <SheetInput
             // eslint-disable-next-line jsx-a11y-x/no-autofocus -- the search opens focused, which also asks the Store what it knows

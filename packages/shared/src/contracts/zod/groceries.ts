@@ -11,6 +11,7 @@ export const PurchaseAmountSchema = z.number().positive().max(9999999).nullable(
 export const GrocerySelectBaseSchema = createSelectSchema(groceries)
   .omit({
     ingredientAliasId: true,
+    householdId: true,
     userId: true,
     recurringGroceryId: true,
     storeId: true,
@@ -35,6 +36,7 @@ export const GrocerySelectBaseSchema = createSelectSchema(groceries)
 // Insert schema with explicit fields to avoid drizzle-zod type inference issues
 export const GroceryInsertBaseSchema = z.object({
   purchaseAmount: PurchaseAmountSchema,
+  householdId: z.uuid(),
   userId: z.string(),
   name: z.string().nullable(),
   /** The alias the name resolved to; set by the server, never taken from a client. */
@@ -89,6 +91,8 @@ export const GroceryCreateSchema = z.object({
   amount: z.coerce.number().nullable(),
   isDone: z.boolean().default(false),
   recipeIngredientId: z.uuid().nullable().optional(),
+  /** The line's food an untouched chip is, which the server reads through the line; none if edited. */
+  lineFoodId: z.uuid().nullable().optional(),
   recurringGroceryId: z.uuid().nullable().optional(),
   storeId: z.uuid().nullable().optional(),
 });

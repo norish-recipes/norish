@@ -6,14 +6,10 @@
  * appended after it by the AI Runtime.
  */
 
-import { listAllTagNames } from "@norish/db/repositories/tags";
 import { getTagStrategy } from "@norish/shared-server/config/server-config-loader";
 
 export interface AutoTaggingSectionOptions {
-  /**
-   * Pre-fetched database tags (for predefined_db mode).
-   * If not provided and mode is predefined_db, will be fetched automatically.
-   */
+  /** The recipe household's Tags, offered under the predefined_db strategy (ADR-0043). */
   existingDbTags?: string[];
 }
 
@@ -31,21 +27,14 @@ export async function buildAutoTaggingSections(
   options: AutoTaggingSectionOptions = {},
   recipe: RecipeForTagging
 ): Promise<string[]> {
-  const { existingDbTags: providedTags } = options;
+  const { existingDbTags: dbTags } = options;
   const strategy = await getTagStrategy();
-
-  // Fetch DB tags if needed and not provided
-  let dbTags: string[] | undefined = providedTags;
-
-  if (strategy === "predefined_db" && !dbTags) {
-    dbTags = await listAllTagNames();
-  }
 
   const sections: string[] = [];
 
   if (strategy === "predefined_db" && dbTags && dbTags.length > 0) {
     sections.push(
-      `ADDITIONAL ALLOWED TAGS (from existing recipes):
+      `ADDITIONAL ALLOWED TAGS (this household's tags):
 ${dbTags.join(", ")}
 
 You may use tags from both the predefined list above AND this additional list.`

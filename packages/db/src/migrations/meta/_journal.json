@@ -610,6 +610,55 @@
       "when": 1795171967880,
       "tag": "0086_extra_nutrients",
       "breakpoints": true
+    },
+    {
+      "idx": 87,
+      "version": "7",
+      "when": 1795505073921,
+      "tag": "0087_recipe_share_token_enc",
+      "breakpoints": true
+    },
+    {
+      "idx": 88,
+      "version": "7",
+      "when": 1795598239073,
+      "tag": "0088_every_account_has_a_household",
+      "breakpoints": true
+    },
+    {
+      "idx": 89,
+      "version": "7",
+      "when": 1795605639349,
+      "tag": "0089_household_things_belong_to_the_household",
+      "breakpoints": true
+    },
+    {
+      "idx": 90,
+      "version": "7",
+      "when": 1795612906711,
+      "tag": "0090_recipes_carry_their_owners_household",
+      "breakpoints": true
+    },
+    {
+      "idx": 91,
+      "version": "7",
+      "when": 1795613201715,
+      "tag": "0091_permission_policy_levels",
+      "breakpoints": true
+    },
+    {
+      "idx": 92,
+      "version": "7",
+      "when": 1795630569573,
+      "tag": "0092_household_lists",
+      "breakpoints": true
+    },
+    {
+      "idx": 93,
+      "version": "7",
+      "when": 1795646210831,
+      "tag": "0093_household_catalogues",
+      "breakpoints": true
     }
   ]
 }

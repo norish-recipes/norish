@@ -20,16 +20,19 @@ export const ServerConfigKeys = {
   SCHEDULER_CLEANUP_MONTHS: "scheduler_cleanup_months",
   JOB_RETENTION: "job_retention",
   RECIPE_PERMISSION_POLICY: "recipe_permission_policy",
-  INGREDIENT_PERMISSION_POLICY: "ingredient_permission_policy",
   INGREDIENT_SEED_STATE: "ingredient_seed_state",
   PROMPTS: "prompts",
   LOCALE_CONFIG: "locale_config",
   TIMER_KEYWORDS: "timer_keywords",
   INGREDIENT_WORDS: "ingredient_words",
   PAGE_RENDERERS: "page_renderers",
+  MASTER_KEY_FINGERPRINT: "master_key_fingerprint",
 } as const;
 
 export type ServerConfigKey = (typeof ServerConfigKeys)[keyof typeof ServerConfigKeys];
+
+/** The keys Admin settings read and restore: all but the Master Key's fingerprint, boot's alone. */
+export const AdminConfigKeySchema = z.enum(ServerConfigKeys).exclude(["MASTER_KEY_FINGERPRINT"]);
 
 // ============================================================================
 // Auth Provider Schemas
@@ -858,15 +861,41 @@ export const DEFAULT_JOB_RETENTION: JobRetentionConfig = {
 // Recipe Permission Policy Schema
 // ============================================================================
 
-export const PermissionLevelSchema = z.enum(["everyone", "household", "owner"]);
+/** Who outside a recipe's household may act on it: Everyone, or the Household alone (ADR-0041). */
+const PermissionLevelSchema = z.enum(["everyone", "household"]);
 
 export type PermissionLevel = z.infer<typeof PermissionLevelSchema>;
 
-export const RecipePermissionPolicySchema = z.object({
-  view: PermissionLevelSchema.default("everyone"),
-  edit: PermissionLevelSchema.default("household"),
-  delete: PermissionLevelSchema.default("household"),
-});
+/** Whether `level` reaches further than `than`. */
+function isWiderLevel(level: PermissionLevel, than: PermissionLevel): boolean {
+  return level === "everyone" && than === "household";
+}
+
+type PolicyLevels = { view: PermissionLevel; edit: PermissionLevel; delete: PermissionLevel };
+
+/** `policy` with edit and delete narrowed to view where they reach further, as 0091 left them. */
+export function withinView<P extends PolicyLevels>(policy: P): P {
+  const narrowed = (level: PermissionLevel) =>
+    isWiderLevel(level, policy.view) ? policy.view : level;
+
+  return { ...policy, edit: narrowed(policy.edit), delete: narrowed(policy.delete) };
+}
+
+/** View, edit and delete; nobody may edit or delete what they cannot view. */
+export const RecipePermissionPolicySchema = z
+  .object({
+    view: PermissionLevelSchema.default("everyone"),
+    edit: PermissionLevelSchema.default("household"),
+    delete: PermissionLevelSchema.default("household"),
+  })
+  .refine(
+    (policy) => {
+      const kept = withinView(policy);
+
+      return kept.edit === policy.edit && kept.delete === policy.delete;
+    },
+    { message: "Edit and delete cannot reach further than view" }
+  );
 
 export type RecipePermissionPolicy = z.infer<typeof RecipePermissionPolicySchema>;
 
@@ -876,23 +905,27 @@ export const DEFAULT_RECIPE_PERMISSION_POLICY: RecipePermissionPolicy = {
   delete: "household",
 };
 
-/**
- * Who may edit an Ingredient someone else minted: rename it, mark it
- * distinct, remove its aliases. One level, because Ingredients are always
- * visible — a hidden one would split the shared catalogue and leave recipes
- * pointing at food their readers cannot see. Adding an alias is open to
- * everyone; ownerless (seeded) rows are an administrator's alone, and an
- * administrator bypasses the policy, as for recipes.
- */
-export const IngredientPermissionPolicySchema = z.object({
-  edit: PermissionLevelSchema.default("household"),
-});
+/** The one rule: whose recipes and cookbooks a reader of `readerHouseholdId` reaches with
+ * `action`, every household's (null) or their own household's alone. No role reaches past it. */
+export function policyReach(
+  policy: RecipePermissionPolicy,
+  action: keyof RecipePermissionPolicy,
+  readerHouseholdId: string
+): string | null {
+  return policy[action] === "everyone" ? null : readerHouseholdId;
+}
 
-export type IngredientPermissionPolicy = z.infer<typeof IngredientPermissionPolicySchema>;
+/** Whether a reader in `readerHouseholdId` may act on a recipe or cookbook of `rowHouseholdId`. */
+export function policyAllows(
+  policy: RecipePermissionPolicy,
+  action: keyof RecipePermissionPolicy,
+  readerHouseholdId: string,
+  rowHouseholdId: string
+): boolean {
+  const reach = policyReach(policy, action, readerHouseholdId);
 
-export const DEFAULT_INGREDIENT_PERMISSION_POLICY: IngredientPermissionPolicy = {
-  edit: "household",
-};
+  return reach === null || reach === rowHouseholdId;
+}
 
 /**
  * Where the ingredient catalogue seed stands (ADR-0038): the validators of
@@ -1001,8 +1034,6 @@ export function getSchemaForConfigKey(key: ServerConfigKey): z.ZodType {
       return JobRetentionConfigSchema;
     case ServerConfigKeys.RECIPE_PERMISSION_POLICY:
       return RecipePermissionPolicySchema;
-    case ServerConfigKeys.INGREDIENT_PERMISSION_POLICY:
-      return IngredientPermissionPolicySchema;
     case ServerConfigKeys.INGREDIENT_SEED_STATE:
       return IngredientSeedStateSchema;
     case ServerConfigKeys.PROMPTS:
@@ -1015,6 +1046,8 @@ export function getSchemaForConfigKey(key: ServerConfigKey): z.ZodType {
       return IngredientWordsConfigSchema;
     case ServerConfigKeys.PAGE_RENDERERS:
       return PageRenderersConfigSchema;
+    case ServerConfigKeys.MASTER_KEY_FINGERPRINT:
+      return z.string().regex(/^[0-9a-f]{64}$/);
     default:
       return z.any();
   }

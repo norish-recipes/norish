@@ -8,6 +8,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { RecipeDashboardDTO } from "@norish/shared/contracts";
 
 import type { NarrowRow } from "../utils/search-suggestions";
+import { useTabScroll } from "../../../../__tests__/mocks/use-tab-scroll";
 import { TypingSuggestions } from "../components/typing-suggestions";
 
 type Box = { children?: ReactNode; testID?: string };
@@ -17,6 +18,9 @@ vi.mock("react-native", () => ({
   ScrollView: ({ children, testID }: Box) => <div data-testid={testID}>{children}</div>,
   View: ({ children }: Box) => <div>{children}</div>,
   Text: ({ children }: Box) => <span>{children}</span>,
+}));
+vi.mock("../components/search-scroll", () => ({
+  SearchScroll: ({ children, testID }: Box) => <div data-testid={testID}>{children}</div>,
 }));
 vi.mock("@/components/card", () => ({
   Card: ({ children, testID }: Box) => <div data-testid={testID}>{children}</div>,
@@ -69,6 +73,7 @@ const base = {
     { kind: "category" as const, name: "Dinner", label: "Diner" },
   ],
   searchWords: "chick",
+  scroll: useTabScroll(),
   onConfirm: vi.fn(),
   onNarrow: vi.fn(),
 };

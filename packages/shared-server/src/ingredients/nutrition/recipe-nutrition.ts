@@ -10,6 +10,7 @@
  */
 import type { NutritionCredit } from "@norish/shared/contracts/ingredient-nutrition";
 import type { ExtraNutrient, ExtraNutrients } from "@norish/shared/contracts/nutrients";
+import type { LineReadings } from "@norish/shared/lib/line-foods";
 import type {
   LeftOutReason,
   NutritionGapEstimate,
@@ -27,17 +28,20 @@ import {
 import { spellingRules } from "@norish/shared/lib/spelling-keys";
 
 import type { NutritionReader } from "./ingredient-nutrition";
+import { lineReadingsOf } from "../line-readings";
 import { resolveIngredientNutrition } from "./ingredient-nutrition";
 
 /** The recipe's worked-out nutrition for the reader's household, or null where it supplies its own. */
 export async function workOutRecipeNutrition(
   recipe: RecipeForNutrition,
   reader: NutritionReader,
-  estimate: NutritionGapEstimate | null = null
+  estimate: NutritionGapEstimate | null = null,
+  /** The reader's readings of its lines outside their catalogue (`lineReadingsOf`). */
+  readings: LineReadings = {}
 ): Promise<WorkedOutNutrition | null> {
   if (suppliesNutrition(recipe)) return null;
 
-  const lines = nutritionLinesOf(recipe);
+  const lines = nutritionLinesOf(recipe, readings);
   const nutrition = await resolveIngredientNutrition(
     lines.flatMap((line) => (line.ingredientId ? [line.ingredientId] : [])),
     reader
@@ -93,7 +97,18 @@ export async function readRecipeNutrition(
   recipe: RecipeForNutrition,
   reader: NutritionReader
 ): Promise<RecipeNutritionAnswer> {
-  const worked = await workOutRecipeNutrition(recipe, reader, recipe.nutritionEstimate ?? null);
+  const lineIds = recipe.recipeIngredients.flatMap((line) => (line.id ? [line.id] : []));
+  // Its lines outside the household's catalogue read through it (ADR-0042).
+  const readings =
+    reader.householdId && !suppliesNutrition(recipe)
+      ? await lineReadingsOf(reader.householdId, { of: "lines", ids: lineIds })
+      : {};
+  const worked = await workOutRecipeNutrition(
+    recipe,
+    reader,
+    recipe.nutritionEstimate ?? null,
+    readings
+  );
   const { nutritionExtras: extras, extrasCoverage } = withStatedExtras(
     recipe.nutritionExtras,
     worked

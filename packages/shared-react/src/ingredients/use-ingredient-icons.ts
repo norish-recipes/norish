@@ -10,13 +10,19 @@ import { useTRPC } from "../trpc";
 import { useCachedAnswers } from "./cached-answers";
 import { useCatalogueFailure } from "./use-catalogue-failure";
 
-/** One read of a surface's foods' icons; each icon selects its own with `useIngredientIconAddress`. */
-export function useIngredientIcons(ids: readonly (string | null | undefined)[]): void {
+/**
+ * One read of a surface's foods' icons; each icon selects its own with `useIngredientIconAddress`.
+ * A recipe's page passes the recipe, so its own foods show though another household's.
+ */
+export function useIngredientIcons(
+  ids: readonly (string | null | undefined)[],
+  recipeId?: string
+): void {
   const trpc = useTRPC();
   const wanted = iconIds(ids);
 
   useQuery({
-    ...trpc.ingredients.icons.queryOptions({ ids: wanted }),
+    ...trpc.ingredients.icons.queryOptions({ ids: wanted, recipeId }),
     enabled: wanted.length > 0,
     notifyOnChangeProps: [],
   });
@@ -103,7 +109,7 @@ export function useIngredientIconMutations(ingredientId: string) {
     answered(write.then(({ file, address }): StoredIcon => ({ file, address })));
 
   return {
-    upload: (image: File) => stored(upload.mutateAsync(uploadForm({ ingredientId, image }))),
+    upload: (image: Blob) => stored(upload.mutateAsync(uploadForm({ ingredientId, image }))),
     generate: () => stored(generate.mutateAsync({ ingredientId })),
     isPending: upload.isPending || generate.isPending,
   };

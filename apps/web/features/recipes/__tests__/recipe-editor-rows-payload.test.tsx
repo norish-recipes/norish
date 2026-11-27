@@ -106,6 +106,7 @@ const line = (
 const stored: FullRecipeDTO = {
   id: "11111111-1111-4111-8111-111111111111",
   userId: "user-1",
+  householdId: "household-1",
   name: "Hoisin chicken",
   description: null,
   url: null,

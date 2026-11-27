@@ -2,9 +2,10 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getRecipeFull } from "@norish/db";
-import { listCategoryNamesForUsers } from "@norish/db/repositories/categories";
+import { listCategoryNamesForHousehold } from "@norish/db/repositories/categories";
+import { addEntry } from "@norish/db/repositories/list-entries";
 
-import { createTestUser } from "../../../db/__tests__/helpers/db-test-helpers";
+import { createTestUser, testHouseholdOf } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 import { writeArchive } from "./norish-fixtures";
 
@@ -78,7 +79,8 @@ describe("a Recipe Archive carries Categories", () => {
       entry!.json,
       importedId,
       new Map(),
-      archive.folder(entry!.folderKey)
+      archive.folder(entry!.folderKey),
+      await listCategoryNamesForHousehold(testHouseholdOf(importerId))
     );
 
     await createResolvedRecipe(importedId, importerId, dto, { userId: importerId });
@@ -87,12 +89,37 @@ describe("a Recipe Archive carries Categories", () => {
   }
 
   it("gives the importer a household Category it did not have", async () => {
-    expect(await listCategoryNamesForUsers([importerId])).not.toContain("Drinks");
+    expect(await listCategoryNamesForHousehold(testHouseholdOf(importerId))).not.toContain(
+      "Drinks"
+    );
 
     const importedId = await exportAndImport(["Drinks", "Snack"]);
 
     expect((await getRecipeFull(importedId))?.categories).toEqual(["Drinks", "Snack"]);
-    expect(await listCategoryNamesForUsers([importerId])).toContain("Drinks");
+    expect(await listCategoryNamesForHousehold(testHouseholdOf(importerId))).toContain("Drinks");
+  });
+
+  it("matches the importer's Categories by fold, then the near-match", async () => {
+    await addEntry("category", testHouseholdOf(importerId), "Desserts");
+    await addEntry("category", testHouseholdOf(importerId), "Café");
+
+    const importedId = await exportAndImport([], (json) => {
+      json.categories = ["Deserts", "cafe"];
+    });
+
+    expect((await getRecipeFull(importedId))?.categories).toEqual(["Desserts", "Café"]);
+    expect(await listCategoryNamesForHousehold(testHouseholdOf(importerId))).not.toContain(
+      "Deserts"
+    );
+  });
+
+  it("reimports a stored Category over the bound the list creates with", async () => {
+    const long = "x".repeat(60);
+    const importedId = await exportAndImport([], (json) => {
+      json.categories = [long, "Snack"];
+    });
+
+    expect((await getRecipeFull(importedId))?.categories).toEqual(["Snack"]);
   });
 
   it("names a built-in by its translation and creates any other name as it is", async () => {

@@ -17,8 +17,8 @@ const storeProductsRepository = vi.hoisted(() => ({
   markLinkPending: vi.fn(),
   listStaleProducts: vi.fn(async () => []),
 }));
-const storesRepository = vi.hoisted(() => ({ listStoresByUserIds: vi.fn() }));
-const groceriesRepository = vi.hoisted(() => ({ listGroceriesByUsers: vi.fn(async () => []) }));
+const storesRepository = vi.hoisted(() => ({ listStoresByHousehold: vi.fn() }));
+const groceriesRepository = vi.hoisted(() => ({ listGroceriesByHousehold: vi.fn(async () => []) }));
 const queue = vi.hoisted(() => ({ add: vi.fn(async () => undefined) }));
 
 vi.mock("@norish/db/repositories/store-products", () => storeProductsRepository);
@@ -32,17 +32,17 @@ vi.mock("@norish/shared-server/logger", () => ({
 }));
 
 const STORE = "11111111-1111-4111-8111-111111111111";
-const ctx = { userIds: ["user-1"], householdKey: "household-1" };
+const ctx = { userIds: ["user-1"], householdId: "household-1" };
 const searchable = { id: STORE, searchAddress: "https://shop.example.nl/zoeken?q={query}" };
 
 /** A grocery at the Store whose name resolved to the Ingredient named for its lowercase self. */
 function grocery(name: string, ingredientId = `ingredient:${name.toLowerCase()}`) {
-  return { name, storeId: STORE, ingredientId };
+  return { id: `grocery:${name}`, name, storeId: STORE, ingredientId };
 }
 
 describe("asking a Store what an Ingredient means", () => {
   beforeEach(() => {
-    storesRepository.listStoresByUserIds.mockResolvedValue([searchable]);
+    storesRepository.listStoresByHousehold.mockResolvedValue([searchable]);
     storeProductsRepository.resolveProductLinks.mockResolvedValue([]);
     storeProductsRepository.markLinkPending.mockResolvedValue(true);
   });
@@ -67,7 +67,7 @@ describe("asking a Store what an Ingredient means", () => {
         storeId: STORE,
         ingredientId: "ingredient:oude kaas",
         name: "Oude kaas",
-        householdKey: "household-1",
+        groceryId: "grocery:Oude kaas",
       },
       expect.not.objectContaining({ delay: expect.anything() })
     );
@@ -86,7 +86,7 @@ describe("asking a Store what an Ingredient means", () => {
       {
         link: pending,
       },
-      { householdKey: "household-1" }
+      { householdId: "household-1" }
     );
   });
 
@@ -98,7 +98,10 @@ describe("asking a Store what an Ingredient means", () => {
       product: null,
     };
 
-    groceriesRepository.listGroceriesByUsers.mockResolvedValue([grocery("kaas"), grocery("melk")]);
+    groceriesRepository.listGroceriesByHousehold.mockResolvedValue([
+      grocery("kaas"),
+      grocery("melk"),
+    ]);
     storeProductsRepository.resolveProductLinks.mockResolvedValue([miss]);
 
     const links = await priceTheList(ctx);
@@ -114,7 +117,7 @@ describe("asking a Store what an Ingredient means", () => {
     expect(stores.publish).toHaveBeenCalledExactlyOnceWith(
       "linkUpdated",
       { link: pending },
-      { householdKey: "household-1" }
+      { householdId: "household-1" }
     );
   });
 
@@ -122,7 +125,7 @@ describe("asking a Store what an Ingredient means", () => {
     const before = Date.now();
 
     await priceTheList(ctx);
-    groceriesRepository.listGroceriesByUsers.mockResolvedValue([grocery("kaas")]);
+    groceriesRepository.listGroceriesByHousehold.mockResolvedValue([grocery("kaas")]);
     await priceTheList(ctx);
 
     const askedBefore = storeProductsRepository.markLinkPending.mock.calls[0]?.[2] as Date;
@@ -180,7 +183,7 @@ describe("asking a Store what an Ingredient means", () => {
   });
 
   it("asks nothing of a Store with no shop behind it", async () => {
-    storesRepository.listStoresByUserIds.mockResolvedValue([{ id: STORE, searchAddress: null }]);
+    storesRepository.listStoresByHousehold.mockResolvedValue([{ id: STORE, searchAddress: null }]);
 
     await noticeGroceries(ctx, [grocery("kaas")]);
 
@@ -201,13 +204,19 @@ describe("asking a Store what an Ingredient means", () => {
     );
     expect(queue.add).toHaveBeenCalledExactlyOnceWith(
       "match",
-      expect.objectContaining({ ingredientId: "ingredient:onion", name: "onions, diced" }),
+      expect.objectContaining({
+        ingredientId: "ingredient:onion",
+        name: "onions, diced",
+        groceryId: "grocery:onions, diced",
+      }),
       expect.anything()
     );
   });
 
   it("asks nothing about a grocery the server has not resolved yet", async () => {
-    await noticeGroceries(ctx, [{ name: "kaas", storeId: STORE, ingredientId: null }]);
+    await noticeGroceries(ctx, [
+      { id: "grocery:kaas", name: "kaas", storeId: STORE, ingredientId: null },
+    ]);
 
     expect(storeProductsRepository.markLinkPending).not.toHaveBeenCalled();
     expect(queue.add).not.toHaveBeenCalled();

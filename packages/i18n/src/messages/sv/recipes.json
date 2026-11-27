@@ -41,12 +41,8 @@
   },
   "empty": {
     "title": "Ditt bibliotek väntar",
-    "description": "Klistra in en receptlänk i sökfältet ovan så hämtar vi receptet.",
     "noResults": "Inga recept hittades",
-    "noResultsHint": "Prova att ändra eller rensa dina filter.",
-    "noCookbooks": "Inga kokböcker ännu",
-    "noCookbooksHint": "En kokbok är en samling recept med en titel. Skapa din första för att få ordning i biblioteket.",
-    "descriptionMobile": "Lägg till ditt första recept från en länk, text eller bilder."
+    "noCookbooks": "Inga kokböcker ännu"
   },
   "card": {
     "noImage": "Ingen bild tillgänglig",
@@ -67,6 +63,7 @@
     "addToGroceries": "Lägg till i inköpslistan",
     "ratingPrompt": "Vad tyckte du om det här receptet?",
     "notFound": "Receptet hittades inte",
+    "offline": "Det här receptet kräver en anslutning",
     "notFoundMessage": "Det här receptet finns inte, eller så har du inte behörighet att visa det.",
     "prep": "förberedelse",
     "total": "totalt",
@@ -160,6 +157,7 @@
     "expiresAfter": "Upphör efter",
     "expiresOn": "Upphör {date}",
     "expiredOn": "Upphörde {date}",
+    "revokedOn": "Återkallad {date}",
     "lastOpenedOn": "Senast öppnad {date}",
     "neverExpires": "Upphör aldrig",
     "linkCreated": "Skapad {date}"
@@ -203,7 +201,7 @@
     "notesPlaceholder": "Lägg till förberedelsetips, anpassningar eller serveringsförslag...",
     "ingredientsHelp": "Skriv ingredienser som ”2 dl mjöl” så tolkar vi mängder och enheter automatiskt.",
     "instructionsHelp": "Skriv tydliga instruktioner steg för steg. Tryck på Enter för att gå till nästa steg.",
-    "tagsHelp": "Skriv taggar och klicka på förslag för att lägga till dem. Befintliga taggar är fyllda, nya taggar har en streckad ram.",
+    "tagsHelp": "Välj en tagg eller skapa en ny.",
     "tagsAndCategories": "Taggar och kategorier",
     "categoriesHelp": "Välj måltidskategorier för det här receptet.",
     "addCategory": "Lägg till kategori",
@@ -224,7 +222,7 @@
     "originRegion": "Region",
     "originRegionPlaceholder": "T.ex. Sicilien",
     "cuisines": "Matkulturer",
-    "cuisinesHelp": "Välj från serverns lista. Flera kan passa för en rätt som blandar matkulturer.",
+    "cuisinesHelp": "Välj i listan eller skapa en egen. Flera passar för en fusionsrätt.",
     "provenanceNote": "Anteckning",
     "provenanceNotePlaceholder": "Några meningar om var den här rätten kommer ifrån…",
     "servings": "Portioner",
@@ -441,7 +439,6 @@
     "singular": "Kokbok",
     "notFound": "Kokboken hittades inte",
     "notFoundHint": "Den kan ha tagits bort eller vara dold för dig.",
-    "emptyHint": "Lägg till recept via receptens snabbmeny.",
     "panelTitle": "Lägg till i kokbok",
     "newWithRecipe": "Ny kokbok med det här receptet",
     "noneEditable": "Det finns inga kokböcker du kan redigera ännu.",
@@ -545,7 +542,7 @@
     "tagsAndCategories": "Taggar och kategorier",
     "categories": "Kategorier",
     "tags": "Taggar",
-    "tagsHint": "Välj ett förslag eller skriv en ny tagg; nya taggar har streckad kant.",
+    "tagsHint": "Välj en tagg i listan eller skapa en ny.",
     "addTag": "Lägg till en tagg",
     "removeNamed": "Ta bort {name}",
     "servingsAndTime": "Portioner och tid",
@@ -561,6 +558,13 @@
     "discardMessage": "Du har osparade ändringar.",
     "keepEditing": "Fortsätt redigera",
     "discard": "Släng"
+  },
+  "picker": {
+    "create": "Skapa \"{name}\"",
+    "createOffline": "Du kan skapa \"{name}\" när du är online.",
+    "tooLong": "Namn får vara högst {max} tecken.",
+    "createFailed": "Det gick inte att skapa \"{name}\". Försök igen.",
+    "loadFailed": "Det gick inte att läsa in listen."
   },
   "search": {
     "sortBestMatch": "Bästa träff",

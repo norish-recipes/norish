@@ -10,7 +10,10 @@ import type {
   RecipeShareSummaryDto,
 } from "@norish/shared/contracts/dto/recipe-shares";
 
+import type { ReadStatus } from "../trpc/read-status";
+import { useRealtimeSubscription } from "../realtime";
 import { useTRPC } from "../trpc";
+import { readStatus, rereadAfterWrite } from "../trpc/read-status";
 
 type RecipeSharesQueryResult = {
   shares: RecipeShareSummaryDto[];
@@ -23,10 +26,8 @@ type RecipeSharesQueryResult = {
   invalidate: () => void;
 };
 
-type ShareInventoryQueryResult<TShare> = {
+type ShareInventoryQueryResult<TShare> = ReadStatus & {
   shares: TShare[];
-  isLoading: boolean;
-  error: unknown;
   queryKey: QueryKey;
   invalidate: () => void;
 };
@@ -72,14 +73,19 @@ export function useMyRecipeSharesQuery(): MyRecipeSharesQueryResult {
   const queryKey = trpc.recipes.shareListMine.queryKey();
   const query = useQuery(trpc.recipes.shareListMine.queryOptions());
 
+  // Told on the maker's own channel, so a link the maker may no longer view still rereads.
+  useRealtimeSubscription(trpc.recipes.onMyShareEvent, {
+    onEvent: () => void rereadAfterWrite(queryClient, queryKey),
+    liveQueryKeys: [queryKey],
+  });
+
   const invalidate = useCallback(() => {
     queryClient.invalidateQueries({ queryKey });
   }, [queryClient, queryKey]);
 
   return {
     shares: query.data ?? [],
-    isLoading: query.isLoading,
-    error: query.error,
+    ...readStatus(query),
     queryKey,
     invalidate,
   };
@@ -91,15 +97,10 @@ export function useAdminRecipeSharesQuery(): AdminRecipeSharesQueryResult {
   const queryKey = trpc.recipes.shareListAdmin.queryKey();
   const query = useQuery(trpc.recipes.shareListAdmin.queryOptions());
 
-  const invalidate = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey });
-  }, [queryClient, queryKey]);
-
   return {
     shares: query.data ?? [],
-    isLoading: query.isLoading,
-    error: query.error,
+    ...readStatus(query),
     queryKey,
-    invalidate,
+    invalidate: () => void queryClient.invalidateQueries({ queryKey }),
   };
 }

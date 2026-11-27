@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 
 const createRecipeWithRefs = vi.fn();
 const dashboardRecipe = vi.fn();
-const getAllergiesForUsers = vi.fn();
+const getHouseholdAllergyNames = vi.fn();
 const rateRecipe = vi.fn();
 const getAverageRating = vi.fn();
 const publishRecipeBecameUsable = vi.fn(async () => undefined);
@@ -13,7 +13,7 @@ const publishRecipe = vi.fn(async () => undefined);
 vi.mock("@norish/db", () => ({
   createRecipeWithRefs,
   dashboardRecipe,
-  getAllergiesForUsers,
+  getHouseholdAllergyNames,
 }));
 
 vi.mock("@norish/db/repositories/ratings", () => ({
@@ -21,6 +21,19 @@ vi.mock("@norish/db/repositories/ratings", () => ({
   getAverageRating,
 }));
 
+// The audience reads each row's household and the account's at publish time.
+vi.mock("@norish/db/repositories/households", () => ({
+  getHouseholdIdForUser: vi.fn().mockResolvedValue("household-1"),
+}));
+const storedIds = vi.hoisted(() => ({ except: new Set<string>() }));
+
+vi.mock("@norish/db/repositories/recipes", () => ({
+  getRecipeHouseholdIds: vi.fn(
+    async (ids: string[]) =>
+      new Map(ids.filter((id) => !storedIds.except.has(id)).map((id) => [id, "household-1"]))
+  ),
+}));
+vi.mock("@norish/db/repositories/cookbooks", () => ({ getCookbookRow: vi.fn() }));
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   getAIConfig: vi.fn().mockResolvedValue({
     automaticEnrichment: {
@@ -61,9 +74,42 @@ vi.mock("@norish/shared-server/logger", () => ({
   createLogger: () => ({ info: vi.fn(), debug: vi.fn(), error: vi.fn() }),
 }));
 
-vi.mock("@norish/shared-server/media/storage", () => ({
-  deleteRecipeImagesDir: vi.fn(),
+const deleteRecipeImagesDir = vi.hoisted(() => vi.fn());
+const worker = vi.hoisted(() => ({
+  onFailed: undefined as ((job: unknown, error: Error) => Promise<void>) | undefined,
 }));
+
+vi.mock("@norish/shared-server/media/storage", () => ({ deleteRecipeImagesDir }));
+
+vi.mock("../../src/create-worker", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../src/create-worker")>()),
+  createWorker: vi.fn((_name: string, _process: unknown, options: typeof worker) => {
+    worker.onFailed = options.onFailed;
+  }),
+}));
+
+describe("a failed paste import", () => {
+  const failedJob = (attemptsMade: number) => ({
+    id: "job-1",
+    attemptsMade,
+    opts: { attempts: 3 },
+    data: { recipeIds: ["stored", "not-stored"], userId: "user-1" },
+  });
+
+  it("keeps every file while it will be retried, then removes only what no recipe holds", async () => {
+    const { startPasteImportWorker } = await import("../../src/paste-import/worker");
+
+    startPasteImportWorker();
+    storedIds.except = new Set(["not-stored"]);
+
+    await worker.onFailed!(failedJob(1), new Error("boom"));
+    expect(deleteRecipeImagesDir).not.toHaveBeenCalled();
+
+    await worker.onFailed!(failedJob(3), new Error("boom"));
+    expect(deleteRecipeImagesDir.mock.calls).toEqual([["not-stored"]]);
+    storedIds.except = new Set();
+  });
+});
 
 describe("processPasteImportJob", () => {
   it("creates valid structured recipes in order and persists normalized ratings", async () => {
@@ -85,8 +131,7 @@ describe("processPasteImportJob", () => {
         batchId: "batch-1",
         recipeIds: ["recipe-1", "recipe-invalid", "recipe-2"],
         userId: "user-1",
-        householdKey: "household-1",
-        householdUserIds: null,
+        householdId: "household-1",
         text: "structured",
         structuredRecipes: [
           {
@@ -216,8 +261,7 @@ describe("processPasteImportJob", () => {
           batchId: "batch-2",
           recipeIds: ["recipe-invalid"],
           userId: "user-1",
-          householdKey: "household-1",
-          householdUserIds: null,
+          householdId: "household-1",
           text: "structured",
           structuredRecipes: [
             {

@@ -10,6 +10,7 @@ import { upgradePromptCopies, upgradeTaggingSettings } from "./before-0-20-setti
 import { upgradeDishColours } from "./before-0-22-dish-colours";
 import { upgradeIngredients } from "./before-0-25-ingredients";
 import { upgradeOAuthTokens } from "./before-0-26-oauth-tokens";
+import { upgradeHouseholdLists } from "./before-0-28-household-lists";
 
 /** Raised when a release adds an upgrade, so every instance runs the data upgrades once more. */
 export const UPGRADES_VERSION = 1;
@@ -20,7 +21,8 @@ export async function upgradeSettingsFromOlderReleases(): Promise<void> {
   await upgradePromptCopies();
 }
 
-/** Older releases' files and rows, once per `UPGRADES_VERSION`, after the first catalogue seed. */
+/** Older releases' files and rows, once per `UPGRADES_VERSION`, after the first catalogue seed;
+ * the 0.28 list fold at every boot until it is done. */
 export async function upgradeDataFromOlderReleases(): Promise<void> {
   await runOnBoot(
     () =>
@@ -41,4 +43,10 @@ export async function upgradeDataFromOlderReleases(): Promise<void> {
       failed: "Upgrading data from older releases failed",
     }
   );
+  // Every boot until no name waits for its fold, whatever the steps above did: until then a
+  // waiting name matches no filter or write by its fold.
+  await runOnBoot(upgradeHouseholdLists, {
+    skipped: "No list names from before 0.28 wait for their fold",
+    failed: "Folding list names from before 0.28 failed",
+  });
 }

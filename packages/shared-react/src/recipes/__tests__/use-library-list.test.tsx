@@ -1,12 +1,15 @@
 import type { ReactNode } from "react";
 import { act, renderHook } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PersistedRecipeFilters } from "@norish/shared/contracts/filter-contract";
-import { DEFAULT_PERSISTED_RECIPE_FILTERS } from "@norish/shared/contracts/filter-contract";
+import {
+  DEFAULT_PERSISTED_RECIPE_FILTERS,
+  hasAppliedRecipeFilters,
+} from "@norish/shared/contracts/filter-contract";
 
 import { LibraryFiltersProvider, useLibraryFiltersStoreApi } from "../library-filters-store";
-import { useLibraryList } from "../use-library-list";
+import { useAppliedLibraryFilters, useLibraryList } from "../use-library-list";
 import { useLibraryQuery } from "../use-library-query";
 
 /** The list and its filters store, made from the cookie's filters (`undefined`: no cookie). */
@@ -19,6 +22,13 @@ function renderList(cookie: PersistedRecipeFilters | undefined) {
 }
 
 vi.mock("../use-library-query", () => ({ useLibraryQuery: vi.fn() }));
+
+const visibility = vi.hoisted(() => ({ showRatings: true, showFavorites: true }));
+
+vi.mock("../../reader", async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  useHiddenItemVisibility: () => visibility,
+}));
 
 const UNFILTERED = [
   { kind: "recipe", recipe: { id: "unfiltered-1" } },
@@ -98,5 +108,53 @@ describe("Search's flag and gate", () => {
       expect.objectContaining({ sortBeatsRank: undefined }),
       { enabled: true }
     );
+  });
+});
+
+describe("a filter on a Hidden Item", () => {
+  beforeEach(() => {
+    vi.mocked(useLibraryQuery)
+      .mockReset()
+      .mockReturnValue({ items: [], total: 0, isLoading: false } as never);
+  });
+  afterEach(() => Object.assign(visibility, { showRatings: true, showFavorites: true }));
+
+  it("stops narrowing the list once the reader hides it", () => {
+    const { rerender } = renderList({
+      ...DEFAULT_PERSISTED_RECIPE_FILTERS,
+      minRating: 4,
+      showFavoritesOnly: true,
+    });
+
+    expect(useLibraryQuery).toHaveBeenLastCalledWith(
+      expect.objectContaining({ minRating: 4, favoritesOnly: true }),
+      expect.anything()
+    );
+
+    Object.assign(visibility, { showRatings: false, showFavorites: false });
+    rerender();
+
+    expect(useLibraryQuery).toHaveBeenLastCalledWith(
+      expect.objectContaining({ minRating: undefined, favoritesOnly: false }),
+      expect.anything()
+    );
+  });
+
+  it("is no applied filter while hidden, and applies again once shown", () => {
+    const { result, rerender } = renderHook(() => useAppliedLibraryFilters(), {
+      wrapper: ({ children }: { children: ReactNode }) => (
+        <LibraryFiltersProvider initial={{ ...DEFAULT_PERSISTED_RECIPE_FILTERS, minRating: 4 }}>
+          {children}
+        </LibraryFiltersProvider>
+      ),
+    });
+
+    Object.assign(visibility, { showRatings: false });
+    rerender();
+    expect(hasAppliedRecipeFilters(result.current)).toBe(false);
+
+    Object.assign(visibility, { showRatings: true });
+    rerender();
+    expect(result.current.minRating).toBe(4);
   });
 });

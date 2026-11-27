@@ -4,6 +4,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import type { CatalogueActor } from "@norish/shared-server/ingredients/catalogue";
 import { getRecipeFull } from "@norish/db";
 
+import { testHouseholdOf } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 import { writeArchive } from "./norish-fixtures";
 
@@ -105,7 +106,11 @@ describe("a Recipe Archive round trip", () => {
 
   /** Rename a recipe's first food and remove every other spelling, so its line's text names it no more. */
   async function respell(recipeId: string, spelling: string): Promise<void> {
-    const actor: CatalogueActor = { userId, householdUserIds: null, isServerAdmin: false };
+    const actor: CatalogueActor = {
+      userId,
+      householdId: testHouseholdOf(userId),
+      isServerAdmin: false,
+    };
     const ingredientId = (await getRecipeFull(recipeId))!.recipeIngredients[0]!.ingredientId!;
 
     await renameIngredient(actor, ingredientId, spelling);

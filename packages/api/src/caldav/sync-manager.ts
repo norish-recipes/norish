@@ -135,32 +135,20 @@ export async function deletePlannedItem(userId: string, itemId: string): Promise
     return;
   }
 
-  try {
-    const client = new CalDavClient({
-      serverUrl: config.serverUrl,
-      calendarUrl: config.calendarUrl ?? undefined,
-      username: config.username,
-      password: config.password,
-      trustedCertificate: config.trustedCertificate ?? undefined,
-    });
+  const client = new CalDavClient({
+    serverUrl: config.serverUrl,
+    calendarUrl: config.calendarUrl ?? undefined,
+    username: config.username,
+    password: config.password,
+    trustedCertificate: config.trustedCertificate ?? undefined,
+  });
 
-    await client.deleteEvent(syncStatus.caldavEventUid);
+  // A failed delete throws, so the job's retries and the failed status keep it retryable.
+  await client.deleteEvent(syncStatus.caldavEventUid);
 
-    await updateCaldavSyncStatus(syncStatus.id, {
-      syncStatus: "removed",
-      lastSyncAt: new Date(),
-      errorMessage: null,
-    });
-  } catch (error) {
-    const errorMessage = truncateErrorMessage(
-      error instanceof Error ? error.message : String(error)
-    );
-
-    // Still mark as removed but preserve the error
-    await updateCaldavSyncStatus(syncStatus.id, {
-      syncStatus: "removed",
-      errorMessage,
-      lastSyncAt: new Date(),
-    });
-  }
+  await updateCaldavSyncStatus(syncStatus.id, {
+    syncStatus: "removed",
+    lastSyncAt: new Date(),
+    errorMessage: null,
+  });
 }

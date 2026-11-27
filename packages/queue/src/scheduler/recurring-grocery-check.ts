@@ -1,4 +1,3 @@
-import { getHouseholdForUser } from "@norish/db";
 import {
   getDueRecurringGroceries,
   uncheckGrocery,
@@ -8,15 +7,6 @@ import { schedulerLogger } from "@norish/shared-server/logger";
 import { groceries } from "@norish/shared-server/realtime/groceries";
 import { recurrencePatternOf } from "@norish/shared/contracts/recurrence";
 import { calculateNextOccurrence } from "@norish/shared/lib/recurrence/calculator";
-
-/**
- * Get the household key for a user (household ID or user ID if no household)
- */
-async function getHouseholdKeyForUser(userId: string): Promise<string> {
-  const household = await getHouseholdForUser(userId);
-
-  return household?.id ?? userId;
-}
 
 // Unchecks recurring groceries that are due
 export async function checkRecurringGroceries(): Promise<{ unchecked: number }> {
@@ -36,7 +26,7 @@ export async function checkRecurringGroceries(): Promise<{ unchecked: number }> 
     for (const item of dueItems) {
       try {
         // Uncheck the grocery
-        await uncheckGrocery(item.grocery.id);
+        await uncheckGrocery(item.grocery.id, item.recurringGrocery.householdId);
 
         // Calculate next occurrence
         const pattern = recurrencePatternOf(item.recurringGrocery);
@@ -48,15 +38,16 @@ export async function checkRecurringGroceries(): Promise<{ unchecked: number }> 
         );
 
         // Update the recurring grocery with new dates
-        await updateRecurringGrocery({
-          id: item.recurringGrocery.id,
-          nextPlannedFor: nextDate,
-          lastCheckedDate: item.recurringGrocery.nextPlannedFor,
-        });
+        await updateRecurringGrocery(
+          {
+            id: item.recurringGrocery.id,
+            nextPlannedFor: nextDate,
+            lastCheckedDate: item.recurringGrocery.nextPlannedFor,
+          },
+          item.recurringGrocery.householdId
+        );
 
-        // Broadcast to household members via tRPC emitter
-        const householdKey = await getHouseholdKeyForUser(item.recurringGrocery.userId);
-
+        // The row's own household, whoever added it.
         void groceries.publish(
           "recurringUpdated",
           {
@@ -70,7 +61,7 @@ export async function checkRecurringGroceries(): Promise<{ unchecked: number }> 
               isDone: false,
             },
           },
-          { householdKey }
+          { householdId: item.recurringGrocery.householdId }
         );
 
         unchecked++;

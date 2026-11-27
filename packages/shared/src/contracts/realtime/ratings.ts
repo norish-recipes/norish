@@ -1,5 +1,5 @@
 /**
- * Rating realtime catalogue. Routed by the recipe permission policy.
+ * Rating realtime catalogue. Updates are routed by the recipe permission policy.
  */
 
 import { z } from "zod";
@@ -15,8 +15,9 @@ export const ratingsRealtime = defineRealtimeCatalogue("rating", {
       ratingCount: z.number(),
     }),
   },
+  // A failed rating is the rater's own news.
   ratingFailed: {
-    scope: "policy",
+    scope: "user",
     payload: z.object({ recipeId: z.string(), reason: z.string() }),
   },
 });

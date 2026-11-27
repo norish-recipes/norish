@@ -2,10 +2,15 @@ import { MutationObserver, QueryClient } from "@tanstack/react-query";
 import { observable } from "@trpc/server/observable";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { hasOutboxAdmissionFailed, isQueuedOutboxSignal } from "@norish/shared/lib/trpc-errors";
+import {
+  hasOutboxAdmissionFailed,
+  HOUSEHOLD_HEADER,
+  isQueuedOutboxSignal,
+} from "@norish/shared/lib/trpc-errors";
 
 import type { OutboxStore } from "./outbox-store";
 import type { NewOutboxEntry, OutboxEntry } from "./outbox-types";
+import { noteWriteStart } from "./household";
 import { isEncodedFormData } from "./input-codec";
 import { createOutboxLink, MUTATION_SEND_TIMEOUT_MS } from "./outbox-link";
 import { createOutboxStore } from "./outbox-store";
@@ -17,6 +22,7 @@ const REPLAY_HEADER_VALUE = "test-outbox";
 
 const enqueue = vi.fn(async (_entry: NewOutboxEntry) => ({}) as OutboxEntry);
 const owner = vi.fn<() => string | null>(() => "u1");
+const household = () => "h1";
 
 type FakeOp = {
   type: "mutation" | "query";
@@ -29,6 +35,8 @@ function runLink(op: FakeOp, terminal: () => ReturnType<typeof observable>) {
   const link = createOutboxLink({
     store: { enqueue } as unknown as OutboxStore,
     owner,
+    household: () => "h1",
+    household,
     replayHeaderValue: REPLAY_HEADER_VALUE,
   })({} as never);
 
@@ -68,6 +76,7 @@ describe("createOutboxLink", () => {
     expect(enqueue).toHaveBeenCalledWith(
       expect.objectContaining({
         ownerId: "u1",
+        householdId: "h1",
         path: "groceries.create",
         input: { id: "g1", name: "Milk" },
         entityId: "g1", // the client-minted create id
@@ -88,17 +97,38 @@ describe("createOutboxLink", () => {
     expect(enqueue).not.toHaveBeenCalled();
   });
 
-  it("excludes a caldav password and a site auth token value, not the procedures beside them", async () => {
+  it("excludes credentials and one-time secrets, not the procedures beside them", async () => {
     const failure = new TypeError("Failed to fetch");
 
-    for (const path of ["caldav.saveConfig", "siteAuthTokens.create", "households.join"]) {
+    for (const path of [
+      "caldav.saveConfig",
+      "siteAuthTokens.create",
+      "households.join",
+      "user.apiKeys.create",
+      "recipes.shareCreate",
+    ]) {
       await runLink(mutationOp({ path, input: { id: "x" } }), errorWith(failure));
     }
     expect(enqueue).not.toHaveBeenCalled();
 
     await runLink(mutationOp({ path: "caldav.deleteConfig" }), errorWith(failure));
     await runLink(mutationOp({ path: "households.leave" }), errorWith(failure));
-    expect(enqueue).toHaveBeenCalledTimes(2);
+    await runLink(mutationOp({ path: "user.apiKeys.toggle" }), errorWith(failure));
+    await runLink(mutationOp({ path: "recipes.shareRevoke" }), errorWith(failure));
+    expect(enqueue).toHaveBeenCalledTimes(4);
+  });
+
+  it("excludes the admin share moderation, not the maker's own share writes", async () => {
+    const failure = new TypeError("Failed to fetch");
+
+    for (const path of [
+      "recipes.shareRevokeAdmin",
+      "recipes.shareReactivateAdmin",
+      "recipes.shareDeleteAdmin",
+    ]) {
+      await runLink(mutationOp({ path, input: { id: "x" } }), errorWith(failure));
+    }
+    expect(enqueue).not.toHaveBeenCalled();
   });
 
   it("excludes procedures of the admin router only", async () => {
@@ -218,6 +248,75 @@ describe("createOutboxLink", () => {
   });
 });
 
+describe("createOutboxLink: the household a write names", () => {
+  beforeEach(() => enqueue.mockClear());
+
+  /** The link while the client holds the account in `held()`; resolves with the op sent on. */
+  function send(
+    op: FakeOp,
+    held: () => string | null,
+    terminal: () => ReturnType<typeof observable>
+  ) {
+    const link = createOutboxLink({
+      store: { enqueue } as unknown as OutboxStore,
+      owner,
+      household: held,
+      replayHeaderValue: REPLAY_HEADER_VALUE,
+    })({} as never);
+    let sent: FakeOp | null = null;
+
+    return new Promise<FakeOp | null>((resolve) => {
+      link({
+        op,
+        next: (forwarded: FakeOp) => ((sent = forwarded), terminal()),
+      } as never).subscribe({
+        next: () => resolve(sent),
+        error: () => resolve(sent),
+        complete: () => resolve(sent),
+      });
+    });
+  }
+
+  it("is the one it started in, when a removal lands before it fails and is queued", async () => {
+    let held = "h1";
+    const failLater = () =>
+      observable((observer) => {
+        held = "h2";
+        queueMicrotask(() => observer.error(new TypeError("Failed to fetch")));
+      });
+
+    const sent = await send(mutationOp(), () => held, failLater);
+
+    expect((sent?.context.headers as Record<string, string>)[HOUSEHOLD_HEADER]).toBe("h1");
+    expect(enqueue).toHaveBeenCalledWith(
+      expect.objectContaining({ householdId: "h1", headers: { "x-operation-id": "op-1" } })
+    );
+  });
+
+  it("is the one its mutation started in, though it waited behind its scope meanwhile", async () => {
+    const op = mutationOp();
+
+    noteWriteStart(op.input, "h1");
+    const sent = await send(op, () => "h2", errorWith(new TypeError("Failed to fetch")));
+
+    expect((sent?.context.headers as Record<string, string>)[HOUSEHOLD_HEADER]).toBe("h1");
+    expect(enqueue).toHaveBeenCalledWith(expect.objectContaining({ householdId: "h1" }));
+  });
+
+  it("is none for the account's own writes and for a replay", async () => {
+    const own = await send(mutationOp({ path: "user.updateName" }), () => "h1", succeedWith({}));
+    const replay = await send(
+      mutationOp({ context: { headers: { [OUTBOX_REPLAY_HEADER]: REPLAY_HEADER_VALUE } } }),
+      () => "h1",
+      succeedWith({})
+    );
+
+    for (const sent of [own, replay]) {
+      expect((sent?.context.headers as Record<string, string>)[HOUSEHOLD_HEADER]).toBeUndefined();
+    }
+  });
+});
+
 describe("createOutboxLink: a whole edit waits behind its pending save", () => {
   const id = "11111111-1111-4111-8111-111111111111";
   const unreachable = () =>
@@ -232,6 +331,7 @@ describe("createOutboxLink: a whole edit waits behind its pending save", () => {
     link = createOutboxLink({
       store,
       owner,
+      household: () => "h1",
       replayHeaderValue: REPLAY_HEADER_VALUE,
       wholeEdits: new Set(["recipes.update"]),
       onConflict,
@@ -292,6 +392,26 @@ describe("createOutboxLink: a whole edit waits behind its pending save", () => {
     expect(await createOutboxStore(storage.outbox).forOwner("u1", "pending")).toHaveLength(1);
   });
 
+  it("keeps what the first save changed and the second left out", async () => {
+    const tagged = { id, version: 3, data: { name: "First", tags: [{ name: "Quick" }] } };
+
+    await save(tagged, unreachable);
+    await save(edit("Second", 4), unreachable);
+
+    expect((await store.loadAll()).map((entry) => entry.input)).toEqual([
+      { id, version: 3, data: { name: "Second", tags: [{ name: "Quick" }] } },
+    ]);
+  });
+
+  it("keeps a time the later save clears", async () => {
+    await save({ id, version: 3, data: { name: "First", prepMinutes: 10 } }, unreachable);
+    await save({ id, version: 4, data: { name: "Second", prepMinutes: null } }, unreachable);
+
+    expect((await store.loadAll()).map((entry) => entry.input)).toEqual([
+      { id, version: 3, data: { name: "Second", prepMinutes: null } },
+    ]);
+  });
+
   it("replays the one save, and it lands", async () => {
     await save(edit("First"), unreachable);
     await save(edit("Second"), unreachable);
@@ -301,7 +421,7 @@ describe("createOutboxLink: a whole edit waits behind its pending save", () => {
       return { kind: "success" as const };
     });
 
-    const pass = await runReplayPass({ store, submit, ownerId: "u1" });
+    const pass = await runReplayPass({ store, submit, ownerId: "u1", householdId: "h1" });
 
     expect(submit).toHaveBeenCalledTimes(1);
     expect(pass).toMatchObject({ removed: 1, parked: 0 });
@@ -372,6 +492,7 @@ describe("createOutboxLink: a whole edit waits behind its pending save", () => {
     await store.enqueue({
       id: "other",
       ownerId: "u1",
+      householdId: "h1",
       path: "recipes.update",
       input: edit("Other tab"),
       entityId: null,
@@ -432,7 +553,12 @@ describe("createOutboxLink: a whole edit waits behind its pending save", () => {
   it("still sends a favourite queued behind a refused edit of its recipe", async () => {
     await save(edit("Mine"), unreachable);
     await new Promise<void>((resolve) =>
-      createOutboxLink({ store, owner, replayHeaderValue: REPLAY_HEADER_VALUE })({} as never)({
+      createOutboxLink({
+        store,
+        owner,
+        household: () => "h1",
+        replayHeaderValue: REPLAY_HEADER_VALUE,
+      })({} as never)({
         op: {
           type: "mutation",
           path: "favorites.toggle",
@@ -446,7 +572,7 @@ describe("createOutboxLink: a whole edit waits behind its pending save", () => {
       kind: entry.path === "recipes.update" ? ("conflict" as const) : ("success" as const),
     }));
 
-    const pass = await runReplayPass({ store, submit, ownerId: "u1" });
+    const pass = await runReplayPass({ store, submit, ownerId: "u1", householdId: "h1" });
 
     expect(submit.mock.calls.map(([entry]) => entry.path)).toEqual([
       "recipes.update",
@@ -468,6 +594,7 @@ describe("createOutboxLink: a send with no answer", () => {
     createOutboxLink({
       store: { enqueue } as unknown as OutboxStore,
       owner,
+      household: () => "h1",
       replayHeaderValue: REPLAY_HEADER_VALUE,
       timedWrites: new Set(["groceries.toggle"]),
     })({} as never);

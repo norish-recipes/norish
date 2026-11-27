@@ -41,15 +41,6 @@ export const NoteTitleSchema = z.string().min(1, "Title is required").max(200, "
 // ============================================================================
 
 /**
- * Household name (optional, with length constraints)
- */
-export const HouseholdNameSchema = z
-  .string()
-  .min(1, "Name is required")
-  .max(100, "Name too long")
-  .optional();
-
-/**
  * 6-digit household join code
  */
 export const JoinCodeSchema = z.string().regex(/^\d{6}$/, "Join code must be 6 digits");

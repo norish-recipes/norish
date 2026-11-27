@@ -12,7 +12,6 @@ import { Stack } from "expo-router";
 import { useIntl } from "react-intl";
 
 import { useLibraryFilters } from "@norish/shared-react/recipes";
-import { hasSearchText } from "@norish/shared/lib/search-terms";
 
 import { Discover } from "../components/discover";
 import { SearchFailed, SearchNoResults, SearchOffline } from "../components/no-results";
@@ -26,10 +25,10 @@ import { useSearchResults } from "../hooks/use-search-results";
 import { useTypingSuggestions } from "../hooks/use-typing-suggestions";
 import { filterChips } from "../utils/search-chips";
 import { ALL_SCOPE, isScopeNarrowed } from "../utils/search-scope";
-import { noResultsVariant } from "../utils/search-state";
+import { noResultsVariant, showsScope } from "../utils/search-state";
 import { narrowRows } from "../utils/search-suggestions";
 
-/** Search: the field in the tab bar, its Search Scope while it has text, and Results once confirmed.
+/** Search: the field in the tab bar, its Search Scope while it is focused or has text, and Results once confirmed.
  * `Results` is the Recipes feature's card list, which the route file hands in. */
 export function SearchScreen({ Results }: { Results: ComponentType<RecipeResultsProps> }) {
   const intl = useIntl();
@@ -128,6 +127,7 @@ export function SearchScreen({ Results }: { Results: ComponentType<RecipeResults
           loading={typing.loading}
           narrowRows={rows}
           recipes={typing.recipes}
+          scroll={scroll}
           searchWords={typing.asked}
           text={field.text}
           onConfirm={field.confirm}
@@ -136,12 +136,13 @@ export function SearchScreen({ Results }: { Results: ComponentType<RecipeResults
       ) : (
         <Discover
           focused={field.focused}
+          scroll={scroll}
           onEdit={field.edit}
           onPicked={field.blur}
           onRun={field.run}
         />
       )}
-      {hasSearchText(field.text) ? <ScopeRow /> : null}
+      <ScopeRow visible={showsScope(field.focused, field.text)} />
     </>
   );
 }

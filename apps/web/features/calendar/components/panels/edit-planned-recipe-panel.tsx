@@ -12,30 +12,22 @@ import { Calendar, DateField, DatePicker, Label, ListBox, Select } from "@heroui
 import { parseDate } from "@internationalized/date";
 import { useTranslations } from "next-intl";
 
+import type { PlannedItemFromQuery } from "@norish/shared/contracts";
 import { useCalendarMutations } from "@norish/shared-react/calendar";
+import { isRecipeItem, isRecipeOutOfView } from "@norish/shared-react/calendar/todays-meals";
 import { Slot } from "@norish/shared/contracts";
 
 const SLOTS: Slot[] = ["Breakfast", "Lunch", "Dinner", "Snack"];
+
 type EditPlannedRecipePanelProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  itemId: string;
-  recipeName: string;
-  recipeImage: string | null;
-  recipeId: string;
-  date: string;
-  slot: Slot;
+  item: PlannedItemFromQuery;
 };
-export function EditPlannedRecipePanel({
-  open,
-  onOpenChange,
-  itemId,
-  recipeName,
-  recipeImage,
-  recipeId,
-  date,
-  slot,
-}: EditPlannedRecipePanelProps) {
+export function EditPlannedRecipePanel({ open, onOpenChange, item }: EditPlannedRecipePanelProps) {
+  const { id: itemId, date, slot } = item;
+  const recipeName = item.recipeName ?? "";
+  const recipeId = isRecipeItem(item) ? item.recipeId : null;
   const { planRecipe, deleteItem, moveItem } = useCalendarMutations();
   const [selectedDate, setSelectedDate] = useState<DateValue>(() => parseDate(date));
   const [selectedSlot, setSelectedSlot] = useState<Slot>(slot);
@@ -44,6 +36,7 @@ export function EditPlannedRecipePanel({
   const tSlots = useTranslations("common.slots");
   const tActions = useTranslations("common.actions");
   const tTimeline = useTranslations("calendar.timeline");
+
   if (seededFrom.open !== open || seededFrom.date !== date || seededFrom.slot !== slot) {
     setSeededFrom({ open, date, slot });
     if (open) {
@@ -54,6 +47,7 @@ export function EditPlannedRecipePanel({
   const handleSave = () => {
     const newDateStr = selectedDate.toString();
     const locationChanged = newDateStr !== date || selectedSlot !== slot;
+
     if (locationChanged) {
       moveItem(itemId, newDateStr, selectedSlot, 0);
     }
@@ -63,32 +57,46 @@ export function EditPlannedRecipePanel({
     deleteItem(itemId);
     onOpenChange(false);
   };
-  const handleDuplicate = () => {
-    planRecipe(selectedDate.toString(), selectedSlot, recipeId);
+  const handleDuplicate = (id: string) => {
+    planRecipe(selectedDate.toString(), selectedSlot, id);
   };
   const handleSlotChange = (value: Key | null) => {
     if (value) {
       setSelectedSlot(value.toString() as Slot);
     }
   };
+
   return (
     <Panel open={open} title={t("title")} onOpenChange={onOpenChange}>
-      <Panel.Body className="gap-5">
-        {/* Recipe preview */}
-        <Link
-          className="focus-visible:ring-accent group flex items-center gap-3 rounded-xl p-2 outline-none focus-visible:ring-2"
-          href={`/recipes/${recipeId}`}
-          onClick={() => onOpenChange(false)}
-        >
-          <PlannedItemThumbnail alt={recipeName} image={recipeImage} itemType="recipe" size="md" />
-          <div className="flex min-w-0 flex-1 flex-col">
-            <span className="text-foreground truncate text-base font-medium">{recipeName}</span>
-            <span className="text-accent flex items-center gap-1 text-sm group-hover:underline">
-              {tTimeline("goToRecipe")}
-              <ArrowTopRightOnSquareIcon className="h-3.5 w-3.5" />
+      <Panel.Body sections>
+        {recipeId ? (
+          <Link
+            className="focus-visible:ring-accent group flex items-center gap-3 rounded-xl p-2 outline-none focus-visible:ring-2"
+            href={`/recipes/${recipeId}`}
+            onClick={() => onOpenChange(false)}
+          >
+            <PlannedItemThumbnail
+              alt={recipeName}
+              image={item.recipeImage ?? null}
+              itemType="recipe"
+              size="md"
+            />
+            <div className="flex min-w-0 flex-1 flex-col">
+              <span className="text-foreground truncate text-base font-medium">{recipeName}</span>
+              <span className="text-accent flex items-center gap-1 text-sm group-hover:underline">
+                {tTimeline("goToRecipe")}
+                <ArrowTopRightOnSquareIcon className="h-3.5 w-3.5" />
+              </span>
+            </div>
+          </Link>
+        ) : isRecipeOutOfView(item) ? (
+          <div className="flex items-center gap-3 p-2" data-testid="planned-recipe-title-only">
+            <PlannedItemThumbnail alt={recipeName} image={null} itemType="recipe" size="md" />
+            <span className="text-foreground min-w-0 flex-1 truncate text-base font-medium">
+              {recipeName}
             </span>
           </div>
-        </Link>
+        ) : null}
 
         <DateAndSlotFields
           selectedDate={selectedDate}
@@ -105,9 +113,11 @@ export function EditPlannedRecipePanel({
             </ActionButton>
           }
         >
-          <ActionButton action="duplicate" onPress={handleDuplicate}>
-            {tActions("duplicate")}
-          </ActionButton>
+          {recipeId ? (
+            <ActionButton action="duplicate" onPress={() => handleDuplicate(recipeId)}>
+              {tActions("duplicate")}
+            </ActionButton>
+          ) : null}
           <ActionButton action="save" onPress={handleSave}>
             {tActions("save")}
           </ActionButton>

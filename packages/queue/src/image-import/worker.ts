@@ -9,17 +9,20 @@ import type { Job } from "bullmq";
 
 import type { ImageImportJobData } from "@norish/queue/contracts/job-types";
 import { addRecipeImages, dashboardRecipe, updateRecipeDishColor } from "@norish/db";
-import { listCategoryNamesForViewer } from "@norish/db/repositories/categories";
+import { listCategoryNamesForHousehold } from "@norish/db/repositories/categories";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
-import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { createResolvedRecipe } from "@norish/shared-server/ingredients/recipe-lines";
 import { createLogger } from "@norish/shared-server/logger";
 import { dishColorForImageUrl } from "@norish/shared-server/media/dish-color";
-import { deleteRecipeImagesDir, saveImageBytes } from "@norish/shared-server/media/storage";
+import { deleteUnreferencedRecipeFile, saveImageBytes } from "@norish/shared-server/media/storage";
+import { accountAudience, policyAudience } from "@norish/shared-server/realtime/audience";
 import { recipes } from "@norish/shared-server/realtime/recipes";
+import { matchImportedTags } from "@norish/shared-server/recipes/imported-tags";
 
 import { createWorker } from "../create-worker";
 import { announceUsableRecipe } from "../enrichment/announce";
+import { deleteUnstoredRecipeMedia } from "../import-cleanup";
+import { importerHouseholdId } from "../importer-household";
 import { reportStep } from "../job-steps";
 import { QUEUE_NAMES } from "../queue-names";
 
@@ -30,23 +33,18 @@ const log = createLogger("worker:image-import");
  */
 export async function processImageImportJob(job: Job<ImageImportJobData>): Promise<void> {
   const extractRecipeFromImages = requireQueueApiHandler("extractRecipeFromImages");
-  const { recipeId, userId, householdKey, householdUserIds, files } = job.data;
+  const { recipeId, userId, files } = job.data;
 
   log.info({ jobId: job.id, recipeId, fileCount: files.length }, "Processing image import job");
 
-  const policy = await getRecipePermissionPolicy();
-  const viewPolicy = policy.view;
-  const ctx = { userId, householdKey };
-
   // Emit import started event (shows skeleton)
-  void recipes.publish(
-    "importStarted",
-    {
-      recipeId,
-      url: `[${files.length} image(s)]`,
-    },
-    { viewPolicy: viewPolicy, ...ctx }
-  );
+  const started = await accountAudience(userId);
+
+  if (started) {
+    void recipes.publish("importStarted", { recipeId, url: `[${files.length} image(s)]` }, started);
+  }
+
+  const householdId = await importerHouseholdId(userId);
 
   // Vision parsing reads the images; every inference happens afterwards.
   // A failure throws with its own message — extraction, not this worker,
@@ -54,12 +52,17 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
   const parsedRecipe = await extractRecipeFromImages(
     recipeId,
     files,
-    await listCategoryNamesForViewer({ userId, householdUserIds })
+    await listCategoryNamesForHousehold(householdId)
   );
 
   // Save the recipe
   await reportStep(job, "saving");
-  const created = await createResolvedRecipe(recipeId, userId, parsedRecipe, { userId });
+  const created = await createResolvedRecipe(
+    recipeId,
+    userId,
+    await matchImportedTags(householdId, parsedRecipe),
+    { userId }
+  );
   const createdId = created?.recipeId;
 
   if (!createdId) {
@@ -78,7 +81,13 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
       const imageBytes = Buffer.from(firstFile.data, "base64");
       const imagePath = await saveImageBytes(imageBytes, recipeId);
 
-      await addRecipeImages(createdId, [{ image: imagePath, order: 0 }]);
+      try {
+        await addRecipeImages(createdId, [{ image: imagePath, order: 0 }]);
+      } catch (error) {
+        // A file with no row (the recipe erased meanwhile, say) would recreate a swept folder.
+        await deleteUnreferencedRecipeFile(imagePath, recipeId);
+        throw error;
+      }
       // Vision imports store their primary image only here, after the
       // recipe row exists, so the Dish Colour is written the same way.
       await updateRecipeDishColor(createdId, await dishColorForImageUrl(imagePath));
@@ -103,13 +112,13 @@ export async function processImageImportJob(job: Job<ImageImportJobData>): Promi
         pendingRecipeId: recipeId,
         toast: "imported",
       },
-      { viewPolicy: viewPolicy, ...ctx }
+      await policyAudience(dashboardDto.householdId)
     );
   }
 
   // Vision parsing is a reader, not an inference step: an image import enters
   // the same enrichment flow as every other creation path.
-  await announceUsableRecipe(created, { userId, householdKey, householdUserIds });
+  await announceUsableRecipe(created, { userId, householdId });
 
   // A finished import is kept as long as the retention says, but not its
   // images: they are base64 in the job data and would sit in Valkey with it.
@@ -125,14 +134,14 @@ async function handleJobFailed(
 ): Promise<void> {
   if (!job) return;
 
-  const { recipeId, userId, householdKey, files } = job.data;
+  const { recipeId, userId, files } = job.data;
 
-  await deleteRecipeImagesDir(recipeId);
+  await deleteUnstoredRecipeMedia([recipeId]);
 
   // Emit failed event (removes skeleton)
-  const policy = await getRecipePermissionPolicy();
-  const ctx = { userId, householdKey };
+  const audience = await accountAudience(userId);
 
+  if (!audience) return;
   void recipes.publish(
     "failed",
     {
@@ -140,7 +149,7 @@ async function handleJobFailed(
       recipeId,
       url: `[${files.length} image(s)]`,
     },
-    { viewPolicy: policy.view, ...ctx }
+    audience
   );
 }
 

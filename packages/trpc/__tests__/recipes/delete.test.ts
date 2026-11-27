@@ -8,20 +8,20 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { canAccessResource } from "../mocks/permissions";
+import { policy, resetPermissionsMocks } from "../mocks/permissions";
 import { recipes } from "../mocks/realtime/recipes";
 import { createMockHousehold, createMockUser } from "./test-utils";
 
 const mocks = vi.hoisted(() => ({
   deleteRecipesByIds: vi.fn(),
-  getRecipeOwnerIds: vi.fn(),
+  getRecipeHouseholdIds: vi.fn(),
   deleteRecipeImagesDir: vi.fn(),
 }));
 
 vi.mock("@norish/db", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@norish/db")>()),
   deleteRecipesByIds: mocks.deleteRecipesByIds,
-  getRecipeOwnerIds: mocks.getRecipeOwnerIds,
+  getRecipeHouseholdIds: mocks.getRecipeHouseholdIds,
 }));
 vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
 vi.mock("@norish/shared-server/realtime/recipes", () => import("../mocks/realtime/recipes"));
@@ -43,7 +43,6 @@ const MINE = "11111111-1111-4111-8111-111111111111";
 const EDITED = "22222222-2222-4222-8222-222222222222";
 const THEIRS = "33333333-3333-4333-8333-333333333333";
 const GONE = "44444444-4444-4444-8444-444444444444";
-const ORPHANED = "55555555-5555-4555-8555-555555555555";
 
 function caller() {
   const household = createMockHousehold();
@@ -59,17 +58,16 @@ function caller() {
 describe("recipes.delete", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.getRecipeOwnerIds.mockResolvedValue(
-      new Map<string, string | null>([
-        [MINE, "test-user-id"],
-        [EDITED, "test-user-id"],
-        [THEIRS, "stranger"],
-        [ORPHANED, null],
-      ])
-    );
-    canAccessResource.mockImplementation(
-      async (_action: string, _userId: string, ownerId: string) => ownerId !== "stranger"
-    );
+    resetPermissionsMocks();
+    mocks.getRecipeHouseholdIds.mockImplementation(async (ids: string[]) => {
+      const stored = new Map([
+        [MINE, "test-household-id"],
+        [EDITED, "test-household-id"],
+        [THEIRS, "another-household"],
+      ]);
+
+      return new Map(ids.flatMap((id) => (stored.has(id) ? [[id, stored.get(id)!]] : [])));
+    });
     mocks.deleteRecipesByIds.mockImplementation(async (items: Array<{ id: string }>) => ({
       deletedIds: items.map((item) => item.id).filter((id) => id !== EDITED),
       staleIds: items.some((item) => item.id === EDITED) ? [EDITED] : [],
@@ -84,19 +82,53 @@ describe("recipes.delete", () => {
 
   it("deletes each recipe on its own and reports what was deleted and kept", async () => {
     const result = await caller().recipes.delete({
-      recipes: [MINE, EDITED, THEIRS, GONE, ORPHANED].map((id) => ({ id, version: 1 })),
+      recipes: [MINE, EDITED, THEIRS, GONE].map((id) => ({ id, version: 1 })),
     });
 
-    // The stranger's recipe is skipped before the database; the rest are tried.
+    // Another household's recipe is skipped, a gone one answers as deleted; neither is tried.
     expect(mocks.deleteRecipesByIds).toHaveBeenCalledWith(
-      [MINE, EDITED, GONE, ORPHANED].map((id) => ({ id, version: 1 }))
+      [MINE, EDITED].map((id) => ({ id, version: 1 }))
     );
-    expect(result).toEqual({ deletedIds: [MINE, GONE, ORPHANED], staleIds: [EDITED] });
-    expect(mocks.deleteRecipeImagesDir.mock.calls.map(([id]) => id)).toEqual([
-      MINE,
-      GONE,
-      ORPHANED,
+    expect(result).toEqual({ deletedIds: [MINE, GONE], staleIds: [EDITED] });
+    expect(mocks.deleteRecipeImagesDir.mock.calls.map(([id]) => id)).toEqual([MINE]);
+  });
+
+  it("answers a recipe out of view as a gone one, and touches nothing of it", async () => {
+    policy.view = "household";
+
+    const result = await caller().recipes.delete({ recipes: [{ id: THEIRS, version: 1 }] });
+
+    expect(result).toEqual({ deletedIds: [THEIRS], staleIds: [] });
+    expect(mocks.deleteRecipesByIds).toHaveBeenCalledWith([]);
+    expect(mocks.deleteRecipeImagesDir).not.toHaveBeenCalled();
+    expect(recipes.publish).not.toHaveBeenCalled();
+  });
+
+  it("deletes another household's recipe under delete Everyone", async () => {
+    policy.delete = "everyone";
+
+    await caller().recipes.delete({
+      recipes: [
+        { id: THEIRS, version: 1 },
+        { id: MINE, version: 1 },
+      ],
+    });
+
+    expect(mocks.deleteRecipesByIds).toHaveBeenCalledWith([
+      { id: THEIRS, version: 1 },
+      { id: MINE, version: 1 },
     ]);
+    // Each recipe's own household hears of it, not the deleter's alone.
+    expect(recipes.publish).toHaveBeenCalledWith(
+      "deleted",
+      { ids: [THEIRS] },
+      { viewPolicy: "household", householdId: "another-household" }
+    );
+    expect(recipes.publish).toHaveBeenCalledWith(
+      "deleted",
+      { ids: [MINE] },
+      { viewPolicy: "household", householdId: "test-household-id" }
+    );
   });
 
   it("announces the deleted recipes to everyone and the kept ones to the caller", async () => {
@@ -107,7 +139,7 @@ describe("recipes.delete", () => {
     expect(recipes.publish).toHaveBeenCalledWith(
       "deleted",
       { ids: [MINE] },
-      { viewPolicy: "household", userId: "test-user-id", householdKey: "test-household-id" }
+      { viewPolicy: "household", householdId: "test-household-id" }
     );
     expect(recipes.publish).toHaveBeenCalledWith(
       "deleteKept",

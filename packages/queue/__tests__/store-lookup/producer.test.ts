@@ -16,7 +16,6 @@ import {
 const add = vi.fn();
 const queue = { add } as unknown as Queue<StoreLookupJobData>;
 
-const HOUSEHOLD = "household-1";
 const STORE = "11111111-1111-4111-8111-111111111111";
 /** The Ingredient every "kaas" below resolved to. */
 const KAAS = "22222222-2222-4222-8222-222222222222";
@@ -31,14 +30,13 @@ describe("the store lookup producer", () => {
       kind: "match",
       storeId: STORE,
       ingredientId: KAAS,
+      groceryId: "grocery-1",
       name: "kaas",
-      householdKey: HOUSEHOLD,
     });
     await addStoreRefreshJob(queue, {
       kind: "refresh",
       storeId: STORE,
       productIds: ["p1"],
-      householdKey: HOUSEHOLD,
     });
 
     const matchPriority = add.mock.calls[0]?.[2]?.priority as number;
@@ -52,22 +50,22 @@ describe("the store lookup producer", () => {
       kind: "match",
       storeId: STORE,
       ingredientId: KAAS,
+      groceryId: "grocery-1",
       name: "Oude Kaas",
-      householdKey: HOUSEHOLD,
     });
     await addStoreMatchJob(queue, {
       kind: "match",
       storeId: STORE,
       ingredientId: KAAS,
+      groceryId: "grocery-1",
       name: "oude kaas, belegen",
-      householdKey: HOUSEHOLD,
     });
     await addStoreMatchJob(queue, {
       kind: "match",
       storeId: STORE,
       ingredientId: "33333333-3333-4333-8333-333333333333",
+      groceryId: "grocery-1",
       name: "Oude Kaas",
-      householdKey: HOUSEHOLD,
     });
 
     expect(add.mock.calls[0]?.[2]?.jobId).toBe(add.mock.calls[1]?.[2]?.jobId);
@@ -83,7 +81,6 @@ describe("the store lookup producer", () => {
       kind: "refresh" as const,
       storeId: STORE,
       productIds: ["p2", "p1"],
-      householdKey: HOUSEHOLD,
     };
 
     await addStoreRefreshJob(queue, data, at);
@@ -103,8 +100,8 @@ describe("the store lookup producer", () => {
       kind: "match" as const,
       storeId: STORE,
       ingredientId: KAAS,
+      groceryId: "grocery-1",
       name: "kaas",
-      householdKey: HOUSEHOLD,
     };
 
     await addStoreMatchJob(queue, data, at);
@@ -122,14 +119,13 @@ describe("the store lookup producer", () => {
       kind: "match",
       storeId: STORE,
       ingredientId: KAAS,
+      groceryId: "grocery-1",
       name: "kaas: oud",
-      householdKey: HOUSEHOLD,
     });
     await addStoreRefreshJob(queue, {
       kind: "refresh",
       storeId: STORE,
       productIds: ["p1"],
-      householdKey: HOUSEHOLD,
     });
 
     for (const call of add.mock.calls) {
@@ -142,7 +138,6 @@ describe("the store lookup producer", () => {
       kind: "refresh",
       storeId: STORE,
       productIds: [],
-      householdKey: HOUSEHOLD,
     });
 
     expect(add).not.toHaveBeenCalled();

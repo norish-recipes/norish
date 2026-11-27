@@ -5,17 +5,17 @@ import type { ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { SETTINGS_TABS, settingsHref, settingsTabOf } from "@/components/settings/settings-tab";
 import {
-  BookOpenIcon as BookOpenIconSolid,
   HomeIcon as HomeIconSolid,
   ServerIcon as ServerIconSolid,
   ShieldCheckIcon as ShieldCheckIconSolid,
+  TagIcon as TagIconSolid,
   UserCircleIcon as UserCircleIconSolid,
 } from "@heroicons/react/20/solid";
 import {
-  BookOpenIcon as BookOpenIconOutline,
   HomeIcon as HomeIconOutline,
   ServerIcon as ServerIconOutline,
   ShieldCheckIcon as ShieldCheckIconOutline,
+  TagIcon as TagIconOutline,
   UserCircleIcon as UserCircleIconOutline,
 } from "@heroicons/react/24/outline";
 import { Tabs } from "@heroui/react";
@@ -30,7 +30,7 @@ const TAB_ICONS: Record<SettingsTab, { active: TabIcon; inactive: TabIcon }> = {
   account: { active: UserCircleIconSolid, inactive: UserCircleIconOutline },
   household: { active: HomeIconSolid, inactive: HomeIconOutline },
   caldav: { active: ServerIconSolid, inactive: ServerIconOutline },
-  ingredients: { active: BookOpenIconSolid, inactive: BookOpenIconOutline },
+  content: { active: TagIconSolid, inactive: TagIconOutline },
   admin: { active: ShieldCheckIconSolid, inactive: ShieldCheckIconOutline },
 };
 

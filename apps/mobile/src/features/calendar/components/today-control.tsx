@@ -8,11 +8,11 @@ import Animated, {
   ZoomOut,
 } from "react-native-reanimated";
 import { GlassPill } from "@/components/glass";
+import { Ionicons } from "@/components/icon";
 import { lightImpact } from "@/lib/haptics";
 import { FADE_REDUCED_IN, FADE_REDUCED_OUT } from "@/lib/motion/layout";
 import { springTo } from "@/lib/motion/spring";
 import { useTabBarMinimised } from "@/lib/tab-accessory-placement";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 

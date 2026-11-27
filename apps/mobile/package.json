@@ -1,7 +1,7 @@
 {
   "name": "@norish/mobile",
   "main": "expo-router/entry",
-  "version": "0.27.0-beta",
+  "version": "0.28.0-beta",
   "private": true,
   "scripts": {
     "start": "expo start",
@@ -36,6 +36,7 @@
     "@trpc/server": "catalog:",
     "better-auth": "catalog:",
     "expo": "~58.0.26",
+    "expo-application": "~58.1.2",
     "expo-clipboard": "~58.0.4",
     "expo-constants": "~58.0.16",
     "expo-dev-client": "~58.0.21",

@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => ({
   state: "idle" as "idle" | "queued" | "processing" | "succeeded" | "failed",
   hidden: [] as string[],
   workedOut: null as WorkedOutNutrition | null,
+  loading: false,
   shown: null as unknown,
   marked: undefined as boolean | undefined,
   panel: null as { id: string | null; open: boolean } | null,
@@ -25,7 +26,7 @@ vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
   useWorkedOutNutrition: (_recipe: unknown, ...options: unknown[]) => {
     mocks.hookOptions = options;
 
-    return mocks.workedOut;
+    return { nutrition: mocks.workedOut, isLoading: mocks.loading };
   },
 }));
 
@@ -120,6 +121,7 @@ describe("NutritionCard", () => {
     mocks.state = "idle";
     mocks.hidden = [];
     mocks.workedOut = null;
+    mocks.loading = false;
     mocks.shown = null;
     mocks.marked = undefined;
   });
@@ -128,6 +130,13 @@ describe("NutritionCard", () => {
     const { container } = renderCard();
 
     expect(container).toBeEmptyDOMElement();
+  });
+
+  it("says it is loading while the lines' readings or numbers read", () => {
+    mocks.loading = true;
+    renderCard();
+
+    expect(screen.getByTestId("nutrition-loading")).toHaveTextContent("loading");
   });
 
   it("stays absent after a quiet automatic failure left nothing stored", () => {

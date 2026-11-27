@@ -2,17 +2,17 @@ import type { HeaderItem } from "@/lib/header-item";
 import React, { useState } from "react";
 import { View } from "react-native";
 import { FiltersButton } from "@/components/filters-button";
+import { Ionicons } from "@/components/icon";
 import { RollingText } from "@/components/rolling-text";
 import { Segmented } from "@/components/segmented";
 import { lightImpact } from "@/lib/haptics";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
 
 import type { LibraryTypeFilter } from "@norish/shared/contracts";
 import type { RecipeViewMode } from "@norish/shared/contracts/zod/device-preferences";
 import { useDevicePreference } from "@norish/shared-react/reader";
-import { useLibraryFilters } from "@norish/shared-react/recipes";
+import { useAppliedLibraryFilters, useLibraryFilters } from "@norish/shared-react/recipes";
 import { LIBRARY_TYPE_FILTERS } from "@norish/shared/contracts";
 import { hasAppliedRecipeFilters } from "@norish/shared/contracts/filter-contract";
 
@@ -55,7 +55,7 @@ export function ViewToggle() {
 /** The Filters button, marked while any filter is on. */
 function LibraryFiltersButton() {
   const intl = useIntl();
-  const filtersOn = hasAppliedRecipeFilters(useLibraryFilters((state) => state.filters));
+  const filtersOn = hasAppliedRecipeFilters(useAppliedLibraryFilters());
 
   return (
     <FiltersButton
@@ -133,7 +133,7 @@ export function LibraryHeader({ scoped = false }: { scoped?: boolean }) {
 export function useFiltersItem(): HeaderItem {
   const intl = useIntl();
   const router = useRouter();
-  const filtersOn = hasAppliedRecipeFilters(useLibraryFilters((state) => state.filters));
+  const filtersOn = hasAppliedRecipeFilters(useAppliedLibraryFilters());
   const label = intl.formatMessage({ id: "common.filters.title" });
 
   return {

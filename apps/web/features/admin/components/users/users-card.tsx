@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { SettingsCard } from "@/components/settings/settings-card";
 import { IconActionButton } from "@/components/shared/action-button";
+import { EmptyState } from "@/components/shared/empty-state";
 import UserAvatar from "@/components/shared/user-avatar";
 import DataTable from "@/features/admin/components/data-table";
 import {
@@ -39,7 +40,13 @@ export default function UsersCard() {
   };
 
   // A failed load must not read as "no users".
-  const emptyState = isLoading ? t("loading") : error ? t("loadFailed") : t("empty");
+  const emptyState = (
+    <EmptyState
+      icon={UsersIcon}
+      title={isLoading ? t("loading") : error ? t("loadFailed") : t("empty")}
+      variant="cell"
+    />
+  );
 
   return (
     <SettingsCard description={t("description")} icon={UsersIcon} title={t("title")}>
@@ -78,7 +85,7 @@ export default function UsersCard() {
             hideOnNarrow: true,
             label: t("table.household"),
             className: "text-sm",
-            render: (row: AdminUserRowDTO) => row.household?.name ?? t("noHousehold"),
+            render: (row: AdminUserRowDTO) => row.household.name,
           },
           {
             key: "joined",

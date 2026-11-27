@@ -6,16 +6,20 @@
  * and counters. Better Auth's memory adapter stands in for Postgres, so the
  * encrypted-email adapter runs as shipped.
  */
+import { randomBytes } from "node:crypto";
 import type { StartedValkeyContainer } from "@testcontainers/valkey";
 import { ValkeyContainer } from "@testcontainers/valkey";
 import { splitSetCookieHeader } from "better-auth/cookies";
 import Valkey from "ioredis";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { authSecret, initMasterKey } from "@norish/config/crypto";
+import { openBase64MasterKey } from "@norish/config/testing";
 import { getValkeyConnectionOptions } from "@norish/shared-server/valkey/client";
 
 import type { Identity } from "../helpers/identity-provider";
 import { VALKEY_IMAGE, valkeyUrl } from "../../../shared-server/__tests__/helpers/valkey";
+import { deleteSessionsAndVerifications } from "../../src/secondary-storage";
 import { createIdentityProvider, IDP_CLIENT_ID } from "../helpers/identity-provider";
 
 const { store, client, registration, serverConfig, admins } = vi.hoisted(() => ({
@@ -42,22 +46,51 @@ vi.mock("@norish/db/repositories/server-config", () => ({
   setConfig: vi.fn(),
   getConfig: async (key: string) => serverConfig[key] ?? null,
 }));
-vi.mock("@norish/db/repositories/users", () => ({
-  countUsers: vi.fn().mockResolvedValue(2),
-  deleteUser: vi.fn(),
-  isUserServerOwner: async () => false,
-  setUserAdminStatus: async (userId: string, isAdmin: boolean) => {
-    if (isAdmin) admins.add(userId);
-    else admins.delete(userId);
-  },
+vi.mock("@norish/db/repositories/users", async () => {
+  const { decrypt } = await import("@norish/config/crypto");
+  const open = (value: string | null) => (value ? decrypt(value) : null);
+
+  return {
+    countUsers: vi.fn().mockResolvedValue(2),
+    // The repository's read, of the row the memory adapter holds in place of Postgres.
+    getAdapterUserById: async (userId: string) => {
+      const rows = store.user as { id: string; email: string; name: string; image: string }[];
+      const user = rows.find((row) => row.id === userId);
+
+      return (
+        user && {
+          ...user,
+          email: decrypt(user.email),
+          name: open(user.name),
+          image: open(user.image),
+        }
+      );
+    },
+    isUserServerOwner: async () => false,
+    setUserAdminStatus: async (userId: string, isAdmin: boolean) => {
+      if (isAdmin) admins.add(userId);
+      else admins.delete(userId);
+    },
+  };
+});
+vi.mock("@norish/db/repositories/households", () => ({
+  getHouseholdForUser: vi.fn(),
+  deleteAccount: vi.fn(async () => ({
+    householdId: null,
+    householdErased: false,
+    successorId: null,
+    memberIds: [],
+    recipeIds: [],
+    cookbookIds: [],
+    notes: [],
+  })),
 }));
-vi.mock("@norish/db/repositories/households", () => ({ getHouseholdForUser: vi.fn() }));
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   isRegistrationEnabled: async () => registration.enabled,
 }));
 vi.mock("@norish/shared-server/media/avatar-cleanup", () => ({ sweepUserAvatars: vi.fn() }));
-vi.mock("@norish/shared-server/realtime/connection", () => ({
-  emitConnectionInvalidation: vi.fn(),
+vi.mock("@norish/shared-server/realtime/household-membership", () => ({
+  announceMembershipChange: vi.fn(),
 }));
 vi.mock("@norish/shared-server/logger", () => {
   const logger = { info: vi.fn(), debug: vi.fn(), warn: vi.fn(), error: vi.fn() };
@@ -528,6 +561,137 @@ describe("sign-out", () => {
   });
 });
 
+describe("ending every stored session, as a re-key does", () => {
+  /** The session token a session cookie carries, signature off. */
+  const tokenOf = (cookie: string) =>
+    decodeURIComponent(/session_token=([^;]+)/.exec(cookie)?.[1] ?? "").split(".")[0] ?? "";
+
+  it("deletes every session and verification value Better Auth stored, and no other key", async () => {
+    const ada = await signUpWithPassword();
+    const grace = await signUpWithPassword("grace@norish.test");
+    const adaAgain = cookiesFrom(
+      await authModule.auth.handler(
+        post("/sign-in/email", { email: "ada@norish.test", password: "ada-password-1" })
+      )
+    );
+    const lists = [`active-sessions-${ada.userId}`, `active-sessions-${grace.userId}`];
+
+    // Two sign-ins at once rewrite a list from one read, so it can miss a session.
+    const adaList = JSON.parse((await valkey.get(lists[0] ?? "")) ?? "[]") as unknown[];
+
+    await valkey.set(lists[0] ?? "", JSON.stringify(adaList.slice(1)));
+    // A list with an entry Better Auth would not write is not its list, and stays; the session stops.
+    const graceList = JSON.parse((await valkey.get(lists[1] ?? "")) ?? "[]") as unknown[];
+
+    await valkey.set(lists[1] ?? "", JSON.stringify([...graceList, { token: 42 }]));
+    // A sign-in left at the provider keeps its state as a verification value.
+    await authModule.auth.handler(post("/sign-in/social", { provider: "oidc", callbackURL: "/" }));
+    const verifications = (await valkey.keys("verification:*")).sort();
+
+    // What else shares the database, Better Auth's names and look-alikes included.
+    await valkey.hset("bull:caldav-sync:1", { data: "{}" });
+    await valkey.xadd("bull:caldav-sync:events", "*", "event", "added");
+    await valkey.rpush("verification:a-list", "x");
+    await valkey.hset("active-sessions-a-hash", { token: "x" });
+    for (const [key, value] of Object.entries({
+      "norish:pending-recipe-media:r1": "[]",
+      "a-session-of-another-key": JSON.stringify({ session: { token: "x", userId: "u" } }),
+      "active-sessions-not-a-list": JSON.stringify({ token: "x" }),
+      "verification:not-json": "not json",
+      "verification:of-another-identifier": JSON.stringify({ identifier: "x", value: "v" }),
+    })) {
+      await valkey.set(key, value);
+    }
+
+    const tokens = [ada.cookie, grace.cookie, adaAgain].map(tokenOf);
+    const ended = new Set([...tokens, lists[0], ...verifications]);
+    const before = await valkey.keys("*");
+
+    expect([...ended].filter((key) => !before.includes(key))).toEqual([]);
+    expect(verifications).toHaveLength(1);
+    expect(await deleteSessionsAndVerifications()).toEqual({ sessions: 3, verifications: 1 });
+
+    for (const cookie of [ada.cookie, grace.cookie, adaAgain]) {
+      expect(await sessionFor(cookie)).toBeNull();
+    }
+    expect((await valkey.keys("*")).sort()).toEqual(before.filter((key) => !ended.has(key)).sort());
+  });
+
+  it("deletes on every scan page, and keeps the other keys on each", async () => {
+    const indexes = Array.from({ length: 1_500 }, (_, index) => index);
+    const sessions = indexes.map((index) => `session-token-${index}`);
+    const verifications = indexes.map((index) => `verification:state-${index}`);
+    const others = indexes.flatMap((index) => [`norish:cache:${index}`, `look-alike-${index}`]);
+
+    await valkey.mset({
+      ...Object.fromEntries(
+        sessions.map((token) => [token, JSON.stringify({ session: { token, userId: "u" } })])
+      ),
+      ...Object.fromEntries(
+        verifications.map((key) => [
+          key,
+          JSON.stringify({ identifier: key.slice("verification:".length), value: "{}" }),
+        ])
+      ),
+      ...Object.fromEntries(
+        others.map((key) => [key, JSON.stringify({ session: { token: "x", userId: "u" } })])
+      ),
+    });
+
+    // The pages the sweep reads: pages after the first hold sessions and other keys alike.
+    const pages: string[][] = [];
+    let cursor = "0";
+
+    do {
+      const [next, keys] = await valkey.scan(cursor, "COUNT", 500, "TYPE", "string");
+
+      pages.push(keys);
+      cursor = next;
+    } while (cursor !== "0");
+    const later = pages.slice(1).flat();
+
+    expect(later.filter((key) => sessions.includes(key)).length).toBeGreaterThan(0);
+    expect(later.filter((key) => others.includes(key)).length).toBeGreaterThan(0);
+
+    expect(await deleteSessionsAndVerifications()).toEqual({
+      sessions: 1_500,
+      verifications: 1_500,
+    });
+    expect((await valkey.keys("*")).sort()).toEqual(others.sort());
+  });
+});
+
+describe("the secret that signs sessions", () => {
+  it("is the Master Key's alone, whatever Better Auth's own variables say", async () => {
+    vi.stubEnv("BETTER_AUTH_SECRETS", "1:an-env-secret-that-no-master-key-rotation-changes");
+    vi.stubEnv("BETTER_AUTH_SECRET", "another-env-secret-that-no-master-key-rotation-changes");
+
+    try {
+      authModule = await importAuth();
+      const ctx = await context();
+
+      expect(ctx.secret).toBe(authSecret());
+      expect(ctx.secretConfig).toEqual({
+        keys: new Map([[1, authSecret()]]),
+        currentVersion: 1,
+        legacySecret: authSecret(),
+      });
+
+      const { cookie } = await signUpWithPassword();
+
+      // A new Master Key signs with a new secret, so a cookie signed before it is no session.
+      initMasterKey(randomBytes(32));
+      authModule = await importAuth();
+      expect(await sessionFor(cookie)).toBeNull();
+    } finally {
+      vi.stubEnv("BETTER_AUTH_SECRETS", undefined);
+      vi.stubEnv("BETTER_AUTH_SECRET", undefined);
+      openBase64MasterKey(process.env.MASTER_KEY ?? "");
+      authModule = await importAuth();
+    }
+  });
+});
+
 describe("API keys", () => {
   it("signs a request in as the key's owner", async () => {
     const { cookie } = await signInWithOIDC(ADA);
@@ -549,7 +713,7 @@ describe("account deletion", () => {
     const userId = (await sessionFor(first.cookie))?.user.id ?? "";
     const { deleteUserAccount } = await import("@norish/auth/account-deletion");
 
-    await deleteUserAccount(userId);
+    await deleteUserAccount(userId, async () => undefined);
 
     expect(await sessionFor(first.cookie)).toBeNull();
     expect(await sessionFor(second.cookie)).toBeNull();

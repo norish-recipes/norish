@@ -1,4 +1,5 @@
-import { and, desc, eq, inArray, or, sql } from "drizzle-orm";
+import { and, eq, inArray, notExists, or, sql } from "drizzle-orm";
+import { alias, QueryBuilder } from "drizzle-orm/pg-core";
 
 import type { NutritionCodes } from "@norish/db/schema";
 import { db } from "@norish/db/drizzle";
@@ -13,10 +14,16 @@ import {
   recipeIngredients,
   recipes,
 } from "@norish/db/schema";
+import { groupBy } from "@norish/shared/lib/group-by";
 
 import type { RecipeListContext } from "./recipes";
+import { isAnyOf } from "./array-params";
+import { inCatalogue } from "./household-scope";
+import { lineageCte } from "./ingredient-kinds";
 import { isFirstLineFood } from "./ingredients";
-import { buildOwnerPolicyCondition } from "./recipes";
+import { buildPolicyCondition } from "./recipes";
+
+const ownSystemLine = alias(recipeIngredients, "own");
 
 /**
  * Ingredient Nutrition's reads and its one write (ADR-0039): the source
@@ -54,8 +61,8 @@ const CHUNK = 1000;
 
 /**
  * Replace every source food and rule with a table's, in one transaction: a
- * failure leaves the last good ones exactly as they were. Corrections live
- * elsewhere and are never touched.
+ * failure leaves the last good ones exactly as they were. A household's
+ * corrections are its own, and stay as they are.
  */
 export async function replaceNutritionSources(
   foods: readonly NutritionFoodRow[],
@@ -82,8 +89,21 @@ export interface NutritionNode {
   nutritionCodes: NutritionCodes | null;
 }
 
-/** How deep the tree is ever walked: a guard, since the tree has no cycle to loop on. */
-const MAX_DEPTH = 64;
+/** Which of `ids` are the household's or the seed's foods: what a reader may ask about by id. */
+export async function findIdsInCatalogue(
+  householdId: string,
+  ids: readonly string[]
+): Promise<Set<string>> {
+  const wanted = [...new Set(ids)];
+
+  if (wanted.length === 0) return new Set();
+  const rows = await db
+    .select({ id: ingredients.id })
+    .from(ingredients)
+    .where(and(inArray(ingredients.id, wanted), inCatalogue(ingredients.householdId, householdId)));
+
+  return new Set(rows.map((row) => row.id));
+}
 
 /** These Ingredients and every ancestor of each, by id. */
 export async function findNutritionLineage(
@@ -93,37 +113,20 @@ export async function findNutritionLineage(
 
   if (wanted.length === 0) return new Map();
 
-  const result = await db.execute<{
-    id: string;
-    name: string;
-    parent_id: string | null;
-    off_id: string | null;
-    nutrition_codes: NutritionCodes | null;
-  }>(sql`
-    with recursive lineage(id, depth) as (
-      select i.id, 0 from ${ingredients} i
-      where i.id = any(${sql.param(wanted)}::uuid[])
-      union
-      select p.id, lineage.depth + 1 from lineage
-      join ${ingredients} c on c.id = lineage.id
-      join ${ingredients} p on p.id = c.parent_id
-      where lineage.depth < ${MAX_DEPTH}
-    )
-    select distinct i.id::text as id, i.name, i.parent_id::text as parent_id, i.off_id, i.nutrition_codes
-    from lineage join ${ingredients} i on i.id = lineage.id`);
+  const lineage = lineageCte(wanted);
+  const rows = await db
+    .with(lineage)
+    .selectDistinct({
+      id: ingredients.id,
+      name: ingredients.name,
+      parentId: ingredients.parentId,
+      offId: ingredients.offId,
+      nutritionCodes: ingredients.nutritionCodes,
+    })
+    .from(lineage)
+    .innerJoin(ingredients, eq(ingredients.id, lineage.lineageId));
 
-  return new Map(
-    result.rows.map((row) => [
-      row.id,
-      {
-        id: row.id,
-        name: row.name,
-        parentId: row.parent_id,
-        offId: row.off_id,
-        nutritionCodes: row.nutrition_codes,
-      },
-    ])
-  );
+  return new Map(rows.map((row) => [row.id, row]));
 }
 
 /** Norish's rules about these taxonomy entries. */
@@ -149,14 +152,21 @@ export async function findNutritionFoods(
 
   if (pairs.length === 0 && wantedNdbs.length === 0) return [];
 
+  const codesOf = groupBy(
+    pairs,
+    ([dataset]) => dataset,
+    ([, code]) => code
+  );
+
   return await db
     .select()
     .from(nutritionFoods)
     .where(
       or(
-        sql`(${nutritionFoods.dataset}, ${nutritionFoods.code}) in (
-          select * from unnest(${sql.param(pairs.map(([dataset]) => dataset))}::text[],
-                               ${sql.param(pairs.map(([, code]) => code))}::text[]))`,
+        // One array of codes per dataset, so the (dataset, code) key finds them.
+        ...[...codesOf].map(([dataset, codes]) =>
+          and(eq(nutritionFoods.dataset, dataset), isAnyOf(nutritionFoods.code, codes, "text"))
+        ),
         wantedNdbs.length > 0
           ? and(eq(nutritionFoods.dataset, "usda"), inArray(nutritionFoods.ndb, wantedNdbs))
           : undefined
@@ -191,7 +201,8 @@ export async function countIngredientLinesByUnit(
   viewer: RecipeListContext,
   ingredientId: string
 ): Promise<Array<{ unit: string | null; lines: number }>> {
-  const visible = await buildOwnerPolicyCondition(viewer, recipes.userId, "view");
+  if ((await findIdsInCatalogue(viewer.householdId, [ingredientId])).size === 0) return [];
+  const visible = await buildPolicyCondition(viewer, recipes.householdId, "view");
   const rows = await db
     .select({ unit: recipeIngredients.unit, lines: sql<number>`count(*)::int` })
     .from(recipeIngredients)
@@ -207,8 +218,17 @@ export async function countIngredientLinesByUnit(
         or(isFirstLineFood(), eq(recipeIngredients.joined, "together")),
         or(
           eq(recipeIngredients.systemUsed, recipes.systemUsed),
-          sql`not exists (select 1 from ${recipeIngredients} own
-            where own.recipe_id = ${recipes.id} and own.system_used = ${recipes.systemUsed})`
+          notExists(
+            new QueryBuilder()
+              .select({ id: ownSystemLine.id })
+              .from(ownSystemLine)
+              .where(
+                and(
+                  eq(ownSystemLine.recipeId, recipes.id),
+                  eq(ownSystemLine.systemUsed, recipes.systemUsed)
+                )
+              )
+          )
         ),
         visible
       )
@@ -236,15 +256,12 @@ export interface NutritionCorrectionValues {
   density: number | null;
 }
 
-/**
- * The household's correction to each of these Ingredients: the most recent
- * any of its members made, whoever that was.
- */
+/** The household's correction to each of these Ingredients. */
 export async function findHouseholdCorrections(
   ingredientIds: readonly string[],
-  householdUserIds: readonly string[]
+  householdId: string
 ): Promise<Map<string, NutritionCorrectionRow>> {
-  if (ingredientIds.length === 0 || householdUserIds.length === 0) return new Map();
+  if (ingredientIds.length === 0) return new Map();
 
   const rows = await db
     .select()
@@ -252,26 +269,19 @@ export async function findHouseholdCorrections(
     .where(
       and(
         inArray(ingredientNutritionCorrections.ingredientId, [...new Set(ingredientIds)]),
-        inArray(ingredientNutritionCorrections.userId, [...new Set(householdUserIds)])
+        eq(ingredientNutritionCorrections.householdId, householdId)
       )
-    )
-    .orderBy(
-      desc(ingredientNutritionCorrections.updatedAt),
-      desc(ingredientNutritionCorrections.id)
     );
-  const latest = new Map<string, NutritionCorrectionRow>();
 
-  for (const row of rows) if (!latest.has(row.ingredientId)) latest.set(row.ingredientId, row);
-
-  return latest;
+  return new Map(rows.map((row) => [row.ingredientId, row]));
 }
 
 /**
- * Write a member's correction to an Ingredient, replacing their own earlier
- * one: it becomes the household's, as the most recent. False where the
- * Ingredient is gone.
+ * Write a member's correction to an Ingredient of the household's catalogue, replacing the
+ * household's earlier one. False where the Ingredient is gone or another household's.
  */
 export async function saveNutritionCorrection(
+  householdId: string,
   userId: string,
   ingredientId: string,
   values: NutritionCorrectionValues
@@ -279,7 +289,9 @@ export async function saveNutritionCorrection(
   const [exists] = await db
     .select({ id: ingredients.id })
     .from(ingredients)
-    .where(eq(ingredients.id, ingredientId));
+    .where(
+      and(eq(ingredients.id, ingredientId), inCatalogue(ingredients.householdId, householdId))
+    );
 
   if (!exists) return false;
 
@@ -287,11 +299,15 @@ export async function saveNutritionCorrection(
 
   await db
     .insert(ingredientNutritionCorrections)
-    .values({ userId, ingredientId, ...values, updatedAt: now })
+    .values({ householdId, userId, ingredientId, ...values, updatedAt: now })
     .onConflictDoUpdate({
-      target: [ingredientNutritionCorrections.userId, ingredientNutritionCorrections.ingredientId],
+      target: [
+        ingredientNutritionCorrections.householdId,
+        ingredientNutritionCorrections.ingredientId,
+      ],
       set: {
         ...values,
+        userId,
         updatedAt: now,
         version: sql`${ingredientNutritionCorrections.version} + 1`,
       },
@@ -301,38 +317,24 @@ export async function saveNutritionCorrection(
 }
 
 /**
- * Remove a household's correction to an Ingredient, every member's, so the
- * sources' numbers are back for all of them. How many rows went.
+ * Remove a household's correction to an Ingredient, so the sources' numbers
+ * are back for all of it. How many rows went.
  */
 export async function removeHouseholdCorrections(
   ingredientId: string,
-  householdUserIds: readonly string[]
+  householdId: string
 ): Promise<number> {
-  if (householdUserIds.length === 0) return 0;
-
   const removed = await db
     .delete(ingredientNutritionCorrections)
     .where(
       and(
         eq(ingredientNutritionCorrections.ingredientId, ingredientId),
-        inArray(ingredientNutritionCorrections.userId, [...householdUserIds])
+        eq(ingredientNutritionCorrections.householdId, householdId)
       )
     )
     .returning({ id: ingredientNutritionCorrections.id });
 
   return removed.length;
-}
-
-/** Every household's corrections to these Ingredients, whoever made them. */
-export async function findAnyCorrections(
-  ingredientIds: readonly string[]
-): Promise<NutritionCorrectionRow[]> {
-  if (ingredientIds.length === 0) return [];
-
-  return await db
-    .select()
-    .from(ingredientNutritionCorrections)
-    .where(inArray(ingredientNutritionCorrections.ingredientId, [...new Set(ingredientIds)]));
 }
 
 /** AI's estimate of an Ingredient's missing facts, as stored. */

@@ -1,16 +1,8 @@
-import type { AIConfig, RecipePermissionPolicy } from "@norish/config/zod/server-config";
-import {
-  DEFAULT_RECIPE_PERMISSION_POLICY,
-  ServerConfigKeys,
-} from "@norish/config/zod/server-config";
-import { getHouseholdForUser } from "@norish/db/repositories/households";
-import { getConfig } from "@norish/db/repositories/server-config";
+import type { AIConfig } from "@norish/config/zod/server-config";
+import { policyAllows, ServerConfigKeys } from "@norish/config/zod/server-config";
+import { getConfig, getRecipePermissionPolicy } from "@norish/db/repositories/server-config";
 
-export async function getRecipePermissionPolicy(): Promise<RecipePermissionPolicy> {
-  const value = await getConfig<RecipePermissionPolicy>(ServerConfigKeys.RECIPE_PERMISSION_POLICY);
-
-  return value ?? DEFAULT_RECIPE_PERMISSION_POLICY;
-}
+export { getRecipePermissionPolicy };
 
 export async function isAIEnabled(): Promise<boolean> {
   const aiConfig = await getConfig<AIConfig>(ServerConfigKeys.AI_CONFIG);
@@ -20,60 +12,25 @@ export async function isAIEnabled(): Promise<boolean> {
 
 export type PermissionAction = "view" | "edit" | "delete";
 
+/** Whether a reader in `readerHouseholdId` may act on a recipe or cookbook of `rowHouseholdId`. */
 export async function canAccessResource(
   action: PermissionAction,
-  userId: string,
-  ownerId: string,
-  userHouseholdUserIds: string[] | null,
-  isServerAdmin: boolean
+  readerHouseholdId: string,
+  rowHouseholdId: string
 ): Promise<boolean> {
-  if (userId === ownerId || isServerAdmin) return true;
-
-  const policy = await getRecipePermissionPolicy();
-  const policyLevel = policy[action];
-
-  switch (policyLevel) {
-    case "everyone":
-      return true;
-
-    case "household": {
-      if (!userHouseholdUserIds) return false;
-
-      // Check if owner is in user's household (households are symmetric)
-      return userHouseholdUserIds.includes(ownerId);
-    }
-    default:
-      return false;
-  }
+  return policyAllows(await getRecipePermissionPolicy(), action, readerHouseholdId, rowHouseholdId);
 }
 
-export async function canAccessHouseholdResource(
-  userId: string,
-  resourceOwnerId: string
-): Promise<boolean> {
-  // Owner always has access
-  if (userId === resourceOwnerId) return true;
+/** What a reader may do to a recipe or cookbook of `rowHouseholdId`: nothing at all (undefined,
+ * it reads as missing) unless they may view it, then whether `action` is allowed. */
+export async function resourceAccess(
+  action: PermissionAction,
+  readerHouseholdId: string,
+  rowHouseholdId: string
+): Promise<boolean | undefined> {
+  if (!(await canAccessResource("view", readerHouseholdId, rowHouseholdId))) return undefined;
 
-  // Check if user shares a household with the owner
-  const userHousehold = await getHouseholdForUser(userId);
-
-  if (!userHousehold) return false;
-
-  // Check if owner is in the user's household
-  const householdUserIds = userHousehold.users.map((u) => u.id);
-
-  return householdUserIds.includes(resourceOwnerId);
-}
-
-export async function assertHouseholdAccess(
-  userId: string,
-  resourceOwnerId: string
-): Promise<void> {
-  const hasAccess = await canAccessHouseholdResource(userId, resourceOwnerId);
-
-  if (!hasAccess) {
-    throw new Error("FORBIDDEN");
-  }
+  return action === "view" || (await canAccessResource(action, readerHouseholdId, rowHouseholdId));
 }
 
 export async function assertAIEnabled(): Promise<void> {

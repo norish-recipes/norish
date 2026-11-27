@@ -4,6 +4,7 @@ import type { Job } from "bullmq";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PasteImportJobData } from "../../src/contracts/job-types";
+import { testHouseholdOf } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 
 let processPasteImportJob: typeof import("../../src/paste-import/worker").processPasteImportJob;
@@ -90,8 +91,7 @@ describe("processPasteImportJob integration", () => {
         batchId: "batch-integration-1",
         recipeIds: ["123e4567-e89b-42d3-a456-426614174001", "123e4567-e89b-42d3-a456-426614174002"],
         userId,
-        householdKey: "household-test",
-        householdUserIds: [userId],
+        householdId: testHouseholdOf(userId),
         text: "structured",
         structuredRecipes: [
           {

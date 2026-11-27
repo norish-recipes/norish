@@ -45,8 +45,7 @@ const { RECIPE_BECAME_USABLE_CHANNEL, initRecipeEnrichmentListener, stopRecipeEn
 const payload = {
   recipeId: "recipe-1",
   userId: "user-1",
-  householdKey: "household-1",
-  householdUserIds: ["user-1"],
+  householdId: "household-1",
 };
 
 function envelope(body: unknown, channel = RECIPE_BECAME_USABLE_CHANNEL): RealtimeEventEnvelope {

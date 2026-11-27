@@ -1,8 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useEffectEvent, useRef, useState } from "react";
-import Link from "next/link";
+import { useState } from "react";
 import { OnTheListMark } from "@/components/ingredients/on-the-list-mark";
 import Panel from "@/components/Panel/Panel";
 import {
@@ -10,13 +9,15 @@ import {
   ActionButtonGroup,
   IconActionButton,
 } from "@/components/shared/action-button";
+import { RecipeLinks } from "@/components/shared/recipe-links";
+import { Section } from "@/components/shared/section";
 import UiSwitch from "@/components/shared/ui-switch";
 import { ArrowsRightLeftIcon, PencilSquareIcon } from "@heroicons/react/16/solid";
 import { ArrowUturnLeftIcon, ChevronRightIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Button, Chip, Input, Skeleton, TextField } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
-import type { IngredientItem, NamedIngredient, Spelling } from "@norish/shared-react/ingredients";
+import type { IngredientItem, Spelling } from "@norish/shared-react/ingredients";
 import type { PantryIngredientDto } from "@norish/shared/contracts";
 import {
   useGroceriesPantryAndCatalogueSubscriptions,
@@ -28,18 +29,15 @@ import {
   isOpenChange,
   useAIChangeMutations,
   useAIChangesQuery,
+  useFoodRecipes,
   useHeldIngredient,
-  useIngredientMutations,
+  useIngredientDraft,
   useIngredientQuery,
   useIngredientSpellingsQuery,
   useIngredientUsesQuery,
 } from "@norish/shared-react/ingredients";
 import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
-import { cleanSpelling } from "@norish/shared/lib/spelling-keys";
 
-import type { IconDraft } from "./ingredient-icon-field";
-import type { IngredientPick } from "./ingredient-picker";
-import type { Relocation } from "./ingredient-relocation";
 import { AIChangeActions } from "./ai-change-actions";
 import { DeleteIngredientModal } from "./delete-ingredient-modal";
 import { IngredientIconField } from "./ingredient-icon-field";
@@ -48,9 +46,6 @@ import { IngredientRelocationPanel } from "./ingredient-relocation";
 import { IngredientStatusChip } from "./ingredient-status-chip";
 import { JunkSpellingModal } from "./junk-spelling-modal";
 import { changeMessage } from "./review-copy";
-
-/** The parent as the draft holds it: the food picked, or none. */
-type DraftParent = NamedIngredient | null;
 
 /** One Ingredient's panel: fields are a draft until Save; actions patch the cache at once. */
 export function IngredientPanel({
@@ -145,27 +140,29 @@ function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClo
   const t = useTranslations("settings.ingredients");
   const tActions = useTranslations("common.actions");
   const locale = useLocale();
-  const edits = useIngredientMutations();
   const displayName = ingredientDisplayName(item, locale);
+  const draft = useIngredientDraft(item, displayName, onClose);
+  const {
+    name,
+    setName,
+    parent,
+    setParent,
+    added,
+    removed,
+    toggleRemoval,
+    askingJunk,
+    askJunk,
+    setIcon,
+    alias,
+    setAlias,
+    spellingCount,
+    hiddenSpellings,
+    relocation,
+    setRelocation,
+  } = draft;
 
   useGroceriesPantryAndCatalogueSubscriptions();
   const [allSpellings, setAllSpellings] = useState(false);
-  // The server sends the viewer's and the household's spellings; the rest are read once asked for.
-  const hiddenSpellings = item.hiddenSpellings ?? 0;
-
-  // The draft: what the viewer has changed and not yet saved.
-  const [name, setName] = useState(item.name);
-  const [parent, setParent] = useState<DraftParent>(item.parent);
-  const [added, setAdded] = useState<string[]>([]);
-  const [removed, setRemoved] = useState<ReadonlySet<string>>(() => new Set());
-  // Of `removed`, the spellings the viewer says name no food, for the junk pile.
-  const [junk, setJunk] = useState<ReadonlySet<string>>(() => new Set());
-  const [askingJunk, setAskingJunk] = useState<Spelling | null>(null);
-  const [icon, setIcon] = useState<IconDraft>(undefined);
-  // What the row counts: every spelling the food has, and the draft's changes to them.
-  const spellingCount = item.aliases.length + hiddenSpellings + added.length - removed.size;
-  const [alias, setAlias] = useState("");
-  const [relocation, setRelocation] = useState<Relocation | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [showingUses, setShowingUses] = useState(false);
   const aiChanges = useAIChangeMutations();
@@ -179,37 +176,10 @@ function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClo
   const kept = usePantryItem(item.id);
   const { addPantryIngredient, removePantryIngredient } = usePantryMutations();
   const [keeps, setKeeps] = useState<boolean | null>(null);
-
-  // A refused save is read back from the server, which would overwrite the
-  // draft the viewer still has to fix: that one read leaves the draft alone.
-  const keepDraftRef = useRef(false);
-
-  // A change elsewhere (a housemate's, or AI's) shows in the draft where the
-  // viewer has not touched that field.
-  const takeSaved = useEffectEvent(() => {
-    if (keepDraftRef.current) {
-      keepDraftRef.current = false;
-
-      return;
-    }
-    setName(item.name);
-    setParent(item.parent);
-  });
-  const parentId = item.parent?.id ?? null;
-
-  // Keyed on the saved values: the panel's own read brings the same parent as a new object.
-  useEffect(() => takeSaved(), [item.name, parentId]);
-
-  const nextName = name.trim();
-  const nameChanged = nextName !== "" && nextName !== item.name;
-  const parentChanged = (parent?.id ?? null) !== (item.parent?.id ?? null);
-  const iconChanged = icon !== undefined;
-  const catalogueDirty =
-    nameChanged || parentChanged || iconChanged || added.length > 0 || removed.size > 0;
   const pantryChanged = keeps !== null && keeps !== (kept !== null);
-  const dirty = catalogueDirty || pantryChanged;
+  const dirty = draft.dirty || pantryChanged;
 
-  /** Lands the Pantry switch, and the catalogue fields as one edit the draft keeps if refused. */
+  /** Lands the Pantry switch, then the catalogue fields as one edit the draft keeps if refused. */
   const save = async () => {
     if (!dirty) return;
     if (pantryChanged) {
@@ -221,87 +191,12 @@ function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClo
         );
       setKeeps(null);
     }
-    if (!catalogueDirty) return;
-    const draft = { added, removed, junk, parent, icon };
-
-    // The row reads as the draft has it, and the draft is spent, at once.
-    setAdded([]);
-    setRemoved(new Set());
-    setJunk(new Set());
-    setIcon(undefined);
-    const saved = await edits.saveDraft({
-      ingredientId: item.id,
-      ...(nameChanged ? { name: nextName } : {}),
-      ...(parentChanged ? { parent } : {}),
-      add: added,
-      remove: [...removed],
-      junk: [...junk],
-      ...(iconChanged ? { icon } : {}),
-    });
-
-    // A refused draft is the viewer's to fix, so it comes back as it was.
-    if (!saved) {
-      keepDraftRef.current = true;
-      setAdded(draft.added);
-      setRemoved(draft.removed);
-      setJunk(draft.junk);
-      setName(nextName);
-      setParent(draft.parent);
-      setIcon(draft.icon);
-    }
-  };
-
-  /** A spelling typed joins the draft clean, as it is stored; the field clears for the next. */
-  const stageAlias = () => {
-    const text = cleanSpelling(alias.trim());
-
-    if (!text) return;
-    if (!added.includes(text)) setAdded((current) => [...current, text]);
-    setAlias("");
-  };
-
-  const saveRelocation = (asked: Relocation, target: IngredientPick) => {
-    if (asked.kind === "parent") {
-      // A parent joins the draft and lands with Save.
-      if (target.id !== null) setParent(target);
-      setRelocation(null);
-
-      return;
-    }
-    const targetId = target.id;
-
-    setRelocation(null);
-    if (asked.kind === "move") {
-      void edits.moveAlias(item.id, asked.aliasId, targetId);
-
-      return;
-    }
-    if (targetId === null) return;
-    // Merged away, the food is gone: nothing is left to show for it.
-    onClose();
-    void edits.merge({ id: item.id, name: displayName }, { id: targetId, name: target.name });
+    await draft.save();
   };
 
   const confirmDelete = () => {
     setDeleting(false);
-    onClose();
-    void edits.remove(item.id);
-  };
-
-  /** Stage a spelling's removal, onto the junk pile when `asJunk`; staged again, it is kept. */
-  const toggleRemoval = (spelling: Spelling, asJunk = false) => {
-    const pending = removed.has(spelling.id);
-    const toggled = (current: ReadonlySet<string>, on: boolean) => {
-      const next = new Set(current);
-
-      if (on) next.add(spelling.id);
-      else next.delete(spelling.id);
-
-      return next;
-    };
-
-    setRemoved((current) => toggled(current, !pending));
-    setJunk((current) => toggled(current, !pending && asJunk));
+    draft.remove();
   };
 
   /**
@@ -345,7 +240,7 @@ function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClo
             className="text-muted hover:text-foreground ml-1 cursor-[var(--cursor-interactive)]"
             data-testid="ingredient-alias-remove"
             type="button"
-            onClick={() => (pendingRemoval ? toggleRemoval(spelling) : setAskingJunk(spelling))}
+            onClick={() => (pendingRemoval ? toggleRemoval(spelling) : askJunk(spelling))}
           >
             {pendingRemoval ? (
               <ArrowUturnLeftIcon className="size-3" />
@@ -360,134 +255,132 @@ function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClo
 
   return (
     <>
-      <Panel.Body>
-        <div className="flex flex-col gap-5 pb-2" data-testid="ingredient-details">
-          {unsure.length > 0 ? (
-            <Section title={t("changedByAI.unsure")}>
-              <div className="flex flex-col gap-3" data-testid="ingredient-ai-changes">
-                {unsure.map((change) => (
-                  <div
-                    key={change.id}
-                    className="flex flex-wrap items-center justify-between gap-2"
-                    data-kind={change.kind}
-                    data-testid="ingredient-ai-change"
-                  >
-                    <p className="text-sm font-medium">{changeMessage(t, change, locale)}</p>
-                    <AIChangeActions
-                      change={change}
-                      onKeep={(it) => void aiChanges.keep(it)}
-                      onUndo={(it) => void aiChanges.undo(it)}
-                    />
-                  </div>
-                ))}
-              </div>
-            </Section>
-          ) : null}
-          {item.flagged ? (
-            <div className="flex flex-col gap-3" data-testid="ingredient-flag-notice">
-              <p className="text-muted text-sm" data-testid="ingredient-flag-reason">
-                {t(`flagReasons.${item.flagReason ?? "unknown"}`)}
-              </p>
-              {item.canEdit ? (
-                <div className="flex flex-wrap items-center gap-2">
-                  <Button
-                    data-testid="ingredient-mark-distinct"
-                    size="sm"
-                    variant="secondary"
-                    onPress={() => void edits.markDistinct(item.id)}
-                  >
-                    <ArrowsRightLeftIcon className="size-4" />
-                    {t("markDistinct")}
-                  </Button>
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-
-          <Section title={t("nameSection")}>
-            <div className="flex items-center gap-3">
-              <IngredientIconField draft={icon} item={item} onDraftChange={setIcon} />
-              {item.canEdit ? (
-                <TextField
-                  aria-label={t("rename")}
-                  className="min-w-0 flex-1"
-                  value={name}
-                  onChange={setName}
+      <Panel.Body data-testid="ingredient-details" sections>
+        {unsure.length > 0 ? (
+          <Section placement="panel" title={t("changedByAI.unsure")}>
+            <div className="flex flex-col gap-3" data-testid="ingredient-ai-changes">
+              {unsure.map((change) => (
+                <div
+                  key={change.id}
+                  className="flex flex-wrap items-center justify-between gap-2"
+                  data-kind={change.kind}
+                  data-testid="ingredient-ai-change"
                 >
-                  <Input
-                    data-testid="ingredient-name-input"
-                    variant="secondary"
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") void save();
-                      if (event.key === "Escape") setName(item.name);
-                    }}
+                  <p className="text-sm font-medium">{changeMessage(t, change, locale)}</p>
+                  <AIChangeActions
+                    change={change}
+                    onKeep={(it) => void aiChanges.keep(it)}
+                    onUndo={(it) => void aiChanges.undo(it)}
                   />
-                </TextField>
-              ) : (
-                <p className="font-medium">{item.name}</p>
-              )}
+                </div>
+              ))}
             </div>
-            {displayName !== item.name ? (
-              <p className="text-muted text-sm">{t("shownAs", { name: displayName })}</p>
-            ) : null}
           </Section>
-
-          <Section title={tGroceries("pantry")}>
-            <PantryRow
-              keeping={keeps ?? kept !== null}
-              kept={kept}
-              onKeepingChange={(on) => setKeeps(on === (kept !== null) ? null : on)}
-            />
-          </Section>
-
-          <Section title={t("parentSection")}>
-            <div className="flex flex-wrap items-center gap-2" data-testid="ingredient-parent">
-              {parent ? (
-                // The same height as the button beside it: the pair reads as one row.
-                <Chip className="h-9 px-3 text-sm md:h-8" size="lg" variant="secondary">
-                  {ingredientDisplayName(parent, locale)}
-                  {item.canEdit ? (
-                    <button
-                      aria-label={t("clearParent")}
-                      className="text-muted hover:text-foreground ml-1 cursor-[var(--cursor-interactive)]"
-                      data-testid="ingredient-clear-parent"
-                      type="button"
-                      onClick={() => setParent(null)}
-                    >
-                      <XMarkIcon className="size-4" />
-                    </button>
-                  ) : null}
-                </Chip>
-              ) : null}
-              {item.canEdit ? (
+        ) : null}
+        {item.flagged ? (
+          <div className="flex flex-col gap-3" data-testid="ingredient-flag-notice">
+            <p className="text-muted text-sm" data-testid="ingredient-flag-reason">
+              {t(`flagReasons.${item.flagReason ?? "unknown"}`)}
+            </p>
+            {item.canEdit ? (
+              <div className="flex flex-wrap items-center gap-2">
                 <Button
-                  data-testid="ingredient-set-parent"
+                  data-testid="ingredient-mark-distinct"
                   size="sm"
                   variant="secondary"
-                  onPress={() => setRelocation({ kind: "parent" })}
+                  onPress={() => void draft.markDistinct()}
                 >
-                  <PencilSquareIcon className="size-4" />
-                  {parent ? t("changeParent") : t("setParent")}
+                  <ArrowsRightLeftIcon className="size-4" />
+                  {t("markDistinct")}
                 </Button>
-              ) : null}
-            </div>
-          </Section>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
 
-          <Section title={t("spellingsSection")}>
-            <Button
-              fullWidth
-              className="justify-between"
-              data-testid="ingredient-all-spellings"
-              variant="tertiary"
-              onPress={() => setAllSpellings(true)}
-            >
-              {t("spellingsCount", { count: spellingCount })}
-              <ChevronRightIcon className="size-4" />
-            </Button>
-          </Section>
+        <Section placement="panel" title={t("nameSection")}>
+          <div className="flex items-center gap-3">
+            <IngredientIconField icons={draft.icons} item={item} onDraftChange={setIcon} />
+            {item.canEdit ? (
+              <TextField
+                aria-label={t("rename")}
+                className="min-w-0 flex-1"
+                value={name}
+                onChange={setName}
+              >
+                <Input
+                  data-testid="ingredient-name-input"
+                  variant="secondary"
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") void save();
+                    if (event.key === "Escape") draft.resetName();
+                  }}
+                />
+              </TextField>
+            ) : (
+              <p className="font-medium">{item.name}</p>
+            )}
+          </div>
+          {displayName !== item.name ? (
+            <p className="text-muted text-sm">{t("shownAs", { name: displayName })}</p>
+          ) : null}
+        </Section>
 
-          <IngredientNutritionSection ingredientId={item.id} name={displayName} />
-        </div>
+        <Section placement="panel" title={tGroceries("pantry")}>
+          <PantryRow
+            keeping={keeps ?? kept !== null}
+            kept={kept}
+            onKeepingChange={(on) => setKeeps(on === (kept !== null) ? null : on)}
+          />
+        </Section>
+
+        <Section placement="panel" title={t("parentSection")}>
+          <div className="flex flex-wrap items-center gap-2" data-testid="ingredient-parent">
+            {parent ? (
+              // The same height as the button beside it: the pair reads as one row.
+              <Chip className="h-9 px-3 text-sm md:h-8" size="lg" variant="secondary">
+                {ingredientDisplayName(parent, locale)}
+                {item.canEdit ? (
+                  <button
+                    aria-label={t("clearParent")}
+                    className="text-muted hover:text-foreground ml-1 cursor-[var(--cursor-interactive)]"
+                    data-testid="ingredient-clear-parent"
+                    type="button"
+                    onClick={() => setParent(null)}
+                  >
+                    <XMarkIcon className="size-4" />
+                  </button>
+                ) : null}
+              </Chip>
+            ) : null}
+            {item.canEdit ? (
+              <Button
+                data-testid="ingredient-set-parent"
+                size="sm"
+                variant="secondary"
+                onPress={() => setRelocation({ kind: "parent" })}
+              >
+                <PencilSquareIcon className="size-4" />
+                {parent ? t("changeParent") : t("setParent")}
+              </Button>
+            ) : null}
+          </div>
+        </Section>
+
+        <Section placement="panel" title={t("spellingsSection")}>
+          <Button
+            fullWidth
+            className="justify-between"
+            data-testid="ingredient-all-spellings"
+            variant="tertiary"
+            onPress={() => setAllSpellings(true)}
+          >
+            {t("spellingsCount", { count: spellingCount })}
+            <ChevronRightIcon className="size-4" />
+          </Button>
+        </Section>
+
+        <IngredientNutritionSection ingredientId={item.id} name={displayName} />
       </Panel.Body>
 
       <Panel.Footer>
@@ -562,7 +455,7 @@ function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClo
                     className="text-muted hover:text-foreground ml-1 cursor-[var(--cursor-interactive)]"
                     data-testid="ingredient-alias-remove"
                     type="button"
-                    onClick={() => setAdded((current) => current.filter((it) => it !== text))}
+                    onClick={() => draft.unstage(text)}
                   >
                     <XMarkIcon className="size-3" />
                   </button>
@@ -581,7 +474,7 @@ function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClo
                   placeholder={t("addAlias")}
                   variant="secondary"
                   onKeyDown={(event) => {
-                    if (event.key === "Enter") stageAlias();
+                    if (event.key === "Enter") draft.stageAlias();
                   }}
                 />
               </TextField>
@@ -590,7 +483,7 @@ function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClo
                 isDisabled={!alias.trim()}
                 label={t("addAlias")}
                 variant="tertiary"
-                onPress={stageAlias}
+                onPress={draft.stageAlias}
               />
             </div>
           </div>
@@ -608,15 +501,15 @@ function IngredientPanelContent({ item, onClose }: { item: IngredientItem; onClo
         ingredient={item}
         relocation={relocation}
         onClose={() => setRelocation(null)}
-        onConfirm={saveRelocation}
+        onConfirm={draft.saveRelocation}
       />
 
       <JunkSpellingModal
         alias={askingJunk?.text ?? null}
-        onClose={() => setAskingJunk(null)}
+        onClose={() => askJunk(null)}
         onRemove={(asJunk) => {
           if (askingJunk) toggleRemoval(askingJunk, asJunk);
-          setAskingJunk(null);
+          askJunk(null);
         }}
       />
 
@@ -709,59 +602,52 @@ function IngredientUsesContent({
 }) {
   const t = useTranslations("settings.ingredients.uses");
   const tActions = useTranslations("common.actions");
+  const tMore = useTranslations("recipes.cookbooks");
   const { uses: data } = useIngredientUsesQuery(ingredientId);
+  const { recipes, loaded, hasMore, loadingMore, loadMore } = useFoodRecipes(ingredientId);
   const unused =
-    data &&
-    data.recipes.length === 0 &&
-    data.groceries.length === 0 &&
-    !data.pantry &&
-    data.elsewhere === 0;
+    data && loaded && recipes.length === 0 && data.groceries.length === 0 && !data.pantry;
 
   return (
     <>
-      <Panel.Body>
-        <div className="flex flex-col gap-5 pb-2" data-testid="ingredient-uses">
-          {!data ? <Skeleton className="h-16 w-full rounded-xl" /> : null}
-          {data && data.recipes.length > 0 ? (
-            <Section title={t("recipes")}>
-              <ul className="flex flex-col gap-1 text-sm">
-                {data.recipes.map((recipe) => (
-                  <li key={recipe.id}>
-                    <Link
-                      className="text-accent hover:underline"
-                      href={`/recipes/${recipe.id}`}
-                      onClick={onClose}
-                    >
-                      {recipe.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </Section>
-          ) : null}
-          {data && data.groceries.length > 0 ? (
-            <Section title={t("groceries")}>
-              <ul className="flex flex-col gap-1 text-sm">
-                {data.groceries.map((grocery) => (
-                  <li key={grocery.id}>
-                    {grocery.name}
-                    {grocery.done || grocery.recurring ? (
-                      <span className="text-muted">
-                        {" · "}
-                        {grocery.recurring ? t("repeats") : t("done")}
-                      </span>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
-            </Section>
-          ) : null}
-          {data?.pantry ? <p className="text-sm">{t("pantry")}</p> : null}
-          {data && data.elsewhere > 0 ? (
-            <p className="text-muted text-sm">{t("elsewhere", { count: data.elsewhere })}</p>
-          ) : null}
-          {unused ? <p className="text-muted text-sm">{t("none")}</p> : null}
-        </div>
+      <Panel.Body data-testid="ingredient-uses" sections>
+        {!data || !loaded ? <Skeleton className="h-16 w-full rounded-xl" /> : null}
+        {recipes.length > 0 ? (
+          <Section placement="panel" title={t("recipes")}>
+            <RecipeLinks recipes={recipes} onOpen={onClose} />
+            {hasMore ? (
+              <Button
+                className="self-center"
+                data-testid="ingredient-uses-more"
+                isPending={loadingMore}
+                size="sm"
+                variant="tertiary"
+                onPress={loadMore}
+              >
+                {tMore("showMore")}
+              </Button>
+            ) : null}
+          </Section>
+        ) : null}
+        {data && data.groceries.length > 0 ? (
+          <Section placement="panel" title={t("groceries")}>
+            <ul className="flex flex-col gap-1 text-sm">
+              {data.groceries.map((grocery) => (
+                <li key={grocery.id}>
+                  {grocery.name}
+                  {grocery.done || grocery.recurring ? (
+                    <span className="text-muted">
+                      {" · "}
+                      {grocery.recurring ? t("repeats") : t("done")}
+                    </span>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          </Section>
+        ) : null}
+        {data?.pantry ? <p className="text-sm">{t("pantry")}</p> : null}
+        {unused ? <p className="text-muted text-sm">{t("none")}</p> : null}
       </Panel.Body>
       <Panel.Footer>
         <ActionButtonGroup>
@@ -785,14 +671,4 @@ function HeldBackSpellings({
   chip: (spelling: Spelling) => ReactNode;
 }) {
   return (useIngredientSpellingsQuery(ingredientId) ?? aliases).map(chip);
-}
-
-/** One part of the panel: a small heading over what it holds. */
-function Section({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section className="flex flex-col gap-2">
-      <h3 className="text-muted text-xs font-semibold tracking-wide uppercase">{title}</h3>
-      {children}
-    </section>
-  );
 }

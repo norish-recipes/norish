@@ -39,6 +39,7 @@ export async function processRecipeProvenanceJob(job: Job<RecipeEnrichmentJobDat
     const mode = enrichmentWriteMode("recipe-provenance", job.data);
     const claim = await inferRecipeProvenance({
       ...toRecipeSummary(recipe),
+      householdId: recipe.householdId,
       // The supplied slots, so the model writes the missing fields around
       // them instead of working the whole claim out against them. A replacing
       // run withholds them on purpose: the write is about to discard the

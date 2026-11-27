@@ -8,13 +8,18 @@ import {
   IconActionButton,
 } from "@/components/shared/action-button";
 import ConfirmModal from "@/components/shared/confirm-modal";
+import { EmptyState } from "@/components/shared/empty-state";
 import { InfoHint } from "@/features/account/components/info-hint";
 import { ShieldCheckIcon } from "@heroicons/react/24/outline";
 import { Chip, FieldError, Input, Label, ListBox, Select, Table, TextField } from "@heroui/react";
 import { useFormatter, useTranslations } from "next-intl";
 
-import { useSiteAuthTokenMutations, useSiteAuthTokensQuery } from "@norish/shared-react/reader";
-import { TokenDomainSchema } from "@norish/shared/contracts/zod/site-auth-tokens";
+import {
+  orderedSiteAuthTokens,
+  siteAuthTokenForm,
+  useSiteAuthTokenMutations,
+  useSiteAuthTokensQuery,
+} from "@norish/shared-react/reader";
 
 export default function SiteAuthTokensCard() {
   const t = useTranslations("settings.user.siteAuthTokens");
@@ -44,18 +49,12 @@ export default function SiteAuthTokensCard() {
     setShowDeleteModal(false);
     setTokenToDelete(null);
   };
-  // A token's domain is a full domain, which also covers its subdomains.
-  const isDomainBare = domain.trim() !== "" && !TokenDomainSchema.safeParse(domain).success;
-  const isFormValid = domain.trim() && !isDomainBare && name.trim() && value.trim();
-
-  // Sorted so a site's accounts read as the sets they are, rather than in the
-  // order they happened to be added.
-  const orderedTokens = [...tokens].sort(
-    (a, b) =>
-      a.domain.localeCompare(b.domain) ||
-      (a.account ?? "").localeCompare(b.account ?? "") ||
-      a.name.localeCompare(b.name)
-  );
+  const { domainBare: isDomainBare, valid: isFormValid } = siteAuthTokenForm({
+    domain,
+    name,
+    value,
+  });
+  const orderedTokens = orderedSiteAuthTokens(tokens);
 
   return (
     <>
@@ -186,7 +185,9 @@ export default function SiteAuthTokensCard() {
           </div>
         )}
 
-        {tokens.length === 0 && <p className="text-muted py-4 text-base">{t("noTokens")}</p>}
+        {tokens.length === 0 && (
+          <EmptyState icon={ShieldCheckIcon} title={t("noTokens")} variant="row" />
+        )}
       </SettingsCard>
 
       <ConfirmModal

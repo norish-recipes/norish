@@ -2,10 +2,10 @@ import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { GLASS_CONTROL_HEIGHT, GlassSurface } from "@/components/glass";
+import { Ionicons } from "@/components/icon";
 import { useTimersName } from "@/components/timer-glance";
 import { labelFits } from "@/lib/label-fits";
 import { useFadeTo } from "@/lib/motion/fade-to";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 

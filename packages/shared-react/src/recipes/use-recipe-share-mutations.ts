@@ -10,27 +10,36 @@ import type {
 
 import { answered } from "../offline/settled";
 import { usePlatform } from "../platform/platform";
+import { useStaleRefusal, wentThroughFresh } from "../platform/stale-write";
 import { useTRPC } from "../trpc";
+import { SECRET_ANSWER } from "../trpc/one-time-secret";
 import { useRecipeShareCacheHelpers } from "./use-recipe-share-cache";
 
-type RecipeShareMutationsResult = {
-  createShare: (
-    expiresIn?: CreateRecipeShareInputDto["expiresIn"]
-  ) => Promise<RecipeShareCreatedDto | null>;
-  updateShare: (input: UpdateRecipeShareInputDto) => void;
-  revokeShare: (id: string, version: number) => void;
-  reactivateShare: (id: string, version: number) => void;
-  deleteShare: (id: string, version: number) => void;
-  isCreating: boolean;
-  isUpdating: boolean;
+/** What a share-links table does to a link; each resolves whether its request went through. */
+export type ShareLinkMutations = {
+  revokeShare: (id: string, version: number) => Promise<boolean>;
+  reactivateShare: (id: string, version: number) => Promise<boolean>;
+  deleteShare: (id: string, version: number) => Promise<boolean>;
   isRevoking: boolean;
   isReactivating: boolean;
   isDeleting: boolean;
 };
 
+type RecipeShareMutationsResult = ShareLinkMutations & {
+  createShare: (
+    expiresIn?: CreateRecipeShareInputDto["expiresIn"]
+  ) => Promise<RecipeShareCreatedDto | null>;
+  /** Drops the new link from the mutation's result, once its panel closed. */
+  forgetCreatedShare: () => void;
+  updateShare: (input: UpdateRecipeShareInputDto) => void;
+  isCreating: boolean;
+  isUpdating: boolean;
+};
+
 export function useRecipeShareMutations(recipeId: string | null): RecipeShareMutationsResult {
   const trpc = useTRPC();
   const { toast, showError } = usePlatform();
+  const refuseStale = useStaleRefusal();
   const {
     invalidateRecipeShares,
     invalidateMyRecipeShares,
@@ -48,9 +57,17 @@ export function useRecipeShareMutations(recipeId: string | null): RecipeShareMut
     invalidateAdminRecipeShares();
     invalidateRecipeShare(shareId);
   };
+  // A failed action rereads the lists: a share whose recipe was deleted elsewhere answers NOT_FOUND.
+  const failed = (context: string) => (error: unknown) => {
+    invalidateRecipeShares(recipeId);
+    invalidateMyRecipeShares();
+    invalidateAdminRecipeShares();
+    showError(error, context);
+  };
 
   const createMutation = useMutation(
     trpc.recipes.shareCreate.mutationOptions({
+      ...SECRET_ANSWER,
       onSuccess: (data) => {
         invalidateShareCollections(data.id, data.recipeId);
         toast.show({
@@ -61,7 +78,7 @@ export function useRecipeShareMutations(recipeId: string | null): RecipeShareMut
       onError: (error) => showError(error, "recipe-share-panel:create"),
     })
   );
-  const { mutateAsync: mutateCreateAsync } = createMutation;
+  const { mutateAsync: mutateCreateAsync, reset: resetCreate } = createMutation;
 
   const updateMutation = useMutation(
     trpc.recipes.shareUpdate.mutationOptions({
@@ -75,35 +92,38 @@ export function useRecipeShareMutations(recipeId: string | null): RecipeShareMut
   const revokeMutation = useMutation(
     trpc.recipes.shareRevoke.mutationOptions({
       onSuccess: (data) => {
+        if (data.stale) refuseStale("recipe-share-panel:revoke");
         invalidateShareCollections(data.id, data.recipeId);
       },
+      onError: failed("recipe-share-panel:revoke"),
     })
   );
-  const { mutate: mutateRevoke } = revokeMutation;
+  const { mutateAsync: mutateRevoke } = revokeMutation;
 
   const reactivateMutation = useMutation(
     trpc.recipes.shareReactivate.mutationOptions({
       onSuccess: (data) => {
+        if (data.stale) refuseStale("recipe-share-panel:reactivate");
         invalidateShareCollections(data.id, data.recipeId);
       },
+      onError: failed("recipe-share-panel:reactivate"),
     })
   );
-  const { mutate: mutateReactivate } = reactivateMutation;
+  const { mutateAsync: mutateReactivate } = reactivateMutation;
 
   const deleteMutation = useMutation(
     trpc.recipes.shareDelete.mutationOptions({
-      onSuccess: (_data, variables) => {
-        if (recipeId) {
-          invalidateRecipeShares(recipeId);
-        }
-
+      onSuccess: ({ stale }, variables) => {
+        invalidateRecipeShares(recipeId);
         invalidateMyRecipeShares();
         invalidateAdminRecipeShares();
-        removeRecipeShare(variables.id);
+        if (stale) refuseStale("recipe-share-panel:delete");
+        else removeRecipeShare(variables.id);
       },
+      onError: failed("recipe-share-panel:delete"),
     })
   );
-  const { mutate: mutateDelete } = deleteMutation;
+  const { mutateAsync: mutateDelete } = deleteMutation;
 
   return {
     createShare: async (expiresIn = "forever") => {
@@ -113,18 +133,13 @@ export function useRecipeShareMutations(recipeId: string | null): RecipeShareMut
 
       return answered(mutateCreateAsync({ recipeId, expiresIn }));
     },
+    forgetCreatedShare: () => resetCreate(),
     updateShare: (input) => {
       mutateUpdate(input);
     },
-    revokeShare: (id, version) => {
-      mutateRevoke({ id, version });
-    },
-    reactivateShare: (id, version) => {
-      mutateReactivate({ id, version });
-    },
-    deleteShare: (id, version) => {
-      mutateDelete({ id, version });
-    },
+    revokeShare: (id, version) => wentThroughFresh(mutateRevoke({ id, version })),
+    reactivateShare: (id, version) => wentThroughFresh(mutateReactivate({ id, version })),
+    deleteShare: (id, version) => wentThroughFresh(mutateDelete({ id, version })),
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isRevoking: revokeMutation.isPending,

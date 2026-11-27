@@ -1,6 +1,6 @@
 {
   "name": "@norish/shared-react",
-  "version": "0.27.0-beta",
+  "version": "0.28.0-beta",
   "private": true,
   "type": "module",
   "exports": {
@@ -13,6 +13,7 @@
     "./calendar/todays-meals": "./src/calendar/todays-meals.ts",
     "./groceries": "./src/groceries/index.ts",
     "./ingredients": "./src/ingredients/index.ts",
+    "./lists": "./src/lists/index.ts",
     "./reader": "./src/reader/index.ts",
     "./page-store": "./src/page-store/index.tsx",
     "./settled-text": "./src/settled-text/index.ts",

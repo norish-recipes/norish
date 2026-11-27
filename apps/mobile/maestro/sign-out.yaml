@@ -1,15 +1,18 @@
-# Signs out from Settings, lands on Sign in for the same server without flipping back,
-# and signs in again.
+# Signs out from Settings with nothing unsynced: no confirm, it lands on Sign in for the same
+# server without flipping back, and signs in again.
 appId: dev.norish.app
 ---
 - runFlow:
     file: subflows/sign-in.yaml
     env:
       NORISH_SIGN_IN_URL: ${NORISH_SERVER_URL}
+- runFlow: subflows/open-settings.yaml
+- scrollUntilVisible:
+    element:
+      id: settings-root-sign-out
 - tapOn:
-    id: tab-settings
-- tapOn:
-    id: smoke-sign-out
+    id: settings-root-sign-out
+- assertNotVisible: Discard unsynced changes?
 - extendedWaitUntil:
     visible:
       id: login-email

@@ -76,6 +76,17 @@ export default withSerwist(
       NEXT_PUBLIC_APP_VERSION: packageJson.version,
     },
     serverExternalPackages: ["pino", "pino-pretty", "thread-stream", "playwright-core"],
+    // Before rendering: the settings layout mounts no panel for an address that is not a tab.
+    async redirects() {
+      return [
+        // The Ingredients tab became a list of the Content tab; the query rides along.
+        {
+          source: "/settings/ingredients",
+          destination: "/settings/content/ingredients",
+          permanent: false,
+        },
+      ];
+    },
     async headers() {
       return [
         {

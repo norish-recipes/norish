@@ -1,34 +1,67 @@
 import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { HintButton } from "@/components/hint-button";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { Ionicons } from "@/components/icon";
+import { useText } from "@/lib/i18n/use-text";
 import { useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
+import type { PickerEntry } from "@norish/shared-react/lists";
 import type { ProvenanceFormValue } from "@norish/shared-react/recipes";
 import type { MeasurementSystem } from "@norish/shared/contracts";
-import { useCuisinesQuery } from "@norish/shared-react/config";
+import { chosenEntries, useListEntries } from "@norish/shared-react/lists";
 import { countryFlagEmoji, listCountryOptions } from "@norish/shared/lib/recipe-provenance";
 
 import { SectionCard } from "../tint";
 import { choiceRoute, requestChoice } from "./choice-request";
-import { AddChip, RemovableChip } from "./detail-cards";
+import { RemovableChip } from "./detail-cards";
 import { EditorField, EditorInput } from "./editor-parts";
+
+/** The chip, ruled by a hairline, that adds one more. */
+function AddChip({
+  label,
+  testID,
+  onPress,
+}: {
+  label: string;
+  testID: string;
+  onPress: () => void;
+}) {
+  const [muted] = useThemeColor(["muted"] as const);
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      className="border-separator h-[34px] flex-row items-center gap-1.5 rounded-full border px-3"
+      testID={testID}
+      onPress={onPress}
+    >
+      <Ionicons color={muted} name="add" size={15} />
+      <Text className="text-foreground text-[15px] font-medium">{label}</Text>
+    </Pressable>
+  );
+}
 
 /** Country, region, cuisines and a note, as one atomic group. */
 export function ProvenanceCard({
   value,
   onChange,
+  recipeId,
+  carriedCuisines,
 }: {
   value: ProvenanceFormValue;
   onChange: (value: ProvenanceFormValue) => void;
+  /** The recipe being edited, once it exists: its household's Cuisines are the ones offered. */
+  recipeId?: string;
+  /** The Cuisines the recipe carries, which it keeps whatever the list offers. */
+  carriedCuisines?: PickerEntry[];
 }) {
   const intl = useIntl();
-  const { cuisines } = useCuisinesQuery();
+  const { entries: cuisines } = useListEntries("cuisine", recipeId);
   const [muted] = useThemeColor(["muted"] as const);
   const router = useRouter();
-  const text = (id: string) => intl.formatMessage({ id });
+  const text = useText();
   const patch = (next: Partial<ProvenanceFormValue>) => onChange({ ...value, ...next });
   const pickCountry = () => {
     const countries = listCountryOptions(intl.locale);
@@ -52,7 +85,8 @@ export function ProvenanceCard({
   };
   const pickCuisines = () => {
     requestChoice({
-      choices: cuisines.map((cuisine) => ({ key: cuisine.id, label: cuisine.name })),
+      choices: [],
+      list: { kind: "cuisine", recipeId },
       selected: value.cuisineIds,
       onChange: (cuisineIds) => patch({ cuisineIds }),
     });
@@ -61,7 +95,7 @@ export function ProvenanceCard({
     );
   };
   const flag = countryFlagEmoji(value.originCountry);
-  const cuisineName = (id: string) => cuisines.find((cuisine) => cuisine.id === id)?.name ?? id;
+  const chosen = chosenEntries(value.cuisineIds, cuisines, carriedCuisines);
 
   return (
     <SectionCard title={text("recipes.form.provenance")}>
@@ -96,11 +130,13 @@ export function ProvenanceCard({
       </EditorField>
       <EditorField label={text("recipes.form.cuisines")}>
         <View className="flex-row flex-wrap gap-2 pt-1">
-          {value.cuisineIds.map((id) => (
+          {chosen.map((cuisine) => (
             <RemovableChip
-              key={id}
-              label={cuisineName(id)}
-              onRemove={() => patch({ cuisineIds: value.cuisineIds.filter((c) => c !== id) })}
+              key={cuisine.id}
+              label={cuisine.name}
+              onRemove={() =>
+                patch({ cuisineIds: value.cuisineIds.filter((id) => id !== cuisine.id) })
+              }
             />
           ))}
           <AddChip
@@ -136,8 +172,7 @@ export function SourceCard({
   onUrlChange: (url: string) => void;
   onSystemChange: (system: MeasurementSystem) => void;
 }) {
-  const intl = useIntl();
-  const text = (id: string) => intl.formatMessage({ id });
+  const text = useText();
 
   return (
     <SectionCard title={text("recipes.editor.source")}>

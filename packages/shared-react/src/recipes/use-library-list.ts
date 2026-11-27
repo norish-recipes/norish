@@ -5,7 +5,7 @@ import type { CanonicalRecipeFilters } from "@norish/shared/contracts/filter-con
 import { toRecipesQueryFilters } from "@norish/shared/contracts/filter-contract";
 
 import type { RecipesMutationErrorHandler } from "./recipes-mutation-error";
-import { useActiveAllergies } from "../reader";
+import { useActiveAllergies, useHiddenItemVisibility, withoutHiddenFilters } from "../reader";
 import { useLibraryFilters } from "./library-filters-store";
 import { useCookbookRecipesQuery } from "./use-cookbook-recipes-query";
 import { useFavoritesMutation } from "./use-favorites-mutation";
@@ -13,10 +13,18 @@ import { useFavoritesQuery } from "./use-favorites-query";
 import { useLibraryQuery } from "./use-library-query";
 import { useRecipesMutations } from "./use-recipes-mutations";
 
+/** The reader's applied Library filters: what every list, badge and empty state reads. */
+export function useAppliedLibraryFilters() {
+  const stored = useLibraryFilters((state) => state.filters);
+
+  return withoutHiddenFilters(stored, useHiddenItemVisibility());
+}
+
 /** The Library's filters, as a list query takes them, and whether the stored ones are applied. */
 export function useLibraryQueryFilters(override?: CanonicalRecipeFilters) {
-  const stored = useLibraryFilters((state) => state.filters);
-  const filters = override ?? stored;
+  const applied = useAppliedLibraryFilters();
+  const visibility = useHiddenItemVisibility();
+  const filters = override ? withoutHiddenFilters(override, visibility) : applied;
   const isHydrated = useLibraryFilters((state) => state.hydrated);
 
   return { filters, queryFilters: toRecipesQueryFilters(filters), isHydrated };

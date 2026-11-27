@@ -1,8 +1,22 @@
 import type { AnyPgColumn } from "drizzle-orm/pg-core";
-import { and, asc, desc, eq, ilike, inArray, isNull, lte, notInArray, or, sql } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  exists,
+  ilike,
+  inArray,
+  isNull,
+  lte,
+  notInArray,
+  or,
+  sql,
+} from "drizzle-orm";
+import { alias, QueryBuilder } from "drizzle-orm/pg-core";
 import z from "zod";
 
-import type { RecipePermissionPolicy } from "@norish/config/zod/server-config";
+import type { Db, DbTransaction } from "@norish/db/drizzle";
 import type {
   FullRecipeDTO,
   FullRecipeInsertDTO,
@@ -17,26 +31,24 @@ import type {
 } from "@norish/shared/contracts/dto/recipe-ingredient";
 import type { StepDto, StepInsertDto } from "@norish/shared/contracts/dto/steps";
 import type { FilterMode, SearchField, SortOrder } from "@norish/shared/contracts/store-types";
-import type { LineJoin } from "@norish/shared/lib/line-foods";
-import {
-  DEFAULT_RECIPE_PERMISSION_POLICY,
-  ServerConfigKeys,
-} from "@norish/config/zod/server-config";
+import type { LineJoin, LineReadings } from "@norish/shared/lib/line-foods";
+import { policyReach } from "@norish/config/zod/server-config";
 import { db } from "@norish/db/drizzle";
 import { dbLogger } from "@norish/db/logger";
+import { entryFold } from "@norish/shared/lib/fold-name";
 import { stripHtmlTags } from "@norish/shared/lib/helpers";
-import { viewerAndHouseholdIds } from "@norish/shared/lib/household";
 import { joinOf } from "@norish/shared/lib/line-foods";
 import { normalizeOriginCountry } from "@norish/shared/lib/recipe-enrichment";
 import { hasSearchText, searchTerms } from "@norish/shared/lib/search-terms";
 import { normalizeUnit } from "@norish/shared/lib/unit-localization";
 
 import type { IngredientResolutions, LineFoods, NewRecipeLine } from "./ingredients";
+import type { EntryWriteOptions } from "./list-entries";
 import type { MutationOutcome } from "./mutation-outcomes";
 import type { StepInsertWithImages } from "./steps";
 import {
   cookbookRecipes,
-  householdUsers,
+  measurementSystemEnum,
   recipeFavorites,
   recipeImages,
   recipeIngredients,
@@ -56,10 +68,12 @@ import {
 } from "../zodSchemas";
 import {
   attachCategoriesToRecipeByInputTx,
+  categoryNamesToWrite,
   RECIPE_CATEGORY_NAMES_SQL,
-  recipeInAnyCategorySql,
 } from "./categories";
-import { replaceRecipeCuisinesTx } from "./cuisines";
+import { TakenIdError } from "./constraint-violation";
+import { currentHouseholdIdSql, householdMemberIdsSql } from "./household-members";
+import { lockRecipeHouseholdsTx } from "./household-rows";
 import {
   attachIngredientsToRecipeByInputTx,
   getUnitsForNormalization,
@@ -67,18 +81,28 @@ import {
   resolvedRecipeLineValues,
   writeRecipeLineFoodsTx,
 } from "./ingredients";
+import {
+  lockEntryNamesTx,
+  recipeCarriesFoldsSql,
+  replaceRecipeEntriesByNameTx,
+  replaceRecipeEntryIdsTx,
+} from "./list-entries";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 import { pantryCoverageSql } from "./pantry-coverage";
+import { assertOwnRecipeMedia } from "./recipe-media-references";
 import { PRIMARY_IMAGE_SQL } from "./recipe-primary-image";
-import { getConfig } from "./server-config";
+import { getRecipePermissionPolicy } from "./server-config";
 import {
   createManyRecipeStepsTx,
   loadIngredientLineIdsByOrderTx,
   syncStepIngredientsTx,
 } from "./steps";
-import { attachTagsToRecipeByInputTx } from "./tags";
 
-type RecipeViewPolicy = RecipePermissionPolicy["view"];
+const qb = new QueryBuilder();
+const searchTagLink = alias(recipeTags, "search_rt");
+const searchTag = alias(tags, "search_tag");
+const searchLine = alias(recipeIngredients, "search_ri");
+const searchStep = alias(stepsTable, "search_step");
 
 /**
  * Which of the recipe permission policy's three levels a query is asking
@@ -86,12 +110,6 @@ type RecipeViewPolicy = RecipePermissionPolicy["view"];
  * depends on this package.
  */
 export type PolicyAction = "view" | "edit" | "delete";
-
-async function getRecipePolicyLevel(action: PolicyAction): Promise<RecipeViewPolicy> {
-  const policy = await getConfig<RecipePermissionPolicy>(ServerConfigKeys.RECIPE_PERMISSION_POLICY);
-
-  return policy?.[action] ?? DEFAULT_RECIPE_PERMISSION_POLICY[action];
-}
 
 function nonEmpty(s: string | null | undefined): s is string {
   return typeof s === "string" && s.trim().length > 0;
@@ -155,29 +173,16 @@ export async function deleteRecipesByIds(
   };
 }
 
-/** The owner of each recipe that exists; Orphaned ones map to null. */
-export async function getRecipeOwnerIds(recipeIds: string[]): Promise<Map<string, string | null>> {
+/** The household of each recipe that exists, which the Permission Policy is decided by. */
+export async function getRecipeHouseholdIds(recipeIds: string[]): Promise<Map<string, string>> {
   if (recipeIds.length === 0) return new Map();
 
   const rows = await db
-    .select({ id: recipes.id, userId: recipes.userId })
+    .select({ id: recipes.id, householdId: recipes.householdId })
     .from(recipes)
     .where(inArray(recipes.id, recipeIds));
 
-  return new Map(rows.map((row) => [row.id, row.userId]));
-}
-
-/**
- * Get the owner userId for a recipe (for permission checks)
- */
-export async function getRecipeOwnerId(recipeId: string): Promise<string | null> {
-  const [row] = await db
-    .select({ userId: recipes.userId })
-    .from(recipes)
-    .where(eq(recipes.id, recipeId))
-    .limit(1);
-
-  return row?.userId ?? null;
+  return new Map(rows.map((row) => [row.id, row.householdId]));
 }
 
 export async function getRecipeByUrl(url: string): Promise<FullRecipeDTO | null> {
@@ -193,60 +198,6 @@ export async function getRecipeByUrl(url: string): Promise<FullRecipeDTO | null>
 }
 
 /**
- * Check if recipe URL exists based on view policy.
- * Used for queue deduplication before creating new recipes.
- *
- * - "everyone": Any recipe with this URL
- * - "household": Any recipe with this URL owned by household members
- * - "owner": Any recipe with this URL owned by the user
- */
-export async function recipeExistsByUrlForPolicy(
-  url: string,
-  userId: string,
-  householdUserIds: string[] | null,
-  viewPolicy: "everyone" | "household" | "owner"
-): Promise<{ exists: boolean; existingRecipeId?: string }> {
-  let whereCondition: ReturnType<typeof and> | ReturnType<typeof or> | ReturnType<typeof eq>;
-
-  switch (viewPolicy) {
-    case "everyone":
-      // Check if URL exists at all
-      whereCondition = eq(recipes.url, url);
-      break;
-
-    case "household":
-      // Check if URL exists for any household member
-      whereCondition = and(
-        eq(recipes.url, url),
-        inArray(recipes.userId, viewerAndHouseholdIds({ userId, householdUserIds }))
-      );
-      break;
-
-    case "owner":
-      // Check if URL exists for this specific user
-      whereCondition = and(eq(recipes.url, url), eq(recipes.userId, userId));
-      break;
-
-    default:
-      whereCondition = and(eq(recipes.url, url), eq(recipes.userId, userId));
-  }
-
-  const existing = await db.query.recipes.findFirst({
-    where: whereCondition,
-    columns: { id: true },
-  });
-
-  if (existing) {
-    dbLogger.debug(
-      { url, recipeId: existing.id, viewPolicy },
-      "Found existing recipe by URL for policy"
-    );
-  }
-
-  return { exists: existing !== null, existingRecipeId: existing?.id };
-}
-
-/**
  * Check if a recipe already exists within a household context.
  * First checks by URL (if provided), then falls back to exact title match.
  * A title match never crosses URLs: where both recipes carry one and they
@@ -256,7 +207,7 @@ export async function recipeExistsByUrlForPolicy(
  * Returns the existing recipe ID if found, null otherwise.
  */
 export async function findExistingRecipe(
-  userIds: string[],
+  householdId: string,
   url: string | null | undefined,
   title: string,
   notByName: readonly string[] = []
@@ -266,7 +217,7 @@ export async function findExistingRecipe(
   // First try to find by URL if provided (most reliable)
   if (trimmedUrl) {
     const byUrl = await db.query.recipes.findFirst({
-      where: and(inArray(recipes.userId, userIds), eq(recipes.url, trimmedUrl)),
+      where: and(eq(recipes.householdId, householdId), eq(recipes.url, trimmedUrl)),
       columns: { id: true },
     });
 
@@ -283,7 +234,7 @@ export async function findExistingRecipe(
   if (trimmedTitle) {
     const byTitle = await db.query.recipes.findFirst({
       where: and(
-        inArray(recipes.userId, userIds),
+        eq(recipes.householdId, householdId),
         ilike(recipes.name, trimmedTitle),
         // Any URL a stored recipe carries here differs from this one, or the
         // URL lookup above would have found it.
@@ -309,63 +260,59 @@ export async function findExistingRecipe(
   return null;
 }
 
+/** Who is reading: the account and the household it is in. */
 export interface RecipeListContext {
   userId: string;
-  householdUserIds: readonly string[] | null;
-  isServerAdmin: boolean;
+  householdId: string;
 }
 
-/**
- * Build the SQL condition the recipe permission policy puts on an owner
- * column, for whichever of its three levels the caller is asking about.
- *
- * A row with a null owner — an Orphaned recipe, or an Orphaned cookbook — is
- * always included, at every level and for every action, which is the same
- * answer `assertRecipeAccess` gives one row at a time.
- *
- * The owner column is a parameter because cookbooks answer to this same
- * policy rather than a rule of their own (ADR-0027): a cookbook is exactly as
- * visible as the recipes its owner could see, so the two conditions have to
- * come from one place or they will drift.
- */
-export async function buildOwnerPolicyCondition(
-  ctx: RecipeListContext,
-  ownerColumn: AnyPgColumn,
-  action: PolicyAction = "view"
+/** The Permission Policy's rule (`policyReach`) as SQL on a recipe's or cookbook's household
+ * column (ADR-0027); a hidden row reads as a missing one. */
+export async function buildPolicyCondition(
+  ctx: Pick<RecipeListContext, "householdId">,
+  householdColumn: AnyPgColumn,
+  action: PolicyAction = "view",
+  executor: Db = db
 ) {
-  const level = await getRecipePolicyLevel(action);
+  const reach = policyReach(await getRecipePermissionPolicy(executor), action, ctx.householdId);
 
-  // Server admin sees all
-  if (ctx.isServerAdmin) {
-    return undefined;
-  }
-
-  const ownOrOrphaned = () => or(eq(ownerColumn, ctx.userId), sql`${ownerColumn} IS NULL`);
-
-  switch (level) {
-    case "everyone":
-      // No filtering needed
-      return undefined;
-
-    case "household":
-      // Own rows + household members' rows + orphaned rows (null owner)
-      return or(inArray(ownerColumn, viewerAndHouseholdIds(ctx)), sql`${ownerColumn} IS NULL`);
-
-    case "owner":
-      // Only own rows + orphaned rows (null owner)
-      return ownOrOrphaned();
-
-    default:
-      return ownOrOrphaned();
-  }
+  return reach === null ? undefined : eq(householdColumn, reach);
 }
 
-/**
- * The recipe list's own view-policy condition — `buildOwnerPolicyCondition`
- * pointed at `recipes.userId`.
- */
+/** The view condition for an account read by its id, in the household it is in now. */
+export async function accountViewCondition(userId: string, householdColumn: AnyPgColumn) {
+  const [current] = await currentHouseholdIdSql(userId);
+
+  return current ? buildPolicyCondition(current, householdColumn) : sql`false`;
+}
+
+/** A recipe with this URL the account may view now, for an import to end on instead. */
+export async function findRecipeIdByUrlForAccount(
+  url: string,
+  userId: string
+): Promise<string | null> {
+  const [row] = await db
+    .select({ id: recipes.id })
+    .from(recipes)
+    .where(and(eq(recipes.url, url), await accountViewCondition(userId, recipes.householdId)))
+    .limit(1);
+
+  return row?.id ?? null;
+}
+
+/** Whether the account, in its household now, may view the recipe. */
+export async function accountCanViewRecipe(userId: string, recipeId: string): Promise<boolean> {
+  const [row] = await db
+    .select({ id: recipes.id })
+    .from(recipes)
+    .where(and(eq(recipes.id, recipeId), await accountViewCondition(userId, recipes.householdId)));
+
+  return row !== undefined;
+}
+
+/** The recipe list's own view condition. */
 async function buildViewPolicyCondition(ctx: RecipeListContext) {
-  return buildOwnerPolicyCondition(ctx, recipes.userId, "view");
+  return buildPolicyCondition(ctx, recipes.householdId, "view");
 }
 
 /**
@@ -406,11 +353,8 @@ export function searchTsqueryTerms(search: string): string | null {
  * there is nothing to search for, either because no term survived
  * sanitisation or because the reader unticked every field.
  *
- * Every reference is spelled `"recipes"."…"` by hand for the same reason
- * PRIMARY_IMAGE_SQL is: an interpolated drizzle column renders unqualified,
- * which resolves to the wrong table inside a correlated subquery and silently
- * matches nothing. The explicit spelling is what lets one builder serve both
- * the recipe list and the Library union.
+ * The correlated parts are builder subqueries, so `"recipes"."id"` renders qualified
+ * in both the recipe list and the Library union.
  */
 export function recipeSearchSql(
   search: string | undefined,
@@ -427,39 +371,36 @@ export function recipeSearchSql(
   for (const field of searchFields) {
     switch (field) {
       case "title":
-        parts.push(sql`setweight(to_tsvector('simple', coalesce("recipes"."name", '')), 'A')`);
+        parts.push(sql`setweight(to_tsvector('simple', coalesce(${recipes.name}, '')), 'A')`);
         break;
       case "tags":
         parts.push(
-          sql`setweight(to_tsvector('simple', coalesce((
-            SELECT string_agg(search_tag.name, ' ')
-            FROM ${recipeTags} search_rt
-            INNER JOIN ${tags} search_tag ON search_rt.tag_id = search_tag.id
-            WHERE search_rt.recipe_id = "recipes"."id"
-          ), '')), 'B')`
+          sql`setweight(to_tsvector('simple', coalesce(${qb
+            .select({ text: sql`string_agg(${searchTag.name}, ' ')` })
+            .from(searchTagLink)
+            .innerJoin(searchTag, eq(searchTagLink.tagId, searchTag.id))
+            .where(eq(searchTagLink.recipeId, recipes.id))}, '')), 'B')`
         );
         break;
       case "ingredients":
         parts.push(
-          sql`setweight(to_tsvector('simple', coalesce((
-            SELECT string_agg(search_ri.name, ' ')
-            FROM ${recipeIngredients} search_ri
-            WHERE search_ri.recipe_id = "recipes"."id"
-          ), '')), 'C')`
+          sql`setweight(to_tsvector('simple', coalesce(${qb
+            .select({ text: sql`string_agg(${searchLine.name}, ' ')` })
+            .from(searchLine)
+            .where(eq(searchLine.recipeId, recipes.id))}, '')), 'C')`
         );
         break;
       case "description":
         parts.push(
-          sql`setweight(to_tsvector('simple', coalesce("recipes"."description", '')), 'D')`
+          sql`setweight(to_tsvector('simple', coalesce(${recipes.description}, '')), 'D')`
         );
         break;
       case "steps":
         parts.push(
-          sql`setweight(to_tsvector('simple', coalesce((
-            SELECT string_agg(search_step.step, ' ')
-            FROM ${stepsTable} search_step
-            WHERE search_step.recipe_id = "recipes"."id"
-          ), '')), 'D')`
+          sql`setweight(to_tsvector('simple', coalesce(${qb
+            .select({ text: sql`string_agg(${searchStep.step}, ' ')` })
+            .from(searchStep)
+            .where(eq(searchStep.recipeId, recipes.id))}, '')), 'D')`
         );
         break;
     }
@@ -486,6 +427,7 @@ export function recipeSearchSql(
 const DASHBOARD_COLUMNS = {
   id: true,
   userId: true,
+  householdId: true,
   name: true,
   description: true,
   notes: true,
@@ -521,7 +463,8 @@ const DASHBOARD_WITH = {
 
 type DashboardRow = {
   id: string;
-  userId: string | null;
+  userId: string;
+  householdId: string;
   name: string;
   description: string | null;
   notes: string | null;
@@ -550,6 +493,7 @@ function toDashboardRecipe(r: DashboardRow) {
   return {
     id: r.id,
     userId: r.userId,
+    householdId: r.householdId,
     name: r.name,
     description: r.description ?? null,
     notes: r.notes ?? null,
@@ -596,7 +540,13 @@ export async function listRecipes(
    * Library applies, which is what makes a cookbook's count and its list
    * agree by construction (ADR-0027).
    */
-  options?: { cookbookId?: string; favoritesOnly?: boolean; pantryOnly?: boolean }
+  options?: {
+    cookbookId?: string;
+    favoritesOnly?: boolean;
+    pantryOnly?: boolean;
+    /** With `pantryOnly`, the lines read through the reader's catalogue (`lineReadingsOf`). */
+    lineReadings?: LineReadings;
+  }
 ): Promise<{ recipes: RecipeDashboardDTO[]; total: number }> {
   const whereConditions: any[] = [];
 
@@ -611,16 +561,20 @@ export async function listRecipes(
     // Same clause the Library union applies, so the favourites toggle means
     // the same thing inside a cookbook as it does on the Library.
     whereConditions.push(
-      sql`EXISTS (
-        SELECT 1 FROM ${recipeFavorites} AS favorite
-        WHERE favorite.recipe_id = "recipes"."id" AND favorite.user_id = ${ctx.userId}
-      )`
+      exists(
+        qb
+          .select({ recipeId: recipeFavorites.recipeId })
+          .from(recipeFavorites)
+          .where(
+            and(eq(recipeFavorites.recipeId, recipes.id), eq(recipeFavorites.userId, ctx.userId))
+          )
+      )
     );
   }
 
   // Members with something at home, most complete first, as the Library orders them.
   const pantryCoverage = options?.pantryOnly
-    ? pantryCoverageSql(viewerAndHouseholdIds(ctx))
+    ? pantryCoverageSql(ctx.householdId, options.lineReadings)
     : undefined;
 
   if (pantryCoverage) {
@@ -628,15 +582,18 @@ export async function listRecipes(
   }
 
   if (options?.cookbookId) {
-    // `"recipes"."id"` by hand: drizzle renders an interpolated column
-    // unqualified, and inside this subquery an unqualified `"id"` would
-    // resolve to the membership table's own column.
     whereConditions.push(
-      sql`EXISTS (
-        SELECT 1 FROM ${cookbookRecipes} AS membership
-        WHERE membership.cookbook_id = ${options.cookbookId}
-          AND membership.recipe_id = "recipes"."id"
-      )`
+      exists(
+        qb
+          .select({ recipeId: cookbookRecipes.recipeId })
+          .from(cookbookRecipes)
+          .where(
+            and(
+              eq(cookbookRecipes.cookbookId, options.cookbookId),
+              eq(cookbookRecipes.recipeId, recipes.id)
+            )
+          )
+      )
     );
   }
 
@@ -650,44 +607,19 @@ export async function listRecipes(
     searchRank = searchSql.rank;
   }
 
-  let tagFilteredIds: string[] | undefined;
-
   if (tagNames?.length) {
-    const normalizedTags = tagNames.map((t) => t.toLowerCase());
-    const tagRelations = await db.query.recipeTags.findMany({
-      columns: { recipeId: true },
-      with: { tag: { columns: { name: true } } },
-    });
-
-    const recipeTagMap = new Map<string, Set<string>>();
-
-    for (const rel of tagRelations) {
-      const tagName = rel.tag?.name?.toLowerCase();
-
-      if (!tagName) continue;
-      if (!recipeTagMap.has(rel.recipeId)) {
-        recipeTagMap.set(rel.recipeId, new Set());
-      }
-      recipeTagMap.get(rel.recipeId)!.add(tagName);
-    }
-
-    tagFilteredIds = Array.from(recipeTagMap.entries())
-      .filter(([_, tagSet]) =>
-        filterMode === "AND"
-          ? normalizedTags.every((t) => tagSet.has(t))
-          : normalizedTags.some((t) => tagSet.has(t))
+    // Across households a Tag filter matches on the folded name (ADR-0043).
+    whereConditions.push(
+      recipeCarriesFoldsSql(
+        "tag",
+        tagNames,
+        filterMode === "AND" ? new Set(tagNames.map(entryFold)).size : 1
       )
-      .map(([recipeId]) => recipeId);
-
-    if (!tagFilteredIds.length) {
-      return { recipes: [], total: 0 };
-    }
-
-    whereConditions.push(inArray(recipes.id, tagFilteredIds));
+    );
   }
 
   if (categories?.length) {
-    whereConditions.push(recipeInAnyCategorySql(categories));
+    whereConditions.push(recipeCarriesFoldsSql("category", categories));
   }
 
   if (maxCookingTime !== undefined) {
@@ -835,6 +767,7 @@ export async function dashboardRecipe(id: string): Promise<RecipeDashboardDTO | 
   const dto = {
     id: r.id,
     userId: r.userId,
+    householdId: r.householdId,
     name: r.name,
     description: r.description ?? null,
     notes: r.notes ?? null,
@@ -882,10 +815,34 @@ export type CreateRecipeResult =
  */
 export type WithIngredientResolutions<T> = T & { ingredientResolutions: IngredientResolutions };
 
+/** The Tag and Category folds a recipe write creates entries of, in one sorted call before any
+ * list row, so two writes naming the same new Tag and Category cannot deadlock. */
+function lockRecipeEntryFoldsTx(
+  tx: DbTransaction,
+  payload: { tags?: readonly { name: string }[]; categories?: readonly string[] },
+  entryOptions: EntryWriteOptions
+) {
+  if (entryOptions.createEntries === false) return;
+
+  return lockEntryNamesTx(tx, {
+    tag: payload.tags?.map((tag) => tag.name),
+    category: payload.categories && categoryNamesToWrite(payload.categories, entryOptions),
+  });
+}
+
+/** The files a recipe's gallery rows name: images, videos and their thumbnails. */
+function galleryMedia(
+  images: ReadonlyArray<{ image: string }> = [],
+  videos: ReadonlyArray<{ video: string; thumbnail?: string | null }> = []
+): Array<string | null | undefined> {
+  return [...images.map((i) => i.image), ...videos.flatMap((v) => [v.video, v.thumbnail])];
+}
+
 export async function createRecipeWithRefs(
   recipeId: string,
-  userId: string | null | undefined,
-  input: WithIngredientResolutions<FullRecipeInsertDTO>
+  userId: string,
+  input: WithIngredientResolutions<FullRecipeInsertDTO>,
+  entryOptions: EntryWriteOptions = {}
 ): Promise<CreateRecipeResult | null> {
   const resolutions = input.ingredientResolutions;
   const parsed = FullRecipeInsertSchema.safeParse(input);
@@ -941,13 +898,13 @@ export async function createRecipeWithRefs(
       });
 
       if (sameId) {
-        if (sameId.userId !== (userId ?? null)) throw new Error("Recipe id is already taken");
+        if (sameId.userId !== userId) throw new TakenIdError();
 
         return { status: "existing", recipeId };
       }
 
       const existing = await tx.query.recipes.findFirst({
-        where: and(eq(recipes.url, toInsert.url!), eq(recipes.userId, userId ?? "")),
+        where: and(eq(recipes.url, toInsert.url!), eq(recipes.userId, userId)),
         columns: { id: true },
       });
 
@@ -960,20 +917,24 @@ export async function createRecipeWithRefs(
 
     const rid = inserted.id;
 
+    await lockRecipeHouseholdsTx(tx, { recipeIds: [rid] });
+    await lockRecipeEntryFoldsTx(tx, payload, entryOptions);
     if (payload.tags.length) {
-      await attachTagsToRecipeByInputTx(
+      await replaceRecipeEntriesByNameTx(
         tx,
+        "tag",
         rid,
-        payload.tags.map((t) => t.name)
+        payload.tags.map((t) => t.name),
+        entryOptions
       );
     }
 
     if (payload.cuisines.length) {
-      await replaceRecipeCuisinesTx(tx, rid, payload.cuisines);
+      await replaceRecipeEntryIdsTx(tx, "cuisine", rid, payload.cuisines);
     }
 
     if (payload.categories.length) {
-      await attachCategoriesToRecipeByInputTx(tx, rid, payload.categories);
+      await attachCategoriesToRecipeByInputTx(tx, rid, payload.categories, entryOptions);
     }
 
     if (payload.recipeIngredients.length) {
@@ -1000,6 +961,8 @@ export async function createRecipeWithRefs(
 
     // Insert gallery images, which hold a recipe's pictures.
     const galleryImages = payload.images ?? [];
+
+    assertOwnRecipeMedia(rid, { gallery: galleryMedia(galleryImages, payload.videos) });
 
     if (galleryImages.length > 0) {
       await tx.insert(recipeImages).values(
@@ -1031,28 +994,40 @@ export async function createRecipeWithRefs(
   return result;
 }
 
+type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+/** Switches a recipe to `system`, only while it is at `version` when one is given; whether a row
+ * moved. `originalFrom` becomes the original system if none was recorded. */
+async function switchSystemTx(
+  tx: typeof db | Transaction,
+  recipeId: string,
+  system: MeasurementSystem,
+  version?: number,
+  originalFrom?: MeasurementSystem
+): Promise<boolean> {
+  const switched = await tx
+    .update(recipes)
+    .set({
+      systemUsed: system,
+      version: sql`${recipes.version} + 1`,
+      ...(originalFrom && {
+        originalSystem: sql`coalesce(${recipes.originalSystem}, ${originalFrom}::${sql.identifier(measurementSystemEnum.enumName)})`,
+      }),
+    })
+    .where(and(eq(recipes.id, recipeId), version ? eq(recipes.version, version) : undefined))
+    .returning({ id: recipes.id });
+
+  return switched.length > 0;
+}
+
 export async function setActiveSystemForRecipe(
   recipeId: string,
   system: MeasurementSystem,
   version?: number
 ): Promise<MutationOutcome<void>> {
-  const whereConditions = [eq(recipes.id, recipeId)];
+  const switched = await switchSystemTx(db, recipeId, system, version);
 
-  if (version) {
-    whereConditions.push(eq(recipes.version, version));
-  }
-
-  const updated = await db
-    .update(recipes)
-    .set({ systemUsed: system, version: sql`${recipes.version} + 1` })
-    .where(and(...whereConditions))
-    .returning({ id: recipes.id });
-
-  if (updated.length === 0 && version) {
-    return staleOutcome();
-  }
-
-  return appliedOutcome(undefined);
+  return !switched && version ? staleOutcome() : appliedOutcome(undefined);
 }
 
 export async function updateRecipeCategories(
@@ -1067,6 +1042,7 @@ export async function updateRecipeCategories(
   }
 
   return await db.transaction(async (tx) => {
+    await lockRecipeHouseholdsTx(tx, { recipeIds: [recipeId] });
     const updated = await tx
       .update(recipes)
       .set({ updatedAt: new Date(), version: sql`${recipes.version} + 1` })
@@ -1083,27 +1059,18 @@ export async function updateRecipeCategories(
   });
 }
 
-/**
- * Every recipe on the server, with the context Recipe Enrichment enrollment
- * needs: the owning user and that user's household. Both are null when the
- * owner's account has been deleted. The schema permits a user in several
- * households; DISTINCT ON keeps one row per recipe, because enrollment needs
- * a household for the recipe, not all of them.
- */
+/** Every recipe on the server, with its Owner and household, for Recipe Enrichment enrollment. */
 export async function getAllRecipesForEnrichment(): Promise<
-  { recipeId: string; userId: string | null; householdId: string | null }[]
+  { recipeId: string; userId: string; householdId: string }[]
 > {
-  const rows = await db
-    .selectDistinctOn([recipes.id], {
+  return await db
+    .select({
       recipeId: recipes.id,
       userId: recipes.userId,
-      householdId: householdUsers.householdId,
+      householdId: recipes.householdId,
     })
     .from(recipes)
-    .leftJoin(householdUsers, eq(householdUsers.userId, recipes.userId))
     .orderBy(recipes.id);
-
-  return rows;
 }
 
 /**
@@ -1181,6 +1148,7 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
       originCountryName: true,
       originRegion: true,
       provenanceNote: true,
+      householdId: true,
       createdAt: true,
       updatedAt: true,
       version: true,
@@ -1276,6 +1244,7 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
   const dto = {
     id: full.id,
     userId: full.userId,
+    householdId: full.householdId,
     name: full.name,
     description: full.description ?? null,
     notes: full.notes ?? null,
@@ -1377,20 +1346,22 @@ export async function getRecipeFull(id: string): Promise<FullRecipeDTO | null> {
   return parsed.data;
 }
 
-/**
- * Write a recipe's converted copy: the lines and steps it holds in the
- * target system go, these take their place, and the system converted from is
- * recorded as the original if nothing was yet. A conversion with AI writes
- * over an earlier copy this way; the original is never the target.
- */
+/** Writes a recipe's converted copy over any in the target system and switches to it, only while
+ * the recipe is at `version`; the system converted from becomes the original if none was. */
 export async function writeConvertedCopy(
   recipeId: string,
   conversion: { from: MeasurementSystem; to: MeasurementSystem },
+  version: number,
   steps: StepInsertWithImages[],
   ingredients: RecipeIngredientInsertDto[],
   resolutions: IngredientResolutions
-): Promise<{ steps: StepDto[]; ingredients: RecipeIngredientsDto[] }> {
+): Promise<MutationOutcome<void>> {
   return db.transaction(async (tx) => {
+    // The household before the row, as a leave takes them; the version check then keeps an edit's lines.
+    await lockRecipeHouseholdsTx(tx, { recipeIds: [recipeId] });
+    if (!(await switchSystemTx(tx, recipeId, conversion.to, version, conversion.from)))
+      return staleOutcome();
+
     await tx
       .delete(recipeIngredients)
       .where(
@@ -1402,14 +1373,9 @@ export async function writeConvertedCopy(
     await tx
       .delete(stepsTable)
       .where(and(eq(stepsTable.recipeId, recipeId), eq(stepsTable.systemUsed, conversion.to)));
-    await tx
-      .update(recipes)
-      .set({
-        originalSystem: sql`coalesce(${recipes.originalSystem}, ${conversion.from}::measurement_system)`,
-      })
-      .where(eq(recipes.id, recipeId));
+    await addStepsAndIngredientsTx(tx, steps, ingredients, resolutions);
 
-    return addStepsAndIngredientsTx(tx, steps, ingredients, resolutions);
+    return appliedOutcome(undefined);
   });
 }
 
@@ -1509,9 +1475,11 @@ async function syncRecipeIngredientsTx(
 
 async function syncStepImagesTx(
   tx: any,
+  recipeId: string,
   stepId: string,
   images: Array<{ id?: string; image: string; order?: unknown; version?: number }>
 ): Promise<void> {
+  assertOwnRecipeMedia(recipeId, { steps: images.map((image) => image.image) });
   const existing = await tx
     .select({ id: stepImages.id })
     .from(stepImages)
@@ -1583,7 +1551,7 @@ async function syncRecipeStepsTx(
         .update(stepsTable)
         .set({ ...values, version: sql`${stepsTable.version} + 1` })
         .where(eq(stepsTable.id, existingStep.id));
-      await syncStepImagesTx(tx, existingStep.id, step.images ?? []);
+      await syncStepImagesTx(tx, recipeId, existingStep.id, step.images ?? []);
       await syncStepIngredientsTx(tx, existingStep.id, step.stepIngredients ?? [], lineIdByOrder);
       continue;
     }
@@ -1594,7 +1562,7 @@ async function syncRecipeStepsTx(
       .returning({ id: stepsTable.id });
 
     if (insertedStep) {
-      await syncStepImagesTx(tx, insertedStep.id, step.images ?? []);
+      await syncStepImagesTx(tx, recipeId, insertedStep.id, step.images ?? []);
       await syncStepIngredientsTx(tx, insertedStep.id, step.stepIngredients ?? [], lineIdByOrder);
     }
   }
@@ -1611,6 +1579,7 @@ async function syncRecipeImagesTx(
   recipeId: string,
   images: NonNullable<FullRecipeUpdateDTO["images"]>
 ): Promise<void> {
+  assertOwnRecipeMedia(recipeId, { gallery: galleryMedia(images) });
   const existing = await tx
     .select({ id: recipeImages.id })
     .from(recipeImages)
@@ -1653,6 +1622,7 @@ async function syncRecipeVideosTx(
   recipeId: string,
   videos: NonNullable<FullRecipeUpdateDTO["videos"]>
 ): Promise<void> {
+  assertOwnRecipeMedia(recipeId, { gallery: galleryMedia([], videos) });
   const existing = await tx
     .select({ id: recipeVideos.id })
     .from(recipeVideos)
@@ -1689,11 +1659,15 @@ async function syncRecipeVideosTx(
   }
 }
 
+/** An editor's save named an entry its recipe's lists no longer have: they changed under it. */
+class ListsChangedError extends Error {}
+
 export async function updateRecipeWithRefs(
   recipeId: string,
   userId: string,
   input: WithIngredientResolutions<FullRecipeUpdateDTO>,
-  version?: number
+  version?: number,
+  entryOptions: EntryWriteOptions = {}
 ): Promise<MutationOutcome<number | null>> {
   const resolutions = input.ingredientResolutions;
   const parsed = FullRecipeUpdateSchema.safeParse(input);
@@ -1703,8 +1677,14 @@ export async function updateRecipeWithRefs(
   }
 
   const payload = parsed.data;
+  // An editor attaches only what its lists hold, so an entry gone means it saved from an old list.
+  const attached = (missing: number) => {
+    if (missing > 0 && entryOptions.createEntries === false) throw new ListsChangedError();
+  };
 
-  return await db.transaction(async (tx) => {
+  const written = db.transaction(async (tx): Promise<MutationOutcome<number | null>> => {
+    // The household first, as a leave or join locks it before the recipe row.
+    await lockRecipeHouseholdsTx(tx, { recipeIds: [recipeId] });
     // Update recipe base fields
     const updateData: any = {};
 
@@ -1758,23 +1738,30 @@ export async function updateRecipeWithRefs(
       return staleOutcome();
     }
 
+    await lockRecipeEntryFoldsTx(tx, payload, entryOptions);
     // Replace Cuisines if provided. An empty array is an editor clearing them,
     // which is deliberately distinct from an enrichment run writing nothing.
     if (payload.cuisines !== undefined) {
-      await replaceRecipeCuisinesTx(tx, recipeId, payload.cuisines);
+      attached(await replaceRecipeEntryIdsTx(tx, "cuisine", recipeId, payload.cuisines));
     }
 
-    // An empty list leaves the Categories alone, as it always has.
-    if (payload.categories?.length) {
-      await attachCategoriesToRecipeByInputTx(tx, recipeId, payload.categories);
+    // Replace Categories if provided: an empty list clears them, as it does Tags and Cuisines.
+    if (payload.categories !== undefined) {
+      attached(
+        await attachCategoriesToRecipeByInputTx(tx, recipeId, payload.categories, entryOptions)
+      );
     }
 
     // Replace tags if provided
     if (payload.tags !== undefined) {
-      await attachTagsToRecipeByInputTx(
-        tx,
-        recipeId,
-        payload.tags.map((t) => t.name)
+      attached(
+        await replaceRecipeEntriesByNameTx(
+          tx,
+          "tag",
+          recipeId,
+          payload.tags.map((t) => t.name),
+          entryOptions
+        )
       );
     }
 
@@ -1853,6 +1840,11 @@ export async function updateRecipeWithRefs(
     // The version this write stored, so a client can send its next edit on top of it.
     return appliedOutcome(updatedRecipeRow?.version ?? null);
   });
+
+  return written.catch((error: unknown) => {
+    if (error instanceof ListsChangedError) return staleOutcome<number | null>();
+    throw error;
+  });
 }
 
 export interface RandomRecipeCandidate {
@@ -1877,12 +1869,12 @@ export async function getRandomRecipeCandidates(
   }
 
   if (category) {
-    whereConditions.push(recipeInAnyCategorySql([category]));
+    whereConditions.push(recipeCarriesFoldsSql("category", [category]));
   }
 
   const whereClause = whereConditions.length ? and(...whereConditions) : undefined;
 
-  const householdUserIds = ctx.householdUserIds ?? [ctx.userId];
+  const members = householdMemberIdsSql(ctx.householdId);
 
   const rows = await db
     .select({
@@ -1909,10 +1901,7 @@ export async function getRandomRecipeCandidates(
       })
       .from(recipeFavorites)
       .where(
-        and(
-          inArray(recipeFavorites.recipeId, recipeIds),
-          inArray(recipeFavorites.userId, householdUserIds)
-        )
+        and(inArray(recipeFavorites.recipeId, recipeIds), inArray(recipeFavorites.userId, members))
       )
       .groupBy(recipeFavorites.recipeId),
 
@@ -1923,10 +1912,7 @@ export async function getRandomRecipeCandidates(
       })
       .from(recipeRatings)
       .where(
-        and(
-          inArray(recipeRatings.recipeId, recipeIds),
-          inArray(recipeRatings.userId, householdUserIds)
-        )
+        and(inArray(recipeRatings.recipeId, recipeIds), inArray(recipeRatings.userId, members))
       )
       .groupBy(recipeRatings.recipeId),
   ]);
@@ -1983,6 +1969,7 @@ export async function addRecipeImages(
   recipeId: string,
   images: RecipeImageInput[]
 ): Promise<{ id: string; image: string; order: number; version: number }[]> {
+  assertOwnRecipeMedia(recipeId, { gallery: galleryMedia(images) });
   if (!images.length) return [];
 
   const inserted = await db
@@ -2091,6 +2078,8 @@ export async function replaceRecipeImages(
   recipeId: string,
   images: RecipeImageInput[]
 ): Promise<{ id: string; image: string; order: number; version: number }[]> {
+  assertOwnRecipeMedia(recipeId, { gallery: galleryMedia(images) });
+
   return db.transaction(async (tx) => {
     // Delete existing images
     await tx.delete(recipeImages).where(eq(recipeImages.recipeId, recipeId));
@@ -2172,6 +2161,7 @@ export async function addRecipeVideos(
     version: number;
   }[]
 > {
+  assertOwnRecipeMedia(recipeId, { gallery: galleryMedia([], videos) });
   if (!videos.length) return [];
 
   const inserted = await db
@@ -2306,6 +2296,8 @@ export async function replaceRecipeVideos(
     version: number;
   }[]
 > {
+  assertOwnRecipeMedia(recipeId, { gallery: galleryMedia([], videos) });
+
   return db.transaction(async (tx) => {
     // Delete existing videos
     await tx.delete(recipeVideos).where(eq(recipeVideos.recipeId, recipeId));
@@ -2342,6 +2334,25 @@ export async function replaceRecipeVideos(
       version: row.version,
     }));
   });
+}
+
+/** Whether a gallery image or video row (its file or thumbnail) still names this media URL. */
+export async function isRecipeMediaReferenced(url: string): Promise<boolean> {
+  const [image] = await db
+    .select({ id: recipeImages.id })
+    .from(recipeImages)
+    .where(eq(recipeImages.image, url))
+    .limit(1);
+
+  if (image) return true;
+
+  const [video] = await db
+    .select({ id: recipeVideos.id })
+    .from(recipeVideos)
+    .where(or(eq(recipeVideos.video, url), eq(recipeVideos.thumbnail, url)))
+    .limit(1);
+
+  return video !== undefined;
 }
 
 /**

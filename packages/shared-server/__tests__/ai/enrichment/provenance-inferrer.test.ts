@@ -13,7 +13,8 @@
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createCuisines, listCuisines } from "@norish/db/repositories/cuisines";
+import { cuisinesForNames } from "@norish/db/repositories/cuisines";
+import { listEntryRows } from "@norish/db/repositories/list-entries";
 import {
   AIDisabledError,
   AIProviderError,
@@ -23,6 +24,7 @@ import {
   getCuisineStrategy,
   isDecisionUseEnabled,
 } from "@norish/shared-server/config/server-config-loader";
+import { announceListsChanged } from "@norish/shared-server/realtime/list-changes";
 
 const mocked = vi.hoisted(() => ({
   generateStructured: vi.fn(),
@@ -40,10 +42,10 @@ vi.mock("@norish/shared-server/ai/enrichment/verification", async (importOrigina
   verifyClaims: mocked.verifyClaims,
 }));
 
-vi.mock("@norish/db/repositories/cuisines", () => ({
-  listCuisines: vi.fn(),
-  createCuisines: vi.fn(),
-}));
+vi.mock("@norish/db/repositories/cuisines", () => ({ cuisinesForNames: vi.fn() }));
+vi.mock("@norish/db/repositories/list-entries", () => ({ listEntryRows: vi.fn() }));
+
+vi.mock("@norish/shared-server/realtime/list-changes", () => ({ announceListsChanged: vi.fn() }));
 
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   getCuisineStrategy: vi.fn(),
@@ -58,12 +60,14 @@ const { inferRecipeProvenance, countryChoiceCriteria, CUISINE_THRESHOLD, NO_COUN
   await import("@norish/shared-server/ai/enrichment/provenance-inferrer");
 
 const ITALIAN_RECIPE = {
+  householdId: "household-1",
   title: "Cacio e Pepe",
   description: "Un primo piatto romano",
   ingredients: ["spaghetti", "pecorino romano", "pepe nero"],
 };
 
 const DUTCH_RECIPE = {
+  householdId: "household-1",
   title: "Stamppot boerenkool",
   description: "Een Hollandse winterklassieker",
   ingredients: ["aardappelen", "boerenkool", "rookworst"],
@@ -98,8 +102,8 @@ function sentRequest(): CapturedRequest {
 beforeEach(() => {
   vi.mocked(getCuisineStrategy).mockResolvedValue("existing");
   vi.mocked(isDecisionUseEnabled).mockResolvedValue(false);
-  vi.mocked(listCuisines).mockResolvedValue(VOCABULARY);
-  vi.mocked(createCuisines).mockResolvedValue([]);
+  vi.mocked(listEntryRows).mockResolvedValue(VOCABULARY);
+  vi.mocked(cuisinesForNames).mockResolvedValue([]);
   // Validation keeps everything unless a test says otherwise.
   mocked.verifyClaims.mockImplementation(({ claims }: { claims: { id: string }[] }) =>
     Promise.resolve({ kept: claims, dropped: [], mode: "off" })
@@ -112,7 +116,7 @@ describe("inferRecipeProvenance", () => {
     mocked.generateStructured.mockRejectedValue(new AIDisabledError());
 
     await expect(inferRecipeProvenance(ITALIAN_RECIPE)).rejects.toBeInstanceOf(AIDisabledError);
-    expect(createCuisines).not.toHaveBeenCalled();
+    expect(cuisinesForNames).not.toHaveBeenCalled();
   });
 
   it("refuses a recipe with no ingredients", async () => {
@@ -239,7 +243,7 @@ describe("inferRecipeProvenance", () => {
     );
 
     await expect(inferRecipeProvenance(ITALIAN_RECIPE)).rejects.toBeInstanceOf(AIResponseError);
-    expect(createCuisines).not.toHaveBeenCalled();
+    expect(cuisinesForNames).not.toHaveBeenCalled();
   });
 
   it("fails without writing when the response carries no usable note", async () => {
@@ -247,7 +251,7 @@ describe("inferRecipeProvenance", () => {
     respondWith({ originCountry: "IT", originRegion: null, cuisines: [], provenanceNote: "   " });
 
     await expect(inferRecipeProvenance(ITALIAN_RECIPE)).rejects.toBeInstanceOf(AIResponseError);
-    expect(createCuisines).not.toHaveBeenCalled();
+    expect(cuisinesForNames).not.toHaveBeenCalled();
   });
 
   it("lets a retryable provider failure out for the queue to retry", async () => {
@@ -371,7 +375,7 @@ describe("Cuisines", () => {
     await inferRecipeProvenance(ITALIAN_RECIPE);
 
     // Not from a compile-time enum: whatever the administrator has right now.
-    expect(listCuisines).toHaveBeenCalled();
+    expect(listEntryRows).toHaveBeenCalledWith("cuisine", "household-1");
     expect(describeCuisineField()).toContain("Italian, Japanese, Dutch");
   });
 
@@ -434,7 +438,7 @@ describe("Cuisines", () => {
     const claim = await inferRecipeProvenance(ITALIAN_RECIPE);
 
     expect(claim.cuisineIds).toEqual(["id-italian"]);
-    expect(createCuisines).not.toHaveBeenCalled();
+    expect(cuisinesForNames).not.toHaveBeenCalled();
   });
 
   it("drops an unmatched name under the existing strategy without creating a row", async () => {
@@ -448,12 +452,12 @@ describe("Cuisines", () => {
     const claim = await inferRecipeProvenance(ITALIAN_RECIPE);
 
     expect(claim.cuisineIds).toEqual(["id-italian"]);
-    expect(createCuisines).not.toHaveBeenCalled();
+    expect(cuisinesForNames).not.toHaveBeenCalled();
   });
 
   it("creates an unmatched name under the extend strategy", async () => {
     vi.mocked(getCuisineStrategy).mockResolvedValue("extend");
-    vi.mocked(createCuisines).mockResolvedValue([
+    vi.mocked(cuisinesForNames).mockResolvedValue([
       { id: "id-basque", name: "Basque", createdAt: new Date(), version: 1 },
     ]);
     respondWith({
@@ -465,7 +469,8 @@ describe("Cuisines", () => {
 
     const claim = await inferRecipeProvenance(ITALIAN_RECIPE);
 
-    expect(createCuisines).toHaveBeenCalledWith(["Basque"]);
+    expect(cuisinesForNames).toHaveBeenCalledWith("household-1", ["Basque"], { create: true });
+    expect(announceListsChanged).toHaveBeenCalledWith("household-1", ["cuisine"]);
     expect(claim.cuisineIds).toEqual(["id-basque"]);
   });
 
@@ -478,7 +483,7 @@ describe("Cuisines", () => {
   });
 
   it("asks for an empty list when the vocabulary is empty", async () => {
-    vi.mocked(listCuisines).mockResolvedValue([]);
+    vi.mocked(listEntryRows).mockResolvedValue([]);
     respondWith({ originCountry: "IT", originRegion: null, cuisines: [], provenanceNote: "Note." });
 
     const claim = await inferRecipeProvenance(ITALIAN_RECIPE);
@@ -581,7 +586,7 @@ describe("the Decision path", () => {
       cuisineIds: ["id-italian"],
     });
     // A settled Cuisine is a vocabulary row already: nothing is resolved or minted.
-    expect(createCuisines).not.toHaveBeenCalled();
+    expect(cuisinesForNames).not.toHaveBeenCalled();
     expect(mocked.verifyClaims).not.toHaveBeenCalled();
   });
 
@@ -716,7 +721,7 @@ describe("the Decision path", () => {
       version: 1,
     }));
 
-    vi.mocked(listCuisines).mockResolvedValue(vocabulary);
+    vi.mocked(listEntryRows).mockResolvedValue(vocabulary);
     mocked.decide.mockImplementation(
       ({ questions }: { questions: Record<string, { type: string }> }) =>
         Promise.resolve({
@@ -742,7 +747,7 @@ describe("the Decision path", () => {
   it("never mints a Cuisine outside the vocabulary on the Decision path", async () => {
     await inferRecipeProvenance(ITALIAN_RECIPE);
 
-    expect(createCuisines).not.toHaveBeenCalled();
+    expect(cuisinesForNames).not.toHaveBeenCalled();
     // The schema did not even ask for Cuisines, so there is nothing to resolve.
     expect(sentRequest().schema.shape).not.toHaveProperty("cuisines");
   });
@@ -750,7 +755,7 @@ describe("the Decision path", () => {
   it("asks only the country under extend, and lets the Decision Model confirm each proposed Cuisine", async () => {
     vi.mocked(getCuisineStrategy).mockResolvedValue("extend");
     mocked.decide.mockResolvedValue(decided({ choice: "ES", probability: 0.9 }, {}));
-    vi.mocked(createCuisines).mockResolvedValue([
+    vi.mocked(cuisinesForNames).mockResolvedValue([
       { id: "id-basque", name: "Basque", createdAt: new Date(), version: 1 },
     ]);
     respondWith({ ...NOTE_ONLY, cuisines: ["Basque", "Japanese"] });
@@ -779,7 +784,7 @@ describe("the Decision path", () => {
         mode: "enforce",
       })
     );
-    expect(createCuisines).toHaveBeenCalledWith(["Basque"]);
+    expect(cuisinesForNames).toHaveBeenCalledWith("household-1", ["Basque"], { create: true });
     expect(claim).toMatchObject({ originCountry: "ES", cuisineIds: ["id-basque"] });
   });
 
@@ -876,7 +881,7 @@ describe("Enrichment Validation of the language model's claims", () => {
 
     const claim = await inferRecipeProvenance(ITALIAN_RECIPE);
 
-    expect(createCuisines).not.toHaveBeenCalled();
+    expect(cuisinesForNames).not.toHaveBeenCalled();
     expect(claim.cuisineIds).toEqual([]);
   });
 
@@ -916,7 +921,7 @@ describe("Enrichment Validation of the language model's claims", () => {
 
     expect(error).toBeInstanceOf(AIResponseError);
     expect((error as AIResponseError).retryable).toBe(true);
-    expect(createCuisines).not.toHaveBeenCalled();
+    expect(cuisinesForNames).not.toHaveBeenCalled();
   });
 
   it("validates nothing when the language model claimed no Cuisines and no country", async () => {

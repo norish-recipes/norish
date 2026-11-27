@@ -3,12 +3,10 @@
  * AI checks the spellings added to seeded foods (ticket 46) against a real database, once, at the
  * first start with AI on; the language model is mocked at `generateStructured`.
  */
-import { asc, eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { CatalogueActor } from "@norish/shared-server/ingredients/catalogue";
-import { ServerConfigKeys } from "@norish/config/zod/server-config";
-import { withTransaction } from "@norish/db/drizzle";
+import { updateGroceries } from "@norish/db/repositories/groceries";
 import { addIngredientAliases } from "@norish/db/repositories/ingredient-aliases";
 import { addToJunkPile, listJunkFolds } from "@norish/db/repositories/ingredient-junk-pile";
 import {
@@ -16,13 +14,6 @@ import {
   listSeededIngredientIds,
 } from "@norish/db/repositories/ingredient-seed";
 import { writeRecipeLineFoodsTx } from "@norish/db/repositories/ingredients";
-import {
-  groceries,
-  ingredientAliases,
-  ingredients,
-  recipeIngredientFoods,
-  serverConfig,
-} from "@norish/db/schema";
 import { decide, generateStructured } from "@norish/shared-server/ai/runtime/runtime";
 import {
   isAIEnabled,
@@ -39,10 +30,20 @@ import { checkSpellingsOf } from "@norish/shared-server/ingredients/spelling-che
 import { ingredientAliasFold } from "@norish/shared/lib/spelling-keys";
 
 import {
+  addTestGrocery,
+  clearTestSeedState,
   createTestRecipe,
-  getTestDb,
+  firstSpellingId,
+  getSpellingTexts,
+  inRepositoryTransaction,
   insertTestRecipeLine,
+  listTestIngredientsNamed,
   mintTestFood,
+  readTestIngredientNamed,
+  setTestIngredients,
+  testGroceryFoods,
+  testHouseholdOf,
+  testLineFoodNames,
 } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 import { seedEntry } from "../helpers/seed-entries";
@@ -101,16 +102,18 @@ describe("AI checks the spellings added to a seeded food", () => {
     const [user] = await testBase.beforeEachTest();
 
     userId = user.id;
-    actor = { userId, householdUserIds: null, isServerAdmin: true };
+    actor = {
+      userId,
+      householdId: testHouseholdOf(userId),
+      isServerAdmin: true,
+    };
     minted.length = 0;
     onIngredientsMinted(async (ids) => void minted.push(...ids));
     vi.mocked(generateStructured).mockReset();
     vi.mocked(decide).mockReset();
     vi.mocked(isAIEnabled).mockReset().mockResolvedValue(true);
     vi.mocked(isDecisionUseEnabled).mockResolvedValue(false);
-    await getTestDb()
-      .delete(serverConfig)
-      .where(eq(serverConfig.key, ServerConfigKeys.INGREDIENT_SEED_STATE));
+    await clearTestSeedState();
     await applyIngredientSeed([
       seedEntry("en:chicken-breast", "chicken breast", "chicken breasts"),
       seedEntry("en:chicken-thigh", "chicken thigh"),
@@ -128,6 +131,7 @@ describe("AI checks the spellings added to a seeded food", () => {
   /** Spellings added to a seeded food, as people and imports add them; by text. */
   async function added(offId: string, ...texts: string[]) {
     const rows = await addIngredientAliases({
+      householdId: actor.householdId,
       ingredientId: seeded.get(offId)!,
       aliases: texts.map((text) => ({ text, fold: ingredientAliasFold(text) })),
       ownerId: userId,
@@ -145,27 +149,11 @@ describe("AI checks the spellings added to a seeded food", () => {
 
   /** The foods a line names, by name, in order. */
   async function lineFoods(lineId: string) {
-    const rows = await getTestDb()
-      .select({ food: ingredients.name, spelling: ingredientAliases.text })
-      .from(recipeIngredientFoods)
-      .innerJoin(
-        ingredientAliases,
-        eq(ingredientAliases.id, recipeIngredientFoods.ingredientAliasId)
-      )
-      .innerJoin(ingredients, eq(ingredients.id, ingredientAliases.ingredientId))
-      .where(eq(recipeIngredientFoods.recipeIngredientId, lineId))
-      .orderBy(asc(recipeIngredientFoods.position));
-
-    return rows;
+    return await testLineFoodNames(lineId);
   }
 
   async function spellingsOf(ingredientId: string) {
-    const rows = await getTestDb()
-      .select({ text: ingredientAliases.text })
-      .from(ingredientAliases)
-      .where(eq(ingredientAliases.ingredientId, ingredientId));
-
-    return rows.map((row) => row.text).sort();
+    return await getSpellingTexts(ingredientId);
   }
 
   /** The sections the last spelling check sent. */
@@ -190,7 +178,7 @@ describe("AI checks the spellings added to a seeded food", () => {
 
     answers({ boneless: "not-a-food", "lbs boneless": "not-a-food", kipfilet: "this-food" });
 
-    const outcome = await checkSpellingsOf(chicken);
+    const outcome = await checkSpellingsOf(actor.householdId, chicken);
 
     expect(outcome).toMatchObject({ outcome: "checked", kept: ["kipfilet"], moved: [] });
     expect(outcome.outcome === "checked" && outcome.removed.sort()).toEqual([
@@ -209,21 +197,16 @@ describe("AI checks the spellings added to a seeded food", () => {
         .sort()
     ).toEqual(["boneless", "kipfilet", "lbs boneless"]);
     expect(await spellingsOf(chicken)).toEqual(["chicken breast", "chicken breasts", "kipfilet"]);
-    expect(await listJunkFolds()).toEqual(expect.arrayContaining(["boneless", "lbs boneless"]));
+    expect(await listJunkFolds(actor.householdId)).toEqual(
+      expect.arrayContaining(["boneless", "lbs boneless"])
+    );
     // The rest of the line names a food; a line that is all junk names none.
     const [commaFood] = await lineFoods(commaLine.id);
 
     // One mint for both lines, its name from whichever spelling went first; AI's pass follows it.
     expect(commaFood?.food).toMatch(/^skinless chicken breasts?$/);
     expect(await lineFoods(lbsLine.id)).toEqual([commaFood]);
-    expect(minted).toContain(
-      (
-        await getTestDb()
-          .select({ id: ingredients.id })
-          .from(ingredients)
-          .where(eq(ingredients.name, commaFood!.food))
-      )[0]!.id
-    );
+    expect(minted).toContain((await readTestIngredientNamed(commaFood!.food))!.id);
     expect(await lineFoods(bareLine.id)).toEqual([]);
     expect(await lineFoods(kipLine.id)).toEqual([{ food: "chicken breast", spelling: "kipfilet" }]);
 
@@ -246,12 +229,12 @@ describe("AI checks the spellings added to a seeded food", () => {
     expect(await lineFoods(bareLine.id)).toEqual([
       { food: "chicken breast", spelling: "boneless" },
     ]);
-    expect(await listJunkFolds()).not.toContain("boneless");
-    expect(await listJunkFolds()).toContain("lbs boneless");
+    expect(await listJunkFolds(actor.householdId)).not.toContain("boneless");
+    expect(await listJunkFolds(actor.householdId)).toContain("lbs boneless");
 
     // An undone removal is never made again, and the check says so.
     answers({ boneless: "not-a-food" });
-    await expect(checkSpellingsOf(chicken)).resolves.toMatchObject({
+    await expect(checkSpellingsOf(actor.householdId, chicken)).resolves.toMatchObject({
       removed: [],
       unchanged: [{ spelling: "boneless", because: "undone" }],
     });
@@ -262,16 +245,21 @@ describe("AI checks the spellings added to a seeded food", () => {
     const chicken = seeded.get("en:chicken-breast")!;
     const spelled = await added("en:chicken-breast", "boneless");
 
-    await withTransaction((tx) => addToJunkPile(tx, ["boneless"], { reason: "seed" }));
+    await inRepositoryTransaction((tx) =>
+      addToJunkPile(tx, null, ["boneless"], { reason: "seed" })
+    );
     answers({ boneless: "not-a-food" });
-    await checkSpellingsOf(chicken);
+    await checkSpellingsOf(actor.householdId, chicken);
     const [change] = await listAIChangesFor(actor);
 
     await undoAIChange(actor, change!.id);
 
     expect(await spellingsOf(chicken)).toContain("boneless");
-    expect(await listJunkFolds()).not.toContain("boneless");
-    const [found] = await resolveIngredients(["boneless"], { userId });
+    expect(await listJunkFolds(actor.householdId)).not.toContain("boneless");
+    const [found] = await resolveIngredients(["boneless"], {
+      userId,
+      householdId: testHouseholdOf(userId),
+    });
 
     expect(found?.aliasId).toBe(spelled.get("boneless"));
   });
@@ -280,25 +268,20 @@ describe("AI checks the spellings added to a seeded food", () => {
     const chicken = seeded.get("en:chicken-breast")!;
     const spelled = await added("en:chicken-breast", "boneless");
 
-    await getTestDb()
-      .insert(groceries)
-      .values({
-        userId,
-        name: "boneless",
-        ingredientAliasId: spelled.get("boneless")!,
-        ingredientId: chicken,
-      });
+    await addTestGrocery(userId, {
+      name: "boneless",
+      ingredientAliasId: spelled.get("boneless")!,
+      ingredientId: chicken,
+    });
     answers({ boneless: "not-a-food" });
-    await checkSpellingsOf(chicken);
+    await checkSpellingsOf(actor.householdId, chicken);
 
     expect(
-      await getTestDb()
-        .select({
-          name: groceries.name,
-          aliasId: groceries.ingredientAliasId,
-          ingredientId: groceries.ingredientId,
-        })
-        .from(groceries)
+      (await testGroceryFoods(userId)).map(({ name, aliasId, ingredientId }) => ({
+        name,
+        aliasId,
+        ingredientId,
+      }))
     ).toEqual([{ name: "boneless", aliasId: null, ingredientId: null }]);
   });
 
@@ -308,17 +291,14 @@ describe("AI checks the spellings added to a seeded food", () => {
     const spelled = await added("en:chicken-breast", "kippendijen");
     const dijLine = await line("500 g kippendijen", spelled.get("kippendijen")!);
 
-    await getTestDb()
-      .insert(groceries)
-      .values({
-        userId,
-        name: "kippendijen",
-        ingredientAliasId: spelled.get("kippendijen")!,
-        ingredientId: breast,
-      });
+    await addTestGrocery(userId, {
+      name: "kippendijen",
+      ingredientAliasId: spelled.get("kippendijen")!,
+      ingredientId: breast,
+    });
     answers({ kippendijen: ["other-food", "chicken thigh"] });
 
-    await expect(checkSpellingsOf(breast)).resolves.toMatchObject({
+    await expect(checkSpellingsOf(actor.householdId, breast)).resolves.toMatchObject({
       outcome: "checked",
       moved: [{ spelling: "kippendijen", to: "chicken thigh" }],
     });
@@ -326,12 +306,10 @@ describe("AI checks the spellings added to a seeded food", () => {
     expect(await lineFoods(dijLine.id)).toEqual([
       { food: "chicken thigh", spelling: "kippendijen" },
     ]);
-    const [grocery] = await getTestDb()
-      .select({ ingredientId: groceries.ingredientId })
-      .from(groceries);
+    const [grocery] = await testGroceryFoods(userId);
 
     expect(grocery?.ingredientId).toBe(thigh);
-    expect(await listJunkFolds()).not.toContain("kippendijen");
+    expect(await listJunkFolds(actor.householdId)).not.toContain("kippendijen");
 
     const [change] = await listAIChangesFor(actor);
 
@@ -351,11 +329,11 @@ describe("AI checks the spellings added to a seeded food", () => {
 
     answers({ zeezoutvlokken: ["other-food", "sea salt flakes"] });
 
-    await expect(checkSpellingsOf(salt)).resolves.toMatchObject({
+    await expect(checkSpellingsOf(actor.householdId, salt)).resolves.toMatchObject({
       removed: ["zeezoutvlokken"],
     });
     expect(await spellingsOf(salt)).toEqual(["salt"]);
-    expect(await listJunkFolds()).not.toContain("zeezoutvlokken");
+    expect(await listJunkFolds(actor.householdId)).not.toContain("zeezoutvlokken");
     expect(await lineFoods(flakesLine.id)).toEqual([
       { food: "zeezoutvlokken", spelling: "zeezoutvlokken" },
     ]);
@@ -364,35 +342,24 @@ describe("AI checks the spellings added to a seeded food", () => {
   it("on Undo, points back only the rows still naming what the removal left them", async () => {
     const chicken = seeded.get("en:chicken-breast")!;
     const thigh = seeded.get("en:chicken-thigh")!;
-    const [thighSpelling] = await getTestDb()
-      .select({ id: ingredientAliases.id })
-      .from(ingredientAliases)
-      .where(eq(ingredientAliases.ingredientId, thigh));
+    const thighSpelling = { id: (await firstSpellingId(thigh))! };
     const boneless = (await added("en:chicken-breast", "boneless")).get("boneless")!;
     const untouched = await line("boneless, skinless chicken breasts", boneless);
     const edited = await line("boneless", boneless);
-    const [kept, repointed] = await getTestDb()
-      .insert(groceries)
-      .values(
-        ["kept", "repointed"].map(() => ({
-          userId,
-          name: "boneless",
-          ingredientAliasId: boneless,
-          ingredientId: chicken,
-        }))
-      )
-      .returning({ id: groceries.id });
+    const fields = { name: "boneless", ingredientAliasId: boneless, ingredientId: chicken };
+    const kept = await addTestGrocery(userId, fields);
+    const repointed = await addTestGrocery(userId, fields);
 
     answers({ boneless: "not-a-food" });
-    await checkSpellingsOf(chicken);
+    await checkSpellingsOf(actor.householdId, chicken);
     // Edits made after the removal: a person's choice, which Undo leaves alone.
-    await getTestDb().transaction((tx) =>
-      writeRecipeLineFoodsTx(tx, [{ id: edited.id, aliasIds: [thighSpelling!.id] }])
+    await inRepositoryTransaction((tx) =>
+      writeRecipeLineFoodsTx(tx, [{ id: edited.id, aliasIds: [thighSpelling.id] }])
     );
-    await getTestDb()
-      .update(groceries)
-      .set({ ingredientAliasId: thighSpelling!.id, ingredientId: thigh })
-      .where(eq(groceries.id, repointed!.id));
+    await updateGroceries(
+      [{ id: repointed.id, ingredientAliasId: thighSpelling.id, ingredientId: thigh }],
+      testHouseholdOf(userId)
+    );
     const [change] = await listAIChangesFor(actor);
 
     await undoAIChange(actor, change!.id);
@@ -404,29 +371,21 @@ describe("AI checks the spellings added to a seeded food", () => {
       { food: "chicken thigh", spelling: "chicken thigh" },
     ]);
     const pointed = new Map(
-      (
-        await getTestDb()
-          .select({ id: groceries.id, ingredientId: groceries.ingredientId })
-          .from(groceries)
-      ).map((row) => [row.id, row.ingredientId])
+      (await testGroceryFoods(userId)).map((row) => [row.id, row.ingredientId])
     );
 
-    expect(pointed.get(kept!.id)).toBe(chicken);
-    expect(pointed.get(repointed!.id)).toBe(thigh);
+    expect(pointed.get(kept.id)).toBe(chicken);
+    expect(pointed.get(repointed.id)).toBe(thigh);
   });
 
   it("on Undo, merges back the food its lines minted from the text", async () => {
     const salt = seeded.get("en:salt")!;
     const spelled = await added("en:salt", "zeezoutvlokken");
     const flakesLine = await line("zeezoutvlokken", spelled.get("zeezoutvlokken")!);
-    const flakes = () =>
-      getTestDb()
-        .select({ id: ingredients.id })
-        .from(ingredients)
-        .where(eq(ingredients.name, "zeezoutvlokken"));
+    const flakes = () => listTestIngredientsNamed("zeezoutvlokken");
 
     answers({ zeezoutvlokken: ["other-food", "sea salt flakes"] });
-    await checkSpellingsOf(salt);
+    await checkSpellingsOf(actor.householdId, salt);
     await expect(flakes()).resolves.toHaveLength(1);
     const [change] = await listAIChangesFor(actor);
 
@@ -443,11 +402,10 @@ describe("AI checks the spellings added to a seeded food", () => {
 
     await line("zeezoutvlokken", spelled.get("zeezoutvlokken")!);
     answers({ zeezoutvlokken: ["other-food", "sea salt flakes"] });
-    await checkSpellingsOf(salt);
-    await getTestDb()
-      .update(ingredients)
-      .set({ nameChosen: true })
-      .where(eq(ingredients.name, "zeezoutvlokken"));
+    await checkSpellingsOf(actor.householdId, salt);
+    await setTestIngredients((await readTestIngredientNamed("zeezoutvlokken"))!.id, {
+      nameChosen: true,
+    });
     const [change] = await listAIChangesFor(actor);
 
     await expect(undoAIChange(actor, change!.id)).rejects.toThrow(/spelling-taken/);
@@ -460,7 +418,7 @@ describe("AI checks the spellings added to a seeded food", () => {
     await added("en:chicken-breast", "kipfilet");
     await line("chicken breasts, skinless", spelled.get("skinless")!);
     answers({});
-    await checkSpellingsOf(chicken);
+    await checkSpellingsOf(actor.householdId, chicken);
 
     expect(askedSections().at(-1)).toBe(
       ["Spellings:", "1. skinless", "   Line: chicken breasts, skinless", "2. kipfilet"].join("\n")
@@ -469,12 +427,12 @@ describe("AI checks the spellings added to a seeded food", () => {
 
   it("leaves the spellings a merge by AI moved onto the food, which AI already judged", async () => {
     const chicken = seeded.get("en:chicken-breast")!;
-    const kip = await mintTestFood("kipfilet");
+    const kip = await mintTestFood(actor.householdId, "kipfilet");
 
     await line("kipfilet", kip.aliasId);
     await expect(mergeByAI(kip.ingredientId, chicken, false)).resolves.toBe("applied");
 
-    await expect(checkSpellingsOf(chicken)).resolves.toEqual({
+    await expect(checkSpellingsOf(actor.householdId, chicken)).resolves.toEqual({
       outcome: "skipped",
       reason: "none",
     });
@@ -483,9 +441,10 @@ describe("AI checks the spellings added to a seeded food", () => {
 
   it("checks the other spellings a merge by AI carried along, which AI never read", async () => {
     const noodle = seeded.get("en:noodle")!;
-    const verstegen = await mintTestFood("Verstegen noedels");
+    const verstegen = await mintTestFood(actor.householdId, "Verstegen noedels");
     const text = "Verstegen World Spice Meals Noedels";
     const [mix] = (await addIngredientAliases({
+      householdId: actor.householdId,
       ingredientId: verstegen.ingredientId,
       aliases: [{ text, fold: ingredientAliasFold(text) }],
       ownerId: userId,
@@ -496,7 +455,7 @@ describe("AI checks the spellings added to a seeded food", () => {
     await expect(mergeByAI(verstegen.ingredientId, noodle, false)).resolves.toBe("applied");
     answers({ [text]: ["other-food", "mixed spices"] });
 
-    await expect(checkSpellingsOf(noodle)).resolves.toMatchObject({
+    await expect(checkSpellingsOf(actor.householdId, noodle)).resolves.toMatchObject({
       outcome: "checked",
       removed: [text],
     });

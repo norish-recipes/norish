@@ -10,6 +10,7 @@ import type { PlannedItemWithRecipePayload } from "@norish/shared/contracts/zod"
 
 import { renderHookWithClient } from "../../../__tests__/hooks/render-hook";
 import { trackedEvent } from "../../../__tests__/realtime/tracked-event";
+import { householdQueryKey } from "../../offline/household";
 import { calendarRangeOfQueryKey, upsertItemInRange } from "../calendar-cache-merge";
 import { useCalendarMutations } from "../use-calendar-mutations";
 import { useCalendarQuery } from "../use-calendar-query";
@@ -415,6 +416,7 @@ describe("a delete, move or edit with no range", () => {
         mutationFn: async (input: unknown) => {
           sent(name, input);
           if (answer instanceof Error) throw answer;
+          if (answer instanceof Promise) return answer;
 
           return answer;
         },
@@ -511,6 +513,46 @@ describe("a delete, move or edit with no range", () => {
     expect(itemsIn(THIS_WEEK)).toEqual(WEEK_ITEMS);
     expect(itemsIn(CALENDAR_PAGE)).toEqual(PAGE_ITEMS);
   });
+
+  it.each(WRITES)("restores nothing once the household changed under a %s", async (write) => {
+    const inHousehold = (id: string) => ({ household: { id }, currentUserId: "user-1" });
+    const answer = deferred<never>();
+    const theirs = [cachedItem({ id: "theirs", title: "Their plan" })];
+
+    queryClient.setQueryData(householdQueryKey(), inHousehold("h1"));
+    mount(answer.promise);
+    act(() => writes[write]());
+    // The account moved, and the new household's plan was read under the same dates.
+    act(() => {
+      queryClient.setQueryData(householdQueryKey(), inHousehold("h2"));
+      queryClient.setQueryData(rangeKeyOf(THIS_WEEK), theirs);
+    });
+    answer.reject(new Error("refused"));
+    await settle();
+
+    expect(itemsIn(THIS_WEEK)).toEqual(theirs);
+  });
+
+  it.each(["move", "edit"] as const)(
+    "places no answer once the household changed under a %s",
+    async (write) => {
+      const inHousehold = (id: string) => ({ household: { id }, currentUserId: "user-1" });
+      const answer = deferred<{ item: PlannedItemFromQuery }>();
+      const theirs = [cachedItem({ id: "theirs", title: "Their plan" })];
+
+      queryClient.setQueryData(householdQueryKey(), inHousehold("h1"));
+      mount(answer.promise);
+      act(() => writes[write]());
+      act(() => {
+        queryClient.setQueryData(householdQueryKey(), inHousehold("h2"));
+        queryClient.setQueryData(rangeKeyOf(THIS_WEEK), theirs);
+      });
+      answer.resolve({ item: { ...WEEK_ITEMS[0]!, version: 3 } });
+      await settle();
+
+      expect(itemsIn(THIS_WEEK)).toEqual(theirs);
+    }
+  );
 
   it.each(WRITES)("keeps a Queued %s in both ranges", async (write) => {
     // Backend unreachable: the write sits in the Outbox (ADR-0009).

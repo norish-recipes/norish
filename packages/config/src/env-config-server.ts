@@ -110,6 +110,15 @@ const commaSeparatedList = z
   )
   .pipe(z.array(z.string()));
 
+/** A Master Key as MASTER_KEY, MASTER_KEY_PREVIOUS and the key file give it; read as base64. */
+export const MasterKeySchema = z.string().min(32);
+
+/** A Master Key, unset when blank: Compose passes an unset `${MASTER_KEY}` as an empty string. */
+const optionalMasterKey = z.preprocess(
+  (value) => (typeof value === "string" && !value.trim() ? undefined : value),
+  MasterKeySchema.optional()
+);
+
 const ServerConfigFields = z.object({
   NODE_ENV: z.enum(["development", "production"]),
 
@@ -170,11 +179,11 @@ const ServerConfigFields = z.object({
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
 
-  // During build (SKIP_ENV_VALIDATION=1), use a placeholder key for Next.js compilation
-  // At runtime, require a real 32+ char key - the placeholder is never persisted in the image
-  MASTER_KEY: isBuild
-    ? z.string().default("QmFzZTY0RW5jb2RlZE1hc3RlcktleU1pbjMyQ2hhcnM=")
-    : z.string().min(32),
+  // Pins the Master Key; unset, the instance keeps a generated one in <UPLOADS_DIR>/.norish.
+  // Nothing reads it at import, so a build needs none.
+  MASTER_KEY: optionalMasterKey,
+  // The key MASTER_KEY replaces, until the boot that re-encrypts under the new one.
+  MASTER_KEY_PREVIOUS: optionalMasterKey,
 
   // AI Provider Configuration
   AI_PROVIDER: z.enum(["openai", "ollama", "lm-studio", "generic-openai"]).default("openai"),

@@ -1,8 +1,8 @@
 import React from "react";
 import { View } from "react-native";
 import { CardPhoto } from "@/components/card-photo";
+import { Ionicons } from "@/components/icon";
 import { useGroupedFill } from "@/components/on-sheet";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useThemeColor } from "heroui-native";
 
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";

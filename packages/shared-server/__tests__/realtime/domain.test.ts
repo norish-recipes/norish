@@ -66,7 +66,7 @@ afterEach(() => {
 
 describe("channel", () => {
   it("derives every scope's channel from the catalogue", () => {
-    expect(domain.channel("created", { householdKey: "hh-1" })).toBe(
+    expect(domain.channel("created", { householdId: "hh-1" })).toBe(
       "norish:grocery:household:hh-1:created"
     );
     expect(domain.channel("failed", { userId: "u-1" })).toBe("norish:grocery:user:u-1:failed");
@@ -74,8 +74,8 @@ describe("channel", () => {
     expect(domain.channel("becameUsable", undefined)).toBe("norish:grocery:internal:becameUsable");
   });
 
-  it("routes policy: everyone → broadcast, household → household:{key}, owner → user:{id}", () => {
-    const target = { householdKey: "hh-1", userId: "u-1" };
+  it("routes policy: everyone → broadcast, household → household:{key}", () => {
+    const target = { householdId: "hh-1", userId: "u-1" };
 
     expect(domain.channel("imported", { ...target, viewPolicy: "everyone" })).toBe(
       "norish:grocery:broadcast:imported"
@@ -83,20 +83,16 @@ describe("channel", () => {
     expect(domain.channel("imported", { ...target, viewPolicy: "household" })).toBe(
       "norish:grocery:household:hh-1:imported"
     );
-    expect(domain.channel("imported", { ...target, viewPolicy: "owner" })).toBe(
-      "norish:grocery:user:u-1:imported"
-    );
   });
 });
 
 describe("channelsFor", () => {
-  const identity = { userId: "u-1", householdKey: "hh-1" };
+  const identity = { userId: "u-1", householdId: "hh-1" };
 
-  it("lists household, broadcast and user for a policy event, in that order", () => {
+  it("lists household and broadcast for a policy event, in that order", () => {
     expect(domain.channelsFor("imported", identity)).toEqual([
       "norish:grocery:household:hh-1:imported",
       "norish:grocery:broadcast:imported",
-      "norish:grocery:user:u-1:imported",
     ]);
   });
 
@@ -111,7 +107,7 @@ describe("channelsFor", () => {
   });
 
   it("uses the user id as household key for a household-less user", () => {
-    expect(domain.channelsFor("created", { userId: "u-1", householdKey: "u-1" })).toEqual([
+    expect(domain.channelsFor("created", { userId: "u-1", householdId: "u-1" })).toEqual([
       "norish:grocery:household:u-1:created",
     ]);
   });
@@ -119,7 +115,7 @@ describe("channelsFor", () => {
 
 describe("publish", () => {
   it("records one realtimePublish call with the stream key, MAXLEN ~ 1000 and TTL 86400", async () => {
-    await domain.publish("created", { ids: ["g-1"] }, { householdKey: "hh-1" });
+    await domain.publish("created", { ids: ["g-1"] }, { householdId: "hh-1" });
 
     expect(valkey.defineCommand).toHaveBeenCalledWith(
       "realtimePublish",
@@ -137,8 +133,8 @@ describe("publish", () => {
   });
 
   it("registers the script once per client", async () => {
-    await domain.publish("created", { ids: ["g-1"] }, { householdKey: "hh-1" });
-    await domain.publish("created", { ids: ["g-2"] }, { householdKey: "hh-1" });
+    await domain.publish("created", { ids: ["g-1"] }, { householdId: "hh-1" });
+    await domain.publish("created", { ids: ["g-2"] }, { householdId: "hh-1" });
 
     expect(valkey.defineCommand).toHaveBeenCalledTimes(1);
     expect(valkey.realtimePublish).toHaveBeenCalledTimes(2);
@@ -148,7 +144,7 @@ describe("publish", () => {
     await domain.publish(
       "imported",
       { recipeId: "r-1" },
-      { viewPolicy: "owner", householdKey: "hh-1", userId: "u-1" }
+      { viewPolicy: "household", householdId: "hh-1", userId: "u-1" }
     );
 
     const envelope = lastPublished();
@@ -159,8 +155,8 @@ describe("publish", () => {
       eventId: EVENT_ID_PLACEHOLDER,
       eventName: "imported",
       namespace: "grocery",
-      scope: "user",
-      channel: "norish:grocery:user:u-1:imported",
+      scope: "household",
+      channel: "norish:grocery:household:hh-1:imported",
     });
     expect(envelope.meta.operationId).toBeUndefined();
     expect(new Date(envelope.meta.occurredAt).toISOString()).toBe(envelope.meta.occurredAt);
@@ -168,7 +164,7 @@ describe("publish", () => {
 
   it("stamps the operationId from the operation context", async () => {
     await runWithOperationContext({ operationId: "op-1" as never }, () =>
-      domain.publish("created", { ids: ["g-1"] }, { householdKey: "hh-1" })
+      domain.publish("created", { ids: ["g-1"] }, { householdId: "hh-1" })
     );
 
     expect(lastPublished().meta.operationId).toBe("op-1");
@@ -193,7 +189,7 @@ describe("publish", () => {
 
   it("strips unknown payload keys through the schema", async () => {
     await domain.publish("created", { ids: ["g-1"], extra: true } as unknown as { ids: string[] }, {
-      householdKey: "hh-1",
+      householdId: "hh-1",
     });
 
     expect(lastPublished().payload).toEqual({ ids: ["g-1"] });
@@ -204,7 +200,7 @@ describe("publish", () => {
 
     await expect(
       domain.publish("created", { ids: "nope" } as unknown as { ids: string[] }, {
-        householdKey: "hh-1",
+        householdId: "hh-1",
       })
     ).rejects.toBeInstanceOf(RealtimePayloadError);
     expect(getPublisherClient).not.toHaveBeenCalled();
@@ -215,7 +211,7 @@ describe("publish", () => {
 
     await expect(
       domain.publish("created", { ids: "nope" } as unknown as { ids: string[] }, {
-        householdKey: "hh-1",
+        householdId: "hh-1",
       })
     ).resolves.toBeUndefined();
     expect(logged.error).toHaveBeenCalledWith(
@@ -229,7 +225,7 @@ describe("publish", () => {
     getPublisherClient.mockRejectedValueOnce(new Error("valkey is down"));
 
     await expect(
-      domain.publish("created", { ids: ["g-1"] }, { householdKey: "hh-1" })
+      domain.publish("created", { ids: ["g-1"] }, { householdId: "hh-1" })
     ).resolves.toBeUndefined();
     expect(logged.error).toHaveBeenCalledWith(
       expect.objectContaining({ channel: "norish:grocery:household:hh-1:created" }),
@@ -243,7 +239,7 @@ describe("publish", () => {
     });
 
     await expect(
-      domain.publish("created", { ids: ["g-1"] }, { householdKey: "hh-1" })
+      domain.publish("created", { ids: ["g-1"] }, { householdId: "hh-1" })
     ).resolves.toBeUndefined();
   });
 

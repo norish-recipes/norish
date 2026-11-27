@@ -14,7 +14,7 @@ import {
 } from "@norish/db/repositories/recurring-groceries";
 import { groceries, recurringGroceries, stores } from "@norish/db/schema";
 
-import { getTestDb } from "../../../helpers/db-test-helpers";
+import { getTestDb, householdIdOf, testHouseholdOf } from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 describe("recurring groceries transactional writes", () => {
@@ -43,6 +43,7 @@ describe("recurring groceries transactional writes", () => {
     return {
       recurring: {
         id,
+        householdId: testHouseholdOf(testUserId),
         userId: testUserId,
         name,
         amount: 1,
@@ -56,6 +57,7 @@ describe("recurring groceries transactional writes", () => {
       grocery: {
         id: crypto.randomUUID(),
         groceries: {
+          householdId: testHouseholdOf(testUserId),
           userId: testUserId,
           name,
           unit: "liter",
@@ -73,7 +75,7 @@ describe("recurring groceries transactional writes", () => {
   async function createRecurringWithGrocery() {
     const {
       created: [made],
-    } = await createRecurringGroceries([recurringRow("Milk")], [testUserId]);
+    } = await createRecurringGroceries([recurringRow("Milk")], await householdIdOf(testUserId));
 
     return { recurring: made!.recurringGrocery, grocery: made!.grocery };
   }
@@ -82,7 +84,7 @@ describe("recurring groceries transactional writes", () => {
     it("creates each recurring grocery with the grocery it puts on the list", async () => {
       const { created } = await createRecurringGroceries(
         [recurringRow("Zout"), recurringRow("Peper")],
-        [testUserId]
+        await householdIdOf(testUserId)
       );
 
       expect(
@@ -101,7 +103,7 @@ describe("recurring groceries transactional writes", () => {
       await expect(
         createRecurringGroceries(
           [recurringRow("Zout"), recurringRow("Peper", { storeId: crypto.randomUUID() })],
-          [testUserId]
+          await householdIdOf(testUserId)
         )
       ).rejects.toThrow();
 
@@ -118,11 +120,13 @@ describe("recurring groceries transactional writes", () => {
       const stale = { id: grocery.id, version: grocery.version + 5 };
       const outcomes = await withTransaction(async (tx) => {
         const updated = await updateRecurringGroceryWithGrocery(
+          testHouseholdOf(testUserId),
           { id: recurring.id, version: recurring.version, name: "Oat milk" },
           stale,
           tx
         );
         const detached = await detachRecurringGrocery(
+          testHouseholdOf(testUserId),
           {
             recurringGroceryId: recurring.id,
             recurringVersion: recurring.version,
@@ -130,7 +134,11 @@ describe("recurring groceries transactional writes", () => {
           },
           tx
         );
-        const made = await createRecurringGroceries([recurringRow("Zout")], [testUserId], tx);
+        const made = await createRecurringGroceries(
+          [recurringRow("Zout")],
+          await householdIdOf(testUserId),
+          tx
+        );
 
         return [updated.stale, detached.stale, made.created.length];
       });
@@ -155,7 +163,11 @@ describe("recurring groceries transactional writes", () => {
     it("is undone with the transaction", async () => {
       await expect(
         withTransaction(async (tx) => {
-          await createRecurringGroceries([recurringRow("Zout")], [testUserId], tx);
+          await createRecurringGroceries(
+            [recurringRow("Zout")],
+            await householdIdOf(testUserId),
+            tx
+          );
           throw new Error("a later write failed");
         })
       ).rejects.toThrow("a later write failed");
@@ -171,7 +183,7 @@ describe("recurring groceries transactional writes", () => {
     it("deletes the recurring row and applies the grocery edit atomically", async () => {
       const { recurring, grocery } = await createRecurringWithGrocery();
 
-      const outcome = await detachRecurringGrocery({
+      const outcome = await detachRecurringGrocery(testHouseholdOf(testUserId), {
         recurringGroceryId: recurring.id,
         recurringVersion: recurring.version,
         grocery: {
@@ -200,7 +212,7 @@ describe("recurring groceries transactional writes", () => {
     it("rolls back the recurring delete when the grocery version is stale", async () => {
       const { recurring, grocery } = await createRecurringWithGrocery();
 
-      const outcome = await detachRecurringGrocery({
+      const outcome = await detachRecurringGrocery(testHouseholdOf(testUserId), {
         recurringGroceryId: recurring.id,
         recurringVersion: recurring.version,
         grocery: {
@@ -230,7 +242,7 @@ describe("recurring groceries transactional writes", () => {
     it("changes nothing when the recurring version is stale", async () => {
       const { recurring, grocery } = await createRecurringWithGrocery();
 
-      const outcome = await detachRecurringGrocery({
+      const outcome = await detachRecurringGrocery(testHouseholdOf(testUserId), {
         recurringGroceryId: recurring.id,
         recurringVersion: recurring.version + 5,
         grocery: {
@@ -261,6 +273,7 @@ describe("recurring groceries transactional writes", () => {
       const { recurring, grocery } = await createRecurringWithGrocery();
 
       const outcome = await updateRecurringGroceryWithGrocery(
+        testHouseholdOf(testUserId),
         { id: recurring.id, version: recurring.version, name: "Oat milk" },
         { id: grocery.id, version: grocery.version }
       );
@@ -284,10 +297,16 @@ describe("recurring groceries transactional writes", () => {
       const db = getTestDb();
       const [store] = await db
         .insert(stores)
-        .values({ userId: testUserId, name: "Bakery", color: "primary" })
+        .values({
+          householdId: testHouseholdOf(testUserId),
+          userId: testUserId,
+          name: "Bakery",
+          color: "primary",
+        })
         .returning();
 
       const outcome = await updateRecurringGroceryWithGrocery(
+        testHouseholdOf(testUserId),
         { id: recurring.id, version: recurring.version, name: "Oat milk" },
         { id: grocery.id, version: grocery.version, storeId: store.id }
       );
@@ -302,6 +321,7 @@ describe("recurring groceries transactional writes", () => {
       const { recurring, grocery } = await createRecurringWithGrocery();
 
       const outcome = await updateRecurringGroceryWithGrocery(
+        testHouseholdOf(testUserId),
         { id: recurring.id, version: recurring.version, name: "Oat milk" },
         { id: grocery.id, version: grocery.version + 5 }
       );
@@ -326,6 +346,7 @@ describe("recurring groceries transactional writes", () => {
       const { recurring, grocery } = await createRecurringWithGrocery();
 
       const outcome = await checkRecurringGrocery({
+        householdId: testHouseholdOf(testUserId),
         groceryId: grocery.id,
         groceryVersion: grocery.version,
         isDone: true,
@@ -354,6 +375,7 @@ describe("recurring groceries transactional writes", () => {
       const { recurring, grocery } = await createRecurringWithGrocery();
 
       const outcome = await checkRecurringGrocery({
+        householdId: testHouseholdOf(testUserId),
         groceryId: grocery.id,
         groceryVersion: grocery.version,
         isDone: true,
@@ -383,6 +405,7 @@ describe("recurring groceries transactional writes", () => {
       const { grocery } = await createRecurringWithGrocery();
 
       const outcome = await checkRecurringGrocery({
+        householdId: testHouseholdOf(testUserId),
         groceryId: grocery.id,
         groceryVersion: grocery.version,
         isDone: false,
@@ -399,7 +422,11 @@ describe("recurring groceries transactional writes", () => {
     it("deletes the recurring row and its linked groceries together", async () => {
       const { recurring, grocery } = await createRecurringWithGrocery();
 
-      const result = await deleteRecurringGroceryById(recurring.id, recurring.version);
+      const result = await deleteRecurringGroceryById(
+        testHouseholdOf(testUserId),
+        recurring.id,
+        recurring.version
+      );
 
       const db = getTestDb();
       const recurringRows = await db
@@ -416,7 +443,11 @@ describe("recurring groceries transactional writes", () => {
     it("deletes nothing when the recurring version is stale", async () => {
       const { recurring, grocery } = await createRecurringWithGrocery();
 
-      const result = await deleteRecurringGroceryById(recurring.id, recurring.version + 5);
+      const result = await deleteRecurringGroceryById(
+        testHouseholdOf(testUserId),
+        recurring.id,
+        recurring.version + 5
+      );
 
       const db = getTestDb();
       const [recurringRow] = await db

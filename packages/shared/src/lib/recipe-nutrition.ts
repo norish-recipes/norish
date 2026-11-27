@@ -46,10 +46,10 @@ import {
 import { EXTRA_NUTRIENTS, knownExtras } from "@norish/shared/contracts/nutrients";
 import { foldName } from "@norish/shared/lib/fold-name";
 
-import type { LineWithFoods } from "./line-foods";
+import type { FoodToBuy, LineReadings, LineWithFoods } from "./line-foods";
 import type { SpellingRules } from "./spelling-keys";
 import type { ResolvedUnit } from "./units";
-import { foodsToBuy } from "./line-foods";
+import { foodsToBuy, linesAsRead } from "./line-foods";
 import { BASE_SPELLING_RULES } from "./spelling-keys";
 import { resolveUnit } from "./units";
 
@@ -87,23 +87,62 @@ export function suppliesNutrition(recipe: RecipeForNutrition): boolean {
 }
 
 /**
- * The lines a total is worked out from: those in the recipe's own measurement system, without
- * the `#` headings, each food as it is counted (`foodsToBuy`).
+ * The lines a total is worked out from, as the reader's household reads them (`linesAsRead`): those
+ * in the recipe's own measurement system, without the `#` headings, each food as it is counted
+ * (`foodsToBuy`). A line read otherwise keeps its stored line's `key`; undefined while not loaded.
  */
-export function nutritionLinesOf(recipe: RecipeForNutrition): NutritionLine[] {
+export function nutritionLinesOf(
+  recipe: RecipeForNutrition,
+  readings: LineReadings
+): NutritionLine[];
+export function nutritionLinesOf(
+  recipe: RecipeForNutrition,
+  readings: LineReadings | undefined
+): NutritionLine[] | undefined;
+export function nutritionLinesOf(
+  recipe: RecipeForNutrition,
+  readings: LineReadings | undefined
+): NutritionLine[] | undefined {
   const own = recipe.recipeIngredients.filter((line) => line.systemUsed === recipe.systemUsed);
-
-  return foodsToBuy(
-    (own.length > 0 ? own : recipe.recipeIngredients).filter(
-      (line) => !line.ingredientName.trim().startsWith("#")
-    )
-  ).map((line, index) => ({
+  const stored = (own.length > 0 ? own : recipe.recipeIngredients).filter(
+    (line) => !line.ingredientName.trim().startsWith("#")
+  );
+  const asLine = (line: FoodToBuy<(typeof stored)[number]>, index: number): NutritionLine => ({
     id: line.id ?? `line-${index}`,
     name: line.ingredientName,
     amount: line.amount === null || line.amount === "" ? null : Number(line.amount),
     unit: line.unit,
     ingredientId: line.ingredientId,
-  }));
+  });
+  const read = linesAsRead(stored, readings);
+
+  if (!read) return undefined;
+  // Each read food keeps its place's stored key; the last also keeps those of foods read into it.
+  const storedKeys = new Map<string, string[]>();
+
+  foodsToBuy(stored).forEach((food, index) => {
+    if (food.lineId) {
+      storedKeys.set(food.lineId, [
+        ...(storedKeys.get(food.lineId) ?? []),
+        lineKey(asLine(food, index)),
+      ]);
+    }
+  });
+  const foods = foodsToBuy(read);
+
+  return foods.map((food, index) => {
+    const line = asLine(food, index);
+    const keys = food.lineId && readings?.[food.lineId] ? storedKeys.get(food.lineId) : undefined;
+
+    if (!keys) return line;
+    const place = foods.slice(0, index).filter((one) => one.lineId === food.lineId).length;
+    const last = !foods.slice(index + 1).some((one) => one.lineId === food.lineId);
+    const mine = keys.slice(place, last ? undefined : place + 1);
+
+    return mine.length > 0 && (mine.length > 1 || mine[0] !== lineKey(line))
+      ? { ...line, keys: mine }
+      : line;
+  });
 }
 
 /** One recipe line, as the arithmetic reads it. */
@@ -115,6 +154,8 @@ export interface NutritionLine {
   /** The unit as the line stores it: a units-map id ("tablespoon", "clove", "to_taste") or a spelling. */
   unit: string | null;
   ingredientId: string | null;
+  /** The stored lines it stands for, where the reader's catalogue reads it otherwise (`lineKey`). */
+  keys?: string[];
 }
 
 /** Calories and macros per serving, and the other nutrients any counted line knew. */
@@ -184,6 +225,8 @@ export interface EstimatedLine {
   carbs: number;
   protein: number;
   extras?: ExtraNutrients;
+  /** Added up from shares whose keys met after a move: counted once, not per line of its key. */
+  combined?: boolean;
 }
 
 /** The language model's estimate of the lines a worked-out total left out: one share per line. */
@@ -330,6 +373,58 @@ export function lineKey(
   return JSON.stringify([line.ingredientId ?? foldName(line.name), line.amount, line.unit ?? null]);
 }
 
+/** Where a move or merge re-pointed each food: old id to new. */
+export type FoodTargets = ReadonlyMap<string, string>;
+
+/**
+ * Stored shares keyed again after their lines' foods were re-pointed, so a share is still found;
+ * two whose keys become one add up. `foods` may differ per share (its line's). Null when none moved.
+ */
+export function rekeyedShares<S extends EstimatedLine>(
+  shares: readonly S[],
+  foods: FoodTargets | ((share: S) => FoodTargets)
+): S[] | null {
+  if (typeof foods !== "function" && foods.size === 0) return null;
+  let changed = false;
+  const byKey = new Map<string, S>();
+
+  for (const share of shares) {
+    const targets = typeof foods === "function" ? foods(share) : foods;
+    const parsed: unknown = targets.size > 0 ? JSON.parse(share.key) : null;
+    const food =
+      Array.isArray(parsed) && typeof parsed[0] === "string" ? targets.get(parsed[0]) : undefined;
+    const key =
+      food === undefined ? share.key : JSON.stringify([food, ...(parsed as unknown[]).slice(1)]);
+    const earlier = byKey.get(key);
+
+    changed ||= food !== undefined;
+    byKey.set(key, earlier ? addedShares(earlier, share) : { ...share, key });
+  }
+
+  return changed ? [...byKey.values()] : null;
+}
+
+/** Two shares of one line as one: every number added. */
+function addedShares<S extends EstimatedLine>(a: S, b: S): S {
+  const extras = { ...a.extras };
+
+  for (const [nutrient, value] of Object.entries(b.extras ?? {}) as Array<
+    [keyof ExtraNutrients, number | undefined]
+  >) {
+    if (value !== undefined) extras[nutrient] = (extras[nutrient] ?? 0) + value;
+  }
+
+  return {
+    ...a,
+    combined: true,
+    calories: a.calories + b.calories,
+    fat: a.fat + b.fat,
+    carbs: a.carbs + b.carbs,
+    protein: a.protein + b.protein,
+    ...(a.extras || b.extras ? { extras } : {}),
+  };
+}
+
 function isSeasoning(line: NutritionLine, seasoning: readonly string[]): boolean {
   if (line.unit && (SEASONING_UNITS as readonly string[]).includes(line.unit)) return true;
   if (line.amount !== null && line.unit) return false;
@@ -420,6 +515,7 @@ export function workOutNutrition({
   const knownGrams: Partial<Record<ExtraNutrient, number>> = {};
   let countedGrams = 0;
   const leftOut: LeftOutLine[] = [];
+  const storedKeysOf = new Map<LeftOutLine, string[]>();
   const counted: CountedLine[] = [];
   const credits = new Set<NutritionCredit>();
   let borrowedCalories = 0;
@@ -431,14 +527,18 @@ export function workOutNutrition({
       : weigh(line, line.ingredientId ? nutrition.get(line.ingredientId) : undefined, rules);
 
     if ("reason" in weighed) {
-      leftOut.push({
+      const keys = line.keys ?? [lineKey(line)];
+      const out: LeftOutLine = {
         lineId: line.id,
         name: line.name,
         ingredientId: line.ingredientId,
-        key: lineKey(line),
+        key: keys[0]!,
         reason: weighed.reason,
         estimatedByAI: false,
-      });
+      };
+
+      leftOut.push(out);
+      storedKeysOf.set(out, keys);
       continue;
     }
 
@@ -483,20 +583,28 @@ export function workOutNutrition({
   const shareOf = new Map((estimate?.lines ?? []).map((line) => [line.key, line]));
   const share = { calories: 0, fat: 0, carbs: 0, protein: 0 };
   const sharedExtras: ExtraNutrients = {};
+  const countedCombined = new Set<string>();
 
   for (const line of leftOut) {
-    const stored = line.reason === "seasoning" ? undefined : shareOf.get(line.key);
+    if (line.reason === "seasoning") continue;
+    // A food two stored foods read as takes both their shares.
+    for (const key of storedKeysOf.get(line) ?? []) {
+      const stored = shareOf.get(key);
 
-    if (!stored) continue;
-    line.estimatedByAI = true;
-    share.calories += stored.calories;
-    share.fat += stored.fat;
-    share.carbs += stored.carbs;
-    share.protein += stored.protein;
-    for (const key of EXTRA_NUTRIENTS) {
-      const value = stored.extras?.[key];
+      if (!stored) continue;
+      line.estimatedByAI = true;
+      // A combined share already holds every line of its key.
+      if (stored.combined && countedCombined.has(key)) continue;
+      if (stored.combined) countedCombined.add(key);
+      share.calories += stored.calories;
+      share.fat += stored.fat;
+      share.carbs += stored.carbs;
+      share.protein += stored.protein;
+      for (const nutrient of EXTRA_NUTRIENTS) {
+        const value = stored.extras?.[nutrient];
 
-      if (value !== undefined) sharedExtras[key] = (sharedExtras[key] ?? 0) + value;
+        if (value !== undefined) sharedExtras[nutrient] = (sharedExtras[nutrient] ?? 0) + value;
+      }
     }
   }
 

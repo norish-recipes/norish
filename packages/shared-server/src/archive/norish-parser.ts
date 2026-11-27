@@ -8,6 +8,8 @@ import {
   saveVideoBytes,
 } from "@norish/shared-server/media/storage";
 import { FullRecipeInsertDTO } from "@norish/shared/contracts";
+import { entryFold } from "@norish/shared/lib/fold-name";
+import { matchNamesToList } from "@norish/shared/lib/list-match";
 
 import {
   EXTERNAL_MEDIA_URL,
@@ -233,8 +235,8 @@ async function rehomeMediaReference(
 
 /**
  * Attach cuisine names only where the receiving vocabulary already knows them
- * (lowercased name → cuisine id), and say which were dropped: an archive
- * never extends a vocabulary its administrator owns (ADR-0022).
+ * (folded name → cuisine id), and say which were dropped: an import never
+ * extends a household's Cuisines (ADR-0022, ADR-0043).
  */
 export function matchCuisineNames(
   names: readonly string[],
@@ -245,7 +247,7 @@ export function matchCuisineNames(
   const seenDropped = new Set<string>();
 
   for (const name of names) {
-    const key = name.trim().toLowerCase();
+    const key = entryFold(name);
     const id = cuisineIdsByName.get(key);
 
     if (id) {
@@ -268,13 +270,15 @@ export function matchCuisineNames(
  * them. Media is read from the recipe's archive folder and rehomed through
  * the existing archive-media pipeline under the freshly minted recipe id.
  * Attribution (`authorName`) is informational and deliberately ignored —
- * ownership belongs to the importer.
+ * ownership belongs to the importer. Categories take the household's spelling
+ * by fold or near-match (`householdCategories`) before a new one is created.
  */
 export async function parseNorishRecipeToDTO(
   json: unknown,
   recipeId: string,
   cuisineIdsByName: ReadonlyMap<string, string>,
-  recipeFolder: JSZip | null = null
+  recipeFolder: JSZip | null = null,
+  householdCategories: readonly string[] = []
 ): Promise<ParsedNorishRecipe> {
   const parsed = NorishArchiveRecipeSchema.safeParse(json);
 
@@ -377,6 +381,7 @@ export async function parseNorishRecipeToDTO(
 
   const dto: FullRecipeInsertDTO = {
     ...rest,
+    categories: matchNamesToList(rest.categories, householdCategories),
     // A line's foods travel as their spellings, which the resolver reads before its text.
     recipeIngredients: wireLines.map(({ foods, ...line }) =>
       foods?.length ? { ...line, foodTexts: foods } : line

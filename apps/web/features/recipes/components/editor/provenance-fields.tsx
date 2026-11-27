@@ -1,11 +1,13 @@
 "use client";
 
-import { useMemo } from "react";
-import { ComboBox, Input, Label, ListBox, Select, TextArea, TextField } from "@heroui/react";
+import { ChipButton } from "@/components/shared/chip-button";
+import { EntryComboBox } from "@/components/shared/entry-combo-box";
+import { ComboBox, Input, Label, ListBox, TextArea, TextField } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
 
+import type { PickerEntry } from "@norish/shared-react/lists";
 import type { ProvenanceFormValue } from "@norish/shared-react/recipes";
-import { useCuisinesQuery } from "@norish/shared-react/config";
+import { chosenEntries, useListEntries } from "@norish/shared-react/lists";
 import { listCountryOptions } from "@norish/shared/lib/recipe-provenance";
 
 export {
@@ -25,6 +27,10 @@ const NO_COUNTRY_KEY = "__none__";
 interface ProvenanceFieldsProps {
   value: ProvenanceFormValue;
   onChange: (value: ProvenanceFormValue) => void;
+  /** The recipe being edited, once it exists: its household's Cuisines are the ones offered. */
+  recipeId?: string;
+  /** The Cuisines the recipe carries, which it keeps whatever the list offers. */
+  carriedCuisines?: PickerEntry[];
 }
 
 /**
@@ -35,21 +41,25 @@ interface ProvenanceFieldsProps {
  * is no separate clear-everything action, because each control already says how
  * to empty it.
  *
- * Cuisines are picked from the administrator's vocabulary rather than typed, so
- * an editor's entries land on exactly the rows AI produces. Country is stored as
- * an alpha-2 code, so the picker offers names but records codes.
+ * Cuisines are picked from the list (the household's and the instance's) as you type, and a
+ * new one is made only by the "Create" row. Country is stored as an alpha-2 code, so the
+ * picker offers names but records codes.
  */
-export default function ProvenanceFields({ value, onChange }: ProvenanceFieldsProps) {
+export default function ProvenanceFields({
+  value,
+  onChange,
+  recipeId,
+  carriedCuisines,
+}: ProvenanceFieldsProps) {
   const locale = useLocale();
   const t = useTranslations("recipes.form");
-  const { cuisines } = useCuisinesQuery();
-  const countries = useMemo(() => listCountryOptions(locale), [locale]);
+  const tEditor = useTranslations("recipes.editor");
+  const { entries: cuisines } = useListEntries("cuisine", recipeId);
+  const countries = listCountryOptions(locale);
 
   const patch = (changes: Partial<ProvenanceFormValue>) => onChange({ ...value, ...changes });
 
-  const selectedCuisineNames = cuisines
-    .filter((cuisine) => value.cuisineIds.includes(cuisine.id))
-    .map((cuisine) => cuisine.name);
+  const chosen = chosenEntries(value.cuisineIds, cuisines, carriedCuisines);
 
   return (
     <div className="flex flex-col gap-4">
@@ -105,39 +115,41 @@ export default function ProvenanceFields({ value, onChange }: ProvenanceFieldsPr
         </TextField>
       </div>
 
-      {/* `value`/`onChange`, not `selectedKeys`/`onSelectionChange`: those are
-          the deprecated single-selection props, and a multiple-mode Select
-          silently ignores them — it renders as empty however much is chosen. */}
-      <Select
-        placeholder={t("cuisines")}
-        selectionMode="multiple"
-        value={value.cuisineIds}
-        onChange={(keys) => patch({ cuisineIds: keys.map(String) })}
-      >
-        <Label>{t("cuisines")}</Label>
+      <div className="flex flex-col gap-2">
+        <span className="text-sm font-medium">{t("cuisines")}</span>
         <p className="text-muted text-sm">{t("cuisinesHelp")}</p>
-        <Select.Trigger>
-          <Select.Value>
-            {({ defaultChildren, isPlaceholder }) =>
-              isPlaceholder
-                ? defaultChildren
-                : // Canonical identifiers: shown verbatim in every locale.
-                  selectedCuisineNames.join(", ")
-            }
-          </Select.Value>
-          <Select.Indicator />
-        </Select.Trigger>
-        <Select.Popover>
-          <ListBox selectionMode="multiple">
-            {cuisines.map((cuisine) => (
-              <ListBox.Item key={cuisine.id} id={cuisine.id} textValue={cuisine.name}>
+        {chosen.length > 0 ? (
+          <div className="flex flex-wrap gap-2">
+            {chosen.map((cuisine) => (
+              <ChipButton
+                key={cuisine.id}
+                aria-label={tEditor("removeNamed", { name: cuisine.name })}
+                className="h-8 cursor-pointer rounded-full px-3 text-sm"
+                color="accent"
+                variant="primary"
+                onClick={() =>
+                  patch({ cuisineIds: value.cuisineIds.filter((id) => id !== cuisine.id) })
+                }
+              >
                 {cuisine.name}
-                <ListBox.ItemIndicator />
-              </ListBox.Item>
+              </ChipButton>
             ))}
-          </ListBox>
-        </Select.Popover>
-      </Select>
+          </div>
+        ) : null}
+        <EntryComboBox
+          opensOnFocus
+          kind="cuisine"
+          label={t("cuisines")}
+          placeholder={t("cuisines")}
+          recipeId={recipeId}
+          isSelected={(entry) => value.cuisineIds.includes(entry.id)}
+          onSelect={(entry) => {
+            if (!value.cuisineIds.includes(entry.id)) {
+              patch({ cuisineIds: [...value.cuisineIds, entry.id] });
+            }
+          }}
+        />
+      </div>
 
       <TextField
         aria-label={t("provenanceNote")}

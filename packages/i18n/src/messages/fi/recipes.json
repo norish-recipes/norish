@@ -41,12 +41,8 @@
   },
   "empty": {
     "title": "Kirjastosi odottaa",
-    "description": "Liitä reseptin osoite yllä olevaan hakukenttään ja katso, kun taika tapahtuu.",
     "noResults": "Reseptejä ei löytynyt",
-    "noResultsHint": "Kokeile muuttaa tai tyhjentää suodattimet.",
-    "noCookbooks": "Ei vielä keittokirjoja",
-    "noCookbooksHint": "Keittokirja on nimetty kokoelma reseptejä. Tee ensimmäinen ja tuo kirjastoosi järjestystä.",
-    "descriptionMobile": "Lisää ensimmäinen reseptisi linkistä, tekstistä tai kuvista."
+    "noCookbooks": "Ei vielä keittokirjoja"
   },
   "card": {
     "noImage": "Ei kuvaa saatavilla",
@@ -67,6 +63,7 @@
     "addToGroceries": "Lisää ostoslistalle",
     "ratingPrompt": "Mitä pidit tästä reseptistä?",
     "notFound": "Reseptiä ei löytynyt",
+    "offline": "Tämä resepti tarvitsee yhteyden",
     "notFoundMessage": "Tätä reseptiä ei ole olemassa tai sinulla ei ole oikeutta nähdä sitä.",
     "prep": "valmistelu",
     "total": "yhteensä",
@@ -160,6 +157,7 @@
     "expiresAfter": "Vanhenee kuluttua",
     "expiresOn": "Vanhenee {date}",
     "expiredOn": "Vanheni {date}",
+    "revokedOn": "Mitätöity {date}",
     "lastOpenedOn": "Viimeksi avattu {date}",
     "neverExpires": "Ei vanhene koskaan",
     "linkCreated": "Luotu {date}"
@@ -203,7 +201,7 @@
     "notesPlaceholder": "Lisää valmisteluohjeita, muutoksia tai tarjoiluvinkkejä tälle reseptille...",
     "ingredientsHelp": "Kirjoita ainesosat muodossa \"2 dl jauhoja\" – tunnistamme määrät ja yksiköt automaattisesti.",
     "instructionsHelp": "Kirjoita selkeät vaiheittaiset ohjeet. Siirry seuraavaan vaiheeseen painamalla Enter.",
-    "tagsHelp": "Kirjoita tunnisteita ja lisää niitä napsauttamalla ehdotuksia. Reseptissä jo olevat tunnisteet ovat täytettyjä; uusilla on katkoviivareunus.",
+    "tagsHelp": "Valitse tunniste tai luo uusi.",
     "tagsAndCategories": "Tunnisteet ja kategoriat",
     "categoriesHelp": "Valitse tämän reseptin ateriakategoriat.",
     "addCategory": "Lisää kategoria",
@@ -224,7 +222,7 @@
     "originRegion": "Alue",
     "originRegionPlaceholder": "esim. Sisilia",
     "cuisines": "Ruokakulttuurit",
-    "cuisinesHelp": "Valitse asennuksesi listalta. Fuusioruoalle useampi on järkevä.",
+    "cuisinesHelp": "Valitse luettelosta tai luo oma. Useampi sopii fuusioruoalle.",
     "provenanceNote": "Huomautus",
     "provenanceNotePlaceholder": "Muutama lause siitä, mistä tämä ruoka on peräisin…",
     "servings": "Annokset",
@@ -441,7 +439,6 @@
     "singular": "Keittokirja",
     "notFound": "Keittokirjaa ei löytynyt",
     "notFoundHint": "Se on voitu poistaa, tai se ei ole sinulle näkyvissä.",
-    "emptyHint": "Lisää reseptejä minkä tahansa reseptin pikatoimintovalikosta.",
     "panelTitle": "Lisää keittokirjaan",
     "newWithRecipe": "Uusi keittokirja tällä reseptillä",
     "noneEditable": "Sinulla ei ole vielä muokattavia keittokirjoja.",
@@ -545,7 +542,7 @@
     "tagsAndCategories": "Tunnisteet ja luokat",
     "categories": "Luokat",
     "tags": "Tunnisteet",
-    "tagsHint": "Valitse ehdotus tai kirjoita uusi tunniste; uusilla tunnisteilla on katkoviivareuna.",
+    "tagsHint": "Valitse tunniste luettelosta tai luo uusi.",
     "addTag": "Lisää tunniste",
     "removeNamed": "Poista {name}",
     "servingsAndTime": "Annokset ja aika",
@@ -561,6 +558,13 @@
     "discardMessage": "Sinulla on tallentamattomia muutoksia.",
     "keepEditing": "Jatka muokkausta",
     "discard": "Hylkää"
+  },
+  "picker": {
+    "create": "Luo \"{name}\"",
+    "createOffline": "Voit luoda kohteen \"{name}\", kun olet verkossa.",
+    "tooLong": "Nimessä saa olla enintään {max} merkkiä.",
+    "createFailed": "Kohdetta \"{name}\" ei voitu luoda. Yritä uudelleen.",
+    "loadFailed": "Luetteloa ei voitu ladata."
   },
   "search": {
     "sortBestMatch": "Paras osuma",

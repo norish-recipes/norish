@@ -38,9 +38,7 @@ import {
  * would silently overwrite it.
  */
 type ArchiveDownloadFailure =
-  | { reason: "unauthorized" }
-  | { reason: "forbidden" }
-  | { reason: "failed"; httpStatus?: number; error?: unknown };
+  { reason: "unauthorized" } | { reason: "failed"; httpStatus?: number; error?: unknown };
 
 type ArchiveDownloadOutcome =
   | { status: "streamed"; bytes: number }
@@ -48,7 +46,7 @@ type ArchiveDownloadOutcome =
   | ({ status: "failed" } & ArchiveDownloadFailure);
 
 type ArchiveDownloadRequest = {
-  /** The export URL, already carrying its scope */
+  /** The export URL */
   url: string;
   /** Used only if the response declines to name the file itself */
   fallbackFileName: string;
@@ -83,7 +81,6 @@ function withProbe(url: string): string {
 
 function failureFor(httpStatus: number): ArchiveDownloadFailure {
   if (httpStatus === 401) return { reason: "unauthorized" };
-  if (httpStatus === 403) return { reason: "forbidden" };
 
   return { reason: "failed", httpStatus };
 }

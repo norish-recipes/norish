@@ -1,6 +1,6 @@
 /**
- * AI Changes (CONTEXT.md; ADR-0037): AI's answers made and recorded in one transaction, kept or
- * undone under `edit` on their food.
+ * AI Changes (CONTEXT.md; ADR-0037): AI's answers made and recorded in one transaction, inside the
+ * asked food's household and the seed (ADR-0042), kept or undone by that household's members.
  */
 import { AsyncLocalStorage } from "node:async_hooks";
 
@@ -31,6 +31,7 @@ import {
   restoreSpelling,
   settleAIChange,
   takeOpenParentChanges,
+  undoStaysIn,
   wasDeletionUndone,
   wasMergeUndone,
   wasParentUndone,
@@ -41,6 +42,7 @@ import {
   deleteCatalogueAlias,
   deleteCatalogueIngredient,
   findCatalogueAliasOwner,
+  findIngredientHouseholds,
   isAskableByAI,
   keepIngredientDistinct,
   renameToPlainName,
@@ -61,7 +63,6 @@ import {
   splitCatalogueIngredient,
 } from "@norish/db/repositories/ingredient-relocation";
 import { getUserPreferences } from "@norish/db/repositories/users";
-import { getIngredientPermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { distinctFoods } from "@norish/shared/lib/line-foods";
 
 import type { CatalogueActor, CatalogueEdit } from "./catalogue";
@@ -102,44 +103,60 @@ export function skippedBy<R extends string>(outcome: R | "gone") {
 
 async function announceIfApplied<T extends string>(
   outcome: T,
-  changed: Array<string | null>
+  changed: Array<string | null>,
+  householdId: string | null
 ): Promise<T> {
-  if (outcome === "applied") {
-    await ingredientChanges().changed(changed.filter((id): id is string => id !== null));
+  if (outcome === "applied" && householdId) {
+    await ingredientChanges().changed(
+      changed.filter((id): id is string => id !== null),
+      householdId
+    );
   }
 
   return outcome;
 }
 
 /**
- * Take the tree lock, then the foods' rows: "gone" where one of `ids` went, "decided" where a person
- * decided about the first meanwhile, else null.
+ * Take the tree lock, then the foods' rows: "gone" where one of `ids` went or is neither the first
+ * one's household's nor the seed's, "decided" where a person decided about the first meanwhile, else
+ * the household AI works in.
  */
 async function lockForAI(tx: DbTransaction, ids: readonly string[]) {
   if (!(await lockFoods(tx, ids))) return "gone";
+  const households = await findIngredientHouseholds(ids, tx);
+  const householdId = households.get(ids[0]!);
+
+  if (!householdId) return "gone";
+  for (const id of ids) {
+    const other = households.get(id);
+
+    if (other !== null && other !== householdId) return "gone";
+  }
   if (!isOverriding() && !(await isAskableByAI(tx, ids[0]!))) return "decided";
 
-  return null;
+  return { householdId };
 }
 
 /** Merge `sourceId` into `targetId`, keeping the target's own flag; an unsure merge flags it. */
 export async function mergeByAI(sourceId: string, targetId: string, sure: boolean) {
+  let householdId: string | null = null;
   const outcome = await withTransaction(async (tx): Promise<ApplyOutcome> => {
     const locked = await lockForAI(tx, [sourceId, targetId]);
 
-    if (locked) return locked;
+    if (typeof locked === "string") return locked;
+    householdId = locked.householdId;
     const undo = await readMergeUndo(tx, sourceId);
 
     if (!undo) return "gone";
     if (!isOverriding() && (await wasMergeUndone(tx, targetId, undo.aliasIds))) return "undone";
     await mergeCatalogueIngredients(tx, sourceId, targetId, { keepFlag: true });
-    await recordAIChange(tx, { ingredientId: targetId, sure, undo });
+    await recordAIChange(tx, { householdId, ingredientId: targetId, sure, undo });
     if (!sure) await flagUnderOpenChange(tx, targetId);
 
     return "applied";
   });
 
-  return await announceIfApplied(outcome, [sourceId, targetId]);
+  return await announceIfApplied(outcome, [sourceId, targetId], householdId);
 }
 
 /**
@@ -148,11 +165,13 @@ export async function mergeByAI(sourceId: string, targetId: string, sure: boolea
  */
 export async function parentByAI(ingredientId: string, parentId: string | null, sure: boolean) {
   let previous: string | null = null;
+  let householdId: string | null = null;
   const ids = parentId ? [ingredientId, parentId] : [ingredientId];
   const outcome = await withTransaction(async (tx): Promise<ApplyOutcome | "cycle"> => {
     const locked = await lockForAI(tx, ids);
 
-    if (locked) return locked;
+    if (typeof locked === "string") return locked;
+    householdId = locked.householdId;
     if (!isOverriding() && (await wasParentUndone(tx, ingredientId, parentId))) return "undone";
 
     if (parentId && (await closesCycle(tx, ingredientId, parentId))) return "cycle";
@@ -165,6 +184,7 @@ export async function parentByAI(ingredientId: string, parentId: string | null, 
     }
     if (previous !== parentId || replaced) {
       await recordAIChange(tx, {
+        householdId,
         ingredientId,
         targetId: parentId,
         sure,
@@ -177,21 +197,24 @@ export async function parentByAI(ingredientId: string, parentId: string | null, 
   });
 
   return {
-    outcome: await announceIfApplied(outcome, [ingredientId, previous, parentId]),
+    outcome: await announceIfApplied(outcome, [ingredientId, previous, parentId], householdId),
     previous,
   };
 }
 
 /** Rename a food to its Plain Name and settle it; "settled" where settled or taken meanwhile. */
 export async function renameByAI(ingredientId: string, formerName: string, name: string) {
+  let householdId: string | null = null;
   const outcome = await withTransaction(async (tx): Promise<ApplyOutcome | "settled"> => {
     const locked = await lockForAI(tx, [ingredientId]);
 
-    if (locked) return locked;
+    if (typeof locked === "string") return locked;
+    householdId = locked.householdId;
     if (!(await renameToPlainName(tx, ingredientId, name, { evenSettled: isOverriding() }))) {
       return "settled";
     }
     await recordAIChange(tx, {
+      householdId,
       ingredientId,
       sure: true,
       undo: { kind: "plain-name", formerName, name },
@@ -200,7 +223,7 @@ export async function renameByAI(ingredientId: string, formerName: string, name:
     return "applied";
   });
 
-  return await announceIfApplied(outcome, [ingredientId]);
+  return await announceIfApplied(outcome, [ingredientId], householdId);
 }
 
 /**
@@ -213,23 +236,25 @@ export async function splitByAI(
   joined: LineJoin
 ) {
   const ids = [...new Set([ingredientId, ...parts.map((part) => part.ingredientId)])];
+  let householdId: string | null = null;
   const { outcome, movedTo } = await withTransaction(async (tx) => {
     const none = (outcome: ApplyOutcome | "refused") => ({ outcome, movedTo: null });
 
     const locked = await lockForAI(tx, ids);
 
-    if (locked) return none(locked);
+    if (typeof locked === "string") return none(locked);
+    householdId = locked.householdId;
     const spelledByFood = parts.find((part) => part.ingredientId === ingredientId);
     let movedTo: { id: string; minted: boolean } | null = null;
 
     if (spelledByFood) {
-      const alias = await findCatalogueAliasOwner(tx, spelledByFood.aliasId);
+      const alias = await findCatalogueAliasOwner(tx, householdId, spelledByFood.aliasId);
 
       if (alias?.ingredientId !== ingredientId) return none("gone");
       movedTo = await moveToFoodNamedFor(
         tx,
         { id: spelledByFood.aliasId, text: alias.text },
-        { ownerId: alias.ownerId }
+        { householdId, ownerId: alias.ownerId }
       );
       // The food is itself named for the spelling: a split would delete it with the spelling on it.
       if (movedTo.id === ingredientId) return none("refused");
@@ -245,7 +270,9 @@ export async function splitByAI(
     return { outcome: "applied" as const, movedTo };
   });
 
-  if (outcome !== "refused") await announceIfApplied(outcome, [...ids, movedTo?.id ?? null]);
+  if (outcome !== "refused") {
+    await announceIfApplied(outcome, [...ids, movedTo?.id ?? null], householdId);
+  }
   if (outcome === "applied" && movedTo?.minted) await announceMinted([movedTo.id]);
 
   return outcome;
@@ -257,10 +284,12 @@ export async function splitByAI(
  */
 export async function deleteByAI(ingredientId: string): Promise<ApplyOutcome | "kept"> {
   let piled = 0;
+  let householdId: string | null = null;
   const outcome = await withTransaction(async (tx): Promise<ApplyOutcome | "kept"> => {
     const locked = await lockForAI(tx, [ingredientId]);
 
-    if (locked) return locked;
+    if (typeof locked === "string") return locked;
+    householdId = locked.householdId;
     const food = await readDeletedFood(tx, ingredientId);
 
     if (!food) return "gone";
@@ -271,6 +300,7 @@ export async function deleteByAI(ingredientId: string): Promise<ApplyOutcome | "
       return "kept";
     }
     const aiChangeId = await recordAIChange(tx, {
+      householdId,
       sure: true,
       undo: { kind: "not-a-food", food },
     });
@@ -278,6 +308,7 @@ export async function deleteByAI(ingredientId: string): Promise<ApplyOutcome | "
     await deleteCatalogueIngredient(tx, ingredientId);
     piled = await addToJunkPile(
       tx,
+      householdId,
       food.aliases.map((alias) => alias.fold),
       { reason: "not-a-food", aiChangeId }
     );
@@ -286,8 +317,8 @@ export async function deleteByAI(ingredientId: string): Promise<ApplyOutcome | "
   });
 
   if (piled > 0) forgetSpellingRules();
-  if (outcome === "applied" || outcome === "kept") {
-    await ingredientChanges().changed([ingredientId]);
+  if ((outcome === "applied" || outcome === "kept") && householdId) {
+    await ingredientChanges().changed([ingredientId], householdId);
   }
 
   return outcome;
@@ -297,8 +328,9 @@ export async function deleteByAI(ingredientId: string): Promise<ApplyOutcome | "
 export type SpellingOutcome = ApplyOutcome | "seeded" | "last-spelling";
 
 /**
- * The spelling the food holds that the seed did not give it, locked with the food (and `targetId`);
- * an outcome instead where it went, is seeded, was undone or is the food's last.
+ * The household's spelling on the food, which the seed did not give it, locked with the food (and
+ * `targetId`, the household's or the seed's); an outcome instead where it went, is the seed's, was
+ * undone or is the food's last.
  */
 async function lockAddedSpelling(
   tx: DbTransaction,
@@ -312,12 +344,16 @@ async function lockAddedSpelling(
   const read = await readChangedSpelling(tx, aliasId);
 
   if (!read || read.ingredientId !== ingredientId) return "gone";
-  if (read.seeded) return "seeded";
-  if (!isOverriding() && (await wasSpellingUndone(tx, aliasId))) return "undone";
-  if ((await countAliasesOf(tx, ingredientId)) <= 1) return "last-spelling";
-  const { ingredientId: _on, seeded: _seeded, ...spelling } = read;
+  const { ingredientId: _on, householdId, ...spelling } = read;
 
-  return spelling;
+  if (householdId === null) return "seeded";
+  const target = targetId ? (await findIngredientHouseholds([targetId], tx)).get(targetId) : null;
+
+  if (target !== null && target !== householdId) return "gone";
+  if (!isOverriding() && (await wasSpellingUndone(tx, aliasId))) return "undone";
+  if ((await countAliasesOf(tx, ingredientId, householdId)) <= 1) return "last-spelling";
+
+  return { householdId, spelling };
 }
 
 /**
@@ -330,11 +366,13 @@ export async function removeSpellingByAI(
   { notAFood }: { notAFood: boolean }
 ): Promise<SpellingOutcome> {
   const done = await withTransaction(async (tx) => {
-    const spelling = await lockAddedSpelling(tx, ingredientId, aliasId);
+    const locked = await lockAddedSpelling(tx, ingredientId, aliasId);
 
-    if (typeof spelling === "string") return spelling;
+    if (typeof locked === "string") return locked;
+    const { householdId, spelling } = locked;
     const rows = await findRowsNamingSpellings(tx, [aliasId]);
     const aiChangeId = await recordAIChange(tx, {
+      householdId,
       ingredientId,
       sure: true,
       undo: {
@@ -351,10 +389,13 @@ export async function removeSpellingByAI(
 
     await deleteCatalogueAlias(tx, aliasId);
     const piled = notAFood
-      ? await addToJunkPile(tx, [spelling.fold], { reason: "not-a-food", aiChangeId })
+      ? await addToJunkPile(tx, householdId, [spelling.fold], {
+          reason: "not-a-food",
+          aiChangeId,
+        })
       : 0;
 
-    return { rows, aiChangeId, piled };
+    return { rows, aiChangeId, piled, householdId };
   });
 
   if (typeof done === "string") return done;
@@ -362,7 +403,7 @@ export async function removeSpellingByAI(
   await resolveAgain(done.rows, "person");
   await noteSpellingRemovalLeft(done.aiChangeId);
 
-  return await announceIfApplied("applied", [ingredientId]);
+  return await announceIfApplied("applied", [ingredientId], done.householdId);
 }
 
 /** Move a spelling AI says names another food to that food; its rows follow. */
@@ -371,11 +412,16 @@ export async function moveSpellingByAI(
   aliasId: string,
   targetId: string
 ): Promise<SpellingOutcome> {
+  let householdId: string | null = null;
   const outcome = await withTransaction(async (tx): Promise<SpellingOutcome> => {
-    const spelling = await lockAddedSpelling(tx, ingredientId, aliasId, targetId);
+    const locked = await lockAddedSpelling(tx, ingredientId, aliasId, targetId);
 
-    if (typeof spelling === "string") return spelling;
+    if (typeof locked === "string") return locked;
+    const { spelling } = locked;
+
+    householdId = locked.householdId;
     await recordAIChange(tx, {
+      householdId,
       ingredientId,
       targetId,
       sure: true,
@@ -386,7 +432,7 @@ export async function moveSpellingByAI(
     return "applied";
   });
 
-  return await announceIfApplied(outcome, [ingredientId, targetId]);
+  return await announceIfApplied(outcome, [ingredientId, targetId], householdId);
 }
 
 /** Flag a food AI answered about without changing it, unless the answer was sure or a person decided meanwhile. */
@@ -395,14 +441,16 @@ export async function flagByAnswer(
   sure: boolean,
   reason: FlagReason = "ai-unsure"
 ): Promise<void> {
-  const flagged = await withTransaction(async (tx) => {
-    if (await lockForAI(tx, [ingredientId])) return false;
+  const householdId = await withTransaction(async (tx) => {
+    const locked = await lockForAI(tx, [ingredientId]);
+
+    if (typeof locked === "string") return null;
     await refreshAIFlag(tx, ingredientId, { unsure: !sure, reason });
 
-    return true;
+    return locked.householdId;
   });
 
-  if (flagged) await ingredientChanges().changed([ingredientId]);
+  if (householdId) await ingredientChanges().changed([ingredientId], householdId);
 }
 
 /** One AI Change as Changed by AI shows it, and whether the viewer may keep or undo it. */
@@ -423,29 +471,35 @@ export interface AIChangeItem {
   canAct: boolean;
 }
 
-/** Whose food a change is (a merge's: the food merged away), and what it was before. */
-function subjectOf(change: StoredAIChange) {
-  const { undo } = change;
-
+/** What a change's food was before: a merged or deleted food's name, a spelling, a former name. */
+function fromOf({ undo }: StoredAIChange): string | null {
   switch (undo.kind) {
     case "merge":
-      return { ownerId: undo.ownerId, from: undo.name };
+      return undo.name;
     case "parent":
-      return { ownerId: change.ingredient?.ownerId ?? null, from: null };
+      return null;
     case "plain-name":
-      return { ownerId: change.ingredient?.ownerId ?? null, from: undo.formerName };
+      return undo.formerName;
     case "not-a-food":
-      return { ownerId: undo.food.ownerId, from: undo.food.name };
+      return undo.food.name;
     case "spelling":
-      return { ownerId: change.ingredient?.ownerId ?? null, from: undo.spelling.text };
+      return undo.spelling.text;
   }
 }
 
-/** Whether `actor` may act on a change, by the ingredient policy on its food. */
-async function mayActOn(actor: CatalogueActor, change: StoredAIChange): Promise<boolean> {
-  const { edit } = await getIngredientPermissionPolicy();
+/**
+ * Whether `actor` may act on a change: a member of the household AI changed, never on a stranded
+ * one, and only an admin where Keep or Undo would write a seeded food's parent or name.
+ */
+function mayActOn(actor: CatalogueActor, change: StoredAIChange): boolean {
+  if (change.undo.stranded || !mayEditOwnedRow(actor, change.householdId)) return false;
 
-  return mayEditOwnedRow(edit, actor, subjectOf(change).ownerId);
+  return actor.isServerAdmin || !writesSeededFood(change);
+}
+
+/** A merge or a spelling change writes nothing on a seeded food; a parent or a name does. */
+function writesSeededFood({ undo, ingredient }: StoredAIChange): boolean {
+  return ingredient?.householdId === null && undo.kind !== "merge" && undo.kind !== "spelling";
 }
 
 /**
@@ -453,11 +507,11 @@ async function mayActOn(actor: CatalogueActor, change: StoredAIChange): Promise<
  * settled before they cleared it is left out.
  */
 export async function listAIChangesFor(actor: CatalogueActor): Promise<AIChangeItem[]> {
-  const [{ edit }, changes] = await Promise.all([
-    getIngredientPermissionPolicy(),
-    getUserPreferences(actor.userId).then((prefs) => listAIChanges(prefs.aiChangesClearedAt)),
-  ]);
+  const changes = await getUserPreferences(actor.userId).then((prefs) =>
+    listAIChanges(actor, prefs.aiChangesClearedAt)
+  );
   const names = await findLocaleNames(
+    actor.householdId,
     changes.flatMap((change) =>
       [change.ingredient?.id, change.target?.id, change.dropped?.id].filter(
         (id) => id !== undefined
@@ -471,8 +525,6 @@ export async function listAIChangesFor(actor: CatalogueActor): Promise<AIChangeI
   });
 
   return changes.map((change) => {
-    const { ownerId, from } = subjectOf(change);
-
     return {
       id: change.id,
       kind: change.undo.kind,
@@ -482,8 +534,8 @@ export async function listAIChangesFor(actor: CatalogueActor): Promise<AIChangeI
       ingredient: change.ingredient ? named(change.ingredient) : null,
       target: change.target ? named(change.target) : null,
       dropped: change.dropped ? named(change.dropped) : null,
-      from,
-      canAct: mayEditOwnedRow(edit, actor, ownerId),
+      from: fromOf(change),
+      canAct: mayActOn(actor, change),
     };
   });
 }
@@ -491,12 +543,12 @@ export async function listAIChangesFor(actor: CatalogueActor): Promise<AIChangeI
 /** The change, locked after the tree lock as every catalogue edit takes them, if the actor may act on it. */
 async function lockChangeFor(tx: DbTransaction, actor: CatalogueActor, changeId: string) {
   await lockTree(tx);
-  const change = await lockAIChange(tx, changeId);
+  const change = await lockAIChange(tx, actor, changeId);
 
   if (!change) throw new CatalogueEditError("not-found");
-  if (!(await mayActOn(actor, change))) throw new CatalogueEditError("forbidden");
+  if (!change.householdId || !mayActOn(actor, change)) throw new CatalogueEditError("forbidden");
 
-  return change;
+  return { ...change, householdId: change.householdId };
 }
 
 /**
@@ -510,17 +562,21 @@ export async function keepAIChange(
   return await inEdit(async (tx) => {
     const change = await lockChangeFor(tx, actor, changeId);
     const foodId = change.ingredient?.id;
+    const audience = change.householdId;
 
-    if (change.sure || change.kept || !foodId) return { changed: [] };
+    if (change.sure || change.kept || !foodId) return { changed: [], audience };
     await settleAIChange(tx, changeId, "kept");
     if (change.undo.kind === "merge") {
       await clearAIFlagUnlessOpen(tx, foodId);
     } else {
-      await keepIngredientDistinct(tx, foodId);
+      // Keeping a spelling change on a seeded food leaves the seed's mark to an admin's edit.
+      const household = change.ingredient?.householdId;
+
+      if (household) await keepIngredientDistinct(tx, foodId, household);
       await refreshAIFlag(tx, foodId, { unsure: false });
     }
 
-    return { changed: [foodId] };
+    return { changed: [foodId], audience };
   });
 }
 
@@ -532,15 +588,22 @@ export async function undoAIChange(
   const { piled, ...edit } = await inEdit(async (tx) => {
     const change = await lockChangeFor(tx, actor, changeId);
     const foodId = change.ingredient?.id;
+
+    // Undo writes only in the actor's catalogue: a change naming another household's rows has none.
+    if (!(await undoStaysIn(tx, actor, change))) throw new CatalogueEditError("forbidden");
     const changed = await reverseChange(tx, change);
-    // An Undo says the text names a food, so it leaves the pile whoever put it there.
-    const piled = await takeOffJunkPile(tx, removedFolds(change));
+    // An Undo says the text names a food, so it leaves the household's pile whoever put it there.
+    const piled = await takeOffJunkPile(tx, change.householdId, removedFolds(change));
 
     await settleAIChange(tx, changeId, "undone");
     // A sure change raised no flag, so undoing it lifts none.
     if (!change.sure && foodId) await clearAIFlagUnlessOpen(tx, foodId);
 
-    return { changed: foodId ? [foodId, ...changed] : changed, piled };
+    return {
+      changed: foodId ? [foodId, ...changed] : changed,
+      audience: change.householdId,
+      piled,
+    };
   });
 
   if (piled > 0) forgetSpellingRules();
@@ -584,12 +647,17 @@ function removedFolds({ undo, target }: StoredAIChange): string[] {
   return undo.kind === "spelling" && !target ? [undo.spelling.fold] : [];
 }
 
-/** Put back what one change took, through `tx`; returns the other foods it touched. */
-async function reverseChange(tx: DbTransaction, change: StoredAIChange): Promise<string[]> {
-  const { undo } = change;
+/** Put back what one change took in its household, through `tx`; returns the other foods it touched. */
+async function reverseChange(
+  tx: DbTransaction,
+  change: StoredAIChange & { householdId: string }
+): Promise<string[]> {
+  const { undo, householdId } = change;
 
   if (undo.kind === "not-a-food") {
-    const restored = await refusedOn("name-taken", () => restoreDeletedFood(tx, undo.food));
+    const restored = await refusedOn("name-taken", () =>
+      restoreDeletedFood(tx, householdId, undo.food)
+    );
 
     if (!restored) throw new CatalogueEditError("spelling-taken");
 
@@ -607,7 +675,7 @@ async function reverseChange(tx: DbTransaction, change: StoredAIChange): Promise
 
       if (stillJoined.length === 0) return [];
       const restored = await refusedOn("name-taken", () =>
-        insertCatalogueIngredient(tx, { name: undo.name, ownerId: undo.ownerId })
+        insertCatalogueIngredient(tx, { householdId, name: undo.name, ownerId: undo.ownerId })
       );
 
       for (const aliasId of stillJoined) await moveCatalogueAlias(tx, aliasId, restored);
@@ -641,21 +709,21 @@ async function reverseChange(tx: DbTransaction, change: StoredAIChange): Promise
       const movedTo = change.target?.id;
 
       if (!movedTo) {
-        const mint = await findMintHolding(tx, undo.spelling.fold, change.createdAt);
+        const mint = await findMintHolding(tx, householdId, undo.spelling.fold, change.createdAt);
 
         // The removal's rows minted its text again: that food goes back into this one.
         if (mint) await mergeCatalogueIngredients(tx, mint, foodId);
-        if (!(await restoreSpelling(tx, foodId, undo))) {
+        if (!(await restoreSpelling(tx, householdId, foodId, undo))) {
           throw new CatalogueEditError("spelling-taken");
         }
 
         return mint ? [mint] : [];
       }
-      const alias = await findCatalogueAliasOwner(tx, undo.spelling.id);
+      const alias = await findCatalogueAliasOwner(tx, householdId, undo.spelling.id);
 
       // A spelling moved on since, or the moved-to food's last, stays.
       if (alias?.ingredientId !== movedTo || (await lockIngredients(tx, [movedTo])) < 1) return [];
-      if ((await countAliasesOf(tx, movedTo)) <= 1) return [];
+      if ((await countAliasesOf(tx, movedTo, householdId)) <= 1) return [];
       await moveCatalogueAlias(tx, undo.spelling.id, foodId);
 
       return [movedTo];

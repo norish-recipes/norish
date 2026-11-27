@@ -8,7 +8,7 @@
     "household": "Huishouden",
     "caldav": "CalDAV",
     "admin": "Admin",
-    "ingredients": "Ingrediënten"
+    "content": "Inhoud"
   },
   "user": {
     "signInMethods": {
@@ -76,13 +76,15 @@
         "warning": "Sla deze sleutel nu op! Je kunt hem niet opnieuw zien. We slaan alleen een hash op en kunnen deze sleutel niet herstellen.",
         "hint": "Gebruik deze sleutel in de <code>x-api-key</code> header bij het maken van API-aanvragen.",
         "confirmButton": "Ik heb het opgeslagen",
-        "copyButton": "Sleutel kopiëren"
+        "copyButton": "Sleutel kopiëren",
+        "copied": "Sleutel gekopieerd"
       },
       "deleteModal": {
         "title": "API-sleutel verwijderen",
         "message": "Weet je zeker dat je deze API-sleutel wilt verwijderen? Dit kan niet ongedaan worden gemaakt.",
         "confirmButton": "Sleutel verwijderen"
-      }
+      },
+      "createNoAnswer": "De server gaf geen antwoord. De sleutel is mogelijk gemaakt: controleer je sleutels."
     },
     "archiveImport": {
       "title": "Archief importeren",
@@ -134,9 +136,9 @@
       "deleteModal": {
         "title": "Account verwijderen",
         "permanentWarning": "Deze actie is permanent en kan niet ongedaan worden gemaakt!",
-        "dataWarning": "Je persoonlijke gegevens, inclusief boodschappen, agenda-items en notities, worden permanent verwijderd.",
-        "recipesNote": "Recepten die je hebt gemaakt, worden bewaard maar zijn niet langer gekoppeld aan je account.",
-        "adminNote": "Als je de beheerder bent van een huishouden met andere leden, moet je eerst de admin overdragen.",
+        "dataWarning": "Je recepten en kookboeken worden verwijderd, net als je beoordelingen, favorieten, allergieën, voorkeuren, API-sleutels, deellinks, CalDAV en sitetokens.",
+        "recipesNote": "Je huishouden houdt zijn boodschappen, winkels, voorraadkast en maaltijdplanning. Je recepten in de planning blijven daar staan als notitie.",
+        "adminNote": "Ben je de beheerder van het huishouden, dan neemt het langst aanwezige lid het over. Ben je het laatste lid, dan wordt het huishouden verwijderd met alles erin.",
         "confirmButton": "Verwijder mijn account"
       }
     },
@@ -228,6 +230,7 @@
       "revokeModal": {
         "title": "Link intrekken",
         "message": "Deze link voor {recipeName} werkt niet meer totdat je hem opnieuw activeert.",
+        "finalMessage": "Deze link voor {recipeName} werkt niet meer en je kunt hem niet opnieuw activeren.",
         "confirm": "Intrekken"
       },
       "reactivateModal": {
@@ -247,11 +250,13 @@
       "yourRole": "Jouw rol",
       "admin": "Beheerder",
       "member": "Lid",
+      "justYou": "Je huishouden (alleen jij)",
       "members": "Leden",
       "leaveButton": "Verlaat huishouden",
       "leaveModal": {
         "title": "Verlaat huishouden",
         "confirmMessage": "Weet je zeker dat je {name} wilt verlaten?",
+        "goesAndStays": "Je recepten en kookboeken gaan met je mee, met hun tags en ingrediënten. De boodschappen, voorraadkast, maaltijdplanning en winkels blijven bij het huishouden.",
         "adminWarning": "Je bent de beheerder. Je moet de admin overdragen voordat je vertrekt.",
         "confirmButton": "Verlaat huishouden"
       }
@@ -269,7 +274,7 @@
       "kickModal": {
         "title": "Verwijder gebruiker",
         "confirmMessage": "Weet je zeker dat je {name} uit het huishouden wilt verwijderen?",
-        "warning": "Ze verliezen toegang tot alle gedeelde recepten, boodschappen en agenda-items.",
+        "warning": "Hun recepten en kookboeken gaan met hen mee, met hun tags en ingrediënten. De boodschappen, voorraadkast, maaltijdplanning en winkels blijven bij het huishouden.",
         "confirmButton": "Verwijder gebruiker"
       },
       "transferModal": {
@@ -293,18 +298,11 @@
       "copyFailed": "Join-code kopieren mislukt",
       "copyButton": "Join code kopiëren"
     },
-    "create": {
-      "title": "Huishouden aanmaken",
-      "description": "Maak een nieuw huishouden om recepten en boodschappen te delen met familie of vrienden.",
-      "nameLabel": "Naam",
-      "namePlaceholder": "bijv. Familie Jansen",
-      "submitButton": "Maak huishouden aan"
-    },
     "join": {
       "title": "Huishouden joinen",
-      "description": "Voer een join code in om lid te worden van een bestaand huishouden.",
+      "description": "Voer een join code in om lid te worden van een bestaand huishouden. Je huishouden gaat erin op: je recepten, boodschappen, voorraadkast, maaltijdplanning en winkels komen mee.",
       "codeLabel": "Join code",
-      "codePlaceholder": "8-cijferige code",
+      "codePlaceholder": "6-cijferige code",
       "submitButton": "Join huishouden"
     }
   },
@@ -392,7 +390,9 @@
   },
   "ingredients": {
     "title": "Ingrediënten",
-    "description": "De ingrediëntencatalogus waarmee Norish voedingswaarden, ingrediënticonen en vertalingen bepaalt.",
+    "sheetTitle": "Ingrediënt",
+    "loadFailed": "Dit ingrediënt laden is niet gelukt",
+    "loadOffline": "Dit ingrediënt heeft een verbinding nodig",
     "search": "Ingrediënten zoeken",
     "searchMatch": "Overeenkomst",
     "searchIn": "Zoek in",
@@ -416,7 +416,6 @@
       "seed-ambiguous": "De catalogus kent meerdere ingrediënten die dit kunnen zijn.",
       "ai-junk": "AI dacht dat dit geen ingrediënt is, zoals keukengerei of een stukje van een receptregel."
     },
-    "empty": "Geen ingrediënten gevonden",
     "emptyFlagged": "Niets is gemarkeerd",
     "rename": "Hernoemen",
     "delete": "Verwijderen",
@@ -428,8 +427,8 @@
       "pantry": "{count, plural, one {# voorraaditem gaat weg} other {# voorraaditems gaan weg}}"
     },
     "markDistinct": "Markeer als apart",
-    "summary": "{spellings, plural, one {# vertaling} other {# vertalingen}}{kinds, plural, =0 {} one {, # soort} other {, # soorten}}{parent, select, none {} other {, hoofdingrediënt: {parent}}}",
-    "addAlias": "Vertaling toevoegen",
+    "summary": "{spellings, plural, one {# schrijfwijze} other {# schrijfwijzen}}{kinds, plural, =0 {} one {, # soort} other {, # soorten}}{parent, select, none {} other {, hoofdingrediënt: {parent}}}",
+    "addAlias": "Schrijfwijze toevoegen",
     "removeAlias": "{alias} verwijderen",
     "mergeInto": "Samenvoegen met…",
     "merge": "Samenvoegen",
@@ -449,15 +448,17 @@
     "clearParent": "Bovenliggend verwijderen",
     "nameSection": "Naam",
     "parentSection": "Hoofdingrediënt",
-    "spellingsSection": "Vertalingen",
+    "spellingsSection": "Schrijfwijzen",
     "shownAs": "Voor jou getoond als {name}",
     "changeParent": "Ander hoofdingrediënt…",
-    "spellingsCount": "{count, plural, one {# vertaling} other {# vertalingen}}",
+    "spellingsCount": "{count, plural, one {# schrijfwijze} other {# schrijfwijzen}}",
     "dataSources": {
       "title": "Gegevensbronnen",
       "notice": "De ingrediëntencatalogus is gevuld met de ingrediëntentaxonomie van <off>Open Food Facts</off>, beschikbaar onder de <odbl>Open Database License (ODbL)</odbl>. De catalogus die Norish ermee opbouwt, wordt onder dezelfde licentie aangeboden.",
       "nutritionNotice": "De voedingswaarde per 100 g komt uit <ciqual>CIQUAL 2025</ciqual> en CALNUT (ANSES), <usda>USDA FoodData Central</usda> en <cofid>CoFID</cofid>, gekoppeld via de codes die Open Food Facts elk ingrediënt geeft. De correcties van een huishouden zijn diens eigen waarden, niet die van de datasets.",
-      "download": "Ingrediëntencatalogus downloaden (JSON)"
+      "download": "Ingrediëntencatalogus downloaden (JSON)",
+      "downloadOffline": "Je kunt de catalogus downloaden als je online bent.",
+      "downloadFailed": "De catalogus kon niet worden gedownload."
     },
     "nutrition": {
       "section": "Voedingswaarde",
@@ -509,6 +510,7 @@
           "hundredMl": "100 ml weegt (g)"
         }
       },
+      "overHundred": "Vet, koolhydraten en eiwit kunnen niet meer dan 100 g per 100 g zijn.",
       "searchFood": "Zoek in de datasets (Engels), zoals milk semi-skimmed",
       "foodHint": "Typ een paar woorden van de naam",
       "searchingFoods": "Zoeken…",
@@ -556,7 +558,6 @@
       "done": "afgevinkt",
       "repeats": "herhaalt",
       "pantry": "In de voorraadkast",
-      "elsewhere": "{count, plural, one {Nog # keer} other {Nog # keer}} in recepten of lijsten die je niet kunt openen",
       "none": "Niets gebruikt het meer"
     },
     "keepAlias": "{alias} behouden",
@@ -573,6 +574,7 @@
     "changedByAI": {
       "title": "Gewijzigd door AI",
       "open": "{count, plural, =0 {Gewijzigd door AI} other {Gewijzigd door AI · # na te kijken}}",
+      "openCompact": "{count, plural, =0 {Gewijzigd door AI} other {# na te kijken}}",
       "unsure": "Niet zeker",
       "sure": "Gewijzigd",
       "empty": "AI heeft de afgelopen maand niets gewijzigd.",
@@ -587,7 +589,8 @@
       "plainName": "Hernoemd van {from}",
       "notAFood": "Verwijderd, want het is geen ingrediënt. De receptregels en boodschappen houden hun tekst.",
       "spellingRemoved": "Vertaling {from} verwijderd",
-      "spellingMoved": "Vertaling {from} verplaatst naar {of}"
+      "spellingMoved": "Vertaling {from} verplaatst naar {of}",
+      "toCheck": "{count, plural, other {# na te kijken}}"
     },
     "icon": {
       "change": "Icoon wijzigen",
@@ -596,13 +599,16 @@
       "failed": "Van deze afbeelding kon geen icoon worden gemaakt.",
       "generate": "Genereren met AI",
       "generateFailed": "Het icoon kon niet worden gegenereerd."
-    }
+    },
+    "keepDistinct": "Apart houden",
+    "offline": "Je kunt dit ingrediënt wijzigen als je online bent."
   },
   "admin": {
     "shareLinks": {
       "title": "Moderatie van receptdeling",
       "description": "Bekijk publieke receptlinks in de hele instantie en beheer hun levenscyclus.",
       "empty": "Geen deellinks gevonden.",
+      "inactive": "Inactief",
       "table": {
         "recipe": "RECEPT",
         "owner": "EIGENAAR",
@@ -614,6 +620,7 @@
       "revokeModal": {
         "title": "Link intrekken",
         "message": "Deze link voor {recipeName} werkt niet meer totdat hij opnieuw wordt geactiveerd.",
+        "finalMessage": "Deze link voor {recipeName} werkt niet meer en kan niet opnieuw worden geactiveerd.",
         "confirm": "Intrekken"
       },
       "reactivateModal": {
@@ -635,12 +642,7 @@
       "localesDescription": "Selecteer welke talen gebruikers kunnen kiezen",
       "defaultLocale": "Standaardtaal",
       "defaultLocaleDescription": "Taal voor nieuwe gebruikers en als fallback",
-      "atLeastOneLocale": "Minimaal één taal moet ingeschakeld zijn",
-      "export": {
-        "title": "Archief",
-        "description": "Download elk recept op deze server.",
-        "button": "Archief exporteren"
-      }
+      "atLeastOneLocale": "Minimaal één taal moet ingeschakeld zijn"
     },
     "users": {
       "title": "Gebruikers",
@@ -656,7 +658,6 @@
         "owner": "Eigenaar",
         "admin": "Admin"
       },
-      "noHousehold": "Geen huishouden",
       "loading": "Gebruikers laden…",
       "empty": "Nog geen gebruikers.",
       "loadFailed": "Kan de gebruikerslijst niet laden.",
@@ -676,9 +677,8 @@
     },
     "permissions": {
       "title": "Rechten",
-      "description": "Wie mag zien en wijzigen wat anderen hebben gemaakt. Serverbeheerders hebben altijd volledige toegang.",
+      "description": "Wie buiten een huishouden de recepten en kookboeken ervan mag zien en wijzigen. Serverbeheerders volgen dezelfde regels.",
       "recipes": "Recepten",
-      "ingredients": "Ingrediënten",
       "viewRecipes": "Recepten bekijken",
       "viewDescription": "Wie recepten kan zien in het dashboard",
       "editRecipes": "Recepten bewerken",
@@ -689,26 +689,9 @@
         "everyone": "Iedereen",
         "everyoneDescription": "Alle geverifieerde gebruikers",
         "household": "Huishouden",
-        "householdDescription": "Recept eigenaar en hun huishoudleden",
-        "owner": "Alleen eigenaar",
-        "ownerDescription": "Alleen de eigenaar van het recept"
+        "householdDescription": "Recept eigenaar en hun huishoudleden"
       },
       "note": "Boodschappen en agenda-items volgen altijd de huishoudregels: huishoudleden kunnen elkaars items bewerken of verwijderen."
-    },
-    "ingredientPermissions": {
-      "title": "Ingrediëntrechten",
-      "description": "Wie ingrediënten mag hernoemen, als apart mag markeren of hun vertalingen mag verwijderen. Iedereen mag een vertaling toevoegen.",
-      "editIngredients": "Ingrediënten bewerken",
-      "editDescription": "Wie een ingrediënt mag wijzigen dat iemand anders heeft toegevoegd",
-      "levels": {
-        "everyone": "Iedereen",
-        "everyoneDescription": "Alle ingelogde gebruikers",
-        "household": "Huishouden",
-        "householdDescription": "Wie het heeft toegevoegd en de leden van diens huishouden",
-        "owner": "Alleen eigenaar",
-        "ownerDescription": "Alleen wie het heeft toegevoegd"
-      },
-      "note": "Ingrediënten uit de ingebouwde catalogus kunnen alleen door serverbeheerders worden bewerkt."
     },
     "system": {
       "title": "Systeeminstellingen",
@@ -720,6 +703,12 @@
         "restartLabel": "Server herstarten",
         "restartDescription": "Pas configuratiewijzigingen toe die een herstart vereisen",
         "restartButton": "Server herstarten"
+      },
+      "masterKey": {
+        "label": "Hoofdsleutel vervangen",
+        "description": "Versleutel alles met een nieuwe sleutel en trek de oude in",
+        "button": "Hoofdsleutel vervangen",
+        "pinned": "<code>MASTER_KEY</code> is ingesteld, dus vervang hem daar: zet de huidige sleutel in <code>MASTER_KEY_PREVIOUS</code>, stel een nieuwe <code>MASTER_KEY</code> in en herstart."
       }
     },
     "restart": {
@@ -730,6 +719,13 @@
       "warning2": "De server is enkele seconden niet beschikbaar",
       "warning3": "Zorg ervoor dat je deployment <code>restart: always</code> is geconfigureerd, anders start de server mogelijk niet opnieuw op",
       "confirmButton": "Herstarten"
+    },
+    "rotateMasterKey": {
+      "title": "Hoofdsleutel vervangen",
+      "confirmMessage": "De server schrijft een nieuwe hoofdsleutel en herstart. Bij het opstarten versleutelt hij alles met de nieuwe sleutel.",
+      "sessions": "Elke sessie eindigt, ook die van jou, dus iedereen logt opnieuw in",
+      "shareLinks": "Deellinks van vóór 0.28 werken niet meer en kunnen alleen nog worden verwijderd",
+      "confirmButton": "Vervangen"
     },
     "authProviders": {
       "title": "Authenticatieproviders",
@@ -862,10 +858,6 @@
       "prompts": {
         "title": "Prompts",
         "subtitle": "Pas AI-instructies aan voor receptverwerking"
-      },
-      "cuisines": {
-        "title": "Keukens",
-        "subtitle": "De woordenlijst waaruit recepten en AI kiezen"
       },
       "bulkEnrichment": {
         "title": "Bulkverrijking",
@@ -1311,17 +1303,6 @@
       },
       "pagination": "Pagina {current} van {total}"
     },
-    "cuisineVocabulary": {
-      "description": "Keukens zijn een gecureerde woordenlijst die jij beheert. Namen worden in elke taal getoond zoals ze hier staan.",
-      "namePlaceholder": "Naam van keuken",
-      "addLabel": "Keuken toevoegen",
-      "renameLabel": "{name} hernoemen",
-      "deleteLabel": "{name} verwijderen",
-      "deleteConfirm": "\"{name}\" verwijderen? Recepten die deze gebruiken raken hem kwijt.",
-      "empty": "Nog geen keukens.",
-      "duplicate": "Er bestaat al een keuken met die naam.",
-      "saveFailed": "Kon die keuken niet opslaan."
-    },
     "toasts": {
       "localesSaved": "Taalinstellingen opgeslagen",
       "localesError": "Taalinstellingen opslaan mislukt",
@@ -1335,8 +1316,122 @@
     "errors": {
       "failedTitle": "Exporteren mislukt",
       "failedDescription": "Het archief kon niet worden gedownload. Probeer het opnieuw.",
-      "signedOut": "Je sessie is verlopen. Meld je opnieuw aan om te exporteren.",
-      "notAllowed": "Je hebt geen rechten om dit te exporteren."
+      "signedOut": "Je sessie is verlopen. Meld je opnieuw aan om te exporteren."
+    }
+  },
+  "mobile": {
+    "connections": "Verbindingen",
+    "app": "App",
+    "server": "Server",
+    "support": "Ondersteuning",
+    "changeServer": {
+      "title": "Server wijzigen?",
+      "description": "Je wordt uitgelogd van deze server.",
+      "action": "Server wijzigen"
+    },
+    "versionServer": "Server {server}",
+    "offlineReason": "Offline · wijzigingen staan stil",
+    "avatarHint": "Tik op je foto om die te wijzigen",
+    "changePhoto": "Foto wijzigen",
+    "accountGroup": "Je account",
+    "phonesGroup": "Op telefoons"
+  },
+  "content": {
+    "ariaLabel": "Inhoud",
+    "listPicker": "Lijst",
+    "lists": {
+      "tags": "Tags",
+      "cuisines": "Keukens",
+      "categories": "Categorieën",
+      "ingredients": "Ingrediënten"
+    },
+    "search": {
+      "tags": "Tags zoeken",
+      "cuisines": "Keukens zoeken",
+      "categories": "Categorieën zoeken"
+    },
+    "show": "Tonen",
+    "all": "Alle",
+    "unused": "Ongebruikt",
+    "recipes": "{count, plural, =0 {Niet gebruikt} one {# recept} other {# recepten}}",
+    "sections": {
+      "ownCuisines": "Je keukens",
+      "ownCategories": "Je categorieën",
+      "server": "Van je server",
+      "builtIn": "Ingebouwd"
+    },
+    "help": {
+      "server": "De beheerder van je server beheert deze voor elk huishouden",
+      "serverAdmin": "Elk huishouden op deze server krijgt deze aangeboden. Als beheerder beheer je ze.",
+      "builtIn": "Ingebouwde categorieën zijn op elke server hetzelfde en kunnen niet worden gewijzigd"
+    },
+    "readOnly": "Alleen lezen",
+    "empty": {
+      "tags": "Nog geen tags",
+      "cuisines": "Nog geen keukens",
+      "categories": "Nog geen categorieën"
+    },
+    "nothingUnused": "Niets is ongebruikt",
+    "noMatch": "Niets komt overeen",
+    "loadFailed": "Deze lijst laden is niet gelukt",
+    "listOffline": "Deze lijst heeft een verbinding nodig",
+    "offline": "Je kunt deze lijst wijzigen als je online bent.",
+    "panel": {
+      "addTitle": {
+        "tag": "Tag toevoegen",
+        "cuisine": "Keuken toevoegen",
+        "category": "Categorie toevoegen",
+        "ingredient": "Ingrediënt toevoegen"
+      },
+      "editTitle": {
+        "tag": "Tag bewerken",
+        "cuisine": "Keuken bewerken",
+        "category": "Categorie bewerken"
+      },
+      "server": "Server",
+      "name": "Naam",
+      "usedBy": "Gebruikt door",
+      "usedByOwn": "{count, plural, =0 {Niet gebruikt in je recepten} one {# van je recepten} other {# van je recepten}}",
+      "already": {
+        "tag": "Al een tag",
+        "cuisine": "Al een keuken",
+        "category": "Al een categorie",
+        "ingredient": "Al een ingrediënt"
+      },
+      "addTo": "Toevoegen aan",
+      "toHousehold": "Je huishouden",
+      "toServer": "Elk huishouden op deze server",
+      "serverReadOnly": "De beheerder van je server beheert deze keuken voor elk huishouden.",
+      "serverEditable": "Elk huishouden op deze server krijgt deze keuken aangeboden.",
+      "merge": "“{target}” bestaat al. Samenvoegen {count, plural, =0 {verwijdert {name}} one {verplaatst # recept van {name} ernaartoe} other {verplaatst # recepten van {name} ernaartoe}}.",
+      "mergeAction": "Samenvoegen",
+      "tooLong": "Namen mogen maximaal {max} tekens hebben.",
+      "failed": "Opslaan is niet gelukt. Probeer het opnieuw.",
+      "stale": "Niet opgeslagen: het is eerst ergens anders gewijzigd"
+    },
+    "delete": {
+      "title": "“{name}” verwijderen?",
+      "body": "{count, plural, =0 {Geen enkel recept gebruikt het.} one {Het gaat van # recept af. Het recept blijft.} other {Het gaat van # recepten af. De recepten blijven.}}",
+      "bodyServer": "{count, plural, =0 {Geen enkel recept gebruikt het.} one {Het gaat van # recept af in elk huishouden op deze server. Het recept blijft.} other {Het gaat van # recepten af in elk huishouden op deze server. De recepten blijven.}}",
+      "countFailed": "De recepten die het gebruiken konden niet worden geteld. Probeer het opnieuw.",
+      "failed": "Verwijderen is niet gelukt. Probeer het opnieuw.",
+      "action": {
+        "tag": "Verwijder tag",
+        "cuisine": "Verwijder keuken",
+        "category": "Verwijder categorie"
+      }
+    },
+    "countCell": "{count, plural, =0 {Niet gebruikt} other {#}}",
+    "count": {
+      "tag": "{count, plural, one {# tag} other {# tags}}",
+      "ingredient": "{count, plural, one {# ingrediënt} other {# ingrediënten}}"
+    },
+    "countUnused": {
+      "tag": "{count, plural, one {# ongebruikte tag} other {# ongebruikte tags}}"
+    },
+    "menu": {
+      "rename": "Hernoemen",
+      "showRecipes": "Toon recepten"
     }
   }
 }

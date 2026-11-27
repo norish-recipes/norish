@@ -30,7 +30,6 @@ export function DeleteUserModal({
           {tActions("remove")}
         </ActionButton>
       }
-      headerClassName="flex items-center gap-2"
       isCancelDisabled={isDeleting}
       isOpen={isOpen}
       title={

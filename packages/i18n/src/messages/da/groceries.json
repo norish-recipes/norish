@@ -16,7 +16,6 @@
   },
   "empty": {
     "title": "Din indkøbsliste venter",
-    "description": "Tilføj varer ved at bruge knappen \"Tilføj vare\" ovenfor for at komme i gang.",
     "manual": "Manuelle varer"
   },
   "item": {
@@ -54,7 +53,6 @@
     },
     "confirmDelete": "Er du sikker på, at du vil slette {storeName}?",
     "noStoresYet": "Ingen butikker endnu",
-    "createStoreHint": "Opret en butik for at organisere dine indkøb",
     "hasItems": "Denne butik har {count} indkøbsvare.",
     "hasItemsPlural": "Denne butik har {count} indkøbsvarer.",
     "whatToDo": "Hvad vil du gøre med dem?",
@@ -153,6 +151,7 @@
     "cannotSearchHint": "Norish kunne ikke læse en søgeside ud af butikslinket til {store}. Ret det under Administrer butikker, så følger priserne.",
     "packAmount": "Mængde pr. pakke",
     "packUnit": "Enhed",
+    "noUnit": "Ingen enhed",
     "productPage": "Produktside",
     "invalidUrl": "Indtast en webadresse, som https://www.dirk.nl/…",
     "invalidPack": "Indtast både en mængde og en enhed, eller ingen af delene",
@@ -185,7 +184,6 @@
     "viewByStore": "Efter butik",
     "viewByRecipe": "Efter opskrift",
     "listSettings": "Listeindstillinger",
-    "emptyHint": "Tilføj varer med knappen nedenfor.",
     "addTitle": "Tilføj indkøb",
     "editTitle": "Rediger vare",
     "store": "Butik",

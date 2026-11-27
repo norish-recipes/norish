@@ -7,16 +7,16 @@
 import type { Job } from "bullmq";
 
 import type { RecipeImportJobData } from "@norish/queue/contracts/job-types";
-import { dashboardRecipe, recipeExistsByUrlForPolicy } from "@norish/db";
-import { listCategoryNamesForViewer } from "@norish/db/repositories/categories";
+import { dashboardRecipe, findRecipeIdByUrlForAccount } from "@norish/db";
+import { listCategoryNamesForHousehold } from "@norish/db/repositories/categories";
 import { getDecryptedTokensByUserId } from "@norish/db/repositories/site-auth-tokens";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
-import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { createResolvedRecipe } from "@norish/shared-server/ingredients/recipe-lines";
 import { createLogger } from "@norish/shared-server/logger";
 import { withDishColor } from "@norish/shared-server/media/dish-color";
-import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
+import { accountAudience, policyAudience } from "@norish/shared-server/realtime/audience";
 import { recipes } from "@norish/shared-server/realtime/recipes";
+import { matchImportedTags } from "@norish/shared-server/recipes/imported-tags";
 import {
   NOT_A_RECIPE_REASON,
   PRIVATE_ADDRESS_REASON,
@@ -33,6 +33,8 @@ import {
   unrecoverable,
 } from "../create-worker";
 import { announceUsableRecipe } from "../enrichment/announce";
+import { deleteUnstoredRecipeMedia } from "../import-cleanup";
+import { importerHouseholdId } from "../importer-household";
 import { completeStep, reportStep } from "../job-steps";
 import { QUEUE_NAMES } from "../queue-names";
 
@@ -44,34 +46,29 @@ const log = createLogger("worker:recipe-import");
  */
 async function processImportJob(job: Job<RecipeImportJobData>): Promise<string> {
   const parseRecipeFromUrl = requireQueueApiHandler("parseRecipeFromUrl");
-  const { url, recipeId, userId, householdKey, householdUserIds } = job.data;
+  const { url, recipeId, userId } = job.data;
 
   log.info(
     { jobId: job.id, url, recipeId, attempt: job.attemptsMade + 1 },
     "Processing recipe import job"
   );
 
-  const policy = await getRecipePermissionPolicy();
-  const viewPolicy = policy.view;
-  const ctx = { userId, householdKey };
-
   // Emit import started event
-  void recipes.publish("importStarted", { recipeId, url }, { viewPolicy: viewPolicy, ...ctx });
+  const started = await accountAudience(userId);
+
+  if (started) void recipes.publish("importStarted", { recipeId, url }, started);
 
   // Check if recipe already exists (policy-aware)
   await reportStep(job, "dedupe-check");
-  const existingCheck = await recipeExistsByUrlForPolicy(url, userId, householdUserIds, viewPolicy);
+  const existingRecipeId = await findRecipeIdByUrlForAccount(url, userId);
 
-  await completeStep(job, { alreadyExists: existingCheck.exists });
+  await completeStep(job, { alreadyExists: existingRecipeId !== null });
 
-  if (existingCheck.exists && existingCheck.existingRecipeId) {
-    const dashboardDto = await dashboardRecipe(existingCheck.existingRecipeId);
+  if (existingRecipeId) {
+    const dashboardDto = await dashboardRecipe(existingRecipeId);
 
     if (dashboardDto) {
-      log.info(
-        { jobId: job.id, existingRecipeId: existingCheck.existingRecipeId },
-        "Recipe already exists, returning existing"
-      );
+      log.info({ jobId: job.id, existingRecipeId }, "Recipe already exists, returning existing");
 
       // Include pendingRecipeId so client can remove the skeleton
       // Show imported toast since no processing will follow for existing recipes
@@ -82,17 +79,18 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<string> 
           pendingRecipeId: recipeId,
           toast: "imported",
         },
-        { viewPolicy: viewPolicy, ...ctx }
+        await policyAudience(dashboardDto.householdId)
       );
     }
 
-    return existingCheck.existingRecipeId;
+    return existingRecipeId;
   }
 
   // No allergy list is fetched here: extraction reads the source, and allergy
   // detection runs afterwards as its own enrichment kind.
 
-  const householdCategories = await listCategoryNamesForViewer({ userId, householdUserIds });
+  const householdId = await importerHouseholdId(userId);
+  const householdCategories = await listCategoryNamesForHousehold(householdId);
   // One site login per import, and the job records which: an import that dies
   // on an expired or rate-limited account has to be able to name it.
   const sets = credentialSetsForUrl(await getDecryptedTokensByUserId(userId), url);
@@ -148,7 +146,7 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<string> 
   const created = await createResolvedRecipe(
     recipeId,
     userId,
-    await withDishColor(parseResult.recipe),
+    await withDishColor(await matchImportedTags(householdId, parseResult.recipe)),
     { userId }
   );
   const createdId = created?.recipeId;
@@ -175,11 +173,11 @@ async function processImportJob(job: Job<RecipeImportJobData>): Promise<string> 
         toast: "imported",
         ...incomplete,
       },
-      { viewPolicy: viewPolicy, ...ctx }
+      await policyAudience(dashboardDto.householdId)
     );
   }
 
-  await announceUsableRecipe(created, { userId, householdKey, householdUserIds });
+  await announceUsableRecipe(created, { userId, householdId });
 
   return createdId;
 }
@@ -194,16 +192,16 @@ async function handleJobFailed(
 ): Promise<void> {
   if (!job) return;
 
-  const { url, recipeId, userId, householdKey } = job.data;
+  const { url, recipeId, userId } = job.data;
   const isFinal = isFinalFailure(job, error);
 
-  await deleteRecipeImagesDir(recipeId);
+  await deleteUnstoredRecipeMedia([recipeId]);
 
   if (isFinal) {
     // Emit failed event to remove skeleton
-    const policy = await getRecipePermissionPolicy();
-    const ctx = { userId, householdKey };
+    const audience = await accountAudience(userId);
 
+    if (!audience) return;
     void recipes.publish(
       "failed",
       {
@@ -211,7 +209,7 @@ async function handleJobFailed(
         recipeId,
         url,
       },
-      { viewPolicy: policy.view, ...ctx }
+      audience
     );
   }
 }

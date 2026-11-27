@@ -1,0 +1,35 @@
+# Deletes a site token from the row's long-press menu: Delete asks first; cancelling keeps the token,
+# confirming drops it and the other one stays.
+appId: dev.norish.app
+---
+- runFlow: subflows/reset.yaml
+- evalScript: "${output.kept = http.post(NORISH_PROXY_CONTROL_URL + '/token', { body: JSON.stringify({ domain: 'tiktok.com' }) }).ok}"
+- assertTrue: ${output.kept}
+- evalScript: "${output.token = json(http.post(NORISH_PROXY_CONTROL_URL + '/token', { body: JSON.stringify({ domain: 'facebook.com' }) }).body).id}"
+- runFlow: subflows/sign-in.yaml
+- runFlow: subflows/open-settings.yaml
+- tapOn:
+    id: settings-root-tokens
+- extendedWaitUntil:
+    visible:
+      id: settings-tokens-item-${output.token}
+    timeout: 20000
+- longPressOn:
+    id: settings-tokens-item-${output.token}
+- tapOn: Delete
+- tapOn: Cancel
+- assertVisible:
+    id: settings-tokens-item-${output.token}
+- longPressOn:
+    id: settings-tokens-item-${output.token}
+- tapOn: Delete
+# The native confirm's button, after its title of the same name.
+- tapOn:
+    text: Delete token
+    index: 1
+- extendedWaitUntil:
+    notVisible:
+      id: settings-tokens-item-${output.token}
+    timeout: 20000
+- evalScript: ${output.tokens = json(http.get(NORISH_PROXY_CONTROL_URL + '/tokens?is=' + encodeURIComponent('["tiktok.com"]')).body).is}
+- assertVisible: tiktok.com

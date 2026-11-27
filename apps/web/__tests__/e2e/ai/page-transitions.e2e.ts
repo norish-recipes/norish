@@ -105,6 +105,7 @@ for (const reducedMotion of ["reduce", "no-preference"] as const) {
     const id = await seedRecipe(name);
 
     await seedRecipePhoto({
+      stack: aiStack,
       recipeName: name,
       uploadsDir: aiStack.server.uploadsDir,
       photoPath: PHOTO,
@@ -330,6 +331,8 @@ test("a back link returns a recipe to where it was scrolled, also when the recip
 
   try {
     await page.goto(`/recipes/${id}`);
+    // Nutrition reads after hydration; its Loading card leaving shortens the page and the scroll.
+    await expect(page.getByTestId("nutrition-loading")).toHaveCount(0);
     // The recipe's cookbooks come last on its page.
     const cookbook = page.getByRole("link", { name: shelf }).filter({ visible: true });
 

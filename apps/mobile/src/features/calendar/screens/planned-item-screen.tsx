@@ -1,5 +1,4 @@
 import React from "react";
-import { View } from "react-native";
 import { Card, CardRow } from "@/components/card";
 import { destructiveAction } from "@/components/modal-header";
 import { PlanPicker } from "@/components/plan-block";
@@ -18,7 +17,7 @@ import { useIntl } from "react-intl";
 
 import type { PlannedItemFromQuery } from "@norish/shared/contracts";
 import { useCalendarRangeQuery, usePlannedItemText } from "@norish/shared-react/calendar";
-import { isRecipeItem } from "@norish/shared-react/calendar/todays-meals";
+import { isRecipeItem, isRecipeOutOfView } from "@norish/shared-react/calendar/todays-meals";
 import { usePlatform } from "@norish/shared-react/platform";
 
 /** A planned item's sheet: a draft of its note's text, day and slot that Save writes as one change
@@ -49,6 +48,7 @@ function PlannedItemSheet({ item, sheet }: { item: PlannedItemFromQuery; sheet: 
   const { title, subtitle } = usePlannedItemText()(item);
   const { draft, changes, setTitle, saveAndClose, confirm, fields } = usePlannedItemSheet(item);
   const recipeId = isRecipeItem(item) ? item.recipeId : null;
+  const outOfView = isRecipeOutOfView(item);
 
   return (
     <Sheet
@@ -72,31 +72,36 @@ function PlannedItemSheet({ item, sheet }: { item: PlannedItemFromQuery; sheet: 
           confirmRemove(item)
         ),
       ]}
-      title={recipeId ? intl.formatMessage({ id: "calendar.editPlannedRecipe.title" }) : title}
+      title={
+        recipeId || outOfView
+          ? intl.formatMessage({ id: "calendar.editPlannedRecipe.title" })
+          : title
+      }
     >
       <SheetBody>
         {recipeId ? (
-          <View className="mb-3">
-            <Card>
-              <CardRow
-                first
-                hint={subtitle || undefined}
-                label={title}
-                media={<PlannedThumb className="size-10 rounded-xl" item={item} />}
-                testID="planned-item-recipe"
-                onPress={() => {
-                  openAfterSheet(
-                    sheet,
-                    () => router.back(),
-                    () => navigation.toRecipe(recipeId)
-                  );
-                }}
-              />
-            </Card>
-          </View>
-        ) : null}
-        {recipeId ? null : (
-          <TextField className="mb-3">
+          <Card>
+            <CardRow
+              first
+              hint={subtitle || undefined}
+              label={title}
+              media={<PlannedThumb className="size-10 rounded-xl" item={item} />}
+              testID="planned-item-recipe"
+              onPress={() => {
+                openAfterSheet(
+                  sheet,
+                  () => router.back(),
+                  () => navigation.toRecipe(recipeId)
+                );
+              }}
+            />
+          </Card>
+        ) : outOfView ? (
+          <Card>
+            <CardRow first label={title} testID="planned-item-recipe-title-only" />
+          </Card>
+        ) : (
+          <TextField>
             <SheetInput
               accessibilityLabel={intl.formatMessage({ id: "calendar.editNote.noteLabel" })}
               placeholder={intl.formatMessage({ id: "calendar.editNote.notePlaceholder" })}

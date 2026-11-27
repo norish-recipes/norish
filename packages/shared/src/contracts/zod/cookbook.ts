@@ -26,7 +26,9 @@ export const COOKBOOK_DESCRIPTION_TITLE_LIMIT = 6;
  */
 export const CookbookSummarySchema = z.object({
   id: z.uuid(),
-  userId: z.string().nullable(),
+  userId: z.string(),
+  /** The Owner's household, which the Permission Policy decides by. */
+  householdId: z.string(),
   title: z.string(),
   createdAt: z.date(),
   updatedAt: z.date(),

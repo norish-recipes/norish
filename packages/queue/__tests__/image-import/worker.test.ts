@@ -7,29 +7,40 @@ import type { ImageImportJobData } from "@norish/queue/contracts/job-types";
 
 const createRecipeWithRefs = vi.fn();
 const dashboardRecipe = vi.fn();
-const getAllergiesForUsers = vi.fn();
+const getHouseholdAllergyNames = vi.fn();
 const addRecipeImages = vi.fn();
 const updateRecipeDishColor = vi.fn();
 const publishRecipe = vi.fn(async () => undefined);
 const extractRecipeFromImages = vi.fn();
 const saveImageBytes = vi.fn();
+const deleteUnreferencedRecipeFile = vi.fn();
 const dishColorForImageUrl = vi.fn();
 
 vi.mock("@norish/db", () => ({
   addRecipeImages,
   createRecipeWithRefs,
   dashboardRecipe,
-  getAllergiesForUsers,
+  getHouseholdAllergyNames,
   updateRecipeDishColor,
 }));
 
 vi.mock("@norish/db/repositories/categories", () => ({
-  listCategoryNamesForViewer: vi.fn().mockResolvedValue(["Breakfast", "Drinks"]),
+  listCategoryNamesForHousehold: vi.fn().mockResolvedValue(["Breakfast", "Drinks"]),
 }));
 vi.mock("@norish/shared-server/media/dish-color", () => ({
   dishColorForImageUrl,
 }));
 
+// The audience reads each row's household and the account's at publish time.
+vi.mock("@norish/db/repositories/households", () => ({
+  getHouseholdIdForUser: vi.fn().mockResolvedValue("household-1"),
+}));
+vi.mock("@norish/db/repositories/recipes", () => ({
+  getRecipeHouseholdIds: vi.fn(
+    async (ids: string[]) => new Map(ids.map((id) => [id, "household-1"]))
+  ),
+}));
+vi.mock("@norish/db/repositories/cookbooks", () => ({ getCookbookRow: vi.fn() }));
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   getAIConfig: vi.fn().mockResolvedValue({
     automaticEnrichment: {
@@ -66,6 +77,7 @@ vi.mock("@norish/shared-server/logger", () => ({
 }));
 
 vi.mock("@norish/shared-server/media/storage", () => ({
+  deleteUnreferencedRecipeFile,
   deleteRecipeImagesDir: vi.fn(),
   saveImageBytes,
 }));
@@ -122,8 +134,7 @@ describe("processImageImportJob", () => {
       data: {
         recipeId: "recipe-123",
         userId: "user-1",
-        householdKey: "household-1",
-        householdUserIds: null,
+        householdId: "household-1",
         files: [
           {
             data: Buffer.from("img").toString("base64"),
@@ -155,6 +166,29 @@ describe("processImageImportJob", () => {
     );
   });
 
+  it("removes the saved photo when its row cannot be saved, the recipe gone meanwhile", async () => {
+    const { processImageImportJob } = await import("../../src/image-import/worker");
+
+    addRecipeImages.mockRejectedValueOnce(new Error("violates foreign key constraint"));
+    await processImageImportJob({
+      id: "job-1",
+      attemptsMade: 0,
+      opts: {},
+      updateData: vi.fn(),
+      data: {
+        recipeId: "recipe-123",
+        userId: "user-1",
+        householdId: "household-1",
+        files: [{ data: "aW1n", mimeType: "image/jpeg", filename: "recipe.jpg" }],
+      },
+    } as never);
+
+    expect(deleteUnreferencedRecipeFile).toHaveBeenCalledWith(
+      "/recipes/recipe-123/uploaded.jpg",
+      "recipe-123"
+    );
+  });
+
   it("stores the Dish Colour extracted from the saved image (vision path)", async () => {
     const { processImageImportJob } = await import("../../src/image-import/worker");
 
@@ -166,8 +200,7 @@ describe("processImageImportJob", () => {
       data: {
         recipeId: "recipe-123",
         userId: "user-1",
-        householdKey: "household-1",
-        householdUserIds: null,
+        householdId: "household-1",
         files: [
           {
             data: Buffer.from("img").toString("base64"),

@@ -74,8 +74,7 @@ async function handleRecipeBecameUsable(envelope: RealtimeEventEnvelope): Promis
       {
         recipeId: payload.recipeId,
         userId: payload.userId,
-        householdKey: payload.householdKey,
-        householdUserIds: payload.householdUserIds,
+        householdId: payload.householdId,
       },
       { origin: "automatic" }
     );

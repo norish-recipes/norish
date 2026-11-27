@@ -8,7 +8,7 @@
     "household": "가구",
     "caldav": "CalDAV",
     "admin": "관리자",
-    "ingredients": "재료"
+    "content": "콘텐츠"
   },
   "user": {
     "signInMethods": {
@@ -76,13 +76,15 @@
         "warning": "지금 이 키를 저장하세요! 다시는 볼 수 없습니다. 해시만 저장하며 이 키를 복구할 수 없습니다.",
         "hint": "API 요청 시 <code>x-api-key</code> 헤더에 이 키를 사용하세요.",
         "confirmButton": "저장했어요",
-        "copyButton": "키 복사"
+        "copyButton": "키 복사",
+        "copied": "키를 복사했습니다"
       },
       "deleteModal": {
         "title": "API 키 삭제",
         "message": "이 API 키를 삭제하시겠습니까? 이를 사용하는 모든 애플리케이션은 즉시 접근 권한을 잃게 됩니다. 이 작업은 취소할 수 없습니다.",
         "confirmButton": "키 삭제"
-      }
+      },
+      "createNoAnswer": "서버가 응답하지 않았습니다. 키가 만들어졌을 수 있으니 키 목록을 확인하세요."
     },
     "archiveImport": {
       "title": "레시피 아카이브 가져오기",
@@ -134,9 +136,9 @@
       "deleteModal": {
         "title": "계정 삭제",
         "permanentWarning": "이 작업은 영구적이며 취소할 수 없습니다!",
-        "dataWarning": "장보기, 캘린더 항목, 메모를 포함한 개인 데이터가 영구적으로 삭제됩니다.",
-        "recipesNote": "내가 만든 레시피는 보존되지만 더 이상 계정에 연결되지 않습니다.",
-        "adminNote": "다른 구성원이 있는 가구의 관리자인 경우 먼저 관리자 권한을 이전해야 합니다.",
+        "dataWarning": "내 레시피와 요리책이 삭제되며, 평점, 즐겨찾기, 알레르기, 환경설정, API 키, 공유 링크, CalDAV, 사이트 토큰도 함께 삭제됩니다.",
+        "recipesNote": "가구의 장보기, 매장, 팬트리, 식단 계획은 그대로 남습니다. 식단에 있는 내 레시피는 메모로 남습니다.",
+        "adminNote": "가구 관리자라면 가장 오래된 구성원이 관리자가 됩니다. 마지막 구성원이라면 가구와 그 안의 모든 것이 삭제됩니다.",
         "confirmButton": "내 계정 삭제"
       }
     },
@@ -228,6 +230,7 @@
       "revokeModal": {
         "title": "링크 취소",
         "message": "{recipeName}의 이 링크는 재활성화할 때까지 작동하지 않습니다.",
+        "finalMessage": "{recipeName}의 이 링크는 작동을 멈추며 재활성화할 수 없습니다.",
         "confirm": "취소"
       },
       "reactivateModal": {
@@ -247,11 +250,13 @@
       "yourRole": "내 역할",
       "admin": "관리자",
       "member": "회원",
+      "justYou": "내 가구 (나만)",
       "members": "회원",
       "leaveButton": "가구 나가기",
       "leaveModal": {
         "title": "가구 나가기",
         "confirmMessage": "정말로 {name}에서 나가시겠습니까?",
+        "goesAndStays": "내 레시피와 요리책은 태그와 재료와 함께 나와 같이 옮겨집니다. 장보기, 팬트리, 식단 계획, 매장은 가구에 남습니다.",
         "adminWarning": "관리자 권한을 보유하고 있습니다. 떠나기 전에 관리자 권한을 이전해야 합니다.",
         "confirmButton": "가구 나가기"
       }
@@ -269,7 +274,7 @@
       "kickModal": {
         "title": "사용자 내보내기",
         "confirmMessage": "정말로 {name}을(를) 가구에서 내보내시겠습니까?",
-        "warning": "모든 공유 레시피, 장보기, 캘린더 항목에 접근할 수 없게 됩니다.",
+        "warning": "이 사람의 레시피와 요리책은 태그와 재료와 함께 옮겨집니다. 장보기, 팬트리, 식단 계획, 매장은 가구에 남습니다.",
         "confirmButton": "사용자 내보내기"
       },
       "transferModal": {
@@ -293,18 +298,11 @@
       "copyFailed": "참여 코드 복사에 실패했습니다",
       "copyButton": "참여 코드 복사"
     },
-    "create": {
-      "title": "가구 만들기",
-      "description": "새 가구를 만들어 가족이나 친구와 레시피와 장보기 목록을 공유하세요.",
-      "nameLabel": "가구 이름",
-      "namePlaceholder": "예: 스미스 가구",
-      "submitButton": "가구 만들기"
-    },
     "join": {
       "title": "가구 참여",
-      "description": "기존 가구에 참여하려면 참여 코드를 입력하세요.",
+      "description": "기존 가구에 참여하려면 참여 코드를 입력하세요. 내 가구가 그 가구에 합쳐지며, 레시피, 장보기, 팬트리, 식단 계획, 매장이 함께 옮겨집니다.",
       "codeLabel": "참여 코드",
-      "codePlaceholder": "8자리 코드",
+      "codePlaceholder": "6자리 코드",
       "submitButton": "가구 참여"
     }
   },
@@ -392,7 +390,9 @@
   },
   "ingredients": {
     "title": "재료",
-    "description": "Norish가 영양 정보, 재료 아이콘, 번역을 정하는 데 쓰는 재료 카탈로그입니다.",
+    "sheetTitle": "재료",
+    "loadFailed": "이 재료를 불러오지 못했습니다",
+    "loadOffline": "이 재료를 보려면 연결이 필요합니다",
     "search": "재료 검색",
     "searchMatch": "일치 방식",
     "searchIn": "검색 범위",
@@ -416,7 +416,6 @@
       "seed-ambiguous": "카탈로그에 이것일 수 있는 재료가 여럿 있습니다.",
       "ai-junk": "AI가 이것을 식재료가 아닌 조리 도구나 레시피 줄의 일부로 판단했습니다."
     },
-    "empty": "재료를 찾을 수 없습니다",
     "emptyFlagged": "표시된 항목이 없습니다",
     "rename": "이름 바꾸기",
     "delete": "삭제",
@@ -428,8 +427,8 @@
       "pantry": "{count, plural, other {식료품 저장실 항목 #개가 삭제됩니다}}"
     },
     "markDistinct": "별개로 표시",
-    "summary": "번역 {spellings}개{kinds, plural, =0 {} other {, 종류 #}}{parent, select, none {} other {, 상위: {parent}}}",
-    "addAlias": "번역 추가",
+    "summary": "표기 {spellings}개{kinds, plural, =0 {} other {, 종류 #}}{parent, select, none {} other {, 상위: {parent}}}",
+    "addAlias": "표기 추가",
     "removeAlias": "{alias} 제거",
     "mergeInto": "다음으로 병합…",
     "merge": "병합",
@@ -449,15 +448,17 @@
     "clearParent": "상위 재료 제거",
     "nameSection": "이름",
     "parentSection": "상위",
-    "spellingsSection": "번역",
+    "spellingsSection": "표기",
     "shownAs": "내게는 {name}(으)로 표시됨",
     "changeParent": "상위 식재료 변경…",
-    "spellingsCount": "번역 {count}개",
+    "spellingsCount": "표기 {count}개",
     "dataSources": {
       "title": "데이터 출처",
       "notice": "재료 카탈로그는 <off>Open Food Facts</off>의 재료 분류 체계를 바탕으로 하며, 이는 <odbl>Open Database License (ODbL)</odbl>로 제공됩니다. Norish가 이를 바탕으로 만든 카탈로그도 같은 라이선스로 제공됩니다.",
       "nutritionNotice": "100 g당 영양 정보는 <ciqual>CIQUAL 2025</ciqual> 및 CALNUT(ANSES), <usda>USDA FoodData Central</usda>, <cofid>CoFID</cofid>에서 가져오며, Open Food Facts가 각 재료에 부여한 코드로 연결됩니다. 가구의 수정 값은 그 가구의 값이며 데이터셋의 값이 아닙니다.",
-      "download": "재료 카탈로그 다운로드 (JSON)"
+      "download": "재료 카탈로그 다운로드 (JSON)",
+      "downloadOffline": "온라인일 때 카탈로그를 내려받을 수 있습니다.",
+      "downloadFailed": "카탈로그를 내려받지 못했습니다."
     },
     "nutrition": {
       "section": "영양 정보",
@@ -509,6 +510,7 @@
           "hundredMl": "100 ml의 무게 (g)"
         }
       },
+      "overHundred": "지방, 탄수화물, 단백질은 100 g당 100 g을 넘을 수 없습니다.",
       "searchFood": "데이터셋에서 검색 (영어), 예: milk semi-skimmed",
       "foodHint": "이름의 단어 몇 개를 입력하세요",
       "searchingFoods": "검색 중…",
@@ -556,7 +558,6 @@
       "done": "완료",
       "repeats": "반복",
       "pantry": "팬트리에 보관 중",
-      "elsewhere": "열 수 없는 레시피나 목록에서 {count, plural, other {#회 더 사용}}",
       "none": "더 이상 사용하는 곳이 없습니다"
     },
     "keepAlias": "{alias} 유지",
@@ -573,6 +574,7 @@
     "changedByAI": {
       "title": "AI가 변경함",
       "open": "{count, plural, =0 {AI가 변경함} other {AI가 변경함 · 확인할 항목 #개}}",
+      "openCompact": "{count, plural, =0 {AI가 변경함} other {확인할 항목 #개}}",
       "unsure": "확실하지 않음",
       "sure": "변경됨",
       "empty": "지난 한 달 동안 AI가 변경한 것이 없습니다.",
@@ -587,7 +589,8 @@
       "plainName": "{from}에서 이름 변경됨",
       "notAFood": "식재료가 아니어서 삭제했습니다. 레시피 줄과 장보기 항목은 텍스트를 유지합니다.",
       "spellingRemoved": "번역 {from}을(를) 삭제함",
-      "spellingMoved": "번역 {from}을(를) {of}(으)로 옮김"
+      "spellingMoved": "번역 {from}을(를) {of}(으)로 옮김",
+      "toCheck": "{count, plural, other {확인할 항목 #개}}"
     },
     "icon": {
       "change": "아이콘 변경",
@@ -596,13 +599,16 @@
       "failed": "이 사진으로 아이콘을 만들 수 없습니다.",
       "generate": "AI로 생성",
       "generateFailed": "아이콘을 생성할 수 없습니다."
-    }
+    },
+    "keepDistinct": "별개로 유지",
+    "offline": "온라인일 때 이 재료를 변경할 수 있습니다."
   },
   "admin": {
     "shareLinks": {
       "title": "레시피 공유 모더레이션",
       "description": "인스턴스 전체의 공개 레시피 링크를 검토하고 생명주기를 관리합니다.",
       "empty": "공유 링크를 찾을 수 없습니다.",
+      "inactive": "비활성",
       "table": {
         "recipe": "레시피",
         "owner": "소유자",
@@ -614,6 +620,7 @@
       "revokeModal": {
         "title": "링크 취소",
         "message": "{recipeName}의 이 링크는 재활성화될 때까지 작동하지 않습니다.",
+        "finalMessage": "{recipeName}의 이 링크는 작동을 멈추며 재활성화될 수 없습니다.",
         "confirm": "취소"
       },
       "reactivateModal": {
@@ -635,12 +642,7 @@
       "localesDescription": "사용자가 선택할 수 있는 언어 선택",
       "defaultLocale": "기본 언어",
       "defaultLocaleDescription": "신규 사용자 및 대체 언어로 사용되는 언어",
-      "atLeastOneLocale": "하나 이상의 언어를 활성화해야 합니다.",
-      "export": {
-        "title": "레시피 아카이브",
-        "description": "이 서버의 모든 레시피를 다운로드합니다.",
-        "button": "레시피 아카이브 내보내기"
-      }
+      "atLeastOneLocale": "하나 이상의 언어를 활성화해야 합니다."
     },
     "users": {
       "title": "사용자",
@@ -656,7 +658,6 @@
         "owner": "소유자",
         "admin": "관리자"
       },
-      "noHousehold": "가구 없음",
       "loading": "사용자 불러오는 중…",
       "empty": "아직 사용자가 없습니다.",
       "loadFailed": "사용자 목록을 불러오지 못했습니다.",
@@ -676,9 +677,8 @@
     },
     "permissions": {
       "title": "권한",
-      "description": "다른 사람이 만든 것을 누가 보고 바꿀 수 있는지. 서버 관리자는 항상 전체 권한을 가집니다.",
+      "description": "가구 밖의 누가 그 가구의 레시피와 요리책을 보고 바꿀 수 있는지. 서버 관리자도 같은 규칙을 따릅니다.",
       "recipes": "레시피",
-      "ingredients": "식재료",
       "viewRecipes": "레시피 보기",
       "viewDescription": "대시보드에서 레시피를 볼 수 있는 사람",
       "editRecipes": "레시피 편집",
@@ -689,26 +689,9 @@
         "everyone": "모든 사람",
         "everyoneDescription": "인증된 모든 사용자",
         "household": "가구",
-        "householdDescription": "레시피 소유자와 가구 구성원",
-        "owner": "소유자만",
-        "ownerDescription": "레시피 소유자만"
+        "householdDescription": "레시피 소유자와 가구 구성원"
       },
       "note": "장보기 및 달력 항목은 항상 가구 규칙을 따릅니다. 가구 구성원은 서로의 항목을 편집하거나 삭제할 수 있습니다."
-    },
-    "ingredientPermissions": {
-      "title": "재료 권한",
-      "description": "누가 재료 이름을 바꾸고, 별개로 표시하거나 번역을 제거할 수 있는지 정합니다. 번역 추가는 누구나 할 수 있습니다.",
-      "editIngredients": "재료 편집",
-      "editDescription": "다른 사람이 추가한 재료를 누가 변경할 수 있는지",
-      "levels": {
-        "everyone": "모두",
-        "everyoneDescription": "로그인한 모든 사용자",
-        "household": "가구",
-        "householdDescription": "추가한 사람과 그 가구 구성원",
-        "owner": "소유자만",
-        "ownerDescription": "추가한 사람만"
-      },
-      "note": "기본 제공 카탈로그의 재료는 서버 관리자만 편집할 수 있습니다."
     },
     "system": {
       "title": "시스템 설정",
@@ -720,6 +703,12 @@
         "restartLabel": "서버 다시 시작",
         "restartDescription": "다시 시작해야 하는 구성 변경 사항 적용",
         "restartButton": "서버 다시 시작"
+      },
+      "masterKey": {
+        "label": "마스터 키 교체",
+        "description": "모든 데이터를 새 키로 암호화하고 이전 키를 폐기합니다",
+        "button": "마스터 키 교체",
+        "pinned": "<code>MASTER_KEY</code>가 설정되어 있으므로 거기에서 교체하세요. 현재 키를 <code>MASTER_KEY_PREVIOUS</code>로 옮기고, 새 <code>MASTER_KEY</code>를 설정한 다음 다시 시작하세요."
       }
     },
     "restart": {
@@ -730,6 +719,13 @@
       "warning2": "몇 초 동안 서버를 사용할 수 없습니다.",
       "warning3": "배포에 <code>restart: Always</code>가 구성되어 있는지 확인하세요. 그렇지 않으면 서버가 자동으로 온라인 상태로 돌아오지 않습니다.",
       "confirmButton": "다시 시작"
+    },
+    "rotateMasterKey": {
+      "title": "마스터 키 교체",
+      "confirmMessage": "서버가 새 마스터 키를 기록하고 다시 시작합니다. 시작하면서 모든 데이터를 새 키로 암호화합니다.",
+      "sessions": "본인을 포함한 모든 세션이 종료되므로 모두 다시 로그인해야 합니다",
+      "shareLinks": "0.28 이전에 만든 공유 링크는 더 이상 작동하지 않으며 삭제만 할 수 있습니다",
+      "confirmButton": "교체"
     },
     "authProviders": {
       "title": "인증 제공자",
@@ -862,10 +858,6 @@
       "prompts": {
         "title": "프롬프트",
         "subtitle": "레시피 처리를 위한 AI 지침 사용자 정의"
-      },
-      "cuisines": {
-        "title": "요리",
-        "subtitle": "레시피와 AI가 선택하는 어휘 목록"
       },
       "bulkEnrichment": {
         "title": "대량 보강",
@@ -1311,17 +1303,6 @@
       },
       "pagination": "{total}페이지 중 {current}페이지"
     },
-    "cuisineVocabulary": {
-      "description": "요리는 관리자가 소유하는 선별된 어휘 목록입니다. 이름은 모든 언어에서 여기 적힌 그대로 표시됩니다.",
-      "namePlaceholder": "요리 이름",
-      "addLabel": "요리 추가",
-      "renameLabel": "{name} 이름 변경",
-      "deleteLabel": "{name} 삭제",
-      "deleteConfirm": "\"{name}\"을(를) 삭제할까요? 사용 중인 레시피에서 사라집니다.",
-      "empty": "아직 요리가 없습니다.",
-      "duplicate": "같은 이름의 요리가 이미 있습니다.",
-      "saveFailed": "해당 요리를 저장할 수 없습니다."
-    },
     "toasts": {
       "localesSaved": "언어 설정이 저장되었습니다",
       "localesError": "언어 설정을 저장하지 못했습니다.",
@@ -1335,8 +1316,122 @@
     "errors": {
       "failedTitle": "내보내기 실패",
       "failedDescription": "레시피 아카이브를 다운로드할 수 없습니다. 다시 시도해 주세요.",
-      "signedOut": "세션이 만료되었습니다. 다시 로그인하여 내보내세요.",
-      "notAllowed": "이 항목을 내보낼 권한이 없습니다."
+      "signedOut": "세션이 만료되었습니다. 다시 로그인하여 내보내세요."
+    }
+  },
+  "mobile": {
+    "connections": "연결",
+    "app": "앱",
+    "server": "서버",
+    "support": "지원",
+    "changeServer": {
+      "title": "서버를 변경할까요?",
+      "description": "이 서버에서 로그아웃됩니다.",
+      "action": "서버 변경"
+    },
+    "versionServer": "서버 {server}",
+    "offlineReason": "오프라인 · 변경 사항 일시 중지",
+    "avatarHint": "사진을 탭하여 변경하세요",
+    "changePhoto": "사진 변경",
+    "accountGroup": "내 계정",
+    "phonesGroup": "휴대폰에서"
+  },
+  "content": {
+    "ariaLabel": "콘텐츠",
+    "listPicker": "목록",
+    "lists": {
+      "tags": "태그",
+      "cuisines": "요리",
+      "categories": "카테고리",
+      "ingredients": "재료"
+    },
+    "search": {
+      "tags": "태그 검색",
+      "cuisines": "요리 검색",
+      "categories": "카테고리 검색"
+    },
+    "show": "보기",
+    "all": "전체",
+    "unused": "미사용",
+    "recipes": "{count, plural, =0 {사용 안 함} other {레시피 #개}}",
+    "sections": {
+      "ownCuisines": "내 요리",
+      "ownCategories": "내 카테고리",
+      "server": "내 서버 제공",
+      "builtIn": "기본 제공"
+    },
+    "help": {
+      "server": "서버 관리자가 모든 가구를 위해 관리합니다",
+      "serverAdmin": "이 서버의 모든 가구에 제공됩니다. 관리자는 직접 관리할 수 있습니다.",
+      "builtIn": "기본 카테고리는 모든 서버에서 같고 변경할 수 없습니다"
+    },
+    "readOnly": "읽기 전용",
+    "empty": {
+      "tags": "아직 태그가 없습니다",
+      "cuisines": "아직 요리가 없습니다",
+      "categories": "아직 카테고리가 없습니다"
+    },
+    "nothingUnused": "미사용 항목이 없습니다",
+    "noMatch": "일치하는 항목이 없습니다",
+    "loadFailed": "이 목록을 불러오지 못했습니다",
+    "listOffline": "이 목록을 보려면 연결이 필요합니다",
+    "offline": "온라인일 때 이 목록을 변경할 수 있습니다.",
+    "panel": {
+      "addTitle": {
+        "tag": "태그 추가",
+        "cuisine": "요리 추가",
+        "category": "카테고리 추가",
+        "ingredient": "재료 추가"
+      },
+      "editTitle": {
+        "tag": "태그 편집",
+        "cuisine": "요리 편집",
+        "category": "카테고리 편집"
+      },
+      "server": "서버",
+      "name": "이름",
+      "usedBy": "사용처",
+      "usedByOwn": "{count, plural, =0 {내 레시피에서 사용 안 함} other {내 레시피 #개}}",
+      "already": {
+        "tag": "이미 있는 태그",
+        "cuisine": "이미 있는 요리",
+        "category": "이미 있는 카테고리",
+        "ingredient": "이미 있는 재료"
+      },
+      "addTo": "추가할 곳",
+      "toHousehold": "내 가구",
+      "toServer": "이 서버의 모든 가구",
+      "serverReadOnly": "서버 관리자가 모든 가구를 위해 이 요리를 관리합니다.",
+      "serverEditable": "이 서버의 모든 가구에 이 요리가 제공됩니다.",
+      "merge": "“{target}”이(가) 이미 있습니다. 병합하면 {count, plural, =0 {{name}이(가) 삭제됩니다} other {{name}의 레시피 #개가 그쪽으로 옮겨집니다}}.",
+      "mergeAction": "병합",
+      "tooLong": "이름은 최대 {max}자까지 쓸 수 있습니다.",
+      "failed": "저장하지 못했습니다. 다시 시도하세요.",
+      "stale": "저장되지 않음: 다른 곳에서 먼저 변경되었습니다"
+    },
+    "delete": {
+      "title": "“{name}”을(를) 삭제할까요?",
+      "body": "{count, plural, =0 {이것을 쓰는 레시피가 없습니다.} other {레시피 #개에서 빠집니다. 레시피는 그대로 남습니다.}}",
+      "bodyServer": "{count, plural, =0 {이것을 쓰는 레시피가 없습니다.} other {이 서버 모든 가구의 레시피 #개에서 빠집니다. 레시피는 그대로 남습니다.}}",
+      "countFailed": "사용 중인 레시피 수를 확인하지 못했습니다. 다시 시도하세요.",
+      "failed": "삭제하지 못했습니다. 다시 시도하세요.",
+      "action": {
+        "tag": "태그 삭제",
+        "cuisine": "요리 삭제",
+        "category": "카테고리 삭제"
+      }
+    },
+    "countCell": "{count, plural, =0 {사용 안 함} other {#}}",
+    "count": {
+      "tag": "{count, plural, other {태그 #개}}",
+      "ingredient": "{count, plural, other {재료 #개}}"
+    },
+    "countUnused": {
+      "tag": "{count, plural, other {사용하지 않는 태그 #개}}"
+    },
+    "menu": {
+      "rename": "이름 바꾸기",
+      "showRecipes": "레시피 보기"
     }
   }
 }

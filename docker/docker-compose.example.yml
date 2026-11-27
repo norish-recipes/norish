@@ -11,7 +11,8 @@ services:
       # Core settings (required)
       AUTH_URL: http://norish.example.com # The URL where Norish is reachable
       DATABASE_URL: postgres://postgres:norish@db:5432/norish
-      MASTER_KEY: <32-byte-base64-key> # Generate with: openssl rand -base64 32
+      # MASTER_KEY: <your-master-key> # Optional: pin a key generated with openssl rand -base64 32
+      # MASTER_KEY_PREVIOUS: <previous-key> # Set during rotation of a pinned key
 
       # Page renderers: seed Settings => Admin => Page renderers at first start
       OBSCURA_ENDPOINT: ws://obscura:9222 # Obscura CDP endpoint. Empty: Obscura off

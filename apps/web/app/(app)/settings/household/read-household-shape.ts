@@ -9,14 +9,14 @@ const { getHouseholdForUser } = await serverPackage<
 >("@norish/db/repositories/households");
 
 /**
- * Whether the reader has a household and administers it. `cache` shares the read between the
- * tab's skeleton and its page.
+ * Whether the reader's household is just them, and whether they administer it. `cache` shares
+ * the read between the tab's skeleton and its page.
  */
 export const readHouseholdShape = cache(async () => {
   const { identity } = await readRequestProfile();
   const household = identity ? await getHouseholdForUser(identity.id) : null;
 
-  if (!household) return "none";
+  if (!household || household.users.length === 1) return "solo" as const;
 
-  return household.adminUserId === identity?.id ? "admin" : "member";
+  return household.adminUserId === identity?.id ? ("admin" as const) : ("member" as const);
 });

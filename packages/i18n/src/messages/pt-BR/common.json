@@ -83,7 +83,8 @@
   "errors": {
     "operationFailed": "Falha na operação",
     "nameCannotBeEmpty": "O nome não pode ficar em branco",
-    "technicalDetails": "Algo deu errado. Verifique o console do navegador para detalhes técnicos."
+    "technicalDetails": "Algo deu errado. Verifique o console do navegador para detalhes técnicos.",
+    "noAnswer": "O servidor não respondeu. Tente novamente."
   },
   "slots": {
     "breakfast": "Café da manhã",
@@ -261,6 +262,7 @@
       "syncing": "{count, plural, =0 {Sincronizando} one {Sincronizando # alteração} other {Sincronizando # alterações}}",
       "syncNow": "Sincronizar agora",
       "retryAll": "Tentar todas novamente",
+      "otherHousehold": "Algumas alterações foram feitas para outra casa. “Tentar todas novamente” as envia para a casa em que você está agora.",
       "discardAll": "Descartar todas",
       "discardConfirmBody": "{count, plural, one {Descartar permanentemente # alteração na fila? Ela não será enviada.} other {Descartar permanentemente # alterações na fila? Elas não serão enviadas.}}",
       "discardConfirm": "Descartar",
@@ -294,6 +296,9 @@
   "changedElsewhere": {
     "title": "Não salvo: foi alterado antes em outro lugar"
   },
+  "lateAnswer": {
+    "title": "O servidor respondeu tarde: no fim deu certo."
+  },
   "storageUnavailable": {
     "title": "Armazenamento indisponível",
     "description": "O Norish não conseguiu ler o chaveiro deste iPhone.",
@@ -308,7 +313,14 @@
     "adminTransferred": "Admin transferido para {name}",
     "unknownMember": "Desconhecido",
     "removedTitle": "Removido da casa",
-    "removedDescription": "Um administrador removeu você da casa."
+    "removedDescription": "Um administrador removeu você da casa.",
+    "joinRefused": {
+      "invalidCode": "Esse código de convite não é válido.",
+      "expired": "Esse código de convite expirou. Peça um novo.",
+      "alreadyMember": "Você já está nesta casa.",
+      "shared": "Saia primeiro da sua casa para entrar em outra.",
+      "busy": "Essa casa estava sendo alterada naquele momento. Tente novamente."
+    }
   },
   "photos": {
     "pickFailedTitle": "Não foi possível escolher a foto",

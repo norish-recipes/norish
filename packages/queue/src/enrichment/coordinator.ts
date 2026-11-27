@@ -18,7 +18,7 @@ import type {
   RecipeEnrichmentKind,
   RecipeEnrichmentSkipReason,
 } from "@norish/shared/lib/recipe-enrichment";
-import { getAllergiesForUsers, getHouseholdMemberIds, getRecipeFull } from "@norish/db";
+import { getHouseholdAllergyNames, getRecipeFull } from "@norish/db";
 import { getQueueByName } from "@norish/queue/registry";
 import {
   getAutomaticEnrichmentConfig,
@@ -41,10 +41,9 @@ const log = createLogger("queue:enrichment-coordinator");
 
 export interface RecipeEnrichmentContext {
   recipeId: string;
-  /** The user whose creation or request this is; also whose household allergies apply. */
+  /** The user whose creation or request this is. */
   userId: string;
-  householdKey: string;
-  householdUserIds: string[] | null;
+  householdId: string;
 }
 
 export type RecipeEnrichmentRequest =
@@ -98,7 +97,7 @@ export async function enrichRecipe(
 
   const attempts = kinds.map(async (kind): Promise<RecipeEnrichmentEnrollment> => {
     const householdHasAllergies =
-      kind === "allergy-detection" ? await loadHouseholdHasAllergies(context) : false;
+      kind === "allergy-detection" ? await householdHasAllergiesOf(recipe.householdId) : false;
     const imageProviderConfigured =
       kind === "image-generation" ? await isImageGenerationConfigured() : true;
     const eligibility = evaluate(kind, {
@@ -118,8 +117,7 @@ export async function enrichRecipe(
       recipeId: recipe.id,
       kind,
       userId: context.userId,
-      householdKey: context.householdKey,
-      householdUserIds: context.householdUserIds,
+      householdId: context.householdId,
       origin: request.origin,
       requestedByUserId: request.origin === "manual" ? context.userId : undefined,
       replaceExisting: replaceExisting ? true : undefined,
@@ -260,11 +258,9 @@ function evaluate(kind: RecipeEnrichmentKind, input: EvaluationInput): Eligibili
   }
 }
 
-async function loadHouseholdHasAllergies(context: RecipeEnrichmentContext): Promise<boolean> {
-  const memberIds = context.householdUserIds ?? (await getHouseholdMemberIds(context.userId));
-  const allergies = await getAllergiesForUsers(memberIds);
-
-  return allergies.length > 0;
+/** Detection asks about the allergies of the recipe's household, whoever requested it. */
+async function householdHasAllergiesOf(householdId: string): Promise<boolean> {
+  return (await getHouseholdAllergyNames(householdId)).length > 0;
 }
 
 function queueForKind(kind: RecipeEnrichmentKind): Queue<RecipeEnrichmentJobData> {

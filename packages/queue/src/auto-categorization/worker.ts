@@ -9,8 +9,7 @@
 import type { Job } from "bullmq";
 
 import type { RecipeEnrichmentJobData } from "@norish/queue/contracts/job-types";
-import { listCategoryNamesForUsers } from "@norish/db/repositories/categories";
-import { getHouseholdMemberIds } from "@norish/db/repositories/households";
+import { listCategoryNamesForHousehold } from "@norish/db/repositories/categories";
 import { replaceRecipeCategories } from "@norish/db/repositories/recipe-enrichment";
 import { categorizeRecipe } from "@norish/shared-server/ai/enrichment/auto-categorizer";
 import { createLogger } from "@norish/shared-server/logger";
@@ -27,15 +26,14 @@ import { QUEUE_NAMES } from "../queue-names";
 
 const log = createLogger("worker:auto-categorization");
 
-/** One auto-categorization run, picking from the recipe owner's household list (ADR-0040). */
+/** One auto-categorization run, picking from the recipe's household's list (ADR-0040). */
 export async function processAutoCategorizationJob(
   job: Job<RecipeEnrichmentJobData>
 ): Promise<void> {
   await runEnrichmentJob(job, async (recipe) => {
-    const owners = recipe.userId ? await getHouseholdMemberIds(recipe.userId) : [];
     const categories = await categorizeRecipe(
       toRecipeSummary(recipe),
-      await listCategoryNamesForUsers(owners)
+      await listCategoryNamesForHousehold(recipe.householdId)
     );
 
     if (categories.length === 0) {

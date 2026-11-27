@@ -42,17 +42,19 @@ function unassignedCaptures(file: string) {
 }
 
 describe("worklet closures in a release build", () => {
-  // The first transform loads Expo's preset and the compiler (seconds under a parallel gate), so
-  // it runs here, on the hook's own limit, rather than inside the first case's.
+  // Every transform runs here, on the hook's own limit: the first loads Expo's preset and the
+  // compiler, and drag-list.tsx took 3.8 s under 24 parallel runs (0.3 s alone), so 60 s.
+  const captures = new Map<string, string[]>();
+
   beforeAll(() => {
-    releaseCode(join(src, "lib/motion/timed.ts"));
-  }, 30_000);
+    for (const file of files) captures.set(file, unassignedCaptures(join(src, file)));
+  }, 60_000);
 
   it("finds the modules with worklets", () => {
     expect(files).toContain("components/drag-list/drop-target.ts");
   });
 
   it.each(files)("%s captures nothing before it is assigned", (file) => {
-    expect(unassignedCaptures(join(src, file))).toEqual([]);
+    expect(captures.get(file)).toEqual([]);
   });
 });

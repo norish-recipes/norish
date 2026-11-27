@@ -11,7 +11,11 @@ import type {
   StoreProductReadingInput,
 } from "@norish/shared/contracts";
 import type { PricedCandidate } from "@norish/shared/lib/currency";
-import { isStaleIngredientReference } from "@norish/db/repositories/constraint-violation";
+import {
+  isGoneStoreReference,
+  isStaleIngredientReference,
+} from "@norish/db/repositories/constraint-violation";
+import { findStoreGroceryFood } from "@norish/db/repositories/groceries";
 import {
   clearPendingLink,
   linkIfUnanswered,
@@ -20,7 +24,7 @@ import {
   resolveProductLink,
   upsertReadProduct,
 } from "@norish/db/repositories/store-products";
-import { getStoreById } from "@norish/db/repositories/stores";
+import { getStoreById, getStoreHouseholdId } from "@norish/db/repositories/stores";
 import { createLogger } from "@norish/shared-server/logger";
 import { stores } from "@norish/shared-server/realtime/stores";
 import { chooseUnmistakable } from "@norish/shared/lib/auto-link";
@@ -61,17 +65,17 @@ export type LookupStepDetail =
   | { written: boolean };
 
 async function announceLink(
-  householdKey: string,
+  householdId: string,
   storeId: string,
   ingredientId: string
 ): Promise<void> {
   const link = await resolveProductLink(storeId, ingredientId);
 
-  if (link) void stores.publish("linkUpdated", { link }, { householdKey });
+  if (link) void stores.publish("linkUpdated", { link }, { householdId });
 }
 
-function announceProduct(householdKey: string, product: StoreProductDto): void {
-  void stores.publish("productUpdated", { product }, { householdKey });
+function announceProduct(householdId: string, product: StoreProductDto): void {
+  void stores.publish("productUpdated", { product }, { householdId });
 }
 
 /**
@@ -157,25 +161,33 @@ export async function searchStore(
  */
 export async function matchGroceryName(input: {
   storeId: string;
-  /** The Ingredient asked about; what the answer is filed under. */
+  /** The Ingredient asked about when queued; the answer goes under the one its grocery names now. */
   ingredientId: string;
+  /** The grocery that asked. */
+  groceryId: string;
   /** The grocery's name: what the shop is searched for. */
   name: string;
-  householdKey: string;
   onStep?: (step: string) => Promise<void>;
   onStepDone?: (detail: LookupStepDetail) => Promise<void>;
 }): Promise<{ matched: boolean }> {
-  const { storeId, ingredientId, name, householdKey } = input;
-  const store = await getStoreById(storeId);
+  const { storeId, name } = input;
+  // Read when the job runs, so the answer reaches the household the Store is in now, filed under
+  // the food its grocery names now: a merge since the job was queued moved the name to another.
+  const householdId = await getStoreHouseholdId(storeId);
+  const store = householdId ? await getStoreById(storeId, householdId) : null;
+  const ingredientId = await findStoreGroceryFood(storeId, input.groceryId);
   // Nothing was learned: the Pending Link the producer wrote goes, so the
   // name is unknown again rather than "being asked" for ever.
   const gaveUp = async (): Promise<{ matched: boolean }> => {
-    await clearPendingLink(storeId, ingredientId);
+    await clearPendingLink(storeId, ingredientId ?? input.ingredientId);
 
     return { matched: false };
   };
 
-  if (!store?.searchAddress) return gaveUp();
+  if (ingredientId && ingredientId !== input.ingredientId) {
+    await clearPendingLink(storeId, input.ingredientId);
+  }
+  if (!ingredientId || !householdId || !store?.searchAddress) return gaveUp();
 
   // The job is only ever queued for a name the Store did not know. By the time
   // it runs a shopper may have said which product this is — through the
@@ -234,12 +246,15 @@ export async function matchGroceryName(input: {
       "No unmistakable match; a Miss"
     );
     await input.onStep?.("saving-link");
-    const written = await linkUnlessGone(() =>
-      linkIfUnanswered(storeId, ingredientId, null, decided?.asked ? decided.suggestion : null)
+    const written = await unlessStoreGone(storeId, () =>
+      linkUnlessGone(() =>
+        linkIfUnanswered(storeId, ingredientId, null, decided?.asked ? decided.suggestion : null)
+      )
     );
 
+    if (written === null) return { matched: false };
     await input.onStepDone?.({ written });
-    await announceLink(householdKey, storeId, ingredientId);
+    await announceLink(householdId, storeId, ingredientId);
 
     return { matched: false };
   }
@@ -257,12 +272,21 @@ export async function matchGroceryName(input: {
   if (!reading) return gaveUp();
 
   await input.onStep?.("saving-link");
-  const product = await upsertReadProduct(reading);
-  const linked = await linkUnlessGone(() => linkIfUnanswered(storeId, ingredientId, product.id));
+  const written = await unlessStoreGone(storeId, async () => {
+    const product = await upsertReadProduct(reading);
+
+    return {
+      product,
+      linked: await linkUnlessGone(() => linkIfUnanswered(storeId, ingredientId, product.id)),
+    };
+  });
+
+  if (!written) return { matched: false };
+  const { product, linked } = written;
 
   await input.onStepDone?.({ written: linked });
-  announceProduct(householdKey, product);
-  await announceLink(householdKey, storeId, ingredientId);
+  announceProduct(householdId, product);
+  await announceLink(householdId, storeId, ingredientId);
   if (linked) {
     log.info(
       {
@@ -300,19 +324,33 @@ async function linkUnlessGone(write: () => Promise<boolean>): Promise<boolean> {
   }
 }
 
+/** A write after a shop visit; a Store deleted meanwhile ends the job quietly, as null. */
+async function unlessStoreGone<T>(storeId: string, write: () => Promise<T>): Promise<T | null> {
+  try {
+    return await write();
+  } catch (error) {
+    if (!isGoneStoreReference(error) || (await getStoreHouseholdId(storeId))) throw error;
+    log.debug({ storeId }, "The Store was deleted while the shop was being read");
+
+    return null;
+  }
+}
+
 /**
  * Re-read the Shelf Prices that have gone stale. A by-hand product is never
  * here: nothing read it, and nothing may overwrite what its owner typed.
  */
 export async function refreshProducts(input: {
+  storeId: string;
   productIds: string[];
-  householdKey: string;
   now?: Date;
 }): Promise<{ refreshed: number }> {
   const now = input.now ?? new Date();
-  const stale = await listStaleProducts(input.productIds, staleBefore(now));
+  // The Store's household as it is now, not as it was when the job was queued.
+  const householdId = await getStoreHouseholdId(input.storeId);
+  const stale = await listStaleProducts([input.storeId], input.productIds, staleBefore(now));
 
-  if (stale.length === 0) return { refreshed: 0 };
+  if (!householdId || stale.length === 0) return { refreshed: 0 };
 
   const fetchStorePage = requireQueueApiHandler("fetchStorePage");
   const readProduct = requireQueueApiHandler("readProduct");
@@ -336,9 +374,10 @@ export async function refreshProducts(input: {
       continue;
     }
 
-    const updated = await upsertReadProduct(reading);
+    const updated = await unlessStoreGone(input.storeId, () => upsertReadProduct(reading));
 
-    announceProduct(input.householdKey, updated);
+    if (!updated) return { refreshed };
+    announceProduct(householdId, updated);
     refreshed += 1;
   }
 

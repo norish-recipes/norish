@@ -7,6 +7,7 @@ export default defineConfig({
     // The ingredient resolver's tests start a Postgres container.
     hookTimeout: 240000,
     include: ["**/*.{test,spec}.{ts,tsx}"],
+    setupFiles: ["@norish/config/testing-setup"],
     env: {
       NODE_ENV: "development",
       DATABASE_URL: "postgresql://test:test@localhost:5432/test",

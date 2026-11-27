@@ -3,6 +3,7 @@ import { expect, request } from "@playwright/test";
 import { WebSocket as RawSocket } from "ws";
 
 import { findNewestGroceryNamed } from "@norish/db/repositories/groceries";
+import { getHouseholdForUser } from "@norish/db/repositories/households";
 
 import type { Identity, RealtimeStack } from "./fixture";
 import { closePanel, rowFor } from "../harness/groceries";
@@ -41,6 +42,7 @@ export async function callQuery<T>(page: Page, baseURL: string, procedure: strin
 
 export interface HouseholdRow {
   id: string;
+  version: number;
   /** Only the household's admin is shown the code. */
   joinCode: string | null;
 }
@@ -51,17 +53,21 @@ export async function readHousehold(
   identity: Identity
 ): Promise<HouseholdRow | null> {
   const { household } = await callTrpc<{
-    household: { id: string; joinCode?: string | null } | null;
+    household: { id: string; version: number; joinCode?: string | null } | null;
   }>(stack.baseURL, stack.cookies[identity], "households.get");
 
-  return household ? { id: household.id, joinCode: household.joinCode ?? null } : null;
+  return household
+    ? { id: household.id, version: household.version, joinCode: household.joinCode ?? null }
+    : null;
 }
 
-/** The newest grocery by this name: a new grocery takes the top of its store's list. */
+/** The newest grocery by this name on A's list: a new grocery takes the top of its store's list. */
 export async function readGrocery(
+  stack: RealtimeStack,
   name: string
 ): Promise<{ id: string; version: number; isDone: boolean } | null> {
-  const grocery = await findNewestGroceryNamed(name);
+  const household = await getHouseholdForUser(stack.userIds.a);
+  const grocery = household ? await findNewestGroceryNamed(household.id, name) : null;
 
   return grocery ? { id: grocery.id, version: grocery.version, isDone: grocery.isDone } : null;
 }

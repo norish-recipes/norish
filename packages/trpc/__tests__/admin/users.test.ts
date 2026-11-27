@@ -112,7 +112,7 @@ describe("admin users router", () => {
       const caller = createCaller();
       const result = await caller.remove({ userId: "other-1" });
 
-      expect(deleteUserAccount).toHaveBeenCalledWith("other-1");
+      expect(deleteUserAccount).toHaveBeenCalledWith("other-1", expect.any(Function));
       expect(result).toEqual({ success: true });
     });
 

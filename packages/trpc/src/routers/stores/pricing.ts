@@ -7,13 +7,13 @@
  * never waits on a supermarket.
  */
 import type { GroceryDto, ResolvedProductLink } from "@norish/shared/contracts";
-import { listGroceriesByUsers } from "@norish/db/repositories/groceries";
+import { listGroceriesByHousehold } from "@norish/db/repositories/groceries";
 import {
   listStaleProducts,
   markLinkPending,
   resolveProductLinks,
 } from "@norish/db/repositories/store-products";
-import { listStoresByUserIds } from "@norish/db/repositories/stores";
+import { listStoresByHousehold } from "@norish/db/repositories/stores";
 import { getQueues } from "@norish/queue/registry";
 import { staleBefore } from "@norish/queue/store-lookup/lookup";
 import {
@@ -32,18 +32,19 @@ import { productLinkKey } from "@norish/shared/lib/store-link-key";
  */
 const MAX_REFRESHED_PER_VIEW = 10;
 
-type PriceableGrocery = Pick<GroceryDto, "name" | "storeId" | "ingredientId">;
+type PriceableGrocery = Pick<GroceryDto, "id" | "name" | "storeId" | "ingredientId">;
 
 /** What a Store is asked about: an Ingredient, under the name the list gives it. */
 interface PriceablePair {
   storeId: string;
   ingredientId: string;
   name: string;
+  /** The grocery the question is asked for. */
+  groceryId: string;
 }
 
 interface PricingContext {
-  userIds: string[];
-  householdKey: string;
+  householdId: string;
 }
 
 function priceablePairs(groceries: PriceableGrocery[]): PriceablePair[] {
@@ -58,7 +59,9 @@ function priceablePairs(groceries: PriceableGrocery[]): PriceablePair[] {
     if (seen.has(key)) return [];
     seen.add(key);
 
-    return [{ storeId: grocery.storeId, ingredientId: grocery.ingredientId, name }];
+    return [
+      { storeId: grocery.storeId, ingredientId: grocery.ingredientId, name, groceryId: grocery.id },
+    ];
   });
 }
 
@@ -81,7 +84,7 @@ async function askStore(
     storeId: pair.storeId,
     ingredientId: pair.ingredientId,
     name: pair.name,
-    householdKey: ctx.householdKey,
+    groceryId: pair.groceryId,
   }).catch((err: unknown) => {
     log.error({ err, storeId: pair.storeId }, "Failed to enqueue a store lookup");
   });
@@ -105,7 +108,7 @@ async function resolveAndQueue(
 
   if (pairs.length === 0) return { known: [], fresh: [] };
 
-  const stores = await listStoresByUserIds(ctx.userIds);
+  const stores = await listStoresByHousehold(ctx.householdId);
   // A grocery is priced through a Store of its own household and no other:
   // a store id that is not the household's is not a question for any shop,
   // and its links are not this household's to read.
@@ -151,7 +154,7 @@ export async function noticeGroceries(
   const links = [...known, ...fresh];
 
   for (const link of links) {
-    void stores.publish("linkUpdated", { link }, { householdKey: ctx.householdKey });
+    void stores.publish("linkUpdated", { link }, { householdId: ctx.householdId });
   }
 
   return links;
@@ -164,7 +167,7 @@ export async function noticeGroceries(
  * visit a supermarket for a list nobody is shopping.
  */
 export async function priceTheList(ctx: PricingContext): Promise<ResolvedProductLink[]> {
-  const groceries = await listGroceriesByUsers(ctx.userIds, { includeDone: true });
+  const groceries = await listGroceriesByHousehold(ctx.householdId, { includeDone: true });
   // The list is the answer here, and what the Stores already knew is not
   // announced: everyone reading it is asking for exactly this. A question
   // asked just now is news, though — a Pending Link the household's other
@@ -172,7 +175,7 @@ export async function priceTheList(ctx: PricingContext): Promise<ResolvedProduct
   const { known, fresh } = await resolveAndQueue(ctx, groceries);
 
   for (const link of fresh) {
-    void stores.publish("linkUpdated", { link }, { householdKey: ctx.householdKey });
+    void stores.publish("linkUpdated", { link }, { householdId: ctx.householdId });
   }
   const links = [...known, ...fresh];
   const productIds = links
@@ -181,7 +184,8 @@ export async function priceTheList(ctx: PricingContext): Promise<ResolvedProduct
 
   if (productIds.length === 0) return links;
 
-  const stale = await listStaleProducts(productIds, staleBefore());
+  const storeIds = [...new Set(links.map((link) => link.storeId))];
+  const stale = await listStaleProducts(storeIds, productIds, staleBefore());
 
   if (stale.length === 0) return links;
 
@@ -199,7 +203,6 @@ export async function priceTheList(ctx: PricingContext): Promise<ResolvedProduct
         kind: "refresh",
         storeId,
         productIds: ids,
-        householdKey: ctx.householdKey,
       }).catch((err: unknown) => {
         log.error({ err, storeId }, "Failed to enqueue a Shelf Price refresh");
       })

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Panel from "@/components/Panel/Panel";
+import { ModalFrame, ModalTitle } from "@/components/shared/confirm-modal";
+import { Section } from "@/components/shared/section";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { usePending } from "@/hooks/use-pending";
 import { OFFLINE_FORCED_AVAILABLE, switchOfflineForced } from "@/lib/connectivity/forced-offline";
@@ -48,18 +50,14 @@ export function OfflineStatusModal({ isOpen, onOpenChange }: OfflineStatusModalP
   }
 
   return (
-    <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={onOpenChange}>
-      <Modal.Container className="z-[1100]" size="md">
-        <Modal.Dialog>
-          {() => (
-            <>
-              <Modal.Header>{t("title")}</Modal.Header>
-              <Modal.Body className="pb-4">{body}</Modal.Body>
-            </>
-          )}
-        </Modal.Dialog>
-      </Modal.Container>
-    </Modal.Backdrop>
+    <ModalFrame isOpen={isOpen} onOpenChange={onOpenChange}>
+      {() => (
+        <>
+          <ModalTitle>{t("title")}</ModalTitle>
+          <Modal.Body className="pb-4">{body}</Modal.Body>
+        </>
+      )}
+    </ModalFrame>
   );
 }
 
@@ -67,17 +65,13 @@ function OfflineStatusBody() {
   const status = useOfflineStatus(offlineEngine);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       <ConnectionSection status={status} />
       <CacheSection status={status} />
       <OutboxSection status={status} />
       {OFFLINE_FORCED_AVAILABLE ? <DevToggleSection status={status} /> : null}
     </div>
   );
-}
-
-function SectionHeading({ children }: { children: React.ReactNode }) {
-  return <h3 className="text-muted text-xs font-semibold tracking-wide uppercase">{children}</h3>;
 }
 
 interface ConfirmInlineProps {
@@ -127,8 +121,7 @@ function ConnectionSection({ status }: { status: OfflineStatus }) {
   const dotColor = status.isLive ? "bg-accent" : "bg-warning";
 
   return (
-    <section className="flex flex-col gap-1.5">
-      <SectionHeading>{t("heading")}</SectionHeading>
+    <Section placement="panel" title={t("heading")}>
       <div className="flex items-center gap-2">
         <span aria-hidden className={`h-2.5 w-2.5 rounded-full ${dotColor}`} />
         <span className="font-medium">{t(key)}</span>
@@ -139,7 +132,7 @@ function ConnectionSection({ status }: { status: OfflineStatus }) {
         ) : null}
       </div>
       <p className="text-muted text-sm">{t(`${key}Description`)}</p>
-    </section>
+    </Section>
   );
 }
 
@@ -160,8 +153,7 @@ function CacheSection({ status }: { status: OfflineStatus }) {
   ];
 
   return (
-    <section className="flex flex-col gap-2">
-      <SectionHeading>{t("heading")}</SectionHeading>
+    <Section placement="panel" title={t("heading")}>
       <dl className="grid grid-cols-2 gap-2">
         {items.map(({ icon: Icon, label, value }) => (
           <div
@@ -207,7 +199,7 @@ function CacheSection({ status }: { status: OfflineStatus }) {
           {t("wipe")}
         </Button>
       )}
-    </section>
+    </Section>
   );
 }
 
@@ -218,9 +210,7 @@ function OutboxSection({ status }: { status: OfflineStatus }) {
   const needsAttention = outbox.parked + outbox.conflicted;
 
   return (
-    <section className="flex flex-col gap-2">
-      <SectionHeading>{t("heading")}</SectionHeading>
-
+    <Section placement="panel" title={t("heading")}>
       {outbox.total === 0 ? (
         <p className="text-muted text-sm">{t("empty")}</p>
       ) : (
@@ -238,6 +228,9 @@ function OutboxSection({ status }: { status: OfflineStatus }) {
               ? t("syncing", { count: outbox.pending })
               : t("pending", { count: outbox.pending })}
           </p>
+          {outbox.otherHousehold > 0 ? (
+            <p className="text-muted text-xs">{t("otherHousehold")}</p>
+          ) : null}
         </>
       )}
 
@@ -281,7 +274,7 @@ function OutboxSection({ status }: { status: OfflineStatus }) {
           }}
         />
       ) : null}
-    </section>
+    </Section>
   );
 }
 
@@ -306,8 +299,7 @@ function DevToggleSection({ status }: { status: OfflineStatus }) {
   const t = useTranslations("common.offlineStatus.devToggle");
 
   return (
-    <section className="border-border flex flex-col gap-2 border-t pt-4">
-      <SectionHeading>{t("heading")}</SectionHeading>
+    <Section placement="panel" title={t("heading")}>
       <div className="flex items-center justify-between gap-3">
         <span className="text-sm font-medium">{t("force")}</span>
         <Button
@@ -319,7 +311,7 @@ function DevToggleSection({ status }: { status: OfflineStatus }) {
         </Button>
       </div>
       <p className="text-muted text-xs">{t("description")}</p>
-    </section>
+    </Section>
   );
 }
 

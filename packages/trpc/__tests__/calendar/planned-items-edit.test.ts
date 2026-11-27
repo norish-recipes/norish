@@ -3,12 +3,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { plannedItemsProcedures } from "@norish/trpc/routers/calendar/planned-items";
 
-import { assertHouseholdAccess } from "../mocks/permissions";
 import {
   editPlannedItem,
   getPlannedItemById,
   getPlannedItemWithRecipeById,
   listPlannedItemsWithRecipeBySlot,
+  ownPlannedItemExists,
 } from "../mocks/planned-items";
 import { calendar } from "../mocks/realtime/calendar";
 import {
@@ -29,6 +29,7 @@ vi.mock("@norish/shared-server/logger", () => ({
 const ID = "00000000-0000-4000-8000-000000000001";
 const stored = {
   id: ID,
+  householdId: "test-household-id",
   userId: "household-member-id",
   date: "2025-01-15",
   slot: "Dinner",
@@ -63,16 +64,16 @@ describe("calendar.editItem", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    ownPlannedItemExists.mockResolvedValue(true);
     getPlannedItemById.mockResolvedValue(stored);
-    assertHouseholdAccess.mockResolvedValue(undefined);
     listPlannedItemsWithRecipeBySlot.mockResolvedValue([]);
-    editPlannedItem.mockImplementation(async (_id, change: object) => ({
+    editPlannedItem.mockImplementation(async (_household, _id, change: object) => ({
       applied: true,
       stale: false,
       value: { ...stored, ...named(change), version: stored.version + 1 },
     }));
     getPlannedItemWithRecipeById.mockImplementation(async () => {
-      const [, change = {}] = editPlannedItem.mock.calls[0] ?? [];
+      const [, , change = {}] = editPlannedItem.mock.calls[0] ?? [];
 
       return withRecipe({ ...named(change), version: stored.version + 1 });
     });
@@ -89,7 +90,7 @@ describe("calendar.editItem", () => {
     const result = await edit(change);
 
     expect(editPlannedItem).toHaveBeenCalledTimes(1);
-    expect(editPlannedItem).toHaveBeenCalledWith(ID, change, stored.version);
+    expect(editPlannedItem).toHaveBeenCalledWith(ctx.householdId, ID, change, stored.version);
     expect(published()).toEqual([event, `${event}Internal`]);
     expect(result).toEqual({
       success: true,
@@ -102,12 +103,12 @@ describe("calendar.editItem", () => {
     await edit({ slot: "Lunch" });
 
     expect(listPlannedItemsWithRecipeBySlot).toHaveBeenCalledWith(
-      ctx.userIds,
+      ctx.householdId,
       stored.date,
       "Lunch"
     );
     expect(listPlannedItemsWithRecipeBySlot).toHaveBeenCalledWith(
-      ctx.userIds,
+      ctx.householdId,
       stored.date,
       "Dinner"
     );
@@ -153,14 +154,5 @@ describe("calendar.editItem", () => {
   it("refuses a day that is not a date key, writing nothing", async () => {
     await expect(edit({ date: "tomorrow" })).rejects.toThrow();
     expect(editPlannedItem).not.toHaveBeenCalled();
-  });
-
-  it("refuses a member outside the item's household", async () => {
-    assertHouseholdAccess.mockRejectedValue(new Error("Access denied"));
-
-    await expect(edit({ title: "Leek soup" })).rejects.toThrow("Access denied");
-    expect(assertHouseholdAccess).toHaveBeenCalledWith(ctx.user.id, stored.userId);
-    expect(editPlannedItem).not.toHaveBeenCalled();
-    expect(calendar.publish).not.toHaveBeenCalled();
   });
 });

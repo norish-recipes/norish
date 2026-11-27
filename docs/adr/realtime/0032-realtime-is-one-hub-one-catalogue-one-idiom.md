@@ -11,7 +11,7 @@ A subscriber that falls behind is not buffered without limit. When its queue ove
 - Adding a realtime event is one catalogue entry; the publisher, the procedure and the client type follow from it. A publish that fails its schema throws in development and test and is logged and dropped in production.
 - Redis connections per process are the publisher, the hub, and BullMQ's — independent of connected clients.
 - The `internal` Scope is for server-to-server facts (a recipe became usable, a connection must be invalidated); it is not subscribable from tRPC and is not buffered.
-- A household-less user's household key is their user id; their household channel simply stays quiet. Subscriptions never wait for a household to exist.
+- The household channel is keyed by household id. Every account belongs to a household.
 - Lagged is the only failure a subscription reports. Queue overflow, Redis reconnect and every cursor failure (ADR-0034) look the same to the client, and the client refetches the domain and resubscribes — no toast, no per-event error handling.
 - The client never suppresses its own echoes; handlers stay idempotent merges by identity, which is what makes Resume and refetch safe to apply on top of each other.
 - The mobile app was parked rather than carried through the rebuild; it gets its own rewrite against the new layer.

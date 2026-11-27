@@ -53,7 +53,9 @@ vi.mock("../../trpc", () => {
   };
 });
 
-vi.mock("../../reader", () => ({ useReader: () => ({ user: { id: "user-1" } }) }));
+vi.mock("../../reader", () => ({
+  useReaderOwner: () => ({ userId: "user-1", householdId: "household-1" }),
+}));
 
 describe("useCookbooksMutations", () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;

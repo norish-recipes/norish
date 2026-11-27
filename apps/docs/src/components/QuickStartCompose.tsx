@@ -1,37 +1,19 @@
 import React, { useEffect, useState } from "react";
 import CodeBlock from "@theme/CodeBlock";
 
-// Server-rendered placeholders. The real secrets are generated in the browser
-// on mount, so every page visit gets a unique MASTER_KEY and Obscura token
-// without ever sending one over the network.
-const PLACEHOLDER = "REPLACE_WITH_A_RANDOM_KEY";
+// Server-rendered placeholder. The real token is generated in the browser on
+// mount, so every page visit gets a unique Obscura token without ever sending
+// one over the network.
 const TOKEN_PLACEHOLDER = "REPLACE_WITH_A_RANDOM_TOKEN";
-
-function randomBytes(): Uint8Array | null {
-  if (typeof crypto === "undefined" || !crypto.getRandomValues) {
-    return null;
-  }
-  return crypto.getRandomValues(new Uint8Array(32));
-}
-
-function randomKey(): string {
-  const bytes = randomBytes();
-  if (!bytes) return PLACEHOLDER;
-  let binary = "";
-  for (const byte of bytes) {
-    binary += String.fromCharCode(byte);
-  }
-  return btoa(binary);
-}
 
 /** Matches `openssl rand -hex 32`. */
 function randomToken(): string {
-  const bytes = randomBytes();
-  if (!bytes) return TOKEN_PLACEHOLDER;
+  if (typeof crypto === "undefined" || !crypto.getRandomValues) return TOKEN_PLACEHOLDER;
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
   return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
-function composeFile(masterKey: string, obscuraToken: string): string {
+function composeFile(obscuraToken: string): string {
   return `services:
   norish:
     image: norishapp/norish:latest
@@ -45,7 +27,6 @@ function composeFile(masterKey: string, obscuraToken: string): string {
     environment:
       AUTH_URL: http://localhost:3000
       DATABASE_URL: postgres://postgres:norish@db:5432/norish
-      MASTER_KEY: ${masterKey}
       OBSCURA_ENDPOINT: ws://obscura:9222
       OBSCURA_CDP_TOKEN: ${obscuraToken}
       VALKEY_URL: valkey://valkey:6379
@@ -87,19 +68,17 @@ volumes:
 }
 
 export default function QuickStartCompose() {
-  // Start from the placeholders so server and first client render match, then
-  // swap in freshly generated secrets after mount.
-  const [masterKey, setMasterKey] = useState(PLACEHOLDER);
+  // Start from the placeholder so server and first client render match, then
+  // swap in a freshly generated token after mount.
   const [obscuraToken, setObscuraToken] = useState(TOKEN_PLACEHOLDER);
 
   useEffect(() => {
-    setMasterKey(randomKey());
     setObscuraToken(randomToken());
   }, []);
 
   return (
     <CodeBlock language="yaml" title="docker-compose.yml">
-      {composeFile(masterKey, obscuraToken)}
+      {composeFile(obscuraToken)}
     </CodeBlock>
   );
 }

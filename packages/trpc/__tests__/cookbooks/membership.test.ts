@@ -19,7 +19,7 @@ import {
   listEditableCookbooks,
   removeRecipesFromCookbook,
 } from "../mocks/cookbooks-repository";
-import { canAccessResource } from "../mocks/permissions";
+import { canAccessResource, policy, resetPermissionsMocks } from "../mocks/permissions";
 import { cookbooks } from "../mocks/realtime/cookbooks";
 import * as recipesRepository from "../mocks/recipes-repository";
 import { createMockHousehold, createMockUser } from "../recipes/test-utils";
@@ -59,6 +59,7 @@ function cookbookRow(overrides: Record<string, unknown> = {}) {
   return {
     id: COOKBOOK_ID,
     userId: "test-user-id",
+    householdId: "test-household-id",
     title: "Weeknights",
     createdAt: new Date("2026-01-01T00:00:00Z"),
     updatedAt: new Date("2026-01-01T00:00:00Z"),
@@ -88,39 +89,32 @@ function expectNoRecipeWrites() {
 
 describe("cookbook membership", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+    resetPermissionsMocks();
+    recipesRepository.resetRecipesMocks();
     getCookbookRow.mockResolvedValue(cookbookRow());
-    recipesRepository.getRecipeOwnerIds.mockImplementation(
-      async (ids: string[]) =>
-        new Map(
-          ids
-            .filter((id) => id !== GONE_ID)
-            .map((id) => [id, id === HIDDEN_ID ? "stranger" : "recipe-owner"])
-        )
-    );
+    // The recipe is the household's own; the hidden one is another household's.
+    recipesRepository.recipeHouseholds.set(RECIPE_ID, "test-household-id");
+    recipesRepository.recipeHouseholds.set(HIDDEN_ID, "another-household");
   });
 
   it("files a recipe the reader can see but not edit", async () => {
-    // The reader may view the recipe and edit the cookbook.
-    canAccessResource.mockResolvedValue(true);
-
+    // Another household's recipe under view Everyone, edit Household: seen, never edited.
     await expect(
       callerFor().cookbooks.setMembership({
         cookbookId: COOKBOOK_ID,
-        recipeIds: [RECIPE_ID],
+        recipeIds: [HIDDEN_ID],
         isMember: true,
       })
     ).resolves.toMatchObject({ isMember: true });
 
-    expect(addRecipesToCookbook).toHaveBeenCalledWith(COOKBOOK_ID, [RECIPE_ID]);
-    expect(canAccessResource.mock.calls.map((call) => call[0])).toEqual(["view", "edit"]);
+    expect(addRecipesToCookbook).toHaveBeenCalledWith(COOKBOOK_ID, [HIDDEN_ID]);
+    expect(canAccessResource.mock.calls.map((call) => call[0])).toEqual(["view", "view", "edit"]);
     expectNoRecipeWrites();
   });
 
   it("files many in one call, leaving out what the reader cannot see or what is gone", async () => {
-    canAccessResource.mockImplementation(
-      async (action: string, _userId: string, ownerId: string) =>
-        action === "edit" || ownerId !== "stranger"
-    );
+    policy.view = "household";
 
     const result = await callerFor().cookbooks.setMembership({
       cookbookId: COOKBOOK_ID,
@@ -133,7 +127,7 @@ describe("cookbook membership", () => {
   });
 
   it("refuses a reader who cannot edit the cookbook", async () => {
-    canAccessResource.mockImplementation(async (action: string) => action === "view");
+    getCookbookRow.mockResolvedValue(cookbookRow({ householdId: "another-household" }));
 
     await expect(
       callerFor().cookbooks.setMembership({
@@ -146,8 +140,6 @@ describe("cookbook membership", () => {
   });
 
   it("takes recipes out again from the same mutation, without writing them", async () => {
-    canAccessResource.mockResolvedValue(true);
-
     await callerFor().cookbooks.setMembership({
       cookbookId: COOKBOOK_ID,
       recipeIds: [RECIPE_ID, HIDDEN_ID],
@@ -160,8 +152,6 @@ describe("cookbook membership", () => {
   });
 
   it("echoes one membership event on the cookbook, never on the recipes", async () => {
-    canAccessResource.mockResolvedValue(true);
-
     await callerFor().cookbooks.setMembership({
       cookbookId: COOKBOOK_ID,
       recipeIds: [RECIPE_ID, HIDDEN_ID],
@@ -172,12 +162,28 @@ describe("cookbook membership", () => {
     expect(cookbooks.publish).toHaveBeenCalledWith(
       "membershipChanged",
       { cookbookId: COOKBOOK_ID, recipeIds: [RECIPE_ID, HIDDEN_ID], isMember: true },
-      { viewPolicy: "household", userId: "test-user-id", householdKey: "test-household-id" }
+      { viewPolicy: "household", householdId: "test-household-id" }
     );
   });
 
+  it("echoes to the household the cookbook is in at publish, after its Owner moved", async () => {
+    getCookbookRow
+      .mockResolvedValueOnce(cookbookRow())
+      .mockResolvedValueOnce(cookbookRow({ householdId: "moved-to" }));
+
+    await callerFor().cookbooks.setMembership({
+      cookbookId: COOKBOOK_ID,
+      recipeIds: [RECIPE_ID],
+      isMember: true,
+    });
+
+    expect(cookbooks.publish).toHaveBeenCalledWith("membershipChanged", expect.anything(), {
+      viewPolicy: "household",
+      householdId: "moved-to",
+    });
+  });
+
   it("creates a cookbook already holding the recipe, in one step", async () => {
-    canAccessResource.mockResolvedValue(true);
     createCookbook.mockResolvedValue({
       ...cookbookRow(),
       memberCount: 0,
@@ -195,9 +201,7 @@ describe("cookbook membership", () => {
   });
 
   it("creates the cookbook with what still exists and is visible, leaving out the rest", async () => {
-    canAccessResource.mockImplementation(
-      async (_action: string, _userId: string, ownerId: string) => ownerId !== "stranger"
-    );
+    policy.view = "household";
     createCookbook.mockResolvedValue({ ...cookbookRow(), memberCount: 0, coverImages: [] });
 
     const result = await callerFor().cookbooks.create({
@@ -226,8 +230,7 @@ describe("cookbook membership", () => {
     expect(result).toHaveLength(1);
     expect(listEditableCookbooks).toHaveBeenCalledWith({
       userId: "test-user-id",
-      householdUserIds: ["test-user-id", "household-member-id"],
-      isServerAdmin: false,
+      householdId: "test-household-id",
     });
   });
 
@@ -235,18 +238,21 @@ describe("cookbook membership", () => {
     // Seeing a cookbook is enough: this says nothing a reader could not learn
     // by opening it, and it is what lets bulk-adding leave out what is
     // already in there.
-    canAccessResource.mockResolvedValue(true);
     listCookbookMemberIds.mockResolvedValue([RECIPE_ID]);
 
     const result = await callerFor().cookbooks.memberIds({ cookbookId: COOKBOOK_ID });
 
     expect(result).toEqual([RECIPE_ID]);
-    expect(listCookbookMemberIds).toHaveBeenCalledWith(COOKBOOK_ID);
+    expect(listCookbookMemberIds).toHaveBeenCalledWith(
+      { userId: "test-user-id", householdId: "test-household-id" },
+      COOKBOOK_ID
+    );
     expectNoRecipeWrites();
   });
 
   it("refuses the member ids of a cookbook the reader may not see", async () => {
-    canAccessResource.mockResolvedValue(false);
+    policy.view = "household";
+    getCookbookRow.mockResolvedValue(cookbookRow({ householdId: "another-household" }));
 
     await expect(callerFor().cookbooks.memberIds({ cookbookId: COOKBOOK_ID })).rejects.toThrow(
       TRPCError
@@ -255,7 +261,6 @@ describe("cookbook membership", () => {
   });
 
   it("reports which cookbooks hold a recipe, for the panel and the card alike", async () => {
-    canAccessResource.mockResolvedValue(true);
     listCookbooksForRecipe.mockResolvedValue([
       { ...cookbookRow(), memberCount: 1, coverImages: [] },
     ]);

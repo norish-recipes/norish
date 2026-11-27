@@ -1,6 +1,7 @@
 "use client";
 
-import { Card } from "@heroui/react";
+import { EmptyState } from "@/components/shared/empty-state";
+import { BookOpenIcon, FunnelIcon } from "@heroicons/react/24/outline";
 import { useTranslations } from "next-intl";
 
 import type { LibraryGridItem, SelectedRecipe } from "@norish/shared-react/recipes";
@@ -81,16 +82,11 @@ export default function CookbookMembers({
   const hasNarrowingFilters = hasAppliedRecipeFilters(filters);
 
   const emptyState = (
-    <div className="flex flex-col items-center justify-center px-4 py-16">
-      <Card className="border-border bg-surface shadow-surface w-full max-w-xl border">
-        <Card.Content className="flex flex-col items-center gap-3 p-8 text-center">
-          <h2 className="text-base font-semibold">
-            {hasNarrowingFilters ? t("noMatchingMembers") : t("empty")}
-          </h2>
-          {!hasNarrowingFilters && <p className="text-muted text-base">{t("emptyHint")}</p>}
-        </Card.Content>
-      </Card>
-    </div>
+    <EmptyState
+      icon={hasNarrowingFilters ? FunnelIcon : BookOpenIcon}
+      title={hasNarrowingFilters ? t("noMatchingMembers") : t("empty")}
+      variant="page"
+    />
   );
 
   return (

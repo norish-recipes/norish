@@ -4,13 +4,14 @@
 import { vi } from "vitest";
 import { z } from "zod";
 
-export const listGroceriesByUsers = vi.fn();
+export const listGroceriesByHousehold = vi.fn();
 export const createGroceries = vi.fn();
 export const updateGroceries = vi.fn();
 export const deleteGroceryByIds = vi.fn();
 export const deleteDoneInStore = vi.fn();
-export const getGroceryOwnerIds = vi.fn();
+export const ownGroceryIds = vi.fn();
 export const getGroceriesByIds = vi.fn();
+export const getGroceryRecipeLine = vi.fn();
 export const getRecipeInfoForGroceries = vi.fn();
 export const lockGroceryList = vi.fn();
 export const assignGroceryToStore = vi.fn();
@@ -43,13 +44,14 @@ export const GroceryDeleteSchema = {
 export const GrocerySelectBaseSchema = z.object({}).passthrough();
 
 export function resetDbMocks() {
-  listGroceriesByUsers.mockReset();
+  listGroceriesByHousehold.mockReset();
   createGroceries.mockReset();
   updateGroceries.mockReset();
   deleteGroceryByIds.mockReset();
   deleteDoneInStore.mockReset();
-  getGroceryOwnerIds.mockReset();
+  ownGroceryIds.mockReset();
   getGroceriesByIds.mockReset();
+  getGroceryRecipeLine.mockReset().mockResolvedValue(null);
   getRecipeInfoForGroceries.mockReset();
   lockGroceryList.mockReset();
   assignGroceryToStore.mockReset();

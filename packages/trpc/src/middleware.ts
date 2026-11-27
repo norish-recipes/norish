@@ -1,18 +1,24 @@
 import { TRPCError } from "@trpc/server";
 
 import type { RecipeListContext } from "@norish/db";
+import type { CatalogueActor } from "@norish/shared-server/ingredients/catalogue";
 import type { FullRecipeDTO, HouseholdWithUsersNamesDto, User } from "@norish/shared/contracts";
 import type { RecipeShareDto } from "@norish/shared/contracts/dto/recipe-shares";
 import type { OperationId } from "@norish/shared/contracts/realtime/envelope";
 import { isUserServerAdmin } from "@norish/db";
+import {
+  isPrimaryKeyCollision,
+  isRetryableConflict,
+} from "@norish/db/repositories/constraint-violation";
+import { ForeignHouseholdReferenceError } from "@norish/db/repositories/household-rows";
 import { getActiveRecipeShareByToken } from "@norish/db/repositories/recipe-shares";
 import { getRecipeFull } from "@norish/db/repositories/recipes";
 import { getCachedHouseholdForUser } from "@norish/shared-server/cache/household";
 import { runWithOperationContext } from "@norish/shared-server/lib/operation-context";
 import { ResolveSharedRecipeInputSchema } from "@norish/shared/contracts/zod/recipe-shares";
-import { viewerAndHouseholdIds } from "@norish/shared/lib/household";
 
 import type { Context } from "./context";
+import { assertWriteHousehold } from "./household-write";
 import { withIdempotency } from "./idempotency-middleware";
 import { middleware, publicProcedure } from "./trpc";
 
@@ -37,8 +43,13 @@ const withAuth = middleware(async ({ ctx, next }) => {
 
   const household = ctx.household ?? (await getCachedHouseholdForUser(user.id));
 
-  const householdUserIds = household?.users.map((u: { id: string }) => u.id) ?? [];
-  const householdKey = household?.id ?? user.id;
+  // Every account has a household; none means the account was deleted mid-session.
+  if (!household) {
+    throw new TRPCError({ code: "UNAUTHORIZED", message: "Your account no longer exists" });
+  }
+  // Made before a move, it would land in the household the caller is in now.
+  assertWriteHousehold(ctx.writeHousehold, household.id);
+
   const isServerAdmin = user.isServerAdmin ?? false;
 
   const operationId = ctx.operationId ?? undefined;
@@ -49,9 +60,7 @@ const withAuth = middleware(async ({ ctx, next }) => {
         ...ctx,
         user,
         household,
-        householdKey,
-        userIds: viewerAndHouseholdIds({ userId: user.id, householdUserIds }),
-        householdUserIds: householdUserIds.length > 0 ? householdUserIds : null,
+        householdId: household.id,
         isServerAdmin,
         operationId: ctx.operationId ?? null,
       },
@@ -62,8 +71,8 @@ const withAuth = middleware(async ({ ctx, next }) => {
 /**
  * Authenticated procedure with full context:
  * - User must be logged in
- * - Household context available (ctx.household, ctx.householdKey, ctx.userIds)
- * - Use canAccessResource from @norish/auth/permissions for permission checks
+ * - Household context available (ctx.household, ctx.householdId)
+ * - Recipes and cookbooks: the Permission Policy, through the routers' access helpers
  *
  * `withIdempotency` runs first: any mutation carrying an `x-operation-id` is
  * executed at most once, and a duplicate replay returns the stored response
@@ -72,7 +81,27 @@ const withAuth = middleware(async ({ ctx, next }) => {
  * an expired/absent session keys differently and falls through to `withAuth`.
  * Queries and mutations without the header pass straight through.
  */
-export const authedProcedure = publicProcedure.use(withIdempotency).use(withAuth);
+export const authedProcedure = publicProcedure
+  .use(withIdempotency)
+  .use(withAuth)
+  // A client-made id another household's row holds, or a reference to one, answers like a missing row.
+  // A write its Owner's move overtook, or a deadlock's victim, is a 503 the Outbox retries (a 409 parks).
+  .use(async ({ next }) => {
+    const result = await next();
+
+    if (
+      !result.ok &&
+      (isPrimaryKeyCollision(result.error) ||
+        result.error.cause instanceof ForeignHouseholdReferenceError)
+    ) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Not found" });
+    }
+    if (!result.ok && isRetryableConflict(result.error)) {
+      throw new TRPCError({ code: "SERVICE_UNAVAILABLE", message: "Changed meanwhile, try again" });
+    }
+
+    return result;
+  });
 
 /** Signed in, nothing more: a realtime subscription reads its household itself. */
 export const signedInProcedure = publicProcedure.use(({ ctx, next }) =>
@@ -117,23 +146,26 @@ export const sharedRecipeProcedure = publicProcedure
 export type AuthedProcedureContext = Omit<Context, "household"> & {
   user: User;
   // The request's own household, or the cached one `withAuth` falls back to.
-  household: Context["household"] | HouseholdWithUsersNamesDto | null;
-  householdKey: string;
-  userIds: string[];
-  householdUserIds: string[] | null;
+  household: NonNullable<Context["household"]> | HouseholdWithUsersNamesDto;
+  householdId: string;
   isServerAdmin: boolean;
   operationId: OperationId | null;
 };
 
 /** The caller, as the repositories scope what a viewer may read and edit. */
 export function viewerOf(
-  ctx: Pick<AuthedProcedureContext, "householdUserIds" | "isServerAdmin"> & { user: { id: string } }
+  ctx: Pick<AuthedProcedureContext, "householdId"> & { user: { id: string } }
 ): RecipeListContext {
-  return {
-    userId: ctx.user.id,
-    householdUserIds: ctx.householdUserIds,
-    isServerAdmin: ctx.isServerAdmin,
-  };
+  return { userId: ctx.user.id, householdId: ctx.householdId };
+}
+
+/** The caller as the Ingredient catalogue judges an edit: a member of their household (ADR-0042). */
+export function actorOf(
+  ctx: Pick<AuthedProcedureContext, "householdId" | "isServerAdmin"> & {
+    user: { id: string };
+  }
+): CatalogueActor {
+  return { ...viewerOf(ctx), isServerAdmin: ctx.isServerAdmin };
 }
 
 /**

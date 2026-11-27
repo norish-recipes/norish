@@ -1,86 +1,49 @@
-import { TRPCError } from "@trpc/server";
-
 import type { PermissionAction } from "@norish/auth/permissions";
-import type { PermissionLevel } from "@norish/config/zod/server-config";
+import type { PolicyTarget } from "@norish/shared-server/realtime/domain";
 import type { ClientEventName, PayloadOf } from "@norish/shared/contracts/realtime/catalogue";
 import type { CookbooksRealtime } from "@norish/shared/contracts/realtime/cookbooks";
-import { canAccessResource } from "@norish/auth/permissions";
+import { resourceAccess } from "@norish/auth/permissions";
 import { getCookbookRow } from "@norish/db/repositories/cookbooks";
-import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
-import { trpcLogger as log } from "@norish/shared-server/logger";
 import { cookbooks } from "@norish/shared-server/realtime/cookbooks";
 
+import { notFoundError, refuseUnlessAllowed } from "../recipes/helpers";
+
 export type CookbookUserContext = {
-  user: { id: string };
-  householdUserIds: string[] | null;
-  householdKey: string;
-  isServerAdmin: boolean;
+  householdId: string;
 };
 
-/**
- * Cookbooks answer to the recipe permission policy, not a rule of their own
- * (ADR-0027), and an Orphaned cookbook is fair game for everyone under every
- * policy — the same answer `assertRecipeAccess` gives for an orphaned recipe.
- *
- * Returns the row so a caller that needs the version or title does not read
- * it twice.
- */
+/** Cookbooks answer to the recipe Permission Policy (ADR-0027), refused as a recipe is. Returns
+ * the row so a caller that needs the version or title does not read it twice. */
 export async function assertCookbookAccess(
-  ctx: Pick<CookbookUserContext, "user" | "householdUserIds" | "isServerAdmin">,
+  ctx: CookbookUserContext,
   cookbookId: string,
   action: PermissionAction
 ) {
   const cookbook = await getCookbookRow(cookbookId);
 
-  if (!cookbook) {
-    throw new TRPCError({ code: "NOT_FOUND", message: "Cookbook not found" });
-  }
-
-  if (cookbook.userId === null) {
-    log.debug({ cookbookId }, `${action} orphaned cookbook`);
-
-    return cookbook;
-  }
-
-  const canAccess = await canAccessResource(
-    action,
-    ctx.user.id,
-    cookbook.userId,
-    ctx.householdUserIds,
-    ctx.isServerAdmin
+  if (!cookbook) throw notFoundError("cookbook");
+  refuseUnlessAllowed(
+    await resourceAccess(action, ctx.householdId, cookbook.householdId),
+    "cookbook"
   );
-
-  if (!canAccess) {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "You do not have permission to access this cookbook",
-    });
-  }
 
   return cookbook;
 }
 
-/**
- * Broadcast a cookbook event to whoever the view policy says may see it —
- * the same reach the cookbook itself has.
- */
+/** Broadcast a cookbook event to its audience, read at publish (`cookbookAudience`); none, none hear. */
 export async function emitCookbookEvent<E extends ClientEventName<CookbooksRealtime>>(
-  ctx: Pick<CookbookUserContext, "user" | "householdKey">,
+  audience: PolicyTarget | null,
   event: E,
   data: PayloadOf<CookbooksRealtime, E>
 ): Promise<void> {
-  const policy = await getRecipePermissionPolicy();
-  // Every cookbook event is policy-scoped; the generic `TargetFor` cannot see
-  // that for an open `E`, so the target shape is pinned here once.
+  if (!audience) return;
+
+  // Every cookbook event is policy-scoped; `TargetFor` cannot see that for an open `E`.
   const publish = cookbooks.publish as (
     event: E,
     payload: PayloadOf<CookbooksRealtime, E>,
-    target: { viewPolicy: PermissionLevel; userId: string; householdKey: string }
+    target: PolicyTarget
   ) => Promise<void>;
 
-  await publish(event, data, {
-    viewPolicy: policy.view,
-    userId: ctx.user.id,
-    householdKey: ctx.householdKey,
-  });
+  await publish(event, data, audience);
 }

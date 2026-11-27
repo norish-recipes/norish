@@ -20,6 +20,8 @@ import {
   createTestUser,
   firstSpellingId,
   insertTestRecipeLine,
+  joinTestHousehold,
+  testHouseholdOf,
 } from "../../../db/__tests__/helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../db/__tests__/helpers/repository-test-base";
 
@@ -38,11 +40,8 @@ describe("the measure a spoon weight is shown in", () => {
 
     housemateId = (await createTestUser({ name: "Housemate" }))!.id;
     strangerId = (await createTestUser({ name: "Stranger" }))!.id;
-    household = {
-      userId: owner.id,
-      householdUserIds: [owner.id, housemateId],
-      isServerAdmin: false,
-    };
+    await joinTestHousehold(housemateId, owner.id);
+    household = { userId: owner.id, householdId: testHouseholdOf(owner.id) };
     await setConfig(
       ServerConfigKeys.RECIPE_PERMISSION_POLICY,
       { view: "household", edit: "household", delete: "household" },
@@ -96,10 +95,7 @@ describe("the measure a spoon weight is shown in", () => {
 
     await expect(spoonMeasureFor(household, cumin.id)).resolves.toBe("teaspoon");
     await expect(
-      spoonMeasureFor(
-        { userId: strangerId, householdUserIds: null, isServerAdmin: false },
-        cumin.id
-      )
+      spoonMeasureFor({ userId: strangerId, householdId: testHouseholdOf(strangerId) }, cumin.id)
     ).resolves.toBe("cup");
   });
 

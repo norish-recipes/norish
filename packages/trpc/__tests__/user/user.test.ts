@@ -7,23 +7,16 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createApiKey,
   deleteApiKey,
-  deleteUser,
   disableApiKey,
   enableApiKey,
   getApiKeysForUser,
-  getHouseholdForUser,
   getUserPreferences,
   resetUserMocks,
   updateUserName,
   updateUserPreferences,
 } from "../mocks/user-repository";
 // Import test utilities
-import {
-  createMockApiKey,
-  createMockAuthedContext,
-  createMockHousehold,
-  createMockUser,
-} from "./test-utils";
+import { createMockApiKey, createMockAuthedContext, createMockUser } from "./test-utils";
 
 // Setup mocks before any imports that use them
 vi.mock("@norish/db", () => import("../mocks/user-repository"));
@@ -229,121 +222,6 @@ describe("user procedures", () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toBe("Name cannot be empty");
-    });
-  });
-
-  describe("deleteAccount", () => {
-    it("deletes account when user is not household admin", async () => {
-      const ctx = createMockAuthedContext(mockUser, null);
-
-      getHouseholdForUser.mockResolvedValue(null);
-      deleteUser.mockResolvedValue(undefined);
-
-      const testRouter = t.router({
-        deleteAccount: authedProcedure.mutation(async ({ ctx }) => {
-          const household = await getHouseholdForUser(ctx.user.id);
-
-          if (household && household.adminUserId === ctx.user.id) {
-            const memberCount = household.users.length;
-
-            if (memberCount > 1) {
-              return {
-                success: false,
-                error: "You cannot delete your account while admin with other members.",
-              };
-            }
-          }
-
-          await deleteUser(ctx.user.id);
-
-          return { success: true };
-        }),
-      });
-
-      const caller = t.createCallerFactory(testRouter)(ctx);
-      const result = await caller.deleteAccount();
-
-      expect(result.success).toBe(true);
-      expect(deleteUser).toHaveBeenCalledWith(mockUser.id);
-    });
-
-    it("prevents deletion when user is admin with other members", async () => {
-      const ctx = createMockAuthedContext(mockUser);
-      const household = createMockHousehold({
-        adminUserId: mockUser.id,
-        users: [
-          { id: mockUser.id, name: mockUser.name },
-          { id: "other-user", name: "Other User" },
-        ],
-      });
-
-      getHouseholdForUser.mockResolvedValue(household);
-
-      const testRouter = t.router({
-        deleteAccount: authedProcedure.mutation(async ({ ctx }) => {
-          const household = await getHouseholdForUser(ctx.user.id);
-
-          if (household && household.adminUserId === ctx.user.id) {
-            const memberCount = household.users.length;
-
-            if (memberCount > 1) {
-              return {
-                success: false,
-                error: "You cannot delete your account while admin with other members.",
-              };
-            }
-          }
-
-          await deleteUser(ctx.user.id);
-
-          return { success: true };
-        }),
-      });
-
-      const caller = t.createCallerFactory(testRouter)(ctx);
-      const result = await caller.deleteAccount();
-
-      expect(result.success).toBe(false);
-      expect(result.error).toContain("admin with other members");
-      expect(deleteUser).not.toHaveBeenCalled();
-    });
-
-    it("allows deletion when user is only household member", async () => {
-      const ctx = createMockAuthedContext(mockUser);
-      const household = createMockHousehold({
-        adminUserId: mockUser.id,
-        users: [{ id: mockUser.id, name: mockUser.name }],
-      });
-
-      getHouseholdForUser.mockResolvedValue(household);
-      deleteUser.mockResolvedValue(undefined);
-
-      const testRouter = t.router({
-        deleteAccount: authedProcedure.mutation(async ({ ctx }) => {
-          const household = await getHouseholdForUser(ctx.user.id);
-
-          if (household && household.adminUserId === ctx.user.id) {
-            const memberCount = household.users.length;
-
-            if (memberCount > 1) {
-              return {
-                success: false,
-                error: "You cannot delete your account while admin with other members.",
-              };
-            }
-          }
-
-          await deleteUser(ctx.user.id);
-
-          return { success: true };
-        }),
-      });
-
-      const caller = t.createCallerFactory(testRouter)(ctx);
-      const result = await caller.deleteAccount();
-
-      expect(result.success).toBe(true);
-      expect(deleteUser).toHaveBeenCalledWith(mockUser.id);
     });
   });
 

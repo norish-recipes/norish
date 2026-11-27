@@ -2,12 +2,12 @@ import React from "react";
 import { Pressable, Text, View } from "react-native";
 import { CardSlice } from "@/components/card-slice";
 import { EmptyCard } from "@/components/empty-card";
+import { Ionicons } from "@/components/icon";
 import { IconButton } from "@/components/icon-button";
 import { IngredientIcon } from "@/components/ingredient-icon";
 import { useOnSheet } from "@/components/on-sheet";
 import { OnTheListChip } from "@/components/on-the-list-chip";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { Skeleton, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
@@ -122,9 +122,9 @@ export function PantryRowView({ row, actions }: { row: PantryRow; actions: Pantr
       return (
         <EmptyCard
           icon={note.icon}
+          placement="screen"
           testID={note.testID}
           title={intl.formatMessage({ id: note.messageId })}
-          tone="shop"
         />
       );
     }
@@ -190,11 +190,12 @@ export function PantryRowView({ row, actions }: { row: PantryRow; actions: Pantr
 export function ShowMore({ onPress }: { onPress: () => void }) {
   const intl = useIntl();
   const accentText = useAccentTextColor();
+  const inset = useOnSheet() ? "px-2" : "px-7";
 
   return (
     <Pressable
       accessibilityRole="button"
-      className="px-7 pt-3"
+      className={`${inset} pt-3`}
       testID="pantry-show-more"
       onPress={onPress}
     >
@@ -219,7 +220,7 @@ export function FoodRowsSkeleton({ rows, testID }: { rows: number; testID?: stri
   const onSheet = useOnSheet();
 
   return (
-    <View className="px-5" testID={testID}>
+    <View className={onSheet ? "" : "px-5"} testID={testID}>
       <SkeletonCard
         className={onSheet ? "bg-sand" : "bg-surface"}
         rowClassName="h-[52px] gap-3 px-3.5"

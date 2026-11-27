@@ -9,6 +9,7 @@ import { groceriesRouter } from "./routers/groceries";
 import { householdsAppRouter } from "./routers/households";
 import { ingredientsRouter } from "./routers/ingredients";
 import { libraryRouter } from "./routers/library";
+import { listsRouter } from "./routers/lists";
 import { pantryRouter } from "./routers/pantry";
 import { permissionsRouter } from "./routers/permissions";
 import { ratingsRouter } from "./routers/ratings";
@@ -24,6 +25,7 @@ export const appRouter = router({
   recipes: recipesRouter,
   cookbooks: cookbooksRouter,
   library: libraryRouter,
+  lists: listsRouter,
   permissions: permissionsRouter,
   admin: adminRouter,
   households: householdsAppRouter,

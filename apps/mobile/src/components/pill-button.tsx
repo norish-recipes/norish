@@ -1,8 +1,8 @@
 import type { ComponentProps } from "react";
 import React from "react";
 import { Pressable, Text } from "react-native";
+import { Ionicons } from "@/components/icon";
 import { useTokenColor } from "@/hooks/use-token-color";
-import Ionicons from "@expo/vector-icons/Ionicons";
 
 const TONE_TEXT = {
   default: "text-foreground font-medium",
@@ -11,17 +11,22 @@ const TONE_TEXT = {
 } as const;
 
 /** The kit's body pill: a solid 34 pt capsule with a small shadow, an optional accent icon before
- * its label; `danger` makes the label red, `accent` a solid accent 36 pt capsule. */
+ * its label; `danger` makes the label red, `accent` a solid accent 36 pt capsule. It sits at the
+ * start of its row, or `centred` on it. */
 export function PillButton({
   label,
   icon,
   tone = "default",
+  centred = false,
+  disabled = false,
   testID,
   onPress,
 }: {
   label: string;
   icon?: ComponentProps<typeof Ionicons>["name"];
   tone?: "default" | "danger" | "accent";
+  centred?: boolean;
+  disabled?: boolean;
   testID?: string;
   onPress: () => void;
 }) {
@@ -30,7 +35,9 @@ export function PillButton({
   return (
     <Pressable
       accessibilityRole="button"
-      className={`flex-row items-center gap-[7px] self-start rounded-full shadow-sm ${tone === "accent" ? "bg-accent h-9 px-[15px]" : "bg-thumb h-[34px] px-3.5"}`}
+      accessibilityState={{ disabled }}
+      className={`${disabled ? "opacity-50" : ""} flex-row items-center gap-[7px] ${centred ? "self-center" : "self-start"} rounded-full shadow-sm ${tone === "accent" ? "bg-accent h-9 px-[15px]" : "bg-thumb h-[34px] px-3.5"}`}
+      disabled={disabled}
       testID={testID}
       onPress={onPress}
     >

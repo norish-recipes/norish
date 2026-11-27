@@ -1,51 +1,49 @@
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 
 import { db } from "@norish/db/drizzle";
-import { tags, userAllergies, users } from "@norish/db/schema";
+import { householdUsers, userAllergies, users } from "@norish/db/schema";
+import { entryFold } from "@norish/shared/lib/fold-name";
 
-import { getOrCreateManyTagsTx } from "./tags";
+import { entryName } from "./list-entries";
 
-export async function getUserAllergies(
+async function readUserAllergies(
+  connection: Pick<typeof db, "select">,
   userId: string
 ): Promise<{ allergies: string[]; version: number }> {
-  const [userRow, rows] = await Promise.all([
-    db
-      .select({ version: users.version })
-      .from(users)
-      .where(eq(users.id, userId))
-      .limit(1)
-      .then((result) => result[0] ?? null),
-    db
-      .select({ name: tags.name, version: userAllergies.version })
-      .from(userAllergies)
-      .innerJoin(tags, eq(userAllergies.tagId, tags.id))
-      .where(eq(userAllergies.userId, userId))
-      .orderBy(sql`lower(${tags.name})`),
-  ]);
-
-  const allergyVersion = rows.reduce((max, row) => Math.max(max, row.version), 0);
+  const rows = await connection
+    .select({
+      name: userAllergies.name,
+      version: users.version,
+      allergyVersion: userAllergies.version,
+    })
+    .from(users)
+    .leftJoin(userAllergies, eq(userAllergies.userId, users.id))
+    .where(eq(users.id, userId))
+    .orderBy(sql`lower(${userAllergies.name})`);
 
   return {
-    allergies: rows.map((row) => row.name),
-    version: Math.max(userRow?.version ?? 0, allergyVersion),
+    allergies: rows.flatMap(({ name }) => (name === null ? [] : [name])),
+    version: rows.reduce((max, row) => Math.max(max, row.version, row.allergyVersion ?? 0), 0),
   };
 }
 
-export async function getAllergiesForUsers(
-  userIds: string[]
-): Promise<{ userId: string; tagName: string }[]> {
-  if (userIds.length === 0) return [];
+export function getUserAllergies(userId: string) {
+  return readUserAllergies(db, userId);
+}
 
+/** Every allergy the household's members keep, one name per fold, by name. */
+export async function getHouseholdAllergyNames(householdId: string): Promise<string[]> {
   const rows = await db
-    .select({
-      userId: userAllergies.userId,
-      tagName: tags.name,
-    })
+    .select({ name: userAllergies.name })
     .from(userAllergies)
-    .innerJoin(tags, eq(userAllergies.tagId, tags.id))
-    .where(inArray(userAllergies.userId, userIds));
+    .innerJoin(householdUsers, eq(householdUsers.userId, userAllergies.userId))
+    .where(eq(householdUsers.householdId, householdId))
+    .orderBy(asc(sql`lower(${userAllergies.name})`), asc(userAllergies.name));
+  const byFold = new Map<string, string>();
 
-  return rows;
+  for (const { name } of rows) if (!byFold.has(entryFold(name))) byFold.set(entryFold(name), name);
+
+  return [...byFold.values()];
 }
 
 export async function updateUserAllergies(
@@ -57,19 +55,7 @@ export async function updateUserAllergies(
     const nextVersion = currentVersion === 0 ? 2 : currentVersion + 1;
 
     if (currentVersion === 0) {
-      const [userRow, existingAllergy] = await Promise.all([
-        tx.select({ version: users.version }).from(users).where(eq(users.id, userId)).limit(1),
-        tx
-          .select({ version: userAllergies.version })
-          .from(userAllergies)
-          .where(eq(userAllergies.userId, userId))
-          .limit(1),
-      ]);
-
-      const authoritativeVersion = Math.max(
-        userRow[0]?.version ?? 0,
-        existingAllergy[0]?.version ?? 0
-      );
+      const { version: authoritativeVersion } = await readUserAllergies(tx, userId);
 
       if (authoritativeVersion !== 1) {
         return { applied: false, version: authoritativeVersion, stale: true };
@@ -85,40 +71,33 @@ export async function updateUserAllergies(
       .returning({ version: users.version });
 
     if (!updatedUser) {
-      const [userRow, existingAllergies] = await Promise.all([
-        tx.select({ version: users.version }).from(users).where(eq(users.id, userId)).limit(1),
-        tx
-          .select({ version: userAllergies.version })
-          .from(userAllergies)
-          .where(eq(userAllergies.userId, userId)),
-      ]);
-
-      const authoritativeVersion = Math.max(
-        userRow[0]?.version ?? 0,
-        ...existingAllergies.map((row) => row.version)
-      );
+      const { version: authoritativeVersion } = await readUserAllergies(tx, userId);
 
       return { applied: false, version: authoritativeVersion, stale: true };
     }
 
-    // Delete existing allergies
-    await tx.delete(userAllergies).where(eq(userAllergies.userId, userId));
+    // A sent name folding like a stored one keeps the stored spelling; new names are cleaned.
+    const stored = await tx
+      .select({ name: userAllergies.name })
+      .from(userAllergies)
+      .where(eq(userAllergies.userId, userId));
+    const storedByFold = new Map(stored.map(({ name }) => [entryFold(name), name]));
+    const kept = new Map<string, string>();
 
-    if (allergyNames.length === 0) {
-      return { applied: true, version: nextVersion, stale: false };
+    for (const sent of allergyNames) {
+      const name = storedByFold.get(entryFold(sent)) ?? entryName(sent)?.name;
+
+      if (name && !kept.has(entryFold(name))) kept.set(entryFold(name), name);
     }
 
-    // Get or create tags
-    const tagRecords = await getOrCreateManyTagsTx(tx, allergyNames);
+    await tx.delete(userAllergies).where(eq(userAllergies.userId, userId));
 
-    // Insert new allergies
-    const rows = tagRecords.map((tag) => ({
-      userId,
-      tagId: tag.id,
-      version: nextVersion,
-    }));
-
-    await tx.insert(userAllergies).values(rows).onConflictDoNothing();
+    if (kept.size > 0) {
+      await tx
+        .insert(userAllergies)
+        .values([...kept.values()].map((name) => ({ userId, name, version: nextVersion })))
+        .onConflictDoNothing();
+    }
 
     return { applied: true, version: nextVersion, stale: false };
   });

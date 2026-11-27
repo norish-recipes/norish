@@ -1,7 +1,7 @@
 "use client";
 
 import type { MouseEvent } from "react";
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import MiniCalendar from "@/components/Panel/consumers/mini-calendar";
@@ -32,11 +32,7 @@ import { Button, Card, Chip, Tooltip, useOverlayState } from "@heroui/react";
 import { useFormatter, useTranslations } from "next-intl";
 import { useLongPress } from "react-aria";
 
-import {
-  ownerAllows,
-  useHiddenItemVisibility,
-  useRecipePermissions,
-} from "@norish/shared-react/reader";
+import { useHiddenItemVisibility, useRecipePermissions } from "@norish/shared-react/reader";
 import { recipeCardFacts, useRecipeSelection } from "@norish/shared-react/recipes";
 import { RecipeDashboardDTO } from "@norish/shared/contracts";
 import { RECIPE_DASHBOARD_KEYS } from "@norish/shared/contracts/zod";
@@ -182,13 +178,13 @@ function RecipeCardComponent({
 
   const recipeHref = withOrigin(`/recipes/${recipe.id}`, pathname);
 
-  const handleNavigate = useCallback(() => {
+  const handleNavigate = () => {
     if (recipe.id && !open) {
       // Navigate immediately - skeleton shows while data loads
       // Prefetch is already happening via useRecipePrefetch hook
       router.push(recipeHref);
     }
-  }, [router, recipe.id, open, recipeHref]);
+  };
 
   const { description, tagNames, allergySet, timeLabel, servings } = recipeCardFacts(
     recipe,
@@ -208,72 +204,66 @@ function RecipeCardComponent({
   const thumbnailImage = recipe.image;
   const showImage = thumbnailImage && failedImage !== thumbnailImage;
 
-  const handleToggleFavorite = useCallback(() => {
+  const handleToggleFavorite = () => {
     onToggleFavorite(recipe.id);
-  }, [onToggleFavorite, recipe.id]);
+  };
 
-  const handleDeleteClick = useCallback(() => {
+  const handleDeleteClick = () => {
     onDeleteModalOpen();
-  }, [onDeleteModalOpen]);
+  };
 
-  const stopParentActivation = useCallback((event: MouseEvent) => {
+  const stopParentActivation = (event: MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
-  }, []);
+  };
 
-  const handleDeleteConfirm = useCallback(() => {
+  const handleDeleteConfirm = () => {
     onDeleteModalClose();
     // Trigger the delete animation, then delete the recipe
     rowRef.current?.triggerDeleteAnimation(() => {
       onDelete([{ id: recipe.id, version: recipe.version }]);
     });
-  }, [onDelete, recipe.id, recipe.version, onDeleteModalClose]);
+  };
 
-  // Check if user can delete this recipe
-  // Recipes without owner don not have restrictions
-  const showDeleteAction = ownerAllows(recipe.userId, canDeleteRecipe);
+  const showDeleteAction = canDeleteRecipe(recipe.householdId);
 
-  const actions: SwipeAction[] = useMemo(() => {
-    const baseActions: SwipeAction[] = [
-      {
-        key: "groceries",
-        icon: ShoppingBagIcon,
-        color: "accent",
-        onPress: () => setGroceriesOpen(true),
-        label: t("viewGroceries"),
-      },
-      {
-        key: "calendar",
-        icon: CalendarDaysIcon,
-        color: "warning",
-        onPress: () => setCalendarOpen(true),
-        label: t("addToCalendar"),
-      },
-    ];
+  const actions: SwipeAction[] = [
+    {
+      key: "groceries",
+      icon: ShoppingBagIcon,
+      color: "accent",
+      onPress: () => setGroceriesOpen(true),
+      label: t("viewGroceries"),
+    },
+    {
+      key: "calendar",
+      icon: CalendarDaysIcon,
+      color: "warning",
+      onPress: () => setCalendarOpen(true),
+      label: t("addToCalendar"),
+    },
+  ];
 
-    if (onRemoveFromCookbook) {
-      // Taking a recipe out of the cookbook it is being read in. This never
-      // touches the recipe, only its membership (ADR-0027).
-      baseActions.push({
-        key: "remove-from-cookbook",
-        icon: MinusCircleIcon,
-        color: "danger",
-        onPress: () => onRemoveFromCookbook(recipe.id),
-        label: tCookbooks("removeFromCookbook"),
-      });
-    } else if (showDeleteAction) {
-      baseActions.push({
-        key: "delete",
-        icon: TrashIcon,
-        color: "danger",
-        onPress: handleDeleteClick,
-        primary: false,
-        label: t("deleteRecipe"),
-      });
-    }
-
-    return baseActions;
-  }, [showDeleteAction, handleDeleteClick, t, onRemoveFromCookbook, recipe.id, tCookbooks]);
+  if (onRemoveFromCookbook) {
+    // Taking a recipe out of the cookbook it is being read in. This never
+    // touches the recipe, only its membership (ADR-0027).
+    actions.push({
+      key: "remove-from-cookbook",
+      icon: MinusCircleIcon,
+      color: "danger",
+      onPress: () => onRemoveFromCookbook(recipe.id),
+      label: tCookbooks("removeFromCookbook"),
+    });
+  } else if (showDeleteAction) {
+    actions.push({
+      key: "delete",
+      icon: TrashIcon,
+      color: "danger",
+      onPress: handleDeleteClick,
+      primary: false,
+      label: t("deleteRecipe"),
+    });
+  }
 
   const optionsButton = (
     <div className="hidden md:block" role="presentation" onClick={stopParentActivation}>

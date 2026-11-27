@@ -12,25 +12,31 @@ import type {
 } from "@norish/shared/contracts";
 import { primaryRecipeImage } from "@norish/shared/lib/recipe-media";
 
+import type { HouseholdMark } from "../offline/optimistic-updates";
 import type { InfiniteRecipeData } from "./library-cache";
 import type { RecipesMutationErrorHandler } from "./recipes-mutation-error";
-import { shouldPreserveOptimisticUpdate } from "../offline/optimistic-updates";
+import {
+  markHousehold,
+  mayRestore,
+  shouldPreserveOptimisticUpdate,
+} from "../offline/optimistic-updates";
+import { useReaderOwner } from "../reader";
 import { useTRPC } from "../trpc";
 import { handleRecipesMutationError } from "./recipes-mutation-error";
 import { removeRecipesFromLists, useRecipesCacheHelpers } from "./use-recipes-cache";
 
-type CreateMutationContext = {
+type CreateMutationContext = Partial<HouseholdMark> & {
   recipeId?: string;
   detailQueryKey?: QueryKey;
   previousDetail?: FullRecipeDTO | null | undefined;
 };
 
-type DeleteMutationContext = {
+type DeleteMutationContext = HouseholdMark & {
   previousDetails: [QueryKey, FullRecipeDTO | null | undefined][];
   previousRecipeLists: [QueryKey, InfiniteRecipeData | undefined][];
 };
 
-type UpdateMutationContext = {
+type UpdateMutationContext = HouseholdMark & {
   detailQueryKey: QueryKey;
   previousDetail: FullRecipeDTO | null | undefined;
   /** What this edit put in the cache, if it showed. */
@@ -117,7 +123,11 @@ function createOptimisticId(): string {
   return `${hex.slice(0, 4).join("")}-${hex.slice(4, 6).join("")}-${hex.slice(6, 8).join("")}-${hex.slice(8, 10).join("")}-${hex.slice(10, 16).join("")}`;
 }
 
-function createOptimisticFullRecipe(input: FullRecipeInsertDTO): FullRecipeDTO | null {
+/** The Reader's own recipe, in their household; unknown ids offer nothing until the echo. */
+function createOptimisticFullRecipe(
+  input: FullRecipeInsertDTO,
+  owner: { userId: string; householdId: string }
+): FullRecipeDTO | null {
   if (!input.id) {
     return null;
   }
@@ -127,7 +137,7 @@ function createOptimisticFullRecipe(input: FullRecipeInsertDTO): FullRecipeDTO |
 
   return {
     id: input.id,
-    userId: null,
+    ...owner,
     name: input.name,
     description: input.description ?? null,
     notes: input.notes ?? null,
@@ -233,6 +243,7 @@ function createOptimisticDashboardRecipe(recipe: FullRecipeDTO): RecipeDashboard
   return {
     id: recipe.id,
     userId: recipe.userId,
+    householdId: recipe.householdId,
     name: recipe.name,
     description: recipe.description,
     notes: recipe.notes,
@@ -258,10 +269,23 @@ function createOptimisticDashboardRecipe(recipe: FullRecipeDTO): RecipeDashboard
   };
 }
 
+/** `onSaved` only for a save stored or queued while Offline; any other answer is `onFailed`. */
 export type SaveCallbacks = { onSaved: () => void; onFailed: (error: unknown) => void };
 
+/** A save refused as stale: the recipe or its lists changed after the editor opened. */
+export class RecipeChangedElsewhereError extends Error {}
+
+const told = (after: SaveCallbacks) => ({
+  onSuccess: (answer: unknown) =>
+    (answer as { stale?: unknown } | null)?.stale === true
+      ? after.onFailed(new RecipeChangedElsewhereError())
+      : after.onSaved(),
+  onError: (error: unknown) =>
+    shouldPreserveOptimisticUpdate(error) ? after.onSaved() : after.onFailed(error),
+});
+
 export type RecipesMutationsResult = {
-  createRecipe: (input: FullRecipeInsertDTO) => void;
+  createRecipe: (input: FullRecipeInsertDTO, after?: SaveCallbacks) => void;
   /** `after` hears once the save is stored or queued, or that it failed. */
   updateRecipe: (id: string, input: FullRecipeUpdateDTO, after?: SaveCallbacks) => void;
   /** Delete recipes, each at the version the reader saw; one call however many. */
@@ -275,11 +299,12 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
   const { setAllRecipesData, invalidate } = useRecipesCacheHelpers();
 
   const recipesPath = [trpc.recipes.list.queryKey({})[0]];
+  const owner = useReaderOwner();
 
   const createMutation = useMutation(
     trpc.recipes.create.mutationOptions({
       onMutate: async (input) => {
-        const optimisticRecipe = createOptimisticFullRecipe(input);
+        const optimisticRecipe = owner && createOptimisticFullRecipe(input, owner);
 
         if (!optimisticRecipe) {
           return {};
@@ -299,7 +324,12 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
           addRecipeToLists(previousData, createOptimisticDashboardRecipe(optimisticRecipe))
         );
 
-        return { recipeId: optimisticRecipe.id, detailQueryKey, previousDetail };
+        return {
+          recipeId: optimisticRecipe.id,
+          detailQueryKey,
+          previousDetail,
+          ...markHousehold(queryClient),
+        };
       },
       onError: (error, _variables, context) => {
         handleRecipesMutationError(error, "create", onError, () => {
@@ -310,7 +340,7 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
           // Setting undefined is a no-op, so a detail that was not there is removed.
           if (detailQueryKey && previousDetail === undefined) {
             queryClient.removeQueries({ queryKey: detailQueryKey, exact: true });
-          } else if (detailQueryKey) {
+          } else if (detailQueryKey && mayRestore(queryClient, createContext as HouseholdMark)) {
             queryClient.setQueryData(detailQueryKey, previousDetail);
             queryClient.invalidateQueries({ queryKey: detailQueryKey });
           }
@@ -347,6 +377,8 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
   const rollBackEdit = (variables: UpdateVariables, context: unknown) => {
     const { detailQueryKey, previousDetail, optimisticDetail } = (context ??
       {}) as Partial<UpdateMutationContext>;
+
+    if (!mayRestore(queryClient, context as UpdateMutationContext | undefined)) return true;
     const others = otherPendingEdits(variables);
 
     if (others.length > 0) {
@@ -417,7 +449,12 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
           }
         );
 
-        return { detailQueryKey, previousDetail, optimisticDetail: shown ? written : undefined };
+        return {
+          detailQueryKey,
+          previousDetail,
+          optimisticDetail: shown ? written : undefined,
+          ...markHousehold(queryClient),
+        };
       },
       // Stored: the next write from the cache (an edit, a convert) is sent at that version.
       // Refused: the Outbox parks it as Conflicted and tells the reader.
@@ -476,7 +513,7 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
           queryClient.setQueryData<FullRecipeDTO | null>(queryKey, null);
         }
 
-        return { previousDetails, previousRecipeLists };
+        return { previousDetails, previousRecipeLists, ...markHousehold(queryClient) };
       },
       // A recipe skipped or kept left the lists tentatively; refetching brings it back.
       onSuccess: ({ deletedIds }, { recipes }) => {
@@ -511,7 +548,7 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
   );
 
   const restoreDeletedRecipes = (context: DeleteMutationContext | undefined): void => {
-    if (!context) {
+    if (!mayRestore(queryClient, context)) {
       return;
     }
 
@@ -522,19 +559,12 @@ export function useRecipesMutations(onError?: RecipesMutationErrorHandler): Reci
     }
   };
 
-  const createRecipe = (input: FullRecipeInsertDTO): void => {
-    mutateCreate(input);
+  const createRecipe = (input: FullRecipeInsertDTO, after?: SaveCallbacks): void => {
+    mutateCreate(input, after && told(after));
   };
 
   const updateRecipe = (id: string, input: FullRecipeUpdateDTO, after?: SaveCallbacks): void => {
-    mutateUpdate(
-      { id, version: input.version ?? 1, data: input },
-      after && {
-        onSuccess: after.onSaved,
-        onError: (error) =>
-          shouldPreserveOptimisticUpdate(error) ? after.onSaved() : after.onFailed(error),
-      }
-    );
+    mutateUpdate({ id, version: input.version ?? 1, data: input }, after && told(after));
   };
 
   const deleteRecipes = (recipes: Array<{ id: string; version: number }>): void => {

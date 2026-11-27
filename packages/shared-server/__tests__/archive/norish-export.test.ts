@@ -70,7 +70,7 @@ describe("norish export service", () => {
       await import("@norish/shared-server/archive/norish-export");
 
     const { stream, recipeCount } = await buildNorishArchiveForViewer({
-      ctx: { userId: "user-1", householdUserIds: null, isServerAdmin: false },
+      ctx: { userId: "user-1", householdId: "household-1" },
       exporter: { name: "Mika", origin: "https://norish.example.com" },
       exportedAt: new Date("2026-08-15T12:00:00Z"),
     });
@@ -90,7 +90,7 @@ describe("norish export service", () => {
     const { buildNorishArchiveForViewer } =
       await import("@norish/shared-server/archive/norish-export");
 
-    const ctx = { userId: "user-1", householdUserIds: ["user-1", "user-2"], isServerAdmin: false };
+    const ctx = { userId: "user-1", householdId: "household-1" };
 
     await buildNorishArchiveForViewer({
       ctx,
@@ -107,7 +107,7 @@ describe("norish export service", () => {
       await import("@norish/shared-server/archive/norish-export");
 
     const { stream, recipeCount } = await buildNorishArchiveForViewer({
-      ctx: { userId: "user-1", householdUserIds: null, isServerAdmin: false },
+      ctx: { userId: "user-1", householdId: "household-1" },
       exporter: { name: "Mika", origin: "https://norish.example.com" },
       exportedAt: new Date("2026-08-15T12:00:00Z"),
     });
@@ -136,7 +136,7 @@ describe("norish export service", () => {
       await import("@norish/shared-server/archive/norish-export");
 
     const { stream } = await buildNorishArchiveForViewer({
-      ctx: { userId: "user-1", householdUserIds: null, isServerAdmin: false },
+      ctx: { userId: "user-1", householdId: "household-1" },
       exporter: { name: "Mika", origin: "https://norish.example.com" },
       exportedAt: new Date("2026-08-15T12:00:00Z"),
     });
@@ -144,7 +144,10 @@ describe("norish export service", () => {
 
     // The marks are read for the exporting user, never for the household
     expect(mockGetUserRatingsByRecipeIds).toHaveBeenCalledWith("user-1", [RECIPE_A, RECIPE_B]);
-    expect(mockGetFavoritesByRecipeIds).toHaveBeenCalledWith("user-1", [RECIPE_A, RECIPE_B]);
+    expect(mockGetFavoritesByRecipeIds).toHaveBeenCalledWith(
+      { userId: "user-1", householdId: "household-1" },
+      [RECIPE_A, RECIPE_B]
+    );
 
     const recipeA = JSON.parse(await zip.file(`${RECIPE_A}/recipe.json`)!.async("string"));
     const recipeB = JSON.parse(await zip.file(`${RECIPE_B}/recipe.json`)!.async("string"));
@@ -156,7 +159,7 @@ describe("norish export service", () => {
   });
 
   it("names the cookbooks the exporter can see, read under the export's own viewer", async () => {
-    const ctx = { userId: "user-1", householdUserIds: null, isServerAdmin: false };
+    const ctx = { userId: "user-1", householdId: "household-1" };
 
     mockListCookbookTitlesByRecipeIds.mockResolvedValue(new Map([[RECIPE_A, ["Dolci", "Kerst"]]]));
 
@@ -190,7 +193,7 @@ describe("norish export service", () => {
       await import("@norish/shared-server/archive/norish-export");
 
     const { stream, recipeCount } = await buildNorishArchiveForViewer({
-      ctx: { userId: "user-1", householdUserIds: null, isServerAdmin: false },
+      ctx: { userId: "user-1", householdId: "household-1" },
       exporter: { name: "Mika", origin: "https://norish.example.com" },
       exportedAt: new Date("2026-08-15T12:00:00Z"),
     });
@@ -215,7 +218,7 @@ describe("norish export service", () => {
       await import("@norish/shared-server/archive/norish-export");
 
     const { stream } = await buildNorishArchiveForViewer({
-      ctx: { userId: "user-1", householdUserIds: null, isServerAdmin: false },
+      ctx: { userId: "user-1", householdId: "household-1" },
       exporter: { name: "Mika", origin: "https://norish.example.com" },
       exportedAt: new Date("2026-08-15T12:00:00Z"),
     });

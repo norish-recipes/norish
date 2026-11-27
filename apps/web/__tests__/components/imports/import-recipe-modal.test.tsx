@@ -32,6 +32,7 @@ vi.mock("@heroui/react", () => ({
       typeof children === "function" ? <div>{children(vi.fn())}</div> : <div>{children}</div>,
     CloseTrigger: () => <button aria-label="Close" type="button" />,
     Header: ({ children }: any) => <div>{children}</div>,
+    Heading: ({ children }: any) => <h2>{children}</h2>,
     Body: ({ children }: any) => <div>{children}</div>,
     Footer: ({ children }: any) => <div>{children}</div>,
   }),

@@ -25,7 +25,7 @@ import { ErrorWithDetail } from "@norish/shared/lib/error-extensions";
 
 const createRecipeWithRefs = vi.fn();
 const dashboardRecipe = vi.fn();
-const recipeExistsByUrlForPolicy = vi.fn();
+const findRecipeIdByUrlForAccount = vi.fn();
 const getDecryptedTokensByUserId = vi.fn();
 const publishRecipe = vi.fn(async () => undefined);
 const parseRecipeFromUrl = vi.fn();
@@ -41,20 +41,32 @@ vi.mock("@norish/shared-server/ai/runtime/errors", async (importOriginal) => ({
 vi.mock("@norish/db", () => ({
   createRecipeWithRefs,
   dashboardRecipe,
-  recipeExistsByUrlForPolicy,
+  findRecipeIdByUrlForAccount,
 }));
 
 vi.mock("@norish/db/repositories/categories", () => ({
-  listCategoryNamesForViewer: vi.fn(async (viewer: { householdUserIds: string[] | null }) =>
-    viewer.householdUserIds?.includes("user-2") ? ["Breakfast", "Drinks"] : ["Breakfast"]
+  listCategoryNamesForHousehold: vi.fn(async (householdId: string) =>
+    householdId === "household-1" ? ["Breakfast", "Drinks"] : ["Breakfast"]
   ),
 }));
 vi.mock("@norish/db/repositories/site-auth-tokens", () => ({
   getDecryptedTokensByUserId,
 }));
 
+// The audience reads each row's household and the account's at publish time.
+vi.mock("@norish/db/repositories/households", () => ({
+  getHouseholdIdForUser: vi.fn().mockResolvedValue("household-1"),
+}));
+vi.mock("@norish/db/repositories/recipes", () => ({
+  getRecipeHouseholdIds: vi.fn(
+    async (ids: string[]) => new Map(ids.map((id) => [id, "household-1"]))
+  ),
+}));
+vi.mock("@norish/db/repositories/cookbooks", () => ({ getCookbookRow: vi.fn() }));
+const getRecipePermissionPolicy = vi.hoisted(() => vi.fn());
+
 vi.mock("@norish/shared-server/config/server-config-loader", () => ({
-  getRecipePermissionPolicy: vi.fn().mockResolvedValue({ view: "everyone" }),
+  getRecipePermissionPolicy,
 }));
 
 vi.mock("@norish/queue/api-handlers", () => ({
@@ -102,7 +114,8 @@ const PARSED_RECIPE = {
 
 describe("processImportJob", () => {
   beforeEach(() => {
-    recipeExistsByUrlForPolicy.mockResolvedValue({ exists: false });
+    getRecipePermissionPolicy.mockResolvedValue({ view: "everyone" });
+    findRecipeIdByUrlForAccount.mockResolvedValue(null);
     getDecryptedTokensByUserId.mockResolvedValue([]);
     parseRecipeFromUrl.mockResolvedValue({ recipe: PARSED_RECIPE, usedAI: false });
     withDishColor.mockImplementation(async (dto) => ({ ...dto, dishColor: "#7c4a1e" }));
@@ -121,8 +134,7 @@ describe("processImportJob", () => {
         url: "https://example.com/stew",
         recipeId: "recipe-77",
         userId: "user-1",
-        householdKey: "household-1",
-        householdUserIds: null,
+        householdId: "household-1",
       },
     } as unknown as Job<RecipeImportJobData>);
 
@@ -145,8 +157,7 @@ describe("processImportJob", () => {
         url: "https://example.com/margarita",
         recipeId: "recipe-77",
         userId: "user-1",
-        householdKey: "household-1",
-        householdUserIds: ["user-1", "user-2"],
+        householdId: "household-1",
       },
     } as unknown as Job<RecipeImportJobData>);
 
@@ -156,10 +167,60 @@ describe("processImportJob", () => {
     ]);
   });
 
+  it("parses with the household the importer is in when the job runs, not when it was queued", async () => {
+    const { processRecipeImportJob } = await import("../../src/recipe-import/worker");
+
+    await processRecipeImportJob({
+      id: "job-1",
+      attemptsMade: 0,
+      opts: {},
+      data: {
+        url: "https://example.com/margarita",
+        recipeId: "recipe-77",
+        userId: "user-1",
+        householdId: "household-left",
+      },
+    } as unknown as Job<RecipeImportJobData>);
+
+    expect(parseRecipeFromUrl.mock.calls.at(-1)?.[2]?.householdCategories).toEqual([
+      "Breakfast",
+      "Drinks",
+    ]);
+  });
+
+  it("announces the import to whoever may view it once stored, not when it started", async () => {
+    const { processRecipeImportJob } = await import("../../src/recipe-import/worker");
+
+    // View narrows to Household while the page is being parsed.
+    parseRecipeFromUrl.mockImplementation(async () => {
+      getRecipePermissionPolicy.mockResolvedValue({ view: "household" });
+
+      return { recipe: PARSED_RECIPE, usedAI: false };
+    });
+    dashboardRecipe.mockResolvedValue({ id: "recipe-77", householdId: "household-1" });
+
+    await processRecipeImportJob({
+      id: "job-1",
+      attemptsMade: 0,
+      opts: {},
+      data: {
+        url: "https://example.com/stew",
+        recipeId: "recipe-77",
+        userId: "user-1",
+        householdId: "household-1",
+      },
+    } as unknown as Job<RecipeImportJobData>);
+
+    expect(publishRecipe).toHaveBeenCalledWith("imported", expect.anything(), {
+      viewPolicy: "household",
+      householdId: "household-1",
+    });
+  });
+
   it("ends on the existing recipe when the URL is already in the library", async () => {
     const { processRecipeImportJob } = await import("../../src/recipe-import/worker");
 
-    recipeExistsByUrlForPolicy.mockResolvedValue({ exists: true, existingRecipeId: "recipe-12" });
+    findRecipeIdByUrlForAccount.mockResolvedValue("recipe-12");
 
     await expect(
       processRecipeImportJob({
@@ -170,8 +231,7 @@ describe("processImportJob", () => {
           url: "https://example.com/stew",
           recipeId: "recipe-78",
           userId: "user-1",
-          householdKey: "household-1",
-          householdUserIds: null,
+          householdId: "household-1",
         },
       } as unknown as Job<RecipeImportJobData>)
     ).resolves.toBe("recipe-12");
@@ -201,8 +261,7 @@ describe("processImportJob", () => {
         url: "https://example.com/untitled",
         recipeId: "recipe-77",
         userId: "user-1",
-        householdKey: "household-1",
-        householdUserIds: null,
+        householdId: "household-1",
       },
     };
 
@@ -239,8 +298,7 @@ describe("processImportJob", () => {
         url: "https://example.com/untitled",
         recipeId: "recipe-77",
         userId: "user-1",
-        householdKey: "household-1",
-        householdUserIds: null,
+        householdId: "household-1",
       },
     };
 
@@ -268,8 +326,7 @@ describe("processImportJob", () => {
           url: "https://www.instagram.com/reel/ABC123/",
           recipeId: "recipe-77",
           userId: "user-1",
-          householdKey: "household-1",
-          householdUserIds: null,
+          householdId: "household-1",
         },
       }) as unknown as Job<RecipeImportJobData>;
 
@@ -336,8 +393,7 @@ describe("processImportJob", () => {
         url: "https://example.com/about",
         recipeId: "recipe-77",
         userId: "user-1",
-        householdKey: "household-1",
-        householdUserIds: null,
+        householdId: "household-1",
       },
     };
     const failure = await processRecipeImportJob(job as unknown as Job<RecipeImportJobData>).catch(
@@ -370,8 +426,7 @@ describe("processImportJob", () => {
         url: "http://192.168.1.1/",
         recipeId: "recipe-78",
         userId: "user-1",
-        householdKey: "household-1",
-        householdUserIds: null,
+        householdId: "household-1",
       },
     };
     const failure = await processRecipeImportJob(job as unknown as Job<RecipeImportJobData>).catch(
@@ -403,8 +458,7 @@ describe("processImportJob", () => {
         url: "https://example.com/thin",
         recipeId: "recipe-77",
         userId: "user-1",
-        householdKey: "household-1",
-        householdUserIds: null,
+        householdId: "household-1",
       },
     };
 
@@ -449,8 +503,7 @@ describe("processImportJob", () => {
           url,
           recipeId: "recipe-77",
           userId: "user-1",
-          householdKey: "household-1",
-          householdUserIds: null,
+          householdId: "household-1",
         },
       } as unknown as Job<RecipeImportJobData>);
     };

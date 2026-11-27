@@ -16,6 +16,7 @@ import type { Job } from "bullmq";
 import type { FullRecipeDTO } from "@norish/shared/contracts";
 import { getRecipeFull } from "@norish/db";
 import { createLogger } from "@norish/shared-server/logger";
+import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
 
 import type { RecipeEnrichmentJobData } from "../contracts/job-types";
 import { isFinalFailure, isUnrecoverableAIFailure, unrecoverable } from "../create-worker";
@@ -59,8 +60,11 @@ export async function runEnrichmentJob(
 
   const recipe = await getRecipeFull(recipeId);
 
+  // Erased meanwhile (its Owner's account deleted, say): nothing left to enrich.
   if (!recipe) {
-    throw new Error(`Recipe not found: ${recipeId}`);
+    log.info({ jobId: job.id, recipeId, kind }, "Recipe is gone, nothing to enrich");
+
+    return;
   }
 
   await reportStep(job, "ai-request");
@@ -70,6 +74,13 @@ export async function runEnrichmentJob(
   try {
     changed = await execute(recipe, job);
   } catch (error) {
+    if (!(await getRecipeFull(recipeId))) {
+      // A file the job wrote after the recipe's folder was swept goes too.
+      await deleteRecipeImagesDir(recipeId);
+      log.info({ jobId: job.id, recipeId, kind }, "Recipe went during its enrichment");
+
+      return;
+    }
     throw isUnrecoverableAIFailure(error) ? unrecoverable(error) : error;
   }
 

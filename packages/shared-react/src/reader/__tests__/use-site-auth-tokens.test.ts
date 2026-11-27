@@ -1,4 +1,4 @@
-import { act, renderHook } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -7,9 +7,16 @@ import {
   fakePlatformAdapter,
 } from "@norish/shared-react/platform/testing";
 
-import { useSiteAuthTokenMutations } from "..";
+import { useSiteAuthTokenMutations, useSiteAuthTokensRead } from "..";
 import { readUnderWay } from "../../offline/testing";
-import { answerCall, keyOf, resetTRPCFake, sentCall } from "../../trpc/testing";
+import {
+  answerCall,
+  failRead,
+  keyOf,
+  resetTRPCFake,
+  sentCall,
+  serveTRPC,
+} from "../../trpc/testing";
 
 vi.mock("../../trpc", async () => (await import("../../trpc/testing")).mockTRPC());
 
@@ -47,6 +54,39 @@ describe("useSiteAuthTokenMutations", () => {
     expect(queryClient.getQueryData(TOKENS_KEY)).toEqual([token]);
   });
 
+  it("reread, never seed, a list that was never read when a token is added", async () => {
+    const result = render(() => useSiteAuthTokenMutations());
+    const invalidate = vi.spyOn(queryClient, "invalidateQueries");
+
+    act(() => void result.current.createToken({ ...token, value: "secret" }));
+    await answerCall("siteAuthTokens.create", token);
+
+    expect(queryClient.getQueryData(TOKENS_KEY)).toBeUndefined();
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: TOKENS_KEY });
+  });
+
+  it("show the added token from a read begun after the add, when the first read was under way", async () => {
+    const reads: ((tokens: unknown) => void)[] = [];
+
+    serveTRPC((path) =>
+      path === "siteAuthTokens.list"
+        ? new Promise((resolve) => reads.push(resolve))
+        : Promise.resolve(token)
+    );
+    const result = render(() => ({
+      read: useSiteAuthTokensRead(),
+      write: useSiteAuthTokenMutations(),
+    }));
+
+    await waitFor(() => expect(reads).toHaveLength(1));
+    await act(() => result.current.write.createToken({ ...token, value: "secret" }));
+    await act(async () => reads[0]?.([]));
+    await waitFor(() => expect(reads).toHaveLength(2));
+    await act(async () => reads[1]?.([token]));
+
+    await waitFor(() => expect(result.current.read.tokens).toEqual([token]));
+  });
+
   it("drop a removed token, sending its version", async () => {
     queryClient.setQueryData(TOKENS_KEY, [token]);
     const result = render(() => useSiteAuthTokenMutations());
@@ -56,6 +96,24 @@ describe("useSiteAuthTokenMutations", () => {
     await answerCall("siteAuthTokens.remove", { success: true, stale: false });
 
     expect(queryClient.getQueryData(TOKENS_KEY)).toEqual([]);
+  });
+
+  it("keep a token edited elsewhere, reread the list and say so when the delete was stale", async () => {
+    const adapter = fakePlatformAdapter();
+    queryClient.setQueryData(TOKENS_KEY, [token]);
+    const result = renderHook(() => useSiteAuthTokenMutations(), {
+      wrapper: createTestWrapper(queryClient, adapter),
+    }).result;
+
+    act(() => void result.current.removeToken("t1"));
+    await answerCall("siteAuthTokens.remove", { success: true, stale: true });
+
+    expect(queryClient.getQueryData(TOKENS_KEY)).toEqual([token]);
+    expect(queryClient.getQueryState(TOKENS_KEY)?.isInvalidated).toBe(true);
+    expect(adapter.showError).toHaveBeenCalledExactlyOnceWith(
+      "common.changedElsewhere.title",
+      expect.any(String)
+    );
   });
 
   it("keep a read begun before an add or a removal from landing over it", async () => {
@@ -75,5 +133,25 @@ describe("useSiteAuthTokenMutations", () => {
     await answerCall("siteAuthTokens.remove", { success: true, stale: false });
     await act(land);
     expect(queryClient.getQueryData(TOKENS_KEY)).toEqual([added]);
+  });
+});
+
+describe("useSiteAuthTokensRead", () => {
+  it("tells a failed first read from an empty list, and keeps a cached list through a failed refetch", async () => {
+    resetTRPCFake();
+    const queryClient = createTestQueryClient();
+    const { result } = renderHook(() => useSiteAuthTokensRead(), {
+      wrapper: createTestWrapper(queryClient, fakePlatformAdapter()),
+    });
+
+    await act(async () => failRead("siteAuthTokens.list"));
+    await waitFor(() => expect(result.current.error).toBeTruthy());
+    expect(result.current).toMatchObject({ tokens: [], answered: false });
+
+    act(() => queryClient.setQueryData(TOKENS_KEY, [{ id: "t1" }]));
+    result.current.refetch();
+    await act(async () => failRead("siteAuthTokens.list"));
+    await waitFor(() => expect(result.current.error).toBeTruthy());
+    expect(result.current).toMatchObject({ tokens: [{ id: "t1" }], answered: true });
   });
 });

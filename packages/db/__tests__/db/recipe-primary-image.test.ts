@@ -8,7 +8,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
   createPlannedItem,
   getPlannedItemWithRecipeById,
-  listPlannedItemsByUserAndDateRange,
+  listPlannedItemsByHouseholdAndDateRange,
   listPlannedItemsWithRecipeBySlot,
 } from "@norish/db/repositories/planned-items";
 import {
@@ -18,7 +18,7 @@ import {
   searchRecipesByName,
 } from "@norish/db/repositories/recipes";
 
-import { createTestUser } from "../helpers/db-test-helpers";
+import { createTestUser, testHouseholdOf } from "../helpers/db-test-helpers";
 import { createRecipeWithRefs } from "../helpers/recipe-writes";
 import { RepositoryTestBase } from "../helpers/repository-test-base";
 
@@ -47,7 +47,7 @@ const BASE_RECIPE = {
 };
 
 function listContext() {
-  return { userId, householdUserIds: [userId], isServerAdmin: false };
+  return { userId, householdId: testHouseholdOf(userId), isServerAdmin: false };
 }
 
 async function seedShapes() {
@@ -112,6 +112,7 @@ describe("planned items resolve their recipe thumbnail the same way", () => {
     const date = "2026-03-02";
     const planned = {
       galleryOnly: await createPlannedItem({
+        householdId: testHouseholdOf(userId),
         userId,
         date,
         slot: "Dinner",
@@ -119,6 +120,7 @@ describe("planned items resolve their recipe thumbnail the same way", () => {
         recipeId: shapes.galleryOnly,
       }),
       noImage: await createPlannedItem({
+        householdId: testHouseholdOf(userId),
         userId,
         date,
         slot: "Lunch",
@@ -130,10 +132,14 @@ describe("planned items resolve their recipe thumbnail the same way", () => {
     return { shapes, planned, date };
   }
 
-  it("listPlannedItemsByUserAndDateRange leads with the first gallery image", async () => {
+  it("listPlannedItemsByHouseholdAndDateRange leads with the first gallery image", async () => {
     const { shapes, date } = await planAll();
 
-    const items = await listPlannedItemsByUserAndDateRange([userId], date, date);
+    const items = await listPlannedItemsByHouseholdAndDateRange(
+      testHouseholdOf(userId),
+      date,
+      date
+    );
     const byRecipe = new Map(items.map((item) => [item.recipeId, item.recipeImage]));
 
     expect(byRecipe.get(shapes.galleryOnly)).toMatch(/\/first\.jpg$/);
@@ -143,16 +149,19 @@ describe("planned items resolve their recipe thumbnail the same way", () => {
   it("getPlannedItemWithRecipeById resolves the same way", async () => {
     const { planned } = await planAll();
 
-    expect((await getPlannedItemWithRecipeById(planned.galleryOnly.id))?.recipeImage).toMatch(
-      /\/first\.jpg$/
-    );
-    expect((await getPlannedItemWithRecipeById(planned.noImage.id))?.recipeImage).toBeNull();
+    expect(
+      (await getPlannedItemWithRecipeById(planned.galleryOnly.id, testHouseholdOf(userId)))
+        ?.recipeImage
+    ).toMatch(/\/first\.jpg$/);
+    expect(
+      (await getPlannedItemWithRecipeById(planned.noImage.id, testHouseholdOf(userId)))?.recipeImage
+    ).toBeNull();
   });
 
   it("listPlannedItemsWithRecipeBySlot resolves the same way", async () => {
     const { shapes, date } = await planAll();
 
-    const items = await listPlannedItemsWithRecipeBySlot([userId], date, "Dinner");
+    const items = await listPlannedItemsWithRecipeBySlot(testHouseholdOf(userId), date, "Dinner");
     const byRecipe = new Map(items.map((item) => [item.recipeId, item.recipeImage]));
 
     expect(byRecipe.get(shapes.galleryOnly)).toMatch(/\/first\.jpg$/);

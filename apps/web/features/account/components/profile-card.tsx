@@ -38,9 +38,8 @@ export default function ProfileCard() {
       return;
     }
     const save = async () => {
-      if (hasNameChanges) {
-        await updateName(name);
-      }
+      // A refused name keeps the photo staged: its upload would carry the reread's version.
+      if (hasNameChanges && !(await updateName(name))) return;
       if (pendingImageFile) {
         if (!(await uploadAvatar(pendingImageFile))) return;
         setImagePreview(null);

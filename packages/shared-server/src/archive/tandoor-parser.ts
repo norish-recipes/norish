@@ -7,7 +7,7 @@ import { FullRecipeInsertDTO } from "@norish/shared/contracts";
 import { sortSourceCategories } from "@norish/shared/lib/category-matcher";
 import { inferSystemUsedFromParsed } from "@norish/shared/lib/determine-recipe-system";
 
-import { galleryOf, sumMinutes, withLineFoodTexts } from "./parser-helpers";
+import { carriedLists, galleryOf, sumMinutes, withLineFoodTexts } from "./parser-helpers";
 
 // Zod schemas for Tandoor recipe structure
 const TandoorFoodSchema = z.object({
@@ -88,10 +88,7 @@ const TandoorKeywordSchema = z.object({
 export const TandoorRecipeSchema = z.object({
   name: z.string(),
   description: z.string().nullable().optional(),
-  keywords: z
-    .array(TandoorKeywordSchema)
-    .nullish()
-    .transform((value) => value ?? []),
+  keywords: z.array(TandoorKeywordSchema).nullish(),
   steps: z
     .array(TandoorStepSchema)
     .nullish()
@@ -356,7 +353,7 @@ export async function parseTandoorRecipeToDTO(
   }
 
   return withLineFoodTexts(
-    parsed.data,
+    carriedLists(parsed.data, validated.keywords != null),
     allIngredients.map((line) => line.foodText)
   );
 }

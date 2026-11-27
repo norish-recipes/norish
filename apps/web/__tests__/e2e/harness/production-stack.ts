@@ -32,7 +32,7 @@ export interface HarnessUser {
 }
 
 interface ProductionStackOptions {
-  project: "offline" | "ai" | "realtime" | "base-path";
+  project: "offline" | "ai" | "realtime" | "base-path" | "master-key";
   databaseName: string;
   users: readonly [HarnessUser, HarnessUser];
   /**
@@ -51,6 +51,8 @@ interface ProductionStackOptions {
 }
 
 export interface ProductionServer {
+  /** Settles once the server's process has exited, on its own or stopped. */
+  readonly exited: Promise<void>;
   stop(): Promise<void>;
 }
 
@@ -335,6 +337,7 @@ export class ProductionStack {
     );
     let stopped = false;
     const server: ProductionServer = {
+      exited,
       stop: async () => {
         if (stopped) return;
         stopped = true;
@@ -404,6 +407,12 @@ export class ProductionStack {
   async restartServer(): Promise<void> {
     await this.stopServer();
     await this.startServer();
+  }
+
+  /** Once the server exits on its own, as an Admin restart makes it, start it as `restart: always` would. */
+  async restartAfterExit(): Promise<void> {
+    await this.activeServer?.exited;
+    await this.restartServer();
   }
 
   async stop(): Promise<void> {

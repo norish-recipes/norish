@@ -1,5 +1,5 @@
 import type { IFuseOptions } from "fuse.js";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import Fuse from "fuse.js";
 import z from "zod";
 
@@ -24,6 +24,7 @@ import {
 } from "@norish/shared/contracts/zod";
 
 import { listAislesByStoreIds, saveStoreAisles } from "./aisles";
+import { assertOwnReferences, householdRow, ownRowIds } from "./household-rows";
 
 // Fuse.js configuration for ingredient name fuzzy matching
 // threshold: 0 = exact match, 1 = match anything
@@ -64,8 +65,12 @@ async function withAisles(rows: (typeof stores.$inferSelect)[], tx: Db = db): Pr
   return parsed.data;
 }
 
-export async function getStoreById(id: string): Promise<StoreDto | null> {
-  const [row] = await db.select().from(stores).where(eq(stores.id, id)).limit(1);
+export async function getStoreById(id: string, householdId: string): Promise<StoreDto | null> {
+  const [row] = await db
+    .select()
+    .from(stores)
+    .where(householdRow(stores, householdId, id))
+    .limit(1);
 
   if (!row) return null;
   const [store] = await withAisles([row]);
@@ -73,13 +78,11 @@ export async function getStoreById(id: string): Promise<StoreDto | null> {
   return store ?? null;
 }
 
-export async function listStoresByUserIds(userIds: string[]): Promise<StoreDto[]> {
-  if (!userIds.length) return [];
-
+export async function listStoresByHousehold(householdId: string): Promise<StoreDto[]> {
   const rows = await db
     .select()
     .from(stores)
-    .where(inArray(stores.userId, userIds))
+    .where(eq(stores.householdId, householdId))
     // Stores made before ordering existed share a position; keep them in a fixed order.
     .orderBy(stores.sortOrder, stores.createdAt, stores.id);
 
@@ -88,15 +91,13 @@ export async function listStoresByUserIds(userIds: string[]): Promise<StoreDto[]
 
 export async function checkStoreNameExistsInHousehold(
   name: string,
-  userIds: string[],
+  householdId: string,
   excludeStoreId?: string
 ): Promise<boolean> {
-  if (!userIds.length) return false;
-
   const normalizedName = name.toLowerCase().trim();
 
   const conditions = [
-    inArray(stores.userId, userIds),
+    eq(stores.householdId, householdId),
     sql`LOWER(TRIM(${stores.name})) = ${normalizedName}`,
   ];
 
@@ -119,11 +120,10 @@ export async function createStore(id: string, input: StoreInsertDto): Promise<St
   const { aisles, ...columns } = parsed.data;
 
   return await db.transaction(async (trx) => {
-    // Get max sort order for user's stores
     const [maxOrder] = await trx
       .select({ max: sql<number>`COALESCE(MAX(${stores.sortOrder}), -1)` })
       .from(stores)
-      .where(eq(stores.userId, input.userId));
+      .where(eq(stores.householdId, input.householdId));
 
     const sortOrder = (maxOrder?.max ?? -1) + 1;
 
@@ -143,23 +143,20 @@ export async function createStore(id: string, input: StoreInsertDto): Promise<St
   });
 }
 
-export async function updateStore(input: StoreUpdateDto): Promise<StoreDto | null> {
+export async function updateStore(
+  input: StoreUpdateDto,
+  householdId: string
+): Promise<StoreDto | null> {
   const parsed = StoreUpdateBaseSchema.safeParse(input);
 
   if (!parsed.success) throw new Error("Invalid StoreUpdateDto");
   const { aisles, ...columns } = parsed.data;
 
-  const whereConditions = [eq(stores.id, input.id)];
-
-  if (columns.version) {
-    whereConditions.push(eq(stores.version, columns.version));
-  }
-
   return await db.transaction(async (trx) => {
     const [row] = await trx
       .update(stores)
       .set({ ...columns, updatedAt: new Date(), version: sql`${stores.version} + 1` })
-      .where(and(...whereConditions))
+      .where(householdRow(stores, householdId, input.id, columns.version))
       .returning();
 
     if (!row) return null;
@@ -175,7 +172,8 @@ export async function updateStore(input: StoreUpdateDto): Promise<StoreDto | nul
 }
 
 export async function reorderStores(
-  storeUpdates: { id: string; version: number }[]
+  storeUpdates: { id: string; version: number }[],
+  householdId: string
 ): Promise<StoreDto[]> {
   return await db.transaction(async (trx) => {
     const updatedRows: (typeof stores.$inferSelect)[] = [];
@@ -189,7 +187,7 @@ export async function reorderStores(
         .update(stores)
         // Renumbering is not an edit: the version stays, so a write queued on it still lands.
         .set({ sortOrder: i, updatedAt: new Date() })
-        .where(and(eq(stores.id, storeUpdate.id), eq(stores.version, storeUpdate.version)))
+        .where(householdRow(stores, householdId, storeUpdate.id, storeUpdate.version))
         .returning();
 
       if (row) updatedRows.push(row);
@@ -200,6 +198,7 @@ export async function reorderStores(
 }
 
 export async function deleteStore(
+  householdId: string,
   storeId: string,
   version: number,
   deleteGroceries: boolean,
@@ -217,11 +216,10 @@ export async function deleteStore(
       for (const row of rows) movedGroceries.push(GrocerySelectBaseSchema.parse(row));
     };
 
-    const [storeRow] = await trx
-      .select({ id: stores.id })
-      .from(stores)
-      .where(and(eq(stores.id, storeId), eq(stores.version, version)))
-      .limit(1);
+    const theStore = householdRow(stores, householdId, storeId, version);
+    // The household's lines filed under the Store; another household's never are.
+    const filed = and(eq(groceries.storeId, storeId), eq(groceries.householdId, householdId));
+    const [storeRow] = await trx.select({ id: stores.id }).from(stores).where(theStore).limit(1);
 
     if (!storeRow) {
       return { deletedGroceryIds, movedGroceries, storeDeleted: false, stale: true };
@@ -232,13 +230,7 @@ export async function deleteStore(
         for (const grocery of grocerySnapshot) {
           const deleted = await trx
             .delete(groceries)
-            .where(
-              and(
-                eq(groceries.id, grocery.id),
-                eq(groceries.version, grocery.version),
-                eq(groceries.storeId, storeId)
-              )
-            )
+            .where(and(householdRow(groceries, householdId, grocery.id, grocery.version), filed))
             .returning({ id: groceries.id });
 
           if (deleted.length > 0) {
@@ -250,13 +242,7 @@ export async function deleteStore(
           const moved = await trx
             .update(groceries)
             .set({ storeId: null, updatedAt: new Date(), version: sql`${groceries.version} + 1` })
-            .where(
-              and(
-                eq(groceries.id, grocery.id),
-                eq(groceries.version, grocery.version),
-                eq(groceries.storeId, storeId)
-              )
-            )
+            .where(and(householdRow(groceries, householdId, grocery.id, grocery.version), filed))
             .returning();
 
           keepMoved(moved);
@@ -267,7 +253,7 @@ export async function deleteStore(
       const [remainingCount] = await trx
         .select({ count: sql<number>`count(*)::int` })
         .from(groceries)
-        .where(eq(groceries.storeId, storeId));
+        .where(filed);
 
       const isEmpty = (remainingCount?.count ?? 0) === 0;
 
@@ -278,10 +264,7 @@ export async function deleteStore(
           .where(eq(ingredientStorePreferences.storeId, storeId));
 
         // Delete the store
-        const deletedStore = await trx
-          .delete(stores)
-          .where(and(eq(stores.id, storeId), eq(stores.version, version)))
-          .returning({ id: stores.id });
+        const deletedStore = await trx.delete(stores).where(theStore).returning({ id: stores.id });
 
         if (deletedStore.length === 0) {
           return { deletedGroceryIds, movedGroceries, storeDeleted: false, stale: true };
@@ -294,22 +277,19 @@ export async function deleteStore(
     // Legacy path (no snapshot): process all current groceries
     if (deleteGroceries) {
       // Get grocery IDs before deleting
-      const groceryRows = await trx
-        .select({ id: groceries.id })
-        .from(groceries)
-        .where(eq(groceries.storeId, storeId));
+      const groceryRows = await trx.select({ id: groceries.id }).from(groceries).where(filed);
 
       deletedGroceryIds = groceryRows.map((g) => g.id);
 
       // Delete groceries
-      await trx.delete(groceries).where(eq(groceries.storeId, storeId));
+      await trx.delete(groceries).where(filed);
     } else {
       // Set storeId to null for groceries in this store
       keepMoved(
         await trx
           .update(groceries)
           .set({ storeId: null, updatedAt: new Date(), version: sql`${groceries.version} + 1` })
-          .where(eq(groceries.storeId, storeId))
+          .where(filed)
           .returning()
       );
     }
@@ -320,10 +300,7 @@ export async function deleteStore(
       .where(eq(ingredientStorePreferences.storeId, storeId));
 
     // Delete the store
-    const deletedStore = await trx
-      .delete(stores)
-      .where(and(eq(stores.id, storeId), eq(stores.version, version)))
-      .returning({ id: stores.id });
+    const deletedStore = await trx.delete(stores).where(theStore).returning({ id: stores.id });
 
     if (deletedStore.length === 0) {
       return { deletedGroceryIds, movedGroceries, storeDeleted: false, stale: true };
@@ -333,27 +310,33 @@ export async function deleteStore(
   });
 }
 
-export async function getStoreOwnerId(storeId: string): Promise<string | null> {
+/** The household a Store belongs to, for the household guard. */
+export async function getStoreHouseholdId(storeId: string): Promise<string | null> {
   const [row] = await db
-    .select({ userId: stores.userId })
+    .select({ householdId: stores.householdId })
     .from(stores)
     .where(eq(stores.id, storeId))
     .limit(1);
 
-  return row?.userId ?? null;
+  return row?.householdId ?? null;
 }
 
-export async function countGroceriesInStore(storeId: string): Promise<number> {
+/** Whether the household's Store exists; another household's is refused. */
+export async function ownStoreExists(householdId: string, storeId: string): Promise<boolean> {
+  return (await ownRowIds(stores, householdId, [storeId])).size > 0;
+}
+
+export async function countGroceriesInStore(storeId: string, householdId: string): Promise<number> {
   const [row] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(groceries)
-    .where(eq(groceries.storeId, storeId));
+    .where(and(eq(groceries.storeId, storeId), eq(groceries.householdId, householdId)));
 
   return row?.count ?? 0;
 }
 
 export async function getIngredientStorePreference(
-  userId: string,
+  householdId: string,
   ingredientId: string
 ): Promise<IngredientStorePreferenceDto | null> {
   const [row] = await db
@@ -361,7 +344,7 @@ export async function getIngredientStorePreference(
     .from(ingredientStorePreferences)
     .where(
       and(
-        eq(ingredientStorePreferences.userId, userId),
+        eq(ingredientStorePreferences.householdId, householdId),
         eq(ingredientStorePreferences.ingredientId, ingredientId)
       )
     )
@@ -376,27 +359,16 @@ export async function getIngredientStorePreference(
   return parsed.data;
 }
 
-export async function listIngredientStorePreferences(
-  userId: string
-): Promise<IngredientStorePreferenceDto[]> {
-  return listIngredientStorePreferencesForUsers([userId]);
-}
-
 /** A store preference with the name of the Ingredient it is for. */
 type NamedPreference = IngredientStorePreferenceDto & { ingredientName: string };
 
-/**
- * Get all ingredient store preferences for multiple users (household-level),
- * each with its Ingredient's name.
- */
-async function listNamedPreferencesForUsers(userIds: string[]): Promise<NamedPreference[]> {
-  if (!userIds.length) return [];
-
+/** The household's store preferences, each with its Ingredient's name. */
+async function listNamedPreferences(householdId: string): Promise<NamedPreference[]> {
   const rows = await db
     .select({ preference: ingredientStorePreferences, ingredientName: ingredients.name })
     .from(ingredientStorePreferences)
     .innerJoin(ingredients, eq(ingredients.id, ingredientStorePreferences.ingredientId))
-    .where(inArray(ingredientStorePreferences.userId, userIds));
+    .where(eq(ingredientStorePreferences.householdId, householdId));
 
   const parsed = z
     .array(IngredientStorePreferenceSelectSchema)
@@ -410,35 +382,30 @@ async function listNamedPreferencesForUsers(userIds: string[]): Promise<NamedPre
   }));
 }
 
-export async function listIngredientStorePreferencesForUsers(
-  userIds: string[]
-): Promise<IngredientStorePreferenceDto[]> {
-  return (await listNamedPreferencesForUsers(userIds)).map(
-    ({ ingredientName: _name, ...preference }) => preference
-  );
-}
-
 /**
- * Remember the Store a member sends an Ingredient to. One per member and
+ * Remember the Store a household sends an Ingredient to, one per household and
  * Ingredient, so a preference for "milk" holds for "melk" (ADR-0037).
  */
 export async function upsertIngredientStorePreference(
+  householdId: string,
   userId: string,
   ingredientId: string,
   storeId: string
 ): Promise<IngredientStorePreferenceDto> {
-  const input = { userId, ingredientId, storeId };
+  const input = { householdId, userId, ingredientId, storeId };
   const parsed = IngredientStorePreferenceInsertSchema.safeParse(input);
 
   if (!parsed.success) throw new Error("Invalid IngredientStorePreferenceInsertDto");
+  await assertOwnReferences(householdId, { storeIds: [storeId] });
 
   const [row] = await db
     .insert(ingredientStorePreferences)
     .values(parsed.data)
     .onConflictDoUpdate({
-      target: [ingredientStorePreferences.userId, ingredientStorePreferences.ingredientId],
+      target: [ingredientStorePreferences.householdId, ingredientStorePreferences.ingredientId],
       set: {
         storeId,
+        userId,
         updatedAt: new Date(),
         version: sql`${ingredientStorePreferences.version} + 1`,
       },
@@ -452,123 +419,39 @@ export async function upsertIngredientStorePreference(
   return validated.data;
 }
 
-export async function deleteIngredientStorePreference(
-  userId: string,
-  ingredientId: string
-): Promise<void> {
-  await db
-    .delete(ingredientStorePreferences)
-    .where(
-      and(
-        eq(ingredientStorePreferences.userId, userId),
-        eq(ingredientStorePreferences.ingredientId, ingredientId)
-      )
-    );
-}
-
-/**
- * Result type for fuzzy preference matching
- */
+/** Result type for fuzzy preference matching */
 export interface FuzzyPreferenceMatch {
   preference: IngredientStorePreferenceDto;
   score: number; // 0 = perfect match, higher = worse match
   isExactMatch: boolean;
-  isCurrentUser: boolean;
 }
 
 /**
- * Find the Store a household sends an Ingredient to.
- *
- * Priority order:
- * 1. Current user's preference for the Ingredient
- * 2. Another household member's preference for the Ingredient
- * 3. Current user fuzzy match on the preferred Ingredients' names (best score)
- * 4. Other household member fuzzy match (best score)
- *
- * @param currentUserId - The ID of the user making the request
- * @param userIds - All household member IDs (including current user)
- * @param ingredient - The Ingredient the grocery resolved to, and its name as the list shows it
- * @returns The best matching preference or null if no match above threshold
+ * Find the Store the household sends an Ingredient to: its preference for the
+ * Ingredient, else the best fuzzy match on the preferred Ingredients' names.
  */
 export async function findBestIngredientStorePreference(
-  currentUserId: string,
-  userIds: string[],
+  householdId: string,
   ingredient: { id: string; name: string }
 ): Promise<FuzzyPreferenceMatch | null> {
-  if (!userIds.length || !ingredient.name.trim()) return null;
+  if (!ingredient.name.trim()) return null;
 
-  const allPreferences = await listNamedPreferencesForUsers(userIds);
+  const allPreferences = await listNamedPreferences(householdId);
 
   if (allPreferences.length === 0) return null;
 
   const strip = ({ ingredientName: _name, ...preference }: NamedPreference) => preference;
+  const exact = allPreferences.find((p) => p.ingredientId === ingredient.id);
 
-  // Step 1: the Ingredient itself, whatever it was called when it was preferred
-  const currentUserExact = allPreferences.find(
-    (p) => p.userId === currentUserId && p.ingredientId === ingredient.id
+  if (exact) return { preference: strip(exact), score: 0, isExactMatch: true };
+
+  const [best] = new Fuse(allPreferences, FUSE_OPTIONS).search(
+    normalizePreferenceSearch(ingredient.name)
   );
 
-  if (currentUserExact) {
-    return {
-      preference: strip(currentUserExact),
-      score: 0,
-      isExactMatch: true,
-      isCurrentUser: true,
-    };
-  }
+  if (!best) return null;
 
-  const otherUserExact = allPreferences.find(
-    (p) => p.userId !== currentUserId && p.ingredientId === ingredient.id
-  );
-
-  if (otherUserExact) {
-    return {
-      preference: strip(otherUserExact),
-      score: 0,
-      isExactMatch: true,
-      isCurrentUser: false,
-    };
-  }
-
-  // Step 2: No preference for the Ingredient, use fuzzy matching on names
-  const fuse = new Fuse(allPreferences, FUSE_OPTIONS);
-  const results = fuse.search(normalizePreferenceSearch(ingredient.name));
-
-  if (results.length === 0) return null;
-
-  // Separate results by current user vs others
-  const currentUserMatches = results.filter((r) => r.item.userId === currentUserId);
-  const otherUserMatches = results.filter((r) => r.item.userId !== currentUserId);
-
-  // Prioritize current user's fuzzy match
-  if (currentUserMatches.length > 0) {
-    const best = currentUserMatches[0];
-
-    if (!best) return null;
-
-    return {
-      preference: strip(best.item),
-      score: best.score ?? 1,
-      isExactMatch: false,
-      isCurrentUser: true,
-    };
-  }
-
-  // Fall back to best household member match
-  if (otherUserMatches.length > 0) {
-    const best = otherUserMatches[0];
-
-    if (!best) return null;
-
-    return {
-      preference: strip(best.item),
-      score: best.score ?? 1,
-      isExactMatch: false,
-      isCurrentUser: false,
-    };
-  }
-
-  return null;
+  return { preference: strip(best.item), score: best.score ?? 1, isExactMatch: false };
 }
 
 function normalizePreferenceSearch(name: string): string {

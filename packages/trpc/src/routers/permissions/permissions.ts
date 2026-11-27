@@ -25,7 +25,8 @@ const get = authedProcedure.query(async ({ ctx }) => {
     isAIEnabled: aiEnabled,
     // AI on and an image provider configured: Ingredient Icons can be drawn.
     canDrawImages: aiEnabled && imageConfigured,
-    householdUserIds: ctx.householdUserIds,
+    householdId: ctx.householdId,
+    // Instance rights only (the admin area, AI keys); recipes follow the policy like anyone's.
     isServerAdmin: serverAdmin,
   };
 });

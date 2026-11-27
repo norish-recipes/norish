@@ -41,12 +41,8 @@
   },
   "empty": {
     "title": "Sua biblioteca espera por você",
-    "description": "Cole uma URL de receita no campo de busca acima e veja a mágica acontecer.",
     "noResults": "Nenhuma receita encontrada",
-    "noResultsHint": "Tente ajustar ou limpar seus filtros.",
-    "noCookbooks": "Nenhum livro de receitas ainda",
-    "noCookbooksHint": "Um livro de receitas é um conjunto de receitas com título. Crie o primeiro para organizar sua biblioteca.",
-    "descriptionMobile": "Adicione sua primeira receita a partir de um link, texto ou fotos."
+    "noCookbooks": "Nenhum livro de receitas ainda"
   },
   "card": {
     "noImage": "Nenhuma imagem disponível",
@@ -67,6 +63,7 @@
     "addToGroceries": "Adicionar à lista de compras",
     "ratingPrompt": "O que você achou desta receita?",
     "notFound": "Receita não encontrada",
+    "offline": "Esta receita precisa de conexão",
     "notFoundMessage": "Esta receita não existe ou você não tem permissão para visualizá-la.",
     "prep": "preparo",
     "total": "total",
@@ -160,6 +157,7 @@
     "expiresAfter": "Expira após",
     "expiresOn": "Expira em {date}",
     "expiredOn": "Expirou em {date}",
+    "revokedOn": "Revogado em {date}",
     "lastOpenedOn": "Última abertura {date}",
     "neverExpires": "Nunca expira",
     "linkCreated": "Criado em {date}"
@@ -203,7 +201,7 @@
     "notesPlaceholder": "Adicione notas de preparo, ajustes ou dicas de como servir esta receita...",
     "ingredientsHelp": "Digite ingredientes como \"2 xícaras de farinha\" - vamos analisar automaticamente quantidades e unidades.",
     "instructionsHelp": "Escreva instruções claras passo a passo. Pressione Enter para passar para a próxima etapa.",
-    "tagsHelp": "Digite tags e clique nas sugestões para adicionar. As tags da receita são preenchidas, novas tags têm uma borda tracejada.",
+    "tagsHelp": "Escolha uma tag ou crie uma nova.",
     "tagsAndCategories": "Tags e categorias",
     "categoriesHelp": "Selecione categorias de refeição para esta receita.",
     "addCategory": "Adicionar categoria",
@@ -224,7 +222,7 @@
     "originRegion": "Região",
     "originRegionPlaceholder": "ex.: Sicília",
     "cuisines": "Culinárias",
-    "cuisinesHelp": "Escolha da lista da sua instalação. Várias fazem sentido em um prato fusion.",
+    "cuisinesHelp": "Escolha da lista ou crie a sua. Várias fazem sentido para um prato fusion.",
     "provenanceNote": "Nota",
     "provenanceNotePlaceholder": "Algumas frases sobre de onde vem este prato…",
     "servings": "Porções",
@@ -441,7 +439,6 @@
     "singular": "Livro de receitas",
     "notFound": "Livro de receitas não encontrado",
     "notFoundHint": "Ele pode ter sido excluído ou não estar visível para você.",
-    "emptyHint": "Adicione receitas pelo menu de ações rápidas de uma receita.",
     "panelTitle": "Adicionar a um livro de receitas",
     "newWithRecipe": "Novo livro com esta receita",
     "noneEditable": "Ainda não há livros de receitas que você possa editar.",
@@ -545,7 +542,7 @@
     "tagsAndCategories": "Tags e categorias",
     "categories": "Categorias",
     "tags": "Tags",
-    "tagsHint": "Escolha uma sugestão ou digite uma nova tag; novas tags têm borda tracejada.",
+    "tagsHint": "Escolha uma tag da lista ou crie uma nova.",
     "addTag": "Adicionar uma tag",
     "removeNamed": "Remover {name}",
     "servingsAndTime": "Porções e tempo",
@@ -561,6 +558,13 @@
     "discardMessage": "Você tem alterações não salvas.",
     "keepEditing": "Continuar editando",
     "discard": "Descartar"
+  },
+  "picker": {
+    "create": "Criar \"{name}\"",
+    "createOffline": "Você poderá criar \"{name}\" quando estiver online.",
+    "tooLong": "Os nomes podem ter no máximo {max} caracteres.",
+    "createFailed": "Não foi possível criar \"{name}\". Tente de novo.",
+    "loadFailed": "Não foi possível carregar a lista."
   },
   "search": {
     "sortBestMatch": "Melhor correspondência",

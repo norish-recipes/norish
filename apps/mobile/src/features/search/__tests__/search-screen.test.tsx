@@ -31,6 +31,12 @@ vi.mock("@norish/shared-react/offline/react", async () => ({
   ...(await vi.importActual<object>("@norish/shared-react/offline/react")),
   useConnectivity: () => ({ isOffline: world.offline }),
 }));
+// The Library reads Hidden Items from the platform's Device Preferences; none are hidden here.
+vi.mock("@norish/shared-react/reader", async (importOriginal) => {
+  const reader = await importOriginal<typeof import("@norish/shared-react/reader")>();
+
+  return { ...reader, useHiddenItemVisibility: () => reader.hiddenItemVisibility([]) };
+});
 vi.mock("@norish/shared-react/trpc", () => ({
   useTRPC: () => ({
     library: {
@@ -52,8 +58,8 @@ vi.mock("@norish/shared-react/trpc", () => ({
     },
   }),
 }));
-vi.mock("@/components/no-results-card", () => ({
-  NoResultsCard: ({ testID }: { testID: string }) => <div data-testid={testID} />,
+vi.mock("@/components/empty-card", () => ({
+  EmptyCard: ({ testID }: { testID: string }) => <div data-testid={testID} />,
 }));
 vi.mock("../components/discover", () => ({ Discover: () => null }));
 vi.mock("../components/typing-suggestions", () => ({ TypingSuggestions: () => null }));

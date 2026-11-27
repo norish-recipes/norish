@@ -3,7 +3,7 @@ import { create } from "zustand";
 import type { RecipeDashboardDTO } from "@norish/shared/contracts";
 
 /** What an action on a selected recipe needs, kept even while a search hides the card. */
-export type SelectedRecipe = Pick<RecipeDashboardDTO, "id" | "version" | "userId">;
+export type SelectedRecipe = Pick<RecipeDashboardDTO, "id" | "version" | "householdId">;
 
 interface RecipeSelectionState {
   /** The selected recipes by id, so search, filters and view changes keep them. */
@@ -19,8 +19,8 @@ interface RecipeSelectionState {
   drop: (ids: readonly string[]) => void;
 }
 
-function pick({ id, version, userId }: SelectedRecipe): SelectedRecipe {
-  return { id, version, userId };
+function pick({ id, version, householdId }: SelectedRecipe): SelectedRecipe {
+  return { id, version, householdId };
 }
 
 /** The Library's selection. Global, so each Library page clears it as it unmounts. */

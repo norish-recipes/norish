@@ -52,6 +52,7 @@ function answers(): Record<string, Answer> {
     "stores.list": () => [],
     "stores.aisleLinks": () => [],
     "pantry.list": () => [],
+    "lists.list": () => [{ id: "e1", name: "Quick", instance: false }],
     "user.getDevicePreferences": () => ({ phone: { groceryViewMode: "recipe" }, desktop: {} }),
     "calendar.listItems": () => [],
   };
@@ -135,6 +136,12 @@ describe("WarmSet", () => {
     expect(
       queryClient.getQueryData([["user", "getDevicePreferences"], { type: "query" }])
     ).toMatchObject({ phone: { groceryViewMode: "recipe" } });
+    // The Tag, Cuisine and Category lists, so the recipe editor has choices Offline.
+    for (const kind of ["tag", "cuisine", "category"]) {
+      expect(
+        queryClient.getQueryData([["lists", "list"], { input: { kind }, type: "query" }])
+      ).toEqual([{ id: "e1", name: "Quick", instance: false }]);
+    }
     // Everything warmed is held as long as the offline cache itself.
     for (const query of queryClient.getQueryCache().getAll()) {
       expect(query.gcTime, query.queryHash).toBe(CACHE_MAX_AGE_MS);

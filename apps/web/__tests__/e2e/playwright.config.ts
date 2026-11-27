@@ -37,5 +37,6 @@ export default defineConfig({
         { name: "offline", testMatch: "offline/**/*.e2e.ts" },
         { name: "ai", testMatch: "ai/**/*.e2e.ts" },
         { name: "realtime", testMatch: "realtime/**/*.e2e.ts" },
+        { name: "master-key", testMatch: "master-key/**/*.e2e.ts" },
       ],
 });

@@ -5,6 +5,7 @@ export default defineConfig({
     environment: "node",
     globals: true,
     include: ["**/*.{test,spec}.{ts,tsx}"],
+    setupFiles: ["@norish/config/testing-setup"],
     env: {
       NODE_ENV: "development",
       DATABASE_URL: "postgresql://test:test@localhost:5432/test",

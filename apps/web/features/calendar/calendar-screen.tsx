@@ -119,13 +119,8 @@ function CalendarScreenContent() {
       {/* Edit planned recipe panel */}
       {editingRecipe && (
         <EditPlannedRecipePanel
-          date={editingRecipe.date}
-          itemId={editingRecipe.id}
+          item={editingRecipe}
           open={!!editingRecipe}
-          recipeId={editingRecipe.recipeId ?? ""}
-          recipeImage={editingRecipe.recipeImage ?? null}
-          recipeName={editingRecipe.recipeName ?? ""}
-          slot={editingRecipe.slot}
           onOpenChange={(open) => {
             if (!open) setEditingRecipe(null);
           }}

@@ -7,7 +7,7 @@ import {
   tabPage,
 } from "@/features/shell/utils/accessory-plan";
 import { useAccentTextColor } from "@/hooks/use-accent-text-color";
-import { useOwnerRights } from "@/hooks/use-owner-rights";
+import { useHouseholdRights } from "@/hooks/use-household-rights";
 import { useGroceriesSection } from "@/lib/groceries-section";
 import { useLibraryLens } from "@/lib/library-lens";
 import { useShownRecipe } from "@/lib/shown-recipe";
@@ -59,7 +59,7 @@ export function ShellTabs() {
     inSearch
   );
   const { cookbook } = useCookbookQuery(cookbookIdOf(screen.path) ?? "");
-  const { canEdit } = useOwnerRights();
+  const { canEdit } = useHouseholdRights();
   const plan = accessoryPlan(
     screen,
     hasTimers,
@@ -112,12 +112,6 @@ export function ShellTabs() {
         <NativeTabs.Trigger.Icon sf={{ default: "calendar", selected: "calendar" }} />
         <NativeTabs.Trigger.Label>
           {intl.formatMessage({ id: "navbar.nav.calendar" })}
-        </NativeTabs.Trigger.Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="settings" testID="tab-settings">
-        <NativeTabs.Trigger.Icon sf={{ default: "gearshape", selected: "gearshape.fill" }} />
-        <NativeTabs.Trigger.Label>
-          {intl.formatMessage({ id: "navbar.userMenu.settings.title" })}
         </NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="(search)" role="search" testID="tab-search">

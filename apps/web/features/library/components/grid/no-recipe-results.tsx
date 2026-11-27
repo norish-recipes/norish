@@ -1,7 +1,8 @@
 "use client";
 
+import { ActionButton } from "@/components/shared/action-button";
+import { EmptyState } from "@/components/shared/empty-state";
 import { FunnelIcon } from "@heroicons/react/24/outline";
-import { Button, Card } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 interface NoRecipeResultsProps {
@@ -12,23 +13,15 @@ export default function NoRecipeResults({ onClear }: NoRecipeResultsProps) {
   const tCommon = useTranslations("common.filters");
 
   return (
-    <div className="flex flex-col items-center justify-center px-4 py-16">
-      <Card className="border-border bg-surface shadow-surface w-full max-w-2xl border">
-        <Card.Content className="flex flex-col items-center gap-5 p-8 text-center">
-          <div className="bg-warning/15 text-warning flex h-12 w-12 items-center justify-center rounded-full">
-            <FunnelIcon className="h-6 w-6" />
-          </div>
-
-          <div className="space-y-1">
-            <h3 className="text-base font-semibold">{t("noResults")}</h3>
-            <p className="text-muted">{t("noResultsHint")}</p>
-          </div>
-
-          <Button className="rounded-full" variant="primary" onPress={onClear}>
-            {tCommon("clearFilters")}
-          </Button>
-        </Card.Content>
-      </Card>
-    </div>
+    <EmptyState
+      action={
+        <ActionButton action="dismiss" onPress={onClear}>
+          {tCommon("clearFilters")}
+        </ActionButton>
+      }
+      variant="page"
+      icon={FunnelIcon}
+      title={t("noResults")}
+    />
   );
 }

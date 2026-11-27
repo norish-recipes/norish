@@ -29,7 +29,7 @@ import type {
 import { getCachedHouseholdForUser } from "@norish/shared-server/cache/household";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { getRealtimeHub, RealtimeLaggedError } from "@norish/shared-server/realtime/hub";
-import { encodeCursor } from "@norish/shared-server/realtime/resume";
+import { encodeCursor, readViewEpoch } from "@norish/shared-server/realtime/resume";
 import { CURSOR_MARK, REALTIME_LAGGED } from "@norish/shared/contracts/realtime/envelope";
 
 import { signedInProcedure } from "./middleware";
@@ -105,16 +105,22 @@ export function realtimeSubscription<C extends RealtimeCatalogue, E extends Clie
     };
 
     // Read here, not in middleware: a lookup Valkey does not answer ends Lagged too.
-    // householdKey === userId when household-less: the household channel stays quiet.
-    let householdKey: string;
+    let householdId: string | undefined;
+    let viewEpoch: string;
 
     try {
-      householdKey = (ctx.household ?? (await getCachedHouseholdForUser(userId)))?.id ?? userId;
+      [householdId, viewEpoch] = await Promise.all([
+        ctx.household?.id ?? getCachedHouseholdForUser(userId).then((household) => household?.id),
+        readViewEpoch(),
+      ]);
     } catch (err) {
       throw await lagged(err, "");
     }
 
-    const identity = { userId, householdKey };
+    // Every account has a household; none means the account is gone.
+    if (!householdId) throw new TRPCError({ code: "UNAUTHORIZED" });
+
+    const identity = { userId, householdId, viewEpoch };
     // The CURRENT identity, always; a Scope Change restarts the socket (ADR-0033).
     const channels = domain.channelsFor(event, identity);
     // 1. Listeners first, so nothing published from here on is missed.

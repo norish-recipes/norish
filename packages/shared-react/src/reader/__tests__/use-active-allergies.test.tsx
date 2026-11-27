@@ -27,8 +27,11 @@ describe("useActiveAllergies", () => {
     expect(render(["Peanuts"], ["Gluten"]).allergies).toEqual(["Peanuts"]);
   });
 
-  it("falls back to the Reader's own outside a household or when it names none", () => {
-    expect(render(null, ["Gluten"]).allergies).toEqual(["Gluten"]);
-    expect(render([], ["Gluten"]).allergySet).toEqual(new Set(["gluten"]));
+  it("falls back to the Reader's own outside a household", () => {
+    expect(render(null, ["Gluten"]).allergySet).toEqual(new Set(["gluten"]));
+  });
+
+  it("warns about none once the household's list is emptied, whatever the device's own holds", () => {
+    expect(render([], ["Gluten"]).allergies).toEqual([]);
   });
 });

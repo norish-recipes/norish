@@ -1,11 +1,11 @@
 import React from "react";
 import { Text, View } from "react-native";
+import { Ionicons } from "@/components/icon";
 import { PlannedThumb } from "@/components/planned-thumb";
 import { PressTap } from "@/components/press-tap";
 import { PressableScale } from "@/components/pressable-scale";
 import { SLOT_GLYPHS } from "@/lib/slot-icons";
 import { TAB_ROUTES } from "@/lib/tab-routes";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";

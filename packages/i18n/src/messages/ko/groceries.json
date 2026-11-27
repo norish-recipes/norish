@@ -16,7 +16,6 @@
   },
   "empty": {
     "title": "아직 장보기 목록이 비어 있어요",
-    "description": "시작하려면 위의 '항목 추가' 버튼을 사용하여 항목을 추가하세요.",
     "manual": "직접 추가한 항목"
   },
   "item": {
@@ -54,7 +53,6 @@
     },
     "confirmDelete": "{storeName}을(를) 삭제하시겠습니까?",
     "noStoresYet": "아직 매장이 없습니다.",
-    "createStoreHint": "장보기 목록을 정리할 매장을 만드세요",
     "hasItems": "이 매장에는 {count}개의 항목이 있습니다.",
     "hasItemsPlural": "이 매장에는 {count}개의 항목이 있습니다.",
     "whatToDo": "해당 항목을 어떻게 처리하시겠습니까?",
@@ -153,6 +151,7 @@
     "cannotSearchHint": "Norish가 {store}의 상점 링크에서 검색 페이지를 읽지 못했습니다. 상점 관리에서 고치면 가격이 따라옵니다.",
     "packAmount": "포장 단위 수량",
     "packUnit": "단위",
+    "noUnit": "단위 없음",
     "productPage": "제품 페이지",
     "invalidUrl": "https://www.dirk.nl/… 같은 웹 주소를 입력하세요",
     "invalidPack": "수량과 단위를 모두 입력하거나 둘 다 비워 두세요",
@@ -185,7 +184,6 @@
     "viewByStore": "매장별",
     "viewByRecipe": "레시피별",
     "listSettings": "목록 설정",
-    "emptyHint": "아래 버튼으로 항목을 추가하세요.",
     "addTitle": "식료품 추가",
     "editTitle": "식료품 수정",
     "store": "매장",

@@ -1,18 +1,55 @@
-import { act, renderHook } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import type { FullRecipeDTO } from "@norish/shared/contracts";
 
+import { createTestQueryClient, createTestWrapper } from "../../platform/testing";
 import { useRecipeEditorForm } from "../use-recipe-editor-form";
+import { RecipeChangedElsewhereError } from "../use-recipes-mutations";
+
+// The recipe as the server has it now, which a stale answer reads again.
+const server = vi.hoisted(() => ({ recipe: null as unknown }));
+
+vi.mock("../../trpc", () => ({
+  useTRPC: () => ({
+    recipes: {
+      get: {
+        queryOptions: ({ id }: { id: string }) => ({
+          queryKey: ["recipes.get", id],
+          queryFn: async () => server.recipe,
+        }),
+      },
+    },
+  }),
+}));
 
 vi.mock("../../config", () => ({
   useUnitsQuery: () => ({ units: {}, isLoading: false }),
-  useCategoriesQuery: () => ({
-    categories: ["Breakfast", "Dinner"],
-    builtInAliases: { breakfast: "Breakfast", ontbijt: "Breakfast" },
-  }),
+}));
+const listRead = vi.fn();
+const creating = vi.hoisted(() => ({ now: false }));
+
+vi.mock("../../lists", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../lists")>()),
+  useListRecipeId: (recipe?: { id: string }) => recipe?.id,
+  useEntryCreatePending: () => creating.now,
+  useListEntries: (kind: string, recipeId?: string) => {
+    listRead(kind, recipeId);
+
+    return {
+      entries: [
+        { id: "c2", name: "Dinner" },
+        { id: "c1", name: "Breakfast" },
+      ],
+    };
+  },
 }));
 vi.mock("../../reader", () => ({ useDevicePreference: () => ["short"] }));
+vi.mock("../../platform", async (importOriginal) => {
+  const { fakePlatformAdapter } = await import("../../platform/testing");
+
+  return { ...(await importOriginal<object>()), usePlatform: () => fakePlatformAdapter() };
+});
 
 const at = new Date("2026-05-01T10:00:00.000Z");
 const stored: FullRecipeDTO = {
@@ -60,10 +97,17 @@ const stored: FullRecipeDTO = {
   videos: [],
 };
 
+const wrapper = () => createTestWrapper(createTestQueryClient());
+
+afterEach(() => {
+  creating.now = false;
+});
+
 describe("useRecipeEditorForm", () => {
   it("seeds an edit's lines and steps and is clean until a field changes", () => {
-    const { result } = renderHook(() =>
-      useRecipeEditorForm({ mode: "edit", initialData: stored, locale: "en" })
+    const { result } = renderHook(
+      () => useRecipeEditorForm({ mode: "edit", initialData: stored, locale: "en" }),
+      { wrapper: wrapper() }
     );
 
     expect(result.current.isReady).toBe(true);
@@ -75,20 +119,34 @@ describe("useRecipeEditorForm", () => {
     expect(result.current.hasUnsavedChanges).toBe(true);
   });
 
-  it("offers the recipe's own Categories and resolves a typed name to a chip", () => {
-    const { result } = renderHook(() =>
-      useRecipeEditorForm({ mode: "edit", initialData: stored, locale: "en" })
+  it("offers the recipe's household's Categories and the recipe's own, and adds a picked one", () => {
+    const { result } = renderHook(
+      () => useRecipeEditorForm({ mode: "edit", initialData: stored, locale: "en" }),
+      { wrapper: wrapper() }
     );
 
     expect(result.current.categoryOptions).toEqual(["Breakfast", "Dinner", "Soups"]);
-    act(() => result.current.addCategory("Ontbijt"));
+    expect(listRead).toHaveBeenCalledWith("category", "recipe-1");
+    act(() => result.current.addCategory("Breakfast"));
     expect(result.current.form.categories).toEqual(["Soups", "Breakfast"]);
     act(() => result.current.toggleCategory("Soups"));
     expect(result.current.form.categories).toEqual(["Breakfast"]);
   });
 
+  it("toggles a Category off whatever its case, by the shared fold rule", () => {
+    const { result } = renderHook(
+      () => useRecipeEditorForm({ mode: "edit", initialData: stored, locale: "en" }),
+      { wrapper: wrapper() }
+    );
+
+    act(() => result.current.toggleCategory("soups"));
+    expect(result.current.form.categories).toEqual([]);
+  });
+
   it("takes a new recipe's system from its lines until the reader picks one", () => {
-    const { result } = renderHook(() => useRecipeEditorForm({ mode: "create", locale: "en" }));
+    const { result } = renderHook(() => useRecipeEditorForm({ mode: "create", locale: "en" }), {
+      wrapper: wrapper(),
+    });
     const cups = { ingredientName: "flour", amount: 2, unit: "cups", order: 0 } as const;
 
     act(() => result.current.set("ingredients", [{ ...cups, systemUsed: "metric" }]));
@@ -102,7 +160,9 @@ describe("useRecipeEditorForm", () => {
   });
 
   it("moves a step's references with their lines", () => {
-    const { result } = renderHook(() => useRecipeEditorForm({ mode: "create", locale: "en" }));
+    const { result } = renderHook(() => useRecipeEditorForm({ mode: "create", locale: "en" }), {
+      wrapper: wrapper(),
+    });
 
     act(() =>
       result.current.set("steps", [
@@ -121,7 +181,9 @@ describe("useRecipeEditorForm", () => {
   });
 
   it("refuses to submit an empty form and names what is missing", () => {
-    const { result } = renderHook(() => useRecipeEditorForm({ mode: "create", locale: "en" }));
+    const { result } = renderHook(() => useRecipeEditorForm({ mode: "create", locale: "en" }), {
+      wrapper: wrapper(),
+    });
     let payload: unknown;
 
     act(() => {
@@ -134,5 +196,117 @@ describe("useRecipeEditorForm", () => {
       ingredients: "ingredientsRequired",
       steps: "stepsRequired",
     });
+  });
+
+  it("saves an edit only once no entry is being created", () => {
+    const { result, rerender } = renderHook(
+      () => useRecipeEditorForm({ mode: "edit", initialData: stored, locale: "en" }),
+      { wrapper: wrapper() }
+    );
+
+    creating.now = true;
+    rerender();
+    expect(result.current.isCreatingEntry).toBe(true);
+    expect(result.current.submit()).toBeNull();
+    expect(result.current.errors).toEqual({});
+
+    creating.now = false;
+    rerender();
+    expect(result.current.submit()).not.toBeNull();
+  });
+
+  it("does not add a Category folding like one it has, and names its household's list by the recipe", () => {
+    const { result } = renderHook(
+      () => useRecipeEditorForm({ mode: "edit", initialData: stored, locale: "en" }),
+      { wrapper: wrapper() }
+    );
+
+    act(() => result.current.addCategory("soups"));
+    expect(result.current.form.categories).toEqual(["Soups"]);
+    expect(result.current.listRecipeId).toBe("recipe-1");
+  });
+
+  it("takes no second save while one is in flight, and takes saves again once it fails", () => {
+    const { result } = renderHook(
+      () => useRecipeEditorForm({ mode: "edit", initialData: stored, locale: "en" }),
+      { wrapper: wrapper() }
+    );
+
+    act(() => void result.current.submit());
+    expect(result.current.isSaving).toBe(true);
+    expect(result.current.submit()).toBeNull();
+
+    act(() => result.current.failSave(new Error("Busy")));
+    expect(result.current.isSaving).toBe(false);
+    expect(result.current.submit()).not.toBeNull();
+  });
+
+  it("puts a draft refused as stale on the fresh recipe: its version, the lists left alone", async () => {
+    server.recipe = { ...stored, version: 7, tags: [{ name: "Fresh" }], categories: ["Lunch"] };
+    const { result } = renderHook(
+      () => useRecipeEditorForm({ mode: "edit", initialData: stored, locale: "en" }),
+      { wrapper: wrapper() }
+    );
+
+    act(() => result.current.set("name", "Typed"));
+    act(() => void result.current.submit());
+    act(() => result.current.failSave(new RecipeChangedElsewhereError()));
+
+    await waitFor(() => expect(result.current.version).toBe(7));
+    expect(result.current.form).toMatchObject({
+      name: "Typed",
+      tags: ["Fresh"],
+      categories: ["Lunch"],
+    });
+    let payload: unknown;
+
+    act(() => {
+      payload = result.current.submit();
+    });
+    expect(payload).toMatchObject({ name: "Typed" });
+    expect(payload).not.toHaveProperty("tags");
+  });
+
+  const retryAfterStale = async (
+    fresh: FullRecipeDTO,
+    edit: (form: ReturnType<typeof useRecipeEditorForm>) => void
+  ) => {
+    server.recipe = fresh;
+    const { result } = renderHook(
+      () => useRecipeEditorForm({ mode: "edit", initialData: stored, locale: "en" }),
+      { wrapper: wrapper() }
+    );
+
+    act(() => edit(result.current));
+    act(() => void result.current.submit());
+    act(() => result.current.failSave(new RecipeChangedElsewhereError()));
+    await waitFor(() => expect(result.current.version).toBe(fresh.version));
+    let payload: unknown;
+
+    act(() => {
+      payload = result.current.submit();
+    });
+
+    return payload;
+  };
+
+  it("retries a stale draft with the fresh value of each field the reader left alone", async () => {
+    const fresh = {
+      ...stored,
+      version: 8,
+      servings: 6,
+      steps: [{ step: "Simmer.", order: 0, systemUsed: "metric" as const, version: 2 }],
+    };
+    const payload = await retryAfterStale(fresh, (form) => form.set("notes", "Salt it"));
+
+    expect(payload).toMatchObject({ servings: 6, notes: "Salt it", steps: [{ step: "Simmer." }] });
+  });
+
+  it("retries a stale draft with the reader's value of a field both changed", async () => {
+    const payload = await retryAfterStale({ ...stored, version: 8, servings: 6 }, (form) =>
+      form.set("servings", 3)
+    );
+
+    expect(payload).toMatchObject({ servings: 3 });
   });
 });

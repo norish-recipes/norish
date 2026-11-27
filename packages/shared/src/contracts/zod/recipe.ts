@@ -3,10 +3,10 @@ import { z } from "zod";
 
 import { measurementSystemEnum, recipes } from "@norish/db-schema/schema";
 
-import { cleanCategoryName } from "../../lib/categories";
 import { primaryRecipeImage } from "../../lib/recipe-media";
 import { ExtraNutrientsSchema } from "../nutrients";
 import { CuisineSummarySchema } from "./cuisine";
+import { StoredCategoryNameSchema } from "./list-entry";
 import { RecipeImagesArraySchema, RecipeImageSchema } from "./recipe-images";
 import {
   RecipeIngredientInputBaseSchema,
@@ -17,25 +17,26 @@ import { RecipeVideosArraySchema, RecipeVideoSchema } from "./recipe-videos";
 import { StepOutputSchema, StepStepSchema } from "./steps";
 import { TagNameSchema, TagSummarySchema } from "./tag";
 
-/** A Category name: trimmed, inner whitespace collapsed, 1 to 40 characters (ADR-0040). */
-export const recipeCategorySchema = z.string().overwrite(cleanCategoryName).min(1).max(40);
+/** A Category name as a write or filter takes it: trimmed, inner whitespace collapsed (ADR-0040);
+ * only a new entry is bounded. */
+export const recipeCategorySchema = StoredCategoryNameSchema;
 
 // The stored nutrients beyond the four, by the catalogue's keys rather than as any JSON.
 const nutritionExtras = ExtraNutrientsSchema.nullish();
 
-export const RecipeSelectBaseSchema = createSelectSchema(recipes).extend({
-  userId: z.string().nullable(),
-  nutritionExtras,
-});
+const RecipeSelectBaseSchema = createSelectSchema(recipes).extend({ nutritionExtras });
 export const RecipeInsertBaseSchema = createInsertSchema(recipes)
   .omit({
     id: true,
     updatedAt: true,
     createdAt: true,
     userId: true, // set from session server-side
+    householdId: true, // the Owner's, set by the database
   })
   .extend({ nutritionExtras });
-export const RecipeUpdateBaseSchema = createUpdateSchema(recipes).extend({ nutritionExtras });
+const RecipeUpdateBaseSchema = createUpdateSchema(recipes)
+  .omit({ householdId: true })
+  .extend({ nutritionExtras });
 
 export const AuthorSchema = z
   .object({
@@ -66,7 +67,7 @@ export const RecipeDashboardSchema = RecipeSelectBaseSchema.omit({
   // The resolved primary image: the first gallery image.
   image: z.string().nullable(),
   tags: z.array(TagSummarySchema).default([]),
-  categories: z.array(recipeCategorySchema).default([]),
+  categories: z.array(z.string()).default([]),
   author: AuthorSchema,
   averageRating: z.number().nullable().optional(),
   ratingCount: z.number().optional(),
@@ -137,6 +138,7 @@ export const RecipeNutritionEstimateSchema = z.object({
       // The other nutrients the model estimated for the line; dropped by an
       // undeclared key, they would never reach the page.
       extras: ExtraNutrientsSchema.optional(),
+      combined: z.boolean().optional(),
     })
   ),
 });
@@ -148,7 +150,7 @@ export const FullRecipeSchema = RecipeSelectBaseSchema.extend({
   // Recipe Provenance travels with the recipe, which is why an Offline reader
   // sees exactly what a Live one does and no separate warming is needed.
   cuisines: z.array(CuisineSummarySchema).default([]),
-  categories: z.array(recipeCategorySchema).default([]),
+  categories: z.array(z.string()).default([]),
   author: AuthorSchema,
   images: RecipeImagesArraySchema.default([]),
   videos: RecipeVideosArraySchema.default([]),
@@ -156,7 +158,8 @@ export const FullRecipeSchema = RecipeSelectBaseSchema.extend({
 });
 
 export const FullRecipeInsertSchema = RecipeInsertBaseSchema.extend({
-  id: z.uuid().optional(),
+  // A client-made id, in the database's spelling so its media folder matches.
+  id: z.uuid().toLowerCase().optional(),
   recipeIngredients: z.array(RecipeIngredientInputSchema).default([]),
   tags: z.array(TagNameSchema).default([]),
   // Vocabulary row ids, as the recipe form sends them. Names would reintroduce

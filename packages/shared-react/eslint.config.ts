@@ -13,6 +13,15 @@ export default defineConfig(
   compiledReactConfig,
   restrictDomains(import.meta.dirname, {
     srcDir: "src",
-    crossCutting: ["trpc", "platform", "offline", "config", "reader", "realtime", "page-store"],
+    crossCutting: [
+      "trpc",
+      "platform",
+      "offline",
+      "config",
+      "reader",
+      "realtime",
+      "page-store",
+      "lists",
+    ],
   })
 );

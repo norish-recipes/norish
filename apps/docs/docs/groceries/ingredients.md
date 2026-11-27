@@ -1,17 +1,17 @@
 ---
 sidebar_position: 4
 title: Manage ingredients
-description: Edit ingredients, translations, nutrition and icons.
+description: Edit ingredients, spellings, nutrition and icons.
 ---
 
 # Manage ingredients
 
-In **Settings**, open **Ingredients**. Search with parts of words in any order.
+In **Settings**, open [Content](/content), then **Ingredients**. Search with parts of words in any order.
 For example, "olive ex" finds "Extra virgin olive oil".
 
 ![The Ingredients catalogue](/img/screenshots/ingredients-list.png)
 
-Open an ingredient to edit its name, add translations, or link it to a parent
+Open an ingredient to edit its name, add spellings, or link it to a parent
 such as "onion" for "red onion". Deleting an entry keeps the original text in
 recipes and groceries. Check the confirmation before deleting.
 
@@ -22,7 +22,7 @@ them, the card lists any ingredients it left out.
 
 Open **Nutrition** and select **Correct**. Pick a food from the database or
 enter the values from the label. You can also correct the weight of a piece
-or spoonful. Corrections apply to your household.
+or spoonful. Corrections apply to your household. Fat, carbohydrates and protein must each be at most 100 g per 100 g.
 
 ![Correcting the weight of a teaspoon of cumin from a label](/img/screenshots/ingredients-nutrition-correction.png)
 
@@ -33,7 +33,7 @@ Select the ingredient's icon to **Upload a picture**, **Generate with AI**, or
 
 ## Review AI changes {#ai-cleanup}
 
-If your administrator has enabled [AI cleanup](../configuration/ai-provider.md#ingredient-catalogue),
+If your administrator has enabled [AI cleanup](/configuration/ai-provider#ingredient-catalogue),
 open **Changed by AI** to review recent edits. Choose **Keep** or **Undo**,
 including for ingredients that were merged or deleted.
 

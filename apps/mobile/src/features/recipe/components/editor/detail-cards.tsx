@@ -1,42 +1,35 @@
 import type { ComponentProps } from "react";
 import React, { useState } from "react";
-import { Alert, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { HintButton } from "@/components/hint-button";
+import { Ionicons } from "@/components/icon";
 import { ServingsStepper } from "@/components/servings-stepper";
 import { ToggleChip } from "@/components/toggle-chip";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { useText } from "@/lib/i18n/use-text";
 import { useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { RecipeFormState } from "@norish/shared-react/recipes";
 import type { RecipeCategory } from "@norish/shared/contracts";
-import { useTagsQuery } from "@norish/shared-react/config";
+import { hasName } from "@norish/shared-react/lists";
 import { servingsDown, servingsUp } from "@norish/shared-react/recipes";
 
 import { SectionCard } from "../tint";
 import { EditorInput } from "./editor-parts";
+import { EntryField } from "./entry-field";
 
 type Set = <K extends keyof RecipeFormState>(key: K, value: RecipeFormState[K]) => void;
 
-/** A removable chip; a dashed one is new to the household. */
-export function RemovableChip({
-  label,
-  dashed = false,
-  onRemove,
-}: {
-  label: string;
-  dashed?: boolean;
-  onRemove: () => void;
-}) {
+/** A chip that goes when pressed. */
+export function RemovableChip({ label, onRemove }: { label: string; onRemove: () => void }) {
   const intl = useIntl();
-  const [muted, border] = useThemeColor(["muted", "border"] as const);
+  const [muted] = useThemeColor(["muted"] as const);
 
   return (
     <Pressable
       accessibilityLabel={intl.formatMessage({ id: "recipes.editor.removeNamed" }, { name: label })}
       accessibilityRole="button"
-      className={`h-[34px] flex-row items-center gap-1.5 rounded-full px-3 ${dashed ? "" : "bg-default"}`}
-      style={dashed ? { borderWidth: 1.5, borderStyle: "dashed", borderColor: border } : undefined}
+      className="bg-default h-[34px] flex-row items-center gap-1.5 rounded-full px-3"
       onPress={onRemove}
     >
       <Text className="text-foreground text-[15px] font-medium">{label}</Text>
@@ -45,34 +38,10 @@ export function RemovableChip({
   );
 }
 
-/** The chip, ruled by a hairline, that adds one more. */
-export function AddChip({
-  label,
-  testID,
-  onPress,
-}: {
-  label: string;
-  testID: string;
-  onPress: () => void;
-}) {
-  const [muted] = useThemeColor(["muted"] as const);
-
-  return (
-    <Pressable
-      accessibilityRole="button"
-      className="border-separator h-[34px] flex-row items-center gap-1.5 rounded-full border px-3"
-      testID={testID}
-      onPress={onPress}
-    >
-      <Ionicons color={muted} name="add" size={15} />
-      <Text className="text-foreground text-[15px] font-medium">{label}</Text>
-    </Pressable>
-  );
-}
-
 export function TagsAndCategoriesCard({
   form,
   set,
+  recipeId,
   categoryOptions,
   categoryLabel,
   onToggleCategory,
@@ -80,26 +49,15 @@ export function TagsAndCategoriesCard({
 }: {
   form: RecipeFormState;
   set: Set;
+  /** The recipe being edited, once it exists: its household's lists are the ones offered. */
+  recipeId?: string;
   categoryOptions: RecipeCategory[];
   categoryLabel: (category: RecipeCategory) => string;
   onToggleCategory: (category: RecipeCategory) => void;
-  onAddCategory: (typed: string) => void;
+  /** An entry of the Category list, picked or just created. */
+  onAddCategory: (name: string) => void;
 }) {
-  const intl = useIntl();
-  const { tags: known } = useTagsQuery();
-  const [draft, setDraft] = useState("");
-  const text = (id: string) => intl.formatMessage({ id });
-  const has = (tag: string) => form.tags.some((t) => t.toLowerCase() === tag.toLowerCase());
-  const addTag = (typed: string) => {
-    const tag = typed.trim();
-
-    setDraft("");
-    if (tag && !has(tag)) set("tags", [...form.tags, tag]);
-  };
-  const needle = draft.trim().toLowerCase();
-  const suggestions = needle
-    ? known.filter((tag) => tag.toLowerCase().includes(needle) && !has(tag)).slice(0, 6)
-    : [];
+  const text = useText();
 
   return (
     <SectionCard title={text("recipes.editor.tagsAndCategories")}>
@@ -111,62 +69,56 @@ export function TagsAndCategoriesCard({
           {categoryOptions.map((category) => (
             <ToggleChip
               key={category}
-              active={form.categories.includes(category)}
+              active={hasName(form.categories, category)}
               label={categoryLabel(category)}
               testID={`editor-category-${category}`}
               onPress={() => onToggleCategory(category)}
             />
           ))}
-          <AddChip
-            label={text("recipes.form.addCategory")}
-            testID="editor-add-category"
-            onPress={() =>
-              Alert.prompt(text("recipes.form.addCategory"), undefined, (typed) =>
-                onAddCategory(typed)
-              )
-            }
-          />
         </View>
+        <EntryField
+          entryLabel={categoryLabel}
+          isSelected={(entry) => hasName(form.categories, entry.name)}
+          kind="category"
+          label={text("recipes.form.addCategory")}
+          placeholder={text("recipes.form.addCategory")}
+          recipeId={recipeId}
+          testID="editor-add-category"
+          onSelect={(entry) => onAddCategory(entry.name)}
+        />
         <View className="mt-2 flex-row items-center gap-1.5">
           <Text className="text-muted text-[13px] font-semibold">
             {text("recipes.editor.tags")}
           </Text>
           <HintButton hint={text("recipes.editor.tagsHint")} />
         </View>
-        <View className="flex-row flex-wrap items-center gap-2">
-          {form.tags.map((tag) => (
-            <RemovableChip
-              key={tag}
-              dashed={!known.includes(tag)}
-              label={tag}
-              onRemove={() =>
-                set(
-                  "tags",
-                  form.tags.filter((t) => t !== tag)
-                )
-              }
-            />
-          ))}
-          <EditorInput
-            accessibilityLabel={text("recipes.editor.addTag")}
-            autoCapitalize="none"
-            className="text-foreground h-[34px] min-w-32 flex-1 py-0 text-[15px]"
-            placeholder={text("recipes.editor.addTag")}
-            returnKeyType="done"
-            submitBehavior="submit"
-            testID="editor-tag-input"
-            value={draft}
-            onChangeText={(value) => (/[\s,]$/.test(value) ? addTag(value) : setDraft(value))}
-            onSubmitEditing={() => addTag(draft)}
-          />
-        </View>
-        {suggestions.length > 0 ? (
-          <View className="flex-row flex-wrap gap-2">
-            {suggestions.map((tag) => (
-              <ToggleChip key={tag} active={false} label={tag} onPress={() => addTag(tag)} />
+        {form.tags.length > 0 ? (
+          <View className="flex-row flex-wrap items-center gap-2">
+            {form.tags.map((tag) => (
+              <RemovableChip
+                key={tag}
+                label={tag}
+                onRemove={() =>
+                  set(
+                    "tags",
+                    form.tags.filter((t) => t !== tag)
+                  )
+                }
+              />
             ))}
           </View>
         ) : null}
+        <EntryField
+          isSelected={(entry) => hasName(form.tags, entry.name)}
+          kind="tag"
+          label={text("recipes.editor.addTag")}
+          placeholder={text("recipes.editor.addTag")}
+          recipeId={recipeId}
+          testID="editor-tag-input"
+          onSelect={(entry) => {
+            if (!hasName(form.tags, entry.name)) set("tags", [...form.tags, entry.name]);
+          }}
+        />
       </View>
     </SectionCard>
   );
@@ -227,8 +179,7 @@ export function ServingsAndTimeCard({
   set: Set;
   error?: string;
 }) {
-  const intl = useIntl();
-  const text = (id: string) => intl.formatMessage({ id });
+  const text = useText();
   const minutes = text("recipes.editor.minutes");
   const time = (field: "prepMinutes" | "cookMinutes" | "totalMinutes", id: string) => (
     <NumberBox
@@ -262,8 +213,7 @@ export function ServingsAndTimeCard({
 }
 
 export function NutritionCard({ form, set }: { form: RecipeFormState; set: Set }) {
-  const intl = useIntl();
-  const text = (id: string) => intl.formatMessage({ id });
+  const text = useText();
   const box = (
     field: "calories" | "protein" | "carbs" | "fat",
     unit: string,

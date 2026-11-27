@@ -1,15 +1,27 @@
 import type { ParsedIngredient } from "@/features/recipes/components/editor/ingredient-input";
 import type { Step } from "@/features/recipes/components/editor/step-input";
 import type { ReactElement } from "react";
-import { deliver, fakeProcedure } from "@/__tests__/helpers/trpc-fake";
+import {
+  deliver,
+  fakeProcedure,
+  readAnswers,
+  sentReads,
+  sentWrites,
+  writeAnswers,
+} from "@/__tests__/helpers/trpc-fake";
 import { RecipeEditorScreen } from "@/features/recipes/recipe-editor-screen";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { FullRecipeDTO } from "@norish/shared/contracts";
 import { createTestQueryClient, createTestWrapper } from "@norish/shared-react/platform/testing";
 
-const mocks = vi.hoisted(() => ({ createRecipe: vi.fn(), push: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  createRecipe: vi.fn(),
+  push: vi.fn(),
+  readerHousehold: "household-2" as string | null,
+}));
 
 vi.mock("@norish/shared-react/trpc", async () =>
   (await import("@/__tests__/helpers/trpc-fake")).mockTRPC()
@@ -28,7 +40,8 @@ const LABELS: Record<string, string> = {
 
 vi.mock("next-intl", () => ({
   useLocale: () => "en",
-  useTranslations: () => (key: string) => LABELS[key] ?? key,
+  useTranslations: () => (key: string, params?: Record<string, unknown>) =>
+    LABELS[key] ?? (params ? `${key} ${Object.values(params).join(" ")}` : key),
 }));
 vi.mock("@norish/shared-react/config", () => ({
   useIngredientsSubscription: () => undefined,
@@ -46,7 +59,9 @@ vi.mock("@norish/shared-react/config", () => ({
   }),
 }));
 vi.mock("@norish/shared-react/reader", async () =>
-  (await import("@/__tests__/helpers/reader-mock")).mockDevicePreferences()
+  (await import("@/__tests__/helpers/reader-mock")).mockDevicePreferences(undefined, {
+    reader: () => ({ permissions: { householdId: mocks.readerHousehold } }),
+  })
 );
 vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@norish/shared-react/recipes")>()),
@@ -96,7 +111,7 @@ vi.mock("@/features/recipes/components/editor/measurement-system-selector", () =
 vi.mock("@/features/recipes/components/editor/time-inputs", () => ({ default: () => null }));
 vi.mock("@/features/recipes/components/editor/smart-input-help", () => ({ default: () => null }));
 vi.mock("@/features/recipes/components/editor/smart-text-input", () => ({ default: () => null }));
-vi.mock("@/components/shared/tag-input", () => ({ default: () => null }));
+vi.mock("@/components/shared/tag-picker", () => ({ default: () => null }));
 vi.mock("@/features/recipes/components/editor/provenance-fields", async (importOriginal) => ({
   ...(await importOriginal<object>()),
   default: () => null,
@@ -119,9 +134,33 @@ function fillRequiredFields() {
   fireEvent.click(screen.getByRole("button", { name: "add-step" }));
 }
 
+const entry = (id: string, name: string, instance = false) => ({ id, name, instance });
+
 beforeEach(() => {
   mocks.createRecipe.mockReset();
+  // The server stores each create.
+  mocks.createRecipe.mockImplementation((_input, after: { onSaved: () => void }) =>
+    after.onSaved()
+  );
   mocks.push.mockReset();
+  mocks.readerHousehold = "household-2";
+  sentWrites.mockReset();
+  readAnswers.clear();
+  writeAnswers.clear();
+  // jsdom has no scrolling; the open listbox scrolls its focused row into view.
+  HTMLElement.prototype.scrollTo = () => {};
+  readAnswers.set("lists.list", async () => [
+    entry("b", "Breakfast", true),
+    entry("l", "Lunch", true),
+    entry("d", "Dinner", true),
+    entry("s", "Snack", true),
+    entry("p", "Puddings"),
+    entry("dr", "Drinks"),
+  ]);
+  writeAnswers.set("lists.add", async (input) => ({
+    created: true,
+    entry: entry(`new-${(input as { name: string }).name}`, (input as { name: string }).name),
+  }));
 });
 
 describe("RecipeForm servings (#684)", () => {
@@ -146,7 +185,10 @@ describe("RecipeForm servings (#684)", () => {
     fireEvent.click(screen.getByRole("button", { name: "createRecipe" }));
 
     await waitFor(() =>
-      expect(mocks.createRecipe).toHaveBeenCalledWith(expect.objectContaining({ servings: 2 }))
+      expect(mocks.createRecipe).toHaveBeenCalledWith(
+        expect.objectContaining({ servings: 2 }),
+        expect.anything()
+      )
     );
   });
 
@@ -174,6 +216,7 @@ describe("RecipeForm categories", () => {
   const mojito: FullRecipeDTO = {
     id: "11111111-1111-4111-8111-111111111111",
     userId: "user-1",
+    householdId: "household-1",
     name: "Mojito",
     description: null,
     url: null,
@@ -205,10 +248,10 @@ describe("RecipeForm categories", () => {
     videos: [],
   };
 
-  it("offers the household's list and the recipe's own, labelling only built-ins", () => {
+  it("offers the recipe's household's list and the recipe's own, labelling only built-ins", async () => {
     renderEditor(<RecipeEditorScreen initialData={mojito} mode="edit" />);
 
-    expect(screen.getByRole("button", { name: "Breakfast" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Breakfast" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Puddings" })).toHaveAttribute(
       "aria-pressed",
       "false"
@@ -219,73 +262,131 @@ describe("RecipeForm categories", () => {
     );
   });
 
-  function addCategory(name: string) {
-    const field = screen.getByRole("textbox", { name: "addCategory" });
+  it("reads the list of another household's recipe being edited, not the editor's", async () => {
+    renderEditor(<RecipeEditorScreen initialData={mojito} mode="edit" />);
 
-    fireEvent.change(field, { target: { value: name } });
-    fireEvent.keyDown(field, { key: "Enter" });
+    await screen.findByRole("button", { name: "Breakfast" });
+    expect(sentReads).toHaveBeenCalledWith("lists.list", { kind: "category", recipeId: mojito.id });
+  });
+
+  it("reads the household's own list for a recipe of the reader's household, as the cache has it", async () => {
+    mocks.readerHousehold = "household-1";
+    renderEditor(<RecipeEditorScreen initialData={mojito} mode="edit" />);
+
+    await screen.findByRole("button", { name: "Breakfast" });
+    expect(sentReads).toHaveBeenCalledWith("lists.list", { kind: "category" });
+    expect(sentReads).not.toHaveBeenCalledWith(
+      "lists.list",
+      expect.objectContaining({ recipeId: mojito.id })
+    );
+  });
+
+  async function typeCategory(user: ReturnType<typeof userEvent.setup>, text: string) {
+    await user.type(screen.getByRole("combobox", { name: "addCategory" }), text);
   }
 
   function pressedChips() {
     return screen
-      .getAllByRole("button", { pressed: true })
+      .getAllByRole("button", { pressed: true, hidden: true })
       .map((chip) => chip.textContent)
       .sort();
   }
 
-  it("adds a typed name as a selected chip of its own", () => {
+  it("selects the existing chip for another casing, without creating anything", async () => {
+    const user = userEvent.setup();
+
     renderEditor(<RecipeEditorScreen initialData={mojito} mode="edit" />);
+    await screen.findByRole("button", { name: "Puddings" });
+    await typeCategory(user, "puddings");
 
-    addCategory("  Long   drinks ");
+    expect(screen.queryByRole("option", { name: /^create/ })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("option", { name: "Puddings" }));
 
-    expect(pressedChips()).toEqual(["Cocktails", "Long drinks"]);
-    expect(screen.getByRole("textbox", { name: "addCategory" })).toHaveValue("");
+    await waitFor(() => expect(pressedChips()).toEqual(["Cocktails", "Puddings"]));
+    expect(sentWrites).not.toHaveBeenCalledWith("lists.add", expect.anything());
   });
 
-  it("selects the existing chip for another casing, a translation or a built-in plural", () => {
+  it("creates a new Category only through the Create row, then selects it", async () => {
+    const user = userEvent.setup();
+
     renderEditor(<RecipeEditorScreen initialData={mojito} mode="edit" />);
+    await screen.findByRole("button", { name: "Puddings" });
+    await typeCategory(user, "  Long   drinks ");
+    await user.click(screen.getByRole("option", { name: "create Long drinks" }));
 
-    addCategory("puddings");
-    addCategory("SNACKS");
-    addCategory("Desserts");
-
-    expect(pressedChips()).toEqual(["Cocktails", "Desserts", "Puddings", "Snack"]);
-    expect(screen.getAllByRole("button", { name: "Puddings" })).toHaveLength(1);
+    await waitFor(() => expect(pressedChips()).toEqual(["Cocktails", "Long drinks"]));
+    expect(sentWrites).toHaveBeenCalledWith("lists.add", {
+      kind: "category",
+      name: "Long drinks",
+      recipeId: mojito.id,
+    });
   });
 
   it.each(["Ontbijt", "breakfasts", "BREAKFAST", "Petit-déjeuner"])(
-    "selects the Breakfast chip for %s in the English UI",
-    (typed) => {
+    "offers Breakfast, not a new Category, for %s",
+    async (typed) => {
+      const user = userEvent.setup();
+
       renderEditor(<RecipeEditorScreen initialData={mojito} mode="edit" />);
+      await screen.findByRole("button", { name: "Puddings" });
+      await typeCategory(user, typed);
 
-      addCategory(typed);
+      expect(screen.queryByRole("option", { name: /^create/ })).not.toBeInTheDocument();
+      await user.click(screen.getByRole("option", { name: "Breakfast" }));
 
-      expect(pressedChips()).toEqual(["Breakfast", "Cocktails"]);
+      await waitFor(() => expect(pressedChips()).toEqual(["Breakfast", "Cocktails"]));
     }
   );
 
-  it("selects an existing household chip for another casing", () => {
+  it("does not offer a name over 40 characters, and says why", async () => {
+    const user = userEvent.setup();
+
     renderEditor(<RecipeEditorScreen initialData={mojito} mode="edit" />);
+    await screen.findByRole("button", { name: "Puddings" });
+    await typeCategory(user, "x".repeat(41));
 
-    addCategory("drinks");
-
-    expect(pressedChips()).toEqual(["Cocktails", "Drinks"]);
-    expect(screen.getAllByRole("button", { name: "Drinks" })).toHaveLength(1);
+    expect(screen.queryByRole("option", { name: /^create/ })).not.toBeInTheDocument();
+    expect(screen.getAllByText("tooLong 40").length).toBeGreaterThan(0);
   });
 
-  it("drops Breakfast on save once deselected after typing another locale's name", async () => {
-    renderEditor(<RecipeEditorScreen mode="create" />);
-    fillRequiredFields();
+  it("saves only what was picked: a typed name nobody created is not a Category", async () => {
+    const user = userEvent.setup();
 
+    renderEditor(<RecipeEditorScreen mode="create" />);
+    await screen.findByRole("button", { name: "Breakfast" });
+    fillRequiredFields();
     fireEvent.click(screen.getByRole("button", { name: "Breakfast" }));
-    addCategory("Ontbijt");
-    expect(pressedChips()).toEqual(["Breakfast"]);
+    await typeCategory(user, "Typed but never created");
+    await user.keyboard("{Escape}");
+    fireEvent.click(await screen.findByRole("button", { name: "createRecipe" }));
+
+    await waitFor(() =>
+      expect(mocks.createRecipe).toHaveBeenCalledWith(
+        expect.objectContaining({ categories: ["Breakfast"] }),
+        expect.anything()
+      )
+    );
+    expect(sentWrites).not.toHaveBeenCalledWith("lists.add", expect.anything());
+  });
+
+  it("drops Breakfast on save once deselected after picking it by another locale's name", async () => {
+    const user = userEvent.setup();
+
+    renderEditor(<RecipeEditorScreen mode="create" />);
+    await screen.findByRole("button", { name: "Breakfast" });
+    fillRequiredFields();
+    await typeCategory(user, "Ontbijt");
+    await user.click(screen.getByRole("option", { name: "Breakfast" }));
+    await waitFor(() => expect(pressedChips()).toEqual(["Breakfast"]));
 
     fireEvent.click(screen.getByRole("button", { name: "Breakfast" }));
     fireEvent.click(screen.getByRole("button", { name: "createRecipe" }));
 
     await waitFor(() =>
-      expect(mocks.createRecipe).toHaveBeenCalledWith(expect.objectContaining({ categories: [] }))
+      expect(mocks.createRecipe).toHaveBeenCalledWith(
+        expect.objectContaining({ categories: [] }),
+        expect.anything()
+      )
     );
   });
 });

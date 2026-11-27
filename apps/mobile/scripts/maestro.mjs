@@ -202,7 +202,7 @@ const bounds = (route) => ({
 const listenProxy = () => proxy.listen(Number(env.NORISH_PROXY_PORT), LOOPBACK);
 const control = createServer(async (request, response) => {
   // The seeding and reading routes the flows call, each answering in JSON: POST seeds from a JSON
-  // body (/reset, /recipe, /grocery, /store, /plan, /pantry-add), GET reads (/count, /groceries, ...).
+  // body (/reset, /recipe, /grocery, /store, /token, /plan, /pantry-add), GET reads (/count, /groceries, ...).
   const route = new URL(request.url ?? "/", "http://control");
   const body = await new Promise((resolve) => {
     const chunks = [];
@@ -261,6 +261,35 @@ const control = createServer(async (request, response) => {
       );
     } else if (route.pathname === "/store") {
       response.write(JSON.stringify({ id: await seed.createStore(JSON.parse(body)) }));
+    } else if (route.pathname === "/token") {
+      response.write(JSON.stringify({ id: await seed.createToken(JSON.parse(body)) }));
+    } else if (["/profile-name", "/tokens", "/api-keys"].includes(route.pathname)) {
+      // `is`, as JSON, waits until the account holds it.
+      const is = route.searchParams.get("is");
+      const read = {
+        "/profile-name": "profileName",
+        "/tokens": "tokenDomains",
+        "/api-keys": "apiKeyNames",
+      };
+
+      response.write(
+        JSON.stringify({
+          is: await seed[read[route.pathname]]({ is: is === null ? undefined : JSON.parse(is) }),
+        })
+      );
+    } else if (route.pathname === "/clipboard") {
+      // The simulator's pasteboard, which Maestro cannot read; `is` waits up to 5 s for that text.
+      const is = route.searchParams.get("is");
+      const paste = () =>
+        spawnSync("xcrun", ["simctl", "pbpaste", simulator], { encoding: "utf8" }).stdout;
+      const deadline = Date.now() + 5_000;
+      let text = paste();
+
+      while (is !== null && text !== is && Date.now() < deadline) {
+        await new Promise((resolve) => setTimeout(resolve, 250));
+        text = paste();
+      }
+      response.write(JSON.stringify({ text }));
     } else if (route.pathname === "/plan") {
       response.write(JSON.stringify({ id: await seed.createPlanned(JSON.parse(body)) }));
     } else if (route.pathname === "/pantry-add") {

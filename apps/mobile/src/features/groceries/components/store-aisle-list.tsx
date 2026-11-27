@@ -5,10 +5,11 @@ import { Pressable, Text, View } from "react-native";
 import { ItemSlice } from "@/components/card-slice";
 import { DragGrip } from "@/components/drag-list/drag-grip";
 import { DragList } from "@/components/drag-list/drag-list";
+import { Ionicons } from "@/components/icon";
 import { IconButton } from "@/components/icon-button";
 import { FULL_SHEET_TOP, SHEET_SCROLL_END } from "@/components/sheet";
 import { useFocusedFieldInView } from "@/hooks/use-focused-field-in-view";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { useText } from "@/lib/i18n/use-text";
 import { Input, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
@@ -83,8 +84,7 @@ export function StoreAisleList({
   onChange: (aisles: EditingAisle[]) => void;
   header: ReactElement;
 }) {
-  const intl = useIntl();
-  const text = (id: string) => intl.formatMessage({ id });
+  const text = useText();
   const [draft, setDraft] = useState("");
   const { scrollRef, onScroll, onFieldFocus, onContentSizeChange } =
     useFocusedFieldInView<DragListHandle>(

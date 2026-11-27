@@ -1,7 +1,7 @@
 import type { ComponentProps } from "react";
 import React from "react";
 import { Text, View } from "react-native";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { Ionicons } from "@/components/icon";
 import { useThemeColor } from "heroui-native";
 
 /**

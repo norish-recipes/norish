@@ -30,6 +30,7 @@ import { useIngredientIcons } from "@norish/shared-react/ingredients";
 import { useDevicePreference } from "@norish/shared-react/reader";
 import {
   clampStep,
+  LoadedPageRecipe,
   resolveCookingModeSteps,
   useLoadedPageRecipe,
   useRecipePageStore,
@@ -143,7 +144,10 @@ function CookMode() {
   };
 
   useCookKeepAwake();
-  useIngredientIcons(recipe.recipeIngredients.map((line) => line.ingredientId));
+  useIngredientIcons(
+    recipe.recipeIngredients.map((line) => line.ingredientId),
+    recipe.id
+  );
 
   // A new notification tap while cook mode is open moves it to that timer's step.
   useEffect(() => {
@@ -238,7 +242,13 @@ export function CookModeScreen() {
   useNoHostBackSwipe();
   useHideTabBar();
 
-  if (recipe) return <CookMode />;
+  if (recipe) {
+    return (
+      <LoadedPageRecipe recipe={recipe}>
+        <CookMode />
+      </LoadedPageRecipe>
+    );
+  }
 
   return (
     <View className="bg-background flex-1" testID="cook-mode-loading">

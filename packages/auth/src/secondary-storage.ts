@@ -1,5 +1,6 @@
 import type { SecondaryStorage } from "better-auth";
 
+import type { DeletedCounts } from "@norish/db/repositories/master-key";
 import { getPublisherClient } from "@norish/shared-server/valkey/client";
 
 // The expiry is set only by the increment that creates the counter, so a window
@@ -33,3 +34,71 @@ export const valkeySecondaryStorage: SecondaryStorage = {
     return Number(await valkey.eval(INCREMENT_SCRIPT, 1, key, ttl));
   },
 };
+
+// Better Auth keeps each session under its bare token, a user's sessions listed in
+// `active-sessions-<userId>`, and each verification value under `verification:<identifier>`.
+const SESSION_LIST = "active-sessions-";
+const VERIFICATION = "verification:";
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+function parseJson(text: string): unknown {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return undefined;
+  }
+}
+
+/** The kind of Better Auth entry `value` under `key` is, by both their shapes; null for none. */
+function entryKind(key: string, value: string): "session" | "list" | "verification" | null {
+  const stored = parseJson(value);
+
+  if (isRecord(stored) && isRecord(stored.session) && stored.session.token === key) {
+    return typeof stored.session.userId === "string" ? "session" : null;
+  }
+  if (key.startsWith(SESSION_LIST)) {
+    const reference = (entry: unknown) =>
+      isRecord(entry) && typeof entry.token === "string" && typeof entry.expiresAt === "number";
+
+    return Array.isArray(stored) && stored.every(reference) ? "list" : null;
+  }
+  if (key.startsWith(VERIFICATION) && isRecord(stored)) {
+    const own = stored.identifier === key.slice(VERIFICATION.length);
+
+    return own && typeof stored.value === "string" ? "verification" : null;
+  }
+
+  return null;
+}
+
+/**
+ * Delete every session and verification value Better Auth keeps in Valkey, found by their shape
+ * and not through its lists, which sign-ins at once can leave short. Nothing else is touched.
+ */
+export async function deleteSessionsAndVerifications(): Promise<DeletedCounts> {
+  const valkey = await getPublisherClient();
+  const ended: DeletedCounts = { sessions: 0, verifications: 0 };
+  let cursor = "0";
+
+  do {
+    const [next, keys] = await valkey.scan(cursor, "COUNT", 500, "TYPE", "string");
+    // MGET answers null for a key that is gone or no longer a string, where GET would fail.
+    const values = keys.length > 0 ? await valkey.mget(...keys) : [];
+    const doomed = keys.filter((key, index) => {
+      const value = values[index];
+      const kind = typeof value === "string" ? entryKind(key, value) : null;
+
+      if (kind === "session") ended.sessions += 1;
+      if (kind === "verification") ended.verifications += 1;
+
+      return kind !== null;
+    });
+
+    cursor = next;
+    if (doomed.length > 0) await valkey.del(...doomed);
+  } while (cursor !== "0");
+
+  return ended;
+}

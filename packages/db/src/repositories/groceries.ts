@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, isNull, lte, sql } from "drizzle-orm";
+import { and, asc, desc, eq, getTableColumns, inArray, isNull, lte, sql } from "drizzle-orm";
 import z from "zod";
 
 import type { Db, DbTransaction } from "@norish/db/drizzle";
@@ -8,7 +8,7 @@ import type {
   GroceryUpdateDto,
 } from "@norish/shared/contracts/dto/groceries";
 import { db, holdLock } from "@norish/db/drizzle";
-import { groceries, householdUsers, recipeIngredients, recipes } from "@norish/db/schema";
+import { groceries, recipeIngredients, recipes } from "@norish/db/schema";
 import {
   GroceryInsertBaseSchema,
   GrocerySelectBaseSchema,
@@ -16,35 +16,73 @@ import {
 } from "@norish/shared/contracts/zod";
 
 import type { IngredientRef } from "./ingredient-aliases";
+import { assertOwnReferences, householdRow, householdRows, ownRowIds } from "./household-rows";
+import { buildPolicyCondition } from "./recipes";
 
-export async function getGroceryById(id: string): Promise<GroceryDto | null> {
-  const [row] = await db.select().from(groceries).where(eq(groceries.id, id)).limit(1);
+/** A grocery as its household reads it: its recipe line only while the household may view that
+ * recipe, so a line from one out of view carries no reference to it. */
+async function readerColumns(householdId: string, executor: Db = db) {
+  const all = getTableColumns(groceries);
+  const viewable = await buildPolicyCondition(
+    { householdId },
+    recipes.householdId,
+    "view",
+    executor
+  );
 
-  if (!row) return null;
+  if (!viewable) return all;
+  const inView = db
+    .select({ one: sql`1` })
+    .from(recipeIngredients)
+    .innerJoin(recipes, eq(recipeIngredients.recipeId, recipes.id))
+    .where(and(eq(recipeIngredients.id, groceries.recipeIngredientId), viewable));
 
-  const parsed = GrocerySelectBaseSchema.safeParse(row);
-
-  if (!parsed.success) throw new Error("Failed to parse grocery by id");
-
-  return parsed.data;
+  return {
+    ...all,
+    recipeIngredientId: sql<
+      string | null
+    >`CASE WHEN EXISTS (${inView}) THEN ${groceries.recipeIngredientId} END`,
+  };
 }
 
-/** The grocery last added under this name, on anyone's list. */
-export async function findNewestGroceryNamed(name: string): Promise<GroceryDto | null> {
+/**
+ * The food a Store's grocery names now: what a lookup queued for that grocery files its answer under
+ * when it runs. Null where it names none, or is gone from the Store.
+ */
+export async function findStoreGroceryFood(
+  storeId: string,
+  groceryId: string
+): Promise<string | null> {
   const [row] = await db
-    .select()
+    .select({ ingredientId: groceries.ingredientId })
     .from(groceries)
-    .where(eq(groceries.name, name))
+    .where(and(eq(groceries.id, groceryId), eq(groceries.storeId, storeId)));
+
+  return row?.ingredientId ?? null;
+}
+
+/** The grocery last added under this name on the household's list. */
+export async function findNewestGroceryNamed(
+  householdId: string,
+  name: string
+): Promise<GroceryDto | null> {
+  const [row] = await db
+    .select(await readerColumns(householdId))
+    .from(groceries)
+    .where(and(eq(groceries.householdId, householdId), eq(groceries.name, name)))
     .orderBy(desc(groceries.createdAt))
     .limit(1);
 
   return row ? GrocerySelectBaseSchema.parse(row) : null;
 }
 
-export async function getGroceriesByIds(ids: string[]): Promise<GroceryDto[]> {
+export async function getGroceriesByIds(ids: string[], householdId: string): Promise<GroceryDto[]> {
   if (ids.length === 0) return [];
 
-  const rows = await db.select().from(groceries).where(inArray(groceries.id, ids));
+  const rows = await db
+    .select(await readerColumns(householdId))
+    .from(groceries)
+    .where(householdRows(groceries, householdId, ids));
 
   const parsed = z.array(GrocerySelectBaseSchema).safeParse(rows);
 
@@ -53,9 +91,23 @@ export async function getGroceriesByIds(ids: string[]): Promise<GroceryDto[]> {
   return parsed.data;
 }
 
-/** Groceries' texts and the food each names, by id; one naming no food has none (ADR-0037). */
+/** The recipe line a household's grocery came from, as stored, whether or not it is in view. */
+export async function getGroceryRecipeLine(
+  groceryId: string,
+  householdId: string
+): Promise<string | null> {
+  const [row] = await db
+    .select({ recipeIngredientId: groceries.recipeIngredientId })
+    .from(groceries)
+    .where(householdRow(groceries, householdId, groceryId));
+
+  return row?.recipeIngredientId ?? null;
+}
+
+/** The household's groceries' texts and the food each names, by id; one naming no food has none (ADR-0037). */
 export async function findGroceryFoods(
-  ids: readonly string[]
+  ids: readonly string[],
+  householdId: string
 ): Promise<Map<string, { name: string | null; food: IngredientRef | null }>> {
   if (ids.length === 0) return new Map();
 
@@ -67,7 +119,7 @@ export async function findGroceryFoods(
       ingredientId: groceries.ingredientId,
     })
     .from(groceries)
-    .where(inArray(groceries.id, [...new Set(ids)]));
+    .where(householdRows(groceries, householdId, [...new Set(ids)]));
 
   return new Map(
     rows.map(({ id, name, aliasId, ingredientId }) => [
@@ -85,67 +137,20 @@ const LIST_ORDER = [
   asc(groceries.id),
 ];
 
-export async function listGroceriesByUser(
-  userId: string,
-  options?: { includeDone?: boolean }
-): Promise<GroceryDto[]> {
-  const includeDone = options?.includeDone ?? true;
-
-  const rows = await db
-    .select()
-    .from(groceries)
-    .where(
-      includeDone
-        ? eq(groceries.userId, userId)
-        : and(eq(groceries.userId, userId), eq(groceries.isDone, false))
-    )
-    .orderBy(...LIST_ORDER);
-
-  const parsed = z.array(GrocerySelectBaseSchema).safeParse(rows);
-
-  if (!parsed.success) throw new Error("Failed to parse groceries");
-
-  return parsed.data;
-}
-
-export async function listGroceriesByUsers(
-  userIds: string[],
-  options?: { includeDone?: boolean }
-): Promise<GroceryDto[]> {
-  if (!userIds.length) return [];
-  const includeDone = options?.includeDone ?? true;
-
-  const rows = await db
-    .select()
-    .from(groceries)
-    .where(
-      includeDone
-        ? inArray(groceries.userId, userIds)
-        : and(inArray(groceries.userId, userIds), eq(groceries.isDone, false))
-    )
-    .orderBy(...LIST_ORDER);
-
-  const parsed = z.array(GrocerySelectBaseSchema).safeParse(rows);
-
-  if (!parsed.success) throw new Error("Failed to parse groceries (users)");
-
-  return parsed.data;
-}
-
 export async function listGroceriesByHousehold(
   householdId: string,
   options?: { includeDone?: boolean }
 ): Promise<GroceryDto[]> {
-  const members = await db
-    .select({ userId: householdUsers.userId })
-    .from(householdUsers)
-    .where(eq(householdUsers.householdId, householdId));
+  const includeDone = options?.includeDone ?? true;
+  const household = eq(groceries.householdId, householdId);
 
-  const userIds = members.map((m) => m.userId);
+  const rows = await db
+    .select(await readerColumns(householdId))
+    .from(groceries)
+    .where(includeDone ? household : and(household, eq(groceries.isDone, false)))
+    .orderBy(...LIST_ORDER);
 
-  if (!userIds.length) return [];
-
-  return listGroceriesByUsers(userIds, options);
+  return parseRows(rows, "groceries");
 }
 
 /**
@@ -172,15 +177,13 @@ function parseRows(rows: unknown[], what: string): GroceryDto[] {
  * Hold the household's list until the transaction ends. Every write of several of its rows takes
  * this before its first, so two such writes wait for each other rather than deadlock.
  */
-export async function lockGroceryList(tx: DbTransaction, householdUserIds: readonly string[]) {
-  const household = [...householdUserIds].sort((a, b) => a.localeCompare(b)).join(",");
-
-  await holdLock(tx, `groceries:${household}`);
+export async function lockGroceryList(tx: DbTransaction, householdId: string) {
+  await holdLock(tx, `groceries:${householdId}`);
 }
 
 export async function createGroceries(
   items: { id: string; groceries: GroceryInsertDto }[],
-  householdUserIds: string[],
+  householdId: string,
   tx: Db = db
 ): Promise<CreatedGroceries> {
   if (!items.length) return { created: [], shifted: [] };
@@ -196,7 +199,22 @@ export async function createGroceries(
   });
 
   return await tx.transaction(async (trx) => {
-    await lockGroceryList(trx, householdUserIds);
+    const columns = await readerColumns(householdId, trx);
+
+    await lockGroceryList(trx, householdId);
+    if (prepared.some((item) => item.householdId !== householdId)) {
+      throw new Error("Groceries are created in the household whose list is locked");
+    }
+    await assertOwnReferences(
+      householdId,
+      {
+        storeIds: prepared.map((item) => item.storeId),
+        recurringGroceryIds: prepared.map((item) => item.recurringGroceryId),
+        ingredientIds: prepared.map((item) => item.ingredientId),
+        ingredientAliasIds: prepared.map((item) => item.ingredientAliasId),
+      },
+      trx
+    );
 
     // Group items by storeId for efficient updates
     const storeGroups = new Map<string | null, typeof prepared>();
@@ -221,12 +239,12 @@ export async function createGroceries(
         })
         .where(
           and(
-            inArray(groceries.userId, householdUserIds),
+            eq(groceries.householdId, householdId),
             eq(groceries.isDone, false),
             storeId ? eq(groceries.storeId, storeId) : isNull(groceries.storeId)
           )
         )
-        .returning();
+        .returning(columns);
 
       shifted.push(...parseRows(rows, "shifted groceries"));
     }
@@ -246,40 +264,15 @@ export async function createGroceries(
       };
     });
 
-    const inserted = await trx.insert(groceries).values(valuesToInsert).returning();
+    const inserted = await trx.insert(groceries).values(valuesToInsert).returning(columns);
 
     return { created: parseRows(inserted, "created groceries"), shifted };
   });
 }
 
-export async function updateGrocery(input: GroceryUpdateDto): Promise<GroceryDto | null> {
-  const parsed = GroceryUpdateBaseSchema.safeParse(input);
-
-  if (!parsed.success) throw new Error("Invalid GroceryUpdateDto");
-
-  const whereConditions = [eq(groceries.id, input.id)];
-
-  if (parsed.data.version) {
-    whereConditions.push(eq(groceries.version, parsed.data.version));
-  }
-
-  const [row] = await db
-    .update(groceries)
-    .set({ ...(parsed.data as any), version: sql`${groceries.version} + 1` })
-    .where(and(...whereConditions))
-    .returning();
-
-  if (!row) return null;
-  const validated = GrocerySelectBaseSchema.safeParse(row);
-
-  if (!validated.success) throw new Error("Failed to parse updated grocery");
-
-  return validated.data;
-}
-
 export async function updateGroceries(
   input: GroceryUpdateDto[],
-  householdUserIds: readonly string[],
+  householdId: string,
   tx: Db = db
 ): Promise<GroceryDto[]> {
   const parsed = z.array(GroceryUpdateBaseSchema).safeParse(input);
@@ -287,22 +280,28 @@ export async function updateGroceries(
   if (!parsed.success) throw new Error("Invalid GroceryUpdateDto array");
 
   return await tx.transaction(async (trx) => {
-    await lockGroceryList(trx, householdUserIds);
+    const columns = await readerColumns(householdId, trx);
+
+    await lockGroceryList(trx, householdId);
+    await assertOwnReferences(
+      householdId,
+      {
+        storeIds: parsed.data.map((g) => g.storeId),
+        recurringGroceryIds: parsed.data.map((g) => g.recurringGroceryId),
+        ingredientIds: parsed.data.map((g) => g.ingredientId),
+        ingredientAliasIds: parsed.data.map((g) => g.ingredientAliasId),
+      },
+      trx
+    );
 
     const updatedGroceries: GroceryDto[] = [];
 
     for (const g of parsed.data) {
-      const whereConditions = [eq(groceries.id, g.id)];
-
-      if (g.version) {
-        whereConditions.push(eq(groceries.version, g.version));
-      }
-
       const [row] = await trx
         .update(groceries)
         .set({ ...(g as any), version: sql`${groceries.version} + 1` })
-        .where(and(...whereConditions))
-        .returning();
+        .where(householdRow(groceries, householdId, g.id, g.version))
+        .returning(columns);
 
       if (row) {
         const validated = GrocerySelectBaseSchema.safeParse(row);
@@ -318,45 +317,16 @@ export async function updateGroceries(
   });
 }
 
-export async function toggleGrocery(id: string, isDone?: boolean): Promise<GroceryDto | null> {
-  const current = await db
-    .select({ id: groceries.id, isDone: groceries.isDone })
-    .from(groceries)
-    .where(eq(groceries.id, id))
-    .limit(1);
-
-  if (!current[0]) return null;
-
-  const next = typeof isDone === "boolean" ? isDone : !current[0].isDone;
-
-  const [row] = await db
-    .update(groceries)
-    .set({ isDone: next, version: sql`${groceries.version} + 1` })
-    .where(eq(groceries.id, id))
-    .returning();
-
-  if (!row) return null;
-  const validated = GrocerySelectBaseSchema.safeParse(row);
-
-  if (!validated.success) throw new Error("Failed to parse toggled grocery");
-
-  return validated.data;
-}
-
-export async function deleteGroceryById(id: string): Promise<void> {
-  await db.delete(groceries).where(eq(groceries.id, id));
-}
-
 export async function deleteGroceryByIds(
   items: Array<{ id: string; version: number }>,
-  householdUserIds: readonly string[]
+  householdId: string
 ): Promise<{ deletedIds: string[]; staleIds: string[] }> {
   if (items.length === 0) {
     return { deletedIds: [], staleIds: [] };
   }
 
   return await db.transaction(async (trx) => {
-    await lockGroceryList(trx, householdUserIds);
+    await lockGroceryList(trx, householdId);
 
     const deletedIds: string[] = [];
     const staleIds: string[] = [];
@@ -364,7 +334,7 @@ export async function deleteGroceryByIds(
     for (const item of items) {
       const deleted = await trx
         .delete(groceries)
-        .where(and(eq(groceries.id, item.id), eq(groceries.version, item.version)))
+        .where(householdRow(groceries, householdId, item.id, item.version))
         .returning({ id: groceries.id });
 
       if (deleted.length > 0) {
@@ -393,32 +363,13 @@ export async function deleteDoneGroceriesBefore(beforeDate: string): Promise<num
   return result.rowCount ?? 0;
 }
 
-/**
- * Get the owner userId for a single grocery item (for permission checks)
- */
-export async function getGroceryOwnerId(groceryId: string): Promise<string | null> {
-  const [row] = await db
-    .select({ userId: groceries.userId })
-    .from(groceries)
-    .where(eq(groceries.id, groceryId))
-    .limit(1);
-
-  return row?.userId ?? null;
-}
-
-/**
- * Get the owner userIds for multiple grocery items (for permission checks)
- * Returns a Map of groceryId -> userId
- */
-export async function getGroceryOwnerIds(groceryIds: string[]): Promise<Map<string, string>> {
-  if (groceryIds.length === 0) return new Map();
-
-  const rows = await db
-    .select({ id: groceries.id, userId: groceries.userId })
-    .from(groceries)
-    .where(inArray(groceries.id, groceryIds));
-
-  return new Map(rows.map((r) => [r.id, r.userId]));
+/** The household each grocery belongs to, by id, for the household guard. */
+/** The household's groceries among these that still exist; another household's is refused. */
+export async function ownGroceryIds(
+  householdId: string,
+  groceryIds: string[]
+): Promise<Set<string>> {
+  return ownRowIds(groceries, householdId, groceryIds);
 }
 
 /**
@@ -428,12 +379,15 @@ export async function getGroceryOwnerIds(groceryIds: string[]): Promise<Map<stri
  */
 export async function reorderGroceriesInStore(
   updates: { id: string; version: number; sortOrder: number; storeId?: string | null }[],
-  householdUserIds: readonly string[]
+  householdId: string
 ): Promise<GroceryDto[]> {
   if (updates.length === 0) return [];
 
   return await db.transaction(async (trx) => {
-    await lockGroceryList(trx, householdUserIds);
+    const columns = await readerColumns(householdId, trx);
+
+    await lockGroceryList(trx, householdId);
+    await assertOwnReferences(householdId, { storeIds: updates.map((u) => u.storeId) }, trx);
 
     const updatedGroceries: GroceryDto[] = [];
 
@@ -452,8 +406,8 @@ export async function reorderGroceriesInStore(
       const [row] = await trx
         .update(groceries)
         .set({ ...updateData, version: sql`${groceries.version} + 1` })
-        .where(and(eq(groceries.id, id), eq(groceries.version, version)))
-        .returning();
+        .where(householdRow(groceries, householdId, id, version))
+        .returning(columns);
 
       if (row) {
         const validated = GrocerySelectBaseSchema.safeParse(row);
@@ -474,20 +428,20 @@ export async function reorderGroceriesInStore(
  * Returns the updated groceries
  */
 export async function markAllDoneInStore(
-  userIds: string[],
+  householdId: string,
   storeId: string | null,
   groceriesToMark?: Array<{ id: string; version: number }>
 ): Promise<GroceryDto[]> {
-  if (userIds.length === 0) return [];
-
   if (groceriesToMark && groceriesToMark.length === 0) return [];
 
   return await db.transaction(async (trx) => {
-    await lockGroceryList(trx, userIds);
+    const columns = await readerColumns(householdId, trx);
+
+    await lockGroceryList(trx, householdId);
 
     if (!groceriesToMark) {
       const whereConditions = [
-        inArray(groceries.userId, userIds),
+        eq(groceries.householdId, householdId),
         eq(groceries.isDone, false),
         storeId ? eq(groceries.storeId, storeId) : isNull(groceries.storeId),
       ];
@@ -496,16 +450,16 @@ export async function markAllDoneInStore(
         .update(groceries)
         .set({ isDone: true, updatedAt: new Date(), version: sql`${groceries.version} + 1` })
         .where(and(...whereConditions))
-        .returning();
+        .returning(columns);
 
       return parseRows(rows, "marked groceries");
     }
 
-    const updatedRows: (typeof groceries.$inferSelect)[] = [];
+    const updatedRows: unknown[] = [];
 
     for (const grocery of groceriesToMark) {
       const whereConditions = [
-        inArray(groceries.userId, userIds),
+        eq(groceries.householdId, householdId),
         eq(groceries.id, grocery.id),
         eq(groceries.version, grocery.version),
         eq(groceries.isDone, false),
@@ -516,7 +470,7 @@ export async function markAllDoneInStore(
         .update(groceries)
         .set({ isDone: true, updatedAt: new Date(), version: sql`${groceries.version} + 1` })
         .where(and(...whereConditions))
-        .returning();
+        .returning(columns);
 
       if (row) {
         updatedRows.push(row);
@@ -532,20 +486,18 @@ export async function markAllDoneInStore(
  * Returns the deleted grocery IDs
  */
 export async function deleteDoneInStore(
-  userIds: string[],
+  householdId: string,
   storeId: string | null,
   groceriesToDelete?: Array<{ id: string; version: number }>
 ): Promise<string[]> {
-  if (userIds.length === 0) return [];
-
   if (groceriesToDelete && groceriesToDelete.length === 0) return [];
 
   return await db.transaction(async (trx) => {
-    await lockGroceryList(trx, userIds);
+    await lockGroceryList(trx, householdId);
 
     if (!groceriesToDelete) {
       const whereConditions = [
-        inArray(groceries.userId, userIds),
+        eq(groceries.householdId, householdId),
         eq(groceries.isDone, true),
         storeId ? eq(groceries.storeId, storeId) : isNull(groceries.storeId),
       ];
@@ -562,7 +514,7 @@ export async function deleteDoneInStore(
 
     for (const grocery of groceriesToDelete) {
       const whereConditions = [
-        inArray(groceries.userId, userIds),
+        eq(groceries.householdId, householdId),
         eq(groceries.id, grocery.id),
         eq(groceries.version, grocery.version),
         eq(groceries.isDone, true),
@@ -583,26 +535,20 @@ export async function deleteDoneInStore(
   });
 }
 
-/**
- * Assign a grocery to a store within a transaction
- */
+/** File the household's grocery under one of its Stores, or none. */
 export async function assignGroceryToStore(
   groceryId: string,
   newStoreId: string | null,
-  _householdUserIds: string[],
+  householdId: string,
   version?: number
 ): Promise<GroceryDto | null> {
-  const whereConditions = [eq(groceries.id, groceryId)];
-
-  if (version) {
-    whereConditions.push(eq(groceries.version, version));
-  }
+  await assertOwnReferences(householdId, { storeIds: [newStoreId] });
 
   const [updated] = await db
     .update(groceries)
     .set({ storeId: newStoreId, updatedAt: new Date(), version: sql`${groceries.version} + 1` })
-    .where(and(...whereConditions))
-    .returning();
+    .where(householdRow(groceries, householdId, groceryId, version))
+    .returning(await readerColumns(householdId));
 
   if (!updated) return null;
 
@@ -616,13 +562,16 @@ export async function assignGroceryToStore(
 }
 
 /**
- * Get recipe info for groceries that have a recipeIngredientId.
- * Returns a Map of recipeIngredientId -> { recipeId, recipeName }
+ * The recipe of each grocery line a recipe added, by recipe line id, for the recipes the
+ * household may view now. A line of one out of view is left out: it lists with the hand-added.
  */
 export async function getRecipeInfoForGroceries(
-  recipeIngredientIds: string[]
+  recipeIngredientIds: string[],
+  householdId: string
 ): Promise<Map<string, { recipeId: string; recipeName: string }>> {
   if (recipeIngredientIds.length === 0) return new Map();
+
+  const viewable = await buildPolicyCondition({ householdId }, recipes.householdId, "view");
 
   const rows = await db
     .select({
@@ -632,7 +581,7 @@ export async function getRecipeInfoForGroceries(
     })
     .from(recipeIngredients)
     .innerJoin(recipes, eq(recipeIngredients.recipeId, recipes.id))
-    .where(inArray(recipeIngredients.id, recipeIngredientIds));
+    .where(and(inArray(recipeIngredients.id, recipeIngredientIds), viewable));
 
   return new Map(
     rows.map((r) => [r.recipeIngredientId, { recipeId: r.recipeId, recipeName: r.recipeName }])

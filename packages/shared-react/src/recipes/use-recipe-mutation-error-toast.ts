@@ -4,7 +4,7 @@ import { createClientLogger } from "@norish/shared/lib/logger";
 import { isQueuedOutboxSignal } from "@norish/shared/lib/trpc-errors";
 
 import type { RecipesMutationErrorHandler } from "./recipes-mutation-error";
-import { usePlatform } from "../platform";
+import { showQueued, usePlatform } from "../platform";
 
 const log = createClientLogger("recipes-mutations");
 
@@ -19,11 +19,7 @@ export function useRecipeMutationErrorToast(
 
   return (error, operation) => {
     if (isQueuedOutboxSignal(error)) {
-      toast.show({
-        severity: "warning",
-        title: toast.translate("common.queuedOffline.title"),
-        description: toast.translate("common.queuedOffline.description"),
-      });
+      showQueued(toast);
 
       return;
     }

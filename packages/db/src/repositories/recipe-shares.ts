@@ -11,9 +11,11 @@ import type {
   RecipeShareSummaryDto,
   UpdateRecipeShareInputDto,
 } from "@norish/shared/contracts/dto/recipe-shares";
-import { hashToken, safeDecrypt } from "@norish/config/crypto";
+import { decrypt, encrypt, hashToken } from "@norish/config/crypto";
+import { policyAllows } from "@norish/config/zod/server-config";
 import { db } from "@norish/db/drizzle";
 import { users } from "@norish/db/schema/auth";
+import { householdUsers } from "@norish/db/schema/household-users";
 import { recipeShares } from "@norish/db/schema/recipe-shares";
 import { recipes } from "@norish/db/schema/recipes";
 import {
@@ -29,11 +31,13 @@ import type { MutationOutcome } from "./mutation-outcomes";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
 import {
   getRecipeShareStatus,
+  hasKeptLink,
   mapRecipeToPublicRecipeView,
   resolveRecipeShareExpiresAt,
   toRecipeShareSummary,
 } from "./recipe-share-helpers";
-import { getRecipeFull } from "./recipes";
+import { accountCanViewRecipe, accountViewCondition, getRecipeFull } from "./recipes";
+import { getRecipePermissionPolicy } from "./server-config";
 
 type ActiveShareOptions = {
   touchLastAccessedAt?: boolean;
@@ -72,6 +76,7 @@ export async function createRecipeShare(
       userId,
       recipeId: validated.recipeId,
       tokenHash: hashToken(token),
+      tokenEnc: encrypt(token),
       expiresAt: resolveRecipeShareExpiresAt(validated.expiresIn),
     })
     .returning();
@@ -92,6 +97,18 @@ export async function getRecipeShareById(id: string): Promise<RecipeShareDto | n
   }
 
   return RecipeShareSelectSchema.parse(row);
+}
+
+/** The share's link while it is active, or null; a share with no stored token has no link. */
+export function getRecipeShareUrl(share: RecipeShareDto): string | null {
+  if (!hasKeptLink(share) || getRecipeShareStatus(share) !== "active") return null;
+
+  try {
+    return `/share/${decrypt(share.tokenEnc)}`;
+  } catch {
+    // An unreadable token (say, a changed key) answers no link and logs nothing.
+    return null;
+  }
 }
 
 export async function getRecipeShareByToken(token: string): Promise<RecipeShareDto | null> {
@@ -127,12 +144,6 @@ export async function getRecipeSharesByUserId(
   return rows.map((row) => toRecipeShareSummary(RecipeShareSelectSchema.parse(row)));
 }
 
-export async function getAllRecipeShares(): Promise<RecipeShareSummaryDto[]> {
-  const rows = await db.select().from(recipeShares).orderBy(desc(recipeShares.createdAt));
-
-  return rows.map((row) => toRecipeShareSummary(RecipeShareSelectSchema.parse(row)));
-}
-
 export async function getRecipeShareInventoryByUserId(
   userId: string
 ): Promise<RecipeShareInventoryDto[]> {
@@ -143,7 +154,10 @@ export async function getRecipeShareInventoryByUserId(
     })
     .from(recipeShares)
     .innerJoin(recipes, eq(recipeShares.recipeId, recipes.id))
-    .where(eq(recipeShares.userId, userId))
+    // A recipe the maker may no longer view is left out until they may again.
+    .where(
+      and(eq(recipeShares.userId, userId), await accountViewCondition(userId, recipes.householdId))
+    )
     .orderBy(desc(recipeShares.createdAt));
 
   return rows.map(({ share, recipeName }) =>
@@ -154,26 +168,38 @@ export async function getRecipeShareInventoryByUserId(
   );
 }
 
+/** Every account's share links, for admin moderation across households. */
 export async function getRecipeShareInventoryForAdmin(): Promise<AdminRecipeShareInventoryDto[]> {
-  const rows = await db
-    .select({
-      share: recipeShares,
-      recipeName: recipes.name,
-      ownerId: users.id,
-      ownerName: users.name,
-    })
-    .from(recipeShares)
-    .innerJoin(recipes, eq(recipeShares.recipeId, recipes.id))
-    .innerJoin(users, eq(recipeShares.userId, users.id))
-    .orderBy(desc(recipeShares.createdAt));
+  const [policy, rows] = await Promise.all([
+    getRecipePermissionPolicy(),
+    db
+      .select({
+        share: recipeShares,
+        recipeName: recipes.name,
+        recipeHouseholdId: recipes.householdId,
+        ownerId: users.id,
+        ownerName: users.name,
+        makerHouseholdId: householdUsers.householdId,
+      })
+      .from(recipeShares)
+      .innerJoin(recipes, eq(recipeShares.recipeId, recipes.id))
+      .innerJoin(users, eq(recipeShares.userId, users.id))
+      .leftJoin(householdUsers, eq(householdUsers.userId, recipeShares.userId))
+      .orderBy(desc(recipeShares.createdAt)),
+  ]);
 
-  return rows.map(({ share, recipeName, ownerId, ownerName }) =>
-    AdminRecipeShareInventorySchema.parse({
-      ...toRecipeShareSummary(RecipeShareSelectSchema.parse(share)),
-      recipeName,
-      ownerId,
-      ownerName: safeDecrypt(ownerName),
-    })
+  return rows.map(
+    ({ share, recipeName, recipeHouseholdId, ownerId, ownerName, makerHouseholdId }) =>
+      AdminRecipeShareInventorySchema.parse({
+        ...toRecipeShareSummary(RecipeShareSelectSchema.parse(share)),
+        recipeName,
+        ownerId,
+        ownerName: ownerName ? decrypt(ownerName) : null,
+        // The same rule as `accountCanViewRecipe`, read once for the whole list.
+        makerMayView:
+          makerHouseholdId !== null &&
+          policyAllows(policy, "view", makerHouseholdId, recipeHouseholdId),
+      })
   );
 }
 
@@ -267,6 +293,9 @@ export async function getActiveRecipeShareByToken(
     return null;
   }
 
+  // Inactive while its maker may not view the recipe; it works again once they may.
+  if (!(await accountCanViewRecipe(share.userId, share.recipeId))) return null;
+
   if (!options.touchLastAccessedAt) {
     return share;
   }
@@ -296,4 +325,10 @@ export async function getPublicRecipeView(
   return mapRecipeToPublicRecipeView(recipe, shareToken, icons);
 }
 
-export { getRecipeShareStatus, mapRecipeToPublicRecipeView, resolveRecipeShareExpiresAt };
+export {
+  getRecipeShareStatus,
+  hasKeptLink,
+  mapRecipeToPublicRecipeView,
+  resolveRecipeShareExpiresAt,
+  toRecipeShareSummary,
+};

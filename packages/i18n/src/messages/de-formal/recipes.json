@@ -41,12 +41,8 @@
   },
   "empty": {
     "title": "Ihre Bibliothek wartet",
-    "description": "Fügen Sie eine Rezept-URL in das Suchfeld oben ein und schauen Sie, wie die Magie passiert.",
     "noResults": "Keine Rezepte gefunden",
-    "noResultsHint": "Versuchen Sie, Ihre Filter anzupassen oder zu löschen.",
-    "noCookbooks": "Noch keine Kochbücher",
-    "noCookbooksHint": "Ein Kochbuch ist eine benannte Sammlung von Rezepten. Erstellen Sie Ihr erstes, um Ihre Bibliothek zu ordnen.",
-    "descriptionMobile": "Fügen Sie Ihr erstes Rezept über einen Link, Text oder Fotos hinzu."
+    "noCookbooks": "Noch keine Kochbücher"
   },
   "card": {
     "noImage": "Kein Bild verfügbar",
@@ -67,6 +63,7 @@
     "addToGroceries": "Zur Einkaufsliste hinzufügen",
     "ratingPrompt": "Was halten Sie von diesem Rezept?",
     "notFound": "Rezept nicht gefunden",
+    "offline": "Dieses Rezept benötigt eine Verbindung",
     "notFoundMessage": "Dieses Rezept existiert nicht oder Sie haben keine Berechtigung, es anzuzeigen.",
     "prep": "Vorbereitung",
     "total": "gesamt",
@@ -160,6 +157,7 @@
     "expiresAfter": "Läuft ab nach",
     "expiresOn": "Läuft ab am {date}",
     "expiredOn": "Abgelaufen am {date}",
+    "revokedOn": "Widerrufen am {date}",
     "lastOpenedOn": "Zuletzt geöffnet {date}",
     "neverExpires": "Läuft nie ab",
     "linkCreated": "Erstellt am {date}"
@@ -203,7 +201,7 @@
     "notesPlaceholder": "Fügen Sie Hinweise zur Vorbereitung, Anpassungen oder Serviervorschläge für dieses Rezept hinzu...",
     "ingredientsHelp": "Geben Sie Zutaten wie \"2 Tassen Mehl\" ein - wir analysieren die Mengen und Einheiten automatisch.",
     "instructionsHelp": "Schreiben Sie klare Schritt-für-Schritt-Anleitungen. Drücken Sie Enter, um zum nächsten Schritt zu gehen.",
-    "tagsHelp": "Geben Sie Tags ein und klicken Sie auf Vorschläge zum Hinzufügen. Tags am Rezept sind ausgefüllt, neue Tags haben einen gestrichelten Rahmen.",
+    "tagsHelp": "Wählen Sie einen Tag oder erstellen Sie einen neuen.",
     "tagsAndCategories": "Tags & Kategorien",
     "categoriesHelp": "Wählen Sie Mahlzeitkategorien für dieses Rezept.",
     "addCategory": "Kategorie hinzufügen",
@@ -224,7 +222,7 @@
     "originRegion": "Region",
     "originRegionPlaceholder": "z. B. Sizilien",
     "cuisines": "Küchen",
-    "cuisinesHelp": "Wählen Sie aus der Liste Ihrer Installation. Bei einem Fusionsgericht sind mehrere sinnvoll.",
+    "cuisinesHelp": "Wählen Sie aus der Liste oder erstellen Sie eine eigene. Bei einem Fusionsgericht sind mehrere sinnvoll.",
     "provenanceNote": "Notiz",
     "provenanceNotePlaceholder": "Ein paar Sätze dazu, woher dieses Gericht stammt …",
     "servings": "Portionen",
@@ -441,7 +439,6 @@
     "singular": "Kochbuch",
     "notFound": "Kochbuch nicht gefunden",
     "notFoundHint": "Es wurde möglicherweise gelöscht oder ist für Sie nicht sichtbar.",
-    "emptyHint": "Fügen Sie Rezepte über das Aktionsmenü eines Rezepts hinzu.",
     "panelTitle": "Zu Kochbuch hinzufügen",
     "newWithRecipe": "Neues Kochbuch mit diesem Rezept",
     "noneEditable": "Es gibt keine Kochbücher, die Sie bearbeiten können.",
@@ -545,7 +542,7 @@
     "tagsAndCategories": "Tags und Kategorien",
     "categories": "Kategorien",
     "tags": "Tags",
-    "tagsHint": "Wählen Sie einen Vorschlag oder geben Sie einen neuen Tag ein; neue Tags haben einen gestrichelten Rand.",
+    "tagsHint": "Wählen Sie einen Tag aus der Liste oder erstellen Sie einen neuen.",
     "addTag": "Tag hinzufügen",
     "removeNamed": "{name} entfernen",
     "servingsAndTime": "Portionen und Zeit",
@@ -561,6 +558,13 @@
     "discardMessage": "Sie haben ungespeicherte Änderungen.",
     "keepEditing": "Weiter bearbeiten",
     "discard": "Verwerfen"
+  },
+  "picker": {
+    "create": "\"{name}\" erstellen",
+    "createOffline": "Sie können \"{name}\" erstellen, wenn Sie online sind.",
+    "tooLong": "Namen dürfen höchstens {max} Zeichen haben.",
+    "createFailed": "\"{name}\" konnte nicht erstellt werden. Versuchen Sie es erneut.",
+    "loadFailed": "Die Liste konnte nicht geladen werden."
   },
   "search": {
     "sortBestMatch": "Beste Treffer",

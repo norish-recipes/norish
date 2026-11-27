@@ -108,6 +108,14 @@ describe("Sign-out and Session Expiry", () => {
       expect(adapter.endSession).toHaveBeenCalledExactlyOnceWith("device");
     });
 
+    it("discards the queue too when the socket closed because the account was deleted", async () => {
+      mountExpiry();
+
+      await expireSession({ code: 4410 });
+
+      expect(steps).toEqual(["end", "clear+discard", "leave:sign-out"]);
+    });
+
     it("still runs after the shell re-renders with a new platform", async () => {
       let current = adapter;
       const { rerender, unmount } = renderHook(() => useSessionExpiry(), {

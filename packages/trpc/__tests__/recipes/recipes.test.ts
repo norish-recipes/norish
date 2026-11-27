@@ -4,19 +4,20 @@ import superjson from "superjson";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { recipesRouter } from "../../src/routers/recipes";
-import { updateRecipeProcedure } from "../../src/routers/recipes/recipes";
+import { createRecipeProcedure, updateRecipeProcedure } from "../../src/routers/recipes/recipes";
 import { router } from "../../src/trpc";
-import { canAccessResource } from "../mocks/permissions";
+import { canAccessResource, policy, resetPermissionsMocks } from "../mocks/permissions";
+import { lists } from "../mocks/realtime/lists";
 import { recipes } from "../mocks/realtime/recipes";
 // Import mocks for assertions
 import {
   createRecipeWithRefs,
   dashboardRecipe,
   deleteRecipeById,
+  everyRecipeIn,
   getRecipeFull,
-  getRecipeOwnerId,
-  listRecipes,
-  updateRecipeCategories,
+  getRecipeHouseholdIds,
+  resetRecipesMocks,
   updateRecipeWithRefs,
 } from "../mocks/recipes-repository";
 // Import test utilities
@@ -39,13 +40,13 @@ vi.mock("@norish/db", async (importOriginal) => {
     createRecipeWithRefs: recipes.createRecipeWithRefs,
     dashboardRecipe: recipes.dashboardRecipe,
     deleteRecipeById: recipes.deleteRecipeById,
-    getAllergiesForUsers: vi.fn(),
+    getHouseholdAllergyNames: vi.fn(),
     getRecipeByUrl: recipes.getRecipeByUrl,
     getRecipeFull: recipes.getRecipeFull,
-    getRecipeOwnerId: recipes.getRecipeOwnerId,
+    getRecipeHouseholdIds: recipes.getRecipeHouseholdIds,
     getRecipesByUrlsForPolicy: vi.fn(),
     listRecipes: recipes.listRecipes,
-    recipeExistsByUrlForPolicy: vi.fn(),
+    findRecipeIdByUrlForAccount: vi.fn(),
     updateRecipeCategories: recipes.updateRecipeCategories,
     updateRecipeWithRefs: recipes.updateRecipeWithRefs,
   };
@@ -53,9 +54,23 @@ vi.mock("@norish/db", async (importOriginal) => {
 vi.mock("@norish/db/repositories/recipes", () => import("../mocks/recipes-repository"));
 vi.mock("@norish/auth/permissions", () => import("../mocks/permissions"));
 vi.mock("@norish/shared-server/realtime/recipes", () => import("../mocks/realtime/recipes"));
+vi.mock("@norish/shared-server/realtime/lists", () => import("../mocks/realtime/lists"));
+// The household a recipe is in as its list change is announced.
+vi.mock("@norish/db/repositories/list-entries", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/db/repositories/list-entries")>()),
+  recipeHouseholdId: vi.fn(async () => "household-now"),
+}));
+// The household a new recipe's lines resolve in: its Owner's.
+vi.mock("@norish/db/repositories/households", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@norish/db/repositories/households")>()),
+  getHouseholdIdForUser: vi.fn(async () => "household-now"),
+}));
 vi.mock("@norish/shared-server/config/server-config-loader", () => import("../mocks/config"));
 
 const readRecipeNutrition = vi.hoisted(() => vi.fn());
+const lineReadingsOf = vi.hoisted(() => vi.fn());
+
+vi.mock("@norish/shared-server/ingredients/line-readings", () => ({ lineReadingsOf }));
 
 vi.mock("@norish/shared-server/ingredients/nutrition/recipe-nutrition", () => ({
   readRecipeNutrition,
@@ -89,6 +104,8 @@ describe("recipes procedures", () => {
   let ctx: ReturnType<typeof createMockAuthedContext>;
 
   beforeEach(() => {
+    resetPermissionsMocks();
+    resetRecipesMocks();
     ctx = createMockAuthedContext(mockUser, mockHousehold);
   });
 
@@ -124,344 +141,9 @@ describe("recipes procedures", () => {
     });
   }
 
-  describe("list", () => {
-    it("returns paginated recipes with filters", async () => {
-      const mockRecipes = [
-        createMockRecipeDashboard({ id: "r1", name: "Recipe 1" }),
-        createMockRecipeDashboard({ id: "r2", name: "Recipe 2" }),
-      ];
-
-      listRecipes.mockResolvedValue({
-        recipes: mockRecipes,
-        total: 2,
-      });
-
-      // Create test caller
-      const testRouter = t.router({
-        list: t.procedure
-          .input((v: any) => v)
-          .query(async ({ input }) => {
-            const result = await listRecipes(
-              {
-                userId: ctx.user.id,
-                householdUserIds: ctx.householdUserIds,
-                isServerAdmin: ctx.isServerAdmin,
-              },
-              input.limit,
-              input.cursor,
-              input.search,
-              input.searchFields,
-              input.tags,
-              input.filterMode,
-              input.sortMode,
-              input.minRating,
-              input.maxCookingTime,
-              input.categories
-            );
-
-            return {
-              recipes: result.recipes,
-              total: result.total,
-              nextCursor:
-                input.cursor + input.limit < result.total ? input.cursor + input.limit : null,
-            };
-          }),
-      });
-
-      const caller = t.createCallerFactory(testRouter)(ctx);
-      const result = await caller.list({
-        cursor: 0,
-        limit: 50,
-        filterMode: "OR",
-        sortMode: "dateDesc",
-        categories: ["Breakfast", "Dinner"],
-        searchFields: ["title", "ingredients"],
-      });
-
-      expect(listRecipes).toHaveBeenCalledWith(
-        {
-          userId: ctx.user.id,
-          householdUserIds: ctx.householdUserIds,
-          isServerAdmin: ctx.isServerAdmin,
-        },
-        50,
-        0,
-        undefined,
-        ["title", "ingredients"],
-        undefined,
-        "OR",
-        "dateDesc",
-        undefined,
-        undefined,
-        ["Breakfast", "Dinner"]
-      );
-      expect(result.recipes).toEqual(mockRecipes);
-      expect(result.total).toBe(2);
-      expect(result.nextCursor).toBeNull();
-    });
-
-    it("returns nextCursor when more pages available", async () => {
-      const mockRecipes = Array.from({ length: 50 }, (_, i) =>
-        createMockRecipeDashboard({ id: `r${i}`, name: `Recipe ${i}` })
-      );
-
-      listRecipes.mockResolvedValue({
-        recipes: mockRecipes,
-        total: 100,
-      });
-
-      const testRouter = t.router({
-        list: t.procedure
-          .input((v: any) => v)
-          .query(async ({ input }) => {
-            const result = await listRecipes(
-              {
-                userId: ctx.user.id,
-                householdUserIds: ctx.householdUserIds,
-                isServerAdmin: ctx.isServerAdmin,
-              },
-              input.limit,
-              input.cursor,
-              input.search,
-              input.searchFields,
-              input.tags,
-              input.filterMode,
-              input.sortMode,
-              input.minRating,
-              input.maxCookingTime,
-              input.categories
-            );
-
-            return {
-              recipes: result.recipes,
-              total: result.total,
-              nextCursor:
-                input.cursor + input.limit < result.total ? input.cursor + input.limit : null,
-            };
-          }),
-      });
-
-      const caller = t.createCallerFactory(testRouter)(ctx);
-      const result = await caller.list({ cursor: 0, limit: 50 });
-
-      expect(listRecipes).toHaveBeenCalledWith(
-        {
-          userId: ctx.user.id,
-          householdUserIds: ctx.householdUserIds,
-          isServerAdmin: ctx.isServerAdmin,
-        },
-        50,
-        0,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined
-      );
-      expect(result.nextCursor).toBe(50);
-    });
-
-    it("filters recipes by categories", async () => {
-      const mockRecipes = [
-        createMockRecipeDashboard({ id: "r1", categories: ["Breakfast"] }),
-        createMockRecipeDashboard({ id: "r2", categories: ["Dinner"] }),
-      ];
-
-      listRecipes.mockResolvedValue({
-        recipes: mockRecipes,
-        total: 2,
-      });
-
-      const testRouter = t.router({
-        list: t.procedure
-          .input((v: any) => v)
-          .query(async ({ input }) => {
-            const result = await listRecipes(
-              {
-                userId: ctx.user.id,
-                householdUserIds: ctx.householdUserIds,
-                isServerAdmin: ctx.isServerAdmin,
-              },
-              input.limit,
-              input.cursor,
-              input.search,
-              input.searchFields,
-              input.tags,
-              input.filterMode,
-              input.sortMode,
-              input.minRating,
-              input.maxCookingTime,
-              input.categories
-            );
-
-            return result;
-          }),
-      });
-
-      const caller = t.createCallerFactory(testRouter)(ctx);
-      const result = await caller.list({
-        cursor: 0,
-        limit: 50,
-        categories: ["Breakfast", "Dinner"],
-      });
-
-      expect(listRecipes).toHaveBeenCalledWith(
-        {
-          userId: ctx.user.id,
-          householdUserIds: ctx.householdUserIds,
-          isServerAdmin: ctx.isServerAdmin,
-        },
-        50,
-        0,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        ["Breakfast", "Dinner"]
-      );
-      expect(result.recipes).toEqual(mockRecipes);
-      expect(result.total).toBe(2);
-    });
-  });
-
-  describe("get", () => {
-    it("returns recipe when user has view permission", async () => {
-      const mockRecipe = createMockFullRecipe({ id: "r1", userId: "other-user-id" });
-
-      getRecipeFull.mockResolvedValue(mockRecipe);
-      canAccessResource.mockResolvedValue(true);
-
-      const testRouter = t.router({
-        get: t.procedure
-          .input((v: any) => v)
-          .query(async ({ input }) => {
-            const recipe = await getRecipeFull(input.id);
-
-            if (!recipe) {
-              throw new Error("Recipe not found");
-            }
-
-            if (recipe.userId) {
-              const canView = await canAccessResource(
-                "view",
-                ctx.user.id,
-                recipe.userId,
-                ctx.householdUserIds,
-                ctx.isServerAdmin
-              );
-
-              if (!canView) {
-                throw new Error("Recipe not found");
-              }
-            }
-
-            return recipe;
-          }),
-      });
-
-      const caller = t.createCallerFactory(testRouter)(ctx);
-      const result = await caller.get({ id: "r1" });
-
-      expect(getRecipeFull).toHaveBeenCalledWith("r1");
-      expect(canAccessResource).toHaveBeenCalledWith(
-        "view",
-        ctx.user.id,
-        "other-user-id",
-        ctx.householdUserIds,
-        ctx.isServerAdmin
-      );
-      expect(result).toEqual(mockRecipe);
-    });
-
-    it("throws when user lacks view permission", async () => {
-      const mockRecipe = createMockFullRecipe({ id: "r1", userId: "other-user-id" });
-
-      getRecipeFull.mockResolvedValue(mockRecipe);
-      canAccessResource.mockResolvedValue(false);
-
-      const testRouter = t.router({
-        get: t.procedure
-          .input((v: any) => v)
-          .query(async ({ input }) => {
-            const recipe = await getRecipeFull(input.id);
-
-            if (!recipe) {
-              throw new Error("Recipe not found");
-            }
-
-            if (recipe.userId) {
-              const canView = await canAccessResource(
-                "view",
-                ctx.user.id,
-                recipe.userId,
-                ctx.householdUserIds,
-                ctx.isServerAdmin
-              );
-
-              if (!canView) {
-                throw new Error("Recipe not found");
-              }
-            }
-
-            return recipe;
-          }),
-      });
-
-      const caller = t.createCallerFactory(testRouter)(ctx);
-      await expect(caller.get({ id: "r1" })).rejects.toThrow("Recipe not found");
-    });
-
-    it("returns orphaned recipe without permission check", async () => {
-      const mockRecipe = createMockFullRecipe({ id: "r1", userId: null });
-
-      getRecipeFull.mockResolvedValue(mockRecipe);
-
-      const testRouter = t.router({
-        get: t.procedure
-          .input((v: any) => v)
-          .query(async ({ input }) => {
-            const recipe = await getRecipeFull(input.id);
-
-            if (!recipe) {
-              throw new Error("Recipe not found");
-            }
-
-            if (recipe.userId) {
-              const canView = await canAccessResource(
-                "view",
-                ctx.user.id,
-                recipe.userId,
-                ctx.householdUserIds,
-                ctx.isServerAdmin
-              );
-
-              if (!canView) {
-                throw new Error("Recipe not found");
-              }
-            }
-
-            return recipe;
-          }),
-      });
-
-      const caller = t.createCallerFactory(testRouter)(ctx);
-      const result = await caller.get({ id: "r1" });
-
-      expect(canAccessResource).not.toHaveBeenCalled();
-      expect(result).toEqual(mockRecipe);
-    });
-  });
-
   describe("getEditable", () => {
     const editableRecipeId = "11111111-1111-4111-8111-111111111111";
     const missingRecipeId = "22222222-2222-4222-8222-222222222222";
-    const orphanRecipeId = "33333333-3333-4333-8333-333333333333";
 
     function createCaller() {
       return recipesRouter.createCaller({
@@ -471,33 +153,25 @@ describe("recipes procedures", () => {
       });
     }
 
-    it("returns recipe when user has edit permission", async () => {
+    it("returns the recipe to a reader the policy lets edit it", async () => {
       const mockRecipe = createValidFullRecipe({ id: editableRecipeId, userId: "other-user-id" });
 
+      policy.edit = "everyone";
       getRecipeFull.mockResolvedValue(mockRecipe);
-      getRecipeOwnerId.mockResolvedValue("other-user-id");
-      canAccessResource.mockResolvedValue(true);
+      everyRecipeIn("other-household");
 
       const result = await createCaller().getEditable({ id: editableRecipeId });
 
-      expect(getRecipeFull).toHaveBeenCalledWith(editableRecipeId);
-      expect(getRecipeOwnerId).toHaveBeenCalledWith(editableRecipeId);
-      expect(canAccessResource).toHaveBeenCalledWith(
-        "edit",
-        ctx.user.id,
-        "other-user-id",
-        ctx.householdUserIds,
-        ctx.isServerAdmin
-      );
+      expect(getRecipeHouseholdIds).toHaveBeenCalledWith([editableRecipeId]);
+      expect(canAccessResource).toHaveBeenCalledWith("edit", ctx.householdId, "other-household");
       expect(result).toEqual(mockRecipe);
     });
 
-    it("throws FORBIDDEN when user lacks edit permission", async () => {
-      const mockRecipe = createValidFullRecipe({ id: editableRecipeId, userId: "other-user-id" });
-
-      getRecipeFull.mockResolvedValue(mockRecipe);
-      getRecipeOwnerId.mockResolvedValue("other-user-id");
-      canAccessResource.mockResolvedValue(false);
+    it("throws FORBIDDEN to a reader who may view but not edit it", async () => {
+      getRecipeFull.mockResolvedValue(
+        createValidFullRecipe({ id: editableRecipeId, userId: "other-user-id" })
+      );
+      everyRecipeIn("other-household");
 
       await expect(createCaller().getEditable({ id: editableRecipeId })).rejects.toMatchObject({
         code: "FORBIDDEN",
@@ -510,19 +184,29 @@ describe("recipes procedures", () => {
       await expect(createCaller().getEditable({ id: missingRecipeId })).rejects.toMatchObject({
         code: "NOT_FOUND",
       });
-      expect(getRecipeOwnerId).not.toHaveBeenCalled();
     });
+  });
 
-    it("returns orphaned recipe without permission check", async () => {
-      const mockRecipe = createValidFullRecipe({ id: orphanRecipeId, userId: null });
+  describe("lineReadings", () => {
+    const shown = "77777777-7777-4777-8777-777777777777";
+    const hidden = "66666666-6666-4666-8666-666666666666";
 
-      getRecipeFull.mockResolvedValue(mockRecipe);
-      getRecipeOwnerId.mockResolvedValue(null);
+    it("reads only the recipes the reader may view, in the reader's household", async () => {
+      policy.view = "household";
+      getRecipeHouseholdIds.mockResolvedValue(
+        new Map([
+          [shown, ctx.householdId],
+          [hidden, "other-household"],
+        ])
+      );
+      lineReadingsOf.mockResolvedValue({});
 
-      const result = await createCaller().getEditable({ id: orphanRecipeId });
-
-      expect(canAccessResource).not.toHaveBeenCalled();
-      expect(result).toEqual(mockRecipe);
+      await expect(
+        recipesRouter
+          .createCaller({ ...ctx, connectionId: null, operationId: null })
+          .lineReadings({ recipeIds: [shown, hidden] })
+      ).resolves.toEqual({});
+      expect(lineReadingsOf).toHaveBeenCalledWith(ctx.householdId, { of: "recipes", ids: [shown] });
     });
   });
 
@@ -543,13 +227,11 @@ describe("recipes procedures", () => {
       const recipe = createValidFullRecipe({ id: recipeId, userId: "other-user-id" });
 
       getRecipeFull.mockResolvedValue(recipe);
-      canAccessResource.mockResolvedValue(true);
+      everyRecipeIn("other-household");
       readRecipeNutrition.mockResolvedValue(answer);
 
       await expect(caller().nutrition({ id: recipeId })).resolves.toEqual(answer);
-      expect(readRecipeNutrition).toHaveBeenCalledWith(recipe, {
-        householdUserIds: ctx.userIds,
-      });
+      expect(readRecipeNutrition).toHaveBeenCalledWith(recipe, { householdId: ctx.householdId });
     });
 
     it("is NOT_FOUND for a recipe that is missing or the reader may not view", async () => {
@@ -559,7 +241,9 @@ describe("recipes procedures", () => {
       });
 
       getRecipeFull.mockResolvedValue(createValidFullRecipe({ id: recipeId, userId: "other" }));
-      canAccessResource.mockResolvedValue(false);
+      policy.view = "household";
+      policy.edit = "household";
+      everyRecipeIn("other-household");
       await expect(caller().nutrition({ id: recipeId })).rejects.toMatchObject({
         code: "NOT_FOUND",
       });
@@ -591,12 +275,34 @@ describe("recipes procedures", () => {
       dashboardRecipe.mockResolvedValue(mockDashboard);
 
       expect(await createCaller().create(input)).toBe(recipeId);
+      // Its entries may be new and count one recipe more, in the household it is in now; the
+      // create answers once that is announced.
+      expect(lists.publish).toHaveBeenCalledWith(
+        "changed",
+        { kinds: ["tag", "cuisine", "category"] },
+        { viewPolicy: "household", householdId: "household-now" }
+      );
       await settle();
       expect(recipes.publish).toHaveBeenCalledWith(
         "created",
         { recipe: mockDashboard },
         expect.anything()
       );
+    });
+
+    it("the editors' create makes no entry, the REST create makes them", async () => {
+      createRecipeWithRefs.mockResolvedValue({ status: "inserted", recipeId });
+      dashboardRecipe.mockResolvedValue(createMockRecipeDashboard({ id: recipeId }));
+
+      await createCaller().create(input);
+      await router({ createRecipe: createRecipeProcedure })
+        .createCaller({ ...ctx, connectionId: null, operationId: null })
+        .createRecipe(input);
+
+      expect(createRecipeWithRefs.mock.calls.map((call) => call[3])).toEqual([
+        { createEntries: false },
+        { createEntries: true },
+      ]);
     });
 
     it("answers a replayed create whose id is already stored", async () => {
@@ -620,67 +326,6 @@ describe("recipes procedures", () => {
     });
   });
 
-  describe("categories", () => {
-    it("updates recipe categories and emits updated event", async () => {
-      updateRecipeCategories.mockResolvedValue(undefined);
-      getRecipeFull.mockResolvedValue(createMockFullRecipe({ id: "recipe-1" }));
-      getRecipeOwnerId.mockResolvedValue("test-user-id");
-      canAccessResource.mockResolvedValue(true);
-
-      const testRouter = t.router({
-        updateCategories: t.procedure
-          .input((v: any) => v)
-          .mutation(async ({ input }) => {
-            const ownerId = await getRecipeOwnerId(input.recipeId);
-
-            if (ownerId !== null) {
-              const canEdit = await canAccessResource(
-                "edit",
-                ctx.user.id,
-                ownerId,
-                ctx.householdUserIds,
-                ctx.isServerAdmin
-              );
-
-              if (!canEdit) {
-                throw new Error("FORBIDDEN");
-              }
-            }
-
-            await updateRecipeCategories(input.recipeId, input.categories);
-
-            const updated = await getRecipeFull(input.recipeId);
-
-            if (updated) {
-              void recipes.publish(
-                "updated",
-                { recipe: updated },
-                { householdKey: ctx.householdKey }
-              );
-            }
-
-            return { success: true };
-          }),
-      });
-
-      const caller = t.createCallerFactory(testRouter)(ctx);
-      const result = await caller.updateCategories({
-        recipeId: "recipe-1",
-        categories: ["Dinner", "Snack"],
-      });
-
-      expect(updateRecipeCategories).toHaveBeenCalledWith("recipe-1", ["Dinner", "Snack"]);
-      expect(recipes.publish).toHaveBeenCalledWith(
-        "updated",
-        {
-          recipe: expect.objectContaining({ id: "recipe-1" }),
-        },
-        { householdKey: ctx.householdKey }
-      );
-      expect(result).toEqual({ success: true });
-    });
-  });
-
   describe("edit via the API", () => {
     const recipeId = "66666666-6666-4666-8666-666666666666";
 
@@ -696,8 +341,7 @@ describe("recipes procedures", () => {
       const edited = createValidFullRecipe({ id: recipeId, name: "Renamed", version: 2 });
 
       getRecipeFull.mockResolvedValue(edited);
-      getRecipeOwnerId.mockResolvedValue(ctx.user.id);
-      canAccessResource.mockResolvedValue(true);
+      everyRecipeIn(ctx.householdId);
       updateRecipeWithRefs.mockResolvedValue({ stale: false });
 
       const result = await createCaller().updateRecipe({
@@ -710,7 +354,8 @@ describe("recipes procedures", () => {
         recipeId,
         ctx.user.id,
         expect.objectContaining({ name: "Renamed" }),
-        1
+        1,
+        { createEntries: true }
       );
       expect(result).toEqual({ recipe: edited, stale: false });
       expect(recipes.publish).toHaveBeenCalledWith(
@@ -722,8 +367,7 @@ describe("recipes procedures", () => {
 
     it("reports a stale version without publishing", async () => {
       getRecipeFull.mockResolvedValue(createValidFullRecipe({ id: recipeId }));
-      getRecipeOwnerId.mockResolvedValue(ctx.user.id);
-      canAccessResource.mockResolvedValue(true);
+      everyRecipeIn(ctx.householdId);
       updateRecipeWithRefs.mockResolvedValue({ stale: true });
 
       const result = await createCaller().updateRecipe({
@@ -753,8 +397,7 @@ describe("recipes procedures", () => {
       getRecipeFull.mockResolvedValue(
         createValidFullRecipe({ id: recipeId, userId: "other-user-id" })
       );
-      getRecipeOwnerId.mockResolvedValue("other-user-id");
-      canAccessResource.mockImplementation(async (action: string) => action === "view");
+      everyRecipeIn("other-household");
 
       await expect(
         createCaller().updateRecipe({ id: recipeId, data: { name: "x" }, version: 1 })
@@ -771,8 +414,7 @@ describe("recipes procedures", () => {
     }
 
     it("rejects a refused edit, so the client rolls back and Replay parks it", async () => {
-      getRecipeOwnerId.mockResolvedValue("other-user-id");
-      canAccessResource.mockResolvedValue(false);
+      everyRecipeIn("other-household");
 
       await expect(
         createCaller().update({ id, data: { name: "x" }, version: 1 })
@@ -785,8 +427,7 @@ describe("recipes procedures", () => {
     });
 
     it("rejects an edit the database failed to store", async () => {
-      getRecipeOwnerId.mockResolvedValue(ctx.user.id);
-      canAccessResource.mockResolvedValue(true);
+      everyRecipeIn(ctx.householdId);
       updateRecipeWithRefs.mockRejectedValue(new Error("connection lost"));
 
       await expect(
@@ -795,8 +436,7 @@ describe("recipes procedures", () => {
     });
 
     it("answers a stored edit as stored when reading it back fails", async () => {
-      getRecipeOwnerId.mockResolvedValue(ctx.user.id);
-      canAccessResource.mockResolvedValue(true);
+      everyRecipeIn(ctx.householdId);
       updateRecipeWithRefs.mockResolvedValue({ stale: false, value: 2 });
       getRecipeFull.mockRejectedValue(new Error("read failed"));
 
@@ -830,13 +470,13 @@ describe("recipes procedures", () => {
         expect.objectContaining({
           images: [{ image: recipeImage, order: 0 }],
           dishColor: EXTRACTED_DISH_COLOR,
-        })
+        }),
+        { createEntries: false }
       );
     });
 
     it("an edit replacing the image recomputes the Dish Colour", async () => {
-      getRecipeOwnerId.mockResolvedValue(ctx.user.id);
-      canAccessResource.mockResolvedValue(true);
+      everyRecipeIn(ctx.householdId);
       updateRecipeWithRefs.mockResolvedValue({ stale: false });
       getRecipeFull.mockResolvedValue(null);
 
@@ -854,16 +494,30 @@ describe("recipes procedures", () => {
           images: [{ image: recipeImage, order: 0 }],
           dishColor: EXTRACTED_DISH_COLOR,
         }),
-        1
+        1,
+        { createEntries: false }
       );
+    });
+
+    it("the editor's save creates no entry", async () => {
+      everyRecipeIn(ctx.householdId);
+      updateRecipeWithRefs.mockResolvedValue({ stale: false });
+      getRecipeFull.mockResolvedValue(null);
+
+      await createCaller().update({
+        id: "55555555-5555-4555-8555-555555555555",
+        data: { tags: [{ name: "x" }] },
+        version: 1,
+      });
+      await vi.waitFor(() => expect(updateRecipeWithRefs).toHaveBeenCalledTimes(1));
+      expect(updateRecipeWithRefs.mock.calls[0]?.[4]).toEqual({ createEntries: false });
     });
 
     it("answers an edit once it is stored, so the next queued edit finds its version", async () => {
       const stored = Promise.withResolvers<{ stale: false }>();
       let answered = false;
 
-      getRecipeOwnerId.mockResolvedValue(ctx.user.id);
-      canAccessResource.mockResolvedValue(true);
+      everyRecipeIn(ctx.householdId);
       updateRecipeWithRefs.mockReturnValue(stored.promise);
       getRecipeFull.mockResolvedValue(null);
 
@@ -881,8 +535,7 @@ describe("recipes procedures", () => {
     it("answers with the version it stored, or that it refused a stale one", async () => {
       const id = "55555555-5555-4555-8555-555555555555";
 
-      getRecipeOwnerId.mockResolvedValue(ctx.user.id);
-      canAccessResource.mockResolvedValue(true);
+      everyRecipeIn(ctx.householdId);
       getRecipeFull.mockResolvedValue(null);
       updateRecipeWithRefs.mockResolvedValueOnce({ stale: false, value: 6 });
       updateRecipeWithRefs.mockResolvedValueOnce({ stale: true });
@@ -896,8 +549,7 @@ describe("recipes procedures", () => {
     });
 
     it("an edit that does not touch the media says nothing about the colour", async () => {
-      getRecipeOwnerId.mockResolvedValue(ctx.user.id);
-      canAccessResource.mockResolvedValue(true);
+      everyRecipeIn(ctx.householdId);
       updateRecipeWithRefs.mockResolvedValue({ stale: false });
       getRecipeFull.mockResolvedValue(null);
 

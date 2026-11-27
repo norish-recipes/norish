@@ -44,10 +44,11 @@ const log = createLogger("realtime");
 /** The placeholder the Lua script replaces with the stream entry id. */
 export const EVENT_ID_PLACEHOLDER = "$ID$";
 
-export type PolicyTarget = { viewPolicy: PermissionLevel; householdKey: string; userId: string };
+/** A policy-scoped event reaches the household of the recipe or cookbook it is about, or everyone. */
+export type PolicyTarget = { viewPolicy: PermissionLevel; householdId: string };
 
 export type TargetFor<S extends RealtimeScope> = S extends "household"
-  ? { householdKey: string }
+  ? { householdId: string }
   : S extends "user"
     ? { userId: string }
     : S extends "policy"
@@ -62,10 +63,10 @@ export interface RealtimeDomain<C extends RealtimeCatalogue> {
     target: TargetFor<ScopeOf<C, E>>
   ): Promise<void>;
   channel<E extends EventName<C>>(event: E, target: TargetFor<ScopeOf<C, E>>): string;
-  /** The channels a subscriber with this identity listens on; `policy` → household, broadcast, user. */
+  /** The channels a subscriber with this identity listens on; `policy` → household and broadcast. */
   channelsFor<E extends ClientEventName<C>>(
     event: E,
-    identity: { userId: string; householdKey: string }
+    identity: { userId: string; householdId: string }
   ): string[];
 }
 
@@ -83,9 +84,9 @@ function resolveChannel(
 ): ResolvedChannel {
   switch (scope) {
     case "household": {
-      const { householdKey } = target as { householdKey: string };
+      const { householdId } = target as { householdId: string };
 
-      return { scope, channel: buildChannel({ namespace, scope, id: householdKey, event }) };
+      return { scope, channel: buildChannel({ namespace, scope, id: householdId, event }) };
     }
     case "user": {
       const { userId } = target as { userId: string };
@@ -93,7 +94,7 @@ function resolveChannel(
       return { scope, channel: buildChannel({ namespace, scope, id: userId, event }) };
     }
     case "policy": {
-      const { viewPolicy, householdKey, userId } = target as PolicyTarget;
+      const { viewPolicy, householdId } = target as PolicyTarget;
 
       switch (viewPolicy) {
         case "everyone":
@@ -104,12 +105,7 @@ function resolveChannel(
         case "household":
           return {
             scope: "household",
-            channel: buildChannel({ namespace, scope: "household", id: householdKey, event }),
-          };
-        case "owner":
-          return {
-            scope: "user",
-            channel: buildChannel({ namespace, scope: "user", id: userId, event }),
+            channel: buildChannel({ namespace, scope: "household", id: householdId, event }),
           };
       }
       throw new Error(`Unknown view policy "${String(viewPolicy)}" for ${namespace}:${event}`);
@@ -137,24 +133,20 @@ export function defineRealtimeDomain<C extends RealtimeCatalogue>(catalogue: C):
     return resolveChannel(namespace, event, specFor(event).scope, target).channel;
   }
 
-  function channelsFor(
-    event: string,
-    identity: { userId: string; householdKey: string }
-  ): string[] {
+  function channelsFor(event: string, identity: { userId: string; householdId: string }): string[] {
     const { scope } = specFor(event);
 
     switch (scope) {
       case "household":
-        return [buildChannel({ namespace, scope, id: identity.householdKey, event })];
+        return [buildChannel({ namespace, scope, id: identity.householdId, event })];
       case "user":
         return [buildChannel({ namespace, scope, id: identity.userId, event })];
       case "broadcast":
         return [buildChannel({ namespace, scope, event })];
       case "policy":
         return [
-          buildChannel({ namespace, scope: "household", id: identity.householdKey, event }),
+          buildChannel({ namespace, scope: "household", id: identity.householdId, event }),
           buildChannel({ namespace, scope: "broadcast", event }),
-          buildChannel({ namespace, scope: "user", id: identity.userId, event }),
         ];
       case "internal":
         throw new Error(`Internal event "${namespace}:${event}" is not subscribable`);

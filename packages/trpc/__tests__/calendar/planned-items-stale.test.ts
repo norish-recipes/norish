@@ -4,7 +4,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { trpcLogger } from "@norish/shared-server/logger";
 import { plannedItemsProcedures } from "@norish/trpc/routers/calendar/planned-items";
 
-import { assertHouseholdAccess } from "../mocks/permissions";
 import {
   deletePlannedItem,
   editPlannedItem,
@@ -12,6 +11,7 @@ import {
   getPlannedItemWithRecipeById,
   listPlannedItemsWithRecipeBySlot,
   moveItem,
+  ownPlannedItemExists,
 } from "../mocks/planned-items";
 import { calendar } from "../mocks/realtime/calendar";
 import {
@@ -51,8 +51,8 @@ describe("calendar planned items stale handling", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    ownPlannedItemExists.mockResolvedValue(true);
     getPlannedItemById.mockResolvedValue(createPlannedItem());
-    assertHouseholdAccess.mockResolvedValue(undefined);
   });
 
   it("logs stale moveItem mutations as no-ops", async () => {
@@ -117,7 +117,14 @@ describe("calendar planned items stale handling", () => {
       targetSlot: item.slot as "Breakfast",
     });
 
-    expect(moveItem).toHaveBeenCalledWith(item.id, item.date, item.slot, undefined, item.version);
+    expect(moveItem).toHaveBeenCalledWith(
+      ctx.householdId,
+      item.id,
+      item.date,
+      item.slot,
+      undefined,
+      item.version
+    );
   });
 
   it("logs stale deleteItem mutations as no-ops", async () => {

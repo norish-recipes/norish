@@ -27,7 +27,7 @@ export function startAutoTaggingWorker(): void {
     QUEUE_NAMES.AUTO_TAGGING,
     (job) =>
       runEnrichmentJob(job, async (recipe) => {
-        const generated = await generateTagsForRecipe(toRecipeSummary(recipe));
+        const generated = await generateTagsForRecipe(toRecipeSummary(recipe), recipe.householdId);
 
         const tags = normalizeEnrichmentTagNames(generated);
 

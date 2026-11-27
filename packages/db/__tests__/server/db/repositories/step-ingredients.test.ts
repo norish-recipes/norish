@@ -9,7 +9,7 @@
  */
 
 import { randomUUID } from "node:crypto";
-import { sql } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import type { FullRecipeDTO, User } from "@norish/shared/contracts";
@@ -154,17 +154,21 @@ describe("Step Ingredients", () => {
       const created = await createRecipeWithRefs(randomUUID(), user.id, dualSystemInsert());
       const db = getTestDb();
 
-      const rows = await db.execute(sql`
-        select ri.system_used as system, ri.amount
-          from step_ingredients si
-          join steps s on s.id = si.step_id
-          join recipe_ingredients ri on ri.id = si.recipe_ingredient_id
-         where s.recipe_id = ${created!.recipeId}
-           and ri."order" = '0'
-      `);
-      const bySystem = new Map(
-        (rows.rows as { system: string; amount: string }[]).map((row) => [row.system, row.amount])
-      );
+      const rows = await db
+        .select({
+          system: schema.recipeIngredients.systemUsed,
+          amount: schema.recipeIngredients.amount,
+        })
+        .from(schema.stepIngredients)
+        .innerJoin(schema.steps, eq(schema.steps.id, schema.stepIngredients.stepId))
+        .innerJoin(
+          schema.recipeIngredients,
+          eq(schema.recipeIngredients.id, schema.stepIngredients.recipeIngredientId)
+        )
+        .where(
+          and(eq(schema.steps.recipeId, created!.recipeId), eq(schema.recipeIngredients.order, "0"))
+        );
+      const bySystem = new Map(rows.map((row) => [row.system, row.amount]));
 
       // The metric "add half the water" points at 50 ml; the US one at ¼ cup.
       expect(bySystem.get("metric")).toBe("50.000");
@@ -383,7 +387,7 @@ describe("Step Ingredients", () => {
 
       expect(await countStoredRefs()).toBeGreaterThan(0);
 
-      await db.execute(sql`delete from recipes where id = ${created!.recipeId}`);
+      await db.delete(schema.recipes).where(eq(schema.recipes.id, created!.recipeId));
 
       expect(await countStoredRefs()).toBe(0);
     });

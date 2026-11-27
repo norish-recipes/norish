@@ -1,26 +1,37 @@
 import { randomInt } from "node:crypto";
-import { and, eq, sql } from "drizzle-orm";
+import { setTimeout as sleep } from "node:timers/promises";
+import { and, eq, inArray, sql } from "drizzle-orm";
 
+import type { DbTransaction } from "@norish/db/drizzle";
 import type {
   HouseholdDto,
-  HouseholdInsertDto,
   HouseholdUserDto,
-  HouseholdUserInsertDto,
   HouseholdWithUsersNamesDto,
 } from "@norish/shared/contracts/dto/household";
+import type { JoinRefusal } from "@norish/shared/lib/join-refusals";
 import { db } from "@norish/db/drizzle";
-import { households, householdUsers } from "@norish/db/schema";
 import {
-  HouseholdInsertBaseSchema,
+  cookbooks,
+  households,
+  householdUsers,
+  plannedItems,
+  recipes,
+  users,
+} from "@norish/db/schema";
+import {
   HouseholdSelectBaseSchema,
-  HouseholdUserInsertBaseSchema,
   HouseholdUserSelectBaseSchema,
   HouseholdWithUsersNamesSchema,
 } from "@norish/shared/contracts/zod/household";
-import { viewerAndHouseholdIds } from "@norish/shared/lib/household";
 
 import type { MutationOutcome } from "./mutation-outcomes";
+import { isConstraintViolation, isRetryableConflict } from "./constraint-violation";
+import { carryRecipeFoodsTx } from "./household-catalogue";
+import { mergeHouseholdTx } from "./household-merge";
+import { listHouseholdIconFiles } from "./ingredient-icons";
+import { carryRecipeEntriesTx } from "./list-entries";
 import { appliedOutcome, staleOutcome } from "./mutation-outcomes";
+import { turnPlannedRecipesIntoNotes } from "./planned-items";
 import { getUsersByIds } from "./users";
 
 export async function getUsersByHouseholdId(householdId: string): Promise<HouseholdUserDto[]> {
@@ -31,28 +42,29 @@ export async function getUsersByHouseholdId(householdId: string): Promise<Househ
   return rows;
 }
 
-export async function createHousehold(input: HouseholdInsertDto): Promise<HouseholdDto> {
-  const parsed = HouseholdInsertBaseSchema.safeParse(input);
+/** What sign-up, the upgrade and leaving name a new household of one (migration 0088). */
+export const NEW_HOUSEHOLD_NAME = "My household";
 
-  if (!parsed.success) throw new Error("Invalid HouseholdInsertDto");
+const JOIN_CODE_LIFETIME_MS = 10 * 60 * 1000;
 
-  // generate a unique 6-digit code with 10-minute expiration
-  const code = await generateUniqueJoinCode();
-  const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
+/** The account's household; null only for an account that no longer exists. */
+export async function getHouseholdIdForUser(userId: string): Promise<string | null> {
   const [row] = await db
-    .insert(households)
-    .values({ ...parsed.data, joinCode: code, joinCodeExpiresAt: expiresAt })
-    .returning();
-  const validated = HouseholdSelectBaseSchema.safeParse(row);
+    .select({ householdId: householdUsers.householdId })
+    .from(householdUsers)
+    .where(eq(householdUsers.userId, userId));
 
-  if (!validated.success) throw new Error("Failed to parse created household");
-
-  return validated.data;
+  return row?.householdId ?? null;
 }
 
-export async function deleteHousehold(id: string): Promise<void> {
-  await db.delete(households).where(eq(households.id, id));
+export async function isHouseholdMember(householdId: string, userId: string): Promise<boolean> {
+  const rows = await db
+    .select({ userId: householdUsers.userId })
+    .from(householdUsers)
+    .where(and(eq(householdUsers.householdId, householdId), eq(householdUsers.userId, userId)))
+    .limit(1);
+
+  return rows.length > 0;
 }
 
 export async function getHouseholdById(id: string): Promise<HouseholdDto | null> {
@@ -127,65 +139,129 @@ export async function getHouseholdForUser(
   return parsed.data;
 }
 
-/**
- * Gets all member IDs in the user's household (including the user)
- * If user is not in a household, returns just the user's ID
- */
-export async function getHouseholdMemberIds(userId: string): Promise<string[]> {
-  const household = await getHouseholdForUser(userId);
-
-  return viewerAndHouseholdIds({
-    userId,
-    householdUserIds: household?.users.map((u) => u.id) ?? null,
-  });
-}
-
-export async function addUserToHousehold(input: HouseholdUserInsertDto): Promise<HouseholdUserDto> {
-  const parsed = HouseholdUserInsertBaseSchema.safeParse(input);
-
-  if (!parsed.success) throw new Error("Invalid HouseholdUserInsertDto");
-
-  // Check if user is already in a household
-  const existingHousehold = await getHouseholdForUser(parsed.data.userId);
-
-  if (existingHousehold) {
-    throw new Error("User is already in a household. Leave the current household first.");
-  }
-
-  const [row] = await db
-    .insert(householdUsers)
-    .values(parsed.data)
-    .onConflictDoNothing()
+async function insertHouseholdOfOne(tx: DbTransaction, userId: string): Promise<HouseholdDto> {
+  // No join code, as sign-up makes one: generating it here would query the pool under the lock.
+  const [row] = await tx
+    .insert(households)
+    .values({ name: NEW_HOUSEHOLD_NAME, adminUserId: userId })
     .returning();
 
-  const resolved = row
-    ? row
-    : (
-        await db
-          .select()
-          .from(householdUsers)
-          .where(
-            and(
-              eq(householdUsers.householdId, parsed.data.householdId),
-              eq(householdUsers.userId, parsed.data.userId)
-            )
-          )
-          .limit(1)
-      )[0];
+  await tx.insert(householdUsers).values({ householdId: row!.id, userId });
 
-  const validated = HouseholdUserSelectBaseSchema.safeParse(resolved);
-
-  if (!validated.success) throw new Error("Failed to add user to household");
-
-  return validated.data;
+  return HouseholdSelectBaseSchema.parse(row);
 }
 
-export async function removeUserFromHousehold(
+/** Locks the households in id order, so two moves never wait on each other in a cycle. */
+async function lockHouseholds(tx: DbTransaction, ids: string[]) {
+  return await tx
+    .select({
+      id: households.id,
+      name: households.name,
+      adminUserId: households.adminUserId,
+      joinCode: households.joinCode,
+      joinCodeExpiresAt: households.joinCodeExpiresAt,
+    })
+    .from(households)
+    .where(inArray(households.id, ids))
+    .orderBy(households.id)
+    .for("update");
+}
+
+/** The account left the household it was read in before that household's lock landed. */
+const MOVED = Symbol("moved");
+
+/** How many fresh transactions an operation tries on an account that keeps moving. */
+export const MOVED_ATTEMPTS = 3;
+
+/** How many times a locked membership write runs again after losing a deadlock to a household write. */
+const DEADLOCK_ATTEMPTS = 3;
+const DEADLOCK_BACKOFF_MS = 50;
+
+/** Runs a locked membership write afresh when Postgres picks it as a deadlock victim or a merge
+ * met a name a housemate gave a food meanwhile (`retryUnique`), which no row lock covers. */
+async function lockedTransaction<T>(
+  work: (tx: DbTransaction) => Promise<T>,
+  { retryUnique = false }: { retryUnique?: boolean } = {}
+): Promise<T> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await db.transaction(work);
+    } catch (error) {
+      const retryable =
+        isRetryableConflict(error) || (retryUnique && isConstraintViolation(error, "23505"));
+
+      if (attempt >= DEADLOCK_ATTEMPTS || !retryable) throw error;
+      // Retried at once, it can take the household back before the winner and deadlock again.
+      await sleep(DEADLOCK_BACKOFF_MS * attempt);
+    }
+  }
+}
+
+/** Runs `work` in a fresh transaction while it finds the account MOVED, then gives `givenUp`. */
+async function retryWhileMoved<T, G>(
+  givenUp: G,
+  work: (tx: DbTransaction) => Promise<T | typeof MOVED>,
+  options?: { retryUnique?: boolean }
+): Promise<T | G> {
+  for (let attempt = 0; attempt < MOVED_ATTEMPTS; attempt++) {
+    const result = await lockedTransaction(work, options);
+
+    if (result !== MOVED) return result;
+  }
+
+  return givenUp;
+}
+
+/** Locks the account's household; every move of the account locks it first, so it stays put. */
+async function lockHouseholdOf(tx: DbTransaction, userId: string) {
+  const current = await householdIdIn(tx, userId);
+
+  if (!current) return null;
+
+  const [household] = await lockHouseholds(tx, [current]);
+
+  return household && (await householdIdIn(tx, userId)) === current ? household : MOVED;
+}
+
+/** Longest-standing first. */
+async function memberIdsIn(tx: DbTransaction, householdId: string): Promise<string[]> {
+  const rows = await tx
+    .select({ userId: householdUsers.userId })
+    .from(householdUsers)
+    .where(eq(householdUsers.householdId, householdId))
+    .orderBy(householdUsers.createdAt, householdUsers.userId);
+
+  return rows.map((row) => row.userId);
+}
+
+type MovedOutcome = MutationOutcome<{ household: HouseholdDto; memberIds: string[] }>;
+
+/**
+ * Takes a member out of a household and into a new household of one, in one transaction
+ * under the household's lock. `memberIds` are who stays. Pass `removedBy` for the admin's removal.
+ */
+export async function moveToHouseholdOfOne(
   householdId: string,
   userId: string,
-  version?: number
-): Promise<MutationOutcome<void>> {
-  return await db.transaction(async (tx) => {
+  version?: number,
+  removedBy?: string
+): Promise<MovedOutcome> {
+  return await lockedTransaction(async (tx) => {
+    const [household] = await lockHouseholds(tx, [householdId]);
+
+    if (!household) return staleOutcome();
+    if (removedBy !== undefined && household.adminUserId !== removedBy) {
+      throw new Error("Only the household admin can kick members");
+    }
+    if (household.adminUserId === userId) {
+      throw new Error("The household admin hands the role on before leaving");
+    }
+    const memberIds = (await memberIdsIn(tx, householdId)).filter((id) => id !== userId);
+
+    if (memberIds.length === 0) {
+      throw new Error("The last member cannot leave their household");
+    }
+
     const whereConditions = [
       eq(householdUsers.householdId, householdId),
       eq(householdUsers.userId, userId),
@@ -204,37 +280,112 @@ export async function removeUserFromHousehold(
       return staleOutcome();
     }
 
-    const rows = await tx
-      .select({ count: sql<number>`count(*)::int` })
-      .from(householdUsers)
-      .where(eq(householdUsers.householdId, householdId));
+    const ofOne = await insertHouseholdOfOne(tx, userId);
 
-    const count = Number(rows?.[0]?.count ?? 0);
+    // The triggers moved the recipes and cookbooks; what they carry of the old household follows.
+    await carryRecipeEntriesTx(tx, ofOne.id);
+    await carryRecipeFoodsTx(tx, ofOne.id);
 
-    if (count === 0) {
-      await tx.delete(households).where(eq(households.id, householdId));
-    }
-
-    return appliedOutcome(undefined);
+    return appliedOutcome({ household: ofOne, memberIds });
   });
 }
 
-export async function findHouseholdByJoinCode(code: string): Promise<HouseholdDto | null> {
-  const rows = await db.select().from(households).where(eq(households.joinCode, code)).limit(1);
-  const parsed = HouseholdSelectBaseSchema.safeParse(rows[0]);
+type JoinHouseholdOutcome =
+  | { joined: HouseholdUserDto; leftHouseholdId: string; memberIds: string[] }
+  | { refused: JoinRefusal };
 
-  return parsed.success ? parsed.data : null;
+/** Moves an account into another household, merging the household of one it leaves into it; with
+ * `name`, only while the household still carries it. Refused from a shared household. */
+export async function joinHousehold(
+  userId: string,
+  target: { householdId: string; name?: string } | { joinCode: string }
+): Promise<JoinHouseholdOutcome> {
+  try {
+    return await joinOnce(userId, target);
+  } catch (error) {
+    // Renamed into the joiner's way on every attempt: refused, nothing changed.
+    if (isConstraintViolation(error, "23505")) return { refused: "busy" };
+    throw error;
+  }
 }
 
-export async function joinHouseholdByCode(
+async function joinOnce(
   userId: string,
-  code: string
-): Promise<HouseholdUserDto | null> {
-  const household = await findHouseholdByJoinCode(code);
+  target: { householdId: string; name?: string } | { joinCode: string }
+): Promise<JoinHouseholdOutcome> {
+  return await retryWhileMoved(
+    { refused: "shared" } as const,
+    async (tx) => {
+      const current = await householdIdIn(tx, userId);
 
-  if (!household) return null;
+      if (!current) throw new Error("Account has no household");
 
-  return addUserToHousehold({ householdId: household.id, userId });
+      const householdId =
+        "householdId" in target
+          ? target.householdId
+          : await householdIdForCode(tx, target.joinCode);
+
+      if (!householdId) return { refused: "gone" };
+      if (current === householdId) return { refused: "already-member" };
+
+      const locked = await lockHouseholds(tx, [current, householdId]);
+      const household = locked.find((h) => h.id === householdId);
+
+      if (!household) return { refused: "gone" };
+      // Read again under the lock, so a code rotated or expired, or a rename, admits nobody.
+      if ("name" in target && target.name !== undefined) {
+        const [named] = await tx
+          .select({ id: households.id })
+          .from(households)
+          .where(and(eq(households.id, householdId), householdNamed(target.name)));
+
+        if (!named) return { refused: "gone" };
+      }
+      if ("joinCode" in target) {
+        if (household.joinCode !== target.joinCode) return { refused: "gone" };
+        if (household.joinCodeExpiresAt && household.joinCodeExpiresAt < new Date()) {
+          return { refused: "expired" };
+        }
+      }
+      // Every move of this account locks its household first, so this read is now stable.
+      if ((await householdIdIn(tx, userId)) !== current) return MOVED;
+      if ((await memberIdsIn(tx, current)).length > 1) return { refused: "shared" };
+
+      const memberIds = await memberIdsIn(tx, householdId);
+
+      await tx.delete(householdUsers).where(eq(householdUsers.userId, userId));
+      const [row] = await tx.insert(householdUsers).values({ householdId, userId }).returning();
+
+      // The triggers moved the recipes and cookbooks; the rest goes before the emptied household.
+      await mergeHouseholdTx(tx, current, householdId);
+      await tx.delete(households).where(eq(households.id, current));
+
+      return {
+        joined: HouseholdUserSelectBaseSchema.parse(row),
+        leftHouseholdId: current,
+        memberIds,
+      };
+    },
+    { retryUnique: true }
+  );
+}
+
+async function householdIdForCode(tx: DbTransaction, code: string): Promise<string | null> {
+  const [row] = await tx
+    .select({ id: households.id })
+    .from(households)
+    .where(eq(households.joinCode, code));
+
+  return row?.id ?? null;
+}
+
+async function householdIdIn(tx: DbTransaction, userId: string): Promise<string | null> {
+  const [row] = await tx
+    .select({ householdId: householdUsers.householdId })
+    .from(householdUsers)
+    .where(eq(householdUsers.userId, userId));
+
+  return row?.householdId ?? null;
 }
 
 /**
@@ -245,7 +396,7 @@ export async function regenerateJoinCode(
   version?: number
 ): Promise<MutationOutcome<HouseholdDto>> {
   const code = await generateUniqueJoinCode();
-  const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+  const expiresAt = new Date(Date.now() + JOIN_CODE_LIFETIME_MS);
 
   const whereConditions = [eq(households.id, householdId)];
 
@@ -284,132 +435,167 @@ export async function isUserHouseholdAdmin(householdId: string, userId: string):
   return household?.adminUserId === userId;
 }
 
-/**
- * Kicks a user from a household (admin only)
- */
+/** The admin removes a member, who lands in a new household of one. */
 export async function kickUserFromHousehold(
   householdId: string,
   userIdToKick: string,
   adminUserId: string,
   version?: number
-): Promise<MutationOutcome<void>> {
-  // Verify admin
-  const isAdmin = await isUserHouseholdAdmin(householdId, adminUserId);
-
-  if (!isAdmin) {
-    throw new Error("Only the household admin can kick members");
-  }
-
-  // Cannot kick yourself
-  if (userIdToKick === adminUserId) {
-    throw new Error("Admin cannot kick themselves. Transfer admin first or leave the household.");
-  }
-
-  return await removeUserFromHousehold(householdId, userIdToKick, version);
+): Promise<MovedOutcome> {
+  return await moveToHouseholdOfOne(householdId, userIdToKick, version, adminUserId);
 }
 
-/**
- * Transfers admin privileges to another member
- */
+/** Hands the admin role to another member, checked under the household's lock. */
 export async function transferHouseholdAdmin(
   householdId: string,
   currentAdminId: string,
   newAdminId: string,
   version?: number
 ): Promise<MutationOutcome<HouseholdDto>> {
-  // Verify current admin
-  const isAdmin = await isUserHouseholdAdmin(householdId, currentAdminId);
+  return await lockedTransaction(async (tx) => {
+    const [household] = await lockHouseholds(tx, [householdId]);
 
-  if (!isAdmin) {
-    throw new Error("Only the current admin can transfer admin privileges");
-  }
+    if (household?.adminUserId !== currentAdminId) {
+      throw new Error("Only the current admin can transfer admin privileges");
+    }
+    if (!(await memberIdsIn(tx, householdId)).includes(newAdminId)) {
+      throw new Error("New admin must be a member of the household");
+    }
 
-  // Verify new admin is a member
-  const members = await getUsersByHouseholdId(householdId);
-  const isMember = members.some((m) => m.userId === newAdminId);
+    const whereConditions = [eq(households.id, householdId)];
 
-  if (!isMember) {
-    throw new Error("New admin must be a member of the household");
-  }
+    if (version) {
+      whereConditions.push(eq(households.version, version));
+    }
 
-  const whereConditions = [eq(households.id, householdId)];
+    const [row] = await tx
+      .update(households)
+      .set({
+        adminUserId: newAdminId,
+        updatedAt: new Date(),
+        version: sql`${households.version} + 1`,
+      })
+      .where(and(...whereConditions))
+      .returning();
 
-  if (version) {
-    whereConditions.push(eq(households.version, version));
-  }
+    if (!row) {
+      return staleOutcome();
+    }
 
-  const [row] = await db
-    .update(households)
-    .set({
-      adminUserId: newAdminId,
-      updatedAt: new Date(),
-      version: sql`${households.version} + 1`,
-    })
-    .where(and(...whereConditions))
-    .returning();
+    const validated = HouseholdSelectBaseSchema.safeParse(row);
 
-  if (!row) {
-    return staleOutcome();
-  }
+    if (!validated.success) throw new Error("Failed to transfer admin");
 
-  const validated = HouseholdSelectBaseSchema.safeParse(row);
-
-  if (!validated.success) throw new Error("Failed to transfer admin");
-
-  return appliedOutcome(validated.data);
+    return appliedOutcome(validated.data);
+  });
 }
+
+/** The household carries `name`, case and outer space aside; the lookup and the join share it. */
+const householdNamed = (name: string) =>
+  sql`LOWER(${households.name}) = ${name.toLowerCase().trim()}`;
 
 /**
  * Find a household by name (case-insensitive)
  */
 export async function findHouseholdByName(name: string): Promise<HouseholdDto | null> {
-  const normalizedName = name.toLowerCase().trim();
-
-  const rows = await db
-    .select()
-    .from(households)
-    .where(sql`LOWER(${households.name}) = ${normalizedName}`)
-    .limit(1);
+  const rows = await db.select().from(households).where(householdNamed(name)).limit(1);
 
   const parsed = HouseholdSelectBaseSchema.safeParse(rows[0]);
 
   return parsed.success ? parsed.data : null;
 }
 
-/**
- * Find existing household by name or create a new one
- * Used for OIDC claim-based household assignment
- */
-export async function findOrCreateHouseholdByName(
-  name: string,
-  creatorUserId: string
-): Promise<HouseholdDto> {
-  const normalizedName = name.trim();
+/** Names the account's household while it is a household of one; null once it is shared. */
+export async function renameHouseholdOfOne(userId: string, name: string): Promise<string | null> {
+  return await retryWhileMoved(null, async (tx) => {
+    const household = await lockHouseholdOf(tx, userId);
 
-  // Try to find existing (case-insensitive)
-  const existing = await findHouseholdByName(normalizedName);
+    if (household === MOVED) return MOVED;
+    if (!household || (await memberIdsIn(tx, household.id)).length > 1) return null;
 
-  if (existing) return existing;
+    await tx
+      .update(households)
+      .set({ name: name.trim(), updatedAt: new Date(), version: sql`${households.version} + 1` })
+      .where(eq(households.id, household.id));
 
-  // Create new household with this user as admin
-  const code = await generateUniqueJoinCode();
-  const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    return household.id;
+  });
+}
 
-  const [row] = await db
-    .insert(households)
-    .values({
-      name: normalizedName,
-      adminUserId: creatorUserId,
-      joinCode: code,
-      joinCodeExpiresAt: expiresAt,
-    })
-    .returning();
+/** What one account deletion did, for the work that runs once it committed. */
+export interface AccountDeletion {
+  /** The household the account was in; null for an account already gone. */
+  householdId: string | null;
+  householdErased: boolean;
+  successorId: string | null;
+  /** Who stays in the household, longest-standing first. */
+  memberIds: string[];
+  /** The erased recipes and cookbooks, whose files are swept after the commit. */
+  recipeIds: string[];
+  cookbookIds: string[];
+  /** The icon files an erased household's own foods showed, swept after the commit where unused. */
+  iconFiles: string[];
+  /** The plan entries for those recipes that became notes, in households that stay. */
+  notes: Array<typeof plannedItems.$inferSelect>;
+}
 
-  const validated = HouseholdSelectBaseSchema.safeParse(row);
+/** Deletes an account under its household's lock, handing the admin role on or taking a last
+ * member's household along; plans of its recipes become notes before they cascade away. */
+export async function deleteAccount(userId: string): Promise<AccountDeletion> {
+  const deletion = await retryWhileMoved(MOVED, async (tx) => {
+    const household = await lockHouseholdOf(tx, userId);
 
-  if (!validated.success) throw new Error("Failed to create household");
+    if (household === MOVED) return MOVED;
+    const others = household
+      ? (await memberIdsIn(tx, household.id)).filter((id) => id !== userId)
+      : [];
+    const successorId = household?.adminUserId === userId ? (others[0] ?? null) : null;
+    const erased = household && others.length === 0 ? household.id : null;
+    // Content rows after the household's: locked, so no household plans one of them meanwhile.
+    const recipeIds = (
+      await tx
+        .select({ id: recipes.id })
+        .from(recipes)
+        .where(eq(recipes.userId, userId))
+        .for("update")
+    ).map((row) => row.id);
+    const cookbookIds = (
+      await tx.select({ id: cookbooks.id }).from(cookbooks).where(eq(cookbooks.userId, userId))
+    ).map((row) => row.id);
+    // An erased household's own plan goes with it, so only the others' entries become notes.
+    const notes = await turnPlannedRecipesIntoNotes(tx, recipeIds, erased);
+    const iconFiles = erased ? await listHouseholdIconFiles(tx, erased) : [];
 
-  return validated.data;
+    if (erased) {
+      await tx.delete(households).where(eq(households.id, erased));
+    } else if (household && successorId) {
+      await tx
+        .update(households)
+        .set({
+          adminUserId: successorId,
+          updatedAt: new Date(),
+          version: sql`${households.version} + 1`,
+        })
+        .where(eq(households.id, household.id));
+    }
+
+    await tx.delete(users).where(eq(users.id, userId));
+
+    return {
+      householdId: household?.id ?? null,
+      householdErased: erased !== null,
+      successorId,
+      memberIds: others,
+      recipeIds,
+      cookbookIds,
+      iconFiles,
+      notes,
+    };
+  });
+
+  if (deletion === MOVED) throw new Error("The account kept moving while being deleted");
+
+  return deletion;
 }
 
 async function generateUniqueJoinCode(): Promise<string> {

@@ -4,7 +4,6 @@
  * who may add and remove, when nothing is written, and what the household
  * hears about it.
  */
-import { TRPCError } from "@trpc/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { pantryProcedures } from "../../src/routers/pantry/pantry";
@@ -14,7 +13,6 @@ import {
   createMockHousehold,
   createMockUser,
 } from "../calendar/test-utils";
-import { assertHouseholdAccess } from "../mocks/permissions";
 import { pantry } from "../mocks/realtime/pantry";
 
 const { addToPantry, addPickedToPantry } = vi.hoisted(() => ({
@@ -23,8 +21,8 @@ const { addToPantry, addPickedToPantry } = vi.hoisted(() => ({
 }));
 const pantryRepository = vi.hoisted(() => ({
   deletePantryIngredient: vi.fn(),
-  getPantryIngredientOwnerId: vi.fn(),
-  listPantryIngredientsByUserIds: vi.fn(),
+  ownPantryIngredientExists: vi.fn(),
+  listPantryIngredientsByHousehold: vi.fn(),
   listPantrySuggestions: vi.fn(),
 }));
 
@@ -47,7 +45,6 @@ describe("the Pantry", () => {
   const caller = pantryProcedures.createCaller(createMockCallerContext(ctx));
 
   beforeEach(() => {
-    assertHouseholdAccess.mockResolvedValue(undefined);
     addToPantry.mockImplementation(async (id: string, input: { userId: string; name: string }) => [
       {
         item: {
@@ -59,15 +56,15 @@ describe("the Pantry", () => {
         created: true,
       },
     ]);
-    pantryRepository.getPantryIngredientOwnerId.mockResolvedValue(ctx.user.id);
+    pantryRepository.ownPantryIngredientExists.mockResolvedValue(true);
     pantryRepository.deletePantryIngredient.mockResolvedValue(true);
   });
 
   it("reads the whole household's Pantry", async () => {
-    pantryRepository.listPantryIngredientsByUserIds.mockResolvedValue([{ id: OLIVE }]);
+    pantryRepository.listPantryIngredientsByHousehold.mockResolvedValue([{ id: OLIVE }]);
 
     await expect(caller.list()).resolves.toEqual([{ id: OLIVE }]);
-    expect(pantryRepository.listPantryIngredientsByUserIds).toHaveBeenCalledWith(ctx.userIds);
+    expect(pantryRepository.listPantryIngredientsByHousehold).toHaveBeenCalledWith(ctx.householdId);
   });
 
   it("adds a name under the client's id and tells the household", async () => {
@@ -75,13 +72,13 @@ describe("the Pantry", () => {
 
     expect(addToPantry).toHaveBeenCalledWith(OLIVE, {
       userId: ctx.user.id,
-      userIds: ctx.userIds,
+      householdId: ctx.householdId,
       name: "Olive Oil",
     });
     expect(pantry.publish).toHaveBeenCalledWith(
       "added",
       { item: expect.objectContaining({ id: OLIVE, name: "Olive Oil" }) },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   });
 
@@ -110,7 +107,7 @@ describe("the Pantry", () => {
     expect(pantry.publish).toHaveBeenCalledWith(
       "added",
       { item: expect.objectContaining({ id: ONION, name: "peper" }) },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   });
 
@@ -124,13 +121,13 @@ describe("the Pantry", () => {
     expect(addToPantry).not.toHaveBeenCalled();
     expect(addPickedToPantry).toHaveBeenCalledWith(OLIVE, {
       userId: ctx.user.id,
-      userIds: ctx.userIds,
+      householdId: ctx.householdId,
       ingredientId: ONION,
     });
     expect(pantry.publish).toHaveBeenCalledWith(
       "added",
       { item: expect.objectContaining({ id: OLIVE, ingredientId: ONION }) },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   });
 
@@ -154,7 +151,7 @@ describe("the Pantry", () => {
     pantryRepository.listPantrySuggestions.mockResolvedValue([{ ingredientId: ONION }]);
 
     await expect(caller.suggestions()).resolves.toEqual([{ ingredientId: ONION }]);
-    expect(pantryRepository.listPantrySuggestions).toHaveBeenCalledWith(ctx.userIds);
+    expect(pantryRepository.listPantrySuggestions).toHaveBeenCalledWith(ctx.householdId);
   });
 
   it("refuses a typed name that names no food", async () => {
@@ -174,12 +171,11 @@ describe("the Pantry", () => {
   it("removes an item and tells the household which", async () => {
     await expect(caller.remove({ id: OLIVE })).resolves.toBe(OLIVE);
 
-    expect(assertHouseholdAccess).toHaveBeenCalledWith(ctx.user.id, ctx.user.id);
-    expect(pantryRepository.deletePantryIngredient).toHaveBeenCalledWith(OLIVE);
+    expect(pantryRepository.deletePantryIngredient).toHaveBeenCalledWith(OLIVE, ctx.householdId);
     expect(pantry.publish).toHaveBeenCalledWith(
       "removed",
       { itemId: OLIVE },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
   });
 
@@ -190,11 +186,8 @@ describe("the Pantry", () => {
     expect(pantry.publish).not.toHaveBeenCalled();
   });
 
-  it("refuses to remove another household's item, or one that does not exist", async () => {
-    assertHouseholdAccess.mockRejectedValue(new TRPCError({ code: "FORBIDDEN" }));
-    await expect(caller.remove({ id: OLIVE })).rejects.toMatchObject({ code: "FORBIDDEN" });
-
-    pantryRepository.getPantryIngredientOwnerId.mockResolvedValue(null);
+  it("refuses to remove an item that does not exist", async () => {
+    pantryRepository.ownPantryIngredientExists.mockResolvedValue(false);
     await expect(caller.remove({ id: OLIVE })).rejects.toMatchObject({ code: "NOT_FOUND" });
     expect(pantryRepository.deletePantryIngredient).not.toHaveBeenCalled();
     expect(pantry.publish).not.toHaveBeenCalled();

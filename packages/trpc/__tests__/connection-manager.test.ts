@@ -92,6 +92,20 @@ describe("connection invalidation on the hub", () => {
     unregisterConnection("user-2", theirs);
   });
 
+  it("closes a deleted account's sockets with 4410, so its devices clear", () => {
+    const mine = fakeSocket();
+
+    registerConnection("user-1", mine);
+    startConnectionInvalidation();
+
+    hub.emit(
+      CONNECTION_INVALIDATION_CHANNEL,
+      envelope({ userId: "user-1", reason: "account-deleted" })
+    );
+
+    expect(mine.close).toHaveBeenCalledWith(4410, "account-deleted");
+  });
+
   it("drops a malformed payload without touching any socket", () => {
     const mine = fakeSocket();
 

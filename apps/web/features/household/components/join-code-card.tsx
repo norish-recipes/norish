@@ -16,44 +16,32 @@ import { ClipboardDocumentIcon as ClipboardDocumentIconOutline } from "@heroicon
 import { Button, Input, toast } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { useHousehold, useHouseholdMutations } from "@norish/shared-react/reader";
-
-const noSubscription = () => () => {};
-const nowToTheSecond = () => Math.floor(Date.now() / 1000) * 1000;
-
-function subscribeToSeconds(onTick: () => void) {
-  const interval = setInterval(onTick, 1000);
-
-  return () => clearInterval(interval);
-}
+import {
+  adminViewOf,
+  everySecondUntil,
+  joinCodeStatus,
+  noTick,
+  nowToTheSecond,
+  useHousehold,
+  useHouseholdMutations,
+} from "@norish/shared-react/reader";
 
 export default function JoinCodeCard() {
   const t = useTranslations("settings.household.joinCode");
   const tErrors = useTranslations("common.errors");
-  const { household, isAdmin } = useHousehold();
+  const { household: cached, currentUserId } = useHousehold();
   const { regenerateJoinCode } = useHouseholdMutations();
-  const joinCodeExpiresAt =
-    household && "joinCode" in household && household.joinCode ? household.joinCodeExpiresAt : null;
+  const household = adminViewOf(cached, currentUserId);
+  const joinCodeExpiresAt = household?.joinCode ? household.joinCodeExpiresAt : null;
   // The clock the countdown reads, to the second, ticking while a code counts down.
   const now = useSyncExternalStore(
-    joinCodeExpiresAt ? subscribeToSeconds : noSubscription,
+    joinCodeExpiresAt ? everySecondUntil(new Date(joinCodeExpiresAt).getTime()) : noTick,
     nowToTheSecond,
     nowToTheSecond
   );
-  // Only an admin's household carries `joinCode`, so `in` narrows to the admin DTO.
-  if (!household || !isAdmin || !("joinCode" in household)) return null;
+  if (!household) return null;
 
-  const msRemaining = household.joinCodeExpiresAt
-    ? new Date(household.joinCodeExpiresAt).getTime() - now
-    : -1;
-  const joinCodeExpired = msRemaining <= 0;
-  const timeRemaining =
-    msRemaining <= 0
-      ? t("expired")
-      : t("countdown", {
-          minutes: Math.floor(msRemaining / 60000),
-          seconds: Math.floor((msRemaining % 60000) / 1000),
-        });
+  const status = joinCodeStatus(household, now);
   const handleCopyJoinCode = async () => {
     if (household.joinCode) {
       try {
@@ -77,7 +65,7 @@ export default function JoinCodeCard() {
   };
   return (
     <SettingsCard icon={ClipboardDocumentIconOutline} title={t("title")}>
-      {household.joinCode && !joinCodeExpired ? (
+      {status.kind === "active" ? (
         <>
           <p className="text-muted text-base">{t("shareDescription")}</p>
           <div className="flex gap-2">
@@ -97,7 +85,10 @@ export default function JoinCodeCard() {
           </div>
           <div className="flex items-center justify-between">
             <span className="text-muted text-base">
-              {t("expiresIn")} <span className="text-warning font-medium">{timeRemaining}</span>
+              {t("expiresIn")}{" "}
+              <span className="text-warning font-medium">
+                {t("countdown", { minutes: status.minutes, seconds: status.seconds })}
+              </span>
             </span>
             <Button size="sm" variant="tertiary" onPress={handleRegenerateCode}>
               <ArrowPathIcon className="size-4" />

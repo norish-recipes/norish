@@ -6,19 +6,18 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import {
   addRecipeImages,
   addRecipeVideos,
-  addUserToHousehold,
-  createHousehold,
-  createTag,
   getHouseholdForUser,
+  getHouseholdIdForUser,
   getRecipeFull,
   getUserAllergies,
   getUserById,
+  joinHousehold,
   updateRecipeImageOrder,
   updateRecipeVideoOrder,
-  updateTagName,
   updateUserAllergies,
   updateUserName,
 } from "@norish/db";
+import { addEntry, renameEntry } from "@norish/db/repositories/list-entries";
 import {
   recipeImages,
   recipeVideos,
@@ -59,11 +58,15 @@ describe("versioned repository behavior", () => {
   });
 
   it("starts tags at version 1 and increments on rename", async () => {
-    const tag = await createTag("Pantry");
+    const { entry: tag } = (await addEntry(
+      "tag",
+      (await getHouseholdIdForUser(testUserId))!,
+      "Pantry"
+    ))!;
 
     expect(tag.version).toBe(1);
 
-    await updateTagName("Pantry", "Pantry Staples");
+    await renameEntry("tag", (await getHouseholdIdForUser(testUserId))!, tag, "Pantry Staples");
 
     const db = getTestDb();
     const [updatedTag] = await db.select().from(tags).where(eq(tags.id, tag.id)).limit(1);
@@ -77,17 +80,11 @@ describe("versioned repository behavior", () => {
 
   it("starts household memberships at version 1 and exposes them in the household DTO", async () => {
     const joiningUser = await createTestUser();
-    const household = await createHousehold({
-      name: "Versioned Household",
-      adminUserId: testUserId,
+    const outcome = await joinHousehold(joiningUser.id, {
+      householdId: (await getHouseholdIdForUser(testUserId))!,
     });
 
-    const membership = await addUserToHousehold({
-      householdId: household.id,
-      userId: joiningUser.id,
-    });
-
-    expect(membership.version).toBe(1);
+    expect("joined" in outcome && outcome.joined.version).toBe(1);
 
     const householdDto = await getHouseholdForUser(joiningUser.id);
 
@@ -122,9 +119,11 @@ describe("versioned repository behavior", () => {
       .insert(stepImages)
       .values({ stepId: step.id, image: "/step.jpg", order: "0" })
       .returning();
-    const [image] = await addRecipeImages(testRecipeId, [{ image: "/hero.jpg", order: 0 }]);
+    const [image] = await addRecipeImages(testRecipeId, [
+      { image: `/recipes/${testRecipeId}/hero.jpg`, order: 0 },
+    ]);
     const [video] = await addRecipeVideos(testRecipeId, [
-      { video: "/clip.mp4", thumbnail: null, duration: 12, order: 0 },
+      { video: `/recipes/${testRecipeId}/video-1.mp4`, thumbnail: null, duration: 12, order: 0 },
     ]);
 
     expect(recipeIngredient.version).toBe(1);
@@ -196,7 +195,9 @@ describe("versioned repository behavior", () => {
 
     expect(initialUser?.version).toBe(1);
 
-    await updateUserName(testUserId, "Updated Test User");
+    const renamed = await updateUserName(testUserId, "Updated Test User");
+
+    expect(renamed.value).toMatchObject({ name: "Updated Test User", version: 2 });
 
     const updatedUser = await getUserById(testUserId);
 
@@ -243,6 +244,14 @@ describe("versioned repository behavior", () => {
       expect.objectContaining({ version: 4 }),
       expect.objectContaining({ version: 4 }),
     ]);
+  });
+
+  it("keeps a stored allergy name a save sends back unchanged, cleaning only new ones", async () => {
+    const db = getTestDb();
+    await db.insert(userAllergies).values({ userId: testUserId, name: "<milk>", version: 1 });
+    await updateUserAllergies(testUserId, ["<milk>", "<b>Soy</b>"], 1);
+
+    expect((await getUserAllergies(testUserId)).allergies).toEqual(["<milk>", "Soy"]);
   });
 
   it("treats stale allergy updates as no-ops", async () => {

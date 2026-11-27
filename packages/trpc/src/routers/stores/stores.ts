@@ -1,13 +1,11 @@
 import { TRPCError } from "@trpc/server";
 
 import type { StoreSearchAddressResult } from "@norish/shared/contracts";
-import { assertHouseholdAccess } from "@norish/auth/permissions";
 import {
   checkStoreNameExistsInHousehold,
   countGroceriesInStore,
   deleteStore,
   getStoreById,
-  getStoreOwnerId,
   reorderStores,
   updateStore,
 } from "@norish/db/repositories/stores";
@@ -26,7 +24,13 @@ import {
 
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
-import { assertAisleNamesUnique, createStoreData, listStoresData } from "./stores-helpers";
+import {
+  assertAisleNamesUnique,
+  assertStoreAccess,
+  createStoreData,
+  listStoresData,
+  storeExistsForHousehold,
+} from "./stores-helpers";
 import {
   createStoreOutputSchema,
   listStoresOutputSchema,
@@ -85,15 +89,12 @@ export const createStoreProcedure = authedProcedure
 const update = authedProcedure.input(StoreUpdateInputSchema).mutation(async ({ ctx, input }) => {
   log.debug({ userId: ctx.user.id, storeId: input.id }, "Updating store");
 
-  const ownerId = await getStoreOwnerId(input.id);
-
   // A Store another member deleted lost to an earlier write: stale, as a changed version is.
-  if (!ownerId) return { success: true, stale: true };
-  await assertHouseholdAccess(ctx.user.id, ownerId);
+  if (!(await storeExistsForHousehold(ctx, input.id))) return { success: true, stale: true };
 
   // Check for duplicate name if name is being changed
   if (input.name) {
-    const exists = await checkStoreNameExistsInHousehold(input.name, ctx.userIds, input.id);
+    const exists = await checkStoreNameExistsInHousehold(input.name, ctx.householdId, input.id);
 
     if (exists) {
       throw new TRPCError({
@@ -107,7 +108,7 @@ const update = authedProcedure.input(StoreUpdateInputSchema).mutation(async ({ c
   assertAisleNamesUnique(input.aisles);
 
   try {
-    const updatedStore = await updateStore(input);
+    const updatedStore = await updateStore(input, ctx.householdId);
 
     if (!updatedStore) {
       log.info(
@@ -124,7 +125,7 @@ const update = authedProcedure.input(StoreUpdateInputSchema).mutation(async ({ c
       {
         store: updatedStore,
       },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
 
     return { success: true, stale: false };
@@ -142,14 +143,12 @@ const remove = authedProcedure.input(StoreDeleteSchema).mutation(async ({ ctx, i
     "Deleting store"
   );
 
-  const ownerId = await getStoreOwnerId(storeId);
-
   // A Store already gone is a delete that already happened: a no-op, not stale.
-  if (!ownerId) return { success: true, stale: false };
-  await assertHouseholdAccess(ctx.user.id, ownerId);
+  if (!(await storeExistsForHousehold(ctx, storeId))) return { success: true, stale: false };
 
   try {
     const { deletedGroceryIds, movedGroceries, storeDeleted, stale } = await deleteStore(
+      ctx.householdId,
       storeId,
       version,
       deleteGroceries,
@@ -161,7 +160,7 @@ const remove = authedProcedure.input(StoreDeleteSchema).mutation(async ({ ctx, i
       void groceries.publish(
         "updated",
         { changedGroceries: movedGroceries },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
     }
 
@@ -188,7 +187,7 @@ const remove = authedProcedure.input(StoreDeleteSchema).mutation(async ({ ctx, i
           storeId,
           deletedGroceryIds,
         },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
     }
 
@@ -198,7 +197,7 @@ const remove = authedProcedure.input(StoreDeleteSchema).mutation(async ({ ctx, i
         {
           groceryIds: deletedGroceryIds,
         },
-        { householdKey: ctx.householdKey }
+        { householdId: ctx.householdId }
       );
     }
 
@@ -216,7 +215,7 @@ const reorder = authedProcedure.input(StoreReorderSchema).mutation(async ({ ctx,
   log.debug({ userId: ctx.user.id, storeCount: storeUpdates.length }, "Reordering stores");
 
   try {
-    const reorderedStores = await reorderStores(storeUpdates);
+    const reorderedStores = await reorderStores(storeUpdates, ctx.householdId);
 
     if (reorderedStores.length === 0 && storeUpdates.length > 0) {
       log.info(
@@ -245,7 +244,7 @@ const reorder = authedProcedure.input(StoreReorderSchema).mutation(async ({ ctx,
       {
         stores: reorderedStores,
       },
-      { householdKey: ctx.householdKey }
+      { householdId: ctx.householdId }
     );
 
     return { success: true, stale: reorderedStores.length !== storeUpdates.length };
@@ -256,14 +255,9 @@ const reorder = authedProcedure.input(StoreReorderSchema).mutation(async ({ ctx,
 });
 
 const getGroceryCount = authedProcedure.input(storeIdInputSchema).query(async ({ ctx, input }) => {
-  const ownerId = await getStoreOwnerId(input.storeId);
+  await assertStoreAccess(ctx, input.storeId);
 
-  if (!ownerId) {
-    throw new TRPCError({ code: "NOT_FOUND", message: "Store not found" });
-  }
-  await assertHouseholdAccess(ctx.user.id, ownerId);
-
-  return countGroceriesInStore(input.storeId);
+  return countGroceriesInStore(input.storeId, ctx.householdId);
 });
 
 /**
@@ -276,10 +270,10 @@ const getGroceryCount = authedProcedure.input(storeIdInputSchema).query(async ({
 const checkSearchAddress = authedProcedure
   .input(StoreSearchAddressCheckSchema)
   .mutation(async ({ ctx, input }): Promise<StoreSearchAddressResult> => {
-    const store = await getStoreById(input.storeId);
+    await assertStoreAccess(ctx, input.storeId);
+    const store = await getStoreById(input.storeId, ctx.householdId);
 
     if (!store) throw new TRPCError({ code: "NOT_FOUND", message: "Store not found" });
-    await assertHouseholdAccess(ctx.user.id, store.userId);
 
     // What the client just saved wins over what the row still says, and a
     // field the client cleared is cleared: `null` is an answer, `undefined`
@@ -293,10 +287,10 @@ const checkSearchAddress = authedProcedure
       searchAddress = await requireQueueApiHandler("discoverSearchAddress")(website);
 
       if (searchAddress) {
-        const saved = await updateStore({ id: store.id, searchAddress });
+        const saved = await updateStore({ id: store.id, searchAddress }, ctx.householdId);
 
         if (saved) {
-          void stores.publish("updated", { store: saved }, { householdKey: ctx.householdKey });
+          void stores.publish("updated", { store: saved }, { householdId: ctx.householdId });
         }
       }
     }

@@ -14,6 +14,7 @@ import {
 import { patchDashboardRecipeFromFull } from "@norish/shared/contracts/zod";
 
 import type { InfiniteRecipeData } from "./library-cache";
+import { olderThanHeld } from "../offline/version-order";
 import { usePlatform } from "../platform/platform";
 import { rereadInWindow, useRealtimeSubscription } from "../realtime/use-realtime-subscription";
 import { useTRPC } from "../trpc";
@@ -191,11 +192,12 @@ export function useRecipeListSubscription() {
   const { setAllRecipesData, removePendingRecipe } = useRecipesCacheHelpers();
   const dropFromSelection = useRecipeSelection((state) => state.drop);
 
-  const live = { liveQueryKeys: [...recipeListKeys(trpc), trpc.config.categories.queryKey()] };
+  const listKeys = [trpc.config.categories.queryKey(), trpc.config.tags.queryKey()];
+  const live = { liveQueryKeys: [...recipeListKeys(trpc), ...listKeys] };
   // The server saves after the mutation answers, so what is built from the recipes is reread
-  // when the save is announced, not when the mutation succeeds.
+  // when the save is announced, not when the mutation succeeds; a save may add list entries.
   const rereadFacets = () => {
-    void queryClient.invalidateQueries({ queryKey: trpc.config.categories.queryKey() });
+    for (const queryKey of listKeys) void queryClient.invalidateQueries({ queryKey });
     rereadDiscover(queryClient, trpc);
   };
 
@@ -208,7 +210,9 @@ export function useRecipeListSubscription() {
         pages: prev.pages.map((page) => ({
           ...page,
           recipes: page.recipes.map((r) =>
-            r.id === updatedRecipe.id ? patchDashboardRecipeFromFull(r, updatedRecipe) : r
+            r.id === updatedRecipe.id && !olderThanHeld(updatedRecipe.version, r.version)
+              ? patchDashboardRecipeFromFull(r, updatedRecipe)
+              : r
           ),
         })),
       };
@@ -228,7 +232,10 @@ export function useRecipeListSubscription() {
     ...live,
     onEvent: ({ recipe, source, kind }) => {
       updateRecipeInList(recipe);
-      queryClient.setQueryData(trpc.recipes.get.queryKey({ id: recipe.id }), recipe);
+      queryClient.setQueryData<FullRecipeDTO | null>(
+        trpc.recipes.get.queryKey({ id: recipe.id }),
+        (cached) => (olderThanHeld(recipe.version, cached?.version) ? cached : recipe)
+      );
 
       // An enrichment adds no household Category; some change what Discover lists.
       if (source !== "enrichment") rereadFacets();

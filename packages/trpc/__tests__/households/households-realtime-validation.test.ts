@@ -30,7 +30,7 @@ describe("household publishes validate against their zod schemas", () => {
     await households.publish(
       "userJoined",
       { user: { id: "u1", name: null, isAdmin: false, version: 1 } },
-      { householdKey: "h1" }
+      { householdId: "h1" }
     );
 
     expect(valkey.realtimePublish).toHaveBeenCalledTimes(1);
@@ -41,7 +41,7 @@ describe("household publishes validate against their zod schemas", () => {
 
   it("throws on a malformed payload outside production, so a test catches the rot", async () => {
     await expect(
-      households.publish("userJoined", { user: { id: 1 } } as never, { householdKey: "h1" })
+      households.publish("userJoined", { user: { id: 1 } } as never, { householdId: "h1" })
     ).rejects.toThrow(/failed its schema/);
 
     expect(valkey.realtimePublish ?? valkey.publish).not.toHaveBeenCalled();

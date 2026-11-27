@@ -4,6 +4,7 @@ import type {
   ArchiveImportNote,
   RecipeDashboardDTO,
 } from "@norish/shared/contracts";
+import { getRecipeHouseholdIds } from "@norish/db/repositories/recipes";
 import { announceUsableRecipe } from "@norish/queue/enrichment/announce";
 import {
   ArchiveFormat,
@@ -11,9 +12,9 @@ import {
   getArchiveInfo,
   importArchive as runArchiveImport,
 } from "@norish/shared-server/archive/parser";
-import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { archive } from "@norish/shared-server/realtime/archive";
+import { cookbookAudience, policyAudience } from "@norish/shared-server/realtime/audience";
 import { cookbooks } from "@norish/shared-server/realtime/cookbooks";
 import { recipes } from "@norish/shared-server/realtime/recipes";
 
@@ -122,20 +123,15 @@ const importArchive = authedProcedure
  * The parser detects the format and picks the reader for it.
  */
 async function runArchiveImportAsync(
-  ctx: Pick<AuthedProcedureContext, "user" | "userIds" | "householdKey" | "householdUserIds">,
+  ctx: Pick<AuthedProcedureContext, "user" | "householdId">,
   buffer: Buffer,
   total: number
 ): Promise<void> {
-  const { userIds, householdKey, householdUserIds } = ctx;
+  const { householdId } = ctx;
   const userId = ctx.user.id;
   const allImported: RecipeDashboardDTO[] = [];
   const allErrors: ArchiveImportError[] = [];
   const allNotes: ArchiveImportNote[] = [];
-  // Archive-created recipes reach whoever the view policy says may see them,
-  // like every other recipe create.
-  const viewPolicy = (await getRecipePermissionPolicy()).view;
-  const target = { viewPolicy, userId, householdKey };
-
   // Calculate dynamic batch size based on total
   const batchSize = Math.max(1, calculateBatchSize(total));
 
@@ -147,25 +143,35 @@ async function runArchiveImportAsync(
   // Landed recipes reach the household a batch at a time, and so do the
   // cookbooks the import filed them into: a cookbook it made appears, and
   // each filing refreshes what it touched, as for a recipe filed by hand.
-  const publishBatch = () => {
-    if (batchRecipes.length > 0) {
-      void recipes.publish("recipeBatchCreated", { recipes: batchRecipes }, target);
-    }
-
-    for (const { filing } of batchFilings) {
-      if (filing.created) void cookbooks.publish("created", { cookbook: filing.created }, target);
-    }
-
-    for (const { recipeId, filing } of batchFilings) {
-      void cookbooks.publish(
-        "membershipChanged",
-        { cookbookId: filing.cookbookId, recipeIds: [recipeId], isMember: true },
-        target
-      );
-    }
+  // Each reaches whoever may see it when it is published, from its row's household then.
+  const publishBatch = async () => {
+    const landed = batchRecipes;
+    const filings = batchFilings;
 
     batchRecipes = [];
     batchFilings = [];
+
+    const households = await getRecipeHouseholdIds(landed.map(({ id }) => id));
+
+    for (const household of new Set(households.values())) {
+      void recipes.publish(
+        "recipeBatchCreated",
+        { recipes: landed.filter(({ id }) => households.get(id) === household) },
+        await policyAudience(household)
+      );
+    }
+
+    for (const { recipeId, filing } of filings) {
+      const audience = await cookbookAudience(filing.cookbookId);
+
+      if (!audience) continue;
+      if (filing.created) void cookbooks.publish("created", { cookbook: filing.created }, audience);
+      void cookbooks.publish(
+        "membershipChanged",
+        { cookbookId: filing.cookbookId, recipeIds: [recipeId], isMember: true },
+        audience
+      );
+    }
   };
 
   let current = 0;
@@ -179,7 +185,7 @@ async function runArchiveImportAsync(
     const inserted = landed?.inserted;
 
     if (inserted) {
-      announceUsableRecipe(inserted, { userId, householdKey, householdUserIds }).catch((err) =>
+      announceUsableRecipe(inserted, { userId, householdId }).catch((err) =>
         log.warn({ err, recipeId: inserted.recipeId }, "Failed to announce archive recipe")
       );
     }
@@ -210,7 +216,7 @@ async function runArchiveImportAsync(
       const batchLanded = batchRecipes.length;
 
       // Emit recipe batch to household (so all members see new recipes)
-      publishBatch();
+      void publishBatch();
 
       // Always emit progress to importing user
       void archive.publish(
@@ -243,11 +249,11 @@ async function runArchiveImportAsync(
 
   try {
     // Import archive (auto-detects format)
-    const result = await runArchiveImport(userId, userIds, buffer, onProgress);
+    const result = await runArchiveImport({ userId, householdId }, buffer, onProgress);
 
     // An archive whose entries outnumber or fall short of its count never
     // reaches the last boundary, so whatever landed since is sent now.
-    publishBatch();
+    await publishBatch();
 
     log.info(
       {

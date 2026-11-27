@@ -1,8 +1,19 @@
+import type { PickerKind } from "@norish/shared-react/lists";
+
 export type Choice = { key: string; label: string };
+
+/** A list the sheet searches as you type, with a "Create" row, in place of fixed `choices`. */
+export type ChoiceList = {
+  kind: PickerKind;
+  /** The recipe being edited, once it exists: its household's list is the one offered. */
+  recipeId?: string;
+};
 
 /** What the editor asks its choice sheet to list and where the picks go: what a route cannot carry. */
 export type ChoiceSlot = {
   choices: Choice[];
+  /** Set, the sheet lists this household list (keys are entry ids) and `choices` is ignored. */
+  list?: ChoiceList;
   selected: string[];
   onChange: (selected: string[]) => void;
 };

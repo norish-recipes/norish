@@ -12,12 +12,13 @@
  * and its tags are validated as any kind's claims are.
  */
 
-import { listAllTagNames } from "@norish/db/repositories/tags";
+import { listEntryNames } from "@norish/db/repositories/list-entries";
 import {
   getTagStrategy,
   isDecisionUseEnabled,
 } from "@norish/shared-server/config/server-config-loader";
 import { aiLogger } from "@norish/shared-server/logger";
+import { matchNamesToList } from "@norish/shared/lib/list-match";
 
 import type { RecipeForTagging } from "./auto-tagging-prompt";
 import type { AutoTaggingOutput } from "./auto-tagging.schema";
@@ -80,9 +81,13 @@ async function decideTags(recipe: RecipeForTagging): Promise<string[] | null> {
  * Generate tags for a recipe using AI.
  *
  * @param recipe - The recipe data to analyze
+ * @param householdId - The recipe's household, whose Tags `predefined_db` offers and `freeform` matches
  * @returns Array of tag strings; throws on AI failure
  */
-export async function generateTagsForRecipe(recipe: RecipeForTagging): Promise<string[]> {
+export async function generateTagsForRecipe(
+  recipe: RecipeForTagging,
+  householdId: string
+): Promise<string[]> {
   // The tag strategy is deliberately not an enablement check: whether auto-tagging
   // runs automatically is coordination policy, not a reason to refuse a request.
   const strategy = await getTagStrategy();
@@ -120,18 +125,16 @@ export async function generateTagsForRecipe(recipe: RecipeForTagging): Promise<s
     }
   }
 
-  // For predefined_db mode, fetch existing tags from database
-  let existingDbTags: string[] | undefined;
-
-  if (strategy === "predefined_db") {
-    existingDbTags = await listAllTagNames();
-    aiLogger.debug({ existingTagCount: existingDbTags.length }, "Fetched existing DB tags");
-  }
+  // The recipe household's Tags: offered under predefined_db, matched before creating under freeform.
+  const householdTags =
+    strategy === "predefined_db" || strategy === "freeform"
+      ? await listEntryNames("tag", householdId)
+      : [];
 
   const output = await generateStructured({
     prompt: "auto-tagging",
     schema: autoTaggingSchema,
-    sections: await buildAutoTaggingSections({ existingDbTags }, recipe),
+    sections: await buildAutoTaggingSections({ existingDbTags: householdTags }, recipe),
   });
 
   // Normalize tags: lowercase, trim, deduplicate
@@ -150,7 +153,8 @@ export async function generateTagsForRecipe(recipe: RecipeForTagging): Promise<s
     claims: normalizedTags.map((tag) => ({ id: tag, question: tagQuestion(tag) })),
     ...(decisionUse ? { mode: "enforce" as const } : {}),
   });
-  const tags = kept.map((claim) => claim.id);
+  const keptTags = kept.map((claim) => claim.id);
+  const tags = strategy === "freeform" ? matchNamesToList(keptTags, householdTags) : keptTags;
 
   aiLogger.info({ title: recipe.title, tags, path: "language-model" }, "Auto-tagging completed");
 

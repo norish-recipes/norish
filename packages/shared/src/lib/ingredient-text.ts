@@ -85,3 +85,8 @@ export function lineFoodText({ text, amount, unit }: RecipeLineText, units: Unit
 
   return (read?.unitOfMeasureID ?? read?.unitOfMeasure) && food ? food : text;
 }
+
+/** The text a stored line means, its foods read from it (`lineFoodText`); "" for one naming none. */
+export function lineMeaning(line: RecipeLineText, units: UnitsMap): string {
+  return lineNamesNoFood(line) ? "" : lineFoodText(line, units);
+}

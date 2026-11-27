@@ -3,9 +3,7 @@
 import { useMemo } from "react";
 import { useStructuralSharing } from "@/features/groceries/hooks/use-structural-sharing";
 import { listFoodIds } from "@/features/groceries/lib/list-food-ids";
-import { ShoppingCartIcon } from "@heroicons/react/24/outline";
 import { motion } from "motion/react";
-import { useTranslations } from "next-intl";
 
 import type { GroceryDto, RecurringGroceryDto, StoreDto } from "@norish/shared/contracts";
 import type { GroceryGroup } from "@norish/shared/lib/grocery-grouping";
@@ -17,10 +15,10 @@ import {
 } from "@norish/shared-react/groceries";
 import { useIngredientIcons } from "@norish/shared-react/ingredients";
 import { groupGroceriesByIngredient } from "@norish/shared/lib/grocery-grouping";
-import { cssEmptyStateGlow } from "@norish/web/config/css-tokens";
 
 import { DndGroceryProvider } from "./dnd/dnd-grocery-provider";
 import { DndGroupedGroceryProvider } from "./dnd/dnd-grouped-grocery-provider";
+import { GroceryListEmpty } from "./grocery-list-empty";
 import { GroupedStoreSection } from "./grouped-store-section";
 import { StoreSection } from "./store-section";
 
@@ -70,7 +68,6 @@ function GroceryListContent({
   getRecipeNameForGrocery,
   groupSimilarIngredients = false,
 }: GroceryListProps) {
-  const t = useTranslations("groceries.empty");
   const { units: customUnits } = useUnitsQuery();
   // Where each Store files each name — the one place a grocery's aisle comes
   // from (ADR-0031) — and the one write a drop into an aisle makes.
@@ -107,25 +104,7 @@ function GroceryListContent({
   const hasStores = stores.length > 0;
 
   if (!hasGroceries && !hasStores) {
-    return (
-      <div className="flex flex-col items-center justify-center px-4 py-20">
-        <div className="border-border bg-surface shadow-surface relative w-full max-w-xl rounded-xl border">
-          <div className="flex flex-col items-center gap-6 p-10 text-center">
-            <div className="relative">
-              <div className={cssEmptyStateGlow} />
-              <div className="bg-accent/15 text-accent relative mx-auto flex h-16 w-16 items-center justify-center rounded-2xl">
-                <ShoppingCartIcon className="h-7 w-7" />
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <h2 className="text-lg font-semibold">{t("title")}</h2>
-              <p className="text-muted text-base">{t("description")}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return <GroceryListEmpty />;
   }
 
   const sortedStores = stores.slice().sort((a, b) => a.sortOrder - b.sortOrder);

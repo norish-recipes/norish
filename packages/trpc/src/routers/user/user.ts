@@ -1,24 +1,24 @@
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
-import { z } from "zod";
 
 import { deleteUserAccount } from "@norish/auth/account-deletion";
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 import {
   clearUserAvatar,
-  getAllergiesForUsers,
   getApiKeysForUser,
-  getHouseholdForUser,
+  getHouseholdAllergyNames,
   getSignInMethodsForUser,
   getUserAllergies,
   getUserById,
   getUserPreferences,
+  getUserProfile,
   setUserDevicePreferences,
   updateUserAllergies,
   updateUserAvatar,
   updateUserName,
   updateUserPreferences,
 } from "@norish/db";
+import { removeAccountJobs } from "@norish/queue/remove-account-jobs";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import {
   deleteAvatarByFilename,
@@ -45,23 +45,28 @@ import { router } from "../../trpc";
  * suppression, ADR-0021) that a member's profile picture changed.
  */
 function emitMemberProfileUpdated(
-  ctx: { user: { id: string }; household: { id: string } | null },
+  ctx: { user: { id: string }; householdId: string },
   image: string | null
 ) {
-  if (!ctx.household) {
-    log.debug({ userId: ctx.user.id }, "No household, skipping memberProfileUpdated emit");
-
-    return;
-  }
-
   void households.publish(
     "memberProfileUpdated",
     {
       userId: ctx.user.id,
       image,
     },
-    { householdKey: ctx.household.id }
+    { householdId: ctx.householdId }
   );
+}
+
+/** The profile with its account-wide preferences only; Device Preferences have their own read. */
+async function getProfileWithoutDevicePreferences(userId: string) {
+  const profile = await getUserProfile(userId);
+
+  if (!profile) return null;
+
+  const { phone: _phone, desktop: _desktop, ...preferences } = profile.preferences ?? {};
+
+  return { ...profile, preferences };
 }
 
 /**
@@ -71,24 +76,17 @@ function emitMemberProfileUpdated(
 const get = authedProcedure.query(async ({ ctx }) => {
   log.debug({ userId: ctx.user.id }, "Getting user settings");
 
-  const freshUser = await getUserById(ctx.user.id);
+  const freshUser = await getProfileWithoutDevicePreferences(ctx.user.id);
   const apiKeys = await getApiKeysForUser(ctx.user.id);
-  const {
-    phone: _phone,
-    desktop: _desktop,
-    ...preferences
-  } = await getUserPreferences(ctx.user.id);
-
-  // completed DB reads
 
   return {
     user: {
       id: ctx.user.id,
       email: freshUser?.email ?? ctx.user.email,
       name: freshUser?.name ?? ctx.user.name,
-      image: freshUser?.image ?? ctx.user.image,
+      image: freshUser ? freshUser.image : ctx.user.image,
       version: freshUser?.version ?? 1,
-      preferences,
+      preferences: freshUser?.preferences ?? {},
     },
     apiKeys: apiKeys.map((k) => ({
       id: k.id,
@@ -119,24 +117,21 @@ const updatePreferences = authedProcedure
         "Ignoring stale user preferences mutation"
       );
 
-      // The stored person-level choices, so the client drops its
-      // optimistic copy; never the device blocks, which a toggle owns.
-      const { locale, afterPlanning, measurementSystem } = await getUserPreferences(ctx.user.id);
+      const storedUser = await getUserProfile(ctx.user.id);
+      const { locale, afterPlanning, measurementSystem } = storedUser?.preferences ?? {};
 
       return {
         success: true,
         stale: true,
         preferences: { locale, afterPlanning, measurementSystem },
-        version: input.version,
+        version: storedUser?.version ?? input.version,
       };
     }
-
-    const updatedUser = await getUserById(ctx.user.id);
 
     return {
       success: true,
       preferences: input.preferences,
-      version: updatedUser?.version ?? input.version,
+      version: result.value,
     };
   });
 
@@ -188,15 +183,13 @@ const updateName = authedProcedure
       return { success: true, stale: true };
     }
 
-    const updatedUser = await getUserById(ctx.user.id);
-
-    if (!updatedUser) {
+    if (!result.value) {
       return { success: false, error: "User not found" };
     }
 
     return {
       success: true,
-      user: updatedUser,
+      user: result.value,
     };
   });
 
@@ -271,9 +264,7 @@ const uploadAvatar = authedProcedure.input(formDataInputSchema).mutation(async (
     predecessorFilename ? [filename, predecessorFilename] : [filename]
   );
 
-  const updatedUser = await getUserById(ctx.user.id);
-
-  if (!updatedUser) {
+  if (!result.value) {
     return { success: false, error: "User not found" };
   }
 
@@ -283,7 +274,7 @@ const uploadAvatar = authedProcedure.input(formDataInputSchema).mutation(async (
 
   return {
     success: true,
-    user: updatedUser,
+    user: result.value,
   };
 });
 
@@ -309,9 +300,7 @@ const deleteAvatar = authedProcedure
     // Delete keeps nothing — no payload should render a removed picture
     await sweepUserAvatars(ctx.user.id);
 
-    const updatedUser = await getUserById(ctx.user.id);
-
-    if (!updatedUser) {
+    if (!clearResult.value) {
       return { success: false, error: "User not found" };
     }
 
@@ -321,32 +310,18 @@ const deleteAvatar = authedProcedure
 
     return {
       success: true,
-      user: updatedUser,
+      user: clearResult.value,
     };
   });
 
 /**
- * Delete user account
+ * Delete the reader's own account, as an admin's removal does: an admin's role passes to the
+ * longest-standing member, and a last member takes the household along.
  */
 const deleteAccount = authedProcedure.mutation(async ({ ctx }) => {
   log.debug({ userId: ctx.user.id }, "Deleting account");
 
-  // Check if user is admin of household with other members
-  const household = await getHouseholdForUser(ctx.user.id);
-
-  if (household && household.adminUserId === ctx.user.id) {
-    const memberCount = household.users.length;
-
-    if (memberCount > 1) {
-      return {
-        success: false,
-        error:
-          "You cannot delete your account while you are the admin of a household with other members. Transfer admin privileges first or have all members leave.",
-      };
-    }
-  }
-
-  await deleteUserAccount(ctx.user.id);
+  await deleteUserAccount(ctx.user.id, removeAccountJobs);
 
   log.info({ userId: ctx.user.id }, "Account deleted");
 
@@ -393,23 +368,10 @@ const setAllergies = authedProcedure
 
     const updatedAllergies = await getUserAllergies(ctx.user.id);
 
-    if (ctx.household) {
-      const userIds = ctx.household.users.map((u) => u.id);
-      const allergiesRows = await getAllergiesForUsers(userIds);
-      const allergies = [...new Set(allergiesRows.map((a) => a.tagName))];
+    const allergies = await getHouseholdAllergyNames(ctx.householdId);
 
-      log.info(
-        { householdId: ctx.household.id, allergies },
-        "Emitting allergiesUpdated to household"
-      );
-      void households.publish(
-        "allergiesUpdated",
-        { allergies },
-        { householdKey: ctx.household.id }
-      );
-    } else {
-      log.info({ userId: ctx.user.id }, "No household, skipping allergiesUpdated emit");
-    }
+    log.info({ householdId: ctx.householdId, allergies }, "Emitting allergiesUpdated to household");
+    void households.publish("allergiesUpdated", { allergies }, { householdId: ctx.householdId });
 
     log.info({ userId: ctx.user.id, allergies: input.allergies }, "User allergies updated");
 

@@ -1,13 +1,17 @@
 "use client";
 
-import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
+import { ActionButton } from "@/components/shared/action-button";
+import {
+  CancelButton,
+  ModalFooter,
+  ModalFrame,
+  ModalTitle,
+} from "@/components/shared/confirm-modal";
 import { ExclamationTriangleIcon, EyeIcon } from "@heroicons/react/16/solid";
 import { Button, Modal } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { useIngredientUsesQuery } from "@norish/shared-react/ingredients";
-
-const DELETE_TOUCHES = ["recipeLines", "groceries", "pantry"] as const;
+import { DELETE_TOUCHES, useIngredientUseCounts } from "@norish/shared-react/ingredients";
 
 /** Asks before an Ingredient goes, saying how many lines, groceries and pantry items it touches. */
 export function DeleteIngredientModal({
@@ -23,13 +27,9 @@ export function DeleteIngredientModal({
   onShowUses: () => void;
 }) {
   return (
-    <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={onClose}>
-      <Modal.Container className="z-[1100]">
-        <Modal.Dialog data-testid="ingredient-delete-dialog">
-          <DeleteIngredientContent onClose={onClose} {...content} />
-        </Modal.Dialog>
-      </Modal.Container>
-    </Modal.Backdrop>
+    <ModalFrame data-testid="ingredient-delete-dialog" isOpen={isOpen} onOpenChange={onClose}>
+      <DeleteIngredientContent onClose={onClose} {...content} />
+    </ModalFrame>
   );
 }
 
@@ -49,25 +49,25 @@ function DeleteIngredientContent({
 }) {
   const t = useTranslations("settings.ingredients");
   const tActions = useTranslations("common.actions");
-  const { uses: data, isPending } = useIngredientUsesQuery(ingredientId);
-  const touched = DELETE_TOUCHES.filter((key) => (data?.counts[key] ?? 0) > 0);
+  const { counts, isPending } = useIngredientUseCounts(ingredientId);
+  const touched = DELETE_TOUCHES.filter((key) => (counts?.[key] ?? 0) > 0);
 
   return (
     <>
-      <Modal.Header className="flex items-center gap-2">
+      <ModalTitle>
         <ExclamationTriangleIcon className="text-danger h-5 w-5" />
         {t("deleteTitle", { name })}
-      </Modal.Header>
+      </ModalTitle>
       <Modal.Body className="flex flex-col gap-3">
         <p>{t("deleteConfirm")}</p>
-        {data && touched.length > 0 ? (
+        {counts && touched.length > 0 ? (
           <div className="flex flex-col items-start gap-2">
             <ul
               className="text-muted list-disc pl-5 text-sm"
               data-testid="ingredient-delete-touches"
             >
               {touched.map((key) => (
-                <li key={key}>{t(`deleteTouches.${key}`, { count: data.counts[key] })}</li>
+                <li key={key}>{t(`deleteTouches.${key}`, { count: counts[key] })}</li>
               ))}
             </ul>
             <Button size="sm" variant="tertiary" onPress={onShowUses}>
@@ -77,23 +77,18 @@ function DeleteIngredientContent({
           </div>
         ) : null}
       </Modal.Body>
-      <Modal.Footer>
-        <ActionButtonGroup>
-          <ActionButton action="cancel" onPress={onClose}>
-            {tActions("cancel")}
-          </ActionButton>
-          <ActionButton
-            action="delete"
-            data-testid="ingredient-delete-confirm"
-            // Not before the counts are read; a failed read leaves it open.
-            isDisabled={isPending}
-            variant="danger"
-            onPress={onConfirm}
-          >
-            {tActions("delete")}
-          </ActionButton>
-        </ActionButtonGroup>
-      </Modal.Footer>
+      <ModalFooter start={<CancelButton onPress={onClose} />}>
+        <ActionButton
+          action="delete"
+          data-testid="ingredient-delete-confirm"
+          // Not before the counts are read; a failed read leaves it open.
+          isDisabled={isPending}
+          variant="danger"
+          onPress={onConfirm}
+        >
+          {tActions("delete")}
+        </ActionButton>
+      </ModalFooter>
     </>
   );
 }

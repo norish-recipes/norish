@@ -5,19 +5,21 @@ import {
   addRecipeImages,
   countRecipeImages,
   deleteRecipeImageById,
+  getRecipeHouseholdIds,
   getRecipeImageById,
-  getRecipeOwnerId,
 } from "@norish/db/repositories/recipes";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { refreshDishColorForRecipe } from "@norish/shared-server/media/dish-color";
 import {
   deleteImageByUrl,
   deleteStepImageByUrl,
+  deleteUnreferencedRecipeFile,
   saveImageBytes,
   saveStepImageBytes,
 } from "@norish/shared-server/media/storage";
 import { ALLOWED_IMAGE_MIME_SET } from "@norish/shared/contracts";
 import { DeleteRecipeImageInputSchema, MAX_RECIPE_IMAGES } from "@norish/shared/contracts/zod";
+import { mediaId } from "@norish/shared/lib/recipe-media";
 
 import type { FormDataInput, UploadedFile } from "../../form-data";
 import { afterCommit } from "../../after-commit";
@@ -27,9 +29,10 @@ import { router } from "../../trpc";
 import {
   announceRecipeUpdated,
   assertRecipeAccess,
+  assertRecipeMediaAccess,
   createSettled,
-  mediaRecipeId,
   recipeIdOfMediaUrl,
+  releaseRecipeMediaClaim,
 } from "./helpers";
 
 // --- Shared Helpers ---
@@ -73,7 +76,7 @@ export async function extractAndValidateImage(
  * Requires recipeId to save to: uploads/recipes/{recipeId}/{hash}.jpg
  */
 const uploadImage = authedProcedure.input(formDataInputSchema).mutation(async ({ ctx, input }) => {
-  const recipeId = mediaRecipeId(input.get("recipeId"));
+  const recipeId = mediaId(input.get("recipeId"));
 
   log.debug({ userId: ctx.user.id, recipeId }, "Uploading recipe image");
 
@@ -81,14 +84,13 @@ const uploadImage = authedProcedure.input(formDataInputSchema).mutation(async ({
     return { success: false, error: "Recipe ID is required" };
   }
 
-  // A recipe not stored yet (the new-recipe form uploads first) is the caller's own.
-  await assertRecipeAccess(ctx, recipeId, "edit");
-
   const validation = await extractAndValidateImage(input);
 
   if (!validation.success) {
     return validation;
   }
+
+  await assertRecipeMediaAccess(ctx, recipeId, "upload");
 
   try {
     const url = await saveImageBytes(validation.bytes, recipeId);
@@ -100,6 +102,7 @@ const uploadImage = authedProcedure.input(formDataInputSchema).mutation(async ({
     const message = error instanceof Error ? error.message : "Failed to upload image";
 
     log.error({ userId: ctx.user.id, recipeId, error }, "Failed to upload recipe image");
+    await releaseRecipeMediaClaim(ctx, recipeId);
 
     return { success: false, error: message };
   }
@@ -121,10 +124,10 @@ const deleteImage = authedProcedure
       return { success: false, error: "Invalid image URL format" };
     }
 
-    await assertRecipeAccess(ctx, recipeId, "edit");
+    await assertRecipeMediaAccess(ctx, recipeId, "delete");
 
     try {
-      await deleteImageByUrl(input.url);
+      await deleteImageByUrl(input.url, recipeId);
 
       log.info({ userId: ctx.user.id, url: input.url }, "Recipe image deleted");
 
@@ -145,7 +148,7 @@ const deleteImage = authedProcedure
 const uploadStepImage = authedProcedure
   .input(formDataInputSchema)
   .mutation(async ({ ctx, input }) => {
-    const recipeId = mediaRecipeId(input.get("recipeId"));
+    const recipeId = mediaId(input.get("recipeId"));
 
     log.debug({ userId: ctx.user.id, recipeId }, "Uploading step image");
 
@@ -153,13 +156,13 @@ const uploadStepImage = authedProcedure
       return { success: false, error: "Recipe ID is required" };
     }
 
-    await assertRecipeAccess(ctx, recipeId, "edit");
-
     const validation = await extractAndValidateImage(input);
 
     if (!validation.success) {
       return validation;
     }
+
+    await assertRecipeMediaAccess(ctx, recipeId, "upload");
 
     try {
       const url = await saveStepImageBytes(validation.bytes, recipeId);
@@ -171,6 +174,7 @@ const uploadStepImage = authedProcedure
       const message = error instanceof Error ? error.message : "Failed to upload step image";
 
       log.error({ userId: ctx.user.id, recipeId, error }, "Failed to upload step image");
+      await releaseRecipeMediaClaim(ctx, recipeId);
 
       return { success: false, error: message };
     }
@@ -187,10 +191,10 @@ const deleteStepImage = authedProcedure
       return { success: false, error: "Invalid image URL format" };
     }
 
-    await assertRecipeAccess(ctx, recipeId, "edit");
+    await assertRecipeMediaAccess(ctx, recipeId, "delete");
 
     try {
-      await deleteStepImageByUrl(input.url);
+      await deleteStepImageByUrl(input.url, recipeId);
 
       log.info({ userId: ctx.user.id, url: input.url }, "Step image deleted");
 
@@ -214,7 +218,7 @@ const deleteStepImage = authedProcedure
 const uploadGalleryImage = authedProcedure
   .input(formDataInputSchema)
   .mutation(async ({ ctx, input }) => {
-    const recipeId = mediaRecipeId(input.get("recipeId"));
+    const recipeId = mediaId(input.get("recipeId"));
     const orderStr = input.get("order") as string | null;
 
     log.debug({ userId: ctx.user.id, recipeId }, "Uploading gallery image");
@@ -224,8 +228,14 @@ const uploadGalleryImage = authedProcedure
     }
 
     // A create of this id still running links the file once it is stored.
+    const validation = await extractAndValidateImage(input);
+
+    if (!validation.success) {
+      return validation;
+    }
+
     await createSettled(recipeId);
-    await assertRecipeAccess(ctx, recipeId, "edit");
+    await assertRecipeMediaAccess(ctx, recipeId, "upload");
 
     // Check max images limit
     const currentCount = await countRecipeImages(recipeId);
@@ -235,12 +245,6 @@ const uploadGalleryImage = authedProcedure
         success: false,
         error: `Maximum ${MAX_RECIPE_IMAGES} images allowed per recipe`,
       };
-    }
-
-    const validation = await extractAndValidateImage(input);
-
-    if (!validation.success) {
-      return validation;
     }
 
     try {
@@ -253,11 +257,15 @@ const uploadGalleryImage = authedProcedure
       // Check if recipe exists in database before inserting into recipe_images
       // For new recipes (created via form), the recipe doesn't exist yet - images will be
       // linked when the recipe is saved via createRecipeWithRefs
-      const recipeOwner = await getRecipeOwnerId(recipeId);
-
-      if (recipeOwner !== null) {
+      if ((await getRecipeHouseholdIds([recipeId])).has(recipeId)) {
         // Recipe exists, add to database
-        const [imageRecord] = await addRecipeImages(recipeId, [{ image: url, order }]);
+        const [imageRecord] = await addRecipeImages(recipeId, [{ image: url, order }]).catch(
+          async (error: unknown) => {
+            // A file with no row (the recipe erased meanwhile, say) would recreate a swept folder.
+            await deleteUnreferencedRecipeFile(url, recipeId);
+            throw error;
+          }
+        );
 
         if (!imageRecord) {
           return { success: false, error: "Failed to create image record" };
@@ -296,6 +304,7 @@ const uploadGalleryImage = authedProcedure
       const message = error instanceof Error ? error.message : "Failed to upload gallery image";
 
       log.error({ userId: ctx.user.id, recipeId, error }, "Failed to upload gallery image");
+      await releaseRecipeMediaClaim(ctx, recipeId);
 
       return { success: false, error: message };
     }
@@ -332,7 +341,7 @@ const deleteGalleryImage = authedProcedure
 
       // The row goes first: a stale delete removes nothing, the file included.
       try {
-        await deleteImageByUrl(imageRecord.image);
+        await deleteImageByUrl(imageRecord.image, imageRecord.recipeId);
       } catch (fsError) {
         // Log but don't fail - file might already be deleted
         log.warn(

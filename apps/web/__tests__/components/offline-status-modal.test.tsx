@@ -51,6 +51,7 @@ vi.mock("@heroui/react", () => ({
       <div>{typeof children === "function" ? children() : children}</div>
     ),
     Header: ({ children }: any) => <div>{children}</div>,
+    Heading: ({ children }: any) => <h2>{children}</h2>,
     Body: ({ children }: any) => <div>{children}</div>,
   },
 }));
@@ -63,7 +64,7 @@ function makeStatus(overrides: Partial<OfflineStatus> = {}): Record<string, unkn
     isForced: false,
     counts: { recipes: 12, groceries: 5, stores: 2, plannedThisWeek: 4 },
     lastWarmedAt: null,
-    outbox: { entries: [], total: 0, pending: 0, parked: 0, conflicted: 0 },
+    outbox: { entries: [], total: 0, pending: 0, parked: 0, conflicted: 0, otherHousehold: 0 },
     isSyncing: false,
     syncNow: vi.fn(async () => {}),
     retryAll: vi.fn(async () => {}),
@@ -112,6 +113,7 @@ describe("OfflineStatusModal", () => {
         pending: 1,
         parked: 0,
         conflicted: 0,
+        otherHousehold: 0,
       },
     });
 
@@ -123,6 +125,24 @@ describe("OfflineStatusModal", () => {
     fireEvent.click(screen.getByText("discardConfirm"));
 
     await waitFor(() => expect(h.status.discardAll).toHaveBeenCalled());
+  });
+
+  it("says what Retry does with a change made for another household", () => {
+    h.status = makeStatus({
+      outbox: {
+        entries: [{ seq: 1, path: "groceries.create", status: "parked" }] as never,
+        total: 1,
+        pending: 0,
+        parked: 1,
+        conflicted: 0,
+        otherHousehold: 1,
+      },
+    });
+
+    renderModal();
+
+    expect(screen.getByText("otherHousehold")).toBeInTheDocument();
+    expect(screen.getByText("retryAll")).toBeInTheDocument();
   });
 
   it("disables both confirm buttons while the confirmed action runs", async () => {

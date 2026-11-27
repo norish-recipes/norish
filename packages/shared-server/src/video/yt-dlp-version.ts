@@ -12,6 +12,7 @@ import path from "node:path";
 import { promisify } from "node:util";
 
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
+import { childEnv } from "@norish/shared-server/lib/child-env";
 import { videoLogger as log } from "@norish/shared-server/logger";
 
 const execFileAsync = promisify(execFile);
@@ -43,7 +44,10 @@ async function askYtDlpVersion(): Promise<string | null> {
   const ytDlpPath = path.resolve(SERVER_CONFIG.YT_DLP_BIN_DIR, ytDlpFilename);
 
   try {
-    const { stdout } = await execFileAsync(ytDlpPath, ["--version"], { windowsHide: true });
+    const { stdout } = await execFileAsync(ytDlpPath, ["--version"], {
+      windowsHide: true,
+      env: childEnv(),
+    });
 
     return stdout.trim() || null;
   } catch (err) {

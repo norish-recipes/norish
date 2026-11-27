@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChipButton } from "@/components/shared/chip-button";
-import TagInput from "@/components/shared/tag-input";
+import { EntryComboBox } from "@/components/shared/entry-combo-box";
+import TagPicker from "@/components/shared/tag-picker";
 import IngredientInput from "@/features/recipes/components/editor/ingredient-input";
 import MeasurementSystemSelector from "@/features/recipes/components/editor/measurement-system-selector";
 import MediaGalleryInput from "@/features/recipes/components/editor/media-gallery-input";
@@ -22,6 +23,7 @@ import { useLocale, useTranslations } from "next-intl";
 import type { LineMoves, RecipeFormErrors } from "@norish/shared-react/recipes";
 import type { FullRecipeDTO } from "@norish/shared/contracts";
 import { useIngredientsSubscription } from "@norish/shared-react/config";
+import { hasName } from "@norish/shared-react/lists";
 import {
   useRecipeEditorForm,
   useRecipeId,
@@ -45,7 +47,6 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
   useRecipeListSubscription();
 
   const categoryLabel = useCategoryLabel();
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const t = useTranslations("recipes.form");
   const tValidation = useTranslations("recipes.validation");
   const tCommon = useTranslations("common.actions");
@@ -64,15 +65,10 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
     servings: errorText("servings"),
     submit: editor.errors.submit,
   };
-  const [newCategory, setNewCategory] = useState("");
   const [lineMoves, setLineMoves] = useState<LineMoves | null>(null);
 
   const navigateBack = () => router.back();
-  const {
-    allowNavigation,
-    confirmNavigation: confirmDiscardChanges,
-    disallowNavigation,
-  } = useUnsavedNavigationGuard({
+  const { allowNavigation, confirmNavigation: confirmDiscardChanges } = useUnsavedNavigationGuard({
     hasUnsavedChanges: editor.hasUnsavedChanges,
     confirmationMessage: t("discardChangesConfirm"),
     onConfirmLeave: navigateBack,
@@ -82,47 +78,32 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
     allowNavigation();
     navigateBack();
   };
-  const addCategory = () => {
-    setNewCategory("");
-    editor.addCategory(newCategory);
-  };
   const handleSubmit = () => {
     const recipeData = editor.submit();
 
     if (!recipeData) return;
-    setIsSubmitting(true);
     const editing = mode === "edit" ? initialData : undefined;
-
-    try {
-      if (mode === "create") {
+    // The form stays open until the save is stored or queued, so a refusal shows here.
+    const after = (id: string) => ({
+      onSaved: () => {
         allowNavigation();
-        createRecipe({ ...recipeData, id: recipeId! });
-        router.push(`/recipes/${recipeId!}`);
-      } else if (editing) {
-        // The form stays open until the save is stored or queued, so a failure shows here.
-        updateRecipe(
-          editing.id,
-          { ...recipeData, version: editing.version },
-          {
-            onSaved: () => {
-              allowNavigation();
-              router.push(`/recipes/${editing.id}`);
-            },
-            onFailed: (err) => {
-              setIsSubmitting(false);
-              editor.failSubmit(err instanceof Error ? err.message : String(err));
-            },
-          }
-        );
+        router.push(`/recipes/${id}`);
+      },
+      onFailed: (err: unknown) => {
+        log.error({ err }, "Failed to save recipe");
+        editor.failSave(err);
+      },
+    });
 
-        return;
-      }
-    } catch (err) {
-      log.error({ err }, "Failed to save recipe");
-      disallowNavigation();
-      editor.failSubmit((err as Error).message);
+    if (mode === "create" && recipeId) {
+      createRecipe({ ...recipeData, id: recipeId }, after(recipeId));
+    } else if (editing) {
+      updateRecipe(
+        editing.id,
+        { ...recipeData, version: editor.version ?? editing.version },
+        after(editing.id)
+      );
     }
-    setIsSubmitting(false);
   };
   const handleTimeChange = (
     field: "prepMinutes" | "cookMinutes" | "totalMinutes",
@@ -156,7 +137,8 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
         )}
       </div>
 
-      <form className="min-w-0 space-y-10">
+      {/* Inert while a save is in flight: what is typed then would be lost when it lands. */}
+      <form className="min-w-0 space-y-10" inert={editor.isSaving}>
         {/* 1. Photos */}
         <section className="min-w-0">
           <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
@@ -227,6 +209,7 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
               <SmartInputHelp />
             </div>
             <IngredientInput
+              key={editor.version}
               ingredients={form.ingredients}
               systemUsed={form.systemUsed}
               onChange={(ingredients) => set("ingredients", ingredients)}
@@ -256,6 +239,7 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
               <SmartInputHelp showIngredientMention />
             </div>
             <StepInput
+              key={editor.version}
               ingredients={form.ingredients}
               lineMoves={lineMoves}
               recipeId={recipeId ?? undefined}
@@ -278,13 +262,17 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
           <div className="ml-0 space-y-6 md:ml-9">
             <div>
               <p className="text-muted mb-3 text-base">{t("tagsHelp")}</p>
-              <TagInput value={form.tags} onChange={(tags) => set("tags", tags)} />
+              <TagPicker
+                recipeId={editor.listRecipeId}
+                value={form.tags}
+                onChange={(tags) => set("tags", tags)}
+              />
             </div>
             <div>
               <p className="text-muted mb-3 text-base">{t("categoriesHelp")}</p>
               <div className="flex flex-wrap gap-2">
                 {editor.categoryOptions.map((category) => {
-                  const active = form.categories.includes(category);
+                  const active = hasName(form.categories, category);
 
                   return (
                     <ChipButton
@@ -299,21 +287,16 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
                     </ChipButton>
                   );
                 })}
-                <input
-                  aria-label={t("addCategory")}
-                  className="bg-default text-foreground placeholder:text-muted h-8 w-40 rounded-full border border-(--field-border) px-3 text-sm outline-none"
-                  maxLength={40}
+                <EntryComboBox
+                  className="w-44"
+                  entryLabel={categoryLabel}
+                  inputClassName="h-8 rounded-full px-3 text-sm"
+                  kind="category"
+                  label={t("addCategory")}
                   placeholder={t("addCategory")}
-                  style={{ fontSize: "16px" }}
-                  type="text"
-                  value={newCategory}
-                  onBlur={addCategory}
-                  onChange={(e) => setNewCategory(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key !== "Enter") return;
-                    e.preventDefault();
-                    addCategory();
-                  }}
+                  recipeId={editor.listRecipeId}
+                  isSelected={(entry) => hasName(form.categories, entry.name)}
+                  onSelect={(entry) => editor.addCategory(entry.name)}
                 />
               </div>
             </div>
@@ -381,6 +364,8 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
           </h2>
           <div className="ml-0 md:ml-9">
             <ProvenanceFields
+              carriedCuisines={initialData?.cuisines}
+              recipeId={editor.listRecipeId}
               value={form.provenance}
               onChange={(provenance) => set("provenance", provenance)}
             />
@@ -471,7 +456,7 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
         <div className="flex justify-end gap-3 border-t pt-6">
           <Button
             className="min-w-24"
-            isDisabled={isSubmitting}
+            isDisabled={editor.isSaving}
             size="lg"
             variant="tertiary"
             onPress={handleCancel}
@@ -480,8 +465,8 @@ export function RecipeEditorScreen({ mode, initialData }: RecipeEditorScreenProp
           </Button>
           <Button
             className="min-w-24"
-            isDisabled={isSubmitting}
-            isPending={isSubmitting}
+            isDisabled={editor.isSaving || editor.isCreatingEntry}
+            isPending={editor.isSaving}
             size="lg"
             variant="primary"
             onPress={handleSubmit}

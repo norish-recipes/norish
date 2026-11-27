@@ -39,8 +39,9 @@ vi.mock("@norish/shared-server/ingredients/recipe-lines", () => ({
 
 vi.mock("@norish/db/repositories/ratings", () => ({ rateRecipe: vi.fn() }));
 vi.mock("@norish/db/repositories/favorites", () => ({ addFavorite: vi.fn() }));
-vi.mock("@norish/db/repositories/cuisines", () => ({
-  listCuisines: vi.fn().mockResolvedValue([]),
+vi.mock("@norish/db/repositories/list-entries", () => ({
+  listEntryNames: vi.fn().mockResolvedValue([]),
+  listEntryRows: vi.fn().mockResolvedValue([]),
 }));
 vi.mock("@norish/db/repositories/cookbooks", () => ({
   findOwnCookbookIdByTitle: mockFindOwnCookbookIdByTitle,
@@ -73,7 +74,7 @@ async function* itemsOf(items: unknown[]) {
 }
 
 async function runLoop(items: unknown[]) {
-  return parser.importRecipeItems(itemsOf(items) as never, "user-1", ["user-1"]);
+  return parser.importRecipeItems(itemsOf(items) as never, "user-1", "household-1");
 }
 
 let parser: typeof import("@norish/shared-server/archive/parser");
@@ -158,7 +159,7 @@ describe("the archive import loop", () => {
       await parser.importRecipeItems(
         itemsOf([item("Tiramisù", "https://a.example/t"), fresh]) as never,
         "user-1",
-        ["user-1"],
+        "household-1",
         onProgress
       );
 
@@ -203,7 +204,7 @@ describe("the archive import loop", () => {
       await parser.importRecipeItems(
         itemsOf([first, second]) as never,
         "user-1",
-        ["user-1"],
+        "household-1",
         onProgress
       );
 
@@ -228,17 +229,6 @@ describe("the archive import loop", () => {
 
       expect(result.imported).toHaveLength(1);
       expect(result.errors).toHaveLength(0);
-    });
-
-    it("files nothing without an importing user", async () => {
-      await parser.importRecipeItems(
-        itemsOf([item("Tiramisù", undefined, { cookbooks: ["Dolci"] })]) as never,
-        undefined,
-        ["user-1"]
-      );
-
-      expect(mockCreateCookbook).not.toHaveBeenCalled();
-      expect(mockAddRecipeToCookbook).not.toHaveBeenCalled();
     });
   });
 });

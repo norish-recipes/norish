@@ -21,6 +21,11 @@ import { Button, Tooltip } from "@heroui/react";
 
 type ActionIcon = ComponentType<SVGProps<SVGSVGElement>>;
 
+/** An arrow that points on, mirrored where text runs right to left. */
+export function ArrowEnd({ className, ...props }: SVGProps<SVGSVGElement>) {
+  return <ArrowRightIcon {...props} className={`${className ?? ""} rtl:rotate-180`} />;
+}
+
 type ActionKind =
   | "add"
   | "apply"
@@ -63,7 +68,7 @@ const ACTION_CONFIG: Record<ActionKind, ActionConfig> = {
   duplicate: { icon: DocumentDuplicateIcon, variant: "tertiary" },
   edit: { icon: PencilIcon, variant: "tertiary" },
   increase: { icon: PlusIcon, variant: "tertiary" },
-  merge: { icon: ArrowRightIcon, variant: "tertiary" },
+  merge: { icon: ArrowEnd, variant: "tertiary" },
   random: { icon: ArrowPathIcon, variant: "primary" },
   remove: { icon: XMarkIcon, variant: "danger-soft" },
   reset: { icon: ArrowPathIcon, variant: "tertiary", className: WARNING_SOFT },
@@ -211,7 +216,7 @@ export function ActionButtonGroup({
   return (
     <div ref={rowRef} className={classNames("flex w-full flex-wrap items-center gap-2", className)}>
       {start ? (
-        <div ref={startRef} className="flex">
+        <div ref={startRef} className="flex gap-2">
           <IconOnlyContext value={iconOnly}>{start}</IconOnlyContext>
         </div>
       ) : null}

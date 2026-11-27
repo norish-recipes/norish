@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 
+import { getHouseholdIdForUser } from "@norish/db/repositories/households";
 import {
   findIngredientAliasesByFolds,
   findIngredientNamesByIds,
@@ -66,14 +67,19 @@ export async function seedStoreFiling(
 }
 
 /**
- * The Ingredient this exact spelling points at now. A repository read: `ingredients.find`
- * reads a name as the resolver would, so a deleted "red onion" would still find onion.
+ * The Ingredient this exact spelling points at now in the owner's household. A repository read:
+ * `ingredients.find` reads a name as the resolver would, so a deleted "red onion" would still find onion.
  */
 export async function readIngredientOf(spelling: string): Promise<string | null> {
-  const [alias] = await findIngredientAliasesByFolds([ingredientAliasFold(spelling)]);
+  const householdId = await getHouseholdIdForUser(await userIdOf(OWNER));
+
+  if (!householdId) return null;
+  const [alias] = await findIngredientAliasesByFolds(householdId, [ingredientAliasFold(spelling)]);
 
   return alias
-    ? ((await findIngredientNamesByIds([alias.ingredientId])).get(alias.ingredientId) ?? null)
+    ? ((await findIngredientNamesByIds(householdId, [alias.ingredientId])).get(
+        alias.ingredientId
+      ) ?? null)
     : null;
 }
 

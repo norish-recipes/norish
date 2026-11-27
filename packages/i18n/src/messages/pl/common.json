@@ -83,7 +83,8 @@
   "errors": {
     "operationFailed": "Operacja nie powiodła się",
     "nameCannotBeEmpty": "Nazwa nie może być pusta",
-    "technicalDetails": "Coś poszło nie tak. Sprawdź konsolę przeglądarki."
+    "technicalDetails": "Coś poszło nie tak. Sprawdź konsolę przeglądarki.",
+    "noAnswer": "Serwer nie odpowiedział. Spróbuj ponownie."
   },
   "slots": {
     "breakfast": "Śniadanie",
@@ -261,6 +262,7 @@
       "syncing": "{count, plural, =0 {Synchronizacja} one {Synchronizacja # zmiany} few {Synchronizacja # zmian} many {Synchronizacja # zmian} other {Synchronizacja # zmiany}}",
       "syncNow": "Synchronizuj teraz",
       "retryAll": "Ponów wszystkie",
+      "otherHousehold": "Niektóre zmiany wprowadzono dla innego gospodarstwa domowego. „Ponów wszystkie” wysyła je do gospodarstwa, w którym jesteś teraz.",
       "discardAll": "Odrzuć wszystkie",
       "discardConfirmBody": "{count, plural, one {Trwale odrzucić # oczekującą zmianę? Nie zostanie wysłana.} few {Trwale odrzucić # oczekujące zmiany? Nie zostaną wysłane.} many {Trwale odrzucić # oczekujących zmian? Nie zostaną wysłane.} other {Trwale odrzucić # oczekującej zmiany? Nie zostaną wysłane.}}",
       "discardConfirm": "Odrzuć",
@@ -294,6 +296,9 @@
   "changedElsewhere": {
     "title": "Nie zapisano: najpierw zmieniono to gdzie indziej"
   },
+  "lateAnswer": {
+    "title": "Serwer odpowiedział z opóźnieniem: jednak się udało."
+  },
   "storageUnavailable": {
     "title": "Pamięć niedostępna",
     "description": "Norish nie mógł odczytać pęku kluczy tego iPhone'a.",
@@ -308,7 +313,14 @@
     "adminTransferred": "Przekazano administratora użytkownikowi {name}",
     "unknownMember": "Nieznany",
     "removedTitle": "Usunięto z gospodarstwa domowego",
-    "removedDescription": "Administrator usunął Cię z gospodarstwa domowego."
+    "removedDescription": "Administrator usunął Cię z gospodarstwa domowego.",
+    "joinRefused": {
+      "invalidCode": "Ten kod dołączenia jest nieprawidłowy.",
+      "expired": "Ten kod dołączenia wygasł. Poproś o nowy.",
+      "alreadyMember": "Jesteś już w tym gospodarstwie domowym.",
+      "shared": "Najpierw opuść swoje gospodarstwo domowe, aby dołączyć do innego.",
+      "busy": "To gospodarstwo domowe było właśnie zmieniane. Spróbuj ponownie."
+    }
   },
   "photos": {
     "pickFailedTitle": "Nie udało się wybrać zdjęcia",

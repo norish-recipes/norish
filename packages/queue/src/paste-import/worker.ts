@@ -14,24 +14,24 @@ import type {
 } from "@norish/queue/contracts/job-types";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts";
 import { dashboardRecipe } from "@norish/db";
-import { listCategoryNamesForViewer } from "@norish/db/repositories/categories";
+import { listCategoryNamesForHousehold } from "@norish/db/repositories/categories";
 import { getAverageRating, rateRecipe } from "@norish/db/repositories/ratings";
 import { requireQueueApiHandler } from "@norish/queue/api-handlers";
-import {
-  getRecipePermissionPolicy,
-  isAIEnabled,
-} from "@norish/shared-server/config/server-config-loader";
+import { isAIEnabled } from "@norish/shared-server/config/server-config-loader";
 import { createResolvedRecipe } from "@norish/shared-server/ingredients/recipe-lines";
 import { createLogger } from "@norish/shared-server/logger";
 import { withDishColor } from "@norish/shared-server/media/dish-color";
-import { deleteRecipeImagesDir } from "@norish/shared-server/media/storage";
+import { accountAudience, policyAudience } from "@norish/shared-server/realtime/audience";
 import { recipes } from "@norish/shared-server/realtime/recipes";
+import { matchImportedTags } from "@norish/shared-server/recipes/imported-tags";
 import { MAX_RECIPE_PASTE_CHARS } from "@norish/shared/contracts/uploads";
 import { FullRecipeInsertSchema } from "@norish/shared/contracts/zod";
 import { hasRecipeNameIngredientsAndSteps } from "@norish/shared/lib/helpers";
 
 import { createWorker, isFinalFailure } from "../create-worker";
 import { announceUsableRecipe } from "../enrichment/announce";
+import { deleteUnstoredRecipeMedia } from "../import-cleanup";
+import { importerHouseholdId } from "../importer-household";
 import { completeStep, reportStep } from "../job-steps";
 import { QUEUE_NAMES } from "../queue-names";
 
@@ -118,7 +118,7 @@ async function persistImportedRating(
 async function createStructuredRecipe(
   structuredRecipe: StructuredPasteImportRecipe,
   userId: string,
-  _householdKey: string
+  householdId: string
 ): Promise<CreateRecipeResult | null> {
   const parsed = FullRecipeInsertSchema.safeParse(structuredRecipe.recipe);
 
@@ -129,7 +129,7 @@ async function createStructuredRecipe(
   const created = await createResolvedRecipe(
     structuredRecipe.recipeId,
     userId,
-    await withDishColor(parsed.data),
+    await withDishColor(await matchImportedTags(householdId, parsed.data)),
     { userId }
   );
 
@@ -145,28 +145,19 @@ async function createStructuredRecipe(
 export async function processPasteImportJob(
   job: Job<PasteImportJobData>
 ): Promise<PasteImportJobResult> {
-  const { recipeIds, structuredRecipes, userId, householdKey, householdUserIds, text, forceAI } =
-    job.data;
+  const { recipeIds, structuredRecipes, userId, text, forceAI } = job.data;
+  const householdId = await importerHouseholdId(userId);
 
   log.info(
     { jobId: job.id, recipeIds, attempt: job.attemptsMade + 1 },
     "Processing paste import job"
   );
 
-  const policy = await getRecipePermissionPolicy();
-  const viewPolicy = policy.view;
-  const ctx = { userId, householdKey };
+  const started = await accountAudience(userId);
 
-  recipeIds.forEach((recipeId) => {
-    void recipes.publish(
-      "importStarted",
-      {
-        recipeId,
-        url: "[pasted]",
-      },
-      { viewPolicy: viewPolicy, ...ctx }
-    );
-  });
+  for (const recipeId of recipeIds) {
+    if (started) void recipes.publish("importStarted", { recipeId, url: "[pasted]" }, started);
+  }
 
   const created: CreateRecipeResult[] = [];
 
@@ -176,7 +167,7 @@ export async function processPasteImportJob(
     for (const structuredRecipe of structuredRecipes) {
       index++;
       await reportStep(job, `creating-recipes:${index}/${structuredRecipes.length}`);
-      const structuredResult = await createStructuredRecipe(structuredRecipe, userId, householdKey);
+      const structuredResult = await createStructuredRecipe(structuredRecipe, userId, householdId);
 
       if (!structuredResult) {
         continue;
@@ -200,14 +191,14 @@ export async function processPasteImportJob(
       text,
       recipeId,
       forceAI,
-      await listCategoryNamesForViewer({ userId, householdUserIds })
+      await listCategoryNamesForHousehold(householdId)
     );
 
     await reportStep(job, "saving");
     const textResult = await createResolvedRecipe(
       recipeId,
       userId,
-      await withDishColor(parseResult.recipe),
+      await withDishColor(await matchImportedTags(householdId, parseResult.recipe)),
       { userId }
     );
 
@@ -238,10 +229,10 @@ export async function processPasteImportJob(
         pendingRecipeId: result.recipeId,
         toast: "imported",
       },
-      { viewPolicy: viewPolicy, ...ctx }
+      await policyAudience(dashboardDto.householdId)
     );
 
-    await announceUsableRecipe(result, { userId, householdKey, householdUserIds });
+    await announceUsableRecipe(result, { userId, householdId });
   }
 
   return { recipeIds: created.map((result) => result.recipeId) };
@@ -253,26 +244,21 @@ async function handleJobFailed(
 ): Promise<void> {
   if (!job) return;
 
-  const { recipeIds, userId, householdKey } = job.data;
+  const { recipeIds, userId } = job.data;
   const isFinal = isFinalFailure(job, error);
 
-  await Promise.all(recipeIds.map((recipeId) => deleteRecipeImagesDir(recipeId)));
+  // A retry needs the pre-parsed files; the recipes stored before the failure keep theirs.
+  if (isFinal) await deleteUnstoredRecipeMedia(recipeIds);
 
-  if (isFinal) {
-    const policy = await getRecipePermissionPolicy();
-    const ctx = { userId, householdKey };
+  const audience = isFinal ? await accountAudience(userId) : null;
 
-    recipeIds.forEach((recipeId) => {
-      void recipes.publish(
-        "failed",
-        {
-          reason: error.message || "Failed to import recipe",
-          recipeId,
-          url: "[pasted]",
-        },
-        { viewPolicy: policy.view, ...ctx }
-      );
-    });
+  if (!audience) return;
+  for (const recipeId of recipeIds) {
+    void recipes.publish(
+      "failed",
+      { reason: error.message || "Failed to import recipe", recipeId, url: "[pasted]" },
+      audience
+    );
   }
 }
 

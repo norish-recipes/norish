@@ -3,7 +3,8 @@
 import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { findCuisineByName, getRecipeCuisines } from "@norish/db/repositories/cuisines";
+import { cuisinesForNames, getRecipeCuisines } from "@norish/db/repositories/cuisines";
+import { recipeEntryNames } from "@norish/db/repositories/list-entries";
 import {
   replaceRecipeCategories,
   replaceRecipeNutrition,
@@ -11,7 +12,7 @@ import {
   writeInferredStepIngredients,
 } from "@norish/db/repositories/recipe-enrichment";
 import { getRecipeFull } from "@norish/db/repositories/recipes";
-import { appendRecipeTags, getRecipeTagNames } from "@norish/db/repositories/tags";
+import { appendRecipeTags } from "@norish/db/repositories/tags";
 
 import { createTestRecipe } from "../../../helpers/db-test-helpers";
 import { createRecipeWithRefs, updateRecipeWithRefs } from "../../../helpers/recipe-writes";
@@ -42,7 +43,7 @@ describe("Recipe Enrichment repository", () => {
       const result = await appendRecipeTags(testRecipe.id, ["Vegan", "Quick"]);
 
       expect(result.added).toEqual(["Vegan", "Quick"]);
-      expect(await getRecipeTagNames(testRecipe.id)).toEqual(
+      expect(await recipeEntryNames("tag", testRecipe.id)).toEqual(
         expect.arrayContaining(["Supplied", "Vegan", "Quick"])
       );
     });
@@ -52,7 +53,7 @@ describe("Recipe Enrichment repository", () => {
       const second = await appendRecipeTags(testRecipe.id, ["Vegan"]);
 
       expect(second.added).toEqual([]);
-      expect(await getRecipeTagNames(testRecipe.id)).toEqual(["Vegan"]);
+      expect(await recipeEntryNames("tag", testRecipe.id)).toEqual(["Vegan"]);
     });
 
     it("normalizes duplicates, blanks, and casing", async () => {
@@ -66,7 +67,7 @@ describe("Recipe Enrichment repository", () => {
       ]);
 
       expect(result.added).toEqual(["Quick"]);
-      expect(await getRecipeTagNames(testRecipe.id)).toEqual(["Vegan", "Quick"]);
+      expect(await recipeEntryNames("tag", testRecipe.id)).toEqual(["Vegan", "Quick"]);
     });
 
     it("keeps both finding sets when two appends run concurrently", async () => {
@@ -77,7 +78,7 @@ describe("Recipe Enrichment repository", () => {
         appendRecipeTags(testRecipe.id, ["Allergen-Milk", "Allergen-Egg"]),
       ]);
 
-      expect(await getRecipeTagNames(testRecipe.id)).toEqual(
+      expect(await recipeEntryNames("tag", testRecipe.id)).toEqual(
         expect.arrayContaining(["Supplied", "Tag-A", "Tag-B", "Allergen-Milk", "Allergen-Egg"])
       );
     });
@@ -90,6 +91,12 @@ describe("Recipe Enrichment repository", () => {
 
       expect(applied).toBe(true);
       expect((await getRecipeFull(testRecipe.id))?.categories).toEqual(["Dinner", "Snack"]);
+    });
+
+    it("creates no Category over the bound, keeping the rest", async () => {
+      await replaceRecipeCategories(testRecipe.id, ["x".repeat(41), "Dinner"], "replace");
+
+      expect((await getRecipeFull(testRecipe.id))?.categories).toEqual(["Dinner"]);
     });
 
     it("rejects an empty proposal without touching stored values", async () => {
@@ -226,7 +233,7 @@ describe("Recipe Enrichment repository", () => {
   });
 
   async function cuisineId(name: string): Promise<string> {
-    const cuisine = await findCuisineByName(name);
+    const [cuisine] = await cuisinesForNames(testRecipe.householdId, [name], { create: false });
 
     if (!cuisine) throw new Error(`Seeded Cuisine missing: ${name}`);
 
@@ -351,7 +358,8 @@ describe("Recipe Enrichment repository", () => {
           {
             originCountry: "IT",
             provenanceNote: "Would be stored.",
-            cuisineIds: ["00000000-0000-0000-0000-000000000000"],
+            // Not an id at all, so the Cuisine write fails (a gone id is dropped).
+            cuisineIds: ["not-a-cuisine-id"],
           },
           "replace"
         )
@@ -524,7 +532,8 @@ describe("Recipe Enrichment repository", () => {
         {
           originCountry: "IT",
           provenanceNote: "Would be stored.",
-          cuisineIds: ["00000000-0000-0000-0000-000000000000"],
+          // Not an id at all, so the Cuisine write fails (a gone id is dropped).
+          cuisineIds: ["not-a-cuisine-id"],
         },
         "gap-fill"
       );
@@ -540,14 +549,14 @@ describe("Recipe Enrichment repository", () => {
 
   describe("an editor saving the recipe form", () => {
     it("writes the whole group, and its Cuisines by id", async () => {
-      const italian = await findCuisineByName("Italian");
+      const italian = await cuisineId("Italian");
 
       await updateRecipeWithRefs(testRecipe.id, userId, {
         originCountry: "IT",
         originCountryName: "Italië",
         originRegion: "Lazio",
         provenanceNote: "My grandmother's, from Rome.",
-        cuisines: [italian!.id],
+        cuisines: [italian],
       });
 
       const recipe = await getRecipeFull(testRecipe.id);
@@ -580,13 +589,13 @@ describe("Recipe Enrichment repository", () => {
     });
 
     it("keeps the Cuisines chosen while creating the recipe", async () => {
-      const italian = await findCuisineByName("Italian");
+      const italian = await cuisineId("Italian");
       const created = await createRecipeWithRefs(randomUUID(), userId, {
         name: "Created with provenance",
         systemUsed: "metric",
         originCountry: "IT",
         provenanceNote: "Typed in at creation.",
-        cuisines: [italian!.id],
+        cuisines: [italian],
       });
 
       const recipe = await getRecipeFull(created!.recipeId);
@@ -618,11 +627,11 @@ describe("Recipe Enrichment repository", () => {
     });
 
     it("clears the group when the editor empties every field", async () => {
-      const italian = await findCuisineByName("Italian");
+      const italian = await cuisineId("Italian");
 
       await replaceRecipeProvenance(
         testRecipe.id,
-        { originCountry: "IT", provenanceNote: "Wrong.", cuisineIds: [italian!.id] },
+        { originCountry: "IT", provenanceNote: "Wrong.", cuisineIds: [italian] },
         "replace"
       );
 

@@ -1,11 +1,11 @@
 import type { IntlShape } from "react-intl";
 import React from "react";
 import { Text, View } from "react-native";
+import { Ionicons } from "@/components/icon";
 import { IconButton } from "@/components/icon-button";
 import { PlannedThumb } from "@/components/planned-thumb";
 import { DAY_CARD_CLASS } from "@/lib/day-card-height";
 import { SLOT_GLYPHS } from "@/lib/slot-icons";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { Skeleton, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 

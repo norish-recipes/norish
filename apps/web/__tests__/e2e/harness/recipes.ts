@@ -2,21 +2,14 @@ import { randomUUID } from "node:crypto";
 import { expect } from "@playwright/test";
 
 import type { LineResolution } from "@norish/db/repositories/ingredients";
-import type { RecipeListContext } from "@norish/db/repositories/recipes";
 import type { FullRecipeDTO, FullRecipeInsertDTO } from "@norish/shared/contracts";
-import { createRecipeWithRefs, searchRecipesByName } from "@norish/db/repositories/recipes";
+import { getHouseholdIdForUser } from "@norish/db/repositories/households";
+import { createRecipeWithRefs } from "@norish/db/repositories/recipes";
 import { lineNamesNoFood } from "@norish/shared/lib/ingredient-text";
 
 import type { SessionCookies } from "./auth";
 import { mintFood } from "./foods";
 import { callTrpc, queryTrpc, TrpcHttpError } from "./trpc";
-
-/** A server admin's view: every recipe and cookbook, whoever owns it. */
-export const ADMIN_VIEW: RecipeListContext = {
-  userId: "",
-  householdUserIds: null,
-  isServerAdmin: true,
-};
 
 /**
  * A recipe with these amount-less lines, saved through tRPC as the recipe form
@@ -50,16 +43,29 @@ export function createRecipe(
   });
 }
 
-/** The ids of every stored recipe named exactly this, whoever owns it. */
-export async function recipeIdsNamed(name: string): Promise<string[]> {
-  const found = await searchRecipesByName(ADMIN_VIEW, name, 100);
+/** The ids of every recipe named exactly this that the signed-in reader may view, oldest first. */
+export async function recipeIdsNamed(
+  baseURL: string,
+  cookies: SessionCookies,
+  name: string
+): Promise<string[]> {
+  const { recipes } = await queryTrpc<{ recipes: Array<{ id: string; name: string }> }>(
+    baseURL,
+    cookies,
+    "recipes.list",
+    { search: name, searchFields: ["title"], limit: 200, sortMode: "dateAsc" }
+  );
 
-  return found.filter((recipe) => recipe.name === name).map((recipe) => recipe.id);
+  return recipes.filter((recipe) => recipe.name === name).map((recipe) => recipe.id);
 }
 
-/** The id of the stored recipe named exactly this; fails when there is none. */
-export async function recipeIdNamed(name: string): Promise<string> {
-  const [id] = await recipeIdsNamed(name);
+/** The id of the recipe named exactly this that the reader may view; fails when there is none. */
+export async function recipeIdNamed(
+  baseURL: string,
+  cookies: SessionCookies,
+  name: string
+): Promise<string> {
+  const [id] = await recipeIdsNamed(baseURL, cookies, name);
 
   if (!id) throw new Error(`No recipe is named ${name}`);
 
@@ -78,10 +84,12 @@ export async function seedRecipe(
 ): Promise<string> {
   const { id = randomUUID(), ...payload } = extra;
   const resolutions = new Map<string, LineResolution | null>();
+  const householdId = await getHouseholdIdForUser(userId);
 
+  if (!householdId) throw new Error(`${userId} has no household`);
   for (const line of lines) {
     if (!lineNamesNoFood({ text: line, amount: null })) {
-      resolutions.set(line, { foods: [await mintFood(line)], joined: null });
+      resolutions.set(line, { foods: [await mintFood(householdId, line)], joined: null });
     }
   }
 
@@ -123,7 +131,7 @@ export async function recipeNamed(
   cookies: SessionCookies,
   name: string
 ): Promise<FullRecipeDTO | null> {
-  const [id] = await recipeIdsNamed(name);
+  const [id] = await recipeIdsNamed(baseURL, cookies, name);
 
   return id ? await readRecipe(baseURL, cookies, id) : null;
 }

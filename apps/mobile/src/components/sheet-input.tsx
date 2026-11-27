@@ -1,14 +1,19 @@
 import type { ComponentProps, ReactNode } from "react";
 import React from "react";
 import { Pressable, Text } from "react-native";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { Input, InputGroup, TextArea, useThemeColor } from "heroui-native";
+import { Ionicons } from "@/components/icon";
+import { Input, InputGroup, Skeleton, TextArea, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";
 
 /** The one field: the sand fill, a capsule 48 pt tall, no ring, shadow or focus outline. No line
  * height: iOS drops a single-line field's typed text below centre when it has one. */
 export const SHEET_FIELD =
   "bg-sand border-stroke h-12 rounded-full border-[0.5px] text-[16px] ios:shadow-none ios:focus:outline-transparent";
+
+/** A field while it loads, as tall and as round as the field. */
+export function SheetFieldSkeleton() {
+  return <Skeleton className="h-12 rounded-full" />;
+}
 
 /** The same field for several lines: the sand fill and no ring, rounded to a card instead of a capsule. */
 const SHEET_TEXT_AREA =
@@ -49,11 +54,13 @@ export function SheetInput({
     ) : null;
 
   const end = clear ?? suffix;
+  // A suffix slot whenever one may show, so the field never remounts (and drops the keyboard) as it comes.
+  const ends = Boolean(onClear || suffix);
   const field = `${SHEET_FIELD} ${className ?? ""}`;
   const word = (node: ReactNode) =>
     typeof node === "string" ? <Text className="text-muted text-base">{node}</Text> : node;
 
-  if (!prefix && !end) {
+  if (!prefix && !ends) {
     return <Input {...props} className={`px-4 ${field}`} variant="secondary" />;
   }
 
@@ -66,10 +73,10 @@ export function SheetInput({
       ) : null}
       <InputGroup.Input
         {...props}
-        className={`${prefix ? "" : "pl-4"} ${end ? "" : "pr-4"} ${field}`}
+        className={`${prefix ? "" : "pl-4"} ${ends ? "" : "pr-4"} ${field}`}
         variant="secondary"
       />
-      {end ? (
+      {ends ? (
         <InputGroup.Suffix className="pr-4 pl-1.5" isDecorative={typeof end === "string"}>
           {word(end)}
         </InputGroup.Suffix>

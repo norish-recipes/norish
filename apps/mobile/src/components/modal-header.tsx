@@ -54,6 +54,7 @@ export function ModalHeader({
   title,
   subtitle,
   back = false,
+  closable = true,
   onClose,
   confirm,
   secondary = [],
@@ -63,6 +64,8 @@ export function ModalHeader({
   subtitle?: string;
   /** The left item goes back to the sheet's form instead of closing the sheet. */
   back?: boolean;
+  /** False disables the left item. */
+  closable?: boolean;
   /** Going back by default. */
   onClose?: () => void;
   confirm?: HeaderConfirm;
@@ -166,6 +169,7 @@ export function ModalHeader({
             label: leftLabel,
             accessibilityLabel: leftLabel,
             icon: { type: "sfSymbol", name: back ? "chevron.backward" : "xmark" },
+            disabled: !closable,
             onPress: onClose ?? (() => router.back()),
           },
         ],

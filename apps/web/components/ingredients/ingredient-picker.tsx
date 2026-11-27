@@ -1,19 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { PanelComboBoxPopover } from "@/components/Panel/Panel";
 import { ComboBox, Input, Label, ListBox } from "@heroui/react";
 import { useLocale, useTranslations } from "next-intl";
-import { useDebounceValue } from "usehooks-ts";
 
-import { useIngredientSearchQuery } from "@norish/shared-react/ingredients";
-import { ingredientDisplayName } from "@norish/shared/lib/ingredient-names";
-
-/** How long typing pauses before the catalogue is searched. */
-const SEARCH_DELAY_MS = 250;
-
-/** What a person picked: a known Ingredient, or a new one (`id` null). */
-export type IngredientPick = { id: string; name: string } | { id: null };
+import type { IngredientPick } from "@norish/shared-react/ingredients";
+import { useIngredientPicker } from "@norish/shared-react/ingredients";
 
 /** Searches Ingredients by any spelling, never `excludeId`; `editableOnly` keeps the viewer's editable ones. */
 export function IngredientPicker({
@@ -30,13 +22,12 @@ export function IngredientPicker({
   const t = useTranslations("settings.ingredients");
   const locale = useLocale();
   // Inside a Panel the options must portal into it, or vaul swallows every tap (#511).
-  const [term, setTerm] = useState("");
-  const [search] = useDebounceValue(term.trim(), SEARCH_DELAY_MS);
-  const [picked, setPicked] = useState<string | null>(null);
-
-  const { items, isFetching } = useIngredientSearchQuery(search || null, locale);
-  const found = items.filter((item) => item.id !== excludeId && (!editableOnly || item.canEdit));
-  const options = found.map((item) => ({ id: item.id, name: ingredientDisplayName(item, locale) }));
+  const { term, picked, options, hint, type, pick } = useIngredientPicker({
+    excludeId,
+    editableOnly,
+    locale,
+    onPick,
+  });
 
   return (
     <ComboBox
@@ -48,20 +39,11 @@ export function IngredientPicker({
       menuTrigger="input"
       value={picked}
       variant="secondary"
-      onInputChange={(value) => {
-        setTerm(value);
-        if (picked !== null) {
-          setPicked(null);
-          onPick(null);
-        }
-      }}
+      onInputChange={type}
       onChange={(key) => {
         const option = options.find((candidate) => candidate.id === key);
 
-        if (!option) return;
-        setPicked(option.id);
-        setTerm(option.name);
-        onPick(option);
+        if (option) pick(option);
       }}
     >
       <Label className="sr-only">{label}</Label>
@@ -76,9 +58,9 @@ export function IngredientPicker({
         <ListBox
           renderEmptyState={() => (
             <p className="text-muted px-3 py-2 text-sm">
-              {term.trim() === ""
+              {hint === "hint"
                 ? t("pickerHint")
-                : isFetching || search !== term.trim()
+                : hint === "searching"
                   ? t("pickerSearching")
                   : t("pickerEmpty")}
             </p>

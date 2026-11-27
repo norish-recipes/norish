@@ -1,4 +1,6 @@
-import { integer, timestamp } from "drizzle-orm/pg-core";
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { integer, timestamp, uuid } from "drizzle-orm/pg-core";
 
 /**
  * Shared mutable-row metadata columns.
@@ -32,3 +34,12 @@ export const mutableRowColumns = {
 export const versionColumn = {
   version: integer("version").notNull().default(1),
 } as const;
+
+/** A recipe's or cookbook's household, which a trigger always sets to its Owner's current one
+ * (migration 0090), whatever a write says; `households` is passed in, as it imports this file. */
+export function householdIdFilledByTrigger(households: () => AnyPgColumn) {
+  return uuid("household_id")
+    .notNull()
+    .references(households, { onDelete: "cascade" })
+    .$defaultFn(() => sql`NULL`);
+}

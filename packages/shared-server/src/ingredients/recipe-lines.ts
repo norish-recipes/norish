@@ -1,5 +1,6 @@
 import type { RecipeLineAlias } from "@norish/db/repositories/ingredient-aliases";
 import type { LineResolution } from "@norish/db/repositories/ingredients";
+import type { EntryWriteOptions } from "@norish/db/repositories/list-entries";
 import type { MutationOutcome } from "@norish/db/repositories/mutation-outcomes";
 import type {
   CreateRecipeResult,
@@ -7,12 +8,15 @@ import type {
 } from "@norish/db/repositories/recipes";
 import type { FullRecipeInsertDTO, FullRecipeUpdateDTO } from "@norish/shared/contracts";
 import type { LineJoin } from "@norish/shared/lib/line-foods";
+import { getHouseholdIdForUser } from "@norish/db/repositories/households";
 import {
   findIngredientNamesByIds,
   findRecipeLineAliases,
 } from "@norish/db/repositories/ingredient-aliases";
+import { recipeHouseholdId } from "@norish/db/repositories/list-entries";
 import { createRecipeWithRefs, updateRecipeWithRefs } from "@norish/db/repositories/recipes";
 import { getUnits } from "@norish/shared-server/config/server-config-loader";
+import { announceRecipeListsChanged } from "@norish/shared-server/realtime/list-changes";
 import { lineFoodText, lineNamesNoFood } from "@norish/shared/lib/ingredient-text";
 import { distinctFoods, joinOf } from "@norish/shared/lib/line-foods";
 
@@ -48,6 +52,7 @@ export async function withResolvedIngredients<
   if (!lines?.length) return { ...payload, ingredientResolutions: new Map() };
 
   const namesById = await findIngredientNamesByIds(
+    actor.householdId,
     lines.flatMap((line) =>
       !cleanIngredientText(line.ingredientName ?? "") && line.ingredientId
         ? [line.ingredientId]
@@ -64,7 +69,10 @@ export async function withResolvedIngredients<
   });
   const units = await getUnits();
   const stored = recipeId
-    ? await findRecipeLineAliases(written.flatMap((line) => (line.id ? [line.id] : [])))
+    ? await findRecipeLineAliases(
+        written.flatMap((line) => (line.id ? [line.id] : [])),
+        null
+      )
     : new Map<string, RecipeLineAlias>();
   const resolved = new Map<string, LineResolution | null>();
   const foodTexts = new Map<string, string>();
@@ -113,20 +121,40 @@ export async function withResolvedIngredients<
   return { ...payload, recipeIngredients: written, ingredientResolutions: resolved };
 }
 
+/** Who writes a recipe: the household its lines resolve in is the recipe's, read when they resolve. */
+type LineActor = Omit<ResolveActor, "householdId">;
+
+/** The household a recipe's lines resolve in (ADR-0042): the recipe's, else its Owner's for a new one. */
+export async function lineHousehold(userId: string, recipeId?: string): Promise<string> {
+  const householdId =
+    (recipeId ? await recipeHouseholdId(recipeId) : null) ?? (await getHouseholdIdForUser(userId));
+
+  if (!householdId) throw new Error("A recipe's Owner has no household");
+
+  return householdId;
+}
+
 /**
  * Create a recipe with its lines resolved: the one way a recipe is written
  * from a payload. Resolved again should a food go away before the write.
  */
 export function createResolvedRecipe(
   recipeId: string,
-  userId: string | null | undefined,
+  userId: string,
   payload: FullRecipeInsertDTO,
-  actor: ResolveActor
+  actor: LineActor,
+  entryOptions?: EntryWriteOptions
 ): Promise<CreateRecipeResult | null> {
   return writeResolved(
-    () => withResolvedIngredients(payload, actor),
-    (resolved) => createRecipeWithRefs(recipeId, userId, resolved)
-  );
+    async () =>
+      withResolvedIngredients(payload, { ...actor, householdId: await lineHousehold(userId) }),
+    (resolved) => createRecipeWithRefs(recipeId, userId, resolved, entryOptions)
+  ).then(async (created) => {
+    // Its Tags, Cuisines and Categories may be new entries, and count one recipe more.
+    if (created?.status === "inserted") await announceRecipeListsChanged(created.recipeId);
+
+    return created;
+  });
 }
 
 /** Update a recipe with its lines resolved, as `createResolvedRecipe` creates one. */
@@ -134,11 +162,21 @@ export function updateResolvedRecipe(
   recipeId: string,
   userId: string,
   payload: FullRecipeUpdateDTO,
-  actor: ResolveActor,
-  version?: number
+  actor: LineActor,
+  version?: number,
+  entryOptions?: EntryWriteOptions
 ): Promise<MutationOutcome<number | null>> {
   return writeResolved(
-    () => withResolvedIngredients(payload, actor, recipeId),
-    (resolved) => updateRecipeWithRefs(recipeId, userId, resolved, version)
-  );
+    async () =>
+      withResolvedIngredients(
+        payload,
+        { ...actor, householdId: await lineHousehold(userId, recipeId) },
+        recipeId
+      ),
+    (resolved) => updateRecipeWithRefs(recipeId, userId, resolved, version, entryOptions)
+  ).then(async (updated) => {
+    if (updated.applied) await announceRecipeListsChanged(recipeId);
+
+    return updated;
+  });
 }

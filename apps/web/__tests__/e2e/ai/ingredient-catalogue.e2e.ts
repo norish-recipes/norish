@@ -190,9 +190,9 @@ test("a food's name, parent and translations land together with Save", async () 
 
   await expect(opened.getByTestId("ingredient-save")).toBeDisabled();
   await opened.getByTestId("ingredient-name-input").fill(after);
-  // Translations are a click through, in a panel of their own.
+  // Spellings are a click through, in a panel of their own.
   await opened.getByTestId("ingredient-all-spellings").click();
-  const spellings = page.getByRole("dialog", { name: "Translations" });
+  const spellings = page.getByRole("dialog", { name: "Spellings" });
 
   await spellings.getByTestId("ingredient-alias-input").fill("vulling");
   await spellings.getByTestId("ingredient-alias-input").press("Enter");
@@ -212,7 +212,7 @@ test("a food's name, parent and translations land together with Save", async () 
   await expect(opened.getByTestId("ingredient-save")).toBeDisabled();
   await page.getByTestId("ingredients-search").fill(after);
   await expect(ingredientRow(after)).toBeVisible();
-  await expect(ingredientRow(after)).toContainText("3 translations, parent: onion");
+  await expect(ingredientRow(after)).toContainText("3 spellings, parent: onion");
   await expect.poll(() => readIngredientOf("vulling")).not.toBeNull();
 
   await opened.getByRole("button", { name: "Close panel" }).click();
@@ -444,7 +444,7 @@ test("removing a translation by hand asks whether it names no food: Not a food k
   await page.getByTestId("ingredients-search").fill("garlic");
   await ingredientRow("garlic").getByTestId("ingredient-toggle").click();
   const opened = ingredientPanel("garlic");
-  const spellings = page.getByRole("dialog", { name: "Translations" });
+  const spellings = page.getByRole("dialog", { name: "Spellings" });
 
   // "boneless" starts on the seeded junk pile; added by hand, it names garlic.
   await opened.getByTestId("ingredient-all-spellings").click();

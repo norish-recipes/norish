@@ -1,9 +1,9 @@
 import type { ComponentProps, ReactNode } from "react";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
+import { Ionicons } from "@/components/icon";
 import { SliceHairline } from "@/components/slice-row";
 import { useTokenColor } from "@/hooks/use-token-color";
-import Ionicons from "@expo/vector-icons/Ionicons";
 
 /** The kit's one card: rows on a solid sand card with a hairline edge, or with `surface` on the
  * edgeless surface the recipe cards use. */

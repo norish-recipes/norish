@@ -11,7 +11,7 @@ export { useRecipeImages } from "./use-recipe-images";
 export { useRecipeIngredients } from "./use-recipe-ingredients";
 export { useHeldReads, useHeldRecipeName } from "./use-held-reads";
 export { usePrefetchRecipe } from "./use-prefetch-recipe";
-export { useRecipeQuery } from "./use-recipe-query";
+export { recipeReadState, useRecipeQuery, type RecipeReadState } from "./use-recipe-query";
 export { useRecipeSubscription } from "./use-recipe-subscription";
 export { useRecipeVideos } from "./use-recipe-videos";
 export { useFavoritesMutation } from "./use-favorites-mutation";
@@ -23,6 +23,7 @@ export { useLibraryQuery } from "./use-library-query";
 export { useLibraryDiscover } from "./use-library-discover";
 export { useLibrarySuggestions } from "./use-library-suggestions";
 export {
+  useAppliedLibraryFilters,
   useCookbookList,
   useLibraryCards,
   useLibraryList,
@@ -38,12 +39,21 @@ export type { ImportOptions, ImportSettled } from "./use-import-mutations";
 export { useImportMutations } from "./use-import-mutations";
 export { isPasteTooLong, useImportRecipe } from "./use-import-recipe";
 export { useRecipeMutationErrorToast } from "./use-recipe-mutation-error-toast";
-export { useRecipesMutations, type RecipesMutationsResult } from "./use-recipes-mutations";
+export {
+  RecipeChangedElsewhereError,
+  useRecipesMutations,
+  type RecipesMutationsResult,
+  type SaveCallbacks,
+} from "./use-recipes-mutations";
 export { useRecipesQuery } from "./use-recipes-query";
 export {
   useRecipeListSubscription,
   useRecipeOutcomesSubscription,
 } from "./use-recipes-subscription";
+export type { ShareLinkAction } from "./share-link-rules";
+export { revokeIsFinal, shareLinkActions } from "./share-link-rules";
+export { useAdminRecipeShareMutations } from "./use-admin-recipe-share-mutations";
+export type { ShareLinkMutations } from "./use-recipe-share-mutations";
 export { useRecipeShareMutations } from "./use-recipe-share-mutations";
 export { useRecipeShareSubscription } from "./use-recipe-share-subscription";
 export {
@@ -51,9 +61,11 @@ export {
   useMyRecipeSharesQuery,
   useRecipeSharesQuery,
 } from "./use-recipe-shares-query";
+export { useShareLink } from "./use-share-link";
 export { useSharePublicConfigQuery } from "./use-share-public-config-query";
 export { useSharedRecipeQuery } from "./use-shared-recipe-query";
 export { useWorkedOutNutrition } from "./use-worked-out-nutrition";
+export { useLineReadings } from "./use-line-readings";
 export { useCookbookAddRecipes } from "./use-cookbook-add-recipes";
 export { useNewCookbook } from "./use-new-cookbook";
 export { useCookbookEdit, useCookbookTitleEdit, type CookbookCover } from "./use-cookbook-edit";
@@ -76,6 +88,7 @@ export { useRecipeFoodsToBuy } from "./use-recipe-foods-to-buy";
 export { useUnitFormatter } from "./use-unit-formatter";
 export {
   createRecipePageStore,
+  LoadedPageRecipe,
   RecipePageProvider,
   RecipePageStores,
   useRecipePageStore,

@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { SaveCallbacks } from "@norish/shared-react/recipes";
 import type { FullRecipeDTO } from "@norish/shared/contracts";
 
 const state = vi.hoisted(() => ({
@@ -13,6 +14,8 @@ const state = vi.hoisted(() => ({
   back: vi.fn(),
   dismissTo: vi.fn(),
   alert: vi.fn(),
+  failSave: vi.fn(),
+  version: undefined as number | undefined,
   preventRemove: undefined as
     { prevent: boolean; callback: (event: { repeat: () => void }) => void } | undefined,
 }));
@@ -20,6 +23,7 @@ const state = vi.hoisted(() => ({
 vi.mock("react-native", () => ({
   Alert: { alert: state.alert },
   Keyboard: {
+    dismiss: () => {},
     isVisible: () => false,
     addListener: () => ({ remove: () => {} }),
     metrics: () => null,
@@ -87,7 +91,9 @@ vi.mock("@norish/shared-react/recipes", async (importOriginal) => ({
     set: vi.fn(),
     errors: {},
     submit: () => state.payload,
-    failSubmit: vi.fn(),
+    failSave: state.failSave,
+    version: state.version,
+    isSaving: false,
     hasUnsavedChanges: state.dirty,
     moveLines: vi.fn(),
     changeSystem: vi.fn(),
@@ -107,9 +113,20 @@ describe("RecipeEditorScreen", () => {
   beforeEach(() => {
     state.payload = { name: "Soup" };
     state.dirty = true;
-    for (const mock of [state.create, state.update, state.back, state.dismissTo, state.alert]) {
+    state.version = undefined;
+    for (const mock of [
+      state.create,
+      state.update,
+      state.back,
+      state.dismissTo,
+      state.alert,
+      state.failSave,
+    ]) {
       mock.mockReset();
     }
+    // The server stores each save.
+    state.create.mockImplementation((_input, after: SaveCallbacks) => after.onSaved());
+    state.update.mockImplementation((_id, _input, after: SaveCallbacks) => after.onSaved());
   });
 
   it("saves nothing while the form is invalid", () => {
@@ -125,7 +142,7 @@ describe("RecipeEditorScreen", () => {
     render(<RecipeEditorScreen mode="create" />);
     save();
 
-    expect(state.create).toHaveBeenCalledWith({ name: "Soup", id: "new-id" });
+    expect(state.create).toHaveBeenCalledWith({ name: "Soup", id: "new-id" }, expect.anything());
     expect(state.dismissTo).toHaveBeenCalledWith({
       pathname: "/recipe/[id]",
       params: { id: "new-id" },
@@ -136,9 +153,46 @@ describe("RecipeEditorScreen", () => {
     render(<RecipeEditorScreen initialData={stored} mode="edit" />);
     save();
 
-    expect(state.update).toHaveBeenCalledWith("recipe-1", { name: "Soup", version: 4 });
+    expect(state.update).toHaveBeenCalledWith(
+      "recipe-1",
+      { name: "Soup", version: 4 },
+      expect.anything()
+    );
     expect(state.back).toHaveBeenCalledOnce();
   });
+
+  it("saves again at the version the form moved to after a stale answer", () => {
+    state.version = 9;
+    render(<RecipeEditorScreen initialData={stored} mode="edit" />);
+    save();
+
+    expect(state.update).toHaveBeenCalledWith(
+      "recipe-1",
+      { name: "Soup", version: 9 },
+      expect.anything()
+    );
+  });
+
+  it.each(["create", "edit"] as const)(
+    "stays open with the draft when a %s is not taken, and says why",
+    (mode) => {
+      const refusal = new Error("Busy");
+
+      state.create.mockImplementation((_input, after: SaveCallbacks) => after.onFailed(refusal));
+      state.update.mockImplementation((_id, _input, after: SaveCallbacks) =>
+        after.onFailed(refusal)
+      );
+      render(<RecipeEditorScreen initialData={stored} mode={mode} />);
+      save();
+
+      expect(state.back).not.toHaveBeenCalled();
+      expect(state.dismissTo).not.toHaveBeenCalled();
+      expect(state.failSave).toHaveBeenCalledWith(refusal);
+      // Leaving now asks again: the draft is still unsaved.
+      state.preventRemove?.callback({ repeat: vi.fn() });
+      expect(state.alert).toHaveBeenCalledOnce();
+    }
+  );
 
   it("asks before leaving with changes and leaves only on Discard", () => {
     render(<RecipeEditorScreen mode="create" />);

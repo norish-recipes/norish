@@ -1,5 +1,7 @@
 "use client";
 
+import { CellSlot, EmptyState } from "@/components/shared/empty-state";
+import { CpuChipIcon, ExclamationCircleIcon } from "@heroicons/react/24/outline";
 import { Spinner } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
@@ -24,26 +26,30 @@ export default function ModelListingEmptyState({
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-2">
+      <CellSlot>
         <Spinner size="sm" />
-      </div>
+      </CellSlot>
     );
   }
 
   if (!refusal) {
-    return <div className="text-muted px-2 py-2 text-xs">{t("empty")}</div>;
+    return <EmptyState icon={CpuChipIcon} title={t("empty")} variant="cell" />;
   }
 
   return (
-    <div className="text-danger px-2 py-2 text-xs">
-      {refusal.status
-        ? t("refused", {
-            provider: refusal.provider,
-            status: refusal.statusText
-              ? `${refusal.status} ${refusal.statusText}`
-              : `${refusal.status}`,
-          })
-        : t("unreachable", { provider: refusal.provider })}
-    </div>
+    <EmptyState
+      icon={ExclamationCircleIcon}
+      title={
+        refusal.status
+          ? t("refused", {
+              provider: refusal.provider,
+              status: refusal.statusText
+                ? `${refusal.status} ${refusal.statusText}`
+                : `${refusal.status}`,
+            })
+          : t("unreachable", { provider: refusal.provider })
+      }
+      variant="cell"
+    />
   );
 }

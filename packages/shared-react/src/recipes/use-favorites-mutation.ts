@@ -2,7 +2,11 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { shouldPreserveOptimisticUpdate } from "../offline/optimistic-updates";
+import {
+  markHousehold,
+  mayRestore,
+  shouldPreserveOptimisticUpdate,
+} from "../offline/optimistic-updates";
 import { useTRPC } from "../trpc";
 
 type FavoritesMutationResult = {
@@ -48,14 +52,14 @@ export function useFavoritesMutation(): FavoritesMutationResult {
           };
         });
 
-        return { previousData };
+        return { previousData, ...markHousehold(queryClient) };
       },
       onError: (error, _variables, context) => {
         if (shouldPreserveOptimisticUpdate(error)) {
           return;
         }
 
-        if (context?.previousData) {
+        if (mayRestore(queryClient, context) && context.previousData) {
           queryClient.setQueryData(queryKey, context.previousData);
         }
       },

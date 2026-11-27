@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { ActionButton, ActionButtonGroup } from "@/components/shared/action-button";
+import { ActionButton } from "@/components/shared/action-button";
+import {
+  CancelButton,
+  ModalFooter,
+  ModalFrame,
+  ModalTitle,
+} from "@/components/shared/confirm-modal";
 import UiSwitch from "@/components/shared/ui-switch";
 import { KeyIcon } from "@heroicons/react/16/solid";
 import { Description, FieldError, Input, Label, Modal, TextField, toast } from "@heroui/react";
@@ -9,6 +15,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 
 import { authClient } from "@norish/shared/lib/auth/client";
+import { passwordChecks } from "@norish/shared/lib/auth/password";
 
 interface ChangePasswordModalProps {
   isOpen: boolean;
@@ -17,31 +24,27 @@ interface ChangePasswordModalProps {
 
 export function ChangePasswordModal({ isOpen, onOpenChange }: ChangePasswordModalProps) {
   return (
-    <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={onOpenChange}>
-      <Modal.Container className="z-[1100]">
-        <Modal.Dialog>
-          {/* The form mounts per opening, so a closed dialog keeps no password. */}
-          {({ close }) => <ChangePasswordForm close={close} />}
-        </Modal.Dialog>
-      </Modal.Container>
-    </Modal.Backdrop>
+    <ModalFrame isOpen={isOpen} onOpenChange={onOpenChange}>
+      {/* The form mounts per opening, so a closed dialog keeps no password. */}
+      {({ close }) => <ChangePasswordForm close={close} />}
+    </ModalFrame>
   );
 }
 
 function ChangePasswordForm({ close }: { close: () => void }) {
   const t = useTranslations("settings.user.signInMethods");
   const tSignup = useTranslations("auth.signup");
-  const tActions = useTranslations("common.actions");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const [revokeOtherSessions, setRevokeOtherSessions] = useState(true);
   const [wrongPassword, setWrongPassword] = useState(false);
-  const tooShort = newPassword.length > 0 && newPassword.length < 8;
-  const tooLong = newPassword.length > 128;
-  const mismatch = confirmation.length > 0 && confirmation !== newPassword;
-  const isValid =
-    currentPassword && newPassword && !tooShort && !tooLong && confirmation === newPassword;
+  const {
+    tooShort,
+    tooLong,
+    mismatch,
+    valid: isValid,
+  } = passwordChecks({ current: currentPassword, next: newPassword, confirmation });
 
   const change = useMutation({
     mutationFn: async () => {
@@ -70,7 +73,7 @@ function ChangePasswordForm({ close }: { close: () => void }) {
         if (isValid) change.mutate();
       }}
     >
-      <Modal.Header>{t("changePassword")}</Modal.Header>
+      <ModalTitle>{t("changePassword")}</ModalTitle>
       <Modal.Body className="flex flex-col gap-4">
         <TextField
           fullWidth
@@ -123,22 +126,17 @@ function ChangePasswordForm({ close }: { close: () => void }) {
           <Label>{t("signOutOthers")}</Label>
         </UiSwitch>
       </Modal.Body>
-      <Modal.Footer>
-        <ActionButtonGroup>
-          <ActionButton action="cancel" onPress={close}>
-            {tActions("cancel")}
-          </ActionButton>
-          <ActionButton
-            action="save"
-            icon={KeyIcon}
-            isDisabled={!isValid}
-            isPending={change.isPending}
-            type="submit"
-          >
-            {t("changePassword")}
-          </ActionButton>
-        </ActionButtonGroup>
-      </Modal.Footer>
+      <ModalFooter start={<CancelButton onPress={close} />}>
+        <ActionButton
+          action="save"
+          icon={KeyIcon}
+          isDisabled={!isValid}
+          isPending={change.isPending}
+          type="submit"
+        >
+          {t("changePassword")}
+        </ActionButton>
+      </ModalFooter>
     </form>
   );
 }

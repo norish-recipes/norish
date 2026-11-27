@@ -11,6 +11,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { users } from "./auth";
+import { households } from "./households";
 import { ingredients } from "./ingredients";
 import { mutableRowColumns } from "./shared";
 
@@ -67,9 +68,9 @@ export const nutritionRules = pgTable(
  * A household's corrections to Ingredient Nutrition (ADR-0039): the last
  * word for that household, kept apart from the source numbers so a table
  * refresh never touches them and the catalogue export never carries them.
- * Keyed by the member who made it and read by everyone in their household,
- * the most recent winning; any member may correct any Ingredient, seeded or
- * not, with no edit policy in the way. Each of the three facts is either a
+ * One per household and Ingredient, with the member who last wrote it kept as
+ * who added it; any member may correct any Ingredient, seeded or not, with no
+ * edit policy in the way. Each of the three facts is either a
  * dataset food (`dataset:code`) or a number, or left to the sources: the
  * numbers per 100 g as all four of `kcal`, `fat`, `carbs` and `protein` (with
  * any other nutrients the label gives in `extras`), the piece weight in grams, the density in grams per millilitre.
@@ -78,9 +79,11 @@ export const ingredientNutritionCorrections = pgTable(
   "ingredient_nutrition_corrections",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    userId: text("user_id")
+    householdId: uuid("household_id")
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+      .references(() => households.id, { onDelete: "cascade" }),
+    /** Who added it; null once their account is deleted (ADR-0041). */
+    userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
     ingredientId: uuid("ingredient_id")
       .notNull()
       .references(() => ingredients.id, { onDelete: "cascade" }),
@@ -97,7 +100,11 @@ export const ingredientNutritionCorrections = pgTable(
     ...mutableRowColumns,
   },
   (t) => [
-    unique("uq_ingredient_nutrition_corrections_user_ingredient").on(t.userId, t.ingredientId),
+    unique("uq_ingredient_nutrition_corrections_household_ingredient").on(
+      t.householdId,
+      t.ingredientId
+    ),
+    index("idx_ingredient_nutrition_corrections_user_id").on(t.userId),
     index("idx_ingredient_nutrition_corrections_ingredient_id").on(t.ingredientId),
   ]
 );

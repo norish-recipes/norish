@@ -13,14 +13,14 @@ import {
   createStore,
   deleteStore,
   getStoreById,
-  listStoresByUserIds,
+  listStoresByHousehold,
   reorderStores,
   updateStore,
 } from "@norish/db/repositories/stores";
 import { aisleLinks, aisles, stores } from "@norish/db/schema";
 
 import { resolveIngredients } from "../../../../../shared-server/src/ingredients/resolver";
-import { getTestDb } from "../../../helpers/db-test-helpers";
+import { getTestDb, testHouseholdOf } from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 const ZUIVEL = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
@@ -42,7 +42,11 @@ describe("aisles and aisle links", () => {
 
     userId = user.id;
     // A plain Store, with no shop behind it: aisles need none.
-    const store = await createStore(crypto.randomUUID(), { userId, name: "Markt" });
+    const store = await createStore(crypto.randomUUID(), {
+      householdId: testHouseholdOf(userId),
+      userId,
+      name: "Markt",
+    });
 
     storeId = store.id;
   });
@@ -55,75 +59,92 @@ describe("aisles and aisle links", () => {
 
   describe("a Store keeps one aisle list, in order", () => {
     it("is created with no aisles, and reads as such everywhere", async () => {
-      await expect(getStoreById(storeId)).resolves.toMatchObject({ aisles: [] });
-      const [store] = await listStoresByUserIds([userId]);
+      await expect(getStoreById(storeId, testHouseholdOf(userId))).resolves.toMatchObject({
+        aisles: [],
+      });
+      const [store] = await listStoresByHousehold(testHouseholdOf(userId));
 
       expect(store?.aisles).toEqual([]);
     });
 
     it("saves the list it is given, in the order it is given", async () => {
-      const saved = await updateStore({
-        id: storeId,
-        aisles: [
-          { id: GROENTE, name: "Groente" },
-          { id: ZUIVEL, name: "Zuivel" },
-          { id: BROOD, name: "Brood" },
-        ],
-      });
+      const saved = await updateStore(
+        {
+          id: storeId,
+          aisles: [
+            { id: GROENTE, name: "Groente" },
+            { id: ZUIVEL, name: "Zuivel" },
+            { id: BROOD, name: "Brood" },
+          ],
+        },
+        testHouseholdOf(userId)
+      );
 
       expect(names(saved!.aisles)).toEqual(["Groente", "Zuivel", "Brood"]);
       expect(saved!.aisles.map((aisle) => aisle.sortOrder)).toEqual([0, 1, 2]);
       expect(saved!.aisles.every((aisle) => aisle.storeId === storeId)).toBe(true);
 
       // The list comes back with the Store, however the Store is read.
-      await expect(getStoreById(storeId)).resolves.toMatchObject({
+      await expect(getStoreById(storeId, testHouseholdOf(userId))).resolves.toMatchObject({
         aisles: [{ name: "Groente" }, { name: "Zuivel" }, { name: "Brood" }],
       });
-      const [listed] = await listStoresByUserIds([userId]);
+      const [listed] = await listStoresByHousehold(testHouseholdOf(userId));
 
       expect(names(listed!.aisles)).toEqual(["Groente", "Zuivel", "Brood"]);
     });
 
     it("renames and repositions a known aisle, creates a new one and deletes the absent", async () => {
-      await updateStore({
-        id: storeId,
-        aisles: [
-          { id: ZUIVEL, name: "Zuivel" },
-          { id: BROOD, name: "Brood" },
-        ],
-      });
+      await updateStore(
+        {
+          id: storeId,
+          aisles: [
+            { id: ZUIVEL, name: "Zuivel" },
+            { id: BROOD, name: "Brood" },
+          ],
+        },
+        testHouseholdOf(userId)
+      );
 
-      const saved = await updateStore({
-        id: storeId,
-        aisles: [
-          { id: GROENTE, name: "Groente & fruit" },
-          { id: ZUIVEL, name: "Zuivel en kaas" },
-        ],
-      });
+      const saved = await updateStore(
+        {
+          id: storeId,
+          aisles: [
+            { id: GROENTE, name: "Groente & fruit" },
+            { id: ZUIVEL, name: "Zuivel en kaas" },
+          ],
+        },
+        testHouseholdOf(userId)
+      );
 
       expect(saved!.aisles.map((aisle) => [aisle.id, aisle.name, aisle.sortOrder])).toEqual([
         [GROENTE, "Groente & fruit", 0],
         [ZUIVEL, "Zuivel en kaas", 1],
       ]);
-      await expect(getAisleById(BROOD)).resolves.toBeNull();
+      await expect(getAisleById(BROOD, storeId)).resolves.toBeNull();
     });
 
     it("lets two aisles swap names in one save", async () => {
-      await updateStore({
-        id: storeId,
-        aisles: [
-          { id: ZUIVEL, name: "Zuivel" },
-          { id: BROOD, name: "Brood" },
-        ],
-      });
+      await updateStore(
+        {
+          id: storeId,
+          aisles: [
+            { id: ZUIVEL, name: "Zuivel" },
+            { id: BROOD, name: "Brood" },
+          ],
+        },
+        testHouseholdOf(userId)
+      );
 
-      const saved = await updateStore({
-        id: storeId,
-        aisles: [
-          { id: ZUIVEL, name: "Brood" },
-          { id: BROOD, name: "Zuivel" },
-        ],
-      });
+      const saved = await updateStore(
+        {
+          id: storeId,
+          aisles: [
+            { id: ZUIVEL, name: "Brood" },
+            { id: BROOD, name: "Zuivel" },
+          ],
+        },
+        testHouseholdOf(userId)
+      );
 
       expect(saved!.aisles.map((aisle) => [aisle.id, aisle.name])).toEqual([
         [ZUIVEL, "Brood"],
@@ -132,59 +153,77 @@ describe("aisles and aisle links", () => {
     });
 
     it("applies a rename made against the version the aisle has, and drops one made against an older one", async () => {
-      const saved = await updateStore({ id: storeId, aisles: [{ id: ZUIVEL, name: "Zuivel" }] });
+      const saved = await updateStore(
+        { id: storeId, aisles: [{ id: ZUIVEL, name: "Zuivel" }] },
+        testHouseholdOf(userId)
+      );
       const version = saved!.aisles[0]!.version;
 
       // A housemate renames it first; the rename bumps the version.
-      const theirs = await updateStore({
-        id: storeId,
-        aisles: [{ id: ZUIVEL, name: "Zuivel en kaas", version }],
-      });
+      const theirs = await updateStore(
+        {
+          id: storeId,
+          aisles: [{ id: ZUIVEL, name: "Zuivel en kaas", version }],
+        },
+        testHouseholdOf(userId)
+      );
 
       expect(theirs!.aisles[0]).toMatchObject({ name: "Zuivel en kaas", version: version + 1 });
 
       // Ours was made against the version we read, which is no longer the
       // aisle's: the first writer won (ADR-0004), and nothing is parked or
       // half-renamed.
-      const ours = await updateStore({
-        id: storeId,
-        aisles: [{ id: ZUIVEL, name: "Melk en kaas", version }],
-      });
+      const ours = await updateStore(
+        {
+          id: storeId,
+          aisles: [{ id: ZUIVEL, name: "Melk en kaas", version }],
+        },
+        testHouseholdOf(userId)
+      );
 
       expect(ours!.aisles[0]).toMatchObject({ name: "Zuivel en kaas", version: version + 1 });
     });
 
     it("bumps an aisle's version only when its name changed, never for its place", async () => {
-      const saved = await updateStore({
-        id: storeId,
-        aisles: [
-          { id: ZUIVEL, name: "Zuivel" },
-          { id: BROOD, name: "Brood" },
-        ],
-      });
+      const saved = await updateStore(
+        {
+          id: storeId,
+          aisles: [
+            { id: ZUIVEL, name: "Zuivel" },
+            { id: BROOD, name: "Brood" },
+          ],
+        },
+        testHouseholdOf(userId)
+      );
       const [zuivel, brood] = saved!.aisles;
 
-      const again = await updateStore({
-        id: storeId,
-        color: "sky",
-        aisles: [
-          { id: ZUIVEL, name: "Zuivel" },
-          { id: BROOD, name: "Brood" },
-        ],
-      });
+      const again = await updateStore(
+        {
+          id: storeId,
+          color: "sky",
+          aisles: [
+            { id: ZUIVEL, name: "Zuivel" },
+            { id: BROOD, name: "Brood" },
+          ],
+        },
+        testHouseholdOf(userId)
+      );
 
       expect(again!.aisles.map((aisle) => aisle.version)).toEqual([
         zuivel!.version,
         brood!.version,
       ]);
 
-      const moved = await updateStore({
-        id: storeId,
-        aisles: [
-          { id: BROOD, name: "Brood" },
-          { id: ZUIVEL, name: "Zuivel" },
-        ],
-      });
+      const moved = await updateStore(
+        {
+          id: storeId,
+          aisles: [
+            { id: BROOD, name: "Brood" },
+            { id: ZUIVEL, name: "Zuivel" },
+          ],
+        },
+        testHouseholdOf(userId)
+      );
 
       expect(moved!.aisles.map((aisle) => [aisle.id, aisle.sortOrder, aisle.version])).toEqual([
         [BROOD, 0, brood!.version],
@@ -192,13 +231,16 @@ describe("aisles and aisle links", () => {
       ]);
 
       // A rename made against the version held before the move still lands.
-      const renamed = await updateStore({
-        id: storeId,
-        aisles: [
-          { id: BROOD, name: "Bakkerij", version: brood!.version },
-          { id: ZUIVEL, name: "Zuivel", version: zuivel!.version },
-        ],
-      });
+      const renamed = await updateStore(
+        {
+          id: storeId,
+          aisles: [
+            { id: BROOD, name: "Bakkerij", version: brood!.version },
+            { id: ZUIVEL, name: "Zuivel", version: zuivel!.version },
+          ],
+        },
+        testHouseholdOf(userId)
+      );
 
       expect(renamed!.aisles.map((aisle) => [aisle.name, aisle.version])).toEqual([
         ["Bakkerij", brood!.version + 1],
@@ -207,9 +249,15 @@ describe("aisles and aisle links", () => {
     });
 
     it("leaves the aisles alone when an update says nothing about them", async () => {
-      await updateStore({ id: storeId, aisles: [{ id: ZUIVEL, name: "Zuivel" }] });
+      await updateStore(
+        { id: storeId, aisles: [{ id: ZUIVEL, name: "Zuivel" }] },
+        testHouseholdOf(userId)
+      );
 
-      const renamed = await updateStore({ id: storeId, name: "Boerenmarkt" });
+      const renamed = await updateStore(
+        { id: storeId, name: "Boerenmarkt" },
+        testHouseholdOf(userId)
+      );
 
       expect(renamed?.name).toBe("Boerenmarkt");
       expect(names(renamed!.aisles)).toEqual(["Zuivel"]);
@@ -217,6 +265,7 @@ describe("aisles and aisle links", () => {
 
     it("is created with its aisles in one go", async () => {
       const store = await createStore(crypto.randomUUID(), {
+        householdId: testHouseholdOf(userId),
         userId,
         name: "Dirk",
         aisles: [
@@ -226,28 +275,41 @@ describe("aisles and aisle links", () => {
       });
 
       expect(names(store.aisles)).toEqual(["Zuivel", "Brood"]);
-      await expect(getStoreById(store.id)).resolves.toMatchObject({
+      await expect(getStoreById(store.id, testHouseholdOf(userId))).resolves.toMatchObject({
         aisles: [{ name: "Zuivel" }, { name: "Brood" }],
       });
     });
 
     it("travels with the Store through a reorder", async () => {
-      await updateStore({ id: storeId, aisles: [{ id: ZUIVEL, name: "Zuivel" }] });
+      await updateStore(
+        { id: storeId, aisles: [{ id: ZUIVEL, name: "Zuivel" }] },
+        testHouseholdOf(userId)
+      );
       const [store] = await getTestDb().select().from(stores).where(eq(stores.id, storeId));
 
-      const [reordered] = await reorderStores([{ id: storeId, version: store!.version }]);
+      const [reordered] = await reorderStores(
+        [{ id: storeId, version: store!.version }],
+        testHouseholdOf(userId)
+      );
 
       expect(names(reordered!.aisles)).toEqual(["Zuivel"]);
     });
 
     it("renumbers the Stores a reorder is given and leaves their versions alone", async () => {
-      const other = await createStore(crypto.randomUUID(), { userId, name: "Dirk" });
+      const other = await createStore(crypto.randomUUID(), {
+        householdId: testHouseholdOf(userId),
+        userId,
+        name: "Dirk",
+      });
       const [markt] = await getTestDb().select().from(stores).where(eq(stores.id, storeId));
 
-      const first = await reorderStores([
-        { id: other.id, version: other.version },
-        { id: storeId, version: markt!.version },
-      ]);
+      const first = await reorderStores(
+        [
+          { id: other.id, version: other.version },
+          { id: storeId, version: markt!.version },
+        ],
+        testHouseholdOf(userId)
+      );
 
       expect(first.map((store) => [store.id, store.sortOrder, store.version])).toEqual([
         [other.id, 0, other.version],
@@ -255,19 +317,25 @@ describe("aisles and aisle links", () => {
       ]);
 
       // A second reorder from the same held versions lands too.
-      const second = await reorderStores([
-        { id: storeId, version: markt!.version },
-        { id: other.id, version: other.version },
-      ]);
+      const second = await reorderStores(
+        [
+          { id: storeId, version: markt!.version },
+          { id: other.id, version: other.version },
+        ],
+        testHouseholdOf(userId)
+      );
 
       expect(second.map((store) => store.sortOrder)).toEqual([0, 1]);
-      await expect(reorderStores([{ id: storeId, version: markt!.version + 5 }])).resolves.toEqual(
-        []
-      );
+      await expect(
+        reorderStores([{ id: storeId, version: markt!.version + 5 }], testHouseholdOf(userId))
+      ).resolves.toEqual([]);
     });
 
     it("refuses two aisles whose names differ only in case", async () => {
-      await updateStore({ id: storeId, aisles: [{ id: ZUIVEL, name: "Zuivel" }] });
+      await updateStore(
+        { id: storeId, aisles: [{ id: ZUIVEL, name: "Zuivel" }] },
+        testHouseholdOf(userId)
+      );
 
       await expect(
         getTestDb().insert(aisles).values({ storeId, name: "zuivel", sortOrder: 1 })
@@ -276,36 +344,44 @@ describe("aisles and aisle links", () => {
 
     it("never touches another Store's aisle, whatever id it is handed", async () => {
       const other = await createStore(crypto.randomUUID(), {
+        householdId: testHouseholdOf(userId),
         userId,
         name: "Jumbo",
         aisles: [{ id: ZUIVEL, name: "Zuivel" }],
       });
 
       // The same id, sent as this Store's: it is not this Store's to rename.
-      await updateStore({ id: storeId, aisles: [{ id: ZUIVEL, name: "Hijacked" }] });
+      await updateStore(
+        { id: storeId, aisles: [{ id: ZUIVEL, name: "Hijacked" }] },
+        testHouseholdOf(userId)
+      );
 
-      await expect(getAisleById(ZUIVEL)).resolves.toMatchObject({
-        storeId: other.id,
-        name: "Zuivel",
-      });
+      await expect(getAisleById(ZUIVEL, other.id)).resolves.toMatchObject({ name: "Zuivel" });
+      await expect(getAisleById(ZUIVEL, storeId)).resolves.toBeNull();
       await expect(listAislesByStoreIds([storeId])).resolves.toEqual([]);
     });
   });
 
   describe("an Aisle Link: where a Store files an Ingredient", () => {
     beforeEach(async () => {
-      await updateStore({
-        id: storeId,
-        aisles: [
-          { id: ZUIVEL, name: "Zuivel" },
-          { id: BROOD, name: "Brood" },
-        ],
-      });
+      await updateStore(
+        {
+          id: storeId,
+          aisles: [
+            { id: ZUIVEL, name: "Zuivel" },
+            { id: BROOD, name: "Brood" },
+          ],
+        },
+        testHouseholdOf(userId)
+      );
     });
 
     /** The Ingredient a grocery name resolves to, as the filing procedure resolves it. */
     async function ingredient(name: string) {
-      const [resolved] = await resolveIngredients([name], { userId });
+      const [resolved] = await resolveIngredients([name], {
+        userId,
+        householdId: testHouseholdOf(userId),
+      });
 
       return resolved!.ingredientId;
     }
@@ -344,7 +420,10 @@ describe("aisles and aisle links", () => {
       await fileIngredient(storeId, await ingredient("melk"), ZUIVEL);
       await fileIngredient(storeId, brood, BROOD);
 
-      await updateStore({ id: storeId, aisles: [{ id: BROOD, name: "Brood" }] });
+      await updateStore(
+        { id: storeId, aisles: [{ id: BROOD, name: "Brood" }] },
+        testHouseholdOf(userId)
+      );
 
       await expect(listAisleLinksByStoreIds([storeId])).resolves.toEqual([
         { storeId, ingredientId: brood, aisleId: BROOD },
@@ -353,6 +432,7 @@ describe("aisles and aisle links", () => {
 
     it("reads the links of a household's Stores in one query", async () => {
       const other = await createStore(crypto.randomUUID(), {
+        householdId: testHouseholdOf(userId),
         userId,
         name: "Jumbo",
         aisles: [{ id: GROENTE, name: "Groente" }],
@@ -378,7 +458,7 @@ describe("aisles and aisle links", () => {
       await fileIngredient(storeId, await ingredient("melk"), ZUIVEL);
       const [store] = await getTestDb().select().from(stores).where(eq(stores.id, storeId));
 
-      await deleteStore(storeId, store!.version, false, []);
+      await deleteStore(testHouseholdOf(userId), storeId, store!.version, false, []);
 
       await expect(getTestDb().select().from(aisles)).resolves.toEqual([]);
       await expect(getTestDb().select().from(aisleLinks)).resolves.toEqual([]);

@@ -1,7 +1,8 @@
 import type { inferRouterOutputs } from "@trpc/server";
 
-import type { PermissionLevel, RecipePermissionPolicy } from "@norish/config/zod/server-config";
+import type { RecipePermissionPolicy } from "@norish/config/zod/server-config";
 import type { AppRouter } from "@norish/trpc/client";
+import { policyAllows } from "@norish/config/zod/server-config";
 
 export type PermissionsData = inferRouterOutputs<AppRouter>["permissions"]["get"];
 
@@ -11,26 +12,18 @@ export type ReaderPermissions = {
   isAIEnabled: boolean;
   /** AI is on and an image provider can draw: Generate shows only then. */
   canDrawImages: boolean;
-  /** The household's members, or null outside one. */
-  householdUserIds: string[] | null;
+  /** The Reader's household; null until the server has said. */
+  householdId: string | null;
   isServerAdmin: boolean;
 };
 
-/** What a recipe permission is decided by. */
-type RecipeAccess = Pick<ReaderPermissions, "recipePolicy" | "householdUserIds" | "isServerAdmin">;
-
-type PermissionAccessInput = {
-  policyLevel: PermissionLevel;
-  userId: string;
-  ownerId: string;
-  householdUserIds: string[] | null;
-  isServerAdmin: boolean;
-};
+/** What a recipe or cookbook permission is decided by. */
+type RowAccess = Pick<ReaderPermissions, "recipePolicy" | "householdId">;
 
 const DEFAULT_RECIPE_POLICY: RecipePermissionPolicy = {
-  view: "owner",
-  edit: "owner",
-  delete: "owner",
+  view: "household",
+  edit: "household",
+  delete: "household",
 };
 
 export function normalizePermissionsData(
@@ -40,58 +33,19 @@ export function normalizePermissionsData(
     recipePolicy: input?.recipePolicy ?? DEFAULT_RECIPE_POLICY,
     isAIEnabled: input?.isAIEnabled ?? false,
     canDrawImages: input?.canDrawImages ?? false,
-    householdUserIds: input?.householdUserIds ?? null,
+    householdId: input?.householdId ?? null,
     isServerAdmin: input?.isServerAdmin ?? false,
   };
 }
 
-function checkPermissionAccess({
-  policyLevel,
-  userId,
-  ownerId,
-  householdUserIds,
-  isServerAdmin,
-}: PermissionAccessInput): boolean {
-  if (userId === ownerId) return true;
-  if (isServerAdmin) return true;
-
-  switch (policyLevel) {
-    case "everyone":
-      return true;
-    case "household":
-      return householdUserIds?.includes(ownerId) ?? false;
-    case "owner":
-    default:
-      return false;
-  }
-}
-
-export function selectCanViewRecipe(permissions: RecipeAccess, userId: string, ownerId: string) {
-  return checkPermissionAccess({
-    policyLevel: permissions.recipePolicy.view,
-    userId,
-    ownerId,
-    householdUserIds: permissions.householdUserIds,
-    isServerAdmin: permissions.isServerAdmin,
-  });
-}
-
-export function selectCanEditRecipe(permissions: RecipeAccess, userId: string, ownerId: string) {
-  return checkPermissionAccess({
-    policyLevel: permissions.recipePolicy.edit,
-    userId,
-    ownerId,
-    householdUserIds: permissions.householdUserIds,
-    isServerAdmin: permissions.isServerAdmin,
-  });
-}
-
-export function selectCanDeleteRecipe(permissions: RecipeAccess, userId: string, ownerId: string) {
-  return checkPermissionAccess({
-    policyLevel: permissions.recipePolicy.delete,
-    userId,
-    ownerId,
-    householdUserIds: permissions.householdUserIds,
-    isServerAdmin: permissions.isServerAdmin,
-  });
+/** The server's rule (`policyAllows`) for a row of `rowHouseholdId`; no answer yet is no. */
+export function selectAllows(
+  permissions: RowAccess,
+  action: keyof RecipePermissionPolicy,
+  rowHouseholdId: string
+) {
+  return (
+    permissions.householdId !== null &&
+    policyAllows(permissions.recipePolicy, action, permissions.householdId, rowHouseholdId)
+  );
 }

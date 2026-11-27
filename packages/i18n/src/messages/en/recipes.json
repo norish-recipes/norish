@@ -41,12 +41,8 @@
   },
   "empty": {
     "title": "Your library awaits",
-    "description": "Paste a recipe URL in the search field above and watch the magic happen.",
     "noResults": "No recipes found",
-    "noResultsHint": "Try adjusting or clearing your filters.",
-    "noCookbooks": "No cookbooks yet",
-    "noCookbooksHint": "A cookbook is a titled set of recipes. Make your first one to give your library some order.",
-    "descriptionMobile": "Add your first recipe from a link, text or photos."
+    "noCookbooks": "No cookbooks yet"
   },
   "card": {
     "noImage": "No image available",
@@ -67,6 +63,7 @@
     "addToGroceries": "Add to groceries",
     "ratingPrompt": "What did you think of this recipe?",
     "notFound": "Recipe Not Found",
+    "offline": "This recipe needs a connection",
     "notFoundMessage": "This recipe doesn't exist or you don't have permission to view it.",
     "prep": "prep",
     "total": "total",
@@ -160,6 +157,7 @@
     "expiresAfter": "Expires after",
     "expiresOn": "Expires {date}",
     "expiredOn": "Expired {date}",
+    "revokedOn": "Revoked {date}",
     "lastOpenedOn": "Last opened {date}",
     "neverExpires": "Never expires",
     "linkCreated": "Created {date}"
@@ -203,7 +201,7 @@
     "notesPlaceholder": "Add prep notes, adjustments or serving tips for this recipe...",
     "ingredientsHelp": "Type ingredients like \"2 cups flour\" - we'll automatically parse amounts and units.",
     "instructionsHelp": "Write clear step-by-step instructions. Press Enter to move to the next step.",
-    "tagsHelp": "Type tags and click suggestions to add. Tags on the recipe are filled in; new tags have a dashed border.",
+    "tagsHelp": "Pick a tag or create a new one.",
     "tagsAndCategories": "Tags & Categories",
     "categoriesHelp": "Select meal categories for this recipe.",
     "addCategory": "Add a category",
@@ -224,7 +222,7 @@
     "originRegion": "Region",
     "originRegionPlaceholder": "e.g. Sicily",
     "cuisines": "Cuisines",
-    "cuisinesHelp": "Pick from your deployment's list. Several make sense for a fusion dish.",
+    "cuisinesHelp": "Pick from the list or create your own. Several make sense for a fusion dish.",
     "provenanceNote": "Note",
     "provenanceNotePlaceholder": "A few sentences about where this dish comes from…",
     "servings": "Servings",
@@ -441,7 +439,6 @@
     "singular": "Cookbook",
     "notFound": "Cookbook not found",
     "notFoundHint": "It may have been deleted, or it is not visible to you.",
-    "emptyHint": "Add recipes from any recipe’s quick actions menu.",
     "panelTitle": "Add to cookbook",
     "newWithRecipe": "New cookbook with this recipe",
     "noneEditable": "There are no cookbooks you can edit yet.",
@@ -545,7 +542,7 @@
     "tagsAndCategories": "Tags & categories",
     "categories": "Categories",
     "tags": "Tags",
-    "tagsHint": "Pick a suggestion or type a new tag; new tags have a dashed border.",
+    "tagsHint": "Pick a tag from the list, or create a new one.",
     "addTag": "Add a tag",
     "removeNamed": "Remove {name}",
     "servingsAndTime": "Servings & time",
@@ -561,6 +558,13 @@
     "discardMessage": "You have unsaved changes.",
     "keepEditing": "Keep editing",
     "discard": "Discard"
+  },
+  "picker": {
+    "create": "Create \"{name}\"",
+    "createOffline": "You can create \"{name}\" when you are online.",
+    "tooLong": "Names can have at most {max} characters.",
+    "createFailed": "Could not create \"{name}\". Try again.",
+    "loadFailed": "Could not load the list."
   },
   "search": {
     "sortBestMatch": "Best match",

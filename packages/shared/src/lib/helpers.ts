@@ -6,6 +6,7 @@ import { parseIngredient } from "parse-ingredient";
 import type { FlatUnitsMap, UnitsMap } from "@norish/config/zod/server-config";
 import type { FullRecipeInsertDTO } from "@norish/shared/contracts/dto/recipe";
 import type { MultiWordUnit } from "@norish/shared/lib/unit-localization";
+import { entryFold } from "@norish/shared/lib/fold-name";
 import { httpUrlSchema } from "@norish/shared/lib/schema";
 import { VAGUE_UNITS } from "@norish/shared/lib/spelling-keys";
 import {
@@ -543,7 +544,7 @@ export function tagsBesideCategories(tags: readonly string[], categories: readon
 
 /** The allergies lower-cased, for a case-insensitive lookup. */
 export function allergenSet(allergies: readonly string[]): Set<string> {
-  return new Set(allergies.map((allergy) => allergy.toLowerCase()));
+  return new Set(allergies.map(entryFold));
 }
 
 /**
@@ -564,7 +565,7 @@ export function sortTagsWithAllergyPriority<T extends { name: string }>(
   const nonAllergenTags: T[] = [];
 
   for (const tag of tags) {
-    if (allergySet.has(tag.name.toLowerCase())) {
+    if (allergySet.has(entryFold(tag.name))) {
       allergenTags.push(tag);
     } else {
       nonAllergenTags.push(tag);
@@ -575,15 +576,9 @@ export function sortTagsWithAllergyPriority<T extends { name: string }>(
   return [...allergenTags, ...nonAllergenTags];
 }
 
-/**
- * Check if a tag is an allergen (case-insensitive).
- *
- * @param tagName - The tag name to check
- * @param allergySet - Pre-computed Set of lowercase allergy names for O(1) lookup
- * @returns True if the tag is an allergen
- */
+/** Whether a Tag is one of the allergies of `allergenSet`, matched on the folded name (ADR-0043). */
 export function isAllergenTag(tagName: string, allergySet: ReadonlySet<string>): boolean {
-  return allergySet.has(tagName.toLowerCase());
+  return allergySet.has(entryFold(tagName));
 }
 
 /** The allergy set of a reader without allergies, one shared instance so it never changes. */

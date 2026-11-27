@@ -45,9 +45,20 @@ vi.mock("@norish/shared-server/logger", async (importOriginal) => {
 });
 
 vi.mock("@norish/shared-server/cache/household", () => ({
-  getCachedHouseholdForUser: vi.fn().mockResolvedValue(null),
+  getCachedHouseholdForUser: vi.fn().mockResolvedValue({
+    id: "house-1",
+    name: "My household",
+    users: [{ id: "user-1", name: "" }],
+  }),
 }));
 
+// What the import landed is in the importer's household when it is announced.
+vi.mock("@norish/db/repositories/recipes", () => ({
+  getRecipeHouseholdIds: vi.fn(async (ids: string[]) => new Map(ids.map((id) => [id, "house-1"]))),
+}));
+vi.mock("@norish/db/repositories/cookbooks", () => ({
+  getCookbookRow: vi.fn(async () => ({ householdId: "house-1" })),
+}));
 vi.mock("@norish/shared-server/realtime/recipes", () => import("../mocks/realtime/recipes"));
 vi.mock("@norish/shared-server/realtime/archive", () => import("../mocks/realtime/archive"));
 vi.mock("@norish/shared-server/realtime/cookbooks", () => import("../mocks/realtime/cookbooks"));
@@ -62,7 +73,7 @@ describe("archiveRouter.importArchive", () => {
         id: "user-1",
       },
       userIds: ["user-1"],
-      householdKey: "house-1",
+      householdId: "house-1",
     } as any);
 
     const formData = new FormData();
@@ -95,7 +106,7 @@ describe("archiveRouter.importArchive", () => {
         id: "user-1",
       },
       userIds: ["user-1"],
-      householdKey: "house-1",
+      householdId: "house-1",
     } as any);
 
     const formData = new FormData();
@@ -126,7 +137,7 @@ describe("archiveRouter.importArchive", () => {
         id: "user-1",
       },
       userIds: ["user-1"],
-      householdKey: "house-1",
+      householdId: "house-1",
     } as any);
 
     const formData = new FormData();
@@ -148,8 +159,7 @@ describe("archiveRouter.importArchive", () => {
     mockArchiveParser.getArchiveInfo.mockResolvedValue({ format: "paprika", count: 1 });
     mockArchiveParser.importArchive.mockImplementation(
       async (
-        _userId: string,
-        _userIds: string[],
+        _importer: unknown,
         _buffer: Buffer,
         onProgress: (current: number, recipe?: unknown) => void
       ) => {
@@ -162,7 +172,7 @@ describe("archiveRouter.importArchive", () => {
     const caller = archiveRouter.createCaller({
       user: { id: "user-1" },
       userIds: ["user-1"],
-      householdKey: "house-1",
+      householdId: "house-1",
     } as any);
 
     const formData = new FormData();
@@ -190,10 +200,10 @@ describe("archiveRouter.importArchive", () => {
     expect(recipes.publish).toHaveBeenCalledWith(
       "recipeBatchCreated",
       { recipes: [recipe] },
-      { viewPolicy: "everyone", userId: "user-1", householdKey: "user-1" }
+      { viewPolicy: "everyone", householdId: "house-1" }
     );
     expect(recipes.publish).not.toHaveBeenCalledWith("recipeBatchCreated", expect.anything(), {
-      householdKey: "user-1",
+      householdId: "house-1",
     });
     expect(archive.publish).toHaveBeenCalledWith(
       "archiveProgress",
@@ -211,12 +221,7 @@ describe("archiveRouter.importArchive", () => {
 
     mockArchiveParser.getArchiveInfo.mockResolvedValue({ format: "paprika", count: 2 });
     mockArchiveParser.importArchive.mockImplementation(
-      async (
-        _userId: string,
-        _userIds: string[],
-        _buffer: Buffer,
-        onProgress: (...args: unknown[]) => void
-      ) => {
+      async (_importer: unknown, _buffer: Buffer, onProgress: (...args: unknown[]) => void) => {
         onProgress(1, { id: "recipe-overwritten" });
         onProgress(2, { id: "recipe-new" }, undefined, undefined, { inserted, cookbooks: [] });
 
@@ -228,7 +233,7 @@ describe("archiveRouter.importArchive", () => {
     const caller = archiveRouter.createCaller({
       user: { id: "user-1" },
       userIds: ["user-1"],
-      householdKey: "house-1",
+      householdId: "house-1",
     } as any);
 
     const formData = new FormData();
@@ -255,8 +260,7 @@ describe("archiveRouter.importArchive", () => {
     expect(mockAnnounceUsableRecipe).toHaveBeenCalledTimes(1);
     expect(mockAnnounceUsableRecipe).toHaveBeenCalledWith(inserted, {
       userId: "user-1",
-      householdKey: "user-1",
-      householdUserIds: null,
+      householdId: "house-1",
     });
   });
   it("tells the household about the cookbooks the import made and filed into", async () => {
@@ -264,12 +268,7 @@ describe("archiveRouter.importArchive", () => {
 
     mockArchiveParser.getArchiveInfo.mockResolvedValue({ format: "recipe-keeper", count: 2 });
     mockArchiveParser.importArchive.mockImplementation(
-      async (
-        _userId: string,
-        _userIds: string[],
-        _buffer: Buffer,
-        onProgress: (...args: unknown[]) => void
-      ) => {
+      async (_importer: unknown, _buffer: Buffer, onProgress: (...args: unknown[]) => void) => {
         onProgress(1, { id: "recipe-1" }, undefined, undefined, {
           cookbooks: [{ cookbookId: made.id, created: made }],
         });
@@ -284,7 +283,7 @@ describe("archiveRouter.importArchive", () => {
     const caller = archiveRouter.createCaller({
       user: { id: "user-1" },
       userIds: ["user-1"],
-      householdKey: "house-1",
+      householdId: "house-1",
     } as any);
 
     const formData = new FormData();
@@ -304,7 +303,7 @@ describe("archiveRouter.importArchive", () => {
     // The import runs detached from the mutation; let it settle.
     for (let i = 0; i < 5; i += 1) await new Promise((resolve) => setImmediate(resolve));
 
-    const target = { viewPolicy: "everyone", userId: "user-1", householdKey: "user-1" };
+    const target = { viewPolicy: "everyone", householdId: "house-1" };
 
     expect(cookbooks.publish).toHaveBeenCalledTimes(3);
     expect(cookbooks.publish).toHaveBeenCalledWith("created", { cookbook: made }, target);
@@ -323,12 +322,7 @@ describe("archiveRouter.importArchive", () => {
   it("sends what landed after the last boundary when an archive's count is off", async () => {
     mockArchiveParser.getArchiveInfo.mockResolvedValue({ format: "mealie-legacy", count: 3 });
     mockArchiveParser.importArchive.mockImplementation(
-      async (
-        _userId: string,
-        _userIds: string[],
-        _buffer: Buffer,
-        onProgress: (...args: unknown[]) => void
-      ) => {
+      async (_importer: unknown, _buffer: Buffer, onProgress: (...args: unknown[]) => void) => {
         // Only two of the three counted entries were recipes.
         onProgress(1, { id: "recipe-1" });
         onProgress(2, { id: "recipe-2" });
@@ -340,7 +334,7 @@ describe("archiveRouter.importArchive", () => {
     const caller = archiveRouter.createCaller({
       user: { id: "user-1" },
       userIds: ["user-1"],
-      householdKey: "house-1",
+      householdId: "house-1",
     } as any);
 
     const formData = new FormData();

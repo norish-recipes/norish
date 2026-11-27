@@ -16,7 +16,6 @@
   },
   "empty": {
     "title": "Deine Einkaufsliste wartet",
-    "description": "Nutze den Button \"Eintrag hinzufügen\" oben, um zu beginnen.",
     "manual": "Manuelle Einträge"
   },
   "item": {
@@ -54,7 +53,6 @@
     },
     "confirmDelete": "Möchtest du {storeName} wirklich löschen?",
     "noStoresYet": "Noch keine Geschäfte",
-    "createStoreHint": "Erstelle ein Geschäft, um deine Einkaufsliste zu organisieren",
     "hasItems": "Dieses Geschäft hat {count} Eintrag.",
     "hasItemsPlural": "Dieses Geschäft hat {count} Einträge.",
     "whatToDo": "Was möchtest du mit ihnen tun?",
@@ -153,6 +151,7 @@
     "cannotSearchHint": "Norish konnte aus dem Shop-Link von {store} keine Suchseite lesen. Korrigiere ihn unter Shops verwalten, dann folgen die Preise.",
     "packAmount": "Menge pro Packung",
     "packUnit": "Einheit",
+    "noUnit": "Keine Einheit",
     "productPage": "Produktseite",
     "invalidUrl": "Gib eine Webadresse ein, wie https://www.dirk.nl/…",
     "invalidPack": "Gib Menge und Einheit ein, oder keines von beiden",
@@ -185,7 +184,6 @@
     "viewByStore": "Nach Geschäft",
     "viewByRecipe": "Nach Rezept",
     "listSettings": "Listeneinstellungen",
-    "emptyHint": "Füge Einträge mit der Schaltfläche unten hinzu.",
     "addTitle": "Einkäufe hinzufügen",
     "editTitle": "Einkauf bearbeiten",
     "store": "Geschäft",

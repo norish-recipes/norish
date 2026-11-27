@@ -137,7 +137,7 @@ export async function buildNorishArchiveForViewer(
   // only the cookbooks the exporter can see
   const [ratings, favorites, cookbookTitles] = await Promise.all([
     getUserRatingsByRecipeIds(input.ctx.userId, recipeIds),
-    getFavoritesByRecipeIds(input.ctx.userId, recipeIds),
+    getFavoritesByRecipeIds(input.ctx, recipeIds),
     listCookbookTitlesByRecipeIds(input.ctx, recipeIds),
   ]);
 

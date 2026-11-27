@@ -18,11 +18,12 @@ export function useActiveAllergies(): ActiveAllergies {
   const trpc = useTRPC();
   const { data: household } = useQuery({
     ...trpc.households.get.queryOptions(),
-    select: (data) => data.household?.allergies,
+    // Null outside a household; inside one, its list stands even emptied.
+    select: (data) => data.household?.allergies ?? null,
   });
-  const own = useAllergiesQuery();
+  const own = useAllergiesQuery().allergies;
 
-  const allergies = household && household.length > 0 ? household : own;
+  const allergies = household ?? own;
   const allergySet = allergenSet(allergies);
 
   return { allergies, allergySet };

@@ -30,7 +30,7 @@ const icons = vi.hoisted(() => ({
   ),
 }));
 const catalogue = vi.hoisted(() => ({
-  listListedIngredientIds: vi.fn(async () => ["onion", "knaks"]),
+  listListedFoodsOfEveryCatalogue: vi.fn(async () => ["onion", "knaks"]),
 }));
 const [fillQueue, iconQueue] = vi.hoisted(() =>
   [0, 1].map(() => ({

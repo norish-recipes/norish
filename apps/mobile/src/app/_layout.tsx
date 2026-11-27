@@ -23,12 +23,12 @@ import { useShareInbox } from "@/features/recipes/hooks/use-share-inbox";
 import { useSignOutBeforeServerChange } from "@/hooks/use-change-server-address";
 import { useResolvedColorScheme } from "@/hooks/use-resolved-color-scheme";
 import { useServerAddress } from "@/hooks/use-server-address";
-import { useUserLocaleSync } from "@/hooks/use-user-locale-sync";
 import { useSheetExit } from "@/lib/after-sheet";
 import { AuthProviders } from "@/lib/auth/auth-providers";
 import { SESSION_END_FADE_MS, useSignedInFadingOut } from "@/lib/auth/auth-session-sync";
 import { resolveBootPhase } from "@/lib/boot/boot-state";
 import { resolveSessionView } from "@/lib/boot/session-view";
+import { LocaleSaveScope } from "@/lib/i18n/locale-save-scope";
 import { MobileIntlFallbackProvider } from "@/lib/i18n/mobile-i18n-context";
 import { timedTo } from "@/lib/motion/timed";
 import { ServerAddressContext } from "@/lib/network/server-address";
@@ -234,16 +234,17 @@ function AuthenticatedProviders({ children }: { children: React.ReactNode }) {
 
   return (
     <OfflineController sessionUserId={user?.id ?? null}>
-      <AuthenticatedEffects />
-      {children}
+      <LocaleSaveScope>
+        <AuthenticatedEffects />
+        {children}
+      </LocaleSaveScope>
     </OfflineController>
   );
 }
 
-/** Effects every signed-in tab leans on: the Reader's locale and the realtime subscriptions. */
+/** Effects every signed-in tab leans on: the realtime subscriptions. */
 function AuthenticatedEffects() {
   useSignOutBeforeServerChange();
-  useUserLocaleSync();
   useHouseholdSubscription();
   usePermissionsSubscription();
   useConfigSubscription();
@@ -278,6 +279,7 @@ function RootStack({ signedIn }: { signedIn: boolean }) {
     >
       <Stack.Protected guard={signedIn}>
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="settings" />
         <Stack.Screen name="recipe/new" options={EDITOR_OPTIONS} />
         <Stack.Screen name="editor-choice" options={SEARCH_SHEET_OPTIONS} />
         {FIT_SHEETS.map((name) => (

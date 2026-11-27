@@ -84,7 +84,6 @@ export const apiKeyRelations = relations(apiKeys, ({ one }) => ({
 
 export const tagsRelations = relations(tags, ({ many }) => ({
   recipeTags: many(recipeTags),
-  userAllergies: many(userAllergies),
 }));
 
 export const cuisinesRelations = relations(cuisines, ({ many }) => ({
@@ -270,9 +269,5 @@ export const userAllergiesRelations = relations(userAllergies, ({ one }) => ({
   user: one(users, {
     fields: [userAllergies.userId],
     references: [users.id],
-  }),
-  tag: one(tags, {
-    fields: [userAllergies.tagId],
-    references: [tags.id],
   }),
 }));

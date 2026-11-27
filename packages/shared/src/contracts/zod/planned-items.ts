@@ -53,7 +53,7 @@ export const PlannedItemEventPayloadSchema = z.object({
   itemType: plannedItemTypeSchema,
   recipeId: z.string().nullable(),
   title: z.string().nullable(),
-  userId: z.string(),
+  userId: z.string().nullable(),
   version: z.number(),
 });
 

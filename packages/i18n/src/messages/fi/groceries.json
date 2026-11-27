@@ -16,7 +16,6 @@
   },
   "empty": {
     "title": "Ostoslistasi odottaa",
-    "description": "Aloita lisäämällä ostoksia yllä olevalla \"Lisää ostos\" -painikkeella.",
     "manual": "Käsin lisätyt"
   },
   "item": {
@@ -54,7 +53,6 @@
     },
     "confirmDelete": "Haluatko varmasti poistaa kaupan {storeName}?",
     "noStoresYet": "Ei vielä kauppoja",
-    "createStoreHint": "Luo kauppa järjestääksesi ostoksesi",
     "hasItems": "Tässä kaupassa on {count} ostos.",
     "hasItemsPlural": "Tässä kaupassa on {count} ostosta.",
     "whatToDo": "Mitä haluat tehdä niille?",
@@ -153,6 +151,7 @@
     "cannotSearchHint": "Norish ei saanut hakusivua kaupan {store} linkistä. Korjaa se kohdassa Hallinnoi kauppoja, niin hinnat seuraavat perässä.",
     "packAmount": "Määrä pakkauksessa",
     "packUnit": "Yksikkö",
+    "noUnit": "Ei yksikköä",
     "productPage": "Tuotesivu",
     "invalidUrl": "Anna verkko-osoite, esimerkiksi https://www.dirk.nl/…",
     "invalidPack": "Anna sekä määrä että yksikkö, tai jätä molemmat tyhjiksi",
@@ -185,7 +184,6 @@
     "viewByStore": "Kaupoittain",
     "viewByRecipe": "Resepteittäin",
     "listSettings": "Listan asetukset",
-    "emptyHint": "Lisää tuotteita alla olevalla painikkeella.",
     "addTitle": "Lisää ostokset",
     "editTitle": "Muokkaa tuotetta",
     "store": "Kauppa",

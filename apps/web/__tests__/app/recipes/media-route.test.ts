@@ -9,15 +9,17 @@ const statMock = vi.hoisted(() => vi.fn());
 const readFileMock = vi.hoisted(() => vi.fn());
 const getActiveRecipeShareByTokenMock = vi.hoisted(() => vi.fn());
 const readSessionPrincipal = vi.hoisted(() => vi.fn());
-const getRecipeOwnerId = vi.hoisted(() => vi.fn());
+const recipeHousehold = vi.hoisted(() => vi.fn());
 const canAccessResource = vi.hoisted(() => vi.fn());
 
 vi.mock("@norish/auth/session", () => ({ readSessionPrincipal }));
 vi.mock("@norish/auth/permissions", () => ({ canAccessResource }));
-vi.mock("@norish/db", () => ({ isUserServerAdmin: async () => false }));
-vi.mock("@norish/db/repositories/recipes", () => ({ getRecipeOwnerId }));
+vi.mock("@norish/db/repositories/recipes", () => ({
+  getRecipeHouseholdIds: async (ids: string[]) =>
+    new Map(ids.map((id) => [id, recipeHousehold()] as const)),
+}));
 vi.mock("@norish/shared-server/cache/household", () => ({
-  getCachedHouseholdForUser: async () => null,
+  getCachedHouseholdForUser: async () => ({ id: "household-1", users: [] }),
 }));
 
 vi.mock("node:fs/promises", () => ({
@@ -90,7 +92,7 @@ describe("a signed-in reader's recipe media", () => {
   beforeEach(() => {
     statMock.mockResolvedValue({ size: 12 });
     readFileMock.mockResolvedValue(Buffer.from("file-bytes"));
-    getRecipeOwnerId.mockResolvedValue("owner-1");
+    recipeHousehold.mockReturnValue("owner-1");
   });
 
   it("is served, privately cached, to a reader who may open the recipe", async () => {
@@ -120,6 +122,20 @@ describe("a signed-in reader's recipe media", () => {
 
     expect(response.status).toBe(404);
     expect(response.headers.get("Cache-Control")).toBe("no-store");
+    expect(readFileMock).not.toHaveBeenCalled();
+  });
+
+  it("is not found under another spelling of the id, even to a reader who may open it", async () => {
+    readSessionPrincipal.mockResolvedValueOnce({ userId: "user-1", token: "token" });
+    canAccessResource.mockResolvedValueOnce(true);
+
+    const upper = recipeId.toUpperCase();
+    const response = await getRecipeMedia(
+      new Request(`http://localhost/recipes/${upper}/cover.jpg`),
+      { params: Promise.resolve({ id: upper, filename: "cover.jpg" }) }
+    );
+
+    expect(response.status).toBe(404);
     expect(readFileMock).not.toHaveBeenCalled();
   });
 });

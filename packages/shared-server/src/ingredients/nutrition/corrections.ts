@@ -23,11 +23,10 @@ import {
 import { ingredients as ingredientsRealtime } from "@norish/shared-server/realtime/ingredients";
 import { foldName } from "@norish/shared/lib/fold-name";
 
-/** Who is correcting: a member, their household, and the household's realtime key. */
+/** Who is correcting: a member and their household. */
 export interface CorrectingMember {
   userId: string;
-  householdUserIds: readonly string[];
-  householdKey: string;
+  householdId: string;
 }
 
 /** One fact of a correction: a dataset food, a number, or left to the sources. */
@@ -56,7 +55,7 @@ async function announce(member: CorrectingMember, ingredientId: string): Promise
   await ingredientsRealtime.publish(
     "corrected",
     { ingredientIds: [ingredientId] },
-    { householdKey: member.householdKey }
+    { householdId: member.householdId }
   );
 }
 
@@ -100,18 +99,18 @@ export async function correctNutrition(
     density: density?.gramsPerMl ?? null,
   };
 
-  if (!(await saveNutritionCorrection(member.userId, ingredientId, values))) {
+  if (!(await saveNutritionCorrection(member.householdId, member.userId, ingredientId, values))) {
     throw new NutritionCorrectionError("not-found");
   }
   await announce(member, ingredientId);
 }
 
-/** Remove the household's correction to an Ingredient: every member's, back to the sources. */
+/** Remove the household's correction to an Ingredient, back to the sources. */
 export async function removeNutritionCorrection(
   member: CorrectingMember,
   ingredientId: string
 ): Promise<void> {
-  await removeHouseholdCorrections(ingredientId, member.householdUserIds);
+  await removeHouseholdCorrections(ingredientId, member.householdId);
   await announce(member, ingredientId);
 }
 

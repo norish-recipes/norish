@@ -270,8 +270,8 @@ describe("admin procedures", () => {
       const ctx = createMockAdminContext(mockAdmin);
       const newPolicy = {
         view: "household" as const,
-        edit: "owner" as const,
-        delete: "owner" as const,
+        edit: "household" as const,
+        delete: "household" as const,
       };
 
       setConfig.mockResolvedValue(undefined);

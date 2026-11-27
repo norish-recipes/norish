@@ -9,7 +9,7 @@
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { listAllTagNames } from "@norish/db/repositories/tags";
+import { listEntryNames } from "@norish/db/repositories/list-entries";
 import { AIDisabledError } from "@norish/shared-server/ai/runtime/errors";
 import {
   getTagStrategy,
@@ -38,8 +38,8 @@ vi.mock("@norish/shared-server/config/server-config-loader", () => ({
   isDecisionUseEnabled: vi.fn(),
 }));
 
-vi.mock("@norish/db/repositories/tags", () => ({
-  listAllTagNames: vi.fn(),
+vi.mock("@norish/db/repositories/list-entries", () => ({
+  listEntryNames: vi.fn(),
 }));
 
 vi.mock("@norish/shared-server/logger", () => ({
@@ -76,6 +76,7 @@ describe("Auto-Tagger", () => {
 
   beforeEach(() => {
     vi.mocked(getTagStrategy).mockResolvedValue("predefined");
+    vi.mocked(listEntryNames).mockResolvedValue([]);
     mocked.generateStructured.mockResolvedValue({ tags: [] });
     // No Decision Model for validation unless a test says otherwise: every
     // claim is kept unjudged.
@@ -93,21 +94,23 @@ describe("Auto-Tagger", () => {
     it("propagates the runtime's refusal when AI is disabled", async () => {
       mocked.generateStructured.mockRejectedValue(new AIDisabledError());
 
-      await expect(generateTagsForRecipe(mockRecipe)).rejects.toBeInstanceOf(AIDisabledError);
+      await expect(generateTagsForRecipe(mockRecipe, "household-1")).rejects.toBeInstanceOf(
+        AIDisabledError
+      );
     });
 
     it("still generates tags when automatic auto-tagging is switched off", async () => {
       // The automatic switch is coordination policy; it must not disable the manual tool.
       mocked.generateStructured.mockResolvedValue({ tags: ["Italian"] });
 
-      const tags = await generateTagsForRecipe(mockRecipe);
+      const tags = await generateTagsForRecipe(mockRecipe, "household-1");
 
       expect(tags).toEqual(["italian"]);
     });
 
     it("refuses a recipe with no ingredients", async () => {
       await expect(
-        generateTagsForRecipe({ title: "Empty Recipe", ingredients: [] })
+        generateTagsForRecipe({ title: "Empty Recipe", ingredients: [] }, "household-1")
       ).rejects.toThrow("No ingredients provided");
       expect(mocked.generateStructured).not.toHaveBeenCalled();
     });
@@ -115,7 +118,7 @@ describe("Auto-Tagger", () => {
     it("runs under the administrator-editable auto-tagging prompt", async () => {
       mocked.generateStructured.mockResolvedValue({ tags: ["Italian"] });
 
-      await generateTagsForRecipe(mockRecipe);
+      await generateTagsForRecipe(mockRecipe, "household-1");
 
       expect(mocked.generateStructured).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -128,19 +131,19 @@ describe("Auto-Tagger", () => {
     it("successfully generates tags in predefined mode", async () => {
       mocked.generateStructured.mockResolvedValue({ tags: ["Italian", "Pasta", "Quick"] });
 
-      const tags = await generateTagsForRecipe(mockRecipe);
+      const tags = await generateTagsForRecipe(mockRecipe, "household-1");
 
       expect(tags).toEqual(["italian", "pasta", "quick"]);
     });
 
     it("fetches existing tags and offers them to the model in predefined_db mode", async () => {
       vi.mocked(getTagStrategy).mockResolvedValue("predefined_db");
-      vi.mocked(listAllTagNames).mockResolvedValue(["dinner", "italian", "vegetarian"]);
+      vi.mocked(listEntryNames).mockResolvedValue(["dinner", "italian", "vegetarian"]);
       mocked.generateStructured.mockResolvedValue({ tags: ["Italian", "Dinner"] });
 
-      const tags = await generateTagsForRecipe(mockRecipe);
+      const tags = await generateTagsForRecipe(mockRecipe, "household-1");
 
-      expect(listAllTagNames).toHaveBeenCalled();
+      expect(listEntryNames).toHaveBeenCalledWith("tag", "household-1");
       expect(mocked.generateStructured).toHaveBeenCalledWith(
         expect.objectContaining({
           sections: expect.arrayContaining([
@@ -152,9 +155,9 @@ describe("Auto-Tagger", () => {
     });
 
     it("does not fetch DB tags in predefined mode", async () => {
-      await generateTagsForRecipe(mockRecipe);
+      await generateTagsForRecipe(mockRecipe, "household-1");
 
-      expect(listAllTagNames).not.toHaveBeenCalled();
+      expect(listEntryNames).not.toHaveBeenCalled();
     });
 
     it("normalizes tags (lowercase, trim, deduplicate)", async () => {
@@ -163,16 +166,33 @@ describe("Auto-Tagger", () => {
         tags: ["  PASTA  ", "Italian", "pasta", "Quick ", ""],
       });
 
-      const tags = await generateTagsForRecipe(mockRecipe);
+      const tags = await generateTagsForRecipe(mockRecipe, "household-1");
 
       // Should be lowercase, trimmed, deduplicated, empty strings removed
       expect(tags).toEqual(["pasta", "italian", "quick"]);
     });
 
+    it("spells a freeform Tag as the household's list does, a near miss included", async () => {
+      vi.mocked(getTagStrategy).mockResolvedValue("freeform");
+      vi.mocked(listEntryNames).mockResolvedValue(["Vegetarian", "One-pot"]);
+      mocked.generateStructured.mockResolvedValue({
+        tags: ["vegeterian", "one pot", "smoky"],
+      });
+
+      expect(await generateTagsForRecipe(mockRecipe, "household-1")).toEqual([
+        "Vegetarian",
+        "One-pot",
+        "smoky",
+      ]);
+      expect(listEntryNames).toHaveBeenCalledWith("tag", "household-1");
+    });
+
     it("lets an AI failure out for the caller to handle", async () => {
       mocked.generateStructured.mockRejectedValue(new Error("API rate limit exceeded"));
 
-      await expect(generateTagsForRecipe(mockRecipe)).rejects.toThrow("API rate limit exceeded");
+      await expect(generateTagsForRecipe(mockRecipe, "household-1")).rejects.toThrow(
+        "API rate limit exceeded"
+      );
     });
   });
 
@@ -185,7 +205,7 @@ describe("Auto-Tagger", () => {
       mocked.generateStructured.mockResolvedValue({ tags: ["Italian", "Quick", "Vegan"] });
       mocked.decide.mockResolvedValue(verdicts({ italian: 0.9, quick: 0.8, vegan: 0.02 }));
 
-      const tags = await generateTagsForRecipe(mockRecipe);
+      const tags = await generateTagsForRecipe(mockRecipe, "household-1");
 
       expect(mocked.decide).toHaveBeenCalledTimes(1);
       expect(mocked.decide).toHaveBeenCalledWith({
@@ -209,11 +229,11 @@ describe("Auto-Tagger", () => {
       // input; they are not claims, so a stored "vegetarian" that the model
       // did not propose is never judged and cannot be dropped.
       vi.mocked(getTagStrategy).mockResolvedValue("predefined_db");
-      vi.mocked(listAllTagNames).mockResolvedValue(["vegetarian", "dinner"]);
+      vi.mocked(listEntryNames).mockResolvedValue(["vegetarian", "dinner"]);
       mocked.generateStructured.mockResolvedValue({ tags: ["Italian"] });
       mocked.decide.mockResolvedValue(verdicts({ italian: 0.9, vegetarian: 0.01 }));
 
-      await expect(generateTagsForRecipe(mockRecipe)).resolves.toEqual(["italian"]);
+      await expect(generateTagsForRecipe(mockRecipe, "household-1")).resolves.toEqual(["italian"]);
       expect(Object.keys(mocked.decide.mock.calls[0]?.[0].questions)).toEqual(["italian"]);
     });
 
@@ -221,7 +241,7 @@ describe("Auto-Tagger", () => {
       mocked.generateStructured.mockResolvedValue({ tags: ["Nonsense"] });
       mocked.decide.mockResolvedValue(verdicts({ nonsense: 0.01 }));
 
-      await expect(generateTagsForRecipe(mockRecipe)).resolves.toEqual([]);
+      await expect(generateTagsForRecipe(mockRecipe, "household-1")).resolves.toEqual([]);
     });
 
     it("keeps a disputed tag when the Validate enrichments use is off: the verdict is only logged", async () => {
@@ -229,7 +249,7 @@ describe("Auto-Tagger", () => {
       mocked.generateStructured.mockResolvedValue({ tags: ["Nonsense"] });
       mocked.decide.mockResolvedValue(verdicts({ nonsense: 0.01 }));
 
-      await expect(generateTagsForRecipe(mockRecipe)).resolves.toEqual(["nonsense"]);
+      await expect(generateTagsForRecipe(mockRecipe, "household-1")).resolves.toEqual(["nonsense"]);
       expect(vi.mocked(isDecisionUseEnabled)).toHaveBeenCalledWith("validateEnrichments");
     });
   });
@@ -248,7 +268,7 @@ describe("Auto-Tagger", () => {
         verdicts({ vegetarian: 0.5, "quick meal": 0.51, pasta: 0.97 })
       );
 
-      const tags = await generateTagsForRecipe(mockRecipe);
+      const tags = await generateTagsForRecipe(mockRecipe, "household-1");
 
       expect(mocked.loadPrompt).toHaveBeenCalledWith("auto-tagging");
       expect(mocked.decide).toHaveBeenCalledWith({
@@ -282,7 +302,7 @@ describe("Auto-Tagger", () => {
         )
       );
 
-      await expect(generateTagsForRecipe(mockRecipe)).resolves.toEqual(["tag 44"]);
+      await expect(generateTagsForRecipe(mockRecipe, "household-1")).resolves.toEqual(["tag 44"]);
       expect(mocked.decide).toHaveBeenCalledTimes(2);
     });
 
@@ -291,7 +311,7 @@ describe("Auto-Tagger", () => {
       mocked.generateStructured.mockResolvedValue({ tags: ["Pasta"] });
       mocked.decide.mockResolvedValue(verdicts({ pasta: 0.9 }));
 
-      await expect(generateTagsForRecipe(mockRecipe)).resolves.toEqual(["pasta"]);
+      await expect(generateTagsForRecipe(mockRecipe, "household-1")).resolves.toEqual(["pasta"]);
       expect(mocked.generateStructured).toHaveBeenCalledTimes(1);
     });
 
@@ -300,18 +320,18 @@ describe("Auto-Tagger", () => {
       mocked.decide.mockResolvedValue(verdicts({ pasta: 0.9 }));
       mocked.generateStructured.mockResolvedValue({ tags: ["Pasta"] });
 
-      await expect(generateTagsForRecipe(mockRecipe)).resolves.toEqual(["pasta"]);
+      await expect(generateTagsForRecipe(mockRecipe, "household-1")).resolves.toEqual(["pasta"]);
     });
 
     it.each(["predefined_db", "freeform"] as const)(
       "lets the Decision Model confirm each tag the language model proposes under %s, whatever Validate enrichments says",
       async (strategy) => {
         vi.mocked(getTagStrategy).mockResolvedValue(strategy);
-        vi.mocked(listAllTagNames).mockResolvedValue(["italian"]);
+        vi.mocked(listEntryNames).mockResolvedValue(["italian"]);
         mocked.generateStructured.mockResolvedValue({ tags: ["Italian", "Vegan"] });
         mocked.decide.mockResolvedValue(verdicts({ italian: 0.8, vegan: 0.3 }));
 
-        const tags = await generateTagsForRecipe(mockRecipe);
+        const tags = await generateTagsForRecipe(mockRecipe, "household-1");
 
         expect(mocked.loadPrompt).not.toHaveBeenCalled();
         expect(mocked.decide).toHaveBeenCalledWith(

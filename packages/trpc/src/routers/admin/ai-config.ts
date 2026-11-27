@@ -369,10 +369,13 @@ const enrichAllRecipes = adminProcedure
       });
     }
 
+    // Every account has a household; none means the account is gone.
+    if (!ctx.household) throw new TRPCError({ code: "UNAUTHORIZED" });
+
     // A library-sized sweep outlives any proxy's timeout, so the worker runs it, not the request.
     await addEnrichAllJob({
       userId: ctx.user.id,
-      householdKey: ctx.household?.id ?? "",
+      householdId: ctx.household.id,
       replaceExisting: input.replaceExisting,
     });
   });

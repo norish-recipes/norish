@@ -18,7 +18,9 @@ export type ParkedReason =
   /** Transient 5xx retried past its budget. */
   | "retries-exhausted"
   /** A create this entry depends on was itself parked (one broken story). */
-  | "dependency";
+  | "dependency"
+  /** Made for a household the account has left; a Retry sends it to the current one. */
+  | "other-household";
 
 export interface OutboxEntry {
   /** FIFO sequence the storage adapter assigns on append; never reused. */
@@ -27,6 +29,8 @@ export interface OutboxEntry {
   id: string;
   /** Cache/session owner this entry belongs to (per-user Replay, ADR-0005). */
   ownerId: string;
+  /** The household it was made for: Replay never sends it into another (ADR-0033). */
+  householdId: string | null;
   /** tRPC procedure path, e.g. `"groceries.create"`. */
   path: string;
   /** The encoded mutation input (may hold upload blobs; see {@link ./input-codec}). */

@@ -76,6 +76,19 @@ describe("Panel", () => {
     expect(screen.getByTestId("drawer-root")).toHaveAttribute("data-reposition-inputs", "false");
   });
 
+  it("puts the panel's gap between the sections of a body that holds sections", () => {
+    const { container } = render(
+      <Panel open title="Add tag" onOpenChange={vi.fn()}>
+        <Panel.Body sections>
+          <section>Name</section>
+          <section>Matches</section>
+        </Panel.Body>
+      </Panel>
+    );
+
+    expect(container.querySelector('[data-slot="panel-body"]')).toHaveClass("gap-5");
+  });
+
   it("still allows a deliberate backdrop override", () => {
     render(
       <Panel backdropVariant="transparent" open title="Calendar" onOpenChange={vi.fn()}>

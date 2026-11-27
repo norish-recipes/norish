@@ -11,7 +11,7 @@ import type {
   StoreProductReadingInput,
 } from "@norish/shared/contracts";
 import { db } from "@norish/db/drizzle";
-import { storeProductLinks, storeProducts } from "@norish/db/schema";
+import { storeProductLinks, storeProducts, stores } from "@norish/db/schema";
 import {
   StoreProductLinkSelectSchema,
   StoreProductSelectSchema,
@@ -361,7 +361,18 @@ export async function createManualProduct(
   return parseProduct(row);
 }
 
+/** A product of one of the household's Stores, in the write itself. */
+const householdProduct = (householdId: string, id: string) =>
+  and(
+    eq(storeProducts.id, id),
+    inArray(
+      storeProducts.storeId,
+      db.select({ id: stores.id }).from(stores).where(eq(stores.householdId, householdId))
+    )
+  );
+
 export async function updateManualProduct(
+  householdId: string,
   input: StoreProductManualUpdateInput
 ): Promise<StoreProductDto | null> {
   const [row] = await db
@@ -382,7 +393,7 @@ export async function updateManualProduct(
       updatedAt: new Date(),
       version: sql`${storeProducts.version} + 1`,
     })
-    .where(and(eq(storeProducts.id, input.id), eq(storeProducts.isManual, true)))
+    .where(and(householdProduct(householdId, input.id), eq(storeProducts.isManual, true)))
     .returning();
 
   return row ? parseProduct(row) : null;
@@ -394,10 +405,14 @@ export async function updateManualProduct(
  * back to what its own size words say, and readings may fill it in again.
  */
 export async function setPackSizeByHand(
+  householdId: string,
   id: string,
   pack: PackSizeDto | null
 ): Promise<StoreProductDto | null> {
-  const existing = await getStoreProductById(id);
+  const [existing] = await db
+    .select({ size: storeProducts.size })
+    .from(storeProducts)
+    .where(householdProduct(householdId, id));
 
   if (!existing) return null;
   const columns = pack ? packColumns(pack) : packColumns(readPackSize(existing.size));
@@ -409,16 +424,25 @@ export async function setPackSizeByHand(
       updatedAt: new Date(),
       version: sql`${storeProducts.version} + 1`,
     })
-    .where(eq(storeProducts.id, id))
+    .where(householdProduct(householdId, id))
     .returning();
 
   return row ? parseProduct(row) : null;
 }
 
-export async function getStoreProductById(id: string): Promise<StoreProductDto | null> {
-  const [row] = await db.select().from(storeProducts).where(eq(storeProducts.id, id)).limit(1);
+/** A product of one of the household's Stores. */
+export async function getStoreProductById(
+  id: string,
+  householdId: string
+): Promise<StoreProductDto | null> {
+  const [row] = await db
+    .select({ product: storeProducts })
+    .from(storeProducts)
+    .innerJoin(stores, eq(stores.id, storeProducts.storeId))
+    .where(and(eq(storeProducts.id, id), eq(stores.householdId, householdId)))
+    .limit(1);
 
-  return row ? parseProduct(row) : null;
+  return row ? parseProduct(row.product) : null;
 }
 
 /** Everything one Store knows it sells, newest reading first. */
@@ -433,7 +457,7 @@ export async function listStoreProducts(storeId: string): Promise<StoreProductDt
 }
 
 /**
- * The read products among these whose Shelf Price is older than the ceiling,
+ * The read products of these Stores among these ids whose Shelf Price is older than the ceiling,
  * least recently touched first. A by-hand product is never stale: nothing
  * read it, and nothing may refresh it. "Touched" rather than "priced": a page
  * that could not be re-read is noted as tried (see `noteProductUnreadable`),
@@ -441,15 +465,17 @@ export async function listStoreProducts(storeId: string): Promise<StoreProductDt
  * filling every refresh with pages that answer nothing.
  */
 export async function listStaleProducts(
+  storeIds: string[],
   productIds: string[],
   olderThan: Date
 ): Promise<StoreProductDto[]> {
-  if (productIds.length === 0) return [];
+  if (storeIds.length === 0 || productIds.length === 0) return [];
   const rows = await db
     .select()
     .from(storeProducts)
     .where(
       and(
+        inArray(storeProducts.storeId, storeIds),
         inArray(storeProducts.id, productIds),
         eq(storeProducts.isManual, false),
         isNotNull(storeProducts.pageUrl),

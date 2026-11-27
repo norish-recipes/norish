@@ -71,8 +71,9 @@ vi.mock("@norish/db/repositories/cookbooks", () => ({
   addRecipeToCookbook: mockAddRecipeToCookbook,
 }));
 
-vi.mock("@norish/db/repositories/cuisines", () => ({
-  listCuisines: mockListCuisines,
+vi.mock("@norish/db/repositories/list-entries", () => ({
+  listEntryNames: vi.fn().mockResolvedValue([]),
+  listEntryRows: mockListCuisines,
 }));
 
 vi.mock("@norish/shared-server/media/storage", () => ({
@@ -214,7 +215,10 @@ describe("norish archive rides the shared import loop", () => {
 
     expect(info).toEqual({ format: parser.ArchiveFormat.NORISH, count: 1 });
 
-    const result = await parser.importArchive("user-1", ["user-1"], zipBytes);
+    const result = await parser.importArchive(
+      { userId: "user-1", householdId: "household-1" },
+      zipBytes
+    );
 
     expect(result.imported).toHaveLength(1);
     expect(result.errors).toHaveLength(0);
@@ -236,7 +240,7 @@ describe("norish archive rides the shared import loop", () => {
       { folderKey: FOLDER_KEY, json: JSON.stringify(buildArchiveRecipeJson()) },
     ]);
 
-    await parser.importArchive("user-1", ["user-1"], zipBytes);
+    await parser.importArchive({ userId: "user-1", householdId: "household-1" }, zipBytes);
 
     const createdId = mockCreateRecipeWithRefs.mock.calls[0]![0];
 
@@ -256,7 +260,7 @@ describe("norish archive rides the shared import loop", () => {
       },
     ]);
 
-    await parser.importArchive("user-1", ["user-1"], zipBytes);
+    await parser.importArchive({ userId: "user-1", householdId: "household-1" }, zipBytes);
 
     const createdId = mockCreateRecipeWithRefs.mock.calls[0]![0];
 
@@ -269,7 +273,7 @@ describe("norish archive rides the shared import loop", () => {
       { folderKey: FOLDER_KEY, json: JSON.stringify(buildArchiveRecipeJson()) },
     ]);
 
-    await parser.importArchive("user-1", ["user-1"], zipBytes);
+    await parser.importArchive({ userId: "user-1", householdId: "household-1" }, zipBytes);
 
     const dto = mockCreateRecipeWithRefs.mock.calls[0]![2] as Record<string, unknown>;
 
@@ -284,7 +288,10 @@ describe("norish archive rides the shared import loop", () => {
       },
     ]);
 
-    const result = await parser.importArchive("user-1", ["user-1"], zipBytes);
+    const result = await parser.importArchive(
+      { userId: "user-1", householdId: "household-1" },
+      zipBytes
+    );
 
     expect(result.errors).toHaveLength(0);
 
@@ -301,7 +308,10 @@ describe("norish archive rides the shared import loop", () => {
       { folderKey: FOLDER_KEY, json: JSON.stringify(buildArchiveRecipeJson()) },
     ]);
 
-    const result = await parser.importArchive("user-1", ["user-1"], zipBytes);
+    const result = await parser.importArchive(
+      { userId: "user-1", householdId: "household-1" },
+      zipBytes
+    );
 
     expect(mockUpdateRecipeWithRefs).toHaveBeenCalledWith(
       "existing-recipe-id",
@@ -321,8 +331,7 @@ describe("norish archive rides the shared import loop", () => {
 
     const progressNotes: Array<{ file: string; note: string }> = [];
     const result = await parser.importArchive(
-      "user-1",
-      ["user-1"],
+      { userId: "user-1", householdId: "household-1" },
       zipBytes,
       (_c, _r, _e, note) => {
         if (note) progressNotes.push(note);
@@ -347,7 +356,10 @@ describe("norish archive rides the shared import loop", () => {
       { folderKey: FOLDER_KEY, json: JSON.stringify(buildArchiveRecipeJson()) },
     ]);
 
-    const result = await parser.importArchive("user-1", ["user-1"], zipBytes);
+    const result = await parser.importArchive(
+      { userId: "user-1", householdId: "household-1" },
+      zipBytes
+    );
 
     expect(result.errors).toHaveLength(1);
     expect(result.notes).toHaveLength(0);
@@ -363,7 +375,10 @@ describe("norish archive rides the shared import loop", () => {
       buildManifest({ recipeCount: 2 })
     );
 
-    const result = await parser.importArchive("user-1", ["user-1"], zipBytes);
+    const result = await parser.importArchive(
+      { userId: "user-1", householdId: "household-1" },
+      zipBytes
+    );
 
     expect(result.imported).toHaveLength(1);
     expect(result.errors).toHaveLength(1);
@@ -376,9 +391,9 @@ describe("norish archive rides the shared import loop", () => {
       buildManifest({ formatVersion: 2 })
     );
 
-    await expect(parser.importArchive("user-1", ["user-1"], zipBytes)).rejects.toThrow(
-      /format version 2/
-    );
+    await expect(
+      parser.importArchive({ userId: "user-1", householdId: "household-1" }, zipBytes)
+    ).rejects.toThrow(/format version 2/);
     expect(mockCreateRecipeWithRefs).not.toHaveBeenCalled();
   });
 

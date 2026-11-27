@@ -15,7 +15,6 @@ export const CaldavSyncStatusUpdateSchema = createUpdateSchema(caldavSyncStatus)
   id: true,
   userId: true,
   itemId: true,
-  itemType: true,
   createdAt: true,
 });
 

@@ -3,8 +3,8 @@ import { serverPackage } from "@/lib/server-package";
 
 import { SERVER_CONFIG } from "@norish/config/env-config-server";
 
-const { auth } = await serverPackage<typeof import("@norish/auth/auth")>("@norish/auth/auth");
-const { isUserServerAdmin } = await serverPackage<typeof import("@norish/db")>("@norish/db");
+const { getVerifiedSession } =
+  await serverPackage<typeof import("@norish/auth/session")>("@norish/auth/session");
 const { buildNorishArchiveForViewer } = await serverPackage<
   typeof import("@norish/shared-server/archive/norish-export")
 >("@norish/shared-server/archive/norish-export");
@@ -54,61 +54,34 @@ function nodeStreamToWeb(nodeStream: ZipStream): ReadableStream<Uint8Array> {
   });
 }
 
-/**
- * The instance-wide doorway. Both scopes are the same operation, format, and
- * route; the scope only says which viewer context the visibility layer is
- * asked with — and this one is admin-only (ADR-0022).
- */
-const INSTANCE_SCOPE = "instance";
-
-/**
- * Recipe Archive export: streams a `.norishrecipes` zip of every recipe the
- * signed-in user can see under the deployment's view policy, or — with
- * `?scope=instance`, for a server admin — every recipe on the instance. The
- * archive is generated straight into the response — no temp file or stored
- * artifact ever exists server-side (ADR-0022).
- */
+/** Recipe Archive export (ADR-0022): a `.norishrecipes` zip of every recipe the reader may view,
+ * an admin's included, streamed straight into the response with nothing stored server-side. */
 export async function GET(req: Request) {
-  const session = await auth.api.getSession({ headers: req.headers });
+  // The user as the database holds them: an API key's session carries their fields encrypted.
+  const sessionUser = await getVerifiedSession(req.headers);
 
-  if (!session?.user) {
+  if (!sessionUser) {
     return new Response("Unauthorized", { status: 401 });
   }
 
-  const sessionUser = session.user;
-  // Read from the database, not the session: a demoted admin's session still
-  // carries the role it was signed in with.
-  const isServerAdmin = await isUserServerAdmin(sessionUser.id);
   const params = new URL(req.url).searchParams;
-  const instanceScope = params.get("scope") === INSTANCE_SCOPE;
-
-  // Admin scope is server-authorised, never presentation-gated: hiding the
-  // admin doorway is not what keeps a non-admin out of it.
-  if (instanceScope && !isServerAdmin) {
-    return new Response("Forbidden", { status: 403 });
-  }
 
   if (params.get(ARCHIVE_PROBE_PARAM) === ARCHIVE_PROBE_VALUE) {
     return new Response(null, { status: 204, headers: { "Cache-Control": "no-store" } });
   }
 
   const household = await getCachedHouseholdForUser(sessionUser.id);
-  const householdUserIds = household?.users.map((user: { id: string }) => user.id) ?? [];
+
+  if (!household) return new Response("Unauthorized", { status: 401 });
 
   const exportedAt = new Date();
   const { stream, recipeCount } = await buildNorishArchiveForViewer({
     ctx: {
       userId: sessionUser.id,
-      householdUserIds: householdUserIds.length > 0 ? householdUserIds : null,
-      // The exporter's own reach, from either doorway. An admin's library
-      // already lists every recipe on the instance — `recipes.list` asks the
-      // visibility layer with this same flag — so "everything the exporter can
-      // see" *is* the whole instance for them, and the admin button is
-      // discoverability rather than privileged extra data (ADR-0022).
-      isServerAdmin,
+      householdId: household.id,
     },
     exporter: {
-      name: sessionUser.name ?? null,
+      name: sessionUser.name || null,
       origin: SERVER_CONFIG.AUTH_URL,
     },
     exportedAt,
@@ -117,10 +90,7 @@ export async function GET(req: Request) {
   const date = exportedAt.toISOString().slice(0, 10);
   const fileName = `norish-recipes-${date}${NORISH_ARCHIVE_EXTENSION}`;
 
-  log.info(
-    { userId: sessionUser.id, recipeCount, scope: instanceScope ? INSTANCE_SCOPE : "viewer" },
-    "Streaming Recipe Archive export"
-  );
+  log.info({ userId: sessionUser.id, recipeCount }, "Streaming Recipe Archive export");
 
   return new Response(nodeStreamToWeb(stream), {
     headers: {

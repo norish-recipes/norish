@@ -1,4 +1,4 @@
-import type { ReactNode, Ref } from "react";
+import type { ComponentProps, ReactNode, Ref } from "react";
 import type {
   FlatListProps,
   KeyboardEvent,
@@ -100,19 +100,40 @@ export function SheetScrollGuard() {
   return <View collapsable={false} />;
 }
 
-/** A fit sheet's body: as tall as its content until the sheet runs out of room, then it scrolls. */
-export function SheetBody({ children, ...layout }: BodyLayout & { children: ReactNode }) {
+/** A fit sheet's body: as tall as its content until the sheet runs out of room, then it scrolls.
+ * Its blocks sit 16 pt apart unless `contentClassName` says otherwise. */
+export function SheetBody({
+  children,
+  contentClassName = "gap-4",
+  ...layout
+}: BodyLayout & { children: ReactNode }) {
   return (
     <>
       <SheetScrollGuard />
       <ScrollView
         {...SCROLLER}
         className="shrink grow-0"
-        contentContainerClassName={contentClass(layout)}
+        contentContainerClassName={contentClass({ ...layout, contentClassName })}
       >
         {children}
       </ScrollView>
     </>
+  );
+}
+
+/** A fit sheet: the sheet and its body, as tall as its content. */
+export function FitSheet({
+  children,
+  contentClassName,
+  ...sheet
+}: Omit<ComponentProps<typeof Sheet>, "children"> & {
+  contentClassName?: string;
+  children?: ReactNode;
+}) {
+  return (
+    <Sheet {...sheet}>
+      <SheetBody contentClassName={contentClassName}>{children}</SheetBody>
+    </Sheet>
   );
 }
 
@@ -168,6 +189,7 @@ export function Sheet({
   title,
   subtitle,
   back = false,
+  closable = true,
   onClose,
   confirm,
   secondary,
@@ -180,6 +202,8 @@ export function Sheet({
   subtitle?: string;
   /** A step inside a sheet: the header's left item is a Back chevron. */
   back?: boolean;
+  /** False disables the left item, for a sheet that must stay open. */
+  closable?: boolean;
   /** What the left item does; going back by default. */
   onClose?: () => void;
   /** A `SheetScrollView`, `SheetList` or `SheetBody`. */
@@ -200,6 +224,7 @@ export function Sheet({
       >
         <ModalHeader
           back={back}
+          closable={closable}
           confirm={confirm}
           secondary={secondary}
           subtitle={subtitle}

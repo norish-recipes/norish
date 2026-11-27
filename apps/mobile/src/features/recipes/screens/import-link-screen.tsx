@@ -1,9 +1,9 @@
 import type { ComponentRef } from "react";
 import React, { useState } from "react";
+import { Ionicons } from "@/components/icon";
 import { Sheet, SheetBody } from "@/components/sheet";
 import { SheetInput } from "@/components/sheet-input";
 import { useFocusOnMount } from "@/hooks/use-focus-on-mount";
-import Ionicons from "@expo/vector-icons/Ionicons";
 import { useLocalSearchParams } from "expo-router";
 import { FieldError, TextField, useThemeColor } from "heroui-native";
 import { useIntl } from "react-intl";

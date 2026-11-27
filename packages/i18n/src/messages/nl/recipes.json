@@ -41,12 +41,8 @@
   },
   "empty": {
     "title": "Je bibliotheek wacht op je",
-    "description": "Plak een link in het zoekveld en zie de magie gebeuren.",
     "noResults": "Geen recepten gevonden",
-    "noResultsHint": "Probeer je filters aan te passen of te wissen.",
-    "noCookbooks": "Nog geen kookboeken",
-    "noCookbooksHint": "Een kookboek is een set recepten met een titel. Maak je eerste om je bibliotheek te ordenen.",
-    "descriptionMobile": "Voeg je eerste recept toe via een link, tekst of foto's."
+    "noCookbooks": "Nog geen kookboeken"
   },
   "card": {
     "noImage": "Geen afbeelding beschikbaar",
@@ -67,6 +63,7 @@
     "addToGroceries": "Toevoegen aan boodschappen",
     "ratingPrompt": "Wat vond je van dit recept?",
     "notFound": "Recept niet gevonden",
+    "offline": "Dit recept heeft een verbinding nodig",
     "notFoundMessage": "Dit recept bestaat niet of je hebt geen toestemming om het te bekijken.",
     "prep": "voorb.",
     "total": "totaal",
@@ -160,6 +157,7 @@
     "expiresAfter": "Verloopt na",
     "expiresOn": "Verloopt {date}",
     "expiredOn": "Verlopen {date}",
+    "revokedOn": "Ingetrokken {date}",
     "lastOpenedOn": "Laatst geopend {date}",
     "neverExpires": "Verloopt nooit",
     "linkCreated": "Gemaakt {date}"
@@ -203,7 +201,7 @@
     "notesPlaceholder": "Voeg tips voor de voorbereiding, aanpassingen of serveersuggesties toe voor dit recept...",
     "ingredientsHelp": "Typ ingrediënten zoals \"2 kopjes bloem\" - we verwerken automatisch hoeveelheden en eenheden.",
     "instructionsHelp": "Schrijf duidelijke stapsgewijze instructies. Druk op Enter om naar de volgende stap te gaan.",
-    "tagsHelp": "Typ tags en klik op suggesties om toe te voegen. Tags op het recept zijn gevuld, nieuwe tags hebben een omstippelde rand.",
+    "tagsHelp": "Kies een tag of maak een nieuwe.",
     "tagsAndCategories": "Tags & Categorieën",
     "categoriesHelp": "Selecteer maaltijdcategorieën voor dit recept.",
     "addCategory": "Categorie toevoegen",
@@ -224,7 +222,7 @@
     "originRegion": "Streek",
     "originRegionPlaceholder": "bijv. Sicilië",
     "cuisines": "Keukens",
-    "cuisinesHelp": "Kies uit de lijst van je installatie. Meerdere is logisch bij een fusiongerecht.",
+    "cuisinesHelp": "Kies uit de lijst of maak er zelf een. Meerdere is logisch bij een fusiongerecht.",
     "provenanceNote": "Toelichting",
     "provenanceNotePlaceholder": "Een paar zinnen over waar dit gerecht vandaan komt…",
     "servings": "Porties",
@@ -441,7 +439,6 @@
     "singular": "Kookboek",
     "notFound": "Kookboek niet gevonden",
     "notFoundHint": "Het is misschien verwijderd, of niet zichtbaar voor jou.",
-    "emptyHint": "Voeg recepten toe via het snelle-actiesmenu van een recept.",
     "panelTitle": "Toevoegen aan kookboek",
     "newWithRecipe": "Nieuw kookboek met dit recept",
     "noneEditable": "Er zijn nog geen kookboeken die je kunt bewerken.",
@@ -545,7 +542,7 @@
     "tagsAndCategories": "Tags en categorieën",
     "categories": "Categorieën",
     "tags": "Tags",
-    "tagsHint": "Kies een suggestie of typ een nieuwe tag; nieuwe tags hebben een stippelrand.",
+    "tagsHint": "Kies een tag uit de lijst of maak een nieuwe.",
     "addTag": "Tag toevoegen",
     "removeNamed": "{name} verwijderen",
     "servingsAndTime": "Porties en tijd",
@@ -561,6 +558,13 @@
     "discardMessage": "Je hebt niet-opgeslagen wijzigingen.",
     "keepEditing": "Verder bewerken",
     "discard": "Weggooien"
+  },
+  "picker": {
+    "create": "\"{name}\" maken",
+    "createOffline": "Je kunt \"{name}\" maken als je online bent.",
+    "tooLong": "Namen mogen maximaal {max} tekens hebben.",
+    "createFailed": "\"{name}\" maken is niet gelukt. Probeer het opnieuw.",
+    "loadFailed": "De lijst laden is niet gelukt."
   },
   "search": {
     "sortBestMatch": "Beste match",

@@ -41,12 +41,8 @@
   },
   "empty": {
     "title": "Votre bibliothèque vous attend",
-    "description": "Collez une URL de recette dans le champ de recherche ci-dessus et laissez opérer la magie.",
     "noResults": "Aucune recette trouvée",
-    "noResultsHint": "Essayez d’ajuster ou de réinitialiser vos filtres.",
-    "noCookbooks": "Aucun livre de cuisine pour l’instant",
-    "noCookbooksHint": "Un livre de cuisine est un ensemble de recettes intitulé. Créez le premier pour organiser votre bibliothèque.",
-    "descriptionMobile": "Ajoutez votre première recette depuis un lien, un texte ou des photos."
+    "noCookbooks": "Aucun livre de cuisine pour l’instant"
   },
   "card": {
     "noImage": "Aucune image disponible",
@@ -67,6 +63,7 @@
     "addToGroceries": "Ajouter aux courses",
     "ratingPrompt": "Qu'avez-vous pensé de cette recette ?",
     "notFound": "Recette introuvable",
+    "offline": "Cette recette nécessite une connexion",
     "notFoundMessage": "Cette recette n'existe pas ou vous n'avez pas la permission de la consulter.",
     "prep": "préparation",
     "total": "total",
@@ -160,6 +157,7 @@
     "expiresAfter": "Expire après",
     "expiresOn": "Expire le {date}",
     "expiredOn": "Expiré le {date}",
+    "revokedOn": "Révoqué le {date}",
     "lastOpenedOn": "Dernière ouverture {date}",
     "neverExpires": "N'expire jamais",
     "linkCreated": "Créé le {date}"
@@ -203,7 +201,7 @@
     "notesPlaceholder": "Ajoutez des conseils de préparation, des ajustements ou des suggestions de service pour cette recette...",
     "ingredientsHelp": "Saisissez les ingrédients comme « 2 tasses de farine » — nous détecterons automatiquement les quantités et unités.",
     "instructionsHelp": "Rédigez des instructions claires étape par étape. Appuyez sur Entrée pour passer à l’étape suivante.",
-    "tagsHelp": "Tapez des tags et cliquez sur les suggestions pour ajouter. Les tags de la recette sont remplis, les nouveaux ont une bordure en pointillé.",
+    "tagsHelp": "Choisissez un tag ou créez-en un nouveau.",
     "tagsAndCategories": "Tags & Catégories",
     "categoriesHelp": "Sélectionnez les catégories de repas pour cette recette.",
     "addCategory": "Ajouter une catégorie",
@@ -224,7 +222,7 @@
     "originRegion": "Région",
     "originRegionPlaceholder": "p. ex. Sicile",
     "cuisines": "Cuisines",
-    "cuisinesHelp": "Choisissez dans la liste de votre installation. Plusieurs se justifient pour un plat fusion.",
+    "cuisinesHelp": "Choisissez dans la liste ou créez la vôtre. Plusieurs ont du sens pour un plat fusion.",
     "provenanceNote": "Note",
     "provenanceNotePlaceholder": "Quelques phrases sur l'origine de ce plat…",
     "servings": "Portions",
@@ -441,7 +439,6 @@
     "singular": "Livre de cuisine",
     "notFound": "Livre de cuisine introuvable",
     "notFoundHint": "Il a peut-être été supprimé, ou il ne vous est pas visible.",
-    "emptyHint": "Ajoutez des recettes depuis le menu d’actions rapides d’une recette.",
     "panelTitle": "Ajouter à un livre de cuisine",
     "newWithRecipe": "Nouveau livre avec cette recette",
     "noneEditable": "Il n’y a pas encore de livre de cuisine que vous puissiez modifier.",
@@ -545,7 +542,7 @@
     "tagsAndCategories": "Tags et catégories",
     "categories": "Catégories",
     "tags": "Tags",
-    "tagsHint": "Choisissez une suggestion ou saisissez un nouveau tag ; les nouveaux tags ont une bordure en pointillés.",
+    "tagsHint": "Choisissez un tag dans la liste ou créez-en un nouveau.",
     "addTag": "Ajouter un tag",
     "removeNamed": "Retirer {name}",
     "servingsAndTime": "Portions et durée",
@@ -561,6 +558,13 @@
     "discardMessage": "Vous avez des modifications non enregistrées.",
     "keepEditing": "Continuer",
     "discard": "Abandonner"
+  },
+  "picker": {
+    "create": "Créer \"{name}\"",
+    "createOffline": "Vous pourrez créer \"{name}\" une fois en ligne.",
+    "tooLong": "Un nom peut avoir {max} caractères au maximum.",
+    "createFailed": "Impossible de créer \"{name}\". Réessayez.",
+    "loadFailed": "Impossible de charger la liste."
   },
   "search": {
     "sortBestMatch": "Meilleure correspondance",

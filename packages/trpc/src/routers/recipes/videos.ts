@@ -4,21 +4,32 @@ import {
   addRecipeVideos,
   countRecipeVideos,
   deleteRecipeVideoById,
-  getRecipeOwnerId,
+  getRecipeHouseholdIds,
   getRecipeVideoById,
 } from "@norish/db/repositories/recipes";
 import { getMaxVideoFileSize } from "@norish/shared-server/config/server-config-loader";
 import { trpcLogger as log } from "@norish/shared-server/logger";
-import { deleteVideoByUrl, saveVideoBytes } from "@norish/shared-server/media/storage";
+import {
+  deleteUnreferencedRecipeFile,
+  deleteVideoByUrl,
+  saveVideoBytes,
+} from "@norish/shared-server/media/storage";
 import { ALLOWED_VIDEO_MIME_SET } from "@norish/shared/contracts";
 import { DeleteRecipeVideoInputSchema, MAX_RECIPE_VIDEOS } from "@norish/shared/contracts/zod";
+import { mediaId } from "@norish/shared/lib/recipe-media";
 
 import type { FormDataInput, UploadedFile } from "../../form-data";
 import { afterCommit } from "../../after-commit";
 import { formDataInputSchema, getUploadedFile } from "../../form-data";
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
-import { announceRecipeUpdated, assertRecipeAccess, createSettled, mediaRecipeId } from "./helpers";
+import {
+  announceRecipeUpdated,
+  assertRecipeAccess,
+  assertRecipeMediaAccess,
+  createSettled,
+  releaseRecipeMediaClaim,
+} from "./helpers";
 
 // --- Shared Helpers ---
 
@@ -67,7 +78,7 @@ async function extractAndValidateVideo(formData: FormDataInput): Promise<VideoVa
 const uploadGalleryVideo = authedProcedure
   .input(formDataInputSchema)
   .mutation(async ({ ctx, input }) => {
-    const recipeId = mediaRecipeId(input.get("recipeId"));
+    const recipeId = mediaId(input.get("recipeId"));
     const orderStr = input.get("order") as string | null;
     const durationStr = input.get("duration") as string | null;
 
@@ -78,9 +89,14 @@ const uploadGalleryVideo = authedProcedure
     }
 
     // A create of this id still running links the file once it is stored.
+    const validation = await extractAndValidateVideo(input);
+
+    if (!validation.success) {
+      return validation;
+    }
+
     await createSettled(recipeId);
-    // A recipe not stored yet (the new-recipe form uploads first) is the caller's own.
-    await assertRecipeAccess(ctx, recipeId, "edit");
+    await assertRecipeMediaAccess(ctx, recipeId, "upload");
 
     // Check max videos limit
     const currentCount = await countRecipeVideos(recipeId);
@@ -90,12 +106,6 @@ const uploadGalleryVideo = authedProcedure
         success: false,
         error: `Maximum ${MAX_RECIPE_VIDEOS} videos allowed per recipe`,
       };
-    }
-
-    const validation = await extractAndValidateVideo(input);
-
-    if (!validation.success) {
-      return validation;
     }
 
     try {
@@ -109,9 +119,7 @@ const uploadGalleryVideo = authedProcedure
       const order = orderStr ? parseInt(orderStr, 10) : currentCount;
 
       // Check if recipe exists in database before inserting into recipe_videos
-      const recipeOwner = await getRecipeOwnerId(recipeId);
-
-      if (recipeOwner !== null) {
+      if ((await getRecipeHouseholdIds([recipeId])).has(recipeId)) {
         // Recipe exists, add to database
         const [videoRecord] = await addRecipeVideos(recipeId, [
           {
@@ -120,7 +128,11 @@ const uploadGalleryVideo = authedProcedure
             duration: savedVideo.duration,
             order,
           },
-        ]);
+        ]).catch(async (error: unknown) => {
+          // A file with no row (the recipe erased meanwhile, say) would recreate a swept folder.
+          await deleteUnreferencedRecipeFile(savedVideo.video, recipeId);
+          throw error;
+        });
 
         if (!videoRecord) {
           return { success: false, error: "Failed to create video record" };
@@ -163,6 +175,7 @@ const uploadGalleryVideo = authedProcedure
       const message = error instanceof Error ? error.message : "Failed to upload gallery video";
 
       log.error({ userId: ctx.user.id, recipeId, error }, "Failed to upload gallery video");
+      await releaseRecipeMediaClaim(ctx, recipeId);
 
       return { success: false, error: message };
     }
@@ -199,7 +212,7 @@ const deleteGalleryVideo = authedProcedure
 
       // The row goes first: a stale delete removes nothing, the file included.
       try {
-        await deleteVideoByUrl(videoRecord.video);
+        await deleteVideoByUrl(videoRecord.video, videoRecord.recipeId);
       } catch (fsError) {
         // Log but don't fail - file might already be deleted
         log.warn(

@@ -83,7 +83,8 @@
   "errors": {
     "operationFailed": "Handlingen mislyktes",
     "nameCannotBeEmpty": "Navn kan ikke være tomt",
-    "technicalDetails": "Noe gikk galt. Sjekk nettleserkonsollen for tekniske detaljer."
+    "technicalDetails": "Noe gikk galt. Sjekk nettleserkonsollen for tekniske detaljer.",
+    "noAnswer": "Serveren svarte ikke. Prøv igjen."
   },
   "slots": {
     "breakfast": "Frokost",
@@ -261,6 +262,7 @@
       "syncing": "{count, plural, =0 {Synkroniserer} one {Synkroniserer # endring} other {Synkroniserer # endringer}}",
       "syncNow": "Synkroniser nå",
       "retryAll": "Prøv alle igjen",
+      "otherHousehold": "Noen endringer ble gjort for en annen husstand. «Prøv alle igjen» sender dem til husstanden du er i nå.",
       "discardAll": "Forkast alle",
       "discardConfirmBody": "{count, plural, one {Forkaste # endring i kø permanent? Den blir ikke sendt.} other {Forkaste # endringer i kø permanent? De blir ikke sendt.}}",
       "discardConfirm": "Forkast",
@@ -294,6 +296,9 @@
   "changedElsewhere": {
     "title": "Ikke lagret: det ble endret et annet sted først"
   },
+  "lateAnswer": {
+    "title": "Serveren svarte sent: det gikk likevel."
+  },
   "storageUnavailable": {
     "title": "Lagring utilgjengelig",
     "description": "Norish kunne ikke lese nøkkelringen på denne iPhonen.",
@@ -308,7 +313,14 @@
     "adminTransferred": "Overførte administrator til {name}",
     "unknownMember": "Ukjent",
     "removedTitle": "Fjernet fra husstanden",
-    "removedDescription": "En administrator har fjernet deg fra husstanden."
+    "removedDescription": "En administrator har fjernet deg fra husstanden.",
+    "joinRefused": {
+      "invalidCode": "Den koden er ikke gyldig.",
+      "expired": "Den koden har utløpt. Be om en ny.",
+      "alreadyMember": "Du er allerede i denne husstanden.",
+      "shared": "Forlat husstanden din først for å bli med i en annen.",
+      "busy": "Den husstanden ble endret akkurat da. Prøv igjen."
+    }
   },
   "photos": {
     "pickFailedTitle": "Kunne ikke velge bilde",

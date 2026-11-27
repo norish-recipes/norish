@@ -7,27 +7,25 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import type { RecipeListContext } from "@norish/db/repositories/recipes";
 import { ServerConfigKeys } from "@norish/config/zod/server-config";
 import { listLibrary, listLibrarySuggestions } from "@norish/db/repositories/library";
+import { addEntry } from "@norish/db/repositories/list-entries";
 import { deleteConfig, setConfig } from "@norish/db/repositories/server-config";
-import {
-  categories,
-  ingredientAliases,
-  ingredients,
-  recipeCategories,
-  recipeTags,
-  tags as tagsTable,
-} from "@norish/db/schema";
+import { ingredientAliases, ingredients } from "@norish/db/schema";
 
 import {
+  attachTestEntry,
+  createTestIngredient,
   createTestRecipe,
   createTestUser,
+  firstSpellingId,
   getTestDb,
   insertTestRecipeLine,
   mintTestFood,
+  testHouseholdOf,
 } from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
 function viewer(userId: string): RecipeListContext {
-  return { userId, householdUserIds: null, isServerAdmin: false };
+  return { userId, householdId: testHouseholdOf(userId) };
 }
 
 describe("the typing suggestions", () => {
@@ -68,31 +66,22 @@ describe("the typing suggestions", () => {
     return recipe;
   }
 
-  const food = (text: string) => mintTestFood(text);
+  const food = (text: string, as = ownerId) => mintTestFood(testHouseholdOf(as), text);
+  const seededFood = async (name: string) => {
+    const { id } = (await createTestIngredient({ name }))!;
+
+    return { ingredientId: id, aliasId: (await firstSpellingId(id))! };
+  };
   const ask = async (text: string, as = ownerId) => await listLibrarySuggestions(viewer(as), text);
   const names = async (text: string, as = ownerId) =>
     (await ask(text, as)).ingredients.map((each) => each.name);
 
   async function tagRecipes(recipeIds: string[], name: string) {
-    const [row] = await getTestDb().insert(tagsTable).values({ name }).returning();
-
-    await getTestDb()
-      .insert(recipeTags)
-      .values(recipeIds.map((recipeId) => ({ recipeId, tagId: row!.id, order: 0 })));
+    await attachTestEntry("tag", recipeIds, name);
   }
 
   async function categorise(recipeIds: string[], name: string) {
-    // The built-in names are seeded, so an existing row is the one to use.
-    await getTestDb().insert(categories).values({ name }).onConflictDoNothing();
-
-    const [row] = await getTestDb()
-      .select()
-      .from(categories)
-      .where(sql`lower(${categories.name}) = ${name.toLowerCase()}`);
-
-    await getTestDb()
-      .insert(recipeCategories)
-      .values(recipeIds.map((recipeId) => ({ recipeId, categoryId: row!.id, order: 0 })));
+    await attachTestEntry("category", recipeIds, name);
   }
 
   describe("Ingredients", () => {
@@ -174,12 +163,12 @@ describe("the typing suggestions", () => {
     it("leaves out a food only a recipe the reader cannot see names", async () => {
       await setConfig(
         ServerConfigKeys.RECIPE_PERMISSION_POLICY,
-        { view: "owner", edit: "owner", delete: "owner" },
+        { view: "household", edit: "household", delete: "household" },
         null,
         false
       );
 
-      const hidden = await food("Hidden leek");
+      const hidden = await food("Hidden leek", strangerId);
       const shared = await food("Leek stock");
 
       await recipeNaming(strangerId, [hidden]);
@@ -241,14 +230,15 @@ describe("the typing suggestions", () => {
       it("leaves out an ancestor whose name does not match, and counts only visible recipes", async () => {
         await setConfig(
           ServerConfigKeys.RECIPE_PERMISSION_POLICY,
-          { view: "owner", edit: "owner", delete: "owner" },
+          { view: "household", edit: "household", delete: "household" },
           null,
           false
         );
 
-        const poultry = await food("Poultry");
-        const thighs = await food("Chicken thighs");
-        const chicken = await food("Chicken");
+        // Seeded, so both households' recipes may name the same foods.
+        const poultry = await seededFood("Poultry");
+        const thighs = await seededFood("Chicken thighs");
+        const chicken = await seededFood("Chicken");
 
         await kindOf(poultry, chicken);
         await kindOf(chicken, thighs);
@@ -308,6 +298,57 @@ describe("the typing suggestions", () => {
       expect((await ask("qu")).tags).toEqual(["Quick meal", "Quail", "quiche"]);
     });
 
+    it("offers households' Tags folding alike once, as the reader's household spells it", async () => {
+      await tagRecipes([(await recipeNaming(ownerId, [], "Ours")).id], "Soja");
+      await tagRecipes(
+        [
+          (await recipeNaming(strangerId, [], "Theirs")).id,
+          (await recipeNaming(strangerId, [], "Theirs too")).id,
+        ],
+        "soja!"
+      );
+
+      expect((await ask("so")).tags).toEqual(["Soja"]);
+      expect((await ask("so", strangerId)).tags).toEqual(["soja!"]);
+    });
+
+    it.each(["everyone", "household"] as const)(
+      "offers only the reader's and the instance's entries under view %s, counting every visible recipe of the fold",
+      async (view) => {
+        await setConfig(
+          ServerConfigKeys.RECIPE_PERMISSION_POLICY,
+          { view, edit: "household", delete: "household" },
+          null,
+          false
+        );
+
+        const [ours, ours2] = [
+          await recipeNaming(ownerId, [], "Ours"),
+          await recipeNaming(ownerId, [], "Ours too"),
+        ];
+        const [theirs, theirs2] = [
+          await recipeNaming(strangerId, [], "Theirs"),
+          await recipeNaming(strangerId, [], "Theirs too"),
+        ];
+
+        await tagRecipes([ours.id], "Soja");
+        await tagRecipes([ours.id, ours2.id], "Sour");
+        await tagRecipes([theirs.id, theirs2.id], "soja!");
+        await tagRecipes([theirs.id], "Smoky");
+        await tagRecipes([theirs.id], "smoked");
+        await addEntry("tag", testHouseholdOf(ownerId), "Smoked");
+        await categorise([theirs.id], "Supper");
+        await categorise([ours.id], "Dessert");
+
+        const answer = await ask("s");
+
+        expect(answer.tags).toEqual(
+          view === "everyone" ? ["Soja", "Sour", "Smoked"] : ["Sour", "Soja"]
+        );
+        expect(answer.categories).toEqual(["Dessert"]);
+      }
+    );
+
     it("leaves out the applied Tags, in any case, before the cap", async () => {
       const [one, two] = [
         await recipeNaming(ownerId, [], "One"),
@@ -356,7 +397,7 @@ describe("the typing suggestions", () => {
     it("leaves out Tags and Categories only on a recipe the reader cannot see", async () => {
       await setConfig(
         ServerConfigKeys.RECIPE_PERMISSION_POLICY,
-        { view: "owner", edit: "owner", delete: "owner" },
+        { view: "household", edit: "household", delete: "household" },
         null,
         false
       );

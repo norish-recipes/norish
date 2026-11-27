@@ -2,16 +2,17 @@ import type { FullRecipeDTO } from "@norish/shared/contracts";
 
 import type { AIE2EStack } from "./fixture";
 import { readRecipe, recipeIdNamed, waitForRecipe } from "../harness/recipes";
-import { callTrpc } from "../harness/trpc";
+import { callTrpc, queryTrpc } from "../harness/trpc";
 
 type Owner = Pick<AIE2EStack, "baseURL" | "ownerCookies">;
 
 /** A seeded Cuisine's id, from the vocabulary an editor picks from. */
 export async function findCuisineIdByName(stack: Owner, name: string): Promise<string> {
-  const { cuisines } = await callTrpc<{ cuisines: Array<{ id: string; name: string }> }>(
+  const cuisines = await queryTrpc<Array<{ id: string; name: string }>>(
     stack.baseURL,
     stack.ownerCookies,
-    "config.cuisines"
+    "lists.list",
+    { kind: "cuisine" }
   );
   const cuisine = cuisines.find((candidate) => candidate.name.toLowerCase() === name.toLowerCase());
 
@@ -21,7 +22,11 @@ export async function findCuisineIdByName(stack: Owner, name: string): Promise<s
 }
 
 async function storedRecipe(stack: Owner, name: string): Promise<FullRecipeDTO> {
-  const recipe = await readRecipe(stack.baseURL, stack.ownerCookies, await recipeIdNamed(name));
+  const recipe = await readRecipe(
+    stack.baseURL,
+    stack.ownerCookies,
+    await recipeIdNamed(stack.baseURL, stack.ownerCookies, name)
+  );
 
   if (!recipe) throw new Error(`Recipe not found: ${name}`);
 

@@ -1,10 +1,11 @@
 import type { ComponentRef } from "react";
 import type { TextInput } from "react-native";
 import React, { useRef, useState } from "react";
-import { Alert, Text, View } from "react-native";
+import { Alert, Keyboard, Text, View } from "react-native";
 import { DragScrollView } from "@/components/drag-list/drag-list";
 import { useCategoryLabel } from "@/hooks/use-category-label";
 import { FocusedFieldContext, useFocusedFieldInView } from "@/hooks/use-focused-field-in-view";
+import { useText } from "@/lib/i18n/use-text";
 import { recipeRoute } from "@/lib/tab-routes";
 import { useRouter } from "expo-router";
 import { usePreventRemove } from "expo-router/react-navigation";
@@ -53,8 +54,8 @@ export function RecipeEditorScreen({
   initialData,
   notFound = false,
 }: EditorProps & { notFound?: boolean }) {
-  // The recipe as it opened: a save carries its version, so an edit made meanwhile elsewhere
-  // conflicts rather than being overwritten.
+  // The recipe as it opened: the form's base, so an edit made meanwhile elsewhere conflicts rather
+  // than being overwritten, until a stale answer rebases the form on the fresh recipe.
   const [opened] = useState(initialData);
   const { recipeId } = useRecipeId(mode, opened?.id);
 
@@ -90,10 +91,10 @@ function Editor({ mode, initialData, recipeId }: EditorProps & { recipeId: strin
   const uploads = useEditorUploads(recipeId);
   const { form, set } = editor;
   const [lineMoves, setLineMoves] = useState<LineMoves | null>(null);
-  // A photo still uploading is not in the form yet, and a second tap would save twice.
-  const [saving, setSaving] = useState(false);
-  const busy = saving || uploads.isUploading;
-  const text = (id: string) => intl.formatMessage({ id });
+  // A photo still uploading, or an entry being created, is not in the form yet, and a second
+  // tap would save twice.
+  const busy = editor.isSaving || uploads.isUploading || editor.isCreatingEntry;
+  const text = useText();
   const error = (field: "name" | "ingredients" | "steps" | "servings") => {
     const key = editor.errors[field];
 
@@ -128,20 +129,28 @@ function Editor({ mode, initialData, recipeId }: EditorProps & { recipeId: strin
 
       return;
     }
-    guard.allowNavigation();
-    setSaving(true);
-    try {
-      if (mode === "create") {
-        createRecipe({ ...payload, id: recipeId });
-        router.dismissTo(recipeRoute(recipeId));
-      } else if (initialData) {
-        updateRecipe(initialData.id, { ...payload, version: initialData.version });
-        router.back();
-      }
-    } catch (failure) {
-      setSaving(false);
-      guard.disallowNavigation();
-      editor.failSubmit(failure instanceof Error ? failure.message : String(failure));
+    // The editor stays open until the save is stored or queued, so a refusal shows here.
+    const after = (leave: () => void) => ({
+      onSaved: () => {
+        guard.allowNavigation();
+        leave();
+      },
+      onFailed: (failure: unknown) => editor.failSave(failure),
+    });
+
+    // Nothing typed while the save is in flight would reach it.
+    Keyboard.dismiss();
+    if (mode === "create") {
+      createRecipe(
+        { ...payload, id: recipeId },
+        after(() => router.dismissTo(recipeRoute(recipeId)))
+      );
+    } else if (initialData) {
+      updateRecipe(
+        initialData.id,
+        { ...payload, version: editor.version ?? initialData.version },
+        after(() => router.back())
+      );
     }
   };
 
@@ -163,7 +172,7 @@ function Editor({ mode, initialData, recipeId }: EditorProps & { recipeId: strin
         onScroll={onScroll}
       >
         <FocusedFieldContext value={onFieldFocus}>
-          <View className="gap-4 px-5">
+          <View className="gap-4 px-5" pointerEvents={editor.isSaving ? "none" : "auto"}>
             {editor.errors.submit ? (
               <View className="bg-danger-soft rounded-2xl px-4 py-3">
                 <Text className="text-danger text-[15px]">{editor.errors.submit}</Text>
@@ -222,6 +231,7 @@ function Editor({ mode, initialData, recipeId }: EditorProps & { recipeId: strin
               }
             >
               <IngredientRows
+                key={editor.version}
                 ingredients={form.ingredients}
                 systemUsed={form.systemUsed}
                 onChange={(ingredients) => set("ingredients", ingredients)}
@@ -245,6 +255,7 @@ function Editor({ mode, initialData, recipeId }: EditorProps & { recipeId: strin
               }
             >
               <StepRows
+                key={editor.version}
                 ingredients={form.ingredients}
                 lineMoves={lineMoves}
                 steps={form.steps}
@@ -260,6 +271,7 @@ function Editor({ mode, initialData, recipeId }: EditorProps & { recipeId: strin
               categoryLabel={categoryLabel}
               categoryOptions={editor.categoryOptions}
               form={form}
+              recipeId={editor.listRecipeId}
               set={set}
               onAddCategory={editor.addCategory}
               onToggleCategory={editor.toggleCategory}
@@ -267,6 +279,8 @@ function Editor({ mode, initialData, recipeId }: EditorProps & { recipeId: strin
             <ServingsAndTimeCard error={error("servings")} form={form} set={set} />
             <NutritionCard form={form} set={set} />
             <ProvenanceCard
+              carriedCuisines={initialData?.cuisines}
+              recipeId={editor.listRecipeId}
               value={form.provenance}
               onChange={(provenance) => set("provenance", provenance)}
             />

@@ -41,12 +41,8 @@
   },
   "empty": {
     "title": "Dit bibliotek venter",
-    "description": "Indsæt en opskrift-URL i søgefeltet ovenfor, og lad magien ske.",
     "noResults": "Ingen opskrifter fundet",
-    "noResultsHint": "Prøv at justere eller rydde dine filtre.",
-    "noCookbooks": "Ingen kogebøger endnu",
-    "noCookbooksHint": "En kogebog er et navngivet sæt opskrifter. Opret din første for at organisere dit bibliotek.",
-    "descriptionMobile": "Tilføj din første opskrift fra et link, tekst eller billeder."
+    "noCookbooks": "Ingen kogebøger endnu"
   },
   "card": {
     "noImage": "Intet billede tilgængeligt",
@@ -67,6 +63,7 @@
     "addToGroceries": "Tilføj til indkøbsliste",
     "ratingPrompt": "Hvad syntes du om denne opskrift?",
     "notFound": "Opskrift ikke fundet",
+    "offline": "Denne opskrift kræver en forbindelse",
     "notFoundMessage": "Denne opskrift eksisterer ikke, eller du har ikke adgang til at se den.",
     "prep": "forberedelse",
     "total": "i alt",
@@ -160,6 +157,7 @@
     "expiresAfter": "Udløber efter",
     "expiresOn": "Udløber {date}",
     "expiredOn": "Udløb {date}",
+    "revokedOn": "Tilbagekaldt {date}",
     "lastOpenedOn": "Sidst åbnet {date}",
     "neverExpires": "Udløber aldrig",
     "linkCreated": "Oprettet {date}"
@@ -203,7 +201,7 @@
     "notesPlaceholder": "Tilføj forberedelsesnoter, justeringer eller serveringstips til denne opskrift...",
     "ingredientsHelp": "Skriv ingredienser som \"2 dl mel\" – vi analyserer automatisk mængder og enheder.",
     "instructionsHelp": "Skriv klare trin-for-trin instruktioner. Tryk Enter for at gå til næste trin.",
-    "tagsHelp": "Skriv tags og klik på forslag for at tilføje. Tags på opskriften er udfyldte, nye tags har stiplet kant.",
+    "tagsHelp": "Vælg et tag eller opret et nyt.",
     "tagsAndCategories": "Tags og kategorier",
     "categoriesHelp": "Vælg måltidskategorier for denne opskrift.",
     "addCategory": "Tilføj kategori",
@@ -224,7 +222,7 @@
     "originRegion": "Region",
     "originRegionPlaceholder": "f.eks. Sicilien",
     "cuisines": "Køkkener",
-    "cuisinesHelp": "Vælg fra din installations liste. Flere giver mening ved en fusionsret.",
+    "cuisinesHelp": "Vælg fra listen, eller opret din egen. Flere giver mening til en fusionsret.",
     "provenanceNote": "Note",
     "provenanceNotePlaceholder": "Et par sætninger om, hvor denne ret kommer fra …",
     "servings": "Portioner",
@@ -441,7 +439,6 @@
     "singular": "Kogebog",
     "notFound": "Kogebogen blev ikke fundet",
     "notFoundHint": "Den er måske slettet, eller den er ikke synlig for dig.",
-    "emptyHint": "Tilføj opskrifter fra en opskrifts handlingsmenu.",
     "panelTitle": "Tilføj til kogebog",
     "newWithRecipe": "Ny kogebog med denne opskrift",
     "noneEditable": "Der er ingen kogebøger, du kan redigere.",
@@ -545,7 +542,7 @@
     "tagsAndCategories": "Tags og kategorier",
     "categories": "Kategorier",
     "tags": "Tags",
-    "tagsHint": "Vælg et forslag eller skriv et nyt tag; nye tags har en stiplet kant.",
+    "tagsHint": "Vælg et tag fra listen, eller opret et nyt.",
     "addTag": "Tilføj et tag",
     "removeNamed": "Fjern {name}",
     "servingsAndTime": "Portioner og tid",
@@ -561,6 +558,13 @@
     "discardMessage": "Du har ikke-gemte ændringer.",
     "keepEditing": "Fortsæt redigering",
     "discard": "Kassér"
+  },
+  "picker": {
+    "create": "Opret \"{name}\"",
+    "createOffline": "Du kan oprette \"{name}\", når du er online.",
+    "tooLong": "Navne må højst have {max} tegn.",
+    "createFailed": "\"{name}\" kunne ikke oprettes. Prøv igen.",
+    "loadFailed": "Listen kunne ikke indlæses."
   },
   "search": {
     "sortBestMatch": "Bedste match",

@@ -89,13 +89,13 @@ describe("recipe filter contract", () => {
     expect(normalizePersistedRecipeFilters({ sortMode: "invalid" })).toBeNull();
   });
 
-  it("keeps any trimmed 1-40 character Category name and drops the rest", () => {
+  it("keeps any trimmed Category name, an older long one too, and drops the rest", () => {
     expect(
       normalizePersistedRecipeFilters({
         ...DEFAULT_PERSISTED_RECIPE_FILTERS,
         categories: ["Dinner", "  Drinks ", "", "x".repeat(41), 7],
       })?.categories
-    ).toEqual(["Dinner", "Drinks"]);
+    ).toEqual(["Dinner", "Drinks", "x".repeat(41)]);
   });
 
   it("never leaves a reader searching no fields at all", () => {

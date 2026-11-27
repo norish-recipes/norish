@@ -1,5 +1,5 @@
 import { useConfirm } from "@/hooks/use-confirm";
-import { useOwnerRights } from "@/hooks/use-owner-rights";
+import { useHouseholdRights } from "@/hooks/use-household-rights";
 import { addToGroceriesRoute } from "@/lib/tab-routes";
 import { useRouter } from "expo-router";
 import { useIntl } from "react-intl";
@@ -26,7 +26,7 @@ export function useCardActions(cookbook?: CookbookSummaryDTO) {
   const { toggleFavorite } = useFavoritesMutation();
   const { deleteRecipes } = useRecipesMutations(useRecipeMutationErrorToast());
   const { setMembership, deleteCookbook } = useCookbooksMutations();
-  const { canEdit, canDelete } = useOwnerRights();
+  const { canEdit, canDelete } = useHouseholdRights();
   // The page's member list is this cookbook's own read, so a removal drops the card now rather
   // than waiting for a refetch that Offline never comes.
   const { removeMember } = useCookbookRecipesQuery(cookbook?.id ?? "", {}, { enabled: false });

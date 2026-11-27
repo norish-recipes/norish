@@ -59,7 +59,9 @@ export async function mockReader(read: () => MockReader = () => ({})) {
     hiddenItemVisibility,
     HIDDEN_ITEMS,
     partitionHiddenItems,
-    ownerAllows,
+    offeredHiddenItems,
+    measurementChoices,
+    shownMeasurement,
   } = await vi.importActual<typeof import("@norish/shared-react/reader")>(
     "@norish/shared-react/reader"
   );
@@ -72,15 +74,34 @@ export async function mockReader(read: () => MockReader = () => ({})) {
     HIDDEN_ITEMS,
     hiddenItemVisibility,
     partitionHiddenItems,
-    ownerAllows,
+    offeredHiddenItems,
+    measurementChoices,
+    shownMeasurement,
     useHiddenItemVisibility: () => hiddenItemVisibility([]),
     useReader: () => ({
       user: read().user ?? null,
       isLoading: false,
     }),
+    useHousehold: () => {
+      const id = permissions().householdId;
+
+      return {
+        household: id ? { id } : null,
+        currentUserId: read().user?.id,
+        isAdmin: false,
+        error: null,
+        isLoading: false,
+      };
+    },
     useSignOut: () => async () => {},
     useProfileQuery: () => ({ user: read().user ?? null, apiKeys: [] }),
     usePermissions: <T>(select: (p: ReaderPermissions) => T) => select(permissions()),
+    useReaderOwner: () => {
+      const userId = read().user?.id;
+      const householdId = permissions().householdId;
+
+      return userId && householdId ? { userId, householdId } : null;
+    },
     useRecipePermissions: () => ({
       isLoading: false,
       canViewRecipe: () => true,

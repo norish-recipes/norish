@@ -42,7 +42,7 @@ ENV UV_LINK_MODE=copy \
 FROM builder-base AS deps
 
 # Every workspace manifest, wherever it sits: a new workspace needs no line here.
-COPY --parents package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json \
+COPY --parents package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json patches \
   apps/*/package.json packages/*/package.json tooling/*/package.json \
   tooling/tailwind/heroui-theme.css tooling/tailwind/heroui-theme.js \
   tooling/tailwind/postcss-config.js ./

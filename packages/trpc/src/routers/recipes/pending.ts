@@ -2,34 +2,20 @@ import type { Job } from "bullmq";
 
 import type { PendingRecipeDTO } from "@norish/shared/contracts";
 import { getQueues } from "@norish/queue/registry";
-import { getRecipePermissionPolicy } from "@norish/shared-server/config/server-config-loader";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 
 import { authedProcedure } from "../../middleware";
 import { router } from "../../trpc";
+import { canViewImportOf } from "./helpers";
 
 const RUNNING_STATES = ["waiting", "active", "delayed"] as const;
 
-type ImportJob = Job<{ userId: string; householdKey: string }>;
+type ImportJob = Job<{ userId: string }>;
 
 const getPending = authedProcedure.query(async ({ ctx }) => {
   log.debug({ userId: ctx.user.id }, "Fetching pending recipe imports");
 
-  const policy = await getRecipePermissionPolicy();
   const queues = getQueues();
-
-  const visible = (job: ImportJob): boolean => {
-    switch (policy.view) {
-      case "everyone":
-        return true;
-      case "household":
-        return job.data.householdKey === ctx.householdKey;
-      case "owner":
-        return job.data.userId === ctx.user.id;
-    }
-
-    return false;
-  };
 
   // Every import kind has a placeholder card, so a reread must list them all.
   const [urlJobs, imageJobs, pasteJobs] = await Promise.all([
@@ -37,6 +23,15 @@ const getPending = authedProcedure.query(async ({ ctx }) => {
     queues.imageImport.getJobs([...RUNNING_STATES]),
     queues.pasteImport.getJobs([...RUNNING_STATES]),
   ]);
+  // Each import is its account's, in the household that account is in now.
+  const viewable = new Set<string>();
+
+  for (const userId of new Set(
+    [...urlJobs, ...imageJobs, ...pasteJobs].map((j) => j.data.userId)
+  )) {
+    if (await canViewImportOf(ctx, userId)) viewable.add(userId);
+  }
+  const visible = (job: ImportJob): boolean => viewable.has(job.data.userId);
 
   const pendingRecipes: PendingRecipeDTO[] = [
     ...urlJobs.filter(visible).map((job) => ({

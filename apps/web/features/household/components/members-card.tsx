@@ -9,7 +9,11 @@ import { UserGroupIcon } from "@heroicons/react/24/outline";
 import { Chip, Table } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
-import { useHousehold, useHouseholdMutations } from "@norish/shared-react/reader";
+import {
+  allowedMemberActions,
+  useHousehold,
+  useHouseholdMutations,
+} from "@norish/shared-react/reader";
 
 type ChosenMember = { id: string; name: string };
 
@@ -53,6 +57,11 @@ export default function MembersCard() {
                 {household.users.map((user) => {
                   const isSelf = user.id === currentUserId;
                   const isUserAdmin = user.isAdmin === true;
+                  const actions = allowedMemberActions({
+                    viewerIsAdmin: isAdmin,
+                    isSelf,
+                    memberIsAdmin: isUserAdmin,
+                  });
 
                   return (
                     <Table.Row key={user.id} id={user.id}>
@@ -73,7 +82,7 @@ export default function MembersCard() {
                       </Table.Cell>
                       <Table.Cell>
                         <div className="flex gap-2">
-                          {isAdmin && !isSelf && (
+                          {actions.includes("kick") && (
                             <>
                               <ActionButton
                                 action="remove"
@@ -89,7 +98,7 @@ export default function MembersCard() {
                               >
                                 {t("kickButton")}
                               </ActionButton>
-                              {!isUserAdmin && (
+                              {actions.includes("transferAdmin") && (
                                 <ActionButton
                                   action="edit"
                                   icon={ShieldCheckIcon}

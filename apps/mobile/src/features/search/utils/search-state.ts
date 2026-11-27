@@ -44,6 +44,10 @@ export function searchView(input: SearchViewInput): SearchView {
   return input.focused ? "focused" : "rested";
 }
 
+/** The Search Scope shows while the field is focused, and stays while it holds text with the keyboard
+ * down (Results); the rested page, with no focus and no text, has none. */
+export const showsScope = (focused: boolean, text: string) => focused || hasSearchText(text);
+
 export type NoResults = "clear-filters" | "search-all-fields" | "plain";
 
 /** What the no-results page offers: loosen the filters first, then widen the Search Scope, else nothing. */

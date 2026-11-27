@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { ActionButton } from "@/components/shared/action-button";
+import ConfirmModal from "@/components/shared/confirm-modal";
 import { showSafeErrorToast } from "@/lib/ui/safe-error-toast";
 import { ArrowDownTrayIcon, SparklesIcon } from "@heroicons/react/16/solid";
-import { Button, Label, Modal, TextArea, TextField } from "@heroui/react";
+import { Label, TextArea, TextField } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import { usePermissions } from "@norish/shared-react/reader";
@@ -54,50 +56,47 @@ export default function ImportFromPasteModal({ isOpen, onOpenChange }: ImportFro
   };
 
   return (
-    <Modal.Backdrop className="z-[1099]" isOpen={isOpen} onOpenChange={handleOpenChange}>
-      <Modal.Container className="z-[1100]" size="lg">
-        <Modal.Dialog>
-          {() => (
-            <>
-              <Modal.CloseTrigger />
-              <Modal.Header className="flex flex-col gap-1">{t("title")}</Modal.Header>
-              <Modal.Body>
-                <TextField fullWidth value={text} variant="secondary" onChange={setText}>
-                  <Label>{t("label")}</Label>
-                  <TextArea fullWidth placeholder={t("placeholder")} rows={8} />
-                </TextField>
-                <p className="text-muted text-xs">
-                  {t("maxCharacters", {
-                    max: MAX_RECIPE_PASTE_CHARS.toLocaleString(),
-                  })}
-                </p>
-              </Modal.Body>
-              <Modal.Footer>
-                {isAIEnabled && (
-                  <Button
-                    isDisabled={text.trim().length === 0}
-                    isPending={isSubmitting}
-                    variant="secondary"
-                    onPress={handleAIImport}
-                  >
-                    {!isSubmitting && <SparklesIcon className="h-4 w-4" />}
-                    {tActions("aiImport")}
-                  </Button>
-                )}
-                <Button
-                  isDisabled={text.trim().length === 0}
-                  isPending={isSubmitting}
-                  variant="primary"
-                  onPress={handleImport}
-                >
-                  {!isSubmitting && <ArrowDownTrayIcon className="h-4 w-4" />}
-                  {tActions("import")}
-                </Button>
-              </Modal.Footer>
-            </>
+    <ConfirmModal
+      confirm={
+        <>
+          {isAIEnabled && (
+            <ActionButton
+              action="apply"
+              icon={SparklesIcon}
+              isDisabled={text.trim().length === 0}
+              isPending={isSubmitting}
+              showIcon={!isSubmitting}
+              variant="secondary"
+              onPress={handleAIImport}
+            >
+              {tActions("aiImport")}
+            </ActionButton>
           )}
-        </Modal.Dialog>
-      </Modal.Container>
-    </Modal.Backdrop>
+          <ActionButton
+            action="apply"
+            icon={ArrowDownTrayIcon}
+            isDisabled={text.trim().length === 0}
+            isPending={isSubmitting}
+            showIcon={!isSubmitting}
+            onPress={handleImport}
+          >
+            {tActions("import")}
+          </ActionButton>
+        </>
+      }
+      isOpen={isOpen}
+      title={t("title")}
+      onOpenChange={handleOpenChange}
+    >
+      <TextField fullWidth value={text} variant="secondary" onChange={setText}>
+        <Label>{t("label")}</Label>
+        <TextArea fullWidth placeholder={t("placeholder")} rows={8} />
+      </TextField>
+      <p className="text-muted text-xs">
+        {t("maxCharacters", {
+          max: MAX_RECIPE_PASTE_CHARS.toLocaleString(),
+        })}
+      </p>
+    </ConfirmModal>
   );
 }

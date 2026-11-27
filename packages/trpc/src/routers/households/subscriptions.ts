@@ -3,8 +3,7 @@ import { households } from "@norish/shared-server/realtime/households";
 import { realtimeSubscription } from "../../realtime-subscription";
 import { router } from "../../trpc";
 
-// A household-less user's household channel is `household:{userId}` and simply
-// stays quiet; no subscription needs to wait for a household to exist.
+// Every account is in a household, so every subscription listens on its household's channel.
 export const householdSubscriptionsRouter = router({
   onCreated: realtimeSubscription(households, "created"),
   onKicked: realtimeSubscription(households, "userKicked"),

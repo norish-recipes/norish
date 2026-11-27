@@ -68,6 +68,15 @@ export function showRefusal(
   showError(answer.error ?? "Unknown error", context);
 }
 
+/** Tells the reader a write the Outbox queued goes through once the connection is back. */
+export function showQueued(toast: ToastAdapter): void {
+  toast.show({
+    severity: "warning",
+    title: toast.translate("common.queuedOffline.title"),
+    description: toast.translate("common.queuedOffline.description"),
+  });
+}
+
 const PlatformContext = createContext<PlatformAdapter | null>(null);
 
 export function PlatformProvider({

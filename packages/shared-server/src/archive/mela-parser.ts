@@ -6,6 +6,7 @@ import { sortSourceCategories } from "@norish/shared/lib/category-matcher";
 
 import {
   buildRecipeDTO,
+  carriedLists,
   parseHumanDurationToMinutes,
   parseServings,
   saveBase64Image,
@@ -66,11 +67,14 @@ export async function parseMelaRecipeToDTO(
     categories: json.categories,
   });
 
-  return {
-    ...dto,
-    id: recipeId,
-    categories: sortSourceCategories(json.categories ?? [], householdCategories).categories,
-  };
+  return carriedLists(
+    {
+      ...dto,
+      id: recipeId,
+      categories: sortSourceCategories(json.categories ?? [], householdCategories).categories,
+    },
+    json.categories !== undefined
+  );
 }
 
 export async function parseMelaArchive(zip: JSZip): Promise<MelaRecipe[]> {

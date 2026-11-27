@@ -163,23 +163,26 @@ export async function getAdapterUserByEmail(email: string): Promise<AdapterUser 
   };
 }
 
-export async function getUserById(userId: string): Promise<VersionedUser | null> {
-  const user = await db.query.users.findFirst({
-    where: eq(users.id, userId),
-    columns: {
-      id: true,
-      email: true,
-      name: true,
-      image: true,
-      emailVerified: true,
-      version: true,
-    },
-  });
+const profileColumns = {
+  id: true,
+  email: true,
+  name: true,
+  image: true,
+  version: true,
+} as const;
 
-  if (!user) {
-    return null;
-  }
+/** The profile columns as an update returns them: what that update committed. */
+const profileReturning = {
+  id: users.id,
+  email: users.email,
+  name: users.name,
+  image: users.image,
+  version: users.version,
+};
 
+function readProfile(
+  user: Pick<typeof users.$inferSelect, keyof typeof profileColumns>
+): VersionedUser {
   return {
     id: user.id,
     email: decrypt(user.email),
@@ -187,6 +190,24 @@ export async function getUserById(userId: string): Promise<VersionedUser | null>
     image: user.image ? decrypt(user.image) : null,
     version: user.version,
   };
+}
+
+export async function getUserById(userId: string): Promise<VersionedUser | null> {
+  const user = await db.query.users.findFirst({
+    where: eq(users.id, userId),
+    columns: profileColumns,
+  });
+
+  return user ? readProfile(user) : null;
+}
+
+export async function getUserProfile(userId: string) {
+  const user = await db.query.users.findFirst({
+    where: eq(users.id, userId),
+    columns: { ...profileColumns, preferences: true },
+  });
+
+  return user ? { ...readProfile(user), preferences: parsePreferences(user.preferences) } : null;
 }
 
 /**
@@ -263,7 +284,7 @@ export async function updateUserAvatar(
   userId: string,
   protectedPath: string,
   version?: number
-): Promise<MutationOutcome<void>> {
+): Promise<MutationOutcome<VersionedUser | null>> {
   const encryptedImage = encrypt(protectedPath);
   const whereConditions = [eq(users.id, userId)];
 
@@ -271,17 +292,17 @@ export async function updateUserAvatar(
     whereConditions.push(eq(users.version, version));
   }
 
-  const updated = await db
+  const [updated] = await db
     .update(users)
     .set({ image: encryptedImage, version: sql`${users.version} + 1` })
     .where(and(...whereConditions))
-    .returning({ id: users.id });
+    .returning(profileReturning);
 
-  if (updated.length === 0 && version) {
+  if (!updated && version) {
     return staleOutcome();
   }
 
-  return appliedOutcome(undefined);
+  return appliedOutcome(updated ? readProfile(updated) : null);
 }
 
 export async function getUserAvatarPath(userId: string): Promise<string | null> {
@@ -318,24 +339,24 @@ export async function getAllUserAvatars(): Promise<
 export async function clearUserAvatar(
   userId: string,
   version?: number
-): Promise<MutationOutcome<void>> {
+): Promise<MutationOutcome<VersionedUser | null>> {
   const whereConditions = [eq(users.id, userId)];
 
   if (version) {
     whereConditions.push(eq(users.version, version));
   }
 
-  const updated = await db
+  const [updated] = await db
     .update(users)
     .set({ image: null, version: sql`${users.version} + 1` })
     .where(and(...whereConditions))
-    .returning({ id: users.id });
+    .returning(profileReturning);
 
-  if (updated.length === 0 && version) {
+  if (!updated && version) {
     return staleOutcome();
   }
 
-  return appliedOutcome(undefined);
+  return appliedOutcome(updated ? readProfile(updated) : null);
 }
 
 /** The user's Sign-in Methods: one account row per provider, password included. */
@@ -385,7 +406,7 @@ export async function updateUserName(
   userId: string,
   name: string,
   version?: number
-): Promise<MutationOutcome<void>> {
+): Promise<MutationOutcome<VersionedUser | null>> {
   const encryptedName = encrypt(name);
   const whereConditions = [eq(users.id, userId)];
 
@@ -393,21 +414,17 @@ export async function updateUserName(
     whereConditions.push(eq(users.version, version));
   }
 
-  const updated = await db
+  const [updated] = await db
     .update(users)
     .set({ name: encryptedName, version: sql`${users.version} + 1` })
     .where(and(...whereConditions))
-    .returning({ id: users.id });
+    .returning(profileReturning);
 
-  if (updated.length === 0 && version) {
+  if (!updated && version) {
     return staleOutcome();
   }
 
-  return appliedOutcome(undefined);
-}
-
-export async function deleteUser(userId: string): Promise<void> {
-  await db.delete(users).where(eq(users.id, userId));
+  return appliedOutcome(updated ? readProfile(updated) : null);
 }
 
 export async function getAllUserIds(): Promise<string[]> {
@@ -461,7 +478,7 @@ export async function getUserAuthorInfo(
 
 /**
  * List every user on the server for the admin user management page.
- * Each user is in at most one household, so the left join can't fan out.
+ * Each user is in exactly one household, so the join neither fans out nor drops anyone.
  */
 export async function listUsersForAdmin(): Promise<AdminUserRowDTO[]> {
   const rows = await db
@@ -477,8 +494,8 @@ export async function listUsersForAdmin(): Promise<AdminUserRowDTO[]> {
       householdName: households.name,
     })
     .from(users)
-    .leftJoin(householdUsers, eq(householdUsers.userId, users.id))
-    .leftJoin(households, eq(households.id, householdUsers.householdId))
+    .innerJoin(householdUsers, eq(householdUsers.userId, users.id))
+    .innerJoin(households, eq(households.id, householdUsers.householdId))
     .orderBy(desc(users.isServerOwner), desc(users.isServerAdmin), users.createdAt);
 
   return rows.map((row) => ({
@@ -489,10 +506,7 @@ export async function listUsersForAdmin(): Promise<AdminUserRowDTO[]> {
     isServerOwner: row.isServerOwner,
     isServerAdmin: row.isServerAdmin,
     createdAt: row.createdAt.getTime(),
-    household:
-      row.householdId && row.householdName
-        ? { id: row.householdId, name: row.householdName }
-        : null,
+    household: { id: row.householdId, name: row.householdName },
   }));
 }
 
@@ -557,6 +571,12 @@ export async function countUsers(): Promise<number> {
   return result.length;
 }
 
+function parsePreferences(preferences: unknown): UserPreferencesDto {
+  const parsed = UserPreferencesSchema.safeParse(preferences ?? {});
+
+  return parsed.success ? parsed.data : {};
+}
+
 /**
  * The user's preferences document, each choice parsed on its own so one this
  * version does not know reads as absent. If the column is missing
@@ -568,9 +588,8 @@ export async function getUserPreferences(userId: string): Promise<UserPreference
       where: eq(users.id, userId),
       columns: { preferences: true },
     });
-    const parsed = UserPreferencesSchema.safeParse(user?.preferences ?? {});
 
-    return parsed.success ? parsed.data : {};
+    return parsePreferences(user?.preferences);
   } catch (error) {
     // Migration/column may be missing: warn and return empty preferences
     try {
@@ -626,7 +645,7 @@ export async function updateUserPreferences(
   userId: string,
   updates: Record<string, unknown>,
   version?: number
-): Promise<MutationOutcome<void>> {
+): Promise<MutationOutcome<number>> {
   const updatesJson = JSON.stringify(updates ?? {});
   const whereConditions = [eq(users.id, userId)];
 
@@ -635,20 +654,16 @@ export async function updateUserPreferences(
   }
 
   try {
-    const updated = await db
+    const [updated] = await db
       .update(users)
       .set({
         preferences: sql`coalesce(${users.preferences}, '{}'::jsonb) || ${updatesJson}::jsonb`,
         version: sql`${users.version} + 1`,
       })
       .where(and(...whereConditions))
-      .returning({ id: users.id });
+      .returning({ version: users.version });
 
-    if (updated.length === 0 && version) {
-      return staleOutcome();
-    }
-
-    return appliedOutcome(undefined);
+    return updated ? appliedOutcome(updated.version) : staleOutcome();
   } catch (error) {
     // Migration/column may be missing: warn and rethrow
     try {

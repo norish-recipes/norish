@@ -1,6 +1,7 @@
 import { date, index, integer, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 import { users } from "./auth";
+import { households } from "./households";
 import { recipes } from "./recipes";
 import { versionColumn } from "./shared";
 
@@ -12,9 +13,11 @@ export const plannedItems = pgTable(
   "planned_items",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    userId: text("user_id")
+    householdId: uuid("household_id")
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+      .references(() => households.id, { onDelete: "cascade" }),
+    /** Who added it; null once their account is deleted (ADR-0041). */
+    userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
     date: date("date").notNull(),
     slot: slotTypeEnum("slot").notNull(),
     sortOrder: integer("sort_order").notNull().default(0),
@@ -31,7 +34,7 @@ export const plannedItems = pgTable(
     ...versionColumn,
   },
   (t) => [
-    index("idx_planned_items_user_date").on(t.userId, t.date),
+    index("idx_planned_items_household_date").on(t.householdId, t.date),
     index("idx_planned_items_user").on(t.userId),
     index("idx_planned_items_date_slot_order").on(t.date, t.slot, t.sortOrder),
     index("idx_planned_items_recipe").on(t.recipeId),

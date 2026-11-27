@@ -26,6 +26,7 @@ import { observable } from "@trpc/server/observable";
 import { createClientLogger } from "@norish/shared/lib/logger";
 import { createClientId } from "@norish/shared/lib/operation-helpers";
 import {
+  HOUSEHOLD_HEADER,
   isBackendUnreachableError,
   markOutboxAdmissionFailed,
 } from "@norish/shared/lib/trpc-errors";
@@ -34,10 +35,11 @@ import type { LockManagerLike } from "./leader";
 import type { OutboxStore } from "./outbox-store";
 import type { OutboxEntry } from "./outbox-types";
 import { isStaleResult } from "./error-classification";
+import { householdAtStart } from "./household";
 import { encodedFormDataId, encodeOutboxInput, isEncodedFormData } from "./input-codec";
 import { runIfLeader } from "./leader";
 import { isOutboxReplayContext } from "./replay-client";
-import { isUncaptured } from "./uncaptured";
+import { isAccountScoped, isUncaptured } from "./uncaptured";
 
 const log = createClientLogger("OutboxLink");
 
@@ -66,6 +68,8 @@ interface OutboxLinkDependencies {
   store: OutboxStore;
   /** The applied cache owner; admission fails while there is none. */
   owner: () => string | null;
+  /** The household the client holds the account to be in: a write names the one it started in. */
+  household: () => string | null;
   replayHeaderValue: string;
   /** Procedures that save a whole entity at the version it was read at; they create nothing. */
   wholeEdits?: ReadonlySet<string>;
@@ -116,6 +120,7 @@ async function captureToOutbox(
   return store.enqueue({
     id: createClientId(),
     ownerId: captureOwner(owner),
+    householdId: householdOf(context),
     path,
     input: encodedInput,
     entityId: wholeEdits?.has(path) ? null : entityIdOf(encodedInput),
@@ -123,16 +128,50 @@ async function captureToOutbox(
   });
 }
 
+/** The household a write names; an entry keeps it as `householdId`, not among its headers. */
+function householdOf(context: unknown): string | null {
+  const headers = (context as { headers?: Record<string, unknown> } | undefined)?.headers;
+  const named = headers?.[HOUSEHOLD_HEADER];
+
+  return typeof named === "string" ? named : null;
+}
+
 function operationOf(context: unknown) {
   const ctx = (context ?? {}) as { operationId?: unknown; headers?: HTTPHeaders };
+  const { [HOUSEHOLD_HEADER]: _named, ...headers } = normalizeHeaders(ctx.headers);
 
   return {
     operationId: typeof ctx.operationId === "string" ? ctx.operationId : null,
-    headers: normalizeHeaders(ctx.headers),
+    headers,
+  };
+}
+
+/** A live write names the household it started in; a replay names its entry's, set by Replay. */
+function withHousehold(deps: OutboxLinkDependencies, op: Operation): Operation {
+  if (isAccountScoped(op.path) || isOutboxReplayContext(op.context, deps.replayHeaderValue)) {
+    return op;
+  }
+  const household = householdAtStart(op.input, deps.household);
+
+  if (!household) return op;
+  const headers = (op.context as { headers?: Record<string, string> }).headers;
+
+  return {
+    ...op,
+    context: { ...op.context, headers: { ...headers, [HOUSEHOLD_HEADER]: household } },
   };
 }
 
 const idOf = (input: unknown) => (input as { id?: unknown } | null)?.id;
+
+type WholeEdit = { version?: unknown; data?: Record<string, unknown> };
+
+/** The later edit on the earlier one's version: what it leaves out keeps the earlier's value. */
+function mergedEdit(earlier: unknown, later: unknown): WholeEdit {
+  const { version, data } = earlier as WholeEdit;
+
+  return { ...(later as WholeEdit), version, data: { ...data, ...(later as WholeEdit).data } };
+}
 
 /** Put a whole edit in place of its recipe's unsent pending entry, on that entry's version. */
 async function replaceUnsent(
@@ -142,7 +181,12 @@ async function replaceUnsent(
   const ownerId = deps.owner();
   const pending = ownerId ? await deps.store.forOwner(ownerId, "pending") : [];
   const last = pending
-    .filter((entry) => entry.path === op.path && idOf(entry.input) === idOf(op.input))
+    .filter(
+      (entry) =>
+        entry.path === op.path &&
+        idOf(entry.input) === idOf(op.input) &&
+        entry.householdId === householdOf(op.context)
+    )
     .at(-1);
 
   if (!last) return "none";
@@ -154,10 +198,7 @@ async function replaceUnsent(
       (!stored.sending || (otherMarksStale && stored.sending !== own))
         ? {
             ...stored,
-            input: {
-              ...(encodeOutboxInput(op.input) as object),
-              version: (stored.input as { version?: unknown }).version,
-            },
+            input: mergedEdit(stored.input, encodeOutboxInput(op.input)),
             ...operationOf(op.context),
           }
         : undefined
@@ -238,10 +279,11 @@ export function createOutboxLink<TRouter extends AnyTRPCRouter>(
         };
       });
 
-    return ({ op, next }) => {
-      if (op.type !== "mutation" || isUncaptured(op.path)) {
-        return next(op);
-      }
+    return ({ op: sent, next }) => {
+      if (sent.type !== "mutation") return next(sent);
+      const op = withHousehold(deps, sent);
+
+      if (isUncaptured(op.path)) return next(op);
 
       if (
         !deps.wholeEdits?.has(op.path) ||

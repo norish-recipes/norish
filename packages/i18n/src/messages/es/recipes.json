@@ -41,12 +41,8 @@
   },
   "empty": {
     "title": "Tu biblioteca te espera",
-    "description": "Pega la URL de una receta en el campo de búsqueda de arriba y verás la magia.",
     "noResults": "No se han encontrado recetas",
-    "noResultsHint": "Prueba ajustando o eliminando tus filtros.",
-    "noCookbooks": "Aún no hay libros de cocina",
-    "noCookbooksHint": "Un libro de cocina es un conjunto de recetas con título. Crea el primero para ordenar tu biblioteca.",
-    "descriptionMobile": "Añade tu primera receta desde un enlace, texto o fotos."
+    "noCookbooks": "Aún no hay libros de cocina"
   },
   "card": {
     "noImage": "No hay imagen disponible",
@@ -67,6 +63,7 @@
     "addToGroceries": "Añadir a la lista de la compra",
     "ratingPrompt": "¿Qué te ha parecido esta receta?",
     "notFound": "Receta no encontrada",
+    "offline": "Esta receta necesita conexión",
     "notFoundMessage": "Esta receta no existe o no tienes permiso para verla.",
     "prep": "preparación",
     "total": "total",
@@ -160,6 +157,7 @@
     "expiresAfter": "Expira después de",
     "expiresOn": "Expira el {date}",
     "expiredOn": "Expiró el {date}",
+    "revokedOn": "Revocado el {date}",
     "lastOpenedOn": "Último acceso {date}",
     "neverExpires": "No expira nunca",
     "linkCreated": "Creado el {date}"
@@ -203,7 +201,7 @@
     "notesPlaceholder": "Añade notas de preparación, ajustes o consejos para servir esta receta...",
     "ingredientsHelp": "Escribe ingredientes como \"400 g harina\" — analizaremos automáticamente las cantidades y unidades.",
     "instructionsHelp": "Escribe instrucciones claras paso a paso. Pulsa Intro para pasar al siguiente paso.",
-    "tagsHelp": "Escribe etiquetas y haz clic en las sugerencias para añadirlas. Las etiquetas de la receta están rellenas; las nuevas tienen un borde discontinuo.",
+    "tagsHelp": "Elige una etiqueta o crea una nueva.",
     "tagsAndCategories": "Etiquetas y categorías",
     "categoriesHelp": "Selecciona categorías de comida para esta receta.",
     "addCategory": "Añadir categoría",
@@ -224,7 +222,7 @@
     "originRegion": "Región",
     "originRegionPlaceholder": "p. ej. Sicilia",
     "cuisines": "Cocinas",
-    "cuisinesHelp": "Elige de la lista de tu instalación. Varias tienen sentido en un plato fusión.",
+    "cuisinesHelp": "Elige de la lista o crea la tuya. Varias tienen sentido para un plato de fusión.",
     "provenanceNote": "Nota",
     "provenanceNotePlaceholder": "Unas frases sobre de dónde viene este plato…",
     "servings": "Raciones",
@@ -441,7 +439,6 @@
     "singular": "Libro de cocina",
     "notFound": "Libro de cocina no encontrado",
     "notFoundHint": "Puede que se haya eliminado o que no sea visible para ti.",
-    "emptyHint": "Añade recetas desde el menú de acciones rápidas de cualquier receta.",
     "panelTitle": "Añadir a un libro de cocina",
     "newWithRecipe": "Nuevo libro con esta receta",
     "noneEditable": "Todavía no hay libros de cocina que puedas editar.",
@@ -545,7 +542,7 @@
     "tagsAndCategories": "Etiquetas y categorías",
     "categories": "Categorías",
     "tags": "Etiquetas",
-    "tagsHint": "Elige una sugerencia o escribe una etiqueta nueva; las etiquetas nuevas tienen un borde discontinuo.",
+    "tagsHint": "Elige una etiqueta de la lista o crea una nueva.",
     "addTag": "Añadir una etiqueta",
     "removeNamed": "Quitar {name}",
     "servingsAndTime": "Raciones y tiempo",
@@ -561,6 +558,13 @@
     "discardMessage": "Tienes cambios sin guardar.",
     "keepEditing": "Seguir editando",
     "discard": "Descartar"
+  },
+  "picker": {
+    "create": "Crear \"{name}\"",
+    "createOffline": "Podrás crear \"{name}\" cuando estés en línea.",
+    "tooLong": "Los nombres pueden tener como máximo {max} caracteres.",
+    "createFailed": "No se pudo crear \"{name}\". Inténtalo de nuevo.",
+    "loadFailed": "No se pudo cargar la lista."
   },
   "search": {
     "sortBestMatch": "Mejor coincidencia",

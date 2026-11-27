@@ -9,19 +9,20 @@
 
 import type { PlannedItemWithRecipe } from "@norish/db/repositories/planned-items";
 import { getCaldavConfigDecrypted } from "@norish/db/repositories/caldav-config";
-import { getPendingOrFailedSyncStatuses } from "@norish/db/repositories/caldav-sync-status";
+import {
+  deleteCaldavSyncStatusByItemId,
+  getPendingOrFailedSyncStatuses,
+  listSyncStatusesLeftBehind,
+} from "@norish/db/repositories/caldav-sync-status";
 import {
   getPlannedItemWithRecipeById,
-  listPlannedItemsByUserAndDateRange,
+  listPlannedItemsAddedBy,
 } from "@norish/db/repositories/planned-items";
 import { addCaldavSyncJob } from "@norish/queue/caldav-sync/producer";
 import { getQueues } from "@norish/queue/registry";
 import { createLogger } from "@norish/shared-server/logger";
 
 const log = createLogger("caldav-sync");
-
-/** Planned dates are plain YYYY-MM-DD and nothing caps how far ahead a user plans. */
-const FAR_FUTURE = "9999-12-31";
 
 /**
  * Today in the server's own timezone, which is the one the operator set and
@@ -88,7 +89,10 @@ async function queueItemDelete(
  *   not be queued at all. Whether each one reaches the server is reported
  *   per item over the caldav subscription.
  */
-export async function syncAllFutureItems(userId: string): Promise<{
+export async function syncAllFutureItems(
+  userId: string,
+  householdId: string
+): Promise<{
   totalSynced: number;
   totalFailed: number;
 }> {
@@ -100,7 +104,8 @@ export async function syncAllFutureItems(userId: string): Promise<{
     return { totalSynced: 0, totalFailed: 0 };
   }
 
-  const items = await listPlannedItemsByUserAndDateRange([userId], todayKey(), FAR_FUTURE);
+  // A member's calendar carries the entries they added to their household's plan.
+  const items = await listPlannedItemsAddedBy(householdId, userId, todayKey());
 
   let totalSynced = 0;
   let totalFailed = 0;
@@ -127,7 +132,10 @@ export async function syncAllFutureItems(userId: string): Promise<{
  * the credentials were wrong, or the job that would have retried it was
  * dropped. An item deleted in the meantime is chased off the calendar instead.
  */
-export async function retryFailedSyncs(userId: string): Promise<{
+export async function retryFailedSyncs(
+  userId: string,
+  householdId: string
+): Promise<{
   totalRetried: number;
   totalFailed: number;
 }> {
@@ -146,7 +154,8 @@ export async function retryFailedSyncs(userId: string): Promise<{
 
   for (const status of statuses) {
     try {
-      const item = await getPlannedItemWithRecipeById(status.itemId);
+      // An entry gone, or left behind in a household the member has left, comes off their calendar.
+      const item = await getPlannedItemWithRecipeById(status.itemId, householdId);
 
       if (item) {
         await queueItemSync(userId, config.serverUrl, item);
@@ -164,4 +173,22 @@ export async function retryFailedSyncs(userId: string): Promise<{
   log.info({ userId, totalRetried, totalFailed }, "Queued CalDAV sync retries");
 
   return { totalRetried, totalFailed };
+}
+
+/**
+ * Take a leaver's synced entries of the household they left off their calendar: each delete drops
+ * the status too (the sync worker). Runs after the move commits.
+ */
+export async function chaseLeftBehindEvents(userId: string): Promise<void> {
+  const statuses = await listSyncStatusesLeftBehind(userId);
+
+  if (statuses.length === 0) return;
+  const config = await getCaldavConfigDecrypted(userId);
+
+  for (const { itemId } of statuses) {
+    // With no calendar to reach, only the status goes.
+    if (config?.enabled) await queueItemDelete(userId, config.serverUrl, itemId);
+    else await deleteCaldavSyncStatusByItemId(userId, itemId);
+  }
+  log.info({ userId, count: statuses.length }, "Removed a left household's plan from CalDAV");
 }

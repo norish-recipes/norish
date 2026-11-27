@@ -23,25 +23,26 @@ import {
   ingredients,
   pantryIngredients,
   recipeRatings,
-  recipeTags,
   steps as stepsTable,
-  tags as tagsTable,
 } from "@norish/db/schema";
 
 import { resolveIngredients } from "../../../../../shared-server/src/ingredients/resolver";
 import {
+  attachTestEntry,
   createTestRecipe,
   createTestRecipeStep,
   createTestUser,
   getTestDb,
   insertTestRecipeLine,
+  joinTestHousehold,
+  testHouseholdOf,
 } from "../../../helpers/db-test-helpers";
 import { RepositoryTestBase } from "../../../helpers/repository-test-base";
 
-type PermissionLevel = "everyone" | "household" | "owner";
+type PermissionLevel = "everyone" | "household";
 
-function viewer(userId: string, householdUserIds: string[] | null = null): RecipeListContext {
-  return { userId, householdUserIds, isServerAdmin: false };
+function viewer(userId: string): RecipeListContext {
+  return { userId, householdId: testHouseholdOf(userId) };
 }
 
 async function setPolicy(level: PermissionLevel) {
@@ -401,12 +402,16 @@ describe("the Library union", () => {
       await deleteRecipeById(baseRecipeId);
 
       const names = ["onion", "salt"];
-      const resolved = await resolveIngredients(names, { userId: ownerId });
+      const resolved = await resolveIngredients(names, {
+        userId: ownerId,
+        householdId: testHouseholdOf(ownerId),
+      });
 
       await getTestDb()
         .insert(pantryIngredients)
         .values([
           {
+            householdId: testHouseholdOf(ownerId),
             userId: ownerId,
             ingredientId: resolved[0]!.ingredientId,
             ingredientAliasId: resolved[0]!.aliasId,
@@ -489,8 +494,13 @@ describe("the Library union", () => {
   describe("the pantry filter", () => {
     it("keeps the recipes the household's Pantry covers a line of, most complete first", async () => {
       const housemate = await createTestUser({ name: "Housemate" });
+
+      await joinTestHousehold(housemate.id, ownerId);
       const names = ["onion", "red onion", "olive oil", "butter", "salt", "garlic", "black garlic"];
-      const resolved = await resolveIngredients(names, { userId: ownerId });
+      const resolved = await resolveIngredients(names, {
+        userId: ownerId,
+        householdId: testHouseholdOf(ownerId),
+      });
       const food = Object.fromEntries(names.map((name, i) => [name, resolved[i]!]));
       const db = getTestDb();
 
@@ -507,6 +517,7 @@ describe("the Library union", () => {
       // A housemate keeps them: the Pantry is the household's.
       await db.insert(pantryIngredients).values(
         ["red onion", "olive oil", "garlic"].map((name) => ({
+          householdId: testHouseholdOf(ownerId),
           userId: housemate.id,
           ingredientId: food[name]!.ingredientId,
           ingredientAliasId: food[name]!.aliasId,
@@ -534,7 +545,7 @@ describe("the Library union", () => {
       await recipe("Wrong kind", [[["black garlic"]]]);
       await recipe("Names no food", []);
 
-      const household = viewer(ownerId, [ownerId, housemate.id]);
+      const household = viewer(ownerId);
       const result = await listLibrary(household, { ...base, pantryOnly: true });
       const coverage = result.items.map((item) =>
         item.kind === "recipe" ? [item.recipe.name, item.recipe.pantryCoverage] : []
@@ -576,7 +587,10 @@ describe("the Library union", () => {
     async function seedFoods() {
       await deleteRecipeById(baseRecipeId);
 
-      const resolved = await resolveIngredients([...FOODS], { userId: ownerId });
+      const resolved = await resolveIngredients([...FOODS], {
+        userId: ownerId,
+        householdId: testHouseholdOf(ownerId),
+      });
       const food = Object.fromEntries(FOODS.map((name, i) => [name, resolved[i]!]));
       const db = getTestDb();
 
@@ -606,11 +620,7 @@ describe("the Library union", () => {
     }
 
     async function tag(recipeIds: string[], name: string) {
-      const [row] = await getTestDb().insert(tagsTable).values({ name }).returning();
-
-      await getTestDb()
-        .insert(recipeTags)
-        .values(recipeIds.map((recipeId) => ({ recipeId, tagId: row!.id, order: 0 })));
+      await attachTestEntry("tag", recipeIds, name);
     }
 
     const named = async (params: Partial<LibraryListParams>) =>
@@ -771,7 +781,7 @@ describe("the Library union", () => {
 
   describe("the view policy", () => {
     it("filters both kinds", async () => {
-      await setPolicy("owner");
+      await setPolicy("household");
       await createCookbook({ userId: ownerId, title: "Theirs" });
       await createTestRecipe(ownerId, { name: "Also theirs" });
 
@@ -785,23 +795,6 @@ describe("the Library union", () => {
       const seenByEveryone = await listLibrary(viewer(strangerId), base);
 
       expect(seenByEveryone.total).toBeGreaterThanOrEqual(2);
-    });
-
-    it("shows an Orphaned cookbook under every policy", async () => {
-      const cookbook = await createCookbook({ userId: ownerId, title: "Left behind" });
-
-      await getTestDb()
-        .update(cookbooksTable)
-        .set({ userId: null })
-        .where(eq(cookbooksTable.id, cookbook.id));
-
-      for (const level of ["everyone", "household", "owner"] as const) {
-        await setPolicy(level);
-
-        const result = await listLibrary(viewer(strangerId), { ...base, type: "cookbooks" });
-
-        expect(titles(result.items), level).toContain("Left behind");
-      }
     });
   });
 
@@ -820,15 +813,7 @@ describe("the Library union", () => {
       });
 
       if (hits.includes("tags")) {
-        const [tag] = await getTestDb()
-          .insert(tagsTable)
-          .values({ name: "basil" })
-          .onConflictDoNothing()
-          .returning();
-
-        await getTestDb()
-          .insert(recipeTags)
-          .values({ recipeId: recipe.id, tagId: tag!.id, order: 0 });
+        await attachTestEntry("tag", [recipe.id], "basil");
       }
 
       if (hits.includes("ingredients")) {
@@ -1121,18 +1106,7 @@ describe("the Library union", () => {
 
       const recipe = await createTestRecipe(ownerId, { name: "Green sauce" });
 
-      for (const [order, name] of [
-        [0, "chicken"],
-        [1, "rice"],
-      ] as const) {
-        const [tag] = await getTestDb()
-          .insert(tagsTable)
-          .values({ name })
-          .onConflictDoNothing()
-          .returning();
-
-        await getTestDb().insert(recipeTags).values({ recipeId: recipe.id, tagId: tag!.id, order });
-      }
+      for (const name of ["chicken", "rice"]) await attachTestEntry("tag", [recipe.id], name);
 
       const result = await listLibrary(viewer(ownerId), {
         ...base,

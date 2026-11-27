@@ -96,7 +96,7 @@ describe("the recipe page's reads", () => {
     sendConvert.mockReturnValue(new Promise(() => {}));
     const { result } = renderOnPage(() => useRecipeConversion());
 
-    act(() => result.current.startConversion("us"));
+    act(() => result.current.startConversion({ target: "us", withAI: false }));
 
     expect(result.current.convertingTo).toBe("us");
     await vi.waitFor(() =>
@@ -114,7 +114,7 @@ describe("the recipe page's reads", () => {
       conversion: useRecipePageStore((state) => state.conversion),
     }));
 
-    act(() => result.current.startConversion("us"));
+    act(() => result.current.startConversion({ target: "us", withAI: false }));
     act(() => queryClient.setQueryData(RECIPE_KEY, { ...recipe, systemUsed: "us", version: 2 }));
 
     await vi.waitFor(() => expect(result.current.conversion).toBeNull());
@@ -128,7 +128,7 @@ describe("the recipe page's reads", () => {
       version: usePageRecipe()?.version,
     }));
 
-    act(() => result.current.startConversion("us"));
+    act(() => result.current.startConversion({ target: "us", withAI: false }));
     act(() => queryClient.setQueryData(RECIPE_KEY, { ...recipe, systemUsed: "us", version: 2 }));
     await vi.waitFor(() => expect(result.current.convertingTo).toBeNull());
 
@@ -145,7 +145,7 @@ describe("the recipe page's reads", () => {
     sendConvert.mockReturnValue(new Promise(() => {}));
     const { result, queryClient } = renderOnPage(() => useRecipeConversion());
 
-    act(() => result.current.startConversion("metric", true));
+    act(() => result.current.startConversion({ target: "metric", withAI: true }));
 
     expect(result.current.convertingTo).toBe("metric");
 
@@ -164,7 +164,7 @@ describe("the recipe page's reads", () => {
     }));
 
     act(() => result.current.setServings(6));
-    act(() => result.current.startConversion("us"));
+    act(() => result.current.startConversion({ target: "us", withAI: false }));
 
     await vi.waitFor(() => expect(result.current.convertingTo).toBeNull());
     expect(result.current.servings).toBe(2);

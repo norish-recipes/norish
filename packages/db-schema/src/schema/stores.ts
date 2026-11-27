@@ -1,6 +1,7 @@
 import { index, integer, pgTable, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
 
 import { users } from "./auth";
+import { households } from "./households";
 import { ingredients } from "./ingredients";
 import { versionColumn } from "./shared";
 
@@ -8,9 +9,11 @@ export const stores = pgTable(
   "stores",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    userId: text("user_id")
+    householdId: uuid("household_id")
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+      .references(() => households.id, { onDelete: "cascade" }),
+    /** Who added it; null once their account is deleted (ADR-0041). */
+    userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
     name: text("name").notNull(),
     color: text("color").notNull().default("primary"),
     /** The shop's own website, when the Store stands for a real one. */
@@ -22,20 +25,26 @@ export const stores = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     ...versionColumn,
   },
-  (t) => [index("idx_stores_user_id").on(t.userId), index("idx_stores_sort_order").on(t.sortOrder)]
+  (t) => [
+    index("idx_stores_household_id").on(t.householdId),
+    index("idx_stores_user_id").on(t.userId),
+    index("idx_stores_sort_order").on(t.sortOrder),
+  ]
 );
 
 /**
- * A store preference: the Store a member sends an Ingredient to, per member
- * and per Ingredient (ADR-0037), so a preference for "milk" holds for "melk".
+ * A store preference: the Store a household sends an Ingredient to, one per
+ * household and Ingredient (ADR-0037), so a preference for "milk" holds for "melk".
  */
 export const ingredientStorePreferences = pgTable(
   "ingredient_store_preferences",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    userId: text("user_id")
+    householdId: uuid("household_id")
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+      .references(() => households.id, { onDelete: "cascade" }),
+    /** Who added it; null once their account is deleted (ADR-0041). */
+    userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
     ingredientId: uuid("ingredient_id")
       .notNull()
       .references(() => ingredients.id, { onDelete: "cascade" }),
@@ -49,6 +58,6 @@ export const ingredientStorePreferences = pgTable(
   (t) => [
     index("idx_ingredient_store_prefs_user_id").on(t.userId),
     index("idx_ingredient_store_prefs_store_id").on(t.storeId),
-    unique("uq_ingredient_store_prefs_user_ingredient").on(t.userId, t.ingredientId),
+    unique("uq_ingredient_store_prefs_household_ingredient").on(t.householdId, t.ingredientId),
   ]
 );

@@ -258,9 +258,12 @@ const cached = (): PlannedItemFromQuery[] =>
 describe("plan writes made offline, replayed", () => {
   const store = createOutboxStore(createMemoryStorage().outbox);
   // Unreachable: the real link admits the write to the Outbox, then fails it as Queued.
-  const link = createOutboxLink({ store, owner: () => OWNER, replayHeaderValue: "test-outbox" })(
-    {} as never
-  );
+  const link = createOutboxLink({
+    store,
+    owner: () => OWNER,
+    household: () => "h1",
+    replayHeaderValue: "test-outbox",
+  })({} as never);
 
   beforeEach(async () => {
     for (const entry of await store.loadAll()) await store.remove(entry.seq);
@@ -305,6 +308,7 @@ describe("plan writes made offline, replayed", () => {
     runReplayPass({
       store,
       ownerId: OWNER,
+      householdId: "h1",
       submit: (entry: OutboxEntry) => replayOutboxEntry(client, entry, "test-outbox"),
     });
 

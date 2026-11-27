@@ -1,30 +1,30 @@
 import React, { useState } from "react";
 import { Share, Text, View } from "react-native";
 import { Card, CardRow } from "@/components/card";
-import { NativeMenu } from "@/components/native-menu";
+import { ChoiceMenu } from "@/components/choice-menu";
+import { Ionicons } from "@/components/icon";
 import { Pill } from "@/components/pill";
 import { PillButton } from "@/components/pill-button";
 import { SectionLabel } from "@/components/section-label";
 import { SheetScrollView } from "@/components/sheet";
 import { SliceHairline } from "@/components/slice-row";
+import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { useTokenColor } from "@/hooks/use-token-color";
 import { useServerUrl } from "@/lib/network/server-url";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import * as Clipboard from "expo-clipboard";
+import { shareSubtitle } from "@/lib/share-subtitle";
 import { useLocalSearchParams } from "expo-router";
 import { Skeleton } from "heroui-native";
 import { useIntl } from "react-intl";
 
 import type { CreateRecipeShareInputDto } from "@norish/shared/contracts";
-import { usePlatform } from "@norish/shared-react/platform";
 import {
+  shareLinkActions,
   useLoadedPageRecipe,
   useRecipeShareMutations,
   useRecipeSharesQuery,
 } from "@norish/shared-react/recipes";
 
 import { RecipeSheetGate } from "../components/recipe-sheet-gate";
-import { shareSubtitle } from "../utils/share-row";
 
 type Expiry = NonNullable<CreateRecipeShareInputDto["expiresIn"]>;
 
@@ -53,16 +53,13 @@ function ShareRow({
   first: boolean;
 }) {
   const intl = useIntl();
-  const { toast } = usePlatform();
+  const copyToClipboard = useCopyToClipboard();
   const recipe = useLoadedPageRecipe();
   const { revokeShare, reactivateShare, deleteShare } = useRecipeShareMutations(recipe.id);
   const t = useShareT();
   const date = (value: Date) => intl.formatDate(value, { month: "short", day: "numeric" });
-  const copy = async () => {
-    if (!url) return;
-    await Clipboard.setStringAsync(url);
-    toast.show({ severity: "success", title: t("copySuccess") });
-  };
+  const copy = () =>
+    url ? copyToClipboard(url, { copied: "recipes.sharePanel.copySuccess" }) : undefined;
 
   return (
     <View className="gap-2.5 px-4 py-3" testID={`recipe-share-${share.id}`}>
@@ -105,7 +102,7 @@ function ShareRow({
             onPress={() => revokeShare(share.id, share.version)}
           />
         ) : null}
-        {share.status === "revoked" ? (
+        {shareLinkActions(share).includes("reactivate") ? (
           <PillButton
             icon="refresh"
             label={t("reactivateModal.confirm")}
@@ -144,20 +141,18 @@ function ShareBody({
   return (
     <SheetScrollView contentClassName="gap-4">
       <Card>
-        <NativeMenu
-          items={EXPIRIES.map((expiry) => ({
-            key: expiry,
-            label: t(`expiryOptions.${expiry}`),
-            systemImage: expiry === expiresIn ? "checkmark" : undefined,
-            onPress: () => setExpiresIn(expiry),
-          }))}
+        <ChoiceMenu
           label={t("expiresAfter")}
+          optionLabel={(expiry) => t(`expiryOptions.${expiry}`)}
+          options={EXPIRIES}
           testID="recipe-share-expiry"
+          value={expiresIn}
+          onChange={setExpiresIn}
         >
           <CardRow first label={t("expiresAfter")} value={t(`expiryOptions.${expiresIn}`)}>
             <Ionicons color={muted} name="chevron-expand" size={16} />
           </CardRow>
-        </NativeMenu>
+        </ChoiceMenu>
       </Card>
 
       {rows.length > 0 || isLoading ? <SectionLabel>{t("currentLinks")}</SectionLabel> : null}

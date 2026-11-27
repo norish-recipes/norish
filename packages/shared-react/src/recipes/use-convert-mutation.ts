@@ -3,19 +3,24 @@
 import type { QueryKey } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import type { FullRecipeDTO, MeasurementSystem } from "@norish/shared/contracts";
+import type { FullRecipeDTO, MeasurementSystem, RecipeConversion } from "@norish/shared/contracts";
 
-import { shouldPreserveOptimisticUpdate } from "../offline/optimistic-updates";
+import type { HouseholdMark } from "../offline/optimistic-updates";
+import {
+  markHousehold,
+  mayRestore,
+  shouldPreserveOptimisticUpdate,
+} from "../offline/optimistic-updates";
 import { useTRPC } from "../trpc";
 
-type ConvertMutationContext = {
+type ConvertMutationContext = HouseholdMark & {
   detailQueryKey: QueryKey;
   previousRecipe: FullRecipeDTO | null | undefined;
   didSwitchLocally: boolean;
 };
 
 type ConvertMutationResult = {
-  convertMeasurements: (targetSystem: MeasurementSystem, version: number, withAI?: boolean) => void;
+  convertMeasurements: (conversion: RecipeConversion) => void;
   error: unknown;
   reset: () => void;
   isConverting: boolean;
@@ -73,6 +78,7 @@ export function useConvertMutation(
           detailQueryKey,
           previousRecipe,
           didSwitchLocally,
+          ...markHousehold(queryClient),
         } satisfies ConvertMutationContext;
       },
       onError: (error, _variables, context) => {
@@ -80,12 +86,18 @@ export function useConvertMutation(
           return;
         }
 
-        if (context?.didSwitchLocally) {
-          queryClient.setQueryData<FullRecipeDTO | null>(
-            context.detailQueryKey,
-            context.previousRecipe
+        const previous =
+          mayRestore(queryClient, context) && context.didSwitchLocally
+            ? context.previousRecipe
+            : null;
+
+        // Only its own switch is undone; another version is left for the reread.
+        if (previous)
+          queryClient.setQueryData<FullRecipeDTO | null>(detailQueryKey, (current) =>
+            current?.version === previous.version
+              ? { ...current, systemUsed: previous.systemUsed }
+              : current
           );
-        }
 
         queryClient.invalidateQueries({ queryKey: context?.detailQueryKey ?? detailQueryKey });
         callbacks.onError?.(error);
@@ -95,8 +107,8 @@ export function useConvertMutation(
   const { mutate: mutateMutation } = mutation;
 
   return {
-    convertMeasurements: (targetSystem, version, withAI = false) => {
-      mutateMutation({ recipeId, targetSystem, version, withAI });
+    convertMeasurements: ({ target, version, withAI }) => {
+      mutateMutation({ recipeId, targetSystem: target, version, withAI });
     },
     error: mutation.error,
     reset: mutation.reset,

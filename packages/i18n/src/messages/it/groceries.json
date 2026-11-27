@@ -16,7 +16,6 @@
   },
   "empty": {
     "title": "La tua lista della spesa ti aspetta",
-    "description": "Aggiungi articoli usando il pulsante \"Aggiungi articolo\" sopra per iniziare.",
     "manual": "Articoli manuali"
   },
   "item": {
@@ -54,7 +53,6 @@
     },
     "confirmDelete": "Sei sicuro di voler eliminare {storeName}?",
     "noStoresYet": "Nessun negozio ancora",
-    "createStoreHint": "Crea un negozio per organizzare la tua spesa",
     "hasItems": "Questo negozio ha {count} articolo.",
     "hasItemsPlural": "Questo negozio ha {count} articoli.",
     "whatToDo": "Cosa vuoi fare con essi?",
@@ -153,6 +151,7 @@
     "cannotSearchHint": "Norish non è riuscito a ricavare una pagina di ricerca dal link di {store}. Correggilo in Gestisci negozi e i prezzi seguiranno.",
     "packAmount": "Quantità per confezione",
     "packUnit": "Unità",
+    "noUnit": "Nessuna unità",
     "productPage": "Pagina del prodotto",
     "invalidUrl": "Inserisci un indirizzo web, come https://www.dirk.nl/…",
     "invalidPack": "Inserisci sia una quantità che un'unità, oppure nessuna delle due",
@@ -185,7 +184,6 @@
     "viewByStore": "Per negozio",
     "viewByRecipe": "Per ricetta",
     "listSettings": "Impostazioni della lista",
-    "emptyHint": "Aggiungi articoli con il pulsante qui sotto.",
     "addTitle": "Aggiungi alla spesa",
     "editTitle": "Modifica articolo",
     "store": "Negozio",

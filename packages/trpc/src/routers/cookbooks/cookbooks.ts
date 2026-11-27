@@ -11,6 +11,7 @@ import {
 } from "@norish/db/repositories/cookbooks";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { saveCookbookImageBytes, sweepCookbookImages } from "@norish/shared-server/media/storage";
+import { cookbookAudience, policyAudience } from "@norish/shared-server/realtime/audience";
 import {
   CookbookCreateInputSchema,
   CookbookDeleteInputSchema,
@@ -20,6 +21,7 @@ import {
   CookbookSummarySchema,
   CookbookUpdateInputSchema,
 } from "@norish/shared/contracts/zod";
+import { mediaId } from "@norish/shared/lib/recipe-media";
 
 import { formDataInputSchema, getFormDataString } from "../../form-data";
 import { authedProcedure, viewerOf } from "../../middleware";
@@ -79,10 +81,12 @@ const create = authedProcedure
     const cookbook = { ...created, memberCount: recipeIds.length };
 
     log.info({ userId: ctx.user.id, cookbookId: cookbook.id }, "Cookbook created");
-    await emitCookbookEvent(ctx, "created", { cookbook });
+    const audience = await cookbookAudience(cookbook.id);
+
+    await emitCookbookEvent(audience, "created", { cookbook });
 
     if (recipeIds.length > 0) {
-      await emitCookbookEvent(ctx, "membershipChanged", {
+      await emitCookbookEvent(audience, "membershipChanged", {
         cookbookId: cookbook.id,
         recipeIds,
         isMember: true,
@@ -122,7 +126,7 @@ const update = authedProcedure
     if (input.image !== undefined) await sweepCookbookImages(cookbook.id, input.image);
 
     log.info({ userId: ctx.user.id, cookbookId: cookbook.id }, "Cookbook updated");
-    await emitCookbookEvent(ctx, "updated", { cookbook });
+    await emitCookbookEvent(await cookbookAudience(cookbook.id), "updated", { cookbook });
 
     return cookbook;
   });
@@ -145,7 +149,9 @@ const remove = authedProcedure.input(CookbookDeleteInputSchema).mutation(async (
   // go with it, through the join table's cascade.
   await sweepCookbookImages(input.id);
   log.info({ userId: ctx.user.id, cookbookId: input.id }, "Cookbook deleted");
-  await emitCookbookEvent(ctx, "deleted", { id: input.id });
+  // Gone, so its audience is the household the delete took it from.
+  if (outcome.value)
+    await emitCookbookEvent(await policyAudience(outcome.value), "deleted", { id: input.id });
 
   return { id: input.id, deleted: true };
 });
@@ -155,7 +161,7 @@ const remove = authedProcedure.input(CookbookDeleteInputSchema).mutation(async (
  * until an `update` saves it, which also sweeps away uploads never saved.
  */
 const uploadImage = authedProcedure.input(formDataInputSchema).mutation(async ({ ctx, input }) => {
-  const cookbookId = getFormDataString(input, "cookbookId");
+  const cookbookId = mediaId(getFormDataString(input, "cookbookId"));
 
   if (!cookbookId) return { success: false as const, error: "Cookbook ID is required" };
 

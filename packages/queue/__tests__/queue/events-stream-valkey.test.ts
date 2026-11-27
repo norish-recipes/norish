@@ -66,8 +66,7 @@ it("cuts a stream grown under BullMQ's default cap down to the cap at its next e
     url: "https://example.com/recipe",
     recipeId: "recipe-0",
     userId: "user-1",
-    householdKey: "household-1",
-    householdUserIds: null,
+    householdId: "household-1",
   });
 
   expect(await valkey.xlen(EVENTS)).toBeLessThanOrEqual(EVENTS_MAX_LEN + STREAM_NODE);
@@ -78,8 +77,7 @@ it("keeps the stream at its cap however many progress writes a job makes", async
     url: "https://example.com/recipe",
     recipeId: "recipe-1",
     userId: "user-1",
-    householdKey: "household-1",
-    householdUserIds: null,
+    householdId: "household-1",
   });
 
   for (let step = 0; step < 3 * EVENTS_MAX_LEN; step++) await job.updateProgress(step);

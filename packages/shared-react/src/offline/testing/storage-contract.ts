@@ -29,6 +29,7 @@ function entry(overrides: Partial<NewOutboxEntry> = {}): NewOutboxEntry {
   return {
     id: "e",
     ownerId: "u1",
+    householdId: "h1",
     path: "groceries.create",
     input: { id: "g1", name: "Milk" },
     entityId: "g1",
@@ -112,6 +113,7 @@ export function describeOfflineStorageContract(name: string, harness: StorageCon
             seq: queued.seq,
             id: "e",
             ownerId: "u1",
+            householdId: "h1",
             path: "groceries.create",
             input: { id: "g1", name: "Milk" },
             entityId: "g1",
@@ -189,7 +191,12 @@ export function describeOfflineStorageContract(name: string, harness: StorageCon
         await before.enqueue(
           entry({ path: "recipes.update", input: edit("First", 3), entityId: null })
         );
-        void runReplayPass({ store: before, ownerId: "u1", submit: () => new Promise(() => {}) });
+        void runReplayPass({
+          store: before,
+          ownerId: "u1",
+          householdId: "h1",
+          submit: () => new Promise(() => {}),
+        });
         await vi.waitFor(async () => expect((await before.loadAll())[0]?.sending).toBeTruthy());
 
         return storage;
@@ -201,6 +208,7 @@ export function describeOfflineStorageContract(name: string, harness: StorageCon
         const link = createOutboxLink({
           store,
           owner: () => "u1",
+          household: () => "h1",
           replayHeaderValue: "contract",
           wholeEdits: new Set(["recipes.update"]),
           locks: () => locks,
@@ -248,6 +256,7 @@ export function describeOfflineStorageContract(name: string, harness: StorageCon
         const pass = runReplayPass({
           store: sender,
           ownerId: "u1",
+          householdId: "h1",
           submit: () => new Promise((resolve) => (answer = resolve)),
         });
 
@@ -266,6 +275,7 @@ export function describeOfflineStorageContract(name: string, harness: StorageCon
         await runReplayPass({
           store: sender,
           ownerId: "u1",
+          householdId: "h1",
           submit: (next) => {
             sent.push(next.input);
 
