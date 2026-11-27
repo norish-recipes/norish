@@ -230,6 +230,7 @@
       "revokeModal": {
         "title": "Link intrekken",
         "message": "Deze link voor {recipeName} werkt niet meer totdat je hem opnieuw activeert.",
+        "finalMessage": "Deze link voor {recipeName} werkt niet meer en je kunt hem niet opnieuw activeren.",
         "confirm": "Intrekken"
       },
       "reactivateModal": {
@@ -619,6 +620,7 @@
       "revokeModal": {
         "title": "Link intrekken",
         "message": "Deze link voor {recipeName} werkt niet meer totdat hij opnieuw wordt geactiveerd.",
+        "finalMessage": "Deze link voor {recipeName} werkt niet meer en kan niet opnieuw worden geactiveerd.",
         "confirm": "Intrekken"
       },
       "reactivateModal": {

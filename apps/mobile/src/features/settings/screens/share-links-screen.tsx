@@ -7,6 +7,7 @@ import { useIntl } from "react-intl";
 
 import type { ShareLinkAction } from "@norish/shared-react/recipes";
 import {
+  revokeIsFinal,
   shareLinkActions,
   useMyRecipeSharesQuery,
   useRecipeShareMutations,
@@ -87,7 +88,12 @@ export function ShareLinksScreen() {
                   label: text(`${modal}.confirm`),
                   onPress: confirmedWrite({
                     title: text(`${modal}.title`),
-                    message: text(`${modal}.message`, { recipeName: share.recipeName }),
+                    message: text(
+                      action === "revoke" && revokeIsFinal(share)
+                        ? `${modal}.finalMessage`
+                        : `${modal}.message`,
+                      { recipeName: share.recipeName }
+                    ),
                     confirmLabelId: `${modal}.confirm`,
                     destructive: action === "delete",
                     send: () => sendAction[action](share.id, share.version),

@@ -230,6 +230,7 @@
       "revokeModal": {
         "title": "Link widerrufen",
         "message": "Dieser Link für {recipeName} funktioniert nicht mehr, bis du ihn reaktivierst.",
+        "finalMessage": "Dieser Link für {recipeName} funktioniert nicht mehr, und du kannst ihn nicht reaktivieren.",
         "confirm": "Widerrufen"
       },
       "reactivateModal": {
@@ -619,6 +620,7 @@
       "revokeModal": {
         "title": "Link widerrufen",
         "message": "Dieser Link für {recipeName} funktioniert nicht mehr, bis er reaktiviert wird.",
+        "finalMessage": "Dieser Link für {recipeName} funktioniert nicht mehr und kann nicht reaktiviert werden.",
         "confirm": "Widerrufen"
       },
       "reactivateModal": {

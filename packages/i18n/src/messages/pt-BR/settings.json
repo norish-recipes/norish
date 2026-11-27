@@ -230,6 +230,7 @@
       "revokeModal": {
         "title": "Revogar link",
         "message": "Este link para {recipeName} deixará de funcionar até que você o reative.",
+        "finalMessage": "Este link para {recipeName} deixará de funcionar e você não poderá reativá-lo.",
         "confirm": "Revogar"
       },
       "reactivateModal": {
@@ -619,6 +620,7 @@
       "revokeModal": {
         "title": "Revogar link",
         "message": "Este link para {recipeName} deixará de funcionar até que seja reativado.",
+        "finalMessage": "Este link para {recipeName} deixará de funcionar e não poderá ser reativado.",
         "confirm": "Revogar"
       },
       "reactivateModal": {

@@ -230,6 +230,7 @@
       "revokeModal": {
         "title": "Tilbakekall lenke",
         "message": "Denne lenken til {recipeName} slutter å virke inntil du gjenaktiverer den.",
+        "finalMessage": "Denne lenken til {recipeName} slutter å virke, og du kan ikke gjenaktivere den.",
         "confirm": "Tilbakekall"
       },
       "reactivateModal": {
@@ -619,6 +620,7 @@
       "revokeModal": {
         "title": "Tilbakekall lenke",
         "message": "Denne lenken til {recipeName} slutter å virke inntil den gjenaktiveres.",
+        "finalMessage": "Denne lenken til {recipeName} slutter å virke og kan ikke gjenaktiveres.",
         "confirm": "Tilbakekall"
       },
       "reactivateModal": {

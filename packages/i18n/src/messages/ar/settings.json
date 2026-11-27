@@ -230,6 +230,7 @@
       "revokeModal": {
         "title": "إلغاء الرابط",
         "message": "سيتوقف هذا الرابط لـ {recipeName} عن العمل حتى تعيد تفعيله.",
+        "finalMessage": "سيتوقف هذا الرابط لـ {recipeName} عن العمل، ولن تتمكن من إعادة تفعيله.",
         "confirm": "إلغاء الرابط"
       },
       "reactivateModal": {
@@ -619,6 +620,7 @@
       "revokeModal": {
         "title": "إلغاء الرابط",
         "message": "سيتوقف هذا الرابط لـ {recipeName} عن العمل حتى تتم إعادة تفعيله.",
+        "finalMessage": "سيتوقف هذا الرابط لـ {recipeName} عن العمل، ولا يمكن إعادة تفعيله.",
         "confirm": "إلغاء الرابط"
       },
       "reactivateModal": {

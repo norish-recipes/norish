@@ -51,7 +51,7 @@ export {
   useRecipeOutcomesSubscription,
 } from "./use-recipes-subscription";
 export type { ShareLinkAction } from "./share-link-rules";
-export { shareLinkActions } from "./share-link-rules";
+export { revokeIsFinal, shareLinkActions } from "./share-link-rules";
 export { useAdminRecipeShareMutations } from "./use-admin-recipe-share-mutations";
 export type { ShareLinkMutations } from "./use-recipe-share-mutations";
 export { useRecipeShareMutations } from "./use-recipe-share-mutations";

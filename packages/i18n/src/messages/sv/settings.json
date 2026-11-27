@@ -230,6 +230,7 @@
       "revokeModal": {
         "title": "Återkalla länk",
         "message": "Den här länken till {recipeName} slutar fungera tills du aktiverar den igen.",
+        "finalMessage": "Den här länken till {recipeName} slutar fungera och du kan inte aktivera den igen.",
         "confirm": "Återkalla"
       },
       "reactivateModal": {
@@ -619,6 +620,7 @@
       "revokeModal": {
         "title": "Återkalla länk",
         "message": "Den här länken till {recipeName} slutar fungera tills den aktiveras igen.",
+        "finalMessage": "Den här länken till {recipeName} slutar fungera och kan inte aktiveras igen.",
         "confirm": "Återkalla"
       },
       "reactivateModal": {

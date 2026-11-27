@@ -17,3 +17,7 @@ export function shareLinkActions({
       return ["delete"];
   }
 }
+
+/** Whether revoking a share ends it for good: one whose link was not kept is never reactivated. */
+export const revokeIsFinal = ({ hasLink }: Pick<RecipeShareSummaryDto, "hasLink">) =>
+  !shareLinkActions({ status: "revoked", hasLink }).includes("reactivate");

@@ -230,6 +230,7 @@
       "revokeModal": {
         "title": "링크 취소",
         "message": "{recipeName}의 이 링크는 재활성화할 때까지 작동하지 않습니다.",
+        "finalMessage": "{recipeName}의 이 링크는 작동을 멈추며 재활성화할 수 없습니다.",
         "confirm": "취소"
       },
       "reactivateModal": {
@@ -619,6 +620,7 @@
       "revokeModal": {
         "title": "링크 취소",
         "message": "{recipeName}의 이 링크는 재활성화될 때까지 작동하지 않습니다.",
+        "finalMessage": "{recipeName}의 이 링크는 작동을 멈추며 재활성화될 수 없습니다.",
         "confirm": "취소"
       },
       "reactivateModal": {

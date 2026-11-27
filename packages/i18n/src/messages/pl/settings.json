@@ -230,6 +230,7 @@
       "revokeModal": {
         "title": "Odwołaj link",
         "message": "Ten link do {recipeName} przestanie działać do momentu reaktywacji.",
+        "finalMessage": "Ten link do {recipeName} przestanie działać i nie będzie można go reaktywować.",
         "confirm": "Odwołaj"
       },
       "reactivateModal": {
@@ -619,6 +620,7 @@
       "revokeModal": {
         "title": "Odwołaj link",
         "message": "Ten link do {recipeName} przestanie działać do momentu reaktywacji.",
+        "finalMessage": "Ten link do {recipeName} przestanie działać i nie będzie można go reaktywować.",
         "confirm": "Odwołaj"
       },
       "reactivateModal": {

@@ -230,6 +230,7 @@
       "revokeModal": {
         "title": "Tilbagekald link",
         "message": "Dette link til {recipeName} holder op med at virke, indtil du genaktiverer det.",
+        "finalMessage": "Dette link til {recipeName} holder op med at virke, og du kan ikke genaktivere det.",
         "confirm": "Tilbagekald"
       },
       "reactivateModal": {
@@ -619,6 +620,7 @@
       "revokeModal": {
         "title": "Tilbagekald link",
         "message": "Dette link til {recipeName} holder op med at virke, indtil det genaktiveres.",
+        "finalMessage": "Dette link til {recipeName} holder op med at virke og kan ikke genaktiveres.",
         "confirm": "Tilbagekald"
       },
       "reactivateModal": {

@@ -24,6 +24,9 @@ vi.mock("next-intl", () => ({
       "settings.user.shareLinks.deleteModal.title": "Delete link",
       "settings.user.shareLinks.reactivateModal.title": "Reactivate link",
       "settings.user.shareLinks.revokeModal.title": "Revoke link",
+      "settings.user.shareLinks.revokeModal.message": "Stops until reactivated",
+      "settings.user.shareLinks.revokeModal.finalMessage": "Stops for good",
+      "settings.user.shareLinks.revokeModal.confirm": "Revoke",
       "settings.admin.shareLinks.title": "Recipe share moderation",
       "settings.admin.shareLinks.inactive": "Inactive",
       "settings.admin.shareLinks.table.owner": "Owner",
@@ -67,35 +70,51 @@ describe("ShareLinksTableCard", () => {
     });
   });
 
-  it("renders populated rows with HeroUI table collections", () => {
-    const shares: RecipeShareInventoryDto[] = [
-      {
-        id: "share-1",
-        userId: "user-1",
-        recipeId: "recipe-1",
-        recipeName: "Pasta",
-        createdAt: new Date("2026-01-01T00:00:00Z"),
-        updatedAt: new Date("2026-01-01T00:00:00Z"),
-        expiresAt: null,
-        revokedAt: null,
-        lastAccessedAt: null,
-        status: "active",
-        hasLink: true,
-        version: 1,
-      },
-    ];
+  const pasta: RecipeShareInventoryDto = {
+    id: "share-1",
+    userId: "user-1",
+    recipeId: "recipe-1",
+    recipeName: "Pasta",
+    createdAt: new Date("2026-01-01T00:00:00Z"),
+    updatedAt: new Date("2026-01-01T00:00:00Z"),
+    expiresAt: null,
+    revokedAt: null,
+    lastAccessedAt: null,
+    status: "active",
+    hasLink: true,
+    version: 1,
+  };
 
+  it("renders populated rows with HeroUI table collections", () => {
     render(
       <ShareLinksTableCard
         isLoading={false}
         mutations={mutations}
         namespace="settings.user.shareLinks"
-        shares={shares}
+        shares={[pasta]}
       />
     );
 
     expect(screen.getByText("Pasta")).toBeInTheDocument();
     expect(screen.getByRole("grid", { name: "Share links" })).toBeInTheDocument();
+  });
+
+  it.each([
+    ["kept its link, it says it can be reactivated", true, "Stops until reactivated"],
+    ["kept no link, it says it cannot be", false, "Stops for good"],
+  ])("confirms a revoke: when the share %s", async (_case, hasLink, message) => {
+    render(
+      <ShareLinksTableCard
+        isLoading={false}
+        mutations={mutations}
+        namespace="settings.user.shareLinks"
+        shares={[{ ...pasta, hasLink }]}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Revoke link" }));
+
+    expect(await screen.findByText(message)).toBeInTheDocument();
   });
 
   it("says so in a line when no share links exist", () => {

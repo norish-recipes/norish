@@ -18,7 +18,7 @@ import type {
   AdminRecipeShareInventoryDto,
   RecipeShareInventoryDto,
 } from "@norish/shared/contracts/dto/recipe-shares";
-import { shareLinkActions } from "@norish/shared-react/recipes";
+import { revokeIsFinal, shareLinkActions } from "@norish/shared-react/recipes";
 
 type ShareRow = RecipeShareInventoryDto | AdminRecipeShareInventoryDto;
 type ConfirmAction = {
@@ -235,9 +235,14 @@ export default function ShareLinksTableCard({
       >
         <p>
           {confirmAction
-            ? t(`${confirmAction.type}Modal.message`, {
-                recipeName: confirmAction.share.recipeName,
-              })
+            ? t(
+                confirmAction.type === "revoke" && revokeIsFinal(confirmAction.share)
+                  ? "revokeModal.finalMessage"
+                  : `${confirmAction.type}Modal.message`,
+                {
+                  recipeName: confirmAction.share.recipeName,
+                }
+              )
             : ""}
         </p>
       </ConfirmModal>

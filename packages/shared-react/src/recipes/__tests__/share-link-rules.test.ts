@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { shareLinkActions } from "../share-link-rules";
+import { revokeIsFinal, shareLinkActions } from "../share-link-rules";
 
 describe("share link rules", () => {
   it("offers an active or expired link what its status allows, and Delete always", () => {
@@ -23,5 +23,10 @@ describe("share link rules", () => {
       "delete",
     ]);
     expect(shareLinkActions({ status: "expired", hasLink: true })).toEqual(["delete"]);
+  });
+
+  it("calls a revoke final only for a share whose link was not kept", () => {
+    expect(revokeIsFinal({ hasLink: false })).toBe(true);
+    expect(revokeIsFinal({ hasLink: true })).toBe(false);
   });
 });

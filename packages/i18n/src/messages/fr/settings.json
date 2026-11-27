@@ -230,6 +230,7 @@
       "revokeModal": {
         "title": "Révoquer le lien",
         "message": "Ce lien pour {recipeName} cessera de fonctionner jusqu'à ce que vous le réactiviez.",
+        "finalMessage": "Ce lien pour {recipeName} cessera de fonctionner et vous ne pourrez pas le réactiver.",
         "confirm": "Révoquer"
       },
       "reactivateModal": {
@@ -619,6 +620,7 @@
       "revokeModal": {
         "title": "Révoquer le lien",
         "message": "Ce lien pour {recipeName} cessera de fonctionner jusqu'à ce qu'il soit réactivé.",
+        "finalMessage": "Ce lien pour {recipeName} cessera de fonctionner et ne pourra pas être réactivé.",
         "confirm": "Révoquer"
       },
       "reactivateModal": {

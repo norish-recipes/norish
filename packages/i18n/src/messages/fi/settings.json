@@ -230,6 +230,7 @@
       "revokeModal": {
         "title": "Mitätöi linkki",
         "message": "Tämä reseptin {recipeName} linkki lakkaa toimimasta, kunnes otat sen uudelleen käyttöön.",
+        "finalMessage": "Tämä reseptin {recipeName} linkki lakkaa toimimasta, etkä voi ottaa sitä uudelleen käyttöön.",
         "confirm": "Mitätöi"
       },
       "reactivateModal": {
@@ -619,6 +620,7 @@
       "revokeModal": {
         "title": "Mitätöi linkki",
         "message": "Tämä reseptin {recipeName} linkki lakkaa toimimasta, kunnes se otetaan uudelleen käyttöön.",
+        "finalMessage": "Tämä reseptin {recipeName} linkki lakkaa toimimasta, eikä sitä voi ottaa uudelleen käyttöön.",
         "confirm": "Mitätöi"
       },
       "reactivateModal": {
