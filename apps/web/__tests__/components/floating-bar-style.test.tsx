@@ -1,11 +1,9 @@
-import { render } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
-
-import { renderToStaticMarkup } from "react-dom/server";
-
-import { FloatingBarStyleScript } from "@/components/floating-bar-style-script";
 import { FloatingBarStyleSync } from "@/components/floating-bar-style";
+import { FloatingBarStyleScript } from "@/components/floating-bar-style-script";
 import { applyFloatingBarStyle, FLOATING_BAR_ATTRIBUTE } from "@/lib/floating-bar-style";
+import { render } from "@testing-library/react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { FloatingBarStyle } from "@norish/shared/contracts/zod/device-preferences";
 

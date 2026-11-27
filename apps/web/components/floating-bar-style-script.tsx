@@ -1,6 +1,6 @@
-import type { FloatingBarStyle } from "@norish/shared/contracts/zod/device-preferences";
-
 import { FLOATING_BAR_ATTRIBUTE } from "@/lib/floating-bar-style";
+
+import type { FloatingBarStyle } from "@norish/shared/contracts/zod/device-preferences";
 
 /**
  * Server-rendered ahead of the page, so the attribute is on <html> before the first frame that
