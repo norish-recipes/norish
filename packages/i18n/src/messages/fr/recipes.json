@@ -51,6 +51,7 @@
   "card": {
     "noImage": "Aucune image disponible",
     "viewGroceries": "Voir les courses",
+    "addToBring": "Ajouter à Bring!",
     "addToCalendar": "Ajouter au calendrier",
     "deleteRecipe": "Supprimer la recette",
     "recipeOptions": "Options de recette",
@@ -87,6 +88,7 @@
   "actions": {
     "plan": "Planifier",
     "groceries": "Courses",
+    "addToBring": "Ajouter à Bring!",
     "edit": "Modifier",
     "delete": "Supprimer",
     "share": "Partager",

@@ -6,6 +6,7 @@ export { useCategoriesQuery } from "./use-categories-query";
 export { useConfigSubscription } from "./use-config-subscription";
 export { useCuisinesQuery } from "./use-cuisines-query";
 export { nutritionQueryKeys, useIngredientsSubscription } from "./use-ingredients-subscription";
+export { useGroceryListProvider } from "./use-grocery-list-provider-query";
 export { useLocaleConfigQuery } from "./use-locale-config-query";
 export { useRecurrenceConfigQuery } from "./use-recurrence-config-query";
 export { useSpellingRules } from "./use-spelling-rules";

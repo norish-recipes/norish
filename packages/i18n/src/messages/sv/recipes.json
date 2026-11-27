@@ -51,6 +51,7 @@
   "card": {
     "noImage": "Ingen bild tillgänglig",
     "viewGroceries": "Visa inköpslista",
+    "addToBring": "Lägg till i Bring!",
     "addToCalendar": "Lägg till i kalendern",
     "deleteRecipe": "Ta bort recept",
     "recipeOptions": "Receptalternativ",
@@ -87,6 +88,7 @@
   "actions": {
     "plan": "Planera",
     "groceries": "Inköpslista",
+    "addToBring": "Lägg till i Bring!",
     "edit": "Redigera",
     "delete": "Ta bort",
     "share": "Dela",

@@ -109,6 +109,21 @@
     "inYourPantry": "In your pantry",
     "offlineDetails": "A food's details open when you're back online."
   },
+  "bring": {
+    "addTitle": "Add to Bring!",
+    "addButton": "Add to Bring!",
+    "ready": "Your items are ready for Bring!",
+    "open": "Open Bring!",
+    "errors": {
+      "notPublic": "Bring! can't reach this Norish instance. It must be reachable from the internet over HTTPS.",
+      "unreachable": "Bring! didn't respond. Try again in a moment.",
+      "rejected": "Bring! couldn't read the list. Check that this Norish instance is reachable from the internet over HTTPS.",
+      "rateLimited": "Too many lists were sent to Bring! recently. Try again in a few minutes.",
+      "failed": "Couldn't send to Bring!",
+      "pageUnreachable": "Bring! couldn't open the page Norish made for it. Make sure /share/bring/ on your Norish address is reachable from the internet without a login, VPN or bot protection.",
+      "pageStatus": "Your server answered HTTP {status}."
+    }
+  },
   "panel": {
     "addTitle": "Add Grocery",
     "editTitle": "Edit Grocery",

@@ -18,6 +18,7 @@ import { useLocale, useTranslations } from "next-intl";
 
 import type { IngredientItem, NamedIngredient, Spelling } from "@norish/shared-react/ingredients";
 import type { PantryIngredientDto } from "@norish/shared/contracts";
+import { useGroceryListProvider } from "@norish/shared-react/config";
 import {
   useGroceriesPantryAndCatalogueSubscriptions,
   useOnTheList,
@@ -710,10 +711,13 @@ function IngredientUsesContent({
   const t = useTranslations("settings.ingredients.uses");
   const tActions = useTranslations("common.actions");
   const { uses: data } = useIngredientUsesQuery(ingredientId);
+  // Where the list is Bring!, the household's groceries are out of sight, so they are not a use.
+  const { isBring } = useGroceryListProvider();
+  const showGroceries = !isBring && data !== undefined && data.groceries.length > 0;
   const unused =
     data &&
     data.recipes.length === 0 &&
-    data.groceries.length === 0 &&
+    (isBring || data.groceries.length === 0) &&
     !data.pantry &&
     data.elsewhere === 0;
 
@@ -739,7 +743,7 @@ function IngredientUsesContent({
               </ul>
             </Section>
           ) : null}
-          {data && data.groceries.length > 0 ? (
+          {data && showGroceries ? (
             <Section title={t("groceries")}>
               <ul className="flex flex-col gap-1 text-sm">
                 {data.groceries.map((grocery) => (

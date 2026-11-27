@@ -636,6 +636,13 @@
       "defaultLocale": "기본 언어",
       "defaultLocaleDescription": "신규 사용자 및 대체 언어로 사용되는 언어",
       "atLeastOneLocale": "하나 이상의 언어를 활성화해야 합니다.",
+      "groceryListProvider": {
+        "title": "장보기 목록",
+        "description": "누군가 레시피 재료를 목록에 추가할 때 재료가 가는 곳입니다.",
+        "builtin": "Norish 장보기 목록",
+        "bring": "Bring!",
+        "bringNotice": "누군가 재료를 추가하면 Bring! 서버가 /share/bring/ 아래의 임시 공개 HTTPS 페이지를 가져옵니다. 이 페이지에는 레시피 이름, 대표 사진, 인분, 품목 줄이 담기며 한 시간 뒤 삭제됩니다. 따라서 이 Norish 인스턴스는 인터넷에서 접근할 수 있어야 하고, /share/bring/은 로그인 없이 열려 있어야 합니다."
+      },
       "export": {
         "title": "레시피 아카이브",
         "description": "이 서버의 모든 레시피를 다운로드합니다.",

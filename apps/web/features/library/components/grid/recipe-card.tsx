@@ -32,6 +32,7 @@ import { Button, Card, Chip, Tooltip, useOverlayState } from "@heroui/react";
 import { useFormatter, useTranslations } from "next-intl";
 import { useLongPress } from "react-aria";
 
+import { useGroceryListProvider } from "@norish/shared-react/config";
 import {
   ownerAllows,
   useHiddenItemVisibility,
@@ -135,6 +136,7 @@ function RecipeCardComponent({
     close: onDeleteModalClose,
   } = useOverlayState();
   const t = useTranslations("recipes.card");
+  const { isBring } = useGroceryListProvider();
   const tCookbooks = useTranslations("recipes.cookbooks");
   const format = useFormatter();
   const { showRatings, showFavorites } = useHiddenItemVisibility();
@@ -240,7 +242,7 @@ function RecipeCardComponent({
         icon: ShoppingBagIcon,
         color: "accent",
         onPress: () => setGroceriesOpen(true),
-        label: t("viewGroceries"),
+        label: isBring ? t("addToBring") : t("viewGroceries"),
       },
       {
         key: "calendar",
@@ -273,7 +275,15 @@ function RecipeCardComponent({
     }
 
     return baseActions;
-  }, [showDeleteAction, handleDeleteClick, t, onRemoveFromCookbook, recipe.id, tCookbooks]);
+  }, [
+    showDeleteAction,
+    handleDeleteClick,
+    t,
+    isBring,
+    onRemoveFromCookbook,
+    recipe.id,
+    tCookbooks,
+  ]);
 
   const optionsButton = (
     <div className="hidden md:block" role="presentation" onClick={stopParentActivation}>

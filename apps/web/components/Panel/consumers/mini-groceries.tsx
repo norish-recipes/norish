@@ -1,5 +1,6 @@
 "use client";
 
+import type { SVGProps } from "react";
 import { useState } from "react";
 import { IngredientIcon } from "@/components/ingredients/ingredient-icon";
 import { OnTheListMark } from "@/components/ingredients/on-the-list-mark";
@@ -12,11 +13,12 @@ import {
 } from "@/components/shared/action-button";
 import { useUnitFormatter } from "@/hooks/use-unit-formatter";
 import { ArchiveBoxArrowDownIcon } from "@heroicons/react/16/solid";
-import { Button, Input } from "@heroui/react";
+import { Button, Input, Spinner } from "@heroui/react";
 import { useTranslations } from "next-intl";
 
 import type { ScaledFood } from "@norish/shared-react/groceries";
 import type { EditedIngredient } from "@norish/shared/lib/grocery-lines";
+import { useGroceryListProvider } from "@norish/shared-react/config";
 import {
   useAddAtOnce,
   useGroceriesPantryAndCatalogueSubscriptions,
@@ -33,6 +35,11 @@ import {
   parseEditedIngredientLine,
 } from "@norish/shared/lib/grocery-lines";
 
+/** The add button's icon while the lines are being made ready for Bring!. */
+function SendingIcon({ className }: SVGProps<SVGSVGElement>) {
+  return <Spinner className={className} color="current" size="sm" />;
+}
+
 type MiniGroceriesProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -42,7 +49,8 @@ type MiniGroceriesProps = {
   /**
    * Put the lines to buy on the list without showing the panel, then close:
    * what "Add ingredients to groceries" after planning does. The panel opens
-   * only where it has something to say, as when the Pantry cannot be read.
+   * only where it has something to say, as when the Pantry cannot be read, or
+   * where the list is Bring!, which opens from a press.
    */
   addAtOnce?: boolean;
 };
@@ -86,9 +94,11 @@ function MiniGroceriesContent({
   onOpenChange,
 }: LinesProps) {
   const t = useTranslations("groceries.panel");
+  const tBring = useTranslations("groceries.bring");
   const tActions = useTranslations("common.actions");
+  const { isBring } = useGroceryListProvider();
   const tDetail = useTranslations("recipes.detail");
-  const { formatAmountUnit } = useUnitFormatter();
+  const { formatAmountUnit, locale } = useUnitFormatter();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>("");
   const [editedIngredients, setEditedIngredients] = useState<Record<string, EditedIngredient>>({});
@@ -100,10 +110,11 @@ function MiniGroceriesContent({
     inPantry,
     addTicked,
     isAdding,
+    isProviderLoading,
     selectedCount,
     inPantrySelectedCount,
     controls,
-  } = useGroceryLines(scaledIngredients, editedIngredients);
+  } = useGroceryLines(scaledIngredients, editedIngredients, { recipeId, servings, locale });
 
   useGroceriesPantryAndCatalogueSubscriptions();
   useRecipeSubscription(recipeId);
@@ -329,10 +340,16 @@ function MiniGroceriesContent({
           <ActionButtonGroup>
             <ActionButton
               action="add"
-              isDisabled={selectedCount + inPantrySelectedCount === 0 || isAdding}
+              // The lines are made ready for Bring! as they change: the button waits until they are,
+              // so its press can open Bring! at once.
+              icon={isBring && isAdding ? SendingIcon : undefined}
+              isDisabled={
+                selectedCount + inPantrySelectedCount === 0 || isAdding || isProviderLoading
+              }
+              isPending={isBring && isAdding}
               onPress={handleConfirm}
             >
-              {tActions("add")}
+              {isBring ? tBring("addButton") : tActions("add")}
             </ActionButton>
           </ActionButtonGroup>
         </Panel.Footer>
@@ -350,6 +367,8 @@ export default function MiniGroceries({
   addAtOnce = false,
 }: MiniGroceriesProps) {
   const t = useTranslations("groceries.panel");
+  const tBring = useTranslations("groceries.bring");
+  const { isBring } = useGroceryListProvider();
   // Once per mount: a panel opened because the Pantry could not be read does not add again.
   const [atOnce, setAtOnce] = useState(addAtOnce);
   const lines = { recipeId, initialServings, originalServings, onOpenChange };
@@ -357,7 +376,11 @@ export default function MiniGroceries({
   return (
     <>
       {atOnce && !open ? <AddAtOnce {...lines} onDone={() => setAtOnce(false)} /> : null}
-      <Panel open={open} title={t("addToGroceries")} onOpenChange={onOpenChange}>
+      <Panel
+        open={open}
+        title={isBring ? tBring("addTitle") : t("addToGroceries")}
+        onOpenChange={onOpenChange}
+      >
         <MiniGroceriesContent key={recipeId} {...lines} />
       </Panel>
     </>

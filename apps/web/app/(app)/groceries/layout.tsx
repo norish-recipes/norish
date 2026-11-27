@@ -1,9 +1,11 @@
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { QuerySeed } from "@/components/query-seed";
 import { GroceriesRoot } from "@/features/groceries/groceries-root";
 import { groceriesView } from "@/features/groceries/lib/groceries-view";
 import { listFoodIds } from "@/features/groceries/lib/list-food-ids";
 import { DESTINATION_HEADER } from "@/lib/auth/login-redirect";
+import { readGroceryListProvider } from "@/lib/grocery-list-provider-server";
 
 import { iconIds } from "@norish/shared/lib/ingredient-icon-ids";
 
@@ -12,6 +14,9 @@ import { iconIds } from "@norish/shared/lib/ingredient-icon-ids";
  * the stored view and grouping come from the App Shell's Device Preferences in the first frame.
  */
 export default async function GroceriesLayout() {
+  // Bring! is this instance's shopping list: the built-in one (and the Pantry with it) has no screen.
+  if ((await readGroceryListProvider()) === "bring") redirect("/");
+
   // A layout isn't told its path, so the proxy's copy of it says which view a full load opens on.
   const view = groceriesView((await headers()).get(DESTINATION_HEADER));
 

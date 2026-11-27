@@ -9,7 +9,7 @@ import type {
 import { groceryOnTheList } from "@norish/shared/lib/pantry";
 
 import type { GroceriesQueryResult } from "./types";
-import { useSpellingRules } from "../config";
+import { useGroceryListProvider, useSpellingRules } from "../config";
 import { useTRPC } from "../trpc";
 
 export function useGroceriesQuery(): GroceriesQueryResult {
@@ -102,12 +102,16 @@ export function useRecurringGroceryFor(groceryId: string | null): RecurringGroce
 export function useOnTheList(items: readonly PantryIngredientDto[]): string[] {
   const trpc = useTRPC();
   const rules = useSpellingRules();
+  // Where the list is Bring!, the built-in list is out of sight: nothing is on it.
+  const { isBring } = useGroceryListProvider();
   const { data = [] } = useQuery({
     ...trpc.groceries.list.queryOptions(),
     select: (list) =>
-      items
-        .filter((item) => groceryOnTheList(list.groceries, item, rules) !== null)
-        .map((item) => item.id),
+      isBring
+        ? []
+        : items
+            .filter((item) => groceryOnTheList(list.groceries, item, rules) !== null)
+            .map((item) => item.id),
   });
 
   return data;

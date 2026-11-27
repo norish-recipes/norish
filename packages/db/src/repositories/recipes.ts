@@ -168,6 +168,22 @@ export async function getRecipeOwnerIds(recipeIds: string[]): Promise<Map<string
 }
 
 /**
+ * A recipe's name and its primary image (the web path, `/recipes/<id>/<file>`, or an imported
+ * address), or null when it does not exist.
+ */
+export async function getRecipeNameAndImage(
+  recipeId: string
+): Promise<{ name: string; image: string | null } | null> {
+  const [row] = await db
+    .select({ name: recipes.name, image: PRIMARY_IMAGE_SQL })
+    .from(recipes)
+    .where(eq(recipes.id, recipeId))
+    .limit(1);
+
+  return row ?? null;
+}
+
+/**
  * Get the owner userId for a recipe (for permission checks)
  */
 export async function getRecipeOwnerId(recipeId: string): Promise<string | null> {

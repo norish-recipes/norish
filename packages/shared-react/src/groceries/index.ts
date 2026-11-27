@@ -59,6 +59,8 @@ export type { ScaledFood } from "./use-lines-to-buy";
 export type { GroceryLineControls } from "./use-grocery-lines";
 export { useGroceryLines } from "./use-grocery-lines";
 export { useLinesToBuy } from "./use-lines-to-buy";
+export { useBringHandoff } from "./use-bring-handoff";
+export type { BringContext, BringHandoffStatus, BringLine } from "./use-bring-handoff";
 export { useParsedGroceryName } from "./use-parsed-grocery-name";
 export { usePantryField } from "./use-pantry-field";
 export { usePantryMutations } from "./use-pantry-mutations";

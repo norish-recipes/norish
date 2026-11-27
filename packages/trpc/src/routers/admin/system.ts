@@ -22,6 +22,7 @@ const READ_BY_CLIENTS = new Set<string>([
   ServerConfigKeys.RECURRENCE_CONFIG,
   ServerConfigKeys.TIMER_KEYWORDS,
   ServerConfigKeys.LOCALE_CONFIG,
+  ServerConfigKeys.GROCERY_LIST_PROVIDER,
 ]);
 
 /**

@@ -1,7 +1,11 @@
 import { z } from "zod";
 
 import type { I18nLocaleConfig } from "@norish/config/zod/server-config";
-import { I18nLocaleConfigSchema, ServerConfigKeys } from "@norish/config/zod/server-config";
+import {
+  GroceryListProviderSchema,
+  I18nLocaleConfigSchema,
+  ServerConfigKeys,
+} from "@norish/config/zod/server-config";
 import { configExists, getConfig, setConfig } from "@norish/db/repositories/server-config";
 import { trpcLogger as log } from "@norish/shared-server/logger";
 import { config } from "@norish/shared-server/realtime/config";
@@ -137,8 +141,24 @@ const updateLocaleConfig = adminProcedure
     return { success: true };
   });
 
+/**
+ * Switch the instance's shopping list between the built-in grocery list and Bring!.
+ * Only the UI follows: no grocery data is touched, so switching back is lossless.
+ */
+const updateGroceryListProvider = adminProcedure
+  .input(GroceryListProviderSchema)
+  .mutation(async ({ input, ctx }) => {
+    log.info({ userId: ctx.user.id, provider: input }, "Updating grocery list provider");
+
+    await setConfig(ServerConfigKeys.GROCERY_LIST_PROVIDER, input, ctx.user.id, false);
+    void config.publish("changed", {}, undefined);
+
+    return { success: true };
+  });
+
 export const generalProcedures = router({
   updateRegistration,
   updatePasswordAuth,
   updateLocaleConfig,
+  updateGroceryListProvider,
 });

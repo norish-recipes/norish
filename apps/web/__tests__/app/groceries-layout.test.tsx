@@ -14,7 +14,18 @@ const requestHeaders = vi.hoisted(() => ({ current: new Headers() }));
 /** The reads the QuerySeed the layout rendered was asked for. */
 const seed = vi.hoisted(() => ({ reads: undefined as Reads | undefined }));
 
+const provider = vi.hoisted(() => ({ current: "builtin" as "builtin" | "bring" }));
+const redirect = vi.hoisted(() =>
+  vi.fn((to: string) => {
+    throw new Error(`NEXT_REDIRECT ${to}`);
+  })
+);
+
 vi.mock("next/headers", () => ({ headers: async () => requestHeaders.current }));
+vi.mock("next/navigation", () => ({ redirect }));
+vi.mock("@/lib/grocery-list-provider-server", () => ({
+  readGroceryListProvider: async () => provider.current,
+}));
 vi.mock("@/components/query-seed", () => ({
   QuerySeed: ({ reads, children }: { reads: Reads; children: ReactNode }) => {
     seed.reads = reads;
@@ -68,6 +79,22 @@ async function seededFor(destination: string | null) {
 describe("the groceries layout", () => {
   beforeEach(() => {
     seed.reads = undefined;
+    provider.current = "builtin";
+    redirect.mockClear();
+  });
+
+  it("sends the reader to the Library, seeding nothing, when Bring! is the shopping list", async () => {
+    provider.current = "bring";
+
+    await expect(seededFor("/groceries")).rejects.toThrow("NEXT_REDIRECT /");
+    await expect(seededFor("/groceries/pantry")).rejects.toThrow("NEXT_REDIRECT /");
+    expect(seed.reads).toBeUndefined();
+  });
+
+  it("does not redirect while the list is built in", async () => {
+    await seededFor("/groceries");
+
+    expect(redirect).not.toHaveBeenCalled();
   });
 
   const list = [

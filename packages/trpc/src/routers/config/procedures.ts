@@ -8,6 +8,7 @@ import { listCategoryNamesForUsers } from "@norish/db/repositories/categories";
 import { listCuisines } from "@norish/db/repositories/cuisines";
 import { listAllTagNames, listTagNamesForUsers } from "@norish/db/repositories/tags";
 import {
+  getGroceryListProvider,
   getIngredientWords,
   getLocaleConfig,
   getRecipePermissionPolicy,
@@ -187,6 +188,13 @@ const timersEnabled = authedProcedure.query(async () => {
 });
 
 /**
+ * Where the instance's shopping list lives (built-in or Bring!)
+ */
+const groceryListProvider = authedProcedure.query(async () => {
+  return await getGroceryListProvider();
+});
+
+/**
  * Get timer keywords configuration
  */
 const timerKeywords = authedProcedure.query(async () => {
@@ -315,6 +323,7 @@ export const configProcedures = router({
   recurrenceConfig,
   uploadLimits,
   timersEnabled,
+  groceryListProvider,
   timerKeywords,
   authProviders,
   health,

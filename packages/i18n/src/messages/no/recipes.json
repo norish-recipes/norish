@@ -51,6 +51,7 @@
   "card": {
     "noImage": "Ingen bilde tilgjengelig",
     "viewGroceries": "Se handleliste",
+    "addToBring": "Legg til i Bring!",
     "addToCalendar": "Legg til i kalender",
     "deleteRecipe": "Slett oppskrift",
     "recipeOptions": "Oppskriftsvalg",
@@ -87,6 +88,7 @@
   "actions": {
     "plan": "Planlegg",
     "groceries": "Handleliste",
+    "addToBring": "Legg til i Bring!",
     "edit": "Rediger",
     "delete": "Slett",
     "share": "Del",

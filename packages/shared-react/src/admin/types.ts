@@ -5,6 +5,7 @@ import type {
   AuthProviderOIDC,
   ContentIndicatorsConfig,
   DecisionConfig,
+  GroceryListProvider,
   I18nLocaleConfig,
   ImageGenerationConfig,
   IngredientPermissionPolicy,
@@ -24,6 +25,7 @@ export type AdminConfigs = {
   [ServerConfigKeys.REGISTRATION_ENABLED]: boolean;
   [ServerConfigKeys.PASSWORD_AUTH_ENABLED]: boolean;
   [ServerConfigKeys.LOCALE_CONFIG]: I18nLocaleConfig;
+  [ServerConfigKeys.GROCERY_LIST_PROVIDER]: GroceryListProvider;
   [ServerConfigKeys.AUTH_PROVIDER_OIDC]: AuthProviderOIDC;
   [ServerConfigKeys.AUTH_PROVIDER_GITHUB]: AuthProviderGitHub;
   [ServerConfigKeys.AUTH_PROVIDER_GOOGLE]: AuthProviderGoogle;

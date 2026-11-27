@@ -18,6 +18,8 @@ export function fakePlatformAdapter(
     navigation: { toHome: vi.fn(), toRecipe: vi.fn() },
     showError: vi.fn(),
     storage: { getItem: () => null, setItem: vi.fn(), removeItem: vi.fn() },
+    openExternalUrl: vi.fn(() => true),
+    supportsExternalShoppingList: true,
     deviceKind,
     session: { user: reader, isPending: false },
     endSession: vi.fn(async () => {}),

@@ -228,6 +228,8 @@ const ServerConfigFields = z.object({
   PAGE_SOLVER_ENABLED: envFlag.default(false),
   PAGE_SOLVER_ENDPOINT: z.string().optional(),
   ALLOW_PRIVATE_ADDRESSES: envFlag.default(false),
+  // Bring!'s API, which turns a handoff page into a deeplink. Only a test points it elsewhere.
+  BRING_API_URL: z.url().default("https://api.getbring.com"),
   // How long a Page Renderer is given to load a page.
   PAGE_RENDERER_TIMEOUT_MS: z.coerce.number().int().positive().default(45000),
 

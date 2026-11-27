@@ -19,6 +19,7 @@ import { Button, Modal } from "@heroui/react";
 import { useFormatter, useNow, useTranslations } from "next-intl";
 
 import type { OfflineStatus } from "@norish/shared-react/offline/react";
+import { useGroceryListProvider } from "@norish/shared-react/config";
 import { useOfflineStatus } from "@norish/shared-react/offline/react";
 
 interface OfflineStatusModalProps {
@@ -149,13 +150,19 @@ function CacheSection({ status }: { status: OfflineStatus }) {
   // relativeTime needs a clock; this one moves on each minute.
   const now = useNow({ updateInterval: 60_000 });
   const { counts } = status;
+  const { isBring } = useGroceryListProvider();
   const [confirming, setConfirming] = useState(false);
 
   const items = [
     { icon: BookOpenIcon, label: t("recipes"), value: counts.recipes },
     { icon: BookmarkSquareIcon, label: t("cookbooks"), value: counts.cookbooks },
-    { icon: ShoppingCartIcon, label: t("groceries"), value: counts.groceries },
-    { icon: BuildingStorefrontIcon, label: t("stores"), value: counts.stores },
+    // Bring! is the shopping list: the built-in list and its stores have no screen to be offline on.
+    ...(isBring
+      ? []
+      : [
+          { icon: ShoppingCartIcon, label: t("groceries"), value: counts.groceries },
+          { icon: BuildingStorefrontIcon, label: t("stores"), value: counts.stores },
+        ]),
     { icon: CalendarDaysIcon, label: t("planned"), value: counts.plannedThisWeek },
   ];
 

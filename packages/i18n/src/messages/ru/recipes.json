@@ -51,6 +51,7 @@
   "card": {
     "noImage": "Изображение недоступно",
     "viewGroceries": "Открыть список покупок",
+    "addToBring": "Добавить в Bring!",
     "addToCalendar": "Добавить в календарь",
     "deleteRecipe": "Удалить рецепт",
     "recipeOptions": "Параметры рецепта",
@@ -87,6 +88,7 @@
   "actions": {
     "plan": "Запланировать",
     "groceries": "Покупки",
+    "addToBring": "Добавить в Bring!",
     "edit": "Редактировать",
     "delete": "Удалить",
     "share": "Поделиться",

@@ -3,18 +3,22 @@
 import { usePathname } from "next/navigation";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import MobileNav from "@/components/navbar/mobile-nav";
-import { NAV_LABEL_KEYS, NavTabLink, navTabPosition } from "@/components/navbar/nav-tabs";
+import {
+  NAV_LABEL_KEYS,
+  NavTabLink,
+  navTabPosition,
+  useNavTabs,
+} from "@/components/navbar/nav-tabs";
 import NavbarUserMenu from "@/components/navbar/navbar-user-menu";
 import { useAutoHide } from "@/hooks/auto-hide";
 import { motion } from "motion/react";
 import { useTranslations } from "next-intl";
 
-import { siteConfig } from "@norish/web/config/site";
-
 export const Navbar = () => {
   const t = useTranslations("navbar.nav");
   const pathname = usePathname();
-  const activeTab = navTabPosition(pathname);
+  const { items, tabs } = useNavTabs();
+  const activeTab = navTabPosition(pathname, tabs);
   const { isVisible, onHoverStart, onHoverEnd } = useAutoHide({
     idleDelay: Infinity, // Only hide on scroll, not on idle
   });
@@ -65,8 +69,8 @@ export const Navbar = () => {
           {/* Center */}
           <div className="flex min-w-0 flex-1 justify-center">
             <ul className="ml-2 flex justify-start gap-3">
-              {/* The nav items lead NAV_TABS, so each one's position is its tab's. */}
-              {siteConfig.navItems.map((item, position) => (
+              {/* The nav items lead the tabs, so each one's position is its tab's. */}
+              {items.map((item, position) => (
                 <li key={item.href}>
                   <NavTabLink
                     className={`hover:text-accent rounded-md px-3 py-1.5 font-medium transition-colors ${

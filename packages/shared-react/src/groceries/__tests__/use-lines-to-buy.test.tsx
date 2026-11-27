@@ -22,13 +22,19 @@ const state = vi.hoisted(() => ({
   lines: [] as GroceryIngredient[],
   create: undefined as unknown as ReturnType<typeof vi.fn>,
   keep: undefined as unknown as ReturnType<typeof vi.fn>,
+  bring: false,
+  providerLoading: false,
 }));
 
 vi.mock("../../config", async () => {
   const { spellingRules } = await import("@norish/shared/lib/spelling-keys");
   const units = (await import("@norish/config/units.default.json")).default;
 
-  return { useSpellingRules: () => spellingRules(units as UnitsMap) };
+  return {
+    useSpellingRules: () => spellingRules(units as UnitsMap),
+    useGroceryListProvider: () => ({ isBring: state.bring, isLoading: state.providerLoading }),
+    useUnitsQuery: () => ({ units }),
+  };
 });
 vi.mock("../use-groceries-mutations", () => ({
   useGroceriesMutations: () => ({ createGroceriesFromData: state.create }),
@@ -61,11 +67,14 @@ const kept = (name: string): PantryIngredientDto => ({
 });
 
 function setup(
-  edited: Record<string, { name: string; amount: number | null; unit: string | null }> = {}
+  edited: Record<string, { name: string; amount: number | null; unit: string | null }> = {},
+  source?: { recipeId: string; servings: number; locale?: string }
 ) {
   const adapter = fakePlatformAdapter();
   const wrapper = createTestWrapper(createTestQueryClient(), adapter);
-  const view = renderHook(() => useLinesToBuy(foodsToBuy(state.lines), edited), { wrapper });
+  const view = renderHook(() => useLinesToBuy(foodsToBuy(state.lines), edited, source), {
+    wrapper,
+  });
 
   return { ...view, adapter };
 }
@@ -74,6 +83,8 @@ describe("useLinesToBuy", () => {
   beforeEach(() => {
     state.create = vi.fn(async () => undefined);
     state.keep = vi.fn(async () => "kept");
+    state.bring = false;
+    state.providerLoading = false;
     state.lines = [line("l-oil", "olive oil", 2), line("l-chicken", "chicken breast", 500)];
     state.pantry = [kept("olive oil")];
   });
@@ -218,6 +229,134 @@ describe("useLinesToBuy", () => {
         severity: "warning",
         title: "groceries.panel.ingredientsFailed",
       });
+    });
+  });
+
+  describe("where the list is Bring!", () => {
+    beforeEach(() => {
+      state.bring = true;
+    });
+
+    it("says so", () => {
+      const { result } = setup();
+
+      expect(result.current.isBring).toBe(true);
+    });
+
+    it("adds nothing to the built-in list, answers false, and says nothing", async () => {
+      const { result, adapter } = setup({}, { recipeId: "r1", servings: 4 });
+
+      let added: boolean | undefined;
+
+      await act(async () => {
+        added = await result.current.addLines(result.current.toBuy);
+      });
+
+      expect(added).toBe(false);
+      expect(state.create).not.toHaveBeenCalled();
+      expect(adapter.toast.show).not.toHaveBeenCalled();
+      expect(result.current.isAdding).toBe(false);
+    });
+
+    it("writes the lines for Bring! as edited here", () => {
+      const { result } = setup(
+        { "l-chicken": { name: "chicken thighs", amount: 3, unit: "pcs" } },
+        { recipeId: "r1", servings: 4 }
+      );
+
+      expect(result.current.toBringLines(result.current.toBuy)).toEqual([
+        { name: "chicken thighs", amount: 3, unit: "pcs" },
+      ]);
+    });
+
+    it("writes them without a source too", () => {
+      const { result } = setup();
+
+      expect(result.current.toBringLines(result.current.toBuy)).toEqual([
+        { name: "chicken breast", amount: 500, unit: "g" },
+      ]);
+    });
+  });
+
+  describe("the units written for Bring!", () => {
+    const bringLines = (locale: string) => {
+      state.pantry = [];
+      state.lines = [
+        line("l-flour", "flour", 250, { unit: "gram" }),
+        line("l-milk", "milk", 0.5, { unit: "liter" }),
+        line("l-eggs", "eggs", 3, { unit: null }),
+        line("l-salt", "salt", 1, { unit: "pinch" }),
+      ];
+      const { result } = setup({}, { recipeId: "r1", servings: 2, locale });
+
+      return result.current
+        .toBringLines(result.current.toBuy)
+        .map((item) => [item.amount, item.unit, item.name]);
+    };
+
+    beforeEach(() => {
+      state.bring = true;
+    });
+
+    it("writes units short, in the reader's language, not as the stored canonical id (en)", () => {
+      expect(bringLines("en")).toEqual([
+        [250, "g", "flour"],
+        [0.5, "l", "milk"],
+        [3, null, "eggs"],
+        [1, "pinch", "salt"],
+      ]);
+    });
+
+    it("writes them in German for a German reader", () => {
+      expect(bringLines("de")).toEqual([
+        [250, "g", "flour"],
+        [0.5, "l", "milk"],
+        [3, null, "eggs"],
+        [1, "Prise", "salt"],
+      ]);
+    });
+
+    it("leaves a unit it does not know as it is, and formats an edited unit the same way", () => {
+      state.pantry = [];
+      const { result } = setup(
+        {
+          "l-chicken": { name: "chicken", amount: 2, unit: "gram" },
+          "l-oil": { name: "oil", amount: 1, unit: "bottle-ish" },
+        },
+        { recipeId: "r1", servings: 2, locale: "en" }
+      );
+
+      expect(
+        result.current
+          .toBringLines([...result.current.toBuy, ...result.current.inPantry])
+          .map((item) => item.unit)
+      ).toEqual(["bottle-ish", "g"]);
+    });
+  });
+
+  describe("before the instance has said which list this is", () => {
+    it("adds nothing and does not use up the one add", async () => {
+      state.providerLoading = true;
+      const { result, rerender } = setup();
+
+      let added: boolean | undefined;
+
+      await act(async () => {
+        added = await result.current.addLines(result.current.toBuy);
+      });
+
+      expect(added).toBe(false);
+      expect(state.create).not.toHaveBeenCalled();
+      expect(result.current.isAdding).toBe(false);
+      expect(result.current.isProviderLoading).toBe(true);
+
+      state.providerLoading = false;
+      rerender();
+      await act(async () => {
+        await result.current.addLines(result.current.toBuy);
+      });
+
+      expect(state.create).toHaveBeenCalledTimes(1);
     });
   });
 

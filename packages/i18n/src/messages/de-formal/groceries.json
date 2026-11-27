@@ -109,6 +109,21 @@
     "inYourPantry": "In Ihrer Vorratskammer",
     "offlineDetails": "Die Details eines Lebensmittels öffnen sich, sobald Sie wieder online sind."
   },
+  "bring": {
+    "addTitle": "Zu Bring! hinzufügen",
+    "addButton": "Zu Bring! hinzufügen",
+    "ready": "Ihre Artikel sind bereit für Bring!",
+    "open": "Bring! öffnen",
+    "errors": {
+      "notPublic": "Bring! kann diese Norish-Instanz nicht erreichen. Sie muss über HTTPS aus dem Internet erreichbar sein.",
+      "unreachable": "Bring! hat nicht geantwortet. Versuchen Sie es gleich noch einmal.",
+      "rejected": "Bring! konnte die Liste nicht lesen. Prüfen Sie, ob diese Norish-Instanz über HTTPS aus dem Internet erreichbar ist.",
+      "rateLimited": "Zu viele Listen an Bring! gesendet – warten Sie ein paar Minuten.",
+      "failed": "Senden an Bring! fehlgeschlagen",
+      "pageUnreachable": "Bring! konnte die Seite, die Norish dafür erstellt, nicht abrufen. Prüfen Sie, ob /share/bring/ unter Ihrer Norish-Adresse ohne Login, VPN oder Bot-Schutz aus dem Internet erreichbar ist.",
+      "pageStatus": "Ihr Server hat mit HTTP {status} geantwortet."
+    }
+  },
   "panel": {
     "addTitle": "Einkauf hinzufügen",
     "editTitle": "Einkauf bearbeiten",

@@ -636,6 +636,13 @@
       "defaultLocale": "Default language",
       "defaultLocaleDescription": "Language used for new users and as fallback",
       "atLeastOneLocale": "At least one language must be enabled",
+      "groceryListProvider": {
+        "title": "Shopping list",
+        "description": "Where recipe ingredients go when someone adds them to the list.",
+        "builtin": "Norish grocery list",
+        "bring": "Bring!",
+        "bringNotice": "When someone adds ingredients, Bring!'s servers fetch a temporary public HTTPS page, under /share/bring/, that contains the recipe name, its main photo, the servings and the item lines, and is deleted after an hour. This Norish instance must therefore be reachable from the internet, with /share/bring/ open to it without a login."
+      },
       "export": {
         "title": "Recipe archive",
         "description": "Download every recipe on this server.",

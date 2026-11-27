@@ -109,6 +109,21 @@
     "inYourPantry": "W Twojej spiżarni",
     "offlineDetails": "Szczegóły produktu otworzą się po powrocie do sieci."
   },
+  "bring": {
+    "addTitle": "Dodaj do Bring!",
+    "addButton": "Dodaj do Bring!",
+    "ready": "Twoje produkty są gotowe dla Bring!",
+    "open": "Otwórz Bring!",
+    "errors": {
+      "notPublic": "Bring! nie może połączyć się z tą instancją Norish. Musi być ona dostępna z internetu przez HTTPS.",
+      "unreachable": "Bring! nie odpowiedział. Spróbuj ponownie za chwilę.",
+      "rejected": "Bring! nie mógł odczytać listy. Sprawdź, czy ta instancja Norish jest dostępna z internetu przez HTTPS.",
+      "rateLimited": "Zbyt wiele list wysłanych do Bring! – poczekaj kilka minut.",
+      "failed": "Nie udało się wysłać do Bring!",
+      "pageUnreachable": "Bring! nie mógł otworzyć strony, którą przygotował dla niego Norish. Upewnij się, że /share/bring/ pod twoim adresem Norish jest dostępne z internetu bez logowania, VPN ani ochrony przed botami.",
+      "pageStatus": "Twój serwer odpowiedział HTTP {status}."
+    }
+  },
   "panel": {
     "addTitle": "Dodaj zakup",
     "editTitle": "Edytuj zakup",

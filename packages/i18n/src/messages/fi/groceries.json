@@ -109,6 +109,21 @@
     "inYourPantry": "Ruokakomerossasi",
     "offlineDetails": "Ruoan tiedot avautuvat, kun olet taas verkossa."
   },
+  "bring": {
+    "addTitle": "Lisää Bring!iin",
+    "addButton": "Lisää Bring!iin",
+    "ready": "Tuotteesi ovat valmiina Bring!iin",
+    "open": "Avaa Bring!",
+    "errors": {
+      "notPublic": "Bring! ei tavoita tätä Norish-palvelinta. Sen on oltava tavoitettavissa internetistä HTTPS-yhteydellä.",
+      "unreachable": "Bring! ei vastannut. Yritä hetken kuluttua uudelleen.",
+      "rejected": "Bring! ei pystynyt lukemaan listaa. Tarkista, että tämä Norish-palvelin on tavoitettavissa internetistä HTTPS-yhteydellä.",
+      "rateLimited": "Liian monta listaa lähetetty Bring!iin – odota muutama minuutti.",
+      "failed": "Lähetys Bring!iin epäonnistui",
+      "pageUnreachable": "Bring! ei voinut avata sivua, jonka Norish loi sille. Varmista, että /share/bring/ Norish-osoitteessasi on tavoitettavissa internetistä ilman kirjautumista, VPN:ää tai bottisuojausta.",
+      "pageStatus": "Palvelimesi vastasi HTTP {status}."
+    }
+  },
   "panel": {
     "addTitle": "Lisää ostos",
     "editTitle": "Muokkaa ostosta",

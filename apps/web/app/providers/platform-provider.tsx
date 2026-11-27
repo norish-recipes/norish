@@ -22,6 +22,7 @@ import { connectTimerStorage } from "@norish/shared-react/recipes/timers";
 import { signOut } from "@norish/shared/lib/auth/client";
 import { addBasePath } from "@norish/shared/lib/base-path";
 import { deviceKindFromUserAgent } from "@norish/shared/lib/device-kind";
+import { isOpenableExternalUrl } from "@norish/shared/lib/external-url";
 
 const SIGNED_OUT: PlatformSession = { user: null, isPending: false };
 
@@ -29,6 +30,11 @@ const SIGNED_OUT: PlatformSession = { user: null, isPending: false };
 if (typeof window !== "undefined") connectTimerStorage(browserStorage);
 
 let navigatedToLogin = false;
+
+/** Safari's own flag, set only in a web app started from an iPhone's or iPad's Home Screen. */
+function isIosHomeScreenApp(): boolean {
+  return (navigator as Navigator & { standalone?: boolean }).standalone === true;
+}
 
 /**
  * Sign-in once per page: a late 401 after a sign-out cannot replace its destination.
@@ -81,18 +87,22 @@ export function WebPlatformProvider({
 
   const adapter: PlatformAdapter = {
     toast: {
-      show: ({ severity, title, description, actionLabel, onActionPress }) => {
+      show: ({ severity, title, description, actionLabel, onActionPress, persistent }) => {
+        // A timeout of 0 keeps the toast until it is dismissed or its action is pressed.
+        const timeout = persistent ? 0 : undefined;
+
         if (actionLabel) {
           showActionToast(title, {
             description,
             variant: severity,
+            timeout,
             action: { label: actionLabel, onPress: () => onActionPress?.() },
           });
 
           return;
         }
 
-        toast(title, { description, variant: severity });
+        toast(title, { description, variant: severity, timeout });
       },
       translate: (messageId, values) => t(messageId as Parameters<typeof t>[0], values),
     },
@@ -108,6 +118,28 @@ export function WebPlatformProvider({
         context,
       }),
     storage: browserStorage,
+    // Called from a press. An iPhone's Home Screen app has no tabs: a link opened in a new window
+    // shows in an in-app browser that never hands it to the app it belongs to, so the page itself
+    // goes there, and iOS opens the app. Elsewhere it is a new tab; a browser that blocks it says so
+    // with a null window. `noopener` would make every open answer null, so the tab's link back to
+    // this page is cut by hand, while the tab is still the blank one the browser creates first.
+    openExternalUrl: (url) => {
+      if (!isOpenableExternalUrl(url)) return false;
+
+      if (isIosHomeScreenApp()) {
+        window.location.assign(url);
+
+        return true;
+      }
+
+      const opened = window.open(url, "_blank");
+
+      if (!opened) return false;
+      opened.opener = null;
+
+      return true;
+    },
+    supportsExternalShoppingList: true,
     deviceKind: kind,
     session,
     endSession: endWebSession,
